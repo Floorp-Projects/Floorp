@@ -59,24 +59,11 @@ add_task(async function test_execute() {
     do_throw("fetching item-annotation that doesn't exist, should've thrown");
   } catch (ex) {}
 
-  // get annotation info
-  var value = {}, flags = {}, exp = {}, storageType = {};
-  annosvc.getItemAnnotationInfo(testItemId, testAnnoName, value, flags, exp, storageType);
-  Assert.equal(value.value, testAnnoVal);
-  Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
-
-  // get annotation names for an item
-  let annoNames = annosvc.getItemAnnotationNames(testItemId);
-  Assert.equal(annoNames.length, 1);
-  Assert.equal(annoNames[0], "moz-test-places/annotations");
-
   // test int32 anno type
   var int32Key = testAnnoName + "/types/Int32";
   var int32Val = 23;
   annosvc.setItemAnnotation(testItemId, int32Key, int32Val, 0, annosvc.EXPIRE_NEVER);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int32Key));
-  annosvc.getItemAnnotationInfo(testItemId, int32Key, value, flags, exp, storageType);
-  Assert.equal(value.value, int32Val);
   let storedVal = annosvc.getItemAnnotation(testItemId, int32Key);
   Assert.ok(int32Val === storedVal);
 
@@ -85,8 +72,6 @@ add_task(async function test_execute() {
   var int64Val = 4294967296;
   annosvc.setItemAnnotation(testItemId, int64Key, int64Val, 0, annosvc.EXPIRE_NEVER);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int64Key));
-  annosvc.getItemAnnotationInfo(testItemId, int64Key, value, flags, exp, storageType);
-  Assert.equal(value.value, int64Val);
   storedVal = annosvc.getItemAnnotation(testItemId, int64Key);
   Assert.ok(int64Val === storedVal);
 
@@ -95,9 +80,6 @@ add_task(async function test_execute() {
   var doubleVal = 0.000002342;
   annosvc.setItemAnnotation(testItemId, doubleKey, doubleVal, 0, annosvc.EXPIRE_NEVER);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, doubleKey));
-  annosvc.getItemAnnotationInfo(testItemId, doubleKey, value, flags, exp, storageType);
-  Assert.equal(value.value, doubleVal);
-  Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_DOUBLE);
   storedVal = annosvc.getItemAnnotation(testItemId, doubleKey);
   Assert.ok(doubleVal === storedVal);
 

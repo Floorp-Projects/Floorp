@@ -4,19 +4,19 @@
   <title>Reference case for text scaled via SVG viewBox</title>
   <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
   <style>
-    body { margin: 0; }
     svg {
       width: 100px;
       height: 100px;
-      background: red;
+      background: lightgray;
+      overflow: visible;
     }
-    rect {
-      fill: lime;
+    text {
+      font: 100px/1 monospace;
     }
   </style>
 </head>
 <body>
   <svg>
-    <rect height="100%" width="100%"></rect>
+    <text x="0" y="100">X̂̂̂̂̂̂</text>
   </svg>
 </body>

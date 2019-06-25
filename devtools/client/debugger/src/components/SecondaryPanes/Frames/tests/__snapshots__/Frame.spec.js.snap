@@ -37,6 +37,7 @@ exports[`Frame getFrameTitle 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -88,6 +89,7 @@ exports[`Frame getFrameTitle 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -146,6 +148,7 @@ exports[`Frame library frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -198,6 +201,7 @@ exports[`Frame library frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -255,6 +259,7 @@ exports[`Frame user frame (not selected) 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -306,6 +311,7 @@ exports[`Frame user frame (not selected) 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -363,6 +369,7 @@ exports[`Frame user frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -414,6 +421,7 @@ exports[`Frame user frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "extensionName": null,
           "id": "source",
           "introductionType": undefined,
           "introductionUrl": null,

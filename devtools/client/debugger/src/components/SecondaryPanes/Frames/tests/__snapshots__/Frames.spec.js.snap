@@ -34,6 +34,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "extensionName": null,
             "id": "1",
             "introductionType": undefined,
             "introductionUrl": null,
@@ -77,6 +78,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "extensionName": null,
             "id": "1",
             "introductionType": undefined,
             "introductionUrl": null,
@@ -122,6 +124,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "extensionName": null,
             "id": "1",
             "introductionType": undefined,
             "introductionUrl": null,
@@ -165,6 +168,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "extensionName": null,
             "id": "1",
             "introductionType": undefined,
             "introductionUrl": null,

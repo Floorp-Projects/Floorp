@@ -96,6 +96,7 @@ export type SourcePayload = {
   sourceMapURL: URL | null,
   introductionUrl: URL | null,
   introductionType: string | null,
+  extensionName: string | null,
 };
 
 /**

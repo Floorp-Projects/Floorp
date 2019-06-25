@@ -76,8 +76,6 @@ const Container_Menu = 2;
 const Container_Unfiled = 3;
 const Container_Places = 4;
 
-const DESCRIPTION_ANNO = "bookmarkProperties/description";
-
 const MICROSEC_PER_SEC = 1000000;
 
 const EXPORT_INDENT = "    "; // four spaces
@@ -888,8 +886,6 @@ BookmarkExporter.prototype = {
       this._writeLine(">" + escapeHtmlEntities(aItem.title) + "</H3>");
     }
 
-    this._writeDescription(aItem, aIndent);
-
     this._writeLine(aIndent + "<DL><p>");
     if (aItem.children)
       await this._writeContainerContents(aItem, aIndent);
@@ -945,7 +941,6 @@ BookmarkExporter.prototype = {
     if (aItem.tags)
       this._writeAttribute("TAGS", escapeHtmlEntities(aItem.tags));
     this._writeLine(">" + escapeHtmlEntities(aItem.title) + "</A>");
-    this._writeDescription(aItem, aIndent);
   },
 
   _writeDateAttributes(aItem) {
@@ -975,13 +970,6 @@ BookmarkExporter.prototype = {
         base64EncodeString(String.fromCharCode.apply(String, favicon.data));
       this._writeAttribute("ICON", faviconContents);
     }
-  },
-
-  _writeDescription(aItem, aIndent) {
-    let descriptionAnno = aItem.annos &&
-                          aItem.annos.find(anno => anno.name == DESCRIPTION_ANNO);
-    if (descriptionAnno)
-      this._writeLine(aIndent + "<DD>" + escapeHtmlEntities(descriptionAnno.value));
   },
 };
 

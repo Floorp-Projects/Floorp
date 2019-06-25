@@ -50,14 +50,24 @@ add_task(async function test_menu_open_close() {
   await new Promise(resolve => requestAnimationFrame(resolve));
   is(false, menu.hidden, "menu should be visible after pressing 'space'");
 
-  let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
-  ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
+  let feedbackItem = gMenuButton.shadowRoot.querySelector(".menuitem-feedback");
+  ok(!feedbackItem.matches(":focus"), ".menuitem-feedback should not be focused before tabbing to it");
   // The Import menuitem is only visible on Windows, where we will need a second Tab
-  // press to get to the Preferences item.
+  // press to get to the Feedback item.
   let tabs = navigator.platform == "Win32" ? 2 : 1;
   while (tabs--) {
     sendKey("TAB");
   }
+
+  await SimpleTest.promiseWaitForCondition(() => feedbackItem.matches(":focus"),
+                                           "waiting for feedbackItem to get focus");
+  ok(feedbackItem.matches(":focus"), ".menuitem-feedback should be focused after tabbing to it");
+
+  let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
+  ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
+  // We will need a third Tab press to get to the Preferences item.
+  sendKey("TAB");
+
   await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
     "waiting for preferencesItem to get focus");
   ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");

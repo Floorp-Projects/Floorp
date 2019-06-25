@@ -253,7 +253,7 @@ pub fn cursor_mangling(
 
     // We early return here because libclang may crash in some case
     // if we pass in a variable inside a partial specialized template.
-    // See rust-lang-nursery/rust-bindgen#67, and rust-lang-nursery/rust-bindgen#462.
+    // See rust-lang/rust-bindgen#67, and rust-lang/rust-bindgen#462.
     if cursor.is_in_non_fully_specialized_template() {
         return None;
     }
@@ -535,7 +535,7 @@ impl FunctionSig {
     ///
     /// For more details, see:
     ///
-    /// * https://github.com/rust-lang-nursery/rust-bindgen/issues/547,
+    /// * https://github.com/rust-lang/rust-bindgen/issues/547,
     /// * https://github.com/rust-lang/rust/issues/38848,
     /// * and https://github.com/rust-lang/rust/issues/40158
     pub fn function_pointers_can_derive(&self) -> bool {

@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import kotlin.math.roundToInt
+import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -75,7 +76,9 @@ class RuntimeSettingsTest : BaseSessionTest() {
     }
 
     @WithDevToolsAPI
+    // disable test on pgo for frequently failing #Bug 1546297
     @Test fun fontSize() {
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         val settings = sessionRule.runtime.settings
         settings.fontSizeFactor = 1.0f
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)

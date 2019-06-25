@@ -122,6 +122,15 @@ this.geckoProfiler = class extends ExtensionAPI {
           return Services.profiler.getProfileDataAsArrayBuffer();
         },
 
+        async getProfileAsGzippedArrayBuffer() {
+          if (!Services.profiler.IsActive()) {
+            throw new ExtensionError("The profiler is stopped. " +
+              "You need to start the profiler before you can capture a profile.");
+          }
+
+          return Services.profiler.getProfileDataAsGzippedArrayBuffer();
+        },
+
         async getSymbols(debugName, breakpadId) {
           if (symbolCache.size === 0) {
             primeSymbolStore(Services.profiler.sharedLibraries);
