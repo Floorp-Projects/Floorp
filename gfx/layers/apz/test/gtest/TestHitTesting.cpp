@@ -212,8 +212,8 @@ TEST_F(APZHitTestingTester, HitTesting1) {
 // A more involved hit testing test that involves css and async transforms.
 TEST_F(APZHitTestingTester, HitTesting2) {
   SCOPED_GFX_VAR(UseWebRender, bool, false);
-  SCOPED_GFX_PREF(APZVelocityBias, float,
-                  0.0);  // Velocity bias can cause extra repaint requests
+  // Velocity bias can cause extra repaint requests.
+  SCOPED_GFX_PREF_FLOAT("apz.velocity_bias", 0.0);
 
   CreateHitTesting2LayerTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
@@ -455,7 +455,7 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
 }
 
 TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
-  SCOPED_GFX_PREF(layout_css_touch_action_enabled, bool, false);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
 
   // The main purpose of this test is to verify that touch-start events (or
   // anything that starts a new input block) don't ever get untransformed. This

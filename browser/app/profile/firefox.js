@@ -1552,9 +1552,10 @@ pref("media.gmp-provider.enabled", true);
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 // Enable fingerprinting blocking by default only in nightly and early beta.
 pref("privacy.trackingprotection.fingerprinting.enabled", true);
-// Enable cryptomining blocking by default only in nightly and early beta.
-pref("privacy.trackingprotection.cryptomining.enabled", true);
 #endif
+
+// Enable cryptomining blocking by default for all channels, only on desktop.
+pref("privacy.trackingprotection.cryptomining.enabled", true);
 
 pref("browser.contentblocking.allowlist.storage.enabled", true);
 
