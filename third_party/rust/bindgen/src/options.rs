@@ -31,7 +31,7 @@ where
                 .help("The default style of code used to generate enums.")
                 .value_name("variant")
                 .default_value("consts")
-                .possible_values(&["consts", "moduleconsts", "bitfield", "rust"])
+                .possible_values(&["consts", "moduleconsts", "bitfield", "rust", "rust_non_exhaustive"])
                 .multiple(false),
             Arg::with_name("bitfield-enum")
                 .long("bitfield-enum")
@@ -129,7 +129,7 @@ where
             Arg::with_name("no-doc-comments")
                 .long("no-doc-comments")
                 .help("Avoid including doc comments in the output, see: \
-                      https://github.com/rust-lang-nursery/rust-bindgen/issues/426"),
+                      https://github.com/rust-lang/rust-bindgen/issues/426"),
             Arg::with_name("no-recursive-whitelist")
                 .long("no-recursive-whitelist")
                 .help("Disable whitelisting types recursively. This will cause \
@@ -326,6 +326,9 @@ where
                 .long("enable-function-attribute-detection")
                 .help("Enables detecting unexposed attributes in functions (slow).
                        Used to generate #[must_use] annotations."),
+            Arg::with_name("use-array-pointers-in-arguments")
+                .long("use-array-pointers-in-arguments")
+                .help("Use `*const [T; size]` instead of `*const T` for C arrays"),
         ]) // .args()
         .get_matches_from(args);
 
@@ -456,6 +459,10 @@ where
 
     if matches.is_present("time-phases") {
         builder = builder.time_phases(true);
+    }
+
+    if matches.is_present("use-array-pointers-in-arguments") {
+        builder = builder.array_pointers_in_arguments(true);
     }
 
     if let Some(prefix) = matches.value_of("ctypes-prefix") {
