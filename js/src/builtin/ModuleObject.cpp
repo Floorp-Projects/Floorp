@@ -780,7 +780,7 @@ void ModuleObject::finalize(js::FreeOp* fop, JSObject* obj) {
   }
   if (FunctionDeclarationVector* funDecls = self->functionDeclarations()) {
     // Not tracked as these may move between zones on merge.
-    fop->delete_(funDecls);
+    fop->deleteUntracked(funDecls);
   }
 }
 
