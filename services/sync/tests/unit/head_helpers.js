@@ -585,20 +585,17 @@ function bookmarkNodesToInfos(nodes) {
     if (node.children) {
       info.children = bookmarkNodesToInfos(node.children);
     }
-    if (node.annos) {
-      let orphanAnno = node.annos.find(anno =>
-        anno.name == "sync/parent"
-      );
-      if (orphanAnno) {
-        info.requestedParent = orphanAnno.value;
-      }
+    // Check orphan parent anno.
+    if (PlacesUtils.annotations.itemHasAnnotation(node.id, "sync/parent")) {
+      info.requestedParent =
+        PlacesUtils.annotations.getItemAnnotation(node.id, "sync/parent");
     }
     return info;
   });
 }
 
 async function assertBookmarksTreeMatches(rootGuid, expected, message) {
-  let root = await PlacesUtils.promiseBookmarksTree(rootGuid);
+  let root = await PlacesUtils.promiseBookmarksTree(rootGuid, {includeItemIds: true});
   let actual = bookmarkNodesToInfos(root.children);
 
   if (!ObjectUtils.deepEqual(actual, expected)) {
