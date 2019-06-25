@@ -2907,6 +2907,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "scroll" ],
     other_values: [ "fixed", "local", "scroll,scroll", "fixed, scroll", "scroll, fixed, local, scroll", "fixed, fixed" ],
     invalid_values: []
@@ -2918,6 +2919,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
       "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
@@ -2934,6 +2936,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "border-box" ],
     other_values: [ "content-box", "padding-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box", "text", "content-box, text", "text, border-box", "text, text" ],
     invalid_values: [ "margin-box", "border-box border-box", "fill-box", "stroke-box", "view-box", "no-clip" ]
@@ -2945,6 +2948,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "transparent", "rgba(0, 0, 0, 0)" ],
     other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)", "hsl(240, 50%, 50%)", "rgb(50%, 50%, 50%)", "-moz-default-background-color", "rgb(100, 100.0, 100)", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(255,255,255,-3.7)" ],
     invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "rgb(100, 100%, 100)" ],
@@ -2957,6 +2961,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "none" ],
     other_values: [
     "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")',
@@ -2978,6 +2983,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "padding-box" ],
     other_values: [ "border-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
     invalid_values: [ "margin-box", "padding-box padding-box", "fill-box", "stroke-box", "view-box", "no-clip" ]
@@ -2989,6 +2995,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "top 0% left 0%", "top 0% left", "top left", "left top", "0% 0%", "0% top", "left 0%" ],
     other_values: [ "top", "left", "right", "bottom", "center", "center bottom", "bottom center", "center right", "right center", "center top", "top center", "center left", "left center", "right bottom", "bottom right", "50%", "top left, top left", "top left, top right", "top right, top left", "left top, 0% 0%", "10% 20%, 30%, 40%", "top left, bottom right", "right bottom, left top", "0%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top",
       "calc(20px)",
@@ -3040,6 +3047,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "left 0%", "left", "0%" ],
     other_values: [ "right", "center", "50%", "left, left", "left, right", "right, left", "left, 0%", "10%, 20%, 40%", "0px", "30px", "0%, 10%, 20%, 30%", "left, left, left, left, left",
       "calc(20px)",
@@ -3069,6 +3077,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "top 0%", "top", "0%" ],
     other_values: [ "bottom", "center", "50%", "top, top", "top, bottom", "bottom, top", "top, 0%", "10%, 20%, 40%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top",
       "calc(20px)",
@@ -3098,6 +3107,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "repeat", "repeat repeat" ],
     other_values: [ "repeat-x", "repeat-y", "no-repeat",
       "repeat-x, repeat-x",
@@ -3142,6 +3152,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "auto", "auto auto" ],
     other_values: [ "contain", "cover", "100px auto", "auto 100px", "100% auto", "auto 100%", "25% 50px", "3em 40%",
       "calc(20px)",
@@ -3506,6 +3517,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     /* XXX should test currentColor, but may or may not be initial */
     initial_values: [ "black", "#000", "#000f", "#000000ff", "-moz-default-color", "rgb(0, 0, 0)", "rgb(0%, 0%, 0%)",
       /* css-color-4: */
@@ -3694,6 +3706,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ (gInitialFontFamilyIsSansSerif ? "sans-serif" : "serif") ],
     other_values: [ (gInitialFontFamilyIsSansSerif ? "serif" : "sans-serif"), "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy", "\\\"Times New Roman", "\"Times New Roman\"", "Times, \\\"Times New Roman", "Times, \"Times New Roman\"", "-no-such-font-installed", "inherit roman", "roman inherit", "Times, inherit roman", "inherit roman, Times", "roman inherit, Times", "Times, roman inherit" ],
     invalid_values: [ "\"Times New\" Roman", "\"Times New Roman\n", "Times, \"Times New Roman\n" ]
@@ -3705,6 +3718,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [
       "'liga' on", "'liga'", "\"liga\" 1", "'liga', 'clig' 1",
@@ -3728,6 +3742,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "auto" ],
     other_values: [ "normal", "none" ],
     invalid_values: [ "on" ]
@@ -3739,6 +3754,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "'ENG'", "'TRK'", "\"TRK\"", "'N\\'Ko'" ],
     invalid_values: [ "TRK", "ja" ]
@@ -3750,6 +3766,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "medium",
       "1rem",
       "calc(1rem)",
@@ -3774,6 +3791,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "none" ],
     other_values: [ "0.3", "0.5", "0.7", "0.0", "0", "3" ],
     invalid_values: [ "-0.3", "-1" ]
@@ -3785,6 +3803,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded" ],
     invalid_values: [ "narrower", "wider" ]
@@ -3796,6 +3815,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "italic", "oblique" ],
     invalid_values: []
@@ -3807,6 +3827,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "weight style" ],
     other_values: [ "none", "weight", "style" ],
     invalid_values: [ "weight none", "style none", "none style", "weight 10px", "weight weight", "style style" ]
@@ -3833,6 +3854,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "historical-forms",
                         "styleset(alt-a, alt-b)", "character-variant(a, b, c)", "annotation(circled)",
@@ -3848,6 +3870,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "titling-caps", "unicase" ],
     invalid_values: [ "normal small-caps", "petite-caps normal", "unicase unicase" ]
@@ -3859,6 +3882,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "jis78", "jis83", "jis90", "jis04", "simplified", "traditional", "full-width", "proportional-width", "ruby",
                     "jis78 full-width", "jis78 full-width ruby", "simplified proportional-width", "ruby simplified" ],
@@ -3872,6 +3896,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "none", "common-ligatures", "no-common-ligatures", "discretionary-ligatures", "no-discretionary-ligatures",
                     "historical-ligatures", "no-historical-ligatures", "contextual", "no-contextual",
@@ -3890,6 +3915,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "lining-nums", "oldstyle-nums", "proportional-nums", "tabular-nums", "diagonal-fractions",
                     "stacked-fractions", "slashed-zero", "ordinal", "lining-nums diagonal-fractions",
@@ -3906,6 +3932,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "super", "sub" ],
     invalid_values: [ "normal sub", "super sub" ]
@@ -3917,6 +3944,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal", "400" ],
     other_values: [ "bold", "100", "200", "300", "500", "600", "700", "800",
                     "900", "bolder", "lighter", "10.5", "calc(10 + 10)",
@@ -4000,6 +4028,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     /*
      * Inheritance tests require consistent font size, since
      * getComputedStyle (which uses the CSS2 computed value, or
@@ -4329,6 +4358,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "1", "17", "397.376", "3e1", "3e+1", "3e0", "3e+0", "3e-0" ],
     other_values: [ "0", "0.4", "0.0000", "-3", "3e-1" ],
     invalid_values: [ "0px", "1px" ]
@@ -4359,6 +4389,7 @@ var gCSSProperties = {
     domProp: "outlineColor",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor" ], // XXX should be invert
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -4376,6 +4407,7 @@ var gCSSProperties = {
     domProp: "outlineStyle",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
     // XXX Should 'hidden' be the same as initial?
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge", "auto" ],
@@ -4385,6 +4417,7 @@ var gCSSProperties = {
     domProp: "outlineWidth",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
     prerequisites: { "outline-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -4682,6 +4715,7 @@ var gCSSProperties = {
     domProp: "rubyPosition",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
     initial_values: [ "over" ],
     other_values: [ "under" ],
     invalid_values: [
@@ -4727,6 +4761,7 @@ var gCSSProperties = {
     domProp: "textCombineUpright",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
     initial_values: [ "none" ],
     other_values: [ "all" ],
     invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
@@ -4740,6 +4775,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     subproperties: [ "text-decoration-color", "text-decoration-line", "text-decoration-style" ],
     initial_values: [ "none" ],
     other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink",
@@ -4753,6 +4789,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -4765,6 +4802,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "none" ],
     other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink" ],
     invalid_values: [ "none none", "underline none", "none underline", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
@@ -4776,6 +4814,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "solid" ],
     other_values: [ "double", "dotted", "dashed", "wavy", "-moz-none" ],
     invalid_values: [ "none", "groove", "ridge", "inset", "outset", "solid dashed", "wave" ]
@@ -4867,6 +4906,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     prerequisites: { "color": "blue" },
     initial_values: [ "none" ],
     other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px",
@@ -4990,6 +5030,7 @@ var gCSSProperties = {
     domProp: "visibility",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_cue: true,
     initial_values: [ "visible" ],
     other_values: [ "hidden", "collapse" ],
     invalid_values: []
@@ -4999,6 +5040,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [ "pre", "nowrap", "pre-wrap", "pre-line", "-moz-pre-space", "break-spaces" ],
     invalid_values: []
@@ -6234,6 +6276,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     alias_for: "font-feature-settings",
     subproperties: [ "font-feature-settings" ],
   },
@@ -6244,6 +6287,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     alias_for: "font-language-override",
     subproperties: [ "font-language-override" ],
   },
@@ -7107,6 +7151,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     alias_for: "background-clip",
     subproperties: [ "background-clip" ],
   },
@@ -7117,6 +7162,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     alias_for: "background-origin",
     subproperties: [ "background-origin" ],
   },
@@ -7127,6 +7173,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     alias_for: "background-size",
     subproperties: [ "background-size" ],
   },
@@ -7473,6 +7520,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "normal" ],
     other_values: [
       "'wdth' 0", "'wdth' -.1", "\"wdth\" 1", "'wdth' 2, 'wght' 3", "\"XXXX\" 0"
@@ -7499,6 +7547,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "auto" ],
     other_values: [ "none" ],
     invalid_values: [ "on" ]
@@ -8163,6 +8212,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_cue: true,
     initial_values: [ "auto" ],
     other_values: [ "grayscale" ],
     invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
