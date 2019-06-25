@@ -222,7 +222,8 @@ class Module : public JS::WasmModule {
 
   void initGCMallocBytesExcludingCode();
   size_t gcMallocBytesExcludingCode() const {
-    return gcMallocBytesExcludingCode_; }
+    return gcMallocBytesExcludingCode_;
+  }
 
   // Generated code analysis support:
 
