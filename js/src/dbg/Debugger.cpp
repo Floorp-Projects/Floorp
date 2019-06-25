@@ -525,6 +525,22 @@ bool BreakpointSite::hasBreakpoint(Breakpoint* toFind) {
   return false;
 }
 
+inline gc::Cell* BreakpointSite::owningCellUnbarriered() {
+  if (type() == Type::JS) {
+    return asJS()->script;
+  }
+
+  return asWasm()->instance->objectUnbarriered();
+}
+
+inline size_t BreakpointSite::allocSize() {
+  if (type() == Type::JS) {
+    return sizeof(Breakpoint);
+  }
+
+  return sizeof(WasmBreakpoint);
+}
+
 Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
                        JSObject* handler)
     : debugger(debugger), site(site), handler(handler) {
@@ -540,10 +556,12 @@ void Breakpoint::destroy(FreeOp* fop,
   }
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
+  gc::Cell* cell = site->owningCellUnbarriered();
+  size_t size = site->allocSize();
   if (mayDestroySite == MayDestroySite::True) {
     site->destroyIfEmpty(fop);
   }
-  fop->delete_(this);
+  fop->delete_(cell, this, size, MemoryUse::Breakpoint);
 }
 
 Breakpoint* Breakpoint::nextInDebugger() { return debuggerLink.mNext; }
@@ -8076,6 +8094,7 @@ struct DebuggerScriptSetBreakpointMatcher {
     }
     site->inc(cx_->runtime()->defaultFreeOp());
     if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
+      AddCellMemory(script, sizeof(Breakpoint), MemoryUse::Breakpoint);
       return true;
     }
     site->dec(cx_->runtime()->defaultFreeOp());
@@ -8104,6 +8123,8 @@ struct DebuggerScriptSetBreakpointMatcher {
     site->inc(cx_->runtime()->defaultFreeOp());
     if (cx_->zone()->new_<WasmBreakpoint>(dbg_, site, handler_,
                                           instance.object())) {
+      AddCellMemory(wasmInstance, sizeof(WasmBreakpoint),
+                    MemoryUse::Breakpoint);
       return true;
     }
     site->dec(cx_->runtime()->defaultFreeOp());
