@@ -982,14 +982,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     this.dispatchEvent(event);
   }
 
-  notifyGloballyAutoplayBlocked() {
-    let event = document.createEvent("CustomEvent");
-    event.initCustomEvent("GloballyAutoplayBlocked", true, false, {
-      url: this.documentURI,
-    });
-    this.dispatchEvent(event);
-  }
-
   /**
    * When the pref "media.block-autoplay-until-in-foreground" is on,
    * Gecko delays starting playback of media resources in tabs until the
@@ -1181,7 +1173,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStart", this);
       this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStop", this);
       this.messageManager.addMessageListener("UnselectedTabHover:Toggle", this);
-      this.messageManager.addMessageListener("GloballyAutoplayBlocked", this);
     }
   }
 
@@ -1294,9 +1285,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
         this._shouldSendUnselectedTabHover = data.enable ?
           ++this._unselectedTabHoverMessageListenerCount > 0 :
           --this._unselectedTabHoverMessageListenerCount == 0;
-        break;
-      case "GloballyAutoplayBlocked":
-        this.notifyGloballyAutoplayBlocked();
         break;
     }
     return undefined;

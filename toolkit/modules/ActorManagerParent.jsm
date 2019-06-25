@@ -101,6 +101,21 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {DefaultMap} = ExtensionUtils;
 
 let ACTORS = {
+  Autoplay: {
+    parent: {
+      moduleURI: "resource://gre/actors/AutoplayParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/AutoplayChild.jsm",
+      events: {
+        "GloballyAutoplayBlocked": {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   BrowserElement: {
     parent: {
       moduleURI: "resource://gre/actors/BrowserElementParent.jsm",
@@ -156,15 +171,6 @@ let LEGACY_ACTORS = {
       observers: [
         "audio-playback",
       ],
-    },
-  },
-
-  Autoplay: {
-    child: {
-      module: "resource://gre/actors/AutoplayChild.jsm",
-      events: {
-        "GloballyAutoplayBlocked": {},
-      },
     },
   },
 
