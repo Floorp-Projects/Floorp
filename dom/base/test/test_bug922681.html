@@ -76,11 +76,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=922681
     testInnerHTML(c, "<body>", "");
 
     function testTableBody(tag) {
-        var c = document.createElement(tag);
-        testInnerHTML(c, "abc", "abc");
-        testInnerHTML(c, "<td>", "<tr><td></td></tr>");
-        testInnerHTML(c, "</body>", "");
-        testInnerHTML(c, "<input>", "<input>");
+        var e = document.createElement(tag);
+        testInnerHTML(e, "abc", "abc");
+        testInnerHTML(e, "<td>", "<tr><td></td></tr>");
+        testInnerHTML(e, "</body>", "");
+        testInnerHTML(e, "<input>", "<input>");
     }
     testTableBody("thead");
     testTableBody("tbody");

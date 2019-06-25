@@ -50,6 +50,7 @@ const receive = (topic, p, syncCallback) => {
         }
       }
     };
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     const id = setTimeout(timeout, 90000);
     addObserver(observer, topic, false);
     queue.push(topic, resolve);
@@ -59,6 +60,7 @@ receive.queue = [];
 
 const openTab = uri => gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, uri);
 
+// eslint-disable-next-line mozilla/no-arbitrary-setTimeout
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const isData = document => document.URL.startsWith("data:");

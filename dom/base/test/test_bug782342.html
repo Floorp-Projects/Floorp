@@ -25,8 +25,8 @@ var xhr = new XMLHttpRequest();
 xhr.open("GET", url, true);
 xhr.responseType = "blob";
 
-function checkHeaders(xhr) {
-  var headers = xhr.getAllResponseHeaders();
+function checkHeaders(xhrInner) {
+  var headers = xhrInner.getAllResponseHeaders();
   dump(headers + "\n");
   var p = headers.split("\n");
 
@@ -44,9 +44,9 @@ function checkHeaders(xhr) {
   ok(contentLength == true, "Content-length is part of the headers!");
   ok(contentType == true, "Content-type is part of the headers!");
 
-  var ct = xhr.getResponseHeader('content-type');
+  var ct = xhrInner.getResponseHeader('content-type');
   ok(ct.length > 0, 'Get Response Header - content type: ' + ct);
-  var cl = xhr.getResponseHeader('content-length');
+  var cl = xhrInner.getResponseHeader('content-length');
   ok(cl.length > 0, 'Get Response Header - content length: ' + cl);
 }
 

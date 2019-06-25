@@ -62,10 +62,12 @@ add_task(async function(){
 
   // Navigate to a content page from the child side.
   await BrowserTestUtils.switchTab(gBrowser, tab1);
+  /* eslint-disable no-shadow */
   await ContentTask.spawn(tab1.linkedBrowser, null, async function() {
     const TEST_URL = "http://www.example.com/browser/dom/base/test/dummy.html";
     content.location.href = TEST_URL;
   });
+  /* eslint-enable no-shadow */
   await BrowserTestUtils.browserLoaded(tab1.linkedBrowser, false, TEST_URL);
   is(ppmm.childCount, originalChildCount + 2,
      "Navigating away from the preloaded browser (child side) should create a new content process.")
@@ -106,4 +108,3 @@ add_task(async function preloaded_state_attribute() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   NewTabPagePreloading.removePreloadedBrowser(window);
 });
-

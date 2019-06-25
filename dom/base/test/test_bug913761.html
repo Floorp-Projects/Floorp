@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=913761
   transportChannel.port1.onmessage = function (event) {
     ok(true, 'Port Returned.');
     var portToService = event.data.port;
-    portToService.onmessage = function (event) {
+    portToService.onmessage = function () {
       ok(true, "message received");
       SimpleTest.finish();
     };

@@ -43,7 +43,7 @@ function getTargetOrigin(i) {
 }
 
 // Create the frames, and tell them which subframes to load.
-for (var i = 0; i < numTests; i++) {
+for (let i = 0; i < numTests; i++) {
   var frame = document.createElement("iframe");
   frame.src = getFrameOrigin(i) +
               "/tests/dom/base/test/file_bug1091883_frame.html#" +
@@ -53,7 +53,7 @@ for (var i = 0; i < numTests; i++) {
 
 // Navigate all subframes to the target.
 window.onload = function() {
-  for (var i = 0; i < numTests; i++) {
+  for (let i = 0; i < numTests; i++) {
     frames[i].frames[0].location = getTargetOrigin(i) +
         "/tests/dom/base/test/file_bug1091883_target.html#" + i;
   }

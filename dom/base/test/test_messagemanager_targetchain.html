@@ -75,7 +75,7 @@
             info("Third iframe loaded");
             let doc3 = SpecialPowers.wrap(iframe3).contentDocument;
             let target = doc3.getElementById("target");
-            target.addEventListener("test-event", function onEvent(e) {
+            target.addEventListener("test-event", function onEvent() {
               is(messageIndex, 2,
                  "target should be the last one to receive the test event");
               messageIndex++;
