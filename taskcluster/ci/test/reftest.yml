@@ -90,7 +90,8 @@ jsreftest:
             linux64-qr/debug: 5
             linux32/debug: 5
             linux64/debug: 5
-            macosx.*64-ccov/debug: 5
+            macosx.*-64-ccov/debug: 5
+            macosx.*-64(-shippable)?/.*: 2
             default: 3
     max-run-time:
         by-test-platform:
