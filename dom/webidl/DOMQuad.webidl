@@ -14,7 +14,8 @@
  Constructor(optional DOMPointInit p1, optional DOMPointInit p2,
              optional DOMPointInit p3, optional DOMPointInit p4),
  Constructor(DOMRectReadOnly rect),
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker),
+ Serializable]
 interface DOMQuad {
     [SameObject] readonly attribute DOMPoint p1;
     [SameObject] readonly attribute DOMPoint p2;

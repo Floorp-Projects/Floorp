@@ -17,6 +17,8 @@
 #include "mozilla/ErrorResult.h"
 #include "Units.h"
 
+class nsIGlobalObject;
+
 namespace mozilla {
 namespace dom {
 
@@ -60,9 +62,12 @@ class DOMQuad final : public nsWrapperCache {
 
   void ToJSON(DOMQuadJSON& aInit);
 
-  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
 
-  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
+  static already_AddRefed<DOMQuad> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
  protected:
   void GetHorizontalMinMax(double* aX1, double* aX2) const;
