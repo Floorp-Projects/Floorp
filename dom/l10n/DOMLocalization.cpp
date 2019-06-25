@@ -148,16 +148,7 @@ void DOMLocalization::GetAttributes(JSContext* aCx, Element& aElement,
   }
 
   if (aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, l10nArgs)) {
-    JS::Rooted<JS::Value> json(aCx);
-    if (!JS_ParseJSON(aCx, l10nArgs.get(), l10nArgs.Length(), &json)) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-    if (!json.isObject()) {
-      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-      return;
-    }
-    aResult.mArgs = &json.toObject();
+    ConvertStringToL10nArgs(aCx, l10nArgs, aResult.mArgs.SetValue(), aRv);
   }
 }
 
@@ -288,7 +279,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
     return nullptr;
   }
 
-  AutoEntryScript aes(mGlobal, "DOMLocalization GetAttributes");
+  AutoEntryScript aes(mGlobal, "DOMLocalization TranslateElements");
   JSContext* cx = aes.cx();
 
   for (auto& domElement : aElements) {
@@ -303,8 +294,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
     }
 
     GetAttributes(cx, *domElement, *key, aRv);
-    if (aRv.Failed()) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
@@ -532,5 +522,31 @@ void DOMLocalization::ReportL10nOverlaysErrors(
         NS_WARNING("Failed to report l10n DOM Overlay errors to console.");
       }
     }
+  }
+}
+
+void DOMLocalization::ConvertStringToL10nArgs(JSContext* aCx,
+                                              const nsString& aInput,
+                                              intl::L10nArgs& aRetVal,
+                                              ErrorResult& aRv) {
+  // This method uses a temporary dictionary to automate
+  // converting a JSON string into an IDL Record via a dictionary.
+  //
+  // Once we get Record::Init(const nsAString& aJSON), we'll switch to
+  // that.
+  L10nArgsHelperDict helperDict;
+  if (!helperDict.Init(NS_LITERAL_STRING("{\"args\": ") + aInput +
+                       NS_LITERAL_STRING("}"))) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  for (auto& entry : helperDict.mArgs.Entries()) {
+    L10nArgs::EntryType* newEntry = aRetVal.Entries().AppendElement(fallible);
+    if (!newEntry) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    newEntry->mKey = entry.mKey;
+    newEntry->mValue = entry.mValue;
   }
 }
