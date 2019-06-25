@@ -6,10 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["AutoplayChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-
-class AutoplayChild extends ActorChild {
+class AutoplayChild extends JSWindowActorChild {
   handleEvent(event) {
-    this.mm.sendAsyncMessage("GloballyAutoplayBlocked");
+    this.sendAsyncMessage("GloballyAutoplayBlocked", {});
   }
 }
