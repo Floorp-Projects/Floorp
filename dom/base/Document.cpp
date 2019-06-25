@@ -9525,7 +9525,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
   // Special behaviour for desktop mode, provided we are not on an about: page
   nsPIDOMWindowOuter* win = GetWindow();
   if (win && win->IsDesktopModeViewport() && !IsAboutPage()) {
-    CSSCoord viewportWidth = StaticPrefs::DesktopViewportWidth() / fullZoom;
+    CSSCoord viewportWidth =
+        StaticPrefs::browser_viewport_desktopWidth() / fullZoom;
     CSSToScreenScale scaleToFit(aDisplaySize.width / viewportWidth);
     float aspectRatio = (float)aDisplaySize.height / aDisplaySize.width;
     CSSSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
@@ -9619,14 +9620,15 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       nsViewportInfo::ZoomFlag effectiveZoomFlag =
           mAllowZoom ? nsViewportInfo::ZoomFlag::AllowZoom
                      : nsViewportInfo::ZoomFlag::DisallowZoom;
-      if (StaticPrefs::ForceUserScalable()) {
+      if (StaticPrefs::browser_ui_zoom_force_user_scalable()) {
         // If the pref to force user-scalable is enabled, we ignore the values
         // from the meta-viewport tag for these properties and just assume they
         // allow the page to be scalable. Note in particular that this code is
         // in the "Specified" branch of the enclosing switch statement, so that
         // calls to GetViewportInfo always use the latest value of the
-        // ForceUserScalable pref. Other codepaths that return nsViewportInfo
-        // instances are all consistent with ForceUserScalable() already.
+        // browser_ui_zoom_force_user_scalable pref. Other codepaths that
+        // return nsViewportInfo instances are all consistent with
+        // browser_ui_zoom_force_user_scalable() already.
         effectiveMinScale = kViewportMinScale;
         effectiveMaxScale = kViewportMaxScale;
         effectiveValidMaxScale = true;
@@ -9732,7 +9734,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
             // Divide by fullZoom to stretch CSS pixel size of viewport in order
             // to keep device pixel size unchanged after full zoom applied.
             // See bug 974242.
-            width = StaticPrefs::DesktopViewportWidth() / fullZoom;
+            width = StaticPrefs::browser_viewport_desktopWidth() / fullZoom;
           } else {
             // Some viewport information was provided; follow the spec.
             width = displaySize.width;

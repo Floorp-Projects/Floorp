@@ -10008,7 +10008,7 @@ bool nsLayoutUtils::ShouldHandleMetaViewport(const Document* aDocument) {
                  nsIDocShell::META_VIEWPORT_OVERRIDE_NONE);
       // The META_VIEWPORT_OVERRIDE_NONE case means that there is no override
       // and we rely solely on the StaticPrefs.
-      return StaticPrefs::MetaViewportEnabled();
+      return StaticPrefs::dom_meta_viewport_enabled();
   }
 }
 
