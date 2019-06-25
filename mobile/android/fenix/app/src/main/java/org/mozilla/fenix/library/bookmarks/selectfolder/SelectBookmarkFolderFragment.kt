@@ -65,7 +65,7 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
     // Fill out our title map once we have context.
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        setRootTitles(context)
+        setRootTitles(context, showMobileRoot = true)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,7 +118,8 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
 
         launch(IO) {
             bookmarkNode =
-                requireComponents.core.bookmarksStorage.getTree(folderGuid!!, true).withOptionalDesktopFolders(context)
+                requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)
+                    .withOptionalDesktopFolders(context, showMobileRoot = true)
             launch(Main) {
                 (activity as HomeActivity).title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
                 val adapter = SelectBookmarkFolderAdapter(sharedViewModel)

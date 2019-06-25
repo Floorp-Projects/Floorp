@@ -12,19 +12,20 @@ import org.mozilla.fenix.R
 
 var rootTitles: Map<String, String> = emptyMap()
 
-@SuppressWarnings("ReturnCount")
+@SuppressWarnings("ReturnCount", "ComplexMethod")
 suspend fun BookmarkNode?.withOptionalDesktopFolders(
-    context: Context?
+    context: Context?,
+    showMobileRoot: Boolean = false
 ): BookmarkNode? {
     // No-op if node is missing.
     if (this == null) {
         return null
     }
 
+    val loggedIn = context?.components?.backgroundServices?.accountManager?.authenticatedAccount() != null
+
     // If we're in the mobile root and logged in, add-in a synthetic "Desktop Bookmarks" folder.
-    if (this.guid == BookmarkRoot.Mobile.id &&
-        context?.components?.backgroundServices?.accountManager?.authenticatedAccount() != null
-    ) {
+    if ((this.guid == BookmarkRoot.Mobile.id) && loggedIn) {
         // We're going to make a copy of the mobile node, and add-in a synthetic child folder to the top of the
         // children's list that contains all of the desktop roots.
         val childrenWithVirtualFolder: MutableList<BookmarkNode> = mutableListOf()
@@ -34,39 +35,17 @@ suspend fun BookmarkNode?.withOptionalDesktopFolders(
             childrenWithVirtualFolder.addAll(children)
         }
 
-        return BookmarkNode(
-            type = this.type,
-            guid = this.guid,
-            parentGuid = this.parentGuid,
-            position = this.position,
-            title = this.title,
-            url = this.url,
-            children = childrenWithVirtualFolder
+        return this.copy(children = childrenWithVirtualFolder)
+    } else if (this.guid == BookmarkRoot.Root.id) {
+        return this.copy(
+            title = rootTitles[this.title],
+            children = if (showMobileRoot) restructureMobileRoots(context, children)
+            else restructureDesktopRoots(children)
         )
 
-        // If we're looking at the root, that means we're in the "Desktop Bookmarks" folder.
-        // Rename its child roots and remove the mobile root.
-    } else if (this.guid == BookmarkRoot.Root.id) {
-        return BookmarkNode(
-            type = this.type,
-            guid = this.guid,
-            parentGuid = this.parentGuid,
-            position = this.position,
-            title = rootTitles[this.title],
-            url = this.url,
-            children = processDesktopRoots(this.children)
-        )
         // If we're looking at one of the desktop roots, change their titles to friendly names.
     } else if (this.guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
-        return BookmarkNode(
-            type = this.type,
-            guid = this.guid,
-            parentGuid = this.parentGuid,
-            position = this.position,
-            title = rootTitles[this.title],
-            url = this.url,
-            children = this.children
-        )
+        return this.copy(title = rootTitles[this.title])
     }
 
     // Otherwise, just return the node as-is.
@@ -75,49 +54,76 @@ suspend fun BookmarkNode?.withOptionalDesktopFolders(
 
 private suspend fun virtualDesktopFolder(context: Context?): BookmarkNode? {
     val rootNode = context?.bookmarkStorage()?.getTree(BookmarkRoot.Root.id, false) ?: return null
-    return BookmarkNode(
-        type = rootNode.type,
-        guid = rootNode.guid,
-        parentGuid = rootNode.parentGuid,
-        position = rootNode.position,
-        title = rootTitles[rootNode.title],
-        url = rootNode.url,
-        children = rootNode.children
-    )
+    return rootNode.copy(title = rootTitles[rootNode.title])
 }
 
 /**
  * Removes 'mobile' root (to avoid a cyclical bookmarks tree in the UI) and renames other roots to friendly titles.
  */
-private fun processDesktopRoots(roots: List<BookmarkNode>?): List<BookmarkNode>? {
+private fun restructureDesktopRoots(roots: List<BookmarkNode>?): List<BookmarkNode>? {
     if (roots == null) {
         return null
     }
 
     return roots.filter { rootTitles.containsKey(it.title) }.map {
-        BookmarkNode(
-            type = it.type,
-            guid = it.guid,
-            parentGuid = it.parentGuid,
-            position = it.position,
-            title = rootTitles[it.title],
-            url = it.url,
-            children = it.children
-        )
+        it.copy(title = rootTitles[it.title])
     }
+}
+
+/**
+ * Restructures roots to place desktop roots underneath the mobile root and renames them to friendly titles.
+ * This provides a recognizable bookmark tree when offering destinations to move a bookmark.
+ */
+private fun restructureMobileRoots(context: Context?, roots: List<BookmarkNode>?): List<BookmarkNode>? {
+    if (roots == null) {
+        return null
+    }
+
+    val loggedIn = context?.components?.backgroundServices?.accountManager?.authenticatedAccount() != null
+
+    val others = roots.filter { it.guid != BookmarkRoot.Mobile.id }
+        .map { it.copy(title = rootTitles[it.title]) }
+
+    val mobileRoot = roots.find { it.guid == BookmarkRoot.Mobile.id } ?: return roots
+    val mobileChildren = (if (loggedIn) others else listOf()) + (mobileRoot.children ?: listOf())
+
+    // Note that the desktop bookmarks folder does not appear because it is not selectable as a parent
+    return listOf(
+        mobileRoot.copy(
+            children = mobileChildren,
+            title = context?.getString(R.string.library_bookmarks)
+        )
+    )
 }
 
 fun Context?.bookmarkStorage(): PlacesBookmarksStorage? {
     return this?.components?.core?.bookmarksStorage
 }
 
-fun setRootTitles(context: Context) {
-    rootTitles = mapOf(
-        "root" to context.getString(R.string.library_desktop_bookmarks_root),
-        "menu" to context.getString(R.string.library_desktop_bookmarks_menu),
-        "toolbar" to context.getString(R.string.library_desktop_bookmarks_toolbar),
-        "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled)
-    )
+fun setRootTitles(context: Context, showMobileRoot: Boolean = false) {
+    rootTitles = if (showMobileRoot) {
+        mapOf(
+            "root" to context.getString(R.string.library_bookmarks),
+            "mobile" to context.getString(R.string.library_bookmarks),
+            "menu" to context.getString(R.string.library_desktop_bookmarks_menu),
+            "toolbar" to context.getString(R.string.library_desktop_bookmarks_toolbar),
+            "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled)
+        )
+    } else {
+        mapOf(
+            "root" to context.getString(R.string.library_desktop_bookmarks_root),
+            "menu" to context.getString(R.string.library_desktop_bookmarks_menu),
+            "toolbar" to context.getString(R.string.library_desktop_bookmarks_toolbar),
+            "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled)
+        )
+    }
+}
+
+fun BookmarkNode?.withRootTitle(): BookmarkNode? {
+    if (this == null) {
+        return null
+    }
+    return if (rootTitles.containsKey(title)) this.copy(title = rootTitles[title]) else this
 }
 
 operator fun BookmarkNode?.minus(child: String): BookmarkNode {

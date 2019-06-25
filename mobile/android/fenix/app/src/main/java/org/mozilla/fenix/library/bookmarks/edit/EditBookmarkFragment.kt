@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks.edit
 
+import android.content.Context
 import android.content.DialogInterface
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -41,6 +42,8 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.setRootTitles
+import org.mozilla.fenix.ext.withRootTitle
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -69,6 +72,11 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         return inflater.inflate(R.layout.fragment_edit_bookmark, container, false)
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        setRootTitles(context, showMobileRoot = true)
+    }
+
     override fun onResume() {
         super.onResume()
         val activity = activity as? AppCompatActivity
@@ -78,7 +86,9 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         launch(IO) {
             bookmarkNode = requireComponents.core.bookmarksStorage.getTree(guidToEdit)
             bookmarkParent = sharedViewModel.selectedFolder
-                ?: bookmarkNode?.parentGuid?.let { requireComponents.core.bookmarksStorage.getTree(it) }
+                ?: bookmarkNode?.parentGuid?.let {
+                    requireComponents.core.bookmarksStorage.getTree(it)
+                }.withRootTitle()
 
             launch(Main) {
                 when (bookmarkNode?.type) {
