@@ -182,6 +182,10 @@ function handleRequest(aRequest, aResponse) {
     updateProps.promptWaitTime = params.promptWaitTime;
   }
 
+  if (params.disableBITS) {
+    updateProps.disableBITS = params.disableBITS;
+  }
+
   let updates = getRemoteUpdateString(updateProps, patches);
   let xml = getRemoteUpdatesXMLString(updates);
   respond(aResponse, params, xml);
