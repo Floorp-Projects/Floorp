@@ -3792,11 +3792,14 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
   // If we are in a remote browser, then apply clipping from ancestor browsers
   if (BrowserChild* browserChild = BrowserChild::GetFrom(presShell)) {
-    LayoutDeviceIntRect unscaledVisibleRect = browserChild->GetVisibleRect();
-    CSSRect visibleRect =
-        unscaledVisibleRect / presContext->CSSToDevPixelScale();
-    rootVisualOverflow.IntersectRect(rootVisualOverflow,
-                                     CSSPixel::ToAppUnits(visibleRect));
+    Maybe<LayoutDeviceIntRect> unscaledVisibleRect =
+        browserChild->GetVisibleRect();
+    if (unscaledVisibleRect) {
+      CSSRect visibleRect =
+          *unscaledVisibleRect / presContext->CSSToDevPixelScale();
+      rootVisualOverflow.IntersectRect(rootVisualOverflow,
+                                       CSSPixel::ToAppUnits(visibleRect));
+    }
   }
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
