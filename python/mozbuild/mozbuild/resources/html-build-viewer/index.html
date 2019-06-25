@@ -432,7 +432,14 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!response || !("files" in response)) {
       return;
     }
-
+    if (response.files.length > 1) {
+      var list = d3.select("#list");
+      for (file of response.files) {
+        list.append("option").attr("value", file).text(file);
+      }
+      list.on("change", function() {renderKey(this.value);})
+      list.style("display", "inline");
+    }
     renderKey(response.files[0]);
   });
 }, false);
@@ -458,6 +465,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </select>
     -->
 
+    <select id="list" style="display: none"></select>
     <div id="resource_graph"></div>
     <div id="summary" style="padding-top: 20px">
       <table border="0">
