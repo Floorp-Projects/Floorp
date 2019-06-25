@@ -1,4 +1,3 @@
-
 # Basic unit tests for jsval pretty-printer.
 # flake8: noqa: F821
 
