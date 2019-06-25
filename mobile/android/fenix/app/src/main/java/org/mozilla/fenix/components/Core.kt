@@ -56,7 +56,6 @@ class Core(private val context: Context) {
 
         if (!Settings.getInstance(context).shouldUseAutoSize) {
             runtimeSettings.automaticFontSizeAdjustment = false
-            runtimeSettings.fontInflationEnabled = true
             val fontSize = Settings.getInstance(context).fontSizeFactor
             runtimeSettings.fontSizeFactor = fontSize
         }

@@ -40,7 +40,6 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             Settings.getInstance(context!!).setAutoSize(newValue as Boolean)
             requireComponents.core.engine.settings.automaticFontSizeAdjustment = newValue
             if (!newValue) {
-                requireComponents.core.engine.settings.fontInflationEnabled = true
                 requireComponents.core.engine.settings.fontSizeFactor = Settings.getInstance(context!!).fontSizeFactor
             }
             textSizePreference?.isVisible = !newValue
