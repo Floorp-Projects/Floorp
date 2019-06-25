@@ -826,7 +826,7 @@ notification[value="translation"] {
   notification[value="translation"] menulist > .menulist-dropmarker {
     list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
   }
-  notification[value="translation"] menulist > .menulist-dropmarker > .dropmarker-icon {
+  notification[value="translation"] menulist > .menulist-dropmarker::part(icon) {
     width: 11px;
     height: 11px;
   }

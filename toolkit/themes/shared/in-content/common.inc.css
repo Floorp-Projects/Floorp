@@ -379,7 +379,7 @@ xul|*.menulist-dropmarker {
   fill: currentColor;
 }
 
-xul|*.menulist-dropmarker > xul|*.dropmarker-icon {
+xul|*.menulist-dropmarker::part(icon) {
   width: 12px;
   height: 12px;
 }
