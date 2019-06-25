@@ -17,6 +17,8 @@ ChromeUtils.defineModuleGetter(this, "MockColorPicker",
                                "resource://specialpowers/MockColorPicker.jsm");
 ChromeUtils.defineModuleGetter(this, "MockPermissionPrompt",
                                "resource://specialpowers/MockPermissionPrompt.jsm");
+ChromeUtils.defineModuleGetter(this, "SpecialPowersSandbox",
+                               "resource://specialpowers/SpecialPowersSandbox.jsm");
 ChromeUtils.defineModuleGetter(this, "WrapPrivileged",
                                "resource://specialpowers/WrapPrivileged.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
@@ -128,6 +130,28 @@ class SpecialPowersAPI extends JSWindowActorChild {
 
     this._nextExtensionID = 0;
     this._extensionListeners = null;
+  }
+
+  receiveMessage(message) {
+    switch (message.name) {
+      case "Assert": {
+        // An assertion has been done in a mochitest chrome script
+        let {name, passed, stack, diag} = message.data;
+
+        let SimpleTest = (
+            this.contentWindow &&
+            this.contentWindow.wrappedJSObject.SimpleTest);
+
+        if (SimpleTest) {
+          SimpleTest.record(passed, name, diag, stack && stack.formattedStack);
+        } else {
+          // Well, this is unexpected.
+          dump(name + "\n");
+        }
+      }
+      break;
+    }
+    return undefined;
   }
 
   /*
@@ -337,7 +361,6 @@ class SpecialPowersAPI extends JSWindowActorChild {
       destroy: () => {
         listeners = [];
         this._removeMessageListener("SPChromeScriptMessage", chromeScript);
-        this._removeMessageListener("SPChromeScriptAssert", chromeScript);
       },
 
       receiveMessage: (aMessage) => {
@@ -356,56 +379,11 @@ class SpecialPowersAPI extends JSWindowActorChild {
           for (let listener of listeners.filter(o => o.name == name)) {
             result = listener.listener(message);
           }
-        } else if (aMessage.name == "SPChromeScriptAssert") {
-          assert(aMessage.json);
         }
         return result;
       },
     };
     this._addMessageListener("SPChromeScriptMessage", chromeScript);
-    this._addMessageListener("SPChromeScriptAssert", chromeScript);
-
-    let assert = json => {
-      // An assertion has been done in a mochitest chrome script
-      let {name, err, message, stack} = json;
-
-      // Try to fetch a test runner from the mochitest
-      // in order to properly log these assertions and notify
-      // all usefull log observers
-      let window = this.contentWindow;
-      let parentRunner, repr = o => o;
-      if (window) {
-        window = window.wrappedJSObject;
-        parentRunner = window.TestRunner;
-        if (window.repr) {
-          repr = window.repr;
-        }
-      }
-
-      // Craft a mochitest-like report string
-      var resultString = err ? "TEST-UNEXPECTED-FAIL" : "TEST-PASS";
-      var diagnostic =
-        message ? message :
-                  ("assertion @ " + stack.filename + ":" + stack.lineNumber);
-      if (err) {
-        diagnostic +=
-          " - got " + repr(err.actual) +
-          ", expected " + repr(err.expected) +
-          " (operator " + err.operator + ")";
-      }
-      var msg = [resultString, name, diagnostic].join(" | ");
-      if (parentRunner) {
-        if (err) {
-          parentRunner.addFailedTest(name);
-          parentRunner.error(msg);
-        } else {
-          parentRunner.log(msg);
-        }
-      } else {
-        // When we are running only a single mochitest, there is no test runner
-        dump(msg + "\n");
-      }
-    };
 
     return this.wrap(chromeScript);
   }
@@ -1236,6 +1214,10 @@ class SpecialPowersAPI extends JSWindowActorChild {
    * passed will be copied via structured clone, as will its return
    * value.
    *
+   * The sandbox also has access to an Assert object, as provided by
+   * Assert.jsm. Any assertion methods called before the task resolves
+   * will be relayed back to the test environment of the caller.
+   *
    * @param {BrowsingContext or FrameLoaderOwner or WindowProxy} target
    *        The target in which to run the task. This may be any element
    *        which implements the FrameLoaderOwner interface (including
@@ -1269,32 +1251,26 @@ class SpecialPowersAPI extends JSWindowActorChild {
       browsingContext = BrowsingContext.getFromWindow(target);
     }
 
-    let {caller} = Components.stack;
     return this.sendQuery("Spawn", {
       browsingContext,
       args,
       task: String(task),
-      caller: {
-        filename: caller.filename,
-        lineNumber: caller.lineNumber,
-      },
+      caller: SpecialPowersSandbox.getCallerInfo(Components.stack.caller),
     });
   }
 
-  _spawnTask(task, args, caller) {
-    let sb = Cu.Sandbox(Cu.getGlobalForObject({}),
-                        {wantGlobalProperties: ["ChromeUtils"]});
+  _spawnTask(task, args, caller, taskId) {
+    let sb = new SpecialPowersSandbox(null, data => {
+      this.sendAsyncMessage("ProxiedAssert", {taskId, data});
+    });
 
-    sb.SpecialPowers = this;
-    Object.defineProperty(sb, "content", {
+    sb.sandbox.SpecialPowers = this;
+    Object.defineProperty(sb.sandbox, "content", {
       get: () => { return this.contentWindow; },
       enumerable: true,
     });
 
-    let func = Cu.evalInSandbox(`(${task})`, sb, undefined,
-                                caller.filename, caller.lineNumber);
-
-    return func(...args);
+    return sb.execute(task, args, caller);
   }
 
   getFocusedElementForWindow(targetWindow, aDeep) {
