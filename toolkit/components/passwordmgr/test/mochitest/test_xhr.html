@@ -163,6 +163,10 @@ add_task(async function test2() {
   is(result.username, "xhruser2", "Checking for username");
   is(result.password, "xhrpass2", "Checking for password");
 
+  // Wait for the assert from the parent script to run and send back its reply,
+  // so it's processed before the test ends.
+  await SpecialPowers.executeAfterFlushingMessageQueue();
+
   newWin.close();
 });
 </script>
