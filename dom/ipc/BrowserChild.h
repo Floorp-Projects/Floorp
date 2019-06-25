@@ -239,6 +239,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
     return mBrowserChildMessageManager;
   }
 
+  bool IsTopLevel() const { return mIsTopLevel; }
+
   /**
    * MessageManagerCallback methods that we override.
    */
@@ -549,7 +551,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   ScreenIntSize GetInnerSize();
 
-  LayoutDeviceIntRect GetVisibleRect();
+  Maybe<LayoutDeviceIntRect> GetVisibleRect() const;
 
   // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
   void DoFakeShow(const ShowInfo& aShowInfo);
