@@ -2142,14 +2142,14 @@ inline JSBreakpointSite* BreakpointSite::asJS() {
 
 class WasmBreakpointSite : public BreakpointSite {
  public:
-  wasm::DebugState* debug;
+  wasm::Instance* instance;
   uint32_t offset;
 
- protected:
+ private:
   void recompile(FreeOp* fop) override;
 
  public:
-  WasmBreakpointSite(wasm::DebugState* debug, uint32_t offset);
+  WasmBreakpointSite(wasm::Instance* instance, uint32_t offset);
 
   void destroyIfEmpty(FreeOp* fop) override;
 };
