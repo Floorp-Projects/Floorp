@@ -15,6 +15,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -48,6 +49,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -66,6 +68,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -97,6 +100,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -117,6 +121,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -152,6 +157,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -183,6 +189,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -201,6 +208,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -236,6 +244,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -275,6 +284,7 @@ Object {
       "hasMatchingGeneratedSource": true,
       "item": Object {
         "contents": Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -294,6 +304,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -326,6 +337,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -347,6 +359,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -382,6 +395,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -419,6 +433,7 @@ Object {
     "hasMatchingGeneratedSource": true,
     "item": Object {
       "contents": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -438,6 +453,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -473,6 +489,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -507,6 +524,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -526,6 +544,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -558,6 +577,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -579,6 +599,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -614,6 +635,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -646,6 +668,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -665,6 +688,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -731,6 +755,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -774,6 +799,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -838,6 +864,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -905,6 +932,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -949,6 +977,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -1014,6 +1043,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -1223,6 +1253,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -1265,6 +1296,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -1328,6 +1360,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -1676,6 +1709,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -1719,6 +1753,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -1783,6 +1818,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -1848,6 +1884,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -1890,6 +1927,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -1953,6 +1991,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -1988,6 +2027,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -2021,6 +2061,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -2040,6 +2081,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -2071,6 +2113,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -2092,6 +2135,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -2127,6 +2171,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -2158,6 +2203,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -2177,6 +2223,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -2212,6 +2259,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -2247,6 +2295,7 @@ Object {
       "focused": true,
       "item": Object {
         "contents": Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -2265,6 +2314,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -2298,6 +2348,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -2318,6 +2369,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -2353,6 +2405,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -2386,6 +2439,7 @@ Object {
     "focused": true,
     "item": Object {
       "contents": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -2404,6 +2458,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
@@ -2439,6 +2494,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -2472,6 +2528,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "extensionName": null,
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
           "introductionUrl": null,
@@ -2491,6 +2548,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -2522,6 +2580,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -2543,6 +2602,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "extensionName": null,
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
               "introductionUrl": null,
@@ -2578,6 +2638,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
                 "introductionUrl": null,
@@ -2609,6 +2670,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "extensionName": null,
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
         "introductionUrl": null,
@@ -2628,6 +2690,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "extensionName": null,
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
       "introductionUrl": null,
