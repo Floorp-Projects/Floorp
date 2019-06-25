@@ -7,17 +7,7 @@
 #ifndef mozilla_dom_l10n_DocumentL10n_h
 #define mozilla_dom_l10n_DocumentL10n_h
 
-#include "nsCycleCollectionParticipant.h"
-#include "nsIContentSink.h"
-#include "nsINode.h"
-#include "nsWrapperCache.h"
-#include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/DOMLocalization.h"
 
 namespace mozilla {
@@ -44,7 +34,6 @@ class DocumentL10n final : public DOMLocalization {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentL10n, DOMLocalization)
 
- public:
   explicit DocumentL10n(Document* aDocument);
   void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
 

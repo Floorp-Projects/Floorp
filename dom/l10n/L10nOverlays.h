@@ -1,8 +1,9 @@
-#ifndef mozilla_dom_l10n_L10nOverlays_h__
-#define mozilla_dom_l10n_L10nOverlays_h__
+#ifndef mozilla_dom_l10n_L10nOverlays_h
+#define mozilla_dom_l10n_L10nOverlays_h
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/L10nOverlaysBinding.h"
+#include "mozilla/dom/LocalizationBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +20,10 @@ class L10nOverlays {
    * will be used for translating the matching source child.
    */
   static void TranslateElement(const GlobalObject& aGlobal, Element& aElement,
-                               const L10nValue& aTranslation,
+                               const L10nMessage& aTranslation,
                                Nullable<nsTArray<L10nOverlaysError>>& aErrors);
-  static void TranslateElement(Element& aElement, const L10nValue& aTranslation,
+  static void TranslateElement(Element& aElement,
+                               const L10nMessage& aTranslation,
                                nsTArray<L10nOverlaysError>& aErrors,
                                ErrorResult& aRv);
 

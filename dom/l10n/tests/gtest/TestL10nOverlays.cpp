@@ -60,8 +60,8 @@ TEST(DOM_L10n_Overlays, Initial)
                      NS_LITERAL_STRING("https://www.mozilla.org"), rv);
   elem->AppendChild(*span, rv);
 
-  // 3. Create an L10nValue with a translation for the element.
-  L10nValue translation;
+  // 3. Create an L10nMessage with a translation for the element.
+  L10nMessage translation;
   translation.mValue.AssignLiteral(
       "Hello <a data-l10n-name=\"link\">World</a>.");
 

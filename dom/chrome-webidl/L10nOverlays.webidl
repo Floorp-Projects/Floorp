@@ -3,16 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-dictionary AttributeNameValue {
-  required DOMString name;
-  required DOMString value;
-};
-
-dictionary L10nValue {
-  DOMString? value = null;
-  sequence<AttributeNameValue>? attributes = null;
-};
-
 dictionary L10nOverlaysError {
   short code;
   DOMString translatedElementName;
@@ -27,5 +17,5 @@ namespace L10nOverlays {
   const unsigned short ERROR_NAMED_ELEMENT_TYPE_MISMATCH = 3;
   const unsigned short ERROR_UNKNOWN = 4;
 
-  sequence<L10nOverlaysError>? translateElement(Element element, optional L10nValue translation);
+  sequence<L10nOverlaysError>? translateElement(Element element, optional L10nMessage translation);
 };

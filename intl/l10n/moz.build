@@ -4,6 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.intl += [
+    'Localization.h',
+]
+
+UNIFIED_SOURCES += [
+    'Localization.cpp',
+]
+
 EXTRA_JS_MODULES += [
     'Fluent.jsm',
     'L10nRegistry.jsm',

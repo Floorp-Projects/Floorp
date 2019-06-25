@@ -1,35 +1,22 @@
-#ifndef mozilla_dom_l10n_DOMLocalization_h__
-#define mozilla_dom_l10n_DOMLocalization_h__
+#ifndef mozilla_dom_l10n_DOMLocalization_h
+#define mozilla_dom_l10n_DOMLocalization_h
 
-#include "nsWeakReference.h"
-#include "nsIObserver.h"
-#include "mozILocalization.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/Promise.h"
+#include "mozilla/intl/Localization.h"
 #include "mozilla/dom/DOMLocalizationBinding.h"
-#include "mozilla/dom/DocumentL10nBinding.h"
-#include "mozilla/dom/L10nOverlaysBinding.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/L10nMutations.h"
-
-class nsIGlobalObject;
+#include "mozilla/dom/L10nOverlaysBinding.h"
+#include "mozilla/dom/LocalizationBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-class DOMLocalization : public nsIObserver,
-                        public nsSupportsWeakReference,
-                        public nsWrapperCache {
+class DOMLocalization : public intl::Localization {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(DOMLocalization,
-                                                         nsIObserver)
-  NS_DECL_NSIOBSERVER
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMLocalization, Localization)
 
   explicit DOMLocalization(nsIGlobalObject* aGlobal);
-  void Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv);
-  void Init(nsTArray<nsString>& aResourceIds,
-            JS::Handle<JS::Value> aGenerateMessages, ErrorResult& aRv);
 
   static already_AddRefed<DOMLocalization> Constructor(
       const GlobalObject& aGlobal,
@@ -37,31 +24,8 @@ class DOMLocalization : public nsIObserver,
       const Optional<OwningNonNull<GenerateMessages>>& aGenerateMessages,
       ErrorResult& aRv);
 
-  nsIGlobalObject* GetParentObject() const;
-
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
-
-  /**
-   * Localization API
-   *
-   * Methods documentation in DOMLocalization.webidl
-   */
-  uint32_t AddResourceIds(const nsTArray<nsString>& aResourceIds, bool aEager);
-
-  uint32_t RemoveResourceIds(const nsTArray<nsString>& aResourceIds);
-
-  already_AddRefed<Promise> FormatValue(
-      JSContext* aCx, const nsAString& aId,
-      const Optional<JS::Handle<JSObject*>>& aArgs, ErrorResult& aRv);
-
-  already_AddRefed<Promise> FormatValues(JSContext* aCx,
-                                         const Sequence<L10nKey>& aKeys,
-                                         ErrorResult& aRv);
-
-  already_AddRefed<Promise> FormatMessages(JSContext* aCx,
-                                           const Sequence<L10nKey>& aKeys,
-                                           ErrorResult& aRv);
 
   /**
    * DOMLocalization API
@@ -110,20 +74,17 @@ class DOMLocalization : public nsIObserver,
    * Applies l10n translations on translatable elements.
    */
   void ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
-                         nsTArray<L10nValue>& aTranslations, ErrorResult& aRv);
+                         nsTArray<L10nMessage>& aTranslations,
+                         ErrorResult& aRv);
 
  protected:
   virtual ~DOMLocalization();
-  void RegisterObservers();
   void OnChange();
   void DisconnectMutations();
   void DisconnectRoots();
-  already_AddRefed<Promise> MaybeWrapPromise(Promise* aPromise);
   void ReportL10nOverlaysErrors(nsTArray<L10nOverlaysError>& aErrors);
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<L10nMutations> mMutations;
-  nsCOMPtr<mozILocalization> mLocalization;
   nsTHashtable<nsRefPtrHashKey<Element>> mRoots;
 };
 
