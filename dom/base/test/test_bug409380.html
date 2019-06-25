@@ -12,13 +12,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409380
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=409380">Mozilla Bug 409380</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 409380 **/
 
+// eslint-disable-next-line complexity
 function runRangeTest()
 {
   // Bug 336381
@@ -363,7 +364,7 @@ function runRangeTest()
     hadException = true;
   }
   ok(!hadException, "Shouldn't have got an exception!");
-  
+
   SimpleTest.finish();
 }
 
@@ -375,4 +376,3 @@ addLoadEvent(runRangeTest);
 <div id="connectedDiv">zz</div>
 </body>
 </html>
-

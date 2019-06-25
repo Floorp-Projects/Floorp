@@ -21,24 +21,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912456
     function receiveMessage(evt) {
       ok(evt.data.port, "Port has been received!");
 
-      var a = new MessageChannel();
-      ok(a, "MessageChannel created");
+      var a1 = new MessageChannel();
+      ok(a1, "MessageChannel created");
 
       try {
-        evt.data.port.postMessage({port: a.port2});
+        evt.data.port.postMessage({port: a1.port2});
         ok(false, "PostMessage should throw! - no transfered port");
       } catch(e) {
         ok(true, "PostMessage should throw! - no transfered port");
       }
 
       try {
-        evt.data.port.postMessage({port: a.port2}, [a.port2, a.port2]);
+        evt.data.port.postMessage({port: a1.port2}, [a1.port2, a1.port2]);
         ok(false, "PostMessage should throw - no duplicate!");
       } catch(e) {
         ok(true, "PostMessage should throw - no duplicate!");
       }
 
-      evt.data.port.postMessage({port: a.port2}, [a.port2]);
+      evt.data.port.postMessage({port: a1.port2}, [a1.port2]);
     }
 
     a.port1.onmessage = function(evt) {
@@ -74,10 +74,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912456
       ok(evt.ports, "Port is received");
       is(evt.ports.length, 1, "Ports.length is 1");
 
-      var a = new MessageChannel();
-      ok(a, "MessageChannel created");
+      var a1 = new MessageChannel();
+      ok(a1, "MessageChannel created");
 
-      evt.ports[0].postMessage(42, [a.port2]);
+      evt.ports[0].postMessage(42, [a1.port2]);
     }
 
     a.port1.onmessage = function(evt) {
@@ -112,4 +112,3 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912456
 </script>
 </body>
 </html>
-

@@ -20,10 +20,9 @@ SimpleTest.waitForExplicitFinish();
 // nesting.
 function clearNestingLevel() {
   return new Promise(resolve => {
-    window.addEventListener('message', function onMessage() {
-      window.removeEventListener('message', onMessage);
+    window.addEventListener('message', () => {
       resolve();
-    });
+    }, {once: true});
     postMessage('done', '*');
   });
 }

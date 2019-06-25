@@ -52,23 +52,23 @@ function testSetFocus(aEventType, aCallback)
 
     var movingFocus = false;
     button.addEventListener(aEventType,
-                            function (aEvent) {
+                            function (event) {
                               movingFocus = true;
                               input.focus();
-                              aEvent.preventDefault();
+                              event.preventDefault();
                               button.removeEventListener(aEventType, arguments.callee, true);
                             }, true);
 
     synthesizeMouseAtCenter(button, {});
 
-    window.addEventListener("message", function (aEvent) {
+    window.addEventListener("message", function (event) {
       if (movingFocus) {
-        is(aEvent.data, "input-value: blur",
+        is(event.data, "input-value: blur",
            description + "<input> in the iframe should get blur");
         is(input.value, "focus",
            description + "<input> in the parent should get focus");
       } else {
-        is(aEvent.data, "input-value: focus",
+        is(event.data, "input-value: focus",
            description + "<input> in the iframe should keep having focus");
       }
 

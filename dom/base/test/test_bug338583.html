@@ -58,14 +58,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       doTest5, doTest5_b, doTest5_c, doTest5_e, doTest6, doTest7
     ];
 
-    for (var test_id=0; test_id < all_tests.length; ++test_id) {
+    for (let test_id=0; test_id < all_tests.length; ++test_id) {
       gTestsHaveFinished[test_id] = false;
       var fn = all_tests[test_id];
       fn(test_id);
     }
 
     setTimeout(function() {
-      for (var test_id=0; test_id < all_tests.length; ++test_id) {
+      for (let test_id=0; test_id < all_tests.length; ++test_id) {
         if (!gTestsHaveFinished[test_id]) {
           ok(false, "Test " + test_id + " took too long");
           setTestHasFinished(test_id);
@@ -181,7 +181,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest1_f(test_id) {
     var called_on_error = false;
-  
+
     gEventSourceObj1_f = new EventSource("file_bug869432.eventsource");
     gEventSourceObj1_f.onopen = function(e) {
       ok(false, "Test 1.f failed: onopen was called");
@@ -429,8 +429,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 //   b) invalid access-control xsite request
 //   c) valid access-control xsite request on a restricted page with credentials
 //   d) valid access-control xsite request on a restricted page without credentials
-//   e) valid access-control xsite request on a restricted page when the parameter withCredentials is a getter 
-//   f) valid access-control xsite request on a restricted page when the parameter withCredentials is missing 
+//   e) valid access-control xsite request on a restricted page when the parameter withCredentials is a getter
+//   f) valid access-control xsite request on a restricted page when the parameter withCredentials is missing
 
   function doTest5(test_id)
   {
@@ -498,17 +498,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     xhr.send();
     xhr.onloadend = function() {
       ok(xhr.status == 200, "Failed to set credentials in test 5.d");
-  
+
       gEventSourceObj5_d = new EventSource("https://example.com/tests/dom/base/test/file_restrictedEventSource.sjs?test=user2_evtsrc");
       ok(!gEventSourceObj5_d.withCredentials, "Wrong withCredentials in test 5.d");
-  
+
       gEventSourceObj5_d.onmessage = function(e) {
         ok(e.origin == "https://example.com", "Wrong Origin in test 5.d");
         fn_onmessage(e);
       };
       gEventSourceObj5_d.hits = [];
       gEventSourceObj5_d.hits['fn_onmessage'] = 0;
-  
+
       setTimeout(function() {
         ok(gEventSourceObj5_d.hits['fn_onmessage'] == 0, "Test 5.d failed");
         gEventSourceObj5_d.close();
@@ -605,10 +605,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     {
       e.target.msg_received.push(e.data);
     }
-    
+
     setTimeout(function() {
       gEventSourceObj7.close();
-      
+
       ok(gEventSourceObj7.msg_received[0] == "" &&
          gEventSourceObj7.msg_received[1] == "delayed1" &&
          gEventSourceObj7.msg_received[2] == "delayed2", "Test 7 failed");
@@ -663,4 +663,3 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   <span id=waitSpan>Wait please...</span>
 </body>
 </html>
-
