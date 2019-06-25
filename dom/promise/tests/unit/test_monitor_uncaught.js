@@ -84,9 +84,11 @@ add_task(async function test_observe_uncaught() {
   };
 
   let resolveLater = function(delay = 20) {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     return new Promise((resolve, reject) => setTimeout(resolve, delay));
   };
   let rejectLater = function(delay = 20) {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     return new Promise((resolve, reject) => setTimeout(reject, delay));
   };
   let makeSamples = function* () {
@@ -119,6 +121,8 @@ add_task(async function test_observe_uncaught() {
 
     // Reject a promise now, consume it later.
     let p = Promise.reject("Reject now, consume later");
+
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(() => p.catch(() => {
       info("Consumed promise");
     }), 200);
@@ -261,6 +265,7 @@ add_task(async function test_uninstall_observer() {
   let wait = new Observer();
   Promise.reject("I am another uncaught rejection.");
   await wait.blocker;
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 100));
   // Normally, `deactivate` should not be notified of the uncaught rejection.
   wait.active = false;

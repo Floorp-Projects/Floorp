@@ -35,6 +35,7 @@ Debugger.prototype.onNewPromise.
   dbg.onNewPromise = function(wp) { wrappedPromise = wp; };
 
   var promise = new Promise(function() {});
+  // eslint-disable-next-line no-debugger
   debugger;
   ok(wrappedPromise);
   is(wrappedPromise.unsafeDereference(), promise);
