@@ -201,7 +201,7 @@ LoginManagerPromptFactory.prototype = {
               );
             } else {
               Cu.reportError(
-                "LoginManagerPrompter: " + "_doAsyncPrompt:run: " + e + "\n"
+                "LoginManagerPrompter: _doAsyncPrompt:run: " + e + "\n"
               );
             }
           }
@@ -716,7 +716,7 @@ LoginManagerPrompter.prototype = {
       // Ignore any errors and display the prompt anyway.
       epicfail = true;
       Cu.reportError(
-        "LoginManagerPrompter: " + "Epic fail in promptAuth: " + e + "\n"
+        "LoginManagerPrompter: Epic fail in promptAuth: " + e + "\n"
       );
     }
 
@@ -835,9 +835,7 @@ LoginManagerPrompter.prototype = {
         this._updateLogin(selectedLogin);
       }
     } catch (e) {
-      Cu.reportError(
-        "LoginManagerPrompter: " + "Fail2 in promptAuth: " + e + "\n"
-      );
+      Cu.reportError("LoginManagerPrompter: Fail2 in promptAuth: " + e + "\n");
     }
 
     return ok;

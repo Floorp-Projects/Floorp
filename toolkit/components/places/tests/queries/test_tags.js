@@ -16,9 +16,7 @@ add_task(async function tags_getter_setter() {
   var [query] = makeQuery();
   Assert.equal(query.tags.length, 0);
 
-  info(
-    "Setting tags to an empty array, tags getter should return " + "empty array"
-  );
+  info("Setting tags to an empty array, tags getter should return empty array");
   [query] = makeQuery([]);
   Assert.equal(query.tags.length, 0);
 
@@ -53,9 +51,7 @@ add_task(async function invalid_setter_calls() {
 
   try {
     makeQuery([undefined]);
-    do_throw(
-      "Passing one-element array with undefined to SetTags " + "should fail"
-    );
+    do_throw("Passing one-element array with undefined to SetTags should fail");
   } catch (exc) {}
 
   try {
@@ -65,9 +61,7 @@ add_task(async function invalid_setter_calls() {
 
   try {
     makeQuery(["foo", undefined, "bar"]);
-    do_throw(
-      "Passing mixture of tags and undefined to SetTags " + "should fail"
-    );
+    do_throw("Passing mixture of tags and undefined to SetTags should fail");
   } catch (exc) {}
 
   try {
@@ -289,9 +283,7 @@ add_task(async function duplicate_tags() {
   await addBookmark(TEST_URI);
   PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
-  info(
-    "Manually create tag folder with same name as tag and insert " + "bookmark"
-  );
+  info("Manually create tag folder with same name as tag and insert bookmark");
   let dupTag = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,

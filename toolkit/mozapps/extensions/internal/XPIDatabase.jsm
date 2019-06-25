@@ -2433,7 +2433,7 @@ this.XPIDatabase = {
     }
     if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
       throw new Error(
-        "Cannot change userDisabled and softDisabled at the " + "same time"
+        "Cannot change userDisabled and softDisabled at the same time"
       );
     }
 

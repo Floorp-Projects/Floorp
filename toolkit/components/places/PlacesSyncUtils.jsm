@@ -528,7 +528,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
         // node reassigned. Take the server's sync ID and reset all items to
         // "UNKNOWN" so that we can merge.
         BookmarkSyncLog.info(
-          "Bookmarks sync ID changed; resetting sync " + "statuses",
+          "Bookmarks sync ID changed; resetting sync statuses",
           { existingSyncId, newSyncId }
         );
         await db.executeTransaction(async function() {
@@ -1051,7 +1051,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
           let wasRemoved = await deleteSyncedAtom(bookmarkItem);
           if (wasRemoved) {
             BookmarkSyncLog.trace(
-              `remove: Removed item ${guid} with ` + `kind ${kind}`
+              `remove: Removed item ${guid} with kind ${kind}`
             );
           }
         }
@@ -2199,14 +2199,14 @@ function addRowToChangeRecords(row, changeRecords) {
     if (!existingRecord.tombstone && isTombstone) {
       // Don't replace undeleted items with tombstones...
       BookmarkSyncLog.warn(
-        "addRowToChangeRecords: Ignoring tombstone for " + "undeleted item",
+        "addRowToChangeRecords: Ignoring tombstone for undeleted item",
         recordId
       );
       return;
     }
     // ...But replace undeleted tombstones with items.
     BookmarkSyncLog.warn(
-      "addRowToChangeRecords: Replacing tombstone for " + "undeleted item",
+      "addRowToChangeRecords: Replacing tombstone for undeleted item",
       recordId
     );
   }

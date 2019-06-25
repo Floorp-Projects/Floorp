@@ -696,7 +696,7 @@ function LOG(string) {
         }).catch(error => {
           dump("*** AUS:SVC Unable to open messages file: " + error + "\n");
           Services.console.logStringMessage(
-            "AUS:SVC Unable to open messages " + "file: " + error
+            "AUS:SVC Unable to open messages file: " + error
           );
           // Reject on failure so that writes are not attempted without a file
           // handle.
@@ -715,7 +715,7 @@ function LOG(string) {
         } catch (e) {
           dump("*** AUS:SVC Unable to write to messages file: " + e + "\n");
           Services.console.logStringMessage(
-            "AUS:SVC Unable to write to " + "messages file: " + e
+            "AUS:SVC Unable to write to messages file: " + e
           );
         }
         return logfile;
@@ -2459,7 +2459,7 @@ UpdateService.prototype = {
       } else {
         let uri = "chrome://mozapps/content/update/updateElevation.xul";
         let features =
-          "chrome,centerscreen,resizable=no,titlebar,toolbar=no," + "dialog=no";
+          "chrome,centerscreen,resizable=no,titlebar,toolbar=no,dialog=no";
         Services.ww.openWindow(null, uri, "Update:Elevation", features, null);
       }
     } else {
@@ -4021,6 +4021,7 @@ Checker.prototype = {
       if (sslStatus && sslStatus.succeededCertChain) {
         let rootCert = null;
         // The root cert is the last cert in the chain.
+        // eslint-disable-next-line no-empty
         for (rootCert of sslStatus.succeededCertChain.getEnumerator()) {
         }
         if (rootCert) {

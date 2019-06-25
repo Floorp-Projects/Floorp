@@ -109,7 +109,7 @@ function test() {
 function testAMessage(aMessage) {
   ok(
     aMessage.errorMessage.indexOf(
-      "DEPRECATION WARNING: " + "this method is deprecated."
+      "DEPRECATION WARNING: this method is deprecated."
     ) === 0,
     "Deprecation is correctly logged."
   );

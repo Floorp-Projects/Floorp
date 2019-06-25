@@ -365,8 +365,7 @@ this.Download.prototype = {
     if (this.error && this.error.becauseBlockedByReputationCheck) {
       return Promise.reject(
         new DownloadError({
-          message:
-            "Cannot start after being blocked " + "by a reputation check.",
+          message: "Cannot start after being blocked by a reputation check.",
         })
       );
     }

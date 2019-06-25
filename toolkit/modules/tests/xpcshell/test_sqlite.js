@@ -1156,7 +1156,7 @@ add_task(async function test_error_message_on_unknown_finalization() {
       let messageText = msg.message;
       if (
         messageText.includes(
-          "Error: Attempt to finalize unknown " + "Sqlite connection: foo"
+          "Error: Attempt to finalize unknown Sqlite connection: foo"
         )
       ) {
         deferred.resolve();

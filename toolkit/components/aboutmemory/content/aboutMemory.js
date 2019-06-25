@@ -340,7 +340,7 @@ window.onload = function() {
   const CuDesc = "Measure current memory reports and show.";
   const LdDesc = "Load memory reports from file and show.";
   const DfDesc =
-    "Load memory report data from two files and show the " + "difference.";
+    "Load memory report data from two files and show the difference.";
 
   const SvDesc = "Save memory reports to file.";
 

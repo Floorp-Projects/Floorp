@@ -436,6 +436,7 @@ var SessionHistoryInternal = {
       // start might already be in use)
       var id = idMap[entry.ID] || 0;
       if (!id) {
+        // eslint-disable-next-line no-empty
         for (id = Date.now(); id in idMap.used; id++) {}
         idMap[entry.ID] = id;
         idMap.used[id] = true;
