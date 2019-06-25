@@ -56,8 +56,11 @@ class RTCCertificate final : public nsISupports, public nsWrapperCache {
   const UniqueCERTCertificate& Certificate() const { return mCertificate; }
 
   // Structured clone methods
-  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
-  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
+  static already_AddRefed<RTCCertificate> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
  private:
   ~RTCCertificate() {}
