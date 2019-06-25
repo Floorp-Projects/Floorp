@@ -157,7 +157,24 @@ class GenericScrollEvent : public Runnable {
 
 DEFINE_SCROLL_EVENT(ScrollEvent);
 DEFINE_SCROLL_EVENT(ScrollEndEvent);
-DEFINE_SCROLL_EVENT(ScrollPortEvent);
+
+class ScrollFrameHelper::ScrollPortEvent final : public Runnable {
+ public:
+  explicit ScrollPortEvent(ScrollFrameHelper* aHelper) :
+      Runnable("ScrollFrameHelper::ScrollPortEvent"), mHelper(aHelper) {}
+
+  NS_IMETHODIMP Run() final {
+    if (mHelper) {
+      mHelper->FireScrollPortEvent();
+    }
+    return NS_OK;
+  }
+
+  void Revoke() { mHelper = nullptr; }
+
+ private:
+  ScrollFrameHelper* mHelper;
+};
 
 class ScrollFrameHelper::ScrolledAreaEvent : public Runnable {
  public:
@@ -5343,7 +5360,11 @@ void ScrollFrameHelper::PostOverflowEvent() {
     return;
   }
 
-  mScrollPortEvent = new ScrollPortEvent(this);
+  RefPtr<ScrollPortEvent> event = new ScrollPortEvent(this);
+  if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(event.get())))) {
+    return;
+  }
+  mScrollPortEvent = event.forget();
 }
 
 nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
