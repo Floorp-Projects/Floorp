@@ -10,6 +10,11 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIObserver;
 
+/**
+ * Interface for synchronous script loads from local file: or jar: sources.
+ * For asynchronous script loads, ChromeUtils.compileScript() should be used
+ * instead.
+ */
 [scriptable, builtinclass, uuid(19533e7b-f321-4ef1-bc59-6e812dc2a733)]
 interface mozIJSSubScriptLoader : nsISupports
 {
