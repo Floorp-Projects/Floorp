@@ -47,11 +47,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                  onclick="gURLBar.handleCommand(event);"
                  tooltiptext="&goEndCap.tooltip;"
                  xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
-      <xul:dropmarker anonid="historydropmarker"
-                      class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
-                      tooltiptext="&urlbar.openHistoryPopup.tooltip;"
-                      allowevents="true"
-                      xbl:inherits="open,parentfocused=focused,usertyping"/>
+      <xul:image anonid="historydropmarker"
+                 class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
+                 tooltiptext="&urlbar.openHistoryPopup.tooltip;"
+                 allowevents="true"
+                 xbl:inherits="open,parentfocused=focused,usertyping"/>
       <children includes="hbox"/>
     </content>
   </binding>
@@ -87,11 +87,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                  onclick="gURLBar.handleCommand(event);"
                  tooltiptext="&goEndCap.tooltip;"
                  xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
-      <xul:dropmarker anonid="historydropmarker"
-                      class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
-                      tooltiptext="&urlbar.openHistoryPopup.tooltip;"
-                      allowevents="true"
-                      xbl:inherits="open,parentfocused=focused,usertyping"/>
+      <xul:image anonid="historydropmarker"
+                 class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
+                 tooltiptext="&urlbar.openHistoryPopup.tooltip;"
+                 allowevents="true"
+                 xbl:inherits="open,parentfocused=focused,usertyping"/>
       <children includes="hbox"/>
     </content>
 
