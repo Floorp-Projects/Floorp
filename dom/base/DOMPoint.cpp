@@ -39,7 +39,7 @@ JSObject* DOMPointReadOnly::WrapObject(JSContext* aCx,
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
 bool DOMPointReadOnly::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
 #define WriteDouble(d)                                                       \
   JS_WriteUint32Pair(aWriter, (BitwiseCast<uint64_t>(d) >> 32) & 0xffffffff, \
                      BitwiseCast<uint64_t>(d) & 0xffffffff)
@@ -48,6 +48,18 @@ bool DOMPointReadOnly::WriteStructuredClone(
          WriteDouble(mW);
 
 #undef WriteDouble
+}
+
+// static
+already_AddRefed<DOMPointReadOnly> DOMPointReadOnly::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  RefPtr<DOMPointReadOnly> retval = new DOMPointReadOnly(aGlobal);
+  if (!retval->ReadStructuredClone(aReader)) {
+    return nullptr;
+  }
+  return retval.forget();
+  ;
 }
 
 bool DOMPointReadOnly::ReadStructuredClone(JSStructuredCloneReader* aReader) {
@@ -66,7 +78,6 @@ bool DOMPointReadOnly::ReadStructuredClone(JSStructuredCloneReader* aReader) {
   ReadDouble(&mW);
 
   return true;
-
 #undef ReadDouble
 }
 
@@ -88,4 +99,16 @@ already_AddRefed<DOMPoint> DOMPoint::Constructor(const GlobalObject& aGlobal,
 JSObject* DOMPoint::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
   return DOMPoint_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+// static
+already_AddRefed<DOMPoint> DOMPoint::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  RefPtr<DOMPoint> retval = new DOMPoint(aGlobal);
+  if (!retval->ReadStructuredClone(aReader)) {
+    return nullptr;
+  }
+  return retval.forget();
+  ;
 }

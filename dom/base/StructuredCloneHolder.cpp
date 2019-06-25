@@ -16,8 +16,6 @@
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/DOMMatrix.h"
 #include "mozilla/dom/DOMMatrixBinding.h"
-#include "mozilla/dom/DOMPoint.h"
-#include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/File.h"
@@ -128,7 +126,7 @@ void StructuredCloneCallbacksError(JSContext* aCx, uint32_t aErrorId) {
 void AssertTagValues() {
   static_assert(SCTAG_DOM_IMAGEDATA == 0xffff8007 &&
                     SCTAG_DOM_DOMPOINT == 0xffff8008 &&
-                    SCTAG_DOM_DOMPOINT_READONLY == 0xffff8009 &&
+                    SCTAG_DOM_DOMPOINTREADONLY == 0xffff8009 &&
                     SCTAG_DOM_WEBCRYPTO_KEY == 0xffff800a &&
                     SCTAG_DOM_NULL_PRINCIPAL == 0xffff800b &&
                     SCTAG_DOM_SYSTEM_PRINCIPAL == 0xffff800c &&
@@ -358,7 +356,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
   }
 
   if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS ||
-      aTag == SCTAG_DOM_DOMPOINT || aTag == SCTAG_DOM_DOMPOINT_READONLY ||
       aTag == SCTAG_DOM_DOMRECT || aTag == SCTAG_DOM_DOMRECT_READONLY ||
       aTag == SCTAG_DOM_DOMMATRIX || aTag == SCTAG_DOM_DOMMATRIX_READONLY) {
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
@@ -377,20 +374,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
           result = nullptr;
         } else {
           result = usp->WrapObject(aCx, nullptr);
-        }
-      } else if (aTag == SCTAG_DOM_DOMPOINT) {
-        RefPtr<DOMPoint> domPoint = new DOMPoint(global);
-        if (!domPoint->ReadStructuredClone(aReader)) {
-          result = nullptr;
-        } else {
-          result = domPoint->WrapObject(aCx, nullptr);
-        }
-      } else if (aTag == SCTAG_DOM_DOMPOINT_READONLY) {
-        RefPtr<DOMPointReadOnly> domPoint = new DOMPointReadOnly(global);
-        if (!domPoint->ReadStructuredClone(aReader)) {
-          result = nullptr;
-        } else {
-          result = domPoint->WrapObject(aCx, nullptr);
         }
       } else if (aTag == SCTAG_DOM_DOMRECT) {
         RefPtr<DOMRect> domRect = new DOMRect(global);
@@ -532,26 +515,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
     }
   }
 #endif
-
-  // Handle DOMPoint cloning
-  // Should be done before DOMPointeReadOnly check
-  // because every DOMPoint is also a DOMPointReadOnly
-  {
-    DOMPoint* domPoint = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMPoint, &obj, domPoint))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMPOINT, 0) &&
-             domPoint->WriteStructuredClone(aWriter);
-    }
-  }
-
-  // Handle DOMPointReadOnly cloning
-  {
-    DOMPointReadOnly* domPoint = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(DOMPointReadOnly, &obj, domPoint))) {
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DOMPOINT_READONLY, 0) &&
-             domPoint->WriteStructuredClone(aWriter);
-    }
-  }
 
   // Handle DOMRect cloning
   // Should be done before DOMRecteReadOnly check
