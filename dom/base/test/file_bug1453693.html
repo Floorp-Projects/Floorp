@@ -831,6 +831,40 @@
         document.body.firstChild.focus();
       }
 
+      // Bug 1558393
+      function testBackwardsTabbingWithSlotsWithoutFocusableContent() {
+        let first = document.createElement("div");
+        first.tabIndex = 0;
+        let host = document.createElement("div");
+        host.tabIndex = 0;
+        let second = document.createElement("div");
+        second.tabIndex = 0;
+        host.appendChild(document.createTextNode("foo"));
+        host.attachShadow({ mode: "open" }).innerHTML = `<slot></slot>`;
+
+        document.body.appendChild(first);
+        document.body.appendChild(host);
+        document.body.appendChild(second);
+        document.body.offsetLeft;
+
+        first.focus();
+        opener.is(document.activeElement, first, "First light div should have focus");
+        synthesizeKey("KEY_Tab");
+        opener.is(document.activeElement, host, "Host should be focused");
+        synthesizeKey("KEY_Tab");
+        opener.is(document.activeElement, second, "Second light div should be focused");
+
+        // Now backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, host, "Focus should return to host");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, first, "Focus should return to first light div");
+
+        second.remove();
+        host.remove();
+        first.remove();
+      }
+
       function runTest() {
 
         testTabbingThroughShadowDOMWithTabIndexes();
@@ -845,6 +879,7 @@
         testTabbingThroughFocusableSlotInLightDOM();
         testTabbingThroughScrollableShadowDOM();
         testDeeplyNestedShadowTree();
+        testBackwardsTabbingWithSlotsWithoutFocusableContent();
 
         opener.didRunTests();
         window.close();
