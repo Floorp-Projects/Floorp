@@ -3364,7 +3364,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
       // that is not owned by document in frame traversal.
       nsIContent* currentContent = frame->GetContent();
       nsIContent* oldTopLevelScopeOwner = currentTopLevelScopeOwner;
-      if (oldTopLevelScopeOwner != currentContent) {
+      if (!aForward || oldTopLevelScopeOwner != currentContent) {
         currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
       } else {
         currentTopLevelScopeOwner = currentContent;
