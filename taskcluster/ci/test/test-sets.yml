@@ -320,7 +320,7 @@ marionette-media-tests:
     - mochitest-a11y
 #    - mochitest-browser-chrome
 #    - mochitest-chrome
-#    - mochitest-devtools-chrome
+    - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
     - mochitest-gpu
 #    - mochitest-media
@@ -348,7 +348,6 @@ macosx64-tests:
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-devtools-chrome
     - mochitest-media
     - mochitest-webgl2-core
     # - mochitest-webgl2-ext test timeouts
