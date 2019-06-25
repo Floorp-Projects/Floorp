@@ -542,130 +542,44 @@ impl<'a> DisplayListFlattener<'a> {
         let mid_index = preceding_prims.len();
         let post_index = mid_index + remaining_prims.len();
 
-        #[derive(Debug, Copy, Clone)]
-        enum ClipLocation {
-            Pre,        // The prims preceding the picture cache content slice.
-            Mid,        // Prims in the content / cache slice.
-            Post,       // Prims trailing the cache slice.
-        }
-
         // Step through each clip chain pair, and see if it crosses a slice boundary.
         for clip_chain_instance in clip_chain_instances {
-            // Get the location of the push / pop for this clip chain.
-            let push_location = if clip_chain_instance.push_index < mid_index {
-                ClipLocation::Pre
-            } else if clip_chain_instance.push_index < post_index {
-                ClipLocation::Mid
-            } else {
-                ClipLocation::Post
-            };
+            if clip_chain_instance.push_index < mid_index && clip_chain_instance.pop_index >= mid_index {
+                preceding_prims.push(
+                    create_clip_prim_instance(
+                        clip_chain_instance.spatial_node_index,
+                        clip_chain_instance.clip_chain_id,
+                        PrimitiveInstanceKind::PopClipChain,
+                    )
+                );
 
-            let pop_location = if clip_chain_instance.pop_index < mid_index {
-                ClipLocation::Pre
-            } else if clip_chain_instance.pop_index < post_index {
-                ClipLocation::Mid
-            } else {
-                ClipLocation::Post
-            };
+                remaining_prims.insert(
+                    0,
+                    create_clip_prim_instance(
+                        clip_chain_instance.spatial_node_index,
+                        clip_chain_instance.clip_chain_id,
+                        PrimitiveInstanceKind::PushClipChain,
+                    )
+                );
+            }
 
-            // Apply fixups for any clip chain instances as required. Although this
-            // code can result in memcpys, it's unlikely to be a problem. The case
-            // itself where this occurs is rare, and the prim lists are typically
-            // quite short here. Nonetheless, we'll want to improve this as part
-            // of the changes to clip chain instances + picture cache slice splitting.
-            match (push_location, pop_location) {
-                (ClipLocation::Pre, ClipLocation::Pre) |
-                (ClipLocation::Mid, ClipLocation::Mid) |
-                (ClipLocation::Post, ClipLocation::Post) => {
-                    // If the clip exists within a slice, no fixup needed. This is the
-                    // common case for clip chain instances at the top level.
-                    continue;
-                }
-                (ClipLocation::Pre, ClipLocation::Post) => {
-                    // Close off the pre list, enclose the cache slice and
-                    // open a clip chain for the trailing prims.
+            if clip_chain_instance.push_index < post_index && clip_chain_instance.pop_index >= post_index {
+                remaining_prims.push(
+                    create_clip_prim_instance(
+                        clip_chain_instance.spatial_node_index,
+                        clip_chain_instance.clip_chain_id,
+                        PrimitiveInstanceKind::PopClipChain,
+                    )
+                );
 
-                    preceding_prims.push(
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PopClipChain,
-                        )
-                    );
-
-                    remaining_prims.insert(
-                        0,
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PushClipChain,
-                        )
-                    );
-
-                    remaining_prims.push(
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PopClipChain,
-                        )
-                    );
-
-                    trailing_prims.insert(
-                        0,
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PushClipChain,
-                        )
-                    );
-                }
-                (ClipLocation::Pre, ClipLocation::Mid) => {
-                    // Close off the preceding prims, and open a clip for the
-                    // content cache slice.
-
-                    preceding_prims.push(
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PopClipChain,
-                        )
-                    );
-
-                    remaining_prims.insert(
-                        0,
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PushClipChain,
-                        )
-                    );
-                }
-                (ClipLocation::Mid, ClipLocation::Post) => {
-                    // Close off the cache content slice, and open up a clip for
-                    // the trailing prims.
-
-                    remaining_prims.push(
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PopClipChain,
-                        )
-                    );
-
-                    trailing_prims.insert(
-                        0,
-                        create_clip_prim_instance(
-                            clip_chain_instance.spatial_node_index,
-                            clip_chain_instance.clip_chain_id,
-                            PrimitiveInstanceKind::PushClipChain,
-                        )
-                    );
-                }
-                (ClipLocation::Mid, ClipLocation::Pre) |
-                (ClipLocation::Post, ClipLocation::Pre) |
-                (ClipLocation::Post, ClipLocation::Mid) => {
-                    unreachable!();
-                }
+                trailing_prims.insert(
+                    0,
+                    create_clip_prim_instance(
+                        clip_chain_instance.spatial_node_index,
+                        clip_chain_instance.clip_chain_id,
+                        PrimitiveInstanceKind::PushClipChain,
+                    )
+                );
             }
         }
 
