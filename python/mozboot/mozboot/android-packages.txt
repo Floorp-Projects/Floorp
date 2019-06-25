@@ -2,3 +2,4 @@ platform-tools
 build-tools;27.0.3
 platforms;android-28
 emulator
+docs
