@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=444546
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=444546">Mozilla Bug 444546</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -60,9 +60,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=444546
     evt.target.log.textContent = diff + "ms";
     evt.target.prevTime = time;
     if (evt.lengthComputable) {
-      var loaded = (evt.loaded / evt.total);
-      if (loaded < 1) {
-        evt.target.log.style.width = (loaded * 400) + "px";
+      var fractionLoaded = (evt.loaded / evt.total);
+      if (fractionLoaded < 1) {
+        evt.target.log.style.width = (fractionLoaded * 400) + "px";
       }
     }
   }

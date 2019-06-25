@@ -53,18 +53,18 @@ SimpleTest.requestLongerTimeout(4);
  * This is the main test routine -- serialized by use of a generator.
  * It performs all tests in sequence using four iframes.
  */
-function startTests(testName, testIframeUrls) {
+function startTests(testName, iframeUrls) {
   testsGenerator[testName] = (function*() {
     var testframe = document.getElementById(testName);
     testframe.onload = function() {
       advance(testName);
     }
 
-    // load the test frame from testIframeUrls[url]
+    // load the test frame from iframeUrls[url]
     // it will call back into this function via postMessage when it finishes
     // loading and continue beyond the yield.
-    for(url in testIframeUrls) {
-      yield testframe.src = testIframeUrls[url];
+    for(url in iframeUrls) {
+      yield testframe.src = iframeUrls[url];
       // run test and check result for loaded test URL
       yield checkExpectedGlobalResults(testName);
     }

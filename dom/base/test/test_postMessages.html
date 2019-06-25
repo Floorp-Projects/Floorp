@@ -403,7 +403,7 @@ function test_workers() {
   w.onmessage = function(e) {
     is(e.data, 'ok', "Worker ready!");
 
-    w.onmessage = function(e) {
+    w.onmessage = function(e1) {
       if (!resolve) {
         ok(false, "Unexpected message!");
         return;
@@ -411,7 +411,7 @@ function test_workers() {
 
       let tmp = resolve;
       resolve = null;
-      tmp({ data: e.data, ports: e.ports });
+      tmp({ data: e1.data, ports: e1.ports });
     }
 
     runTests({
@@ -423,7 +423,7 @@ function test_workers() {
           resolve = r;
           try {
             w.postMessage(what, ports);
-          } catch(e) {
+          } catch(ex) {
             resolve = null;
             rr();
           }
@@ -493,7 +493,7 @@ function test_broadcastChannel_inWorkers() {
   w.onmessage = function(e) {
     is(e.data, 'ok', "Worker ready!");
 
-    w.onmessage = function(e) {
+    w.onmessage = function(e1) {
       if (!resolve) {
         ok(false, "Unexpected message!");
         return;
@@ -501,7 +501,7 @@ function test_broadcastChannel_inWorkers() {
 
       let tmp = resolve;
       resolve = null;
-      tmp({ data: e.data, ports: e.ports });
+      tmp({ data: e1.data, ports: e1.ports });
     }
 
     runTests({
@@ -581,7 +581,7 @@ function test_messagePort_inWorkers() {
   w.onmessage = function(e) {
     is(e.data, 'ok', "Worker ready!");
 
-    w.onmessage = function(e) {
+    w.onmessage = function(e1) {
       if (!resolve) {
         ok(false, "Unexpected message!");
         return;
@@ -589,7 +589,7 @@ function test_messagePort_inWorkers() {
 
       let tmp = resolve;
       resolve = null;
-      tmp({ data: e.data, ports: e.ports });
+      tmp({ data: e1.data, ports: e1.ports });
     }
 
     runTests({
@@ -601,7 +601,7 @@ function test_messagePort_inWorkers() {
           resolve = r;
           try {
             mc.port1.postMessage(what, ports);
-          } catch(e) {
+          } catch(ex) {
             resolve = null;
             rr();
           }

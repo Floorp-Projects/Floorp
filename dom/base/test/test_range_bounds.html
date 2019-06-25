@@ -90,8 +90,8 @@ function runATest(obj) {
         //convert RectList to a real array
         obj.rectList=Array.prototype.slice.call(obj.rectList, 0);
       }
-      obj.rectList.forEach(function(rect,i) {
-        is(_getRect(rectlist[i]),_getRect(rect),
+      obj.rectList.forEach(function(r,i) {
+        is(_getRect(rectlist[i]),_getRect(r),
            annotateName(testname+": item at "+i));
       });
     }
