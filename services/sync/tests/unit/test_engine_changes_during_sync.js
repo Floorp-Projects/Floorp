@@ -145,7 +145,9 @@ add_task(async function test_passwords_change_during_sync() {
 add_task(async function test_prefs_change_during_sync() {
   _("Ensure that we don't bump the score when applying prefs.");
 
-  const TEST_PREF = "services.sync.prefs.sync.test.duringSync";
+  const TEST_PREF = "test.duringSync";
+  // create a "control pref" for the pref we sync.
+  Services.prefs.setBoolPref("services.sync.prefs.sync.test.duringSync", true);
 
   enableValidationPrefs();
 
