@@ -52,7 +52,10 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         pass
 
     def upgrade_mercurial(self, current):
-        self.pip_install('mercurial')
+        # Mercurial upstream sometimes doesn't upload wheels, and building
+        # from source requires MS Visual C++ 9.0. So we force pip to install
+        # the last version that comes with wheels.
+        self.pip_install('mercurial', '--only-binary', 'mercurial')
 
     def upgrade_python(self, current):
         pass
