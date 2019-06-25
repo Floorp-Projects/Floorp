@@ -310,14 +310,14 @@ marionette-media-tests:
 # macosx1014-64-tests:
 #    - cppunit
 #    - crashtest
-#    - firefox-ui-functional-local
-#    - firefox-ui-functional-remote
+    # - firefox-ui-functional-local
+    # - firefox-ui-functional-remote
 #    - gtest
 #    - jittest
 #    - jsreftest
-#    - marionette
+    # - marionette
 #    - mochitest
-#    - mochitest-a11y
+    # - mochitest-a11y
 #    - mochitest-browser-chrome
 #    - mochitest-chrome
 #    - mochitest-devtools-chrome
@@ -328,14 +328,14 @@ marionette-media-tests:
 #    - mochitest-webgl1-ext
 #    - mochitest-webgl2-core
 #     - mochitest-webgl2-ext test  # timeouts
-#    - reftest
+    # - reftest
 #    - telemetry-tests-client
-#    - test-verify
-#    - test-verify-gpu
-#    - test-verify-wpt
-#    - web-platform-tests
-#    - web-platform-tests-reftests
-#    - web-platform-tests-wdspec
+    # - test-verify
+    # - test-verify-gpu
+    # - test-verify-wpt
+    - web-platform-tests
+    - web-platform-tests-reftests
+    # - web-platform-tests-wdspec
 #    - xpcshell
 
 # macosx1014-64-qr-tests:
@@ -368,8 +368,6 @@ macosx64-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - web-platform-tests
-    - web-platform-tests-reftests
     - web-platform-tests-wdspec
     - xpcshell
 
