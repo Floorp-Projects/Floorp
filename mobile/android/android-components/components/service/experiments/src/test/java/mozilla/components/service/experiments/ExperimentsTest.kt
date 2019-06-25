@@ -750,7 +750,7 @@ class ExperimentsTest {
 
         resetExperiments(valuesProvider = ValuesProvider())
         experiments.initialize(context, configuration)
-        assertTrue(experiments.getUserBucket(mockContext) == 54)
+        assertEquals(954, experiments.getUserBucket(mockContext))
     }
 
     @Test
@@ -763,14 +763,14 @@ class ExperimentsTest {
         })
         experiments.initialize(context, configuration)
 
-        assertEquals(79, experiments.getUserBucket(context))
+        assertEquals(779, experiments.getUserBucket(context))
 
         resetExperiments(source, storage, object : ValuesProvider() {
             override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
         })
         experiments.initialize(context, configuration)
 
-        assertEquals(55, experiments.getUserBucket(context))
+        assertEquals(355, experiments.getUserBucket(context))
     }
 
     @Test
