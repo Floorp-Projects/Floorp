@@ -357,9 +357,9 @@ void nsSVGForeignObjectFrame::ReflowSVG() {
     InvalidateFrame();
   }
 
-  // TODO: once we support |overflow:visible| on foreignObject, then we will
-  // need to take account of our descendants here.
-  nsRect overflow = nsRect(nsPoint(0, 0), mRect.Size());
+  auto* anonKid = PrincipalChildList().FirstChild();
+  nsRect overflow = anonKid->GetVisualOverflowRect();
+
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
 
