@@ -71,7 +71,7 @@ var gSync = {
   },
 
   _generateNodeGetters() {
-    for (let k of ["Status", "Avatar", "Label", "Container"]) {
+    for (let k of ["Status", "Avatar", "Label"]) {
       let prop = "appMenu" + k;
       let suffix = k.toLowerCase();
       delete this[prop];
@@ -394,7 +394,7 @@ var gSync = {
     const status = state.status;
     // Reset the status bar to its original state.
     this.appMenuLabel.setAttribute("label", defaultLabel);
-    this.appMenuContainer.removeAttribute("fxastatus");
+    this.appMenuStatus.removeAttribute("fxastatus");
     this.appMenuAvatar.style.removeProperty("list-style-image");
     this.appMenuLabel.classList.remove("subviewbutton-nav");
 
@@ -406,21 +406,21 @@ var gSync = {
     if (status == UIState.STATUS_LOGIN_FAILED) {
       let tooltipDescription = this.fxaStrings.formatStringFromName("reconnectDescription", [state.email]);
       let errorLabel = this.appMenuStatus.getAttribute("errorlabel");
-      this.appMenuContainer.setAttribute("fxastatus", "login-failed");
+      this.appMenuStatus.setAttribute("fxastatus", "login-failed");
       this.appMenuLabel.setAttribute("label", errorLabel);
       this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
       let tooltipDescription = this.fxaStrings.formatStringFromName("verifyDescription", [state.email]);
       let unverifiedLabel = this.appMenuStatus.getAttribute("unverifiedlabel");
-      this.appMenuContainer.setAttribute("fxastatus", "unverified");
+      this.appMenuStatus.setAttribute("fxastatus", "unverified");
       this.appMenuLabel.setAttribute("label", unverifiedLabel);
       this.appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     }
 
     // At this point we consider sync to be logged-in.
-    this.appMenuContainer.setAttribute("fxastatus", "signedin");
+    this.appMenuStatus.setAttribute("fxastatus", "signedin");
     this.appMenuLabel.setAttribute("label", state.displayName || state.email);
     this.appMenuLabel.classList.add("subviewbutton-nav");
     this.appMenuStatus.removeAttribute("tooltiptext");
@@ -451,18 +451,18 @@ var gSync = {
   },
 
   onMenuPanelCommand() {
-    switch (this.appMenuContainer.getAttribute("fxastatus")) {
+    switch (this.appMenuStatus.getAttribute("fxastatus")) {
     case "signedin":
       const panel = document.getElementById("appMenu-fxa-status");
       this.emitFxaToolbarTelemetry("toolbar_icon", panel);
       PanelUI.showSubView("PanelUI-fxa", panel);
       break;
+    case "unverified":
+      this.openPrefs("menupanel", "fxaError");
+      PanelUI.hide();
+      break;
     case "error":
-      if (this.appMenuContainer.getAttribute("fxastatus") == "unverified") {
-        this.openPrefs("menupanel", "fxaError");
-      } else {
-        this.openSignInAgainPage("menupanel");
-      }
+      this.openSignInAgainPage("menupanel");
       PanelUI.hide();
       break;
     default:

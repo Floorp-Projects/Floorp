@@ -2248,6 +2248,24 @@ SearchService.prototype = {
     return this.defaultEngine = engine;
   },
 
+  get defaultPrivateEngine() {
+    return this.defaultEngine;
+  },
+
+  set defaultPrivateEngine(engine) {
+    return this.defaultEngine = engine;
+  },
+
+  async getDefaultPrivate() {
+    await this.init(true);
+    return this.defaultEngine;
+  },
+
+  async setDefaultPrivate(engine) {
+    await this.init(true);
+    return this.defaultEngine = engine;
+  },
+
   async getDefaultEngineInfo() {
     let result = {};
 

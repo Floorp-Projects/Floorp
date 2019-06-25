@@ -319,7 +319,7 @@ macosx1014-64-tests:
     - jittest
     - jsreftest
     - marionette
-    # - mochitest
+    - mochitest
     - mochitest-a11y
     # - mochitest-browser-chrome
     # - mochitest-chrome
