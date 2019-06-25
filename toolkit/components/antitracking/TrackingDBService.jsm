@@ -39,8 +39,7 @@ const SQL = {
     "INSERT INTO events (type, count, timestamp) " +
     "VALUES (:type, 1, date(:date));",
 
-  incrementEvent:
-    "UPDATE events " + "SET count = count + 1 " + "WHERE id = :id;",
+  incrementEvent: "UPDATE events SET count = count + 1 WHERE id = :id;",
 
   selectByTypeAndDate:
     "SELECT * FROM events " +

@@ -117,7 +117,7 @@ function terminateFirefox(completion) {
       Assert.equal(
         aTopic,
         "process-finished",
-        "Terminate firefox observer topic should be " + "process-finished"
+        "Terminate firefox observer topic should be process-finished"
       );
 
       if (completion) {
@@ -166,7 +166,7 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
       Assert.equal(
         aTopic,
         "process-finished",
-        "the application process observer topic should be " + "process-finished"
+        "the application process observer topic should be process-finished"
       );
 
       handler(true);

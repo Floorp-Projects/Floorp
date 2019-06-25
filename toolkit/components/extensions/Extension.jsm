@@ -2297,7 +2297,7 @@ class Extension extends ExtensionData {
         Cu.reportError(
           `Error while waiting for extension data migration on shutdown: ${
             this.policy.debugName
-          } - ` + `${err.message}::${err.stack}`
+          } - ${err.message}::${err.stack}`
         );
       }
       this.state = "Shutdown: Storage complete";

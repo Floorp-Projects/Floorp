@@ -149,7 +149,7 @@ AntiTracking.runTest(
 );
 
 AntiTracking.runTest(
-  "Verify that non-sandboxed contexts get the" + " saved permission",
+  "Verify that non-sandboxed contexts get the saved permission",
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */

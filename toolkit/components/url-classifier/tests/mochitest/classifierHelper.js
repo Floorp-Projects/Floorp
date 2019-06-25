@@ -96,7 +96,7 @@ classifierHelper.resetDatabase = function() {
       var testUpdate = "";
       for (var update of classifierHelper._updatesToCleanup) {
         testUpdate +=
-          "n:1000\n" + "i:" + update.db + "\n" + "ad:" + update.addChunk + "\n";
+          "n:1000\ni:" + update.db + "\nad:" + update.addChunk + "\n";
       }
 
       classifierHelper._update(testUpdate, resolve, reject);

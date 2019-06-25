@@ -23,6 +23,7 @@ add_task(async function childCauseHang() {
 
   executeSoon(() => {
     let startTime = Date.now();
+    // eslint-disable-next-line no-empty
     while (Date.now() - startTime < 2000) {}
   });
 

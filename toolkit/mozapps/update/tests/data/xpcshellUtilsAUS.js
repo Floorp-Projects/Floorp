@@ -2309,7 +2309,7 @@ function shouldRunServiceTest() {
     }
 
     logTestInfo(
-      "this test can only run on the buildbot build system at this " + "time"
+      "this test can only run on the buildbot build system at this time"
     );
     return false;
   }
@@ -3279,6 +3279,7 @@ function checkUpdateLogContents(
     // The FindFile results when enumerating the filesystem on Windows is not
     // determistic so the results matching the following need to be fixed.
     let re = new RegExp(
+      // eslint-disable-next-line no-useless-concat
       "([^\n]* 7/7text1[^\n]*)\n" + "([^\n]* 7/7text0[^\n]*)\n",
       "g"
     );
@@ -4677,9 +4678,7 @@ function resetEnvironment() {
   }
 
   if (AppConstants.platform == "win" && gAddedEnvXRENoWindowsCrashDialog) {
-    debugDump(
-      "removing the XRE_NO_WINDOWS_CRASH_DIALOG environment " + "variable"
-    );
+    debugDump("removing the XRE_NO_WINDOWS_CRASH_DIALOG environment variable");
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
 

@@ -184,8 +184,8 @@ add_task(async function test_apiScript_exports_simple_sync_method() {
 
     // Redefine the includes method on the Array prototype, to explicitly verify that the method
     // redefined in the userScript is not used when accessing arrayParam.includes from the API script.
+    // eslint-disable-next-line no-extend-native
     Array.prototype.includes = () => {
-      // eslint-disable-line no-extend-native
       throw new Error("Unexpected prototype leakage");
     };
     const arrayParam = new Array(1, 2, 3); // eslint-disable-line no-array-constructor

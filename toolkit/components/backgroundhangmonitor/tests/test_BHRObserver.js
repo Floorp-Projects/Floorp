@@ -67,11 +67,13 @@ add_task(async function test_BHRObserver() {
 
   executeSoon(() => {
     let startTime = Date.now();
+    // eslint-disable-next-line no-empty
     while (Date.now() - startTime < 10000) {}
   });
 
   executeSoon(() => {
     let startTime = Date.now();
+    // eslint-disable-next-line no-empty
     while (Date.now() - startTime < 1000) {}
   });
 

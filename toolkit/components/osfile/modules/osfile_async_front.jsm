@@ -1534,8 +1534,8 @@ Object.defineProperty(OS.File, "queue", {
 // It would be nicer to go through `Services.appinfo`, but some tests need to be
 // able to replace that field with a custom implementation before it is first
 // called.
-// eslint-disable-next-line mozilla/use-services
 const isContent =
+  // eslint-disable-next-line mozilla/use-services
   Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType ==
   Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 
