@@ -273,7 +273,9 @@ android.libraryVariants.all { variant ->
             file("${System.properties['java.home']}/lib/rt.jar")] + android.bootClasspath
         options.memberLevel = JavadocMemberLevel.PROTECTED
         options.source = 8
-        options.links("https://d.android.com/reference/")
+        // Bug 1555255: don't require a network connection to produce Javadoc.
+        // See https://stackoverflow.com/a/24026735.
+        options.linksOffline("https://d.android.com/reference/", "${android.sdkDirectory}/docs/reference");
 
         options.docTitle = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
         options.header = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
