@@ -80,7 +80,7 @@ var UITour = {
     ["accountStatus", {
       query: (aDocument) => {
         // If the user is logged in, use the avatar element.
-        let fxAFooter = aDocument.getElementById("appMenu-fxa-container");
+        let fxAFooter = aDocument.getElementById("appMenu-fxa-status");
         if (fxAFooter.getAttribute("fxastatus")) {
           return aDocument.getElementById("appMenu-fxa-avatar");
         }
