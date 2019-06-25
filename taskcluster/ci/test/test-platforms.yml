@@ -282,11 +282,11 @@ macosx1014-64-shippable/opt:
         # - macosx1014-64-tests
         - macosx64-talos
         # - desktop-screenshot-capture
-        # - awsy
+        - awsy
         - raptor-chromium
         - raptor-firefox
         - raptor-profiling
-        # - marionette-media-tests
+        - marionette-media-tests
 
 # macosx1014-64/debug:
 #    build-platform: macosx64-shippable/opt
@@ -325,8 +325,6 @@ macosx1010-64-shippable/opt:
     test-sets:
         - macosx64-tests
         - desktop-screenshot-capture
-        - awsy
-        - marionette-media-tests
 
 macosx1010-64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
