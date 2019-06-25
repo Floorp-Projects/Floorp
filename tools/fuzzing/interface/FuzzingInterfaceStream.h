@@ -63,20 +63,20 @@ void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc);
 #endif
 
 #ifdef LIBFUZZER
-#  define MOZ_LIBFUZZER_INTERFACE_STREAM(initFunc, testFunc, moduleName)     \
-    static int LibFuzzerTest##moduleName(const uint8_t* data, size_t size) { \
-      if (size > INT32_MAX) return 0;                                        \
-      nsCOMPtr<nsIInputStream> stream;                                       \
-      nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),            \
-                                          MakeSpan((const char*)data, size), \
-                                          NS_ASSIGNMENT_DEPEND);             \
-      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));                                  \
-      testFunc(stream.forget());                                             \
-      return 0;                                                              \
-    }                                                                        \
-    static void __attribute__((constructor)) LibFuzzerRegister() {           \
-      ::mozilla::FuzzerRegistry::getInstance().registerModule(               \
-          #moduleName, initFunc, LibFuzzerTest##moduleName);                 \
+#  define MOZ_LIBFUZZER_INTERFACE_STREAM(initFunc, testFunc, moduleName)       \
+    static int LibFuzzerTest##moduleName(const uint8_t* data, size_t size) {   \
+      if (size > INT32_MAX) return 0;                                          \
+      nsCOMPtr<nsIInputStream> stream;                                         \
+      nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),              \
+                                          MakeSpan((const char*)data, size),   \
+                                          NS_ASSIGNMENT_DEPEND);               \
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));                                    \
+      testFunc(stream.forget());                                               \
+      return 0;                                                                \
+    }                                                                          \
+    static void __attribute__((constructor)) LibFuzzerRegister##moduleName() { \
+      ::mozilla::FuzzerRegistry::getInstance().registerModule(                 \
+          #moduleName, initFunc, LibFuzzerTest##moduleName);                   \
     }
 #else
 #  define MOZ_LIBFUZZER_INTERFACE_STREAM(initFunc, testFunc, \
