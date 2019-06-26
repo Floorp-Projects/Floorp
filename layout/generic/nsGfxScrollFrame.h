@@ -347,9 +347,13 @@ class ScrollFrameHelper : public nsIReflowCallback {
  private:
   nsIFrame* GetFrameForDir() const;  // helper for Is{Physical,Bidi}LTR to find
                                      // the frame whose directionality we use
-  nsIFrame* GetFrameForScrollSnap() const;  // helper to find the frame whose
-                                            // scroll-snap-type and
-                                            // scroll-padding we use
+  // helper to find the frame that style data for this scrollable frame is
+  // stored.
+  //
+  // NOTE: Use GetFrameForDir() if you want to know `writing-mode` or `dir`
+  // properties. Use GetScrollStylesFromFrame() if you want to know `overflow`
+  // and `overflow-behavior` properties.
+  nsIFrame* GetFrameForStyle() const;
 
   // This is the for the old unspecced scroll snap implementation.
   ScrollSnapInfo ComputeOldScrollSnapInfo() const;
