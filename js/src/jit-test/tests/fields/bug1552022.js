@@ -1,5 +1,3 @@
-// |jit-test| --enable-experimental-fields
-
 load(libdir + "eqArrayHelper.js");
 
 let expected = [];
