@@ -3,7 +3,7 @@ set -x -e -v
 
 # If you update this, make sure to update the minimum version in
 # build/moz.configure/bindgen.configure as well.
-CBINDGEN_REVISION=23a991a5b21e89aa1dcdc70f1371be20c93ece8e # v0.8.7
+CBINDGEN_REVISION=e19526e00b3fe6921b881682147a1fe5d6b64124 # v0.9.0
 TARGET="$1"
 
 case "$(uname -s)" in
