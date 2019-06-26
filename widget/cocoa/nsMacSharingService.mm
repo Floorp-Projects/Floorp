@@ -77,12 +77,11 @@ NSString* const openSharingSubpaneProtocolValue = @"com.apple.share-services";
 @end
 
 static NSString* NSImageToBase64(const NSImage* aImage) {
-  [aImage lockFocus];
-  NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc]
-      initWithFocusedViewRect:NSMakeRect(0, 0, aImage.size.width, aImage.size.height)];
-  [aImage unlockFocus];
+  NSRect rect = NSMakeRect(0, 0, aImage.size.width, aImage.size.height);
+  NSImageRep* bestRep = [aImage bestRepresentationForRect:rect context:nil hints:nil];
+  NSData* tiffData = [NSBitmapImageRep TIFFRepresentationOfImageRepsInArray:@[ bestRep ]];
+  NSBitmapImageRep* bitmapRep = [NSBitmapImageRep imageRepWithData:tiffData];
   NSData* imageData = [bitmapRep representationUsingType:NSPNGFileType properties:@{}];
-  [bitmapRep release];
   NSString* base64Encoded = [imageData base64EncodedStringWithOptions:0];
   return [NSString stringWithFormat:@"data:image/png;base64,%@", base64Encoded];
 }
