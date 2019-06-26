@@ -124,3 +124,4 @@ load 1538727.html
 load empty-samples.webm # Bug 1540580
 test-pref(media.autoplay.block-webaudio,false) load 1545133.html
 load track-with-zero-dimensions.mp4 # Bug 1542539
+load 1547899.html
