@@ -27,7 +27,7 @@ pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPrior
     unsafe {
         let rv = AvRevertMmThreadCharacteristics(rt_priority_handle.task_handle);
         if rv == 0 {
-            error!("Unable to restore the thread priority ({})", GetLastError());
+            warn!("Unable to restore the thread priority ({})", GetLastError());
             return Err(())
         }
     }
@@ -46,7 +46,7 @@ pub fn promote_current_thread_to_real_time_internal(_audio_buffer_frames: u32,
         handle.task_handle = AvSetMmThreadCharacteristicsA("Audio\0".as_ptr() as _, &mut handle.mmcss_task_index);
 
         if handle.task_handle.is_null() {
-            error!("Unable to use mmcss to bump the thread priority ({})", GetLastError());
+            warn!("Unable to use mmcss to bump the thread priority ({})", GetLastError());
             return Err(())
         }
     }

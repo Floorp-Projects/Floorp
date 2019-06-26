@@ -126,7 +126,7 @@ cfg_if! {
                             });
                         }
                         Err(_) => {
-                            error!("Could not promote audio threads to real-time during initialization.");
+                            warn!("Could not promote audio threads to real-time during initialization.");
                         }
                     }
                     let thr = thread::current();

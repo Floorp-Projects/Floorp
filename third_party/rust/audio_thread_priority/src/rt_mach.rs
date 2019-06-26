@@ -63,11 +63,11 @@ pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPrior
                                thread_policy_t,
                                THREAD_TIME_CONSTRAINT_POLICY_COUNT!());
         if rv != KERN_SUCCESS as i32 {
-            error!("thread demotion error: thread_policy_set: RT");
+            warn!("thread demotion error: thread_policy_set: RT");
             return Err(());
         }
 
-        info!("thread {} priority restored.", h.tid);
+        warn!("thread {} priority restored.", h.tid);
     }
 
     return Ok(());
@@ -138,7 +138,7 @@ pub fn promote_current_thread_to_real_time_internal(audio_buffer_frames: u32,
                                (&mut time_constraints) as *mut _ as thread_policy_t,
                                THREAD_TIME_CONSTRAINT_POLICY_COUNT!());
         if rv != KERN_SUCCESS as i32 {
-            error!("thread promotion error: thread_policy_set: time_constraint");
+            warn!("thread promotion error: thread_policy_set: time_constraint");
             return Err(());
         }
 
