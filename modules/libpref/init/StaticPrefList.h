@@ -3589,14 +3589,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "image.animated.decode-on-demand.threshold-kb",
-  ImageAnimatedDecodeOnDemandThresholdKB,
+   image_animated_decode_on_demand_threshold_kb,
   RelaxedAtomicUint32, 20480
 )
 
 VARCACHE_PREF(
   Live,
   "image.animated.decode-on-demand.batch-size",
-  ImageAnimatedDecodeOnDemandBatchSize,
+   image_animated_decode_on_demand_batch_size,
   RelaxedAtomicUint32, 6
 )
 
@@ -3606,28 +3606,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.animated.decode-on-demand.recycle",
-  ImageAnimatedDecodeOnDemandRecycle,
+   image_animated_decode_on_demand_recycle,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "image.animated.resume-from-last-displayed",
-  ImageAnimatedResumeFromLastDisplayed,
+   image_animated_resume_from_last_displayed,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "image.cache.factor2.threshold-surfaces",
-  ImageCacheFactor2ThresholdSurfaces,
+   image_cache_factor2_threshold_surfaces,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Live,
   "image.cache.max-rasterized-svg-threshold-kb",
-  ImageCacheMaxRasterizedSVGThresholdKB,
+   image_cache_max_rasterized_svg_threshold_kb,
   RelaxedAtomicInt32, 90*1024
 )
 
@@ -3635,7 +3635,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.cache.size",
-  ImageCacheSize,
+   image_cache_size,
   int32_t, 5*1024*1024
 )
 
@@ -3644,35 +3644,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.cache.timeweight",
-  ImageCacheTimeWeight,
+   image_cache_timeweight,
   int32_t, 500
 )
 
 VARCACHE_PREF(
   Live,
   "image.decode-immediately.enabled",
-  ImageDecodeImmediatelyEnabled,
+   image_decode_immediately_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "image.downscale-during-decode.enabled",
-  ImageDownscaleDuringDecodeEnabled,
+   image_downscale_during_decode_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "image.infer-src-animation.threshold-ms",
-  ImageInferSrcAnimationThresholdMS,
+   image_infer_src_animation_threshold_ms,
   RelaxedAtomicUint32, 2000
 )
 
 VARCACHE_PREF(
   Live,
   "image.layout_network_priority",
-  ImageLayoutNetworkPriority,
+   image_layout_network_priority,
   RelaxedAtomicBool, true
 )
 
@@ -3680,14 +3680,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.mem.decode_bytes_at_a_time",
-  ImageMemDecodeBytesAtATime,
+   image_mem_decode_bytes_at_a_time,
   uint32_t, 16384
 )
 
 VARCACHE_PREF(
   Live,
   "image.mem.discardable",
-  ImageMemDiscardable,
+   image_mem_discardable,
   RelaxedAtomicBool, false
 )
 
@@ -3696,28 +3696,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.mem.animated.discardable",
-  ImageMemAnimatedDiscardable,
+   image_mem_animated_discardable,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "image.mem.animated.use_heap",
-  ImageMemAnimatedUseHeap,
+   image_mem_animated_use_heap,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "image.mem.debug-reporting",
-  ImageMemDebugReporting,
+   image_mem_debug_reporting,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "image.mem.shared",
-  ImageMemShared,
+   image_mem_shared,
   RelaxedAtomicBool, true
 )
 
@@ -3730,7 +3730,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.discard_factor",
-  ImageMemSurfaceCacheDiscardFactor,
+   image_mem_surfacecache_discard_factor,
   uint32_t, 1
 )
 
@@ -3738,7 +3738,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.max_size_kb",
-  ImageMemSurfaceCacheMaxSizeKB,
+   image_mem_surfacecache_max_size_kb,
   uint32_t, 1024 * 1024
 )
 
@@ -3747,7 +3747,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.min_expiration_ms",
-  ImageMemSurfaceCacheMinExpirationMS,
+   image_mem_surfacecache_min_expiration_ms,
   uint32_t, 60*1000
 )
 
@@ -3758,14 +3758,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.size_factor",
-  ImageMemSurfaceCacheSizeFactor,
+   image_mem_surfacecache_size_factor,
   uint32_t, 4
 )
 
 VARCACHE_PREF(
   Live,
   "image.mem.volatile.min_threshold_kb",
-  ImageMemVolatileMinThresholdKB,
+   image_mem_volatile_min_threshold_kb,
   RelaxedAtomicInt32, -1
 )
 
@@ -3773,7 +3773,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.multithreaded_decoding.idle_timeout",
-  ImageMTDecodingIdleTimeout,
+   image_multithreaded_decoding_idle_timeout,
   int32_t, 600000
 )
 
@@ -3782,14 +3782,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "image.multithreaded_decoding.limit",
-  ImageMTDecodingLimit,
+   image_multithreaded_decoding_limit,
   int32_t, -1
 )
 
 VARCACHE_PREF(
   Live,
   "image.webp.enabled",
-  ImageWebPEnabled,
+   image_webp_enabled,
   RelaxedAtomicBool, false
 )
 
