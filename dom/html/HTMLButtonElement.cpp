@@ -346,10 +346,8 @@ HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
 
 void HTMLButtonElement::DoneCreatingElement() {
   if (!mInhibitStateRestoration) {
-    nsresult rv = GenerateStateKey();
-    if (NS_SUCCEEDED(rv)) {
-      RestoreFormControlState();
-    }
+    GenerateStateKey();
+    RestoreFormControlState();
   }
 }
 

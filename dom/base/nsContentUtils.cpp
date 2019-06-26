@@ -2654,23 +2654,21 @@ static inline bool IsAutocompleteOff(const nsIContent* aContent) {
 }
 
 /*static*/
-nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
-                                          Document* aDocument,
-                                          nsACString& aKey) {
+void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
+                                      nsACString& aKey) {
+  MOZ_ASSERT(aContent);
+
   aKey.Truncate();
 
   uint32_t partID = aDocument ? aDocument->GetPartID() : 0;
 
-  // We must have content if we're not using a special state id
-  NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
-
   // Don't capture state for anonymous content
   if (aContent->IsInAnonymousSubtree()) {
-    return NS_OK;
+    return;
   }
 
   if (IsAutocompleteOff(aContent)) {
-    return NS_OK;
+    return;
   }
 
   RefPtr<Document> doc = aContent->GetUncomposedDoc();
@@ -2709,7 +2707,7 @@ nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
       if (formElement) {
         if (IsAutocompleteOff(formElement)) {
           aKey.Truncate();
-          return NS_OK;
+          return;
         }
 
         KeyAppendString(NS_LITERAL_CSTRING("f"), aKey);
@@ -2793,8 +2791,6 @@ nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
       parent = content->GetParentNode();
     }
   }
-
-  return NS_OK;
 }
 
 // static

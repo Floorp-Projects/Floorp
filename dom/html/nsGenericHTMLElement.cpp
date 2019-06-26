@@ -2484,24 +2484,19 @@ nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
   mStateKey.SetIsVoid(true);
 }
 
-nsresult nsGenericHTMLFormElementWithState::GenerateStateKey() {
+void nsGenericHTMLFormElementWithState::GenerateStateKey() {
   // Keep the key if already computed
   if (!mStateKey.IsVoid()) {
-    return NS_OK;
+    return;
   }
 
   Document* doc = GetUncomposedDoc();
   if (!doc) {
-    return NS_OK;
+    return;
   }
 
   // Generate the state key
-  nsresult rv = nsContentUtils::GenerateStateKey(this, doc, mStateKey);
-
-  if (NS_FAILED(rv)) {
-    mStateKey.SetIsVoid(true);
-    return rv;
-  }
+  nsContentUtils::GenerateStateKey(this, doc, mStateKey);
 
   // If the state key is blank, this is anonymous content or for whatever
   // reason we are not supposed to save/restore state: keep it as such.
@@ -2509,7 +2504,6 @@ nsresult nsGenericHTMLFormElementWithState::GenerateStateKey() {
     // Add something unique to content so layout doesn't muck us up.
     mStateKey += "-C";
   }
-  return NS_OK;
 }
 
 PresState* nsGenericHTMLFormElementWithState::GetPrimaryPresState() {

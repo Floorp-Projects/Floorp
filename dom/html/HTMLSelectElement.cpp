@@ -1113,10 +1113,8 @@ void HTMLSelectElement::DoneAddingChildren(bool aHaveNotified) {
   }
 
   if (!mInhibitStateRestoration) {
-    nsresult rv = GenerateStateKey();
-    if (NS_SUCCEEDED(rv)) {
-      RestoreFormControlState();
-    }
+    GenerateStateKey();
+    RestoreFormControlState();
   }
 
   // Now that we're done, select something (if it's a single select something
