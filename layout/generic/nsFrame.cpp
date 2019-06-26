@@ -721,7 +721,9 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
       AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER);
       if (!GetParent() ||
           // I'd use NS_FRAME_OUT_OF_FLOW, but it's not set yet.
-          disp->IsFloating(this) || disp->IsAbsolutelyPositioned(this)) {
+          disp->IsFloating(this) || disp->IsAbsolutelyPositioned(this) ||
+          GetParent()->IsFlexContainerFrame() ||
+          GetParent()->IsGridContainerFrame()) {
         AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
       }
     }
