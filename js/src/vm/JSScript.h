@@ -1511,9 +1511,64 @@ class alignas(uintptr_t) PrivateScriptData final {
   PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 };
 
-/*
- * Common data that can be shared between many scripts in a single runtime.
- */
+// [SMDOC] JSScript data layout (shared)
+//
+// SharedScriptData stores variable-length script data that may be shared
+// between scripts with the same bytecode, even across different GC Zones.
+// Abstractly this structure consists of multiple (optional) arrays that are
+// exposed as mozilla::Span<T>. These arrays exist in a single heap allocation.
+//
+// Under the hood, SharedScriptData is a fixed-size header class followed the
+// various array bodies interleaved with metadata to compactly encode the
+// bounds. These arrays have varying requirements for alignment, performance,
+// and jit-friendliness which leads to the complex indexing system below.
+//
+// Note: The '----' separators are for readability only.
+//
+// ----
+//   <SharedScriptData itself>
+// ----
+//   (OPTIONAL) Array of GCPtrAtom constituting atoms()
+// ----
+//   (REQUIRED) Flags structure
+//  codeOffset:
+//   (REQUIRED) Array of jsbytecode constituting code()
+//   (REQUIRED) Array of jssrcnote constituting notes()
+// ----
+//   (OPTIONAL) Array of uint32_t optional-offsets
+//  optArrayOffset:
+// ----
+//  L0:
+//   (OPTIONAL) Array of uint32_t constituting resumeOffsets()
+//  L1:
+//   (OPTIONAL) Array of ScopeNote constituting scopeNotes()
+//  L2:
+//   (OPTIONAL) Array of JSTryNote constituting tryNotes()
+//  L3:
+// ----
+//
+// NOTE: The notes() array must have been null-padded such that
+//       flags/code/notes together have uint32_t alignment.
+//
+// The 'codeOffset' and 'optArrayOffset' labels shown have their byte-offset
+// relative to 'this' stored as fields in SharedScriptData. They form the basis
+// of the indexing system.
+//
+// The L0/L1/L2/L3 labels indicate the start and end of the optional arrays.
+// Some of these labels may refer to the same location if the array between
+// them is empty. Each unique label position has an offset stored in the
+// optional-offsets table. Note that we also avoid entries for labels that
+// match 'optArrayOffset'. This is done to save memory when arrays are empty.
+//
+// The flags() data indicates (for each optional array) which entry from the
+// optional-offsets table marks the *end* of array. The array starts where the
+// previous array ends and the first array begins at 'optArrayOffset'. The
+// optional-offset table is addressed at negative indices from
+// 'optArrayOffset'.
+//
+// In general, the length of each array is computed from subtracting the start
+// offset of the array from the start offset of the subsequent array. The
+// notable exception is that bytecode length is stored explicitly.
 class alignas(uintptr_t) SharedScriptData final {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
@@ -1524,11 +1579,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
   uint32_t codeOffset_ = 0;  // Byte-offset from 'this'
   uint32_t codeLength_ = 0;
-  uint32_t resumeOffsetsOffset_ = 0;
-  uint32_t scopeNotesOffset_ = 0;
-  uint32_t tryNotesOffset_ = 0;
-  uint32_t padding_ = 0;
-  uint32_t tailOffset_ = 0;
+  uint32_t optArrayOffset_ = 0;
 
   // Offset of main entry point from code, after predef'ing prologue.
   uint32_t mainOffset = 0;
@@ -1555,7 +1606,10 @@ class alignas(uintptr_t) SharedScriptData final {
   // padding values as needed for predicatable results across compilers.
 
   struct Flags {
-    uint8_t _unused : 8;
+    uint8_t resumeOffsetsEndIndex : 2;
+    uint8_t scopeNotesEndIndex : 2;
+    uint8_t tryNotesEndIndex : 2;
+    uint8_t _unused : 2;
   };
   static_assert(sizeof(Flags) == sizeof(uint8_t),
                 "Structure packing is broken");
@@ -1570,10 +1624,32 @@ class alignas(uintptr_t) SharedScriptData final {
   size_t flagOffset() const { return codeOffset_ - sizeof(Flags); }
   size_t codeOffset() const { return codeOffset_; }
   size_t noteOffset() const { return codeOffset_ + codeLength_; }
-  size_t resumeOffsetsOffset() const { return resumeOffsetsOffset_; }
-  size_t scopeNotesOffset() const { return scopeNotesOffset_; }
-  size_t tryNotesOffset() const { return tryNotesOffset_; }
-  size_t endOffset() const { return tailOffset_; }
+  size_t optionalOffsetsOffset() const {
+    // Determine the location to beginning of optional-offsets array by looking
+    // at index for try-notes.
+    //
+    //   optionalOffsetsOffset():
+    //     (OPTIONAL) tryNotesEndOffset
+    //     (OPTIONAL) scopeNotesEndOffset
+    //     (OPTIONAL) resumeOffsetsEndOffset
+    //   optArrayOffset_:
+    //     ....
+    unsigned numOffsets = flags().tryNotesEndIndex;
+    MOZ_ASSERT(numOffsets >= flags().scopeNotesEndIndex);
+    MOZ_ASSERT(numOffsets >= flags().resumeOffsetsEndIndex);
+
+    return optArrayOffset_ - (numOffsets * sizeof(uint32_t));
+  }
+  size_t resumeOffsetsOffset() const { return optArrayOffset_; }
+  size_t scopeNotesOffset() const {
+    return getOptionalOffset(flags().resumeOffsetsEndIndex);
+  }
+  size_t tryNotesOffset() const {
+    return getOptionalOffset(flags().scopeNotesEndIndex);
+  }
+  size_t endOffset() const {
+    return getOptionalOffset(flags().tryNotesEndIndex);
+  }
 
   // Size to allocate
   static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
@@ -1590,10 +1666,29 @@ class alignas(uintptr_t) SharedScriptData final {
   template <typename T>
   void initElements(size_t offset, size_t length);
 
+  void initOptionalArrays(size_t* cursor, Flags* flags,
+                          uint32_t numResumeOffsets, uint32_t numScopeNotes,
+                          uint32_t numTryNotes);
+
   // Initialize to GC-safe state
   SharedScriptData(uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
                    uint32_t numResumeOffsets, uint32_t numScopeNotes,
                    uint32_t numTryNotes);
+
+  void setOptionalOffset(int index, uint32_t offset) {
+    MOZ_ASSERT((index > 0) && (offset != optArrayOffset_),
+               "Implicit offset should not be stored");
+    offsetToPointer<uint32_t>(optArrayOffset_)[-index] = offset;
+  }
+  uint32_t getOptionalOffset(int index) const {
+    // The index 0 represents (implicitly) the offset 'optArrayOffset_'.
+    if (index == 0) {
+      return optArrayOffset_;
+    }
+
+    SharedScriptData* this_ = const_cast<SharedScriptData*>(this);
+    return this_->offsetToPointer<uint32_t>(optArrayOffset_)[-index];
+  }
 
  public:
   static SharedScriptData* new_(JSContext* cx, uint32_t codeLength,
@@ -1630,7 +1725,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
   // Span over all raw bytes in this struct and its trailing arrays.
   mozilla::Span<const uint8_t> allocSpan() const {
-    size_t allocSize = tailOffset_;
+    size_t allocSize = endOffset();
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
   }
 
@@ -1657,11 +1752,14 @@ class alignas(uintptr_t) SharedScriptData final {
   GCPtrAtom* atoms() { return offsetToPointer<GCPtrAtom>(atomOffset()); }
 
   Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
+  const Flags& flags() const {
+    return const_cast<SharedScriptData*>(this)->flagsRef();
+  }
 
   uint32_t codeLength() const { return codeLength_; }
-  jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset_); }
+  jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
 
-  uint32_t noteLength() const { return resumeOffsetsOffset() - noteOffset(); }
+  uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
   jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
 
   mozilla::Span<uint32_t> resumeOffsets() {
