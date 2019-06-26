@@ -25,6 +25,8 @@ py3:
         - security/manager/ssl
         - servo
         - testing/awsy
+        - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
+        - testing/gtest
         - testing/mochitest
         - testing/mozharness
         - testing/raptor
@@ -35,6 +37,7 @@ py3:
         - tools/jprof
         - tools/profiler
         - tools/rb
+        - tools/update-packaging
         - xpcom/idl-parser
     extensions: ['py']
     support-files:
