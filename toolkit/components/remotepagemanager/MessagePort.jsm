@@ -305,6 +305,14 @@ class MessagePort {
     return new this.window.Promise((resolve, reject) => promise.then(resolve, reject));
   }
 
+  getAppBuildID() {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getAppBuildID", "yes")) {
+      throw new Error("RPMAccessManager does not allow access to getAppBuildID");
+    }
+    return Services.appinfo.appBuildID;
+  }
+
   getIntPref(aPref) {
     let principal = this.window.document.nodePrincipal;
     if (!RPMAccessManager.checkAllowAccess(principal, "getIntPref", aPref)) {
