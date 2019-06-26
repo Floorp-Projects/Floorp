@@ -1218,11 +1218,15 @@ nsresult Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
   }
 
   FallibleTArray<uint32_t> AddPrefixHashes;
-  rv = lookupCacheV2->GetPrefixes(AddPrefixHashes);
+  FallibleTArray<nsCString> AddCompletesHashes;
+  rv = lookupCacheV2->GetPrefixes(AddPrefixHashes, AddCompletesHashes);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = store.AugmentAdds(AddPrefixHashes);
+
+  rv = store.AugmentAdds(AddPrefixHashes, AddCompletesHashes);
   NS_ENSURE_SUCCESS(rv, rv);
+
   AddPrefixHashes.Clear();
+  AddCompletesHashes.Clear();
 
   uint32_t applied = 0;
 
