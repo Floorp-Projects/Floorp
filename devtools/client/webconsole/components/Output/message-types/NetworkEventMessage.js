@@ -10,7 +10,7 @@
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const Message = createFactory(require("devtools/client/webconsole/components/Message"));
+const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
 const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 

@@ -13,12 +13,12 @@ const actions = require("devtools/client/webconsole/actions/index");
 const {
   FILTERBAR_DISPLAY_MODES,
 } = require("devtools/client/webconsole/constants");
-const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/ConsoleOutput"));
-const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar"));
+const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/Output/ConsoleOutput"));
+const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar/FilterBar"));
 const SideBar = createFactory(require("devtools/client/webconsole/components/SideBar"));
-const ReverseSearchInput = createFactory(require("devtools/client/webconsole/components/ReverseSearchInput"));
-const JSTerm = createFactory(require("devtools/client/webconsole/components/JSTerm"));
-const ConfirmDialog = createFactory(require("devtools/client/webconsole/components/ConfirmDialog"));
+const ReverseSearchInput = createFactory(require("devtools/client/webconsole/components/Input/ReverseSearchInput"));
+const JSTerm = createFactory(require("devtools/client/webconsole/components/Input/JSTerm"));
+const ConfirmDialog = createFactory(require("devtools/client/webconsole/components/Input/ConfirmDialog"));
 const NotificationBox = createFactory(require("devtools/client/shared/components/NotificationBox").NotificationBox);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");

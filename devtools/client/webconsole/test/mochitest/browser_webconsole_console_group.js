@@ -11,7 +11,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-console-group.html";
 const { INDENT_WIDTH } =
-  require("devtools/client/webconsole/components/MessageIndent");
+  require("devtools/client/webconsole/components/Output/MessageIndent");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

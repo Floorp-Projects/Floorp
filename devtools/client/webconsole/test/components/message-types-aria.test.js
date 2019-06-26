@@ -8,9 +8,9 @@ const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const ConsoleApiCall = createFactory(require("devtools/client/webconsole/components/message-types/ConsoleApiCall"));
-const ConsoleCmd = createFactory(require("devtools/client/webconsole/components/message-types/ConsoleCommand"));
-const EvaluationResult = createFactory(require("devtools/client/webconsole/components/message-types/EvaluationResult"));
+const ConsoleApiCall = createFactory(require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall"));
+const ConsoleCmd = createFactory(require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand"));
+const EvaluationResult = createFactory(require("devtools/client/webconsole/components/Output/message-types/EvaluationResult"));
 
 const { ConsoleCommand } = require("devtools/client/webconsole/types");
 
