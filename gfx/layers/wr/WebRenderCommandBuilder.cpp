@@ -1335,8 +1335,11 @@ void Grouper::ConstructItemInsideInactive(
   // still
   aGroup->ComputeGeometryChange(aItem, data, mTransform, mDisplayListBuilder);
 
-  // Temporarily restrict the image bounds to the bounds of the container so
-  // that clipped children within the container know about the clip.
+  // Temporarily restrict the image bounds to the bounds of the container so that
+  // clipped children within the container know about the clip. This ensures
+  // that the bounds passed to FlushItem are contained in the bounds of the clip
+  // so that we don't include items in the recording without including their
+  // corresponding clipping items.
   IntRect oldClippedImageBounds = aGroup->mClippedImageBounds;
   aGroup->mClippedImageBounds =
       aGroup->mClippedImageBounds.Intersect(data->mRect);
