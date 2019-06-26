@@ -5894,9 +5894,11 @@ void HTMLInputElement::DoneCreatingElement() {
   // Restore state as needed.  Note that disabled state applies to all control
   // types.
   //
-  bool restoredCheckedState = !mInhibitRestoration &&
-                              NS_SUCCEEDED(GenerateStateKey()) &&
-                              RestoreFormControlState();
+  bool restoredCheckedState = false;
+  if (!mInhibitRestoration) {
+    GenerateStateKey();
+    restoredCheckedState = RestoreFormControlState();
+  }
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED
