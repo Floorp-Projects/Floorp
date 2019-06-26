@@ -76,7 +76,7 @@ DOMLocalization::~DOMLocalization() { DisconnectMutations(); }
  * DOMLocalization API
  */
 
-void DOMLocalization::ConnectRoot(Element& aNode, ErrorResult& aRv) {
+void DOMLocalization::ConnectRoot(nsINode& aNode, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = aNode.GetOwnerGlobal();
   if (!global) {
     return;
@@ -86,7 +86,7 @@ void DOMLocalization::ConnectRoot(Element& aNode, ErrorResult& aRv) {
 
 #ifdef DEBUG
   for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    Element* root = iter.Get()->GetKey();
+    nsINode* root = iter.Get()->GetKey();
 
     MOZ_ASSERT(
         root != &aNode && !root->Contains(&aNode) && !aNode.Contains(root),
@@ -99,7 +99,7 @@ void DOMLocalization::ConnectRoot(Element& aNode, ErrorResult& aRv) {
   aNode.AddMutationObserverUnlessExists(mMutations);
 }
 
-void DOMLocalization::DisconnectRoot(Element& aNode, ErrorResult& aRv) {
+void DOMLocalization::DisconnectRoot(nsINode& aNode, ErrorResult& aRv) {
   if (mRoots.Contains(&aNode)) {
     aNode.RemoveMutationObserver(mMutations);
     mRoots.RemoveEntry(&aNode);
@@ -357,12 +357,19 @@ already_AddRefed<Promise> DOMLocalization::TranslateRoots(ErrorResult& aRv) {
   nsTArray<RefPtr<Promise>> promises;
 
   for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    Element* root = iter.Get()->GetKey();
+    nsINode* root = iter.Get()->GetKey();
 
     RefPtr<Promise> promise = TranslateFragment(*root, aRv);
-    RefPtr<L10nRootTranslationHandler> nativeHandler =
-        new L10nRootTranslationHandler(root);
-    promise->AppendNativeHandler(nativeHandler);
+
+    // If the root is an element, we'll add a native handler
+    // to set root info (language, direction etc.) on it
+    // once the localization finishes.
+    if (root->IsElement()) {
+      RefPtr<L10nRootTranslationHandler> nativeHandler =
+          new L10nRootTranslationHandler(root->AsElement());
+      promise->AppendNativeHandler(nativeHandler);
+    }
+
     promises.AppendElement(promise);
   }
   AutoEntryScript aes(mGlobal, "DOMLocalization TranslateRoots");
@@ -470,9 +477,9 @@ void DOMLocalization::DisconnectMutations() {
 
 void DOMLocalization::DisconnectRoots() {
   for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    Element* elem = iter.Get()->GetKey();
+    nsINode* node = iter.Get()->GetKey();
 
-    elem->RemoveMutationObserver(mMutations);
+    node->RemoveMutationObserver(mMutations);
   }
   mRoots.Clear();
 }

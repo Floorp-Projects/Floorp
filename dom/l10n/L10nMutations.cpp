@@ -34,8 +34,7 @@ void L10nMutations::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   if (!mObserving) {
     return;
   }
-  Document* uncomposedDoc = aElement->GetUncomposedDoc();
-  if (uncomposedDoc) {
+  if (aElement->IsInComposedDoc()) {
     if (aNameSpaceID == kNameSpaceID_None &&
         (aAttribute == nsGkAtoms::datal10nid ||
          aAttribute == nsGkAtoms::datal10nargs)) {
@@ -56,8 +55,7 @@ void L10nMutations::ContentAppended(nsIContent* aChild) {
     if (node->IsElement()) {
       Element* elem = node->AsElement();
 
-      Document* uncomposedDoc = elem->GetUncomposedDoc();
-      if (uncomposedDoc) {
+      if (elem->IsInComposedDoc()) {
         DOMLocalization::GetTranslatables(*node, elements, rv);
       }
     }
@@ -82,8 +80,7 @@ void L10nMutations::ContentInserted(nsIContent* aChild) {
   }
   Element* elem = aChild->AsElement();
 
-  Document* uncomposedDoc = elem->GetUncomposedDoc();
-  if (!uncomposedDoc) {
+  if (!elem->IsInComposedDoc()) {
     return;
   }
   DOMLocalization::GetTranslatables(*aChild, elements, rv);

@@ -39,13 +39,13 @@ interface DOMLocalization : Localization {
    * Adds a node to nodes observed for localization
    * related changes.
    */
-  [Throws] void connectRoot(Element aElement);
+  [Throws] void connectRoot(Node aElement);
 
   /**
    * Removes a node from nodes observed for localization
    * related changes.
    */
-  [Throws] void disconnectRoot(Element aElement);
+  [Throws] void disconnectRoot(Node aElement);
 
   /**
    * Pauses the MutationObserver set to observe
