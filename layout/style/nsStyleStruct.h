@@ -945,6 +945,44 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
       mMozListReversed;  // true in an <ol reversed> scope
 };
 
+struct nsStyleGridLine {
+  // http://dev.w3.org/csswg/css-grid/#typedef-grid-line
+  // XXXmats we could optimize memory size here
+  bool mHasSpan;
+  int32_t mInteger;    // 0 means not provided
+  RefPtr<nsAtom> mLineName;  // Empty string means not provided.
+
+  // These are the limits that we choose to clamp grid line numbers to.
+  // http://dev.w3.org/csswg/css-grid/#overlarge-grids
+  // mInteger is clamped to this range:
+  static const int32_t kMinLine = -10000;
+  static const int32_t kMaxLine = 10000;
+
+  nsStyleGridLine()
+      : mHasSpan(false), mInteger(0), mLineName(nsGkAtoms::_empty) {}
+
+  nsStyleGridLine(const nsStyleGridLine& aOther) { (*this) = aOther; }
+
+  void operator=(const nsStyleGridLine& aOther) {
+    mHasSpan = aOther.mHasSpan;
+    mInteger = aOther.mInteger;
+    mLineName = aOther.mLineName;
+  }
+
+  bool operator!=(const nsStyleGridLine& aOther) const {
+    return mHasSpan != aOther.mHasSpan || mInteger != aOther.mInteger ||
+           mLineName != aOther.mLineName;
+  }
+
+  bool IsAuto() const {
+    bool haveInitialValues = mInteger == 0 && mLineName == nsGkAtoms::_empty;
+    MOZ_ASSERT(!(haveInitialValues && mHasSpan),
+               "should not have 'span' when other components are "
+               "at their initial values");
+    return haveInitialValues;
+  }
+};
+
 // Computed value of the grid-template-columns or grid-template-rows property
 // (but *not* grid-template-areas.)
 // http://dev.w3.org/csswg/css-grid/#track-sizing
@@ -1013,7 +1051,7 @@ struct nsStyleGridTemplate {
   bool HasRepeatAuto() const { return mRepeatAutoIndex != -1; }
 
   bool IsRepeatAutoIndex(uint32_t aIndex) const {
-    MOZ_ASSERT(aIndex < uint32_t(2 * mozilla::StyleMAX_GRID_LINE));
+    MOZ_ASSERT(aIndex < uint32_t(2 * nsStyleGridLine::kMaxLine));
     return int32_t(aIndex) == mRepeatAutoIndex;
   }
 };
@@ -1104,10 +1142,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
 
   mozilla::StyleGridTemplateAreas mGridTemplateAreas;
 
-  mozilla::StyleGridLine mGridColumnStart;
-  mozilla::StyleGridLine mGridColumnEnd;
-  mozilla::StyleGridLine mGridRowStart;
-  mozilla::StyleGridLine mGridRowEnd;
+  nsStyleGridLine mGridColumnStart;
+  nsStyleGridLine mGridColumnEnd;
+  nsStyleGridLine mGridRowStart;
+  nsStyleGridLine mGridRowEnd;
   mozilla::NonNegativeLengthPercentageOrNormal mColumnGap;
   mozilla::NonNegativeLengthPercentageOrNormal mRowGap;
 
