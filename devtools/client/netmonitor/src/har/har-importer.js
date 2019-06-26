@@ -56,7 +56,7 @@ HarImporter.prototype = {
       }, false);
 
       // Update request
-      this.actions.updateRequest(requestId, {
+      const data = {
         requestHeaders: {
           headers: entry.request.headers,
           headersSize: entry.request.headersSize,
@@ -105,7 +105,24 @@ HarImporter.prototype = {
         responseHeadersAvailable: false,
         securityInfoAvailable: false,
         requestPostDataAvailable: false,
-      }, false);
+      };
+
+      if (entry.cache.afterRequest) {
+        const afterRequest = entry.cache.afterRequest;
+        data.responseCache = {
+          cache: {
+            expires: afterRequest.expires,
+            fetchCount: afterRequest.fetchCount,
+            lastFetched: afterRequest.lastFetched,
+            eTag: afterRequest.eTag,
+            _dataSize: afterRequest._dataSize,
+            _lastModified: afterRequest._lastModified,
+            _device: afterRequest._device,
+          },
+        };
+      }
+
+      this.actions.updateRequest(requestId, data, false);
 
       // Page timing markers
       const pageTimings = pages.get(entry.pageref).pageTimings;
