@@ -546,6 +546,7 @@ linux-devedition-nightly/opt:
 
 linux-shippable/opt:
     description: "Linux32 Shippable"
+    use-pgo: true
     attributes:
         shippable: true
         enable-full-crashsymbols: true
@@ -557,7 +558,7 @@ linux-shippable/opt:
         type: shippable
     treeherder:
         platform: linux32-shippable/opt
-        symbol: B
+        symbol: Bpgo(B)
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
