@@ -150,7 +150,7 @@ bool InputBlockState::IsDownchainOf(AsyncPanZoomController* aA,
 
 void InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc) {
   // An input block should only have one scrolled APZC.
-  MOZ_ASSERT(!mScrolledApzc || (StaticPrefs::APZAllowImmediateHandoff()
+  MOZ_ASSERT(!mScrolledApzc || (StaticPrefs::apz_allow_immediate_handoff()
                                     ? IsDownchainOf(mScrolledApzc, aApzc)
                                     : mScrolledApzc == aApzc));
 
@@ -783,8 +783,8 @@ Maybe<ScrollDirection> TouchBlockState::GetBestGuessPanDirection(
   angle = fabs(angle);                       // range [0, pi]
 
   double angleThreshold = TouchActionAllowsPanningXY()
-                              ? StaticPrefs::APZAxisLockAngle()
-                              : StaticPrefs::APZAllowedDirectPanAngle();
+                              ? StaticPrefs::apz_axis_lock_lock_angle()
+                              : StaticPrefs::apz_axis_lock_direct_pan_angle();
   if (apz::IsCloseToHorizontal(angle, angleThreshold)) {
     return Some(ScrollDirection::eHorizontal);
   }

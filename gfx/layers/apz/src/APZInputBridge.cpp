@@ -65,7 +65,7 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
       // hit testing in a zoomed-in or zoomed-out state.
       // FIXME: bug 1525793 -- this may need to handle zooming or not on a
       // per-document basis.
-      if (StaticPrefs::APZAllowZooming()) {
+      if (StaticPrefs::apz_allow_zooming()) {
         mouseEvent.mIgnoreRootScrollFrame = true;
       }
 

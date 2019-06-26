@@ -382,7 +382,7 @@ bool TenuredCell::isInsideZone(JS::Zone* zone) const {
   }
 
   if (thing->isMarkedGray()) {
-    // There shouldn't be anything marked grey unless we're on the main thread.
+    // There shouldn't be anything marked gray unless we're on the main thread.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()));
     if (!JS::RuntimeHeapIsCollecting()) {
       JS::UnmarkGrayGCThingRecursively(
