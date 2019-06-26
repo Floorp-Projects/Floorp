@@ -126,50 +126,32 @@ static uint32_t GetOverflowChange(const nsRect& aCurScrolledRect,
  * ScrollEvents are one-shot runnables; the refresh driver drops them after
  * running them.
  */
-class GenericScrollEvent : public Runnable {
+class ScrollFrameHelper::ScrollEvent : public Runnable {
  public:
+  NS_DECL_NSIRUNNABLE
+  explicit ScrollEvent(ScrollFrameHelper* aHelper, bool aDelayed);
   void Revoke() { mHelper = nullptr; }
 
- protected:
-  GenericScrollEvent(const char* aTag, ScrollFrameHelper* aHelper,
-                     bool aDelayed = false)
-      : Runnable(aTag), mHelper(aHelper) {
-    mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this,
-                                                                     aDelayed);
-  }
-
+ private:
   ScrollFrameHelper* mHelper;
 };
 
-#define DEFINE_SCROLL_EVENT(name_)                                    \
-  class ScrollFrameHelper::name_ final : public GenericScrollEvent {  \
-   public:                                                            \
-    explicit name_(ScrollFrameHelper* aHelper, bool aDelayed = false) \
-        : GenericScrollEvent("ScrollFrameHelper::" #name_, aHelper,   \
-                             aDelayed) {}                             \
-    NS_IMETHODIMP Run() final {                                       \
-      if (mHelper) {                                                  \
-        mHelper->Fire##name_();                                       \
-      }                                                               \
-      return NS_OK;                                                   \
-    }                                                                 \
-  };
-
-DEFINE_SCROLL_EVENT(ScrollEvent);
-DEFINE_SCROLL_EVENT(ScrollEndEvent);
-
-class ScrollFrameHelper::ScrollPortEvent final : public Runnable {
+class ScrollFrameHelper::ScrollEndEvent : public Runnable {
  public:
-  explicit ScrollPortEvent(ScrollFrameHelper* aHelper) :
-      Runnable("ScrollFrameHelper::ScrollPortEvent"), mHelper(aHelper) {}
+  NS_DECL_NSIRUNNABLE
+  explicit ScrollEndEvent(ScrollFrameHelper* aHelper);
+  void Revoke() { mHelper = nullptr; }
 
-  NS_IMETHODIMP Run() final {
-    if (mHelper) {
-      mHelper->FireScrollPortEvent();
-    }
-    return NS_OK;
-  }
+ private:
+  ScrollFrameHelper* mHelper;
+};
 
+class ScrollFrameHelper::AsyncScrollPortEvent : public Runnable {
+ public:
+  NS_DECL_NSIRUNNABLE
+  explicit AsyncScrollPortEvent(ScrollFrameHelper* helper)
+      : Runnable("ScrollFrameHelper::AsyncScrollPortEvent"),
+        mHelper(helper) {}
   void Revoke() { mHelper = nullptr; }
 
  private:
@@ -181,7 +163,6 @@ class ScrollFrameHelper::ScrolledAreaEvent : public Runnable {
   NS_DECL_NSIRUNNABLE
   explicit ScrolledAreaEvent(ScrollFrameHelper* helper)
       : Runnable("ScrollFrameHelper::ScrolledAreaEvent"), mHelper(helper) {}
-
   void Revoke() { mHelper = nullptr; }
 
  private:
@@ -2136,9 +2117,6 @@ ScrollFrameHelper::~ScrollFrameHelper() {
   }
   if (mScrollEndEvent) {
     mScrollEndEvent->Revoke();
-  }
-  if (mScrollPortEvent) {
-    mScrollPortEvent->Revoke();
   }
 }
 
@@ -4660,13 +4638,18 @@ auto ScrollFrameHelper::GetPageLoadingState() -> LoadingState {
              : LoadingState::Loading;
 }
 
-void ScrollFrameHelper::FireScrollPortEvent() {
-  mScrollPortEvent->Revoke();
-  mScrollPortEvent = nullptr;
+nsresult ScrollFrameHelper::FireScrollPortEvent() {
+  mAsyncScrollPortEvent.Forget();
 
   // Keep this in sync with PostOverflowEvent().
   nsSize scrollportSize = mScrollPort.Size();
   nsSize childSize = GetScrolledRect().Size();
+
+  // TODO(emilio): why do we need the whole WillPaintObserver infrastructure and
+  // can't use AddScriptRunner & co? I guess it made sense when we used
+  // WillPaintObserver for scroll events too, or when this used to flush.
+  //
+  // Should we remove this?
 
   bool newVerticalOverflow = childSize.height > scrollportSize.height;
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
@@ -4675,7 +4658,7 @@ void ScrollFrameHelper::FireScrollPortEvent() {
   bool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
 
   if (!vertChanged && !horizChanged) {
-    return;
+    return NS_OK;
   }
 
   // If both either overflowed or underflowed then we dispatch only one
@@ -4709,8 +4692,8 @@ void ScrollFrameHelper::FireScrollPortEvent() {
           : eScrollPortUnderflow,
       nullptr);
   event.mOrient = orient;
-  EventDispatcher::Dispatch(mOuter->GetContent(), mOuter->PresContext(),
-                            &event);
+  return EventDispatcher::Dispatch(mOuter->GetContent(), mOuter->PresContext(),
+                                   &event);
 }
 
 void ScrollFrameHelper::PostScrollEndEvent() {
@@ -5145,6 +5128,34 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
 
 /* ============= Scroll events ========== */
 
+ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper,
+                                            bool aDelayed)
+    : Runnable("ScrollFrameHelper::ScrollEvent"), mHelper(aHelper) {
+  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this,
+                                                                   aDelayed);
+}
+
+NS_IMETHODIMP
+ScrollFrameHelper::ScrollEvent::Run() {
+  if (mHelper) {
+    mHelper->FireScrollEvent();
+  }
+  return NS_OK;
+}
+
+ScrollFrameHelper::ScrollEndEvent::ScrollEndEvent(ScrollFrameHelper* aHelper)
+    : Runnable("ScrollFrameHelper::ScrollEndEvent"), mHelper(aHelper) {
+  mHelper->mOuter->PresContext()->RefreshDriver()->PostScrollEvent(this);
+}
+
+NS_IMETHODIMP
+ScrollFrameHelper::ScrollEndEvent::Run() {
+  if (mHelper) {
+    mHelper->FireScrollEndEvent();
+  }
+  return NS_OK;
+}
+
 void ScrollFrameHelper::FireScrollEvent() {
   nsIContent* content = mOuter->GetContent();
   nsPresContext* prescontext = mOuter->PresContext();
@@ -5196,6 +5207,11 @@ void ScrollFrameHelper::PostScrollEvent(bool aDelayed) {
 
   // The ScrollEvent constructor registers itself with the refresh driver.
   mScrollEvent = new ScrollEvent(this, aDelayed);
+}
+
+NS_IMETHODIMP
+ScrollFrameHelper::AsyncScrollPortEvent::Run() {
+  return mHelper ? mHelper->FireScrollPortEvent() : NS_OK;
 }
 
 bool nsXULScrollFrame::AddHorizontalScrollbar(nsBoxLayoutState& aState,
@@ -5342,7 +5358,7 @@ void nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState,
 }
 
 void ScrollFrameHelper::PostOverflowEvent() {
-  if (mScrollPortEvent) {
+  if (mAsyncScrollPortEvent.IsPending()) {
     return;
   }
 
@@ -5360,11 +5376,8 @@ void ScrollFrameHelper::PostOverflowEvent() {
     return;
   }
 
-  RefPtr<ScrollPortEvent> event = new ScrollPortEvent(this);
-  if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(event.get())))) {
-    return;
-  }
-  mScrollPortEvent = event.forget();
+  mAsyncScrollPortEvent = new AsyncScrollPortEvent(this);
+  nsContentUtils::AddScriptRunner(mAsyncScrollPortEvent.get());
 }
 
 nsIFrame* ScrollFrameHelper::GetFrameForDir() const {

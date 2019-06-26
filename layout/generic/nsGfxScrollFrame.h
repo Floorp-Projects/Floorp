@@ -72,10 +72,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
       nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements);
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilter);
-  void PostOverflowEvent();
-  void FireScrollPortEvent();
+  nsresult FireScrollPortEvent();
   void PostScrollEndEvent();
   void FireScrollEndEvent();
+  void PostOverflowEvent();
   using PostDestroyData = nsIFrame::PostDestroyData;
   void Destroy(PostDestroyData& aPostDestroyData);
 
@@ -521,12 +521,12 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   class ScrollEvent;
   class ScrollEndEvent;
-  class ScrollPortEvent;
+  class AsyncScrollPortEvent;
   class ScrolledAreaEvent;
 
   RefPtr<ScrollEvent> mScrollEvent;
   RefPtr<ScrollEndEvent> mScrollEndEvent;
-  RefPtr<ScrollPortEvent> mScrollPortEvent;
+  nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
   nsRevocableEventPtr<ScrolledAreaEvent> mScrolledAreaEvent;
   nsIFrame* mHScrollbarBox;
   nsIFrame* mVScrollbarBox;
