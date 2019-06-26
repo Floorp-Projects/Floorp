@@ -1015,7 +1015,6 @@ static bool CheckOverflow(ComputedStyle* aComputedStyle,
                           ScrollStyles* aStyles) {
   const nsStyleDisplay* display = aComputedStyle->StyleDisplay();
   if (display->mOverflowX == StyleOverflow::Visible &&
-      display->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
       display->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
       display->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
       display->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {

@@ -51,7 +51,6 @@ ScrollStyles::ScrollStyles(WritingMode aWritingMode, StyleOverflow aH,
                            StyleOverflow aV, const nsStyleDisplay* aDisplay)
     : mHorizontal(aH),
       mVertical(aV),
-      mScrollBehavior(aDisplay->mScrollBehavior),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
       mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {
   InitializeScrollSnapStrictness(aWritingMode, aDisplay);
@@ -61,7 +60,6 @@ ScrollStyles::ScrollStyles(WritingMode aWritingMode,
                            const nsStyleDisplay* aDisplay)
     : mHorizontal(aDisplay->mOverflowX),
       mVertical(aDisplay->mOverflowY),
-      mScrollBehavior(aDisplay->mScrollBehavior),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
       mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {
   InitializeScrollSnapStrictness(aWritingMode, aDisplay);
