@@ -1261,37 +1261,55 @@ void nsGenericHTMLElement::MapImageMarginAttributeInto(
   }
 }
 
+static void MapSizeAttributeInto(MappedDeclarations& aDecls,
+                                 nsCSSPropertyID aProp,
+                                 const nsAttrValue& aValue) {
+  MOZ_ASSERT(!aDecls.PropertyIsSet(aProp),
+             "Why mapping the same property twice?");
+  if (aValue.Type() == nsAttrValue::eInteger) {
+    return aDecls.SetPixelValue(aProp, aValue.GetIntegerValue());
+  }
+  if (aValue.Type() == nsAttrValue::ePercent) {
+    return aDecls.SetPercentValue(aProp, aValue.GetPercentValue());
+  }
+}
+
 void nsGenericHTMLElement::MapWidthAttributeInto(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  // width: value
-  if (!aDecls.PropertyIsSet(eCSSProperty_width)) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      aDecls.SetPixelValue(eCSSProperty_width, (float)value->GetIntegerValue());
-    } else if (value && value->Type() == nsAttrValue::ePercent) {
-      aDecls.SetPercentValue(eCSSProperty_width, value->GetPercentValue());
-    }
+  if (const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width)) {
+    MapSizeAttributeInto(aDecls, eCSSProperty_width, *value);
   }
 }
 
 void nsGenericHTMLElement::MapHeightAttributeInto(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  // height: value
-  if (!aDecls.PropertyIsSet(eCSSProperty_height)) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      aDecls.SetPixelValue(eCSSProperty_height,
-                           (float)value->GetIntegerValue());
-    } else if (value && value->Type() == nsAttrValue::ePercent) {
-      aDecls.SetPercentValue(eCSSProperty_height, value->GetPercentValue());
-    }
+  if (const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height)) {
+    MapSizeAttributeInto(aDecls, eCSSProperty_height, *value);
   }
 }
 
 void nsGenericHTMLElement::MapImageSizeAttributesInto(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapHeightAttributeInto(aAttributes, aDecls);
+  auto* width = aAttributes->GetAttr(nsGkAtoms::width);
+  auto* height = aAttributes->GetAttr(nsGkAtoms::height);
+  if (width) {
+    MapSizeAttributeInto(aDecls, eCSSProperty_width, *width);
+  }
+  if (height) {
+    MapSizeAttributeInto(aDecls, eCSSProperty_height, *height);
+  }
+  // NOTE(emilio): If we implement the unrestricted aspect-ratio proposal, we
+  // probably need to make this attribute mapping not apply to things like
+  // <marquee> and <table>, which right now can go through this path.
+  if (StaticPrefs::layout_css_width_and_height_map_to_aspect_ratio_enabled() &&
+      width && width->Type() == nsAttrValue::eInteger && height &&
+      height->Type() == nsAttrValue::eInteger) {
+    int32_t w = width->GetIntegerValue();
+    int32_t h = height->GetIntegerValue();
+    if (w != 0 && h != 0) {
+      aDecls.SetNumberValue(eCSSProperty_aspect_ratio, float(w) / float(h));
+    }
+  }
 }
 
 void nsGenericHTMLElement::MapImageBorderAttributeInto(
