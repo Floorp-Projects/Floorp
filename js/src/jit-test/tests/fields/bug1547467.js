@@ -1,3 +1,5 @@
+// |jit-test| --enable-experimental-fields
+
 load(libdir + "asserts.js");
 
 assertThrowsInstanceOf(() => {

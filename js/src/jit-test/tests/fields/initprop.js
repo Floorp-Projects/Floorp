@@ -1,3 +1,5 @@
+// |jit-test| --enable-experimental-fields
+
 let called = false
 class base {
     set x(arg) {
