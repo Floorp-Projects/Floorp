@@ -258,4 +258,110 @@ class TabListActionTest {
         store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
         assertNull(store.state.selectedTabId)
     }
+
+    @Test
+    fun `RestoreAction - Adds restored tabs and updates selected tab`() {
+        val store = BrowserStore(BrowserState())
+
+        assertEquals(0, store.state.tabs.size)
+
+        store.dispatch(TabListAction.RestoreAction(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                createTab(id = "b", url = "https://www.firefox.com", private = true),
+                createTab(id = "c", url = "https://www.example.org", private = true),
+                createTab(id = "d", url = "https://getpocket.com", private = false)
+            ),
+            selectedTabId = "d"
+        )).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("b", store.state.tabs[1].id)
+        assertEquals("c", store.state.tabs[2].id)
+        assertEquals("d", store.state.tabs[3].id)
+        assertEquals("d", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RestoreAction - Adds restored tabs to existing tabs without updating selection`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            ),
+            selectedTabId = "a"
+        ))
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(TabListAction.RestoreAction(
+            tabs = listOf(
+                createTab(id = "c", url = "https://www.example.org", private = true),
+                createTab(id = "d", url = "https://getpocket.com", private = false)
+            ),
+            selectedTabId = "d"
+        )).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("c", store.state.tabs[0].id)
+        assertEquals("d", store.state.tabs[1].id)
+        assertEquals("a", store.state.tabs[2].id)
+        assertEquals("b", store.state.tabs[3].id)
+        assertEquals("a", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RestoreAction - Adds restored tabs to existing tabs with updating selection`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            )
+        ))
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(TabListAction.RestoreAction(
+            tabs = listOf(
+                createTab(id = "c", url = "https://www.example.org", private = true),
+                createTab(id = "d", url = "https://getpocket.com", private = false)
+            ),
+            selectedTabId = "d"
+        )).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("c", store.state.tabs[0].id)
+        assertEquals("d", store.state.tabs[1].id)
+        assertEquals("a", store.state.tabs[2].id)
+        assertEquals("b", store.state.tabs[3].id)
+        assertEquals("d", store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RestoreAction - Does not update selection if none was provided`() {
+        val store = BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            )
+        ))
+
+        assertEquals(2, store.state.tabs.size)
+
+        store.dispatch(TabListAction.RestoreAction(
+            tabs = listOf(
+                createTab(id = "c", url = "https://www.example.org", private = true),
+                createTab(id = "d", url = "https://getpocket.com", private = false)
+            ),
+            selectedTabId = null
+        )).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertEquals("c", store.state.tabs[0].id)
+        assertEquals("d", store.state.tabs[1].id)
+        assertEquals("a", store.state.tabs[2].id)
+        assertEquals("b", store.state.tabs[3].id)
+        assertNull(store.state.selectedTabId)
+    }
 }

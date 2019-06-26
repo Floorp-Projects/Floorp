@@ -16,7 +16,6 @@ import mozilla.components.lib.state.Action
  * [Action] implementation related to [BrowserState].
  */
 sealed class BrowserAction : Action
-
 /**
  * [BrowserAction] implementations related to updating the list of [TabSessionState] inside [BrowserState].
  */
@@ -35,6 +34,11 @@ sealed class TabListAction : BrowserAction() {
      * Removes the [TabSessionState] with the given [tabId] from the list of sessions.
      */
     data class RemoveTabAction(val tabId: String) : TabListAction()
+
+    /**
+     * Restores state from a (partial) previous state.
+     */
+    data class RestoreAction(val tabs: List<TabSessionState>, val selectedTabId: String? = null) : TabListAction()
 }
 
 /**
