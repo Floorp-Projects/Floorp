@@ -20,8 +20,8 @@ NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS = (
     'release-source-linux64-source/opt',
     'release-source-linux64-fennec-source/opt',
     'release-source-linux64-devedition-source/opt',
-    'release-eme-free-repack-macosx64-nightly',
-    'release-partner-repack-macosx64-nightly',
+    'release-eme-free-repack-macosx64-shippable',
+    'release-partner-repack-macosx64-shippable',
 )
 
 

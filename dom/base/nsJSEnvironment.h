@@ -66,6 +66,8 @@ class nsJSContext : public nsIScriptContext {
   // Setup all the statics etc - safe to call multiple times after Startup().
   static void EnsureStatics();
 
+  static void SetLowMemoryState(bool aState);
+
   static void GarbageCollectNow(JS::GCReason reason,
                                 IsIncremental aIncremental = NonIncrementalGC,
                                 IsShrinking aShrinking = NonShrinkingGC,

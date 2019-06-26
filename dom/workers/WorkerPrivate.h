@@ -278,6 +278,8 @@ class WorkerPrivate : public RelativeTimeline {
                             uint32_t aFrequency);
 #endif
 
+  void SetLowMemoryStateInternal(JSContext* aCx, bool aState);
+
   void GarbageCollectInternal(JSContext* aCx, bool aShrinking,
                               bool aCollectChildren);
 
@@ -802,6 +804,8 @@ class WorkerPrivate : public RelativeTimeline {
       already_AddRefed<nsIRunnable> aRunnable);
 
   bool ProxyReleaseMainThreadObjects();
+
+  void SetLowMemoryState(bool aState);
 
   void GarbageCollect(bool aShrinking);
 

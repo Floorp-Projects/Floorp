@@ -139,7 +139,9 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define GC_REQUEST_OBSERVER_TOPIC "child-gc-request"
 #define CC_REQUEST_OBSERVER_TOPIC "child-cc-request"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
-#define MEMORY_PRESSURE_ONGOING_DATA "low-memory-ongoing"
+#define LOW_MEMORY_DATA "low-memory"
+#define LOW_MEMORY_ONGOING_DATA "low-memory-ongoing"
+#define MEMORY_PRESSURE_STOP_OBSERVER_TOPIC "memory-pressure-stop"
 
 #define BROADCAST_ALL_WORKERS(_func, ...)                         \
   PR_BEGIN_MACRO                                                  \
@@ -2121,6 +2123,10 @@ void RuntimeService::UpdateAllWorkerGCZeal() {
 }
 #endif
 
+void RuntimeService::SetLowMemoryStateAllWorkers(bool aState) {
+  BROADCAST_ALL_WORKERS(SetLowMemoryState, aState);
+}
+
 void RuntimeService::GarbageCollectAllWorkers(bool aShrinking) {
   BROADCAST_ALL_WORKERS(GarbageCollect, aShrinking);
 }
@@ -2200,13 +2206,22 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   if (!strcmp(aTopic, MEMORY_PRESSURE_OBSERVER_TOPIC)) {
+    nsDependentString data(aData);
     // Don't continue to GC/CC if we are in an ongoing low-memory state since
     // its very slow and it likely won't help us anyway.
-    if (!nsDependentString(aData).EqualsLiteral(MEMORY_PRESSURE_ONGOING_DATA)) {
-      GarbageCollectAllWorkers(/* shrinking = */ true);
-      CycleCollectAllWorkers();
-      MemoryPressureAllWorkers();
+    if (data.EqualsLiteral(LOW_MEMORY_ONGOING_DATA)) {
+      return NS_OK;
     }
+    if (data.EqualsLiteral(LOW_MEMORY_DATA)) {
+      SetLowMemoryStateAllWorkers(true);
+    }
+    GarbageCollectAllWorkers(/* shrinking = */ true);
+    CycleCollectAllWorkers();
+    MemoryPressureAllWorkers();
+    return NS_OK;
+  }
+  if (!strcmp(aTopic, MEMORY_PRESSURE_STOP_OBSERVER_TOPIC)) {
+    SetLowMemoryStateAllWorkers(false);
     return NS_OK;
   }
   if (!strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC)) {

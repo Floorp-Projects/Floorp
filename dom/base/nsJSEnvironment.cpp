@@ -332,11 +332,14 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                  const char16_t* aData) {
   if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
     if (StaticPrefs::javascript_options_gc_on_memory_pressure()) {
-      if (StringBeginsWith(nsDependentString(aData),
-                           NS_LITERAL_STRING("low-memory-ongoing"))) {
+      nsDependentString data(aData);
+      if (data.EqualsLiteral("low-memory-ongoing")) {
         // Don't GC/CC if we are in an ongoing low-memory state since its very
         // slow and it likely won't help us anyway.
         return NS_OK;
+      }
+      if (data.EqualsLiteral("low-memory")) {
+        nsJSContext::SetLowMemoryState(true);
       }
       nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
                                      nsJSContext::NonIncrementalGC,
@@ -348,6 +351,8 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                        nsJSContext::ShrinkingGC);
       }
     }
+  } else if (!nsCRT::strcmp(aTopic, "memory-pressure-stop")) {
+    nsJSContext::SetLowMemoryState(false);
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-inactive")) {
     if (StaticPrefs::javascript_options_compact_on_user_inactive()) {
       nsJSContext::PokeShrinkingGC();
@@ -1078,6 +1083,12 @@ void FullGCTimerFired(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(!aClosure, "Don't pass a closure to FullGCTimerFired");
   nsJSContext::GarbageCollectNow(JS::GCReason::FULL_GC_TIMER,
                                  nsJSContext::IncrementalGC);
+}
+
+// static
+void nsJSContext::SetLowMemoryState(bool aState) {
+  JSContext* cx = danger::GetJSContext();
+  JS::SetLowMemoryState(cx, aState);
 }
 
 // static
