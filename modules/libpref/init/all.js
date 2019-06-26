@@ -1419,8 +1419,6 @@ pref("javascript.options.spectre.jit_to_C++_calls", true);
 // Streams API
 pref("javascript.options.streams", true);
 
-pref("javascript.options.experimental.fields", false);
-
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
 
@@ -4797,9 +4795,7 @@ pref("widget.content.allow-gtk-dark-theme", false);
 #endif
 #endif
 #ifdef MOZ_WAYLAND
-#ifdef HAVE_LIBDRM
 pref("widget.wayland_dmabuf_backend.enabled", false);
-#endif
 #endif
 
 pref("widget.window-transforms.disabled", false);

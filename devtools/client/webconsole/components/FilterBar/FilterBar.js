@@ -15,10 +15,10 @@ const { PluralForm } = require("devtools/shared/plural-form");
 const {
   FILTERS,
   FILTERBAR_DISPLAY_MODES,
-} = require("../constants");
+} = require("devtools/client/webconsole/constants");
 
-const FilterButton = require("devtools/client/webconsole/components/FilterButton");
-const FilterCheckbox = require("devtools/client/webconsole/components/FilterCheckbox");
+const FilterButton = require("devtools/client/webconsole/components/FilterBar/FilterButton");
+const FilterCheckbox = require("devtools/client/webconsole/components/FilterBar/FilterCheckbox");
 const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");

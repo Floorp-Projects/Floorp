@@ -12,12 +12,12 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const actions = require("devtools/client/webconsole/actions/index");
 const { MESSAGE_SOURCE, MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
-const { MessageIndent } = require("devtools/client/webconsole/components/MessageIndent");
-const MessageIcon = require("devtools/client/webconsole/components/MessageIcon");
+const { MessageIndent } = require("devtools/client/webconsole/components/Output/MessageIndent");
+const MessageIcon = require("devtools/client/webconsole/components/Output/MessageIcon");
 const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
 
-loader.lazyRequireGetter(this, "CollapseButton", "devtools/client/webconsole/components/CollapseButton");
-loader.lazyRequireGetter(this, "MessageRepeat", "devtools/client/webconsole/components/MessageRepeat");
+loader.lazyRequireGetter(this, "CollapseButton", "devtools/client/webconsole/components/Output/CollapseButton");
+loader.lazyRequireGetter(this, "MessageRepeat", "devtools/client/webconsole/components/Output/MessageRepeat");
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 loader.lazyRequireGetter(this, "SmartTrace", "devtools/client/shared/components/SmartTrace");
 ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");

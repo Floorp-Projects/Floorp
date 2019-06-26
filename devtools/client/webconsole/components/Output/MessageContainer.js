@@ -17,14 +17,14 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 const componentMap = new Map([
-  ["ConsoleApiCall", require("./message-types/ConsoleApiCall")],
-  ["ConsoleCommand", require("./message-types/ConsoleCommand")],
-  ["CSSWarning", require("./message-types/CSSWarning")],
-  ["DefaultRenderer", require("./message-types/DefaultRenderer")],
-  ["EvaluationResult", require("./message-types/EvaluationResult")],
-  ["NetworkEventMessage", require("./message-types/NetworkEventMessage")],
-  ["PageError", require("./message-types/PageError")],
-  ["WarningGroup", require("./message-types/WarningGroup")],
+  ["ConsoleApiCall", require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")],
+  ["ConsoleCommand", require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand")],
+  ["CSSWarning", require("devtools/client/webconsole/components/Output/message-types/CSSWarning")],
+  ["DefaultRenderer", require("devtools/client/webconsole/components/Output/message-types/DefaultRenderer")],
+  ["EvaluationResult", require("devtools/client/webconsole/components/Output/message-types/EvaluationResult")],
+  ["NetworkEventMessage", require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage")],
+  ["PageError", require("devtools/client/webconsole/components/Output/message-types/PageError")],
+  ["WarningGroup", require("devtools/client/webconsole/components/Output/message-types/WarningGroup")],
 ]);
 
 class MessageContainer extends Component {

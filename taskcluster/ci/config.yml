@@ -311,6 +311,16 @@ workers:
             implementation: scriptworker-signing
             os: linux
             worker-type: signing-linux-v1
+        mac-depsigning:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-iscript
+            os: macosx
+            worker-type: depsigning-mac-v1
+        mac-signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-iscript
+            os: macosx
+            worker-type: signing-mac-v1
         t-ap.*:
             provisioner: proj-autophone
             implementation: script-engine-autophone
@@ -385,3 +395,19 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
+
+mac-notarization:
+    mac-behavior:
+        by-release-type:
+            nightly.*: mac_notarize
+            beta.*: mac_notarize
+            esr.*: mac_notarize
+            release.*: mac_notarize
+            default: mac_sign_and_pkg
+    mac-entitlements:
+        by-platform:
+            macosx64.*:
+                by-project:
+                    mozilla-(central|beta|release): security/mac/hardenedruntime/production.entitlements.xml
+                    default: security/mac/hardenedruntime/developer.entitlements.xml
+            default: ''

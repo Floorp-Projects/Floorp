@@ -13,12 +13,12 @@ const Provider = createFactory(require("react-redux").Provider);
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
 
 // Components under test.
-const ConsoleApiCall = createFactory(require("devtools/client/webconsole/components/message-types/ConsoleApiCall"));
+const ConsoleApiCall = createFactory(require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall"));
 const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
 } = require("devtools/client/webconsole/constants");
-const { INDENT_WIDTH } = require("devtools/client/webconsole/components/MessageIndent");
+const { INDENT_WIDTH } = require("devtools/client/webconsole/components/Output/MessageIndent");
 const {prepareMessage} = require("devtools/client/webconsole/utils/messages");
 
 // Test fakes.

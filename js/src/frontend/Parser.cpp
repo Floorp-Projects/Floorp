@@ -183,7 +183,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        ScriptSourceObject* sourceObject, ParseGoal parseGoal)
     : ParserSharedBase(cx, alloc, usedNames, sourceObject,
                        ParserSharedBase::Kind::Parser),
-      anyChars(cx, options, thisForCtor()),
+      anyChars(cx, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
 #ifdef DEBUG

@@ -47,6 +47,7 @@ const UnsolicitedPauses = {
   eventBreakpoint: "eventBreakpoint",
   exception: "exception",
   replayForcedPause: "replayForcedPause",
+  mutationBreakpoint: "mutationBreakpoint",
 };
 
 module.exports = {

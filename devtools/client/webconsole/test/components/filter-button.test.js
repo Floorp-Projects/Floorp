@@ -7,7 +7,7 @@ const { render } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
-const FilterButton = createFactory(require("devtools/client/webconsole/components/FilterButton"));
+const FilterButton = createFactory(require("devtools/client/webconsole/components/FilterBar/FilterButton"));
 const { MESSAGE_LEVEL } = require("devtools/client/webconsole/constants");
 
 describe("FilterButton component:", () => {
