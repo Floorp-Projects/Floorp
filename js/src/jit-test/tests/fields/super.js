@@ -1,3 +1,5 @@
+// |jit-test| --enable-experimental-fields
+
 class Base {
 }
 
