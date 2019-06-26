@@ -575,7 +575,7 @@ class TaskBuilder(object):
                 ]],
                 "env": {
                     "EXTRA_MOZHARNESS_CONFIG": json.dumps({
-                        "test_packages_url": "{}/{}/artifacts/public/build/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
+                        "test_packages_url": "{}/{}/artifacts/public/build/en-US/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
                         "installer_url": apk_url,
                     }),
                     "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/releases/mozilla-beta",
@@ -586,7 +586,7 @@ class TaskBuilder(object):
                     "MOZ_NODE_PATH": "/usr/local/bin/node",
                     "MOZHARNESS_CONFIG": "raptor/android_hw_config.py",
                     "MOZHARNESS_SCRIPT": "raptor_script.py",
-                    "MOZHARNESS_URL": "{}/{}/artifacts/public/build/mozharness.zip".format(_DEFAULT_TASK_URL, mozharness_task_id),
+                    "MOZHARNESS_URL": "{}/{}/artifacts/public/build/en-US/mozharness.zip".format(_DEFAULT_TASK_URL, mozharness_task_id),
                     "MOZILLA_BUILD_URL": apk_url,
                     "NEED_XVFB": "false",
                     "NO_FAIL_ON_TEST_ERRORS": "1",
@@ -653,10 +653,7 @@ def schedule_task_graph(ordered_groups_of_tasks):
 
 
 def fetch_mozharness_task_id(geckoview_beta_version):
-    nightly_build_id = geckoview_beta_version.split('.')[-1]
-    nightly_date = arrow.get(nightly_build_id, 'YYYYMMDDHHmmss')
-
-    raptor_index = 'gecko.v2.mozilla-beta.pushdate.{}.{:02}.{:02}.{}.firefox.linux64-debug'.format(
-        nightly_date.year, nightly_date.month, nightly_date.day, nightly_build_id
+    raptor_index = 'gecko.v2.mozilla-beta.geckoview-version.{}.mobile.android-x86_64-beta-opt'.format(
+        geckoview_beta_version
     )
     return taskcluster.Index().findTask(raptor_index)['taskId']
