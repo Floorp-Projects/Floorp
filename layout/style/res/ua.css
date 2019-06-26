@@ -48,7 +48,7 @@
   backface-visibility: inherit;
   clip: inherit;
   /* Other transform-related properties */
-  transform-style: inherit;
+  /* transform-style: inherit; Bug 1560704 */
   rotate: inherit;
   scale: inherit;
   translate: inherit;

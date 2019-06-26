@@ -9,7 +9,7 @@ const sinon = require("sinon");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
-let { MessageContainer } = require("devtools/client/webconsole/components/MessageContainer");
+let { MessageContainer } = require("devtools/client/webconsole/components/Output/MessageContainer");
 MessageContainer = createFactory(MessageContainer);
 
 // Test fakes.

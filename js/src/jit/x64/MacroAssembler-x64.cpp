@@ -119,11 +119,6 @@ void MacroAssemblerX64::boxValue(JSValueType type, Register src,
   MOZ_ASSERT(src != dest);
 
   JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
-  if (ImmShiftedTag(type).value == 0) {
-    MOZ_ASSERT(type == JSVAL_TYPE_OBJECT);
-    movq(src, dest);
-    return;
-  }
 #ifdef DEBUG
   if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
     Label upper32BitsZeroed;

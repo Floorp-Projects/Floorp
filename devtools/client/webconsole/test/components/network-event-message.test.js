@@ -10,8 +10,8 @@ const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const NetworkEventMessage = createFactory(require("devtools/client/webconsole/components/message-types/NetworkEventMessage"));
-const { INDENT_WIDTH } = require("devtools/client/webconsole/components/MessageIndent");
+const NetworkEventMessage = createFactory(require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage"));
+const { INDENT_WIDTH } = require("devtools/client/webconsole/components/Output/MessageIndent");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");

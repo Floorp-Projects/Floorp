@@ -4,26 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'message-types'
+    'FilterBar',
+    'Input',
+    'Output',
 ]
 
 DevToolsModules(
     'App.js',
-    'CollapseButton.js',
-    'ConfirmDialog.js',
-    'ConsoleOutput.js',
-    'ConsoleTable.js',
-    'FilterBar.js',
-    'FilterButton.js',
-    'FilterCheckbox.js',
-    'GripMessageBody.js',
-    'JSTerm.js',
-    'Message.js',
-    'MessageContainer.js',
-    'MessageIcon.js',
-    'MessageIndent.js',
-    'MessageRepeat.js',
-    'ReverseSearchInput.css',
-    'ReverseSearchInput.js',
-    'SideBar.js'
+    'SideBar.js',
 )

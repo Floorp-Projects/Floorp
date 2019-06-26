@@ -38,7 +38,8 @@ def test_push_to_try(repo, monkeypatch):
     else:
         expected = [
             (tool, 'cinnabar', '--version'),
-            (tool, 'commit', '--allow-empty', '-m', commit_message),
+            (tool, '-c', 'commit.gpgSign=false', 'commit', '--allow-empty',
+                   '-m', commit_message),
             (tool, '-c', 'remote.try.url=hg::ssh://hg.mozilla.org/try',
                    'push', 'try', '+HEAD:refs/heads/branches/default/tip'),
             (tool, 'reset', 'HEAD~'),

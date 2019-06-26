@@ -463,9 +463,13 @@ Toolbox.prototype = {
 
     this.highlightTool("jsdebugger");
 
-    if (packet.why.type === "debuggerStatement" ||
-       packet.why.type === "breakpoint" ||
-       packet.why.type === "exception") {
+    if (
+      packet.why.type === "debuggerStatement" ||
+      packet.why.type === "mutationBreakpoint" ||
+      packet.why.type === "eventBreakpoint" ||
+      packet.why.type === "breakpoint" ||
+      packet.why.type === "exception"
+    ) {
       this.raise();
       this.selectTool("jsdebugger", packet.why.type);
     }
