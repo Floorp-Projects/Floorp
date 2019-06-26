@@ -163,8 +163,8 @@ function buildApzcTree(paint) {
 // Given an APZC tree produced by buildApzcTree, return the RCD node in
 // the tree, or null if there was none.
 function findRcdNode(apzcTree) {
+  // isRootContent will be undefined or "1"
   if (apzcTree.isRootContent) {
-    // isRootContent will be undefined or "1"
     return apzcTree;
   }
   for (var i = 0; i < apzcTree.children.length; i++) {
@@ -293,8 +293,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       var test = aSubtests[testIndex];
       if (w) {
         // Run any cleanup functions registered in the subtest
+        // Guard against the subtest not loading apz_test_utils.js
         if (w.ApzCleanup) {
-          // guard against the subtest not loading apz_test_utils.js
           w.ApzCleanup.execute();
         }
         if (typeof test.dp_suppression != "undefined") {
