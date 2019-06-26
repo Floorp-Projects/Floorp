@@ -1419,8 +1419,6 @@ pref("javascript.options.spectre.jit_to_C++_calls", true);
 // Streams API
 pref("javascript.options.streams", true);
 
-pref("javascript.options.experimental.fields", false);
-
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
 
