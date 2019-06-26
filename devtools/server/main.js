@@ -1175,6 +1175,13 @@ DebuggerServerConnection.prototype = {
         throw new Error(`Connection closed, pending response from '${from}', ` +
                         `type '${type}' failed`);
       }
+
+      // It might happen that a function doesn't return anything (e.g. webconsole's
+      // evaluateJSAsync, which use sendActorEvent instead).
+      if (!response) {
+        return;
+      }
+
       if (!response.from) {
         response.from = from;
       }
