@@ -3,4 +3,4 @@
 load(libdir + "asserts.js");
 
 source = `#_\\u200C`;
-assertThrowsInstanceOf(() => eval(source), ReferenceError);
+assertThrowsInstanceOf(() => eval(source), SyntaxError);
