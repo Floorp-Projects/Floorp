@@ -10222,7 +10222,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableStreams = !op.getBoolOption("no-streams");
   enableBigInt = !op.getBoolOption("no-bigint");
   enableFields = op.getBoolOption("enable-experimental-fields");
-  enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
+  enableAwaitFix = !op.getBoolOption("disable-experimental-await-fix");
 
   JS::ContextOptionsRef(cx)
       .setBaseline(enableBaseline)
@@ -10962,8 +10962,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "no-bigint", "Disable BigInt support") ||
       !op.addBoolOption('\0', "enable-experimental-fields",
                         "Enable fields in classes") ||
-      !op.addBoolOption('\0', "enable-experimental-await-fix",
-                        "Enable new, faster await semantics") ||
+      !op.addBoolOption('\0', "disable-experimental-await-fix",
+                        "Disable new, faster await semantics") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
