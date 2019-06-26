@@ -111,7 +111,11 @@ var DateTimePickerParent = {
     let type = aData.type;
     let detail = aData.detail;
 
-    this._anchor = aBrowser.ownerGlobal.gBrowser.popupAnchor;
+    this._anchor = aBrowser.popupAnchor;
+    if (!this._anchor) {
+      throw new Error("No popup anchor for this browser, cannot show date picker");
+    }
+
     this._anchor.left = rect.left;
     this._anchor.top = rect.top;
     this._anchor.width = rect.width;
@@ -123,7 +127,7 @@ var DateTimePickerParent = {
     let window = aBrowser.ownerGlobal;
     let tabbrowser = window.gBrowser;
     if (Services.focus.activeWindow != window ||
-        tabbrowser.selectedBrowser != aBrowser) {
+        (tabbrowser && tabbrowser.selectedBrowser != aBrowser)) {
       // We were sent a message from a window or tab that went into the
       // background, so we'll ignore it for now.
       return;

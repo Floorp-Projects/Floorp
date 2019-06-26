@@ -108,7 +108,7 @@ var FormValidationHandler =
     this._panel.hidden = false;
 
     let tabBrowser = aWindow.gBrowser;
-    this._anchor = tabBrowser.popupAnchor;
+    this._anchor = tabBrowser.selectedBrowser.popupAnchor;
     this._anchor.left = aPanelData.contentRect.left;
     this._anchor.top = aPanelData.contentRect.top;
     this._anchor.width = aPanelData.contentRect.width;

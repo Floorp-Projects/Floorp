@@ -401,6 +401,30 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     return document.getElementById(this.getAttribute("datetimepicker"));
   }
 
+  /**
+   * Provides a node to hang popups (such as the datetimepicker) from.
+   * If this <browser> isn't the descendant of a <stack>, null is returned
+   * instead and popup code must handle this case.
+   */
+  get popupAnchor() {
+    let stack = this.closest("stack");
+    if (!stack) {
+      return null;
+    }
+
+    let popupAnchor = stack.querySelector(".popup-anchor");
+    if (popupAnchor) {
+      return popupAnchor;
+    }
+
+    // Create an anchor for the popup
+    popupAnchor = document.createXULElement("hbox");
+    popupAnchor.className = "popup-anchor";
+    popupAnchor.hidden = true;
+    stack.appendChild(popupAnchor);
+    return popupAnchor;
+  }
+
   set docShellIsActive(val) {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
