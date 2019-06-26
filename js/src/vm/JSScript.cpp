@@ -668,6 +668,12 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   size += sizeof(Flags);
   size += codeLength * sizeof(jsbytecode);
   size += noteLength * sizeof(jssrcnote);
+
+  unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
+                               unsigned(numScopeNotes > 0) +
+                               unsigned(numTryNotes > 0);
+  size += numOptionalArrays * sizeof(uint32_t);
+
   size += numResumeOffsets * sizeof(uint32_t);
   size += numScopeNotes * sizeof(ScopeNote);
   size += numTryNotes * sizeof(JSTryNote);
@@ -683,6 +689,77 @@ void SharedScriptData::initElements(size_t offset, size_t length) {
   DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
 }
 
+// Initialize the optional arrays in the trailing allocation. This is a set of
+// offsets that delimit each optional array followed by the arrays themselves.
+// See comment before 'SharedScriptData' for more details.
+void SharedScriptData::initOptionalArrays(size_t* pcursor,
+                                          SharedScriptData::Flags* flags,
+                                          uint32_t numResumeOffsets,
+                                          uint32_t numScopeNotes,
+                                          uint32_t numTryNotes) {
+  size_t cursor = (*pcursor);
+
+  // The byte arrays must have already been padded.
+  MOZ_ASSERT(cursor % sizeof(uint32_t) == 0);
+
+  // Each non-empty optional array needs will need an offset to its end.
+  unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
+                               unsigned(numScopeNotes > 0) +
+                               unsigned(numTryNotes > 0);
+
+  // Default-initialize the optional-offsets.
+  static_assert(alignof(SharedScriptData) >= alignof(uint32_t),
+                "Incompatible alignment");
+  initElements<uint32_t>(cursor, numOptionalArrays);
+  cursor += numOptionalArrays * sizeof(uint32_t);
+
+  // Offset between optional-offsets table and the optional arrays. This is
+  // later used to access the optional-offsets table as well as first optional
+  // array.
+  optArrayOffset_ = cursor;
+
+  // Each optional array that follows must store an end-offset in the offset
+  // table. Assign table entries by using this 'offsetIndex'. The index 0 is
+  // reserved for implicit value 'optArrayOffset'.
+  int offsetIndex = 0;
+
+  // Default-initialize optional 'resumeOffsets'.
+  MOZ_ASSERT(resumeOffsetsOffset() == cursor);
+  if (numResumeOffsets > 0) {
+    static_assert(sizeof(uint32_t) >= alignof(uint32_t),
+                  "Incompatible alignment");
+    initElements<uint32_t>(cursor, numResumeOffsets);
+    cursor += numResumeOffsets * sizeof(uint32_t);
+    setOptionalOffset(++offsetIndex, cursor);
+  }
+  flags->resumeOffsetsEndIndex = offsetIndex;
+
+  // Default-initialize optional 'scopeNotes'.
+  MOZ_ASSERT(scopeNotesOffset() == cursor);
+  if (numScopeNotes > 0) {
+    static_assert(sizeof(uint32_t) >= alignof(ScopeNote),
+                  "Incompatible alignment");
+    initElements<ScopeNote>(cursor, numScopeNotes);
+    cursor += numScopeNotes * sizeof(ScopeNote);
+    setOptionalOffset(++offsetIndex, cursor);
+  }
+  flags->scopeNotesEndIndex = offsetIndex;
+
+  // Default-initialize optional 'tryNotes'
+  MOZ_ASSERT(tryNotesOffset() == cursor);
+  if (numTryNotes > 0) {
+    static_assert(sizeof(ScopeNote) >= alignof(JSTryNote),
+                  "Incompatible alignment");
+    initElements<JSTryNote>(cursor, numTryNotes);
+    cursor += numTryNotes * sizeof(JSTryNote);
+    setOptionalOffset(++offsetIndex, cursor);
+  }
+  flags->tryNotesEndIndex = offsetIndex;
+
+  MOZ_ASSERT(endOffset() == cursor);
+  (*pcursor) = cursor;
+}
+
 SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
                                    uint32_t natoms, uint32_t numResumeOffsets,
                                    uint32_t numScopeNotes, uint32_t numTryNotes)
@@ -690,8 +767,7 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
   // Variable-length data begins immediately after SharedScriptData itself.
   size_t cursor = sizeof(*this);
 
-  // Default-initialize trailing arrays.
-
+  // Default-initialize 'atoms'
   static_assert(alignof(SharedScriptData) >= alignof(GCPtrAtom),
                 "Incompatible alignment");
   initElements<GCPtrAtom>(cursor, natoms);
@@ -721,26 +797,9 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
     MOZ_ASSERT(cursor % CodeNoteAlign == 0);
   }
 
-  static_assert(alignof(uint32_t) >= alignof(uint32_t),
-                "Incompatible alignment");
-  resumeOffsetsOffset_ = cursor;
-  initElements<uint32_t>(cursor, numResumeOffsets);
-  cursor += numResumeOffsets * sizeof(uint32_t);
-
-  static_assert(alignof(uint32_t) >= alignof(ScopeNote),
-                "Incompatible alignment");
-  scopeNotesOffset_ = cursor;
-  initElements<ScopeNote>(cursor, numScopeNotes);
-  cursor += numScopeNotes * sizeof(ScopeNote);
-
-  static_assert(alignof(ScopeNote) >= alignof(JSTryNote),
-                "Incompatible alignment");
-  tryNotesOffset_ = cursor;
-  initElements<JSTryNote>(cursor, numTryNotes);
-  cursor += numTryNotes * sizeof(JSTryNote);
-
-  // Offset to end of SharedScriptData
-  tailOffset_ = cursor;
+  // Initialization for remaining arrays.
+  initOptionalArrays(&cursor, &flagsRef(), numResumeOffsets, numScopeNotes,
+                     numTryNotes);
 
   // Check that we correctly recompute the expected values.
   MOZ_ASSERT(this->natoms() == natoms);
