@@ -1094,6 +1094,9 @@ struct sslSocketStr {
     /* The information from the ESNI keys record
      * (also the private key for the server). */
     sslEsniKeys *esniKeys;
+
+    /* Anti-replay for TLS 1.3 0-RTT. */
+    SSLAntiReplayContext *antiReplay;
 };
 
 struct sslSelfEncryptKeysStr {

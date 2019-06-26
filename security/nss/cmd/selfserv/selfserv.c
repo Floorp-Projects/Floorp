@@ -805,6 +805,7 @@ PRBool enableSessionTickets = PR_FALSE;
 PRBool failedToNegotiateName = PR_FALSE;
 PRBool enableExtendedMasterSecret = PR_FALSE;
 PRBool zeroRTT = PR_FALSE;
+SSLAntiReplayContext *antiReplay = NULL;
 PRBool enableALPN = PR_FALSE;
 PRBool enablePostHandshakeAuth = PR_FALSE;
 SSLNamedGroup *enabledGroups = NULL;
@@ -1954,7 +1955,7 @@ server_main(
         if (enabledVersions.max < SSL_LIBRARY_VERSION_TLS_1_3) {
             errExit("You tried enabling 0RTT without enabling TLS 1.3!");
         }
-        rv = SSL_InitAntiReplay(PR_Now(), 10L * PR_USEC_PER_SEC, 7, 14);
+        rv = SSL_SetAntiReplayContext(model_sock, antiReplay);
         if (rv != SECSuccess) {
             errExit("error configuring anti-replay ");
         }
@@ -2723,6 +2724,12 @@ main(int argc, char **argv)
         }
         fprintf(stderr, "selfserv: Done creating dynamic weak DH parameters\n");
     }
+    if (zeroRTT) {
+        rv = SSL_CreateAntiReplayContext(PR_Now(), 10L * PR_USEC_PER_SEC, 7, 14, &antiReplay);
+        if (rv != SECSuccess) {
+            errExit("Unable to create anti-replay context for 0-RTT.");
+        }
+    }
 
     /* allocate the array of thread slots, and launch the worker threads. */
     rv = launch_threads(&jobLoop, 0, 0, useLocalThreads);
@@ -2797,6 +2804,9 @@ cleanup:
     }
     if (enabledGroups) {
         PORT_Free(enabledGroups);
+    }
+    if (antiReplay) {
+        SSL_ReleaseAntiReplayContext(antiReplay);
     }
     if (NSS_Shutdown() != SECSuccess) {
         SECU_PrintError(progName, "NSS_Shutdown");
