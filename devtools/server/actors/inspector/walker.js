@@ -141,6 +141,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._refMap = new Map();
     this._pendingMutations = [];
     this._activePseudoClassLocks = new Set();
+    this._mutationBreakpoints = new WeakMap();
     this.customElementWatcher = new CustomElementWatcher(targetActor.chromeEventHandler);
 
     this.showAllAnonymousContent = options.showAllAnonymousContent;
@@ -158,6 +159,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // list contains orphaned nodes that were so retained.
     this._retainedOrphans = new Set();
 
+    this.onNodeInserted = this.onNodeInserted.bind(this);
+    this.onNodeRemoved = this.onNodeRemoved.bind(this);
+    this.onAttributeModified = this.onAttributeModified.bind(this);
+    this.onNodeRemovedFromDocument = this.onNodeRemovedFromDocument.bind(this);
     this.onMutations = this.onMutations.bind(this);
     this.onSlotchange = this.onSlotchange.bind(this);
     this.onShadowrootattached = this.onShadowrootattached.bind(this);
@@ -1686,6 +1691,261 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     oldNode.remove();
     return null;
+  },
+
+  /**
+   * Gets the state of the mutation breakpoint types for this actor.
+   *
+   * @param {NodeActor} node The node to get breakpoint info for.
+   */
+  getMutationBreakpoints(node) {
+    let bps;
+    if (!isNodeDead(node)) {
+      bps = this._breakpointInfoForNode(node.rawNode);
+    }
+
+    return bps || {
+      subtree: false,
+      removal: false,
+      attribute: false,
+    };
+  },
+
+  /**
+   * Set the state of some subset of mutation breakpoint types for this actor.
+   *
+   * @param {NodeActor} node The node to set breakpoint info for.
+   * @param {Object} bps A subset of the breakpoints for this actor that
+   *                            should be updated to new states.
+   */
+  setMutationBreakpoints(node, bps) {
+    if (isNodeDead(node)) {
+      return;
+    }
+    const rawNode = node.rawNode;
+
+    if (rawNode.ownerDocument && !rawNode.ownerDocument.contains(rawNode)) {
+      // We only allow watching for mutations on nodes that are attached to
+      // documents. That allows us to clean up our mutation listeners when all
+      // of the watched nodes have been removed from the document.
+      return;
+    }
+
+    // This argument has nullable fields so we want to only update boolean
+    // field values.
+    const bpsForNode = Object.keys(bps).reduce((obj, bp) => {
+      if (typeof bps[bp] === "boolean") {
+        obj[bp] = bps[bp];
+      }
+      return obj;
+    }, {});
+
+    this._updateMutationBreakpointState(rawNode, {
+      ...this.getMutationBreakpoints(node),
+      ...bpsForNode,
+    });
+  },
+
+  /**
+   * Update the mutation breakpoint state for the given DOM node.
+   *
+   * @param {Node} rawNode The DOM node.
+   * @param {Object} bpsForNode The state of each mutation bp type we support.
+   */
+  _updateMutationBreakpointState(rawNode, bpsForNode) {
+    const rawDoc = rawNode.ownerDocument || rawNode;
+
+    const docMutationBreakpoints = this._mutationBreakpointsForDoc(
+      rawDoc, true /* createIfNeeded */);
+    const originalBpsForNode = this._breakpointInfoForNode(rawNode) || {};
+
+    docMutationBreakpoints.nodes.set(rawNode, bpsForNode);
+    if (originalBpsForNode.subtree && !bpsForNode.subtree) {
+      docMutationBreakpoints.counts.subtree -= 1;
+    } else if (!originalBpsForNode.subtree && bpsForNode.subtree) {
+      docMutationBreakpoints.counts.subtree += 1;
+    }
+
+    if (originalBpsForNode.removal && !bpsForNode.removal) {
+      docMutationBreakpoints.counts.removal -= 1;
+    } else if (!originalBpsForNode.removal && bpsForNode.removal) {
+      docMutationBreakpoints.counts.removal += 1;
+    }
+
+    if (originalBpsForNode.attribute && !bpsForNode.attribute) {
+      docMutationBreakpoints.counts.attribute -= 1;
+    } else if (!originalBpsForNode.attribute && bpsForNode.attribute) {
+      docMutationBreakpoints.counts.attribute += 1;
+    }
+
+    this._updateNodeMutationListeners(rawNode);
+    this._updateDocumentMutationListeners(rawDoc);
+
+    const actor = this.getNode(rawNode);
+    if (actor) {
+      this.queueMutation({
+        type: "mutationBreakpointUpdate",
+        target: actor.actorID,
+        mutationBreakpoints: this.getMutationBreakpoints(rawNode),
+      });
+    }
+  },
+
+  /**
+   * Controls whether this DOM node has a listener attached.
+   *
+   * @param {Node} rawNode The DOM node.
+   */
+  _updateNodeMutationListeners(rawNode) {
+    const bpInfo = this._breakpointInfoForNode(rawNode);
+    if (bpInfo.subtree || bpInfo.removal || bpInfo.attribute) {
+      eventListenerService.addSystemEventListener(
+        rawNode,
+        "DOMNodeRemovedFromDocument",
+        this.onNodeRemovedFromDocument,
+        true /* capture */
+      );
+    } else {
+      eventListenerService.removeSystemEventListener(
+        rawNode,
+        "DOMNodeRemovedFromDocument",
+        this.onNodeRemovedFromDocument,
+        true /* capture */
+      );
+    }
+  },
+
+  /**
+   * Controls whether this DOM document has event listeners attached for
+   * handling of DOM mutation breakpoints.
+   *
+   * @param {Document} rawDoc The DOM document.
+   */
+  _updateDocumentMutationListeners(rawDoc) {
+    const docMutationBreakpoints = this._mutationBreakpointsForDoc(rawDoc);
+    if (!docMutationBreakpoints) {
+      return;
+    }
+
+    if (docMutationBreakpoints.counts.subtree > 0) {
+      eventListenerService.addSystemEventListener(
+        rawDoc,
+        "DOMNodeInserted",
+        this.onNodeInserted,
+        true /* capture */
+      );
+    } else {
+      eventListenerService.removeSystemEventListener(
+        rawDoc,
+        "DOMNodeInserted",
+        this.onNodeInserted,
+        true /* capture */
+      );
+    }
+
+    if (
+      docMutationBreakpoints.counts.subtree > 0 ||
+      docMutationBreakpoints.counts.removal > 0
+    ) {
+      eventListenerService.addSystemEventListener(
+        rawDoc,
+        "DOMNodeRemoved",
+        this.onNodeRemoved,
+        true /* capture */
+      );
+    } else {
+      eventListenerService.removeSystemEventListener(
+        rawDoc,
+        "DOMNodeRemoved",
+        this.onNodeRemoved,
+        true /* capture */
+      );
+    }
+
+    if (docMutationBreakpoints.counts.attribute > 0) {
+      eventListenerService.addSystemEventListener(
+        rawDoc,
+        "DOMAttrModified",
+        this.onAttributeModified,
+        true /* capture */
+      );
+    } else {
+      eventListenerService.removeSystemEventListener(
+        rawDoc,
+        "DOMAttrModified",
+        this.onAttributeModified,
+        true /* capture */
+      );
+    }
+  },
+
+  _breakOnMutation: function(bpType) {
+    this.targetActor.threadActor.pauseForMutationBreakpoint(bpType);
+  },
+
+  _mutationBreakpointsForDoc(rawDoc, createIfNeeded = false) {
+    let docMutationBreakpoints = this._mutationBreakpoints.get(rawDoc);
+    if (!docMutationBreakpoints && createIfNeeded) {
+      docMutationBreakpoints = {
+        counts: {
+          subtree: 0,
+          removal: 0,
+          attribute: 0,
+        },
+        nodes: new WeakMap(),
+      };
+      this._mutationBreakpoints.set(rawDoc, docMutationBreakpoints);
+    }
+    return docMutationBreakpoints;
+  },
+
+  _breakpointInfoForNode: function(target) {
+    const docMutationBreakpoints =
+      this._mutationBreakpointsForDoc(target.ownerDocument || target);
+    return (
+      docMutationBreakpoints &&
+      docMutationBreakpoints.nodes.get(target) ||
+      null
+    );
+  },
+
+  onNodeInserted: function(evt) {
+    this.onSubtreeModified(evt);
+  },
+
+  onNodeRemoved: function(evt) {
+    const mutationBpInfo = this._breakpointInfoForNode(evt.target);
+    if (mutationBpInfo && mutationBpInfo.removal) {
+      this._breakOnMutation("nodeRemoved");
+    } else {
+      this.onSubtreeModified(evt);
+    }
+  },
+
+  onAttributeModified: function(evt) {
+    const mutationBpInfo = this._breakpointInfoForNode(evt.target);
+    if (mutationBpInfo && mutationBpInfo.attribute) {
+      this._breakOnMutation("attributeModified");
+    }
+  },
+
+  onSubtreeModified: function(evt) {
+    let node = evt.target;
+    while ((node = node.parentNode) !== null) {
+      const mutationBpInfo = this._breakpointInfoForNode(node);
+      if (mutationBpInfo && mutationBpInfo.subtree) {
+        this._breakOnMutation("subtreeModified");
+        break;
+      }
+    }
+  },
+
+  onNodeRemovedFromDocument: function(evt) {
+    this._updateMutationBreakpointState(evt.target, {
+      subtree: false,
+      removal: false,
+      attribute: false,
+    });
   },
 
   /**
