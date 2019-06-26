@@ -861,6 +861,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                                           bool aAsyncAddtrack = true);
 
   /**
+   * Discard all output streams that are flagged to finish when playback ends.
+   */
+  void DiscardFinishWhenEndedOutputStreams();
+
+  /**
    * Returns an DOMMediaStream containing the played contents of this
    * element. When aBehavior is FINISH_WHEN_ENDED, when this element ends
    * playback we will finish the stream and not play any more into it.  When
