@@ -421,7 +421,7 @@ endif
 default all::
 	$(foreach tier,$(TIERS),$(call SUBMAKE,$(tier)))
 
-ifeq ($(findstring s,$(filter-out --%, $(MAKEFLAGS))),)
+ifdef BUILD_VERBOSE_LOG
 ECHO := echo
 QUIET :=
 else
