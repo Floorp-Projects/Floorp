@@ -12,9 +12,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const actions = require("devtools/client/webconsole/actions/index");
 
-const Message = createFactory(require("devtools/client/webconsole/components/Message"));
+const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
 
-loader.lazyRequireGetter(this, "GripMessageBody", "devtools/client/webconsole/components/GripMessageBody");
+loader.lazyRequireGetter(this, "GripMessageBody", "devtools/client/webconsole/components/Output/GripMessageBody");
 
 /**
  * This component is responsible for rendering CSS warnings in the Console panel.

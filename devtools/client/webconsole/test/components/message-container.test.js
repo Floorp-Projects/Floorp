@@ -8,12 +8,12 @@ const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-let { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/components/MessageContainer");
+let { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/components/Output/MessageContainer");
 MessageContainer = createFactory(MessageContainer);
-const ConsoleApiCall = require("devtools/client/webconsole/components/message-types/ConsoleApiCall");
-const CSSWarning = require("devtools/client/webconsole/components/message-types/CSSWarning");
-const EvaluationResult = require("devtools/client/webconsole/components/message-types/EvaluationResult");
-const PageError = require("devtools/client/webconsole/components/message-types/PageError");
+const ConsoleApiCall = require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall");
+const CSSWarning = require("devtools/client/webconsole/components/Output/message-types/CSSWarning");
+const EvaluationResult = require("devtools/client/webconsole/components/Output/message-types/EvaluationResult");
+const PageError = require("devtools/client/webconsole/components/Output/message-types/PageError");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");

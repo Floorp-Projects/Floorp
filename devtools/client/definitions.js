@@ -150,7 +150,7 @@ Tools.jsdebugger = {
 
 Tools.styleEditor = {
   id: "styleeditor",
-  ordinal: 4,
+  ordinal: 5,
   visibilityswitch: "devtools.styleeditor.enabled",
   accesskey: l10n("open.accesskey"),
   icon: "chrome://devtools/skin/images/tool-styleeditor.svg",
@@ -173,7 +173,7 @@ Tools.styleEditor = {
 
 Tools.performance = {
  id: "performance",
- ordinal: 7,
+ ordinal: 6,
  icon: "chrome://devtools/skin/images/tool-profiler.svg",
  visibilityswitch: "devtools.performance.enabled",
  label: l10n("performance.label"),
@@ -220,7 +220,7 @@ Services.prefs.addObserver(
 
 Tools.memory = {
   id: "memory",
-  ordinal: 8,
+  ordinal: 7,
   icon: "chrome://devtools/skin/images/tool-memory.svg",
   url: "chrome://devtools/content/memory/index.xhtml",
   visibilityswitch: "devtools.memory.enabled",
@@ -241,7 +241,7 @@ Tools.memory = {
 Tools.netMonitor = {
   id: "netmonitor",
   accesskey: l10n("netmonitor.accesskey"),
-  ordinal: 9,
+  ordinal: 4,
   visibilityswitch: "devtools.netmonitor.enabled",
   icon: "chrome://devtools/skin/images/tool-network.svg",
   url: "chrome://devtools/content/netmonitor/index.html",
@@ -265,7 +265,7 @@ Tools.netMonitor = {
 
 Tools.storage = {
   id: "storage",
-  ordinal: 10,
+  ordinal: 8,
   accesskey: l10n("storage.accesskey"),
   visibilityswitch: "devtools.storage.enabled",
   icon: "chrome://devtools/skin/images/tool-storage.svg",
@@ -310,7 +310,7 @@ Tools.scratchpad = {
 Tools.dom = {
   id: "dom",
   accesskey: l10n("dom.accesskey"),
-  ordinal: 13,
+  ordinal: 11,
   visibilityswitch: "devtools.dom.enabled",
   icon: "chrome://devtools/skin/images/tool-dom.svg",
   url: "chrome://devtools/content/dom/index.html",
@@ -335,7 +335,7 @@ Tools.dom = {
 Tools.accessibility = {
   id: "accessibility",
   accesskey: l10n("accessibility.accesskey"),
-  ordinal: 14,
+  ordinal: 9,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.accessibility.enabled",
   icon: "chrome://devtools/skin/images/tool-accessibility.svg",
@@ -364,7 +364,7 @@ Tools.accessibility = {
 
 Tools.application = {
   id: "application",
-  ordinal: 15,
+  ordinal: 10,
   visibilityswitch: "devtools.application.enabled",
   icon: "chrome://devtools/skin/images/tool-application.svg",
   url: "chrome://devtools/content/application/index.html",

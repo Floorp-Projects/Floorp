@@ -11,7 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   MESSAGE_TYPE,
   JSTERM_COMMANDS,
-} = require("../constants");
+} = require("devtools/client/webconsole/constants");
 const { getObjectInspector } = require("devtools/client/webconsole/utils/object-inspector");
 const actions = require("devtools/client/webconsole/actions/index");
 

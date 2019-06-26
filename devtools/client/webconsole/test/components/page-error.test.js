@@ -14,12 +14,12 @@ const { setupStore } = require("devtools/client/webconsole/test/helpers");
 const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 
 // Components under test.
-const PageError = require("devtools/client/webconsole/components/message-types/PageError");
+const PageError = require("devtools/client/webconsole/components/Output/message-types/PageError");
 const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
 } = require("devtools/client/webconsole/constants");
-const { INDENT_WIDTH } = require("devtools/client/webconsole/components/MessageIndent");
+const { INDENT_WIDTH } = require("devtools/client/webconsole/components/Output/MessageIndent");
 
 // Test fakes.
 const { stubPackets, stubPreparedMessages } =
