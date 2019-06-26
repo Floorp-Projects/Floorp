@@ -4,6 +4,9 @@ var max = 40;
 setJitCompilerOption("ion.warmup.trigger", max - 10);
 setJitCompilerOption("ion.full.warmup.trigger", max - 10);
 
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
 // This function is used to escape "g" which is a non-escaped inner function.
 // As it is not escaped within "f", the lambda for "g" would be computed on the
 // bailout path. Resolving the first ".caller" implies that we have to recover

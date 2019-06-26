@@ -11,6 +11,9 @@ if (!opts['ion.enable'] || !opts['baseline.enable'] ||
     crash("Cannot test assertRecoveredOnBailout");
 }
 
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
 function g() {
     return inIon();
 }

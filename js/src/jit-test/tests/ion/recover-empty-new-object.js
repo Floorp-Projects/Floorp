@@ -10,6 +10,9 @@
 if (getJitCompilerOptions()["ion.warmup.trigger"] <= 20)
     setJitCompilerOption("ion.warmup.trigger", 20);
 
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
 // These arguments have to be computed by baseline, and thus captured in a
 // resume point. The next function checks that we can remove the computation of
 // these arguments.

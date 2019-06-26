@@ -1,6 +1,9 @@
 var max = 40;
 setJitCompilerOption("ion.warmup.trigger", max - 10);
 
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
 function selfhosted() {
     if (typeof getSelfHostedValue === "undefined")
         return;
