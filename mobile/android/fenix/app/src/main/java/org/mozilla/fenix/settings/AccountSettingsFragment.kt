@@ -181,11 +181,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private val syncStatusObserver = object : SyncStatusObserver {
-        private val key = context!!.getPreferenceKey(R.string.pref_key_sync_now)
-
         override fun onStarted() {
             lifecycleScope.launch {
-                val pref = findPreference<Preference>(key)
+                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
                 view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
                 pref?.title = getString(R.string.sync_syncing_in_progress)
                 pref?.isEnabled = false
@@ -197,7 +195,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         // Sync stopped successfully.
         override fun onIdle() {
             lifecycleScope.launch {
-                findPreference<Preference>(key)?.let { pref ->
+                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)
                     pref.isEnabled = true
                     updateLastSyncedTimePref(context!!, pref, failed = false)
@@ -208,7 +207,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         // Sync stopped after encountering a problem.
         override fun onError(error: Exception?) {
             lifecycleScope.launch {
-                findPreference<Preference>(key)?.let { pref ->
+                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)
                     pref.isEnabled = true
                     updateLastSyncedTimePref(context!!, pref, failed = true)
