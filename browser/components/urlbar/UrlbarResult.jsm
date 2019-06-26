@@ -149,10 +149,12 @@ class UrlbarResult {
    * @param {array} tokens The tokens that should be highlighted in each of the
    *        payload properties.
    * @param {object} payloadInfo An object that looks like this:
-   *        {
-   *          payloadPropertyName: [payloadPropertyValue, shouldHighlight],
-   *          ...
-   *        }
+   *        { payloadPropertyName: payloadPropertyInfo }
+   *
+   *        Each payloadPropertyInfo may be either a string or an array.  If
+   *        it's a string, then the property value will be that string, and no
+   *        highlighting will be applied to it.  If it's an array, then it
+   *        should look like this: [payloadPropertyValue, shouldHighlight].
    *        payloadPropertyValue may be a string or an array of strings.  If
    *        it's a string, then the payloadHighlights in the return value will
    *        be an array of match highlights as described in
@@ -162,7 +164,14 @@ class UrlbarResult {
    * @returns {array} An array [payload, payloadHighlights].
    */
   static payloadAndSimpleHighlights(tokens, payloadInfo) {
-    if ((!payloadInfo.title || (payloadInfo.title && !payloadInfo.title[0])) &&
+    // Convert string values in payloadInfo to [value, false] arrays.
+    for (let [name, info] of Object.entries(payloadInfo)) {
+      if (typeof(info) == "string") {
+        payloadInfo[name] = [info, false];
+      }
+    }
+
+    if ((!payloadInfo.title || !payloadInfo.title[0]) &&
         payloadInfo.url && typeof payloadInfo.url[0] == "string") {
       // If there's no title, show the domain as the title.  Not all valid URLs
       // have a domain.
