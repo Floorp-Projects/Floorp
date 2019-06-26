@@ -334,6 +334,12 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   bool IsPendingLoad(imgIRequest* aRequest) const;
 
   /**
+   * Updates mImage based on the current image request (cannot be null), and the
+   * image passed in (can be null), and invalidate layout and paint as needed.
+   */
+  void UpdateImage(imgIRequest* aRequest, imgIContainer* aImage);
+
+  /**
    * Function to convert a dirty rect in the source image to a dirty
    * rect for the image frame.
    */
