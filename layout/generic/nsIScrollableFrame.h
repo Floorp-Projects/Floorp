@@ -564,6 +564,13 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool SmoothScrollVisual(
       const nsPoint& aVisualViewportOffset,
       mozilla::layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType) = 0;
+
+  /**
+   * Returns true if this scroll frame should perform smooth scroll with the
+   * given |aBehavior|.
+   */
+  virtual bool IsSmoothScroll(mozilla::dom::ScrollBehavior aBehavior =
+                                  mozilla::dom::ScrollBehavior::Auto) const = 0;
 };
 
 #endif

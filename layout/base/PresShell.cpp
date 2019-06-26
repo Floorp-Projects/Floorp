@@ -3390,9 +3390,7 @@ static void ScrollToShowRect(PresShell* aPresShell,
   // a current smooth scroll operation.
   if (needToScroll) {
     ScrollMode scrollMode = ScrollMode::Instant;
-    bool autoBehaviorIsSmooth =
-        (aFrameAsScrollable->GetScrollStyles().mScrollBehavior ==
-         NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
+    bool autoBehaviorIsSmooth = aFrameAsScrollable->IsSmoothScroll();
     bool smoothScroll = (aScrollFlags & ScrollFlags::ScrollSmooth) ||
                         ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) &&
                          autoBehaviorIsSmooth);

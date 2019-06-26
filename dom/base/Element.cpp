@@ -786,15 +786,9 @@ void Element::Scroll(const CSSIntPoint& aScroll,
                      const ScrollOptions& aOptions) {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
-    ScrollMode scrollMode = ScrollMode::Instant;
-    if (aOptions.mBehavior == ScrollBehavior::Smooth) {
-      scrollMode = ScrollMode::SmoothMsd;
-    } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
-      ScrollStyles styles = sf->GetScrollStyles();
-      if (styles.mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
-        scrollMode = ScrollMode::SmoothMsd;
-      }
-    }
+    ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
+                                ? ScrollMode::SmoothMsd
+                                : ScrollMode::Instant;
 
     sf->ScrollToCSSPixels(aScroll, scrollMode);
   }
@@ -849,15 +843,9 @@ void Element::ScrollBy(const ScrollToOptions& aOptions) {
       scrollDelta.y = mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
     }
 
-    ScrollMode scrollMode = ScrollMode::Instant;
-    if (aOptions.mBehavior == ScrollBehavior::Smooth) {
-      scrollMode = ScrollMode::SmoothMsd;
-    } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
-      ScrollStyles styles = sf->GetScrollStyles();
-      if (styles.mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
-        scrollMode = ScrollMode::SmoothMsd;
-      }
-    }
+    ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
+                                ? ScrollMode::SmoothMsd
+                                : ScrollMode::Instant;
 
     sf->ScrollByCSSPixels(scrollDelta, scrollMode, nsGkAtoms::relative);
   }
@@ -879,11 +867,9 @@ void Element::SetScrollTop(int32_t aScrollTop) {
   FlushType flushType = aScrollTop == 0 ? FlushType::Frames : FlushType::Layout;
   nsIScrollableFrame* sf = GetScrollFrame(nullptr, flushType);
   if (sf) {
-    ScrollMode scrollMode = ScrollMode::Instant;
-    if (sf->GetScrollStyles().mScrollBehavior ==
-        NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
-      scrollMode = ScrollMode::SmoothMsd;
-    }
+    ScrollMode scrollMode =
+        sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
+
     sf->ScrollToCSSPixels(
         CSSIntPoint(sf->GetScrollPositionCSSPixels().x, aScrollTop),
         scrollMode);
@@ -901,11 +887,8 @@ void Element::SetScrollLeft(int32_t aScrollLeft) {
   // range.  So we need to flush layout no matter what.
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
-    ScrollMode scrollMode = ScrollMode::Instant;
-    if (sf->GetScrollStyles().mScrollBehavior ==
-        NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
-      scrollMode = ScrollMode::SmoothMsd;
-    }
+    ScrollMode scrollMode =
+        sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
 
     sf->ScrollToCSSPixels(
         CSSIntPoint(aScrollLeft, sf->GetScrollPositionCSSPixels().y),
