@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Localization.prototype.formatMessages API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { FluentBundle } =
+    ChromeUtils.import("resource://gre/modules/Fluent.jsm");
+
+  async function* mockGenerateMessages(locales, resourceIds) {
+    const bundle = new FluentBundle(locales, {
+      useIsolating: false,
+    });
+    bundle.addMessages(`
+key1 = Value
+  .title = Title 1
+  .accesskey = K
+key2 =
+  .label = This is a label for { $user }
+    `);
+    yield bundle;
+  }
+
+  (async () => {
+    SimpleTest.waitForExplicitFinish();
+
+    const loc = new Localization(
+      ['mock.ftl'],
+      mockGenerateMessages,
+    );
+
+    {
+      // Simple mix works.
+      let msgs = await loc.formatMessages([
+        {id: "key1"},
+        {id: "key2", args: { user: "Amy"}},
+      ]);
+      is(msgs[0].value, "Value");
+      is(msgs[0].attributes[0].name, "title");
+      is(msgs[0].attributes[0].value, "Title 1");
+      is(msgs[0].attributes[1].name, "accesskey");
+      is(msgs[0].attributes[1].value, "K");
+
+      is(msgs[1].value, null);
+      is(msgs[1].attributes[0].name, "label");
+      is(msgs[1].attributes[0].value, "This is a label for Amy");
+    }
+
+    {
+      // Missing arguments cause exception in automation.
+      try {
+        let msgs = await loc.formatMessages([
+          {id: "key1"},
+          {id: "key2"},
+        ]);
+        ok(false, "Missing argument didn't cause an exception.");
+      } catch (e) {
+        is(e,
+          "[fluent][resolver] errors in mock.ftl/key2: ReferenceError: Unknown variable: user.",
+          "Missing key causes an exception.");
+      }
+    }
+
+    {
+      // Missing keys cause exception in automation.
+      try {
+        let msgs = await loc.formatMessages([
+          { id: "key1" },
+          { id: "key4" },
+        ]);
+        ok(false, "Missing key didn't cause an exception.");
+      } catch (e) {
+        is(e,
+           "[fluent] Missing translations in mock.ftl: key4.",
+           "Missing key causes an exception.");
+      }
+    }
+    SimpleTest.finish();
+  })();
+  </script>
+</head>
+<body>
+</body>
+</html>
