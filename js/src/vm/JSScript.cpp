@@ -665,6 +665,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   size_t size = sizeof(SharedScriptData);
 
   size += natoms * sizeof(GCPtrAtom);
+  size += sizeof(Flags);
   size += codeLength * sizeof(jsbytecode);
   size += noteLength * sizeof(jssrcnote);
   size += numResumeOffsets * sizeof(uint32_t);
@@ -701,7 +702,12 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
   {
     MOZ_ASSERT(cursor % CodeNoteAlign == 0);
 
-    static_assert(CodeNoteAlign >= alignof(jsbytecode),
+    // Zero-initialize 'flags'
+    static_assert(CodeNoteAlign >= alignof(Flags), "Incompatible alignment");
+    new (offsetToPointer<void>(cursor)) Flags{};
+    cursor += sizeof(Flags);
+
+    static_assert(alignof(Flags) >= alignof(jsbytecode),
                   "Incompatible alignment");
     codeOffset_ = cursor;
     initElements<jsbytecode>(cursor, codeLength);
@@ -3434,8 +3440,15 @@ bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
                                       uint32_t numResumeOffsets,
                                       uint32_t numScopeNotes,
                                       uint32_t numTryNotes) {
-  MOZ_ASSERT((codeLength + noteLength) % sizeof(uint32_t) == 0,
+#ifdef DEBUG
+  // The compact arrays need to maintain uint32_t alignment. This should have
+  // been done by padding out source notes.
+  size_t byteArrayLength =
+      sizeof(SharedScriptData::Flags) + codeLength + noteLength;
+  MOZ_ASSERT(byteArrayLength % sizeof(uint32_t) == 0,
              "Source notes should have been padded already");
+#endif
+
   MOZ_ASSERT(!scriptData_);
   scriptData_ =
       SharedScriptData::new_(cx, codeLength, noteLength, natoms,
