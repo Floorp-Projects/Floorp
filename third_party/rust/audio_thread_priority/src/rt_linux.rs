@@ -111,7 +111,7 @@ pub fn promote_current_thread_to_real_time_internal(audio_buffer_frames: u32,
     let handle = RtPriorityHandleInternal { pthread_id, policy, param};
     let r = make_realtime(thread_id, budget_us, RT_PRIO_DEFAULT);
     if r.is_err() {
-        error!("Could not make thread real-time.");
+        warn!("Could not make thread real-time.");
         return Err(());
     }
     return Ok(handle);
@@ -124,7 +124,7 @@ pub fn demote_current_thread_from_real_time_internal(rt_priority_handle: RtPrior
     if unsafe { libc::pthread_setschedparam(rt_priority_handle.pthread_id,
                                             rt_priority_handle.policy,
                                             &rt_priority_handle.param) } < 0 {
-        error!("could not demote thread {}", rt_priority_handle.pthread_id);
+        warn!("could not demote thread {}", rt_priority_handle.pthread_id);
         return Err(());
     }
     return Ok(());
