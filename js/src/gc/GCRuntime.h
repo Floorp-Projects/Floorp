@@ -317,6 +317,9 @@ class GCRuntime {
     return uid;
   }
 
+  void setLowMemoryState(bool newState) { lowMemoryState = newState; }
+  bool systemHasLowMemory() const { return lowMemoryState; }
+
 #ifdef DEBUG
   bool shutdownCollectedEverything() const { return arenasEmptyAtShutdown; }
 #endif
@@ -408,7 +411,6 @@ class GCRuntime {
       JS::GCNurseryCollectionCallback callback);
   JS::DoCycleCollectionCallback setDoCycleCollectionCallback(
       JS::DoCycleCollectionCallback callback);
-  void callDoCycleCollectionCallback(JSContext* cx);
 
   void setFullCompartmentChecks(bool enable);
 
@@ -705,6 +707,7 @@ class GCRuntime {
   void callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const;
   void callWeakPointerZonesCallbacks() const;
   void callWeakPointerCompartmentCallbacks(JS::Compartment* comp) const;
+  void callDoCycleCollectionCallback(JSContext* cx);
 
  public:
   JSRuntime* const rt;
@@ -1014,6 +1017,8 @@ class GCRuntime {
 
   /* Always preserve JIT code during GCs, for testing. */
   MainThreadData<bool> alwaysPreserveCode;
+
+  MainThreadData<bool> lowMemoryState;
 
 #ifdef DEBUG
   MainThreadData<bool> arenasEmptyAtShutdown;
