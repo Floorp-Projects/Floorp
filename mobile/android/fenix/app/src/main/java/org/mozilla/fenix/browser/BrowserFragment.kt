@@ -669,7 +669,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 it.onPermissionsResult(permissions, grantResults)
             }
             REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.withFeature {
-                it.onPermissionsResult(grantResults)
+                it.onPermissionsResult(permissions, grantResults)
             }
         }
     }
