@@ -18,8 +18,8 @@ const { LongStringActor } = require("devtools/server/actors/object/long-string")
 const { createValueGrip, stringIsLong } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
-const { evalWithDebugger } = require("devtools/server/actors/webconsole/eval-with-debugger");
 
+loader.lazyRequireGetter(this, "evalWithDebugger", "devtools/server/actors/webconsole/eval-with-debugger", true);
 loader.lazyRequireGetter(this, "NetworkMonitorActor", "devtools/server/actors/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/server/actors/webconsole/listeners/console-progress", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/server/actors/network-monitor/stack-trace-collector", true);
@@ -897,7 +897,7 @@ WebConsoleActor.prototype =
    *         The response packet to send to with the unique id in the
    *         `resultID` field.
    */
-  evaluateJSAsync: function(request) {
+  evaluateJSAsync: async function(request) {
     // We want to be able to run console commands without waiting
     // for the first to return (see Bug 1088861).
 
@@ -908,22 +908,27 @@ WebConsoleActor.prototype =
       resultID: resultID,
     });
 
-    // Then, execute the script that may pause.
-    const response = this.evaluateJS(request);
-    response.resultID = resultID;
+    try {
+      // Then, execute the script that may pause.
+      let response = this.evaluateJS(request);
+      response.resultID = resultID;
 
-    this._waitForResultAndSend(response).catch(e =>
+      // Wait for any potential returned Promise.
+      response = await this._maybeWaitForResponseResult(response);
+      // Finally, send an unsolicited evaluationResult packet with the normal return value
+      this.conn.sendActorEvent(this.actorID, "evaluationResult", response);
+    } catch (e) {
       DevToolsUtils.reportException(
         "evaluateJSAsync",
         Error(`Encountered error while waiting for Helper Result: ${e}`)
-      )
-    );
+      );
+    }
   },
 
   /**
    * In order to have asynchronous commands (e.g. screenshot, top-level await, …) ,
    * we have to be able to handle promises. This method handles waiting for the promise,
-   * and then dispatching the result.
+   * and then returns the result.
    *
    * @private
    * @param object response
@@ -932,50 +937,48 @@ WebConsoleActor.prototype =
    *         `awaitResult` field.
    *
    * @return object
-   *         The response packet to send to with the unique id in the
-   *         `resultID` field, with a sanitized helperResult field.
+   *         The updated response object.
    */
-  _waitForResultAndSend: async function(response) {
-    let updateTimestamp = false;
+  _maybeWaitForResponseResult: async function(response) {
+    if (!response) {
+      return response;
+    }
+
+    const thenable = obj => obj && typeof obj.then === "function";
+    const waitForHelperResult = response.helperResult && thenable(response.helperResult);
+    const waitForAwaitResult = response.awaitResult && thenable(response.awaitResult);
+
+    if (!waitForAwaitResult && !waitForHelperResult) {
+      return response;
+    }
 
     // Wait for asynchronous command completion before sending back the response
-    if (
-      response.helperResult && typeof response.helperResult.then == "function"
-    ) {
+    if (waitForHelperResult) {
       response.helperResult = await response.helperResult;
-      updateTimestamp = true;
-    } else if (response.awaitResult && typeof response.awaitResult.then === "function") {
+    } else if (waitForAwaitResult) {
       let result;
       try {
         result = await response.awaitResult;
+
+        // `createValueGrip` expect a debuggee value, while here we have the raw object.
+        // We need to call `makeDebuggeeValue` on it to make it work.
+        const dbgResult = this.makeDebuggeeValue(result);
+        response.result = this.createValueGrip(dbgResult);
       } catch (e) {
         // The promise was rejected. We let the engine handle this as it will report a
         // `uncaught exception` error.
         response.topLevelAwaitRejected = true;
       }
 
-      if (!response.topLevelAwaitRejected) {
-        // `createValueGrip` expect a debuggee value, while here we have the raw object.
-        // We need to call `makeDebuggeeValue` on it to make it work.
-        const dbgResult = this.makeDebuggeeValue(result);
-        response.result = this.createValueGrip(dbgResult);
-      }
-
       // Remove the promise from the response object.
       delete response.awaitResult;
-
-      updateTimestamp = true;
     }
 
-    if (updateTimestamp) {
-      // We need to compute the timestamp again as the one in the response was set before
-      // doing the evaluation, which is now innacurate since we waited for a bit.
-      response.timestamp = Date.now();
-    }
+    // We need to compute the timestamp again as the one in the response was set before
+    // doing the evaluation, which is now innacurate since we waited for a bit.
+    response.timestamp = Date.now();
 
-    // Finally, send an unsolicited evaluationResult packet with
-    // the normal return value
-    this.conn.sendActorEvent(this.actorID, "evaluationResult", response);
+    return response;
   },
 
   /**

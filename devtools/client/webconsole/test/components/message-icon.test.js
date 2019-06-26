@@ -9,7 +9,7 @@ const {
 const expect = require("expect");
 const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const MessageIcon = createFactory(require("devtools/client/webconsole/components/MessageIcon"));
+const MessageIcon = createFactory(require("devtools/client/webconsole/components/Output/MessageIcon"));
 
 describe("MessageIcon component:", () => {
   it("renders icon based on level", () => {

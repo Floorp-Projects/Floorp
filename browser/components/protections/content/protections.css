@@ -1,20 +1,51 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- :root {
-   --card-box-shadow: 0 1px 4px 0 rgba(12,12,13,0.1), 0 1px 0 0 rgba(0,0,0,0.05);
-   --card-background:  #FFF;
-   --clickable-text-hover: hsla(0,0%,70%,.2);
-   --clickable-text-active: hsla(0,0%,70%,.3);
-   --card-divider: rgba(12,12,13,0.1) 1px solid;
-   --report-background: #FAFAFC;
-   --card-padding: 22px;
- }
+:root {
+  --card-box-shadow: 0 1px 4px 0 rgba(12,12,13,0.1), 0 1px 0 0 rgba(0,0,0,0.05);
+  --card-background:  #FFF;
+  --clickable-text-hover: hsla(0,0%,70%,.2);
+  --clickable-text-active: hsla(0,0%,70%,.3);
+  --card-divider: rgba(12,12,13,0.1) 1px solid;
+  --report-background: #FAFAFC;
+  --card-padding: 22px;
+  --social-color: #AB71FF;
+  --social-color-darker: #7F27FF;
+  --crossSite-color: #0090F4;
+  --crossSite-color-darker: #0073C3;
+  --tracker-color: #2AC3A2;
+  --tracker-color-darker: #229C82;
+  --fingerprinter-color: #FFBD4F;
+  --fingerprinter-color-darker: #ffA40C;
+  --cryptominer-color: #AFAFBB;
+  --cryptominer-color-darker: #88889A;
+  --tab-highlight: var(--social-color); /* start with social selected */
+}
 
 body {
   background-color: var(--report-background);
   font: message-box;
   margin-top: 82px;
+}
+
+body[focuseddatatype=social] {
+  --tab-highlight: var(--social-color);
+}
+
+body[focuseddatatype=crossSite] {
+  --tab-highlight: var(--crossSite-color);
+}
+
+body[focuseddatatype=tracker] {
+  --tab-highlight: var(--tracker-color);
+}
+
+body[focuseddatatype=fingerprinter] {
+  --tab-highlight: var(--fingerprinter-color);
+}
+
+body[focuseddatatype=cryptominer] {
+  --tab-highlight: var(--cryptominer-color);
 }
 
 #report-title {
@@ -45,7 +76,8 @@ body {
   box-shadow: var(--card-box-shadow);
 }
 
-.report-card .card-header {
+.report-card .card-header,
+.report-card .card-body {
   display: grid;
   grid-template-columns: 1fr 7fr;
   padding: var(--card-padding);
@@ -53,7 +85,7 @@ body {
 }
 
 .report-card .card-title {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 22px;
   margin: 0;
   cursor: default;
@@ -62,14 +94,14 @@ body {
 .report-card .content {
   margin-bottom: 24px;
   margin-top: 5px;
-  font-size: 14px;
+  font-size: 0.85rem;
   cursor: default;
 }
 
 #protection-details {
   background: url("chrome://browser/skin/settings.svg") no-repeat 3px 3px;
   padding: 4px 4px 4px 24px;
-  font-size: 12px;
+  font-size: 0.75rem;
   display: inline;
   cursor: default;
 }
@@ -86,9 +118,169 @@ body {
   font-weight: bold;
 }
 
-.card-body {
+.report-card .card-body {
   border-top: var(--card-divider);
   grid-column: span 2;
   grid-row: 2;
   margin-bottom: 24px;
+}
+
+.body-wrapper {
+  grid-column: 2;
+}
+
+.graph-week-summary,
+.graph-total-summary {
+  font-size: 0.8rem;
+}
+
+.graph-week-summary {
+  font-weight: bold;
+}
+
+#graph-wrapper {
+  width: 100%;
+  margin-top: 30px;
+}
+
+#graph {
+  display: grid;
+  grid: repeat(10, 1fr) max-content / repeat(7, 1fr);
+  height: 200px;
+  margin-bottom: 10px;
+}
+
+/* Graph Bars */
+.graph-bar {
+  grid-row: 1 / -2;
+  justify-self: center;
+  align-self: flex-end;
+  width: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.graph-bar:hover {
+  cursor: pointer;
+}
+
+.social-bar {
+  background-color: var(--social-color);
+}
+
+.hover-social .social-bar {
+  background-color: var(--social-color-darker);
+}
+
+.crossSite-bar {
+  background-color: var(--crossSite-color);
+}
+
+.hover-crossSite .crossSite-bar {
+  background-color: var(--crossSite-color-darker);
+}
+
+.tracker-bar {
+  background-color: var(--tracker-color);
+}
+
+.hover-tracker .tracker-bar {
+  background-color: var(--tracker-color-darker);
+}
+
+.fingerprinter-bar {
+  background-color: var(--fingerprinter-color);
+}
+
+.hover-fingerprinter .fingerprinter-bar {
+  background-color: var(--fingerprinter-color-darker);
+}
+
+.cryptominer-bar {
+  background-color: var(--cryptominer-color);
+}
+
+.hover-cryptominer .cryptominer-bar {
+  background-color: var(--cryptominer-color-darker);
+}
+
+.column-label {
+  justify-self: center;
+  margin-top: 5px;
+  font-size: 0.9rem;
+}
+
+/* Legend */
+input {
+  display: none;
+}
+
+label {
+  display: inline-block;
+  margin: 0 0 -1px;
+  padding: 15px 25px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+label[data-type="social"] {
+  color: var(--social-color);
+}
+
+label[data-type="crossSite"] {
+  color: var(--crossSite-color);
+}
+
+label[data-type="tracker"] {
+  color: var(--tracker-color);
+}
+
+label[data-type="fingerprinter"] {
+  color: var(--fingerprinter-color);
+}
+
+label[data-type="cryptominer"] {
+  color: var(--cryptominer-color);
+}
+
+.hover-social label[for="tab-social"],
+.hover-crossSite label[for="tab-crossSite"],
+.hover-tracker label[for="tab-tracker"],
+.hover-fingerprinter label[for="tab-fingerprinter"],
+.hover-cryptominer label[for="tab-cryptominer"],
+label:hover {
+  background-color: var(--clickable-text-hover);
+  cursor: pointer;
+}
+
+input:checked + label {
+  border-bottom: 3px solid var(--tab-highlight);
+}
+
+.tab-content {
+  display: none;
+  padding: 22px 20px 20px;
+  border-top: 1px solid var(--tab-highlight);
+  background-color: #F9F9FB;
+  color: #737373;
+  font-size: 0.8rem;
+  line-height: 20px;
+  min-height: 130px;
+}
+
+.tab-content .content-title {
+  font-weight: bold;
+}
+
+.tab-content p {
+  margin: 0;
+}
+
+#tab-social:checked ~ #social,
+#tab-crossSite:checked ~ #crossSite,
+#tab-tracker:checked ~ #tracker,
+#tab-fingerprinter:checked ~ #fingerprinter,
+#tab-cryptominer:checked ~ #cryptominer {
+  display: block;
 }

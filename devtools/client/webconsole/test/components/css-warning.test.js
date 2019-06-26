@@ -13,7 +13,7 @@ const Provider = createFactory(require("react-redux").Provider);
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
 
 // Components under test.
-const CSSWarning = require("devtools/client/webconsole/components/message-types/CSSWarning");
+const CSSWarning = require("devtools/client/webconsole/components/Output/message-types/CSSWarning");
 const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,

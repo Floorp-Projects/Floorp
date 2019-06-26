@@ -1237,6 +1237,12 @@ void MacroAssemblerMIPS64Compat::unboxDouble(const Address& src,
                                              FloatRegister dest) {
   ma_ld(dest, Address(src.base, src.offset));
 }
+void MacroAssemblerMIPS64Compat::unboxDouble(const BaseIndex& src,
+                                             FloatRegister dest) {
+  SecondScratchRegisterScope scratch(asMasm());
+  loadPtr(src, scratch);
+  unboxDouble(ValueOperand(scratch), dest);
+}
 
 void MacroAssemblerMIPS64Compat::unboxString(const ValueOperand& operand,
                                              Register dest) {
@@ -1367,7 +1373,7 @@ void MacroAssemblerMIPS64Compat::loadInt32OrDouble(const Address& src,
 
   // Not an int, just load as double.
   bind(&notInt32);
-  ma_ld(dest, src);
+  unboxDouble(src, dest);
   bind(&end);
 }
 
@@ -1392,7 +1398,7 @@ void MacroAssemblerMIPS64Compat::loadInt32OrDouble(const BaseIndex& addr,
   // First, recompute the offset that had been stored in the scratch register
   // since the scratch register was overwritten loading in the type.
   computeScaledAddress(addr, SecondScratchReg);
-  loadDouble(Address(SecondScratchReg, 0), dest);
+  unboxDouble(Address(SecondScratchReg, 0), dest);
   bind(&end);
 }
 
@@ -2034,7 +2040,7 @@ void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
                                        MIRType valueType, const T& dest,
                                        MIRType slotType) {
   if (valueType == MIRType::Double) {
-    storeDouble(value.reg().typedReg().fpu(), dest);
+    boxDouble(value.reg().typedReg().fpu(), dest);
     return;
   }
 
@@ -2070,6 +2076,12 @@ template void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
 template void MacroAssembler::storeUnboxedValue(
     const ConstantOrRegister& value, MIRType valueType,
     const BaseObjectElementIndex& dest, MIRType slotType);
+
+void MacroAssembler::PushBoxed(FloatRegister reg) {
+  subFromStackPtr(Imm32(sizeof(double)));
+  boxDouble(reg, Address(getStackPointer(), 0));
+  adjustFrame(sizeof(double));
+}
 
 void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
                                      Register boundsCheckLimit, Label* label) {

@@ -1172,20 +1172,27 @@ DebuggerServerConnection.prototype = {
       return responseOrPromise;
     }).then(response => {
       if (!this.transport) {
-        throw new Error(`Connection closed, pending response from ${from}, ` +
-                        `type ${type} failed`);
+        throw new Error(`Connection closed, pending response from '${from}', ` +
+                        `type '${type}' failed`);
       }
+
+      // It might happen that a function doesn't return anything (e.g. webconsole's
+      // evaluateJSAsync, which use sendActorEvent instead).
+      if (!response) {
+        return;
+      }
+
       if (!response.from) {
         response.from = from;
       }
       this.transport.send(response);
     }).catch((error) => {
       if (!this.transport) {
-        throw new Error(`Connection closed, pending error from ${from}, ` +
-                        `type ${type} failed`);
+        throw new Error(`Connection closed, pending error from '${from}', ` +
+                        `type '${type}' failed`);
       }
 
-      const prefix = "error occurred while processing '" + type;
+      const prefix = `error occurred while processing '${type}'`;
       this.transport.send(this._unknownError(from, prefix, error));
     });
 
@@ -1290,16 +1297,17 @@ DebuggerServerConnection.prototype = {
         this.currentPacket = packet;
         ret = actor.requestTypes[packet.type].bind(actor)(packet, this);
       } catch (error) {
-        const prefix = "error occurred while processing '" + packet.type;
+        const prefix = `error occurred while processing '${packet.type}'`;
         this.transport.send(this._unknownError(actor.actorID, prefix, error));
       } finally {
         this.currentPacket = undefined;
       }
     } else {
-      ret = { error: "unrecognizedPacketType",
-              message: ("Actor " + actor.actorID +
-                        " does not recognize the packet type " +
-                        packet.type) };
+      ret = {
+        error: "unrecognizedPacketType",
+        message:
+          `Actor ${actor.actorID} does not recognize the packet type '${packet.type}'`,
+      };
     }
 
     // There will not be a return value if a bulk reply is sent.
@@ -1352,13 +1360,13 @@ DebuggerServerConnection.prototype = {
       try {
         ret = actor.requestTypes[type].call(actor, packet);
       } catch (error) {
-        const prefix = "error occurred while processing bulk packet '" + type;
+        const prefix = `error occurred while processing bulk packet '${type}'`;
         this.transport.send(this._unknownError(actorKey, prefix, error));
         packet.done.reject(error);
       }
     } else {
-      const message = "Actor " + actorKey +
-                    " does not recognize the bulk packet type " + type;
+      const message =
+        `Actor ${actorKey} does not recognize the bulk packet type '${type}'`;
       ret = { error: "unrecognizedPacketType",
               message: message };
       packet.done.reject(new Error(message));

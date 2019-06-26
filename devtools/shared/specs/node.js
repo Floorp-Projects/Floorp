@@ -45,6 +45,12 @@ types.addDictType("disconnectedNodeArray", {
   newParents: "array:domnode",
 });
 
+types.addDictType("mutationBreakpointsRequest", {
+  subtree: "nullable:boolean",
+  removal: "nullable:boolean",
+  attribute: "nullable:boolean",
+});
+
 const nodeListSpec = generateActorSpec({
   typeName: "domnodelist",
 
@@ -133,6 +139,13 @@ const nodeSpec = generateActorSpec({
     getOwnerGlobalDimensions: {
       request: {},
       response: RetVal("windowDimensions"),
+    },
+
+    setMutationBreakpoints: {
+      request: {
+        breakpoints: Arg(0, "mutationBreakpointsRequest"),
+      },
+      response: {},
     },
   },
 });
