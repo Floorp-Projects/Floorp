@@ -945,10 +945,7 @@ class AndroidArguments(ArgumentContainer):
         options.webServer = options.remoteWebServer
 
         if options.app is None:
-            if build_obj:
-                options.app = build_obj.substs['ANDROID_PACKAGE_NAME']
-            else:
-                parser.error("You must specify either appPath or app")
+            options.app = "org.mozilla.geckoview.test"
 
         if build_obj and 'MOZ_HOST_BIN' in os.environ:
             options.xrePath = os.environ['MOZ_HOST_BIN']

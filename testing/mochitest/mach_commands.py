@@ -452,7 +452,7 @@ class MachCommands(MachCommandBase):
             from mozrunner.devices.android_device import verify_android_device
             app = kwargs.get('app')
             if not app:
-                app = self.substs["ANDROID_PACKAGE_NAME"]
+                app = "org.mozilla.geckoview.test"
             device_serial = kwargs.get('deviceSerial')
 
             # verify installation
@@ -566,7 +566,7 @@ class RobocopCommands(MachCommandBase):
         # verify installation
         app = kwargs.get('app')
         if not app:
-            app = self.substs["ANDROID_PACKAGE_NAME"]
+            kwargs['app'] = app = self.substs["ANDROID_PACKAGE_NAME"]
         device_serial = kwargs.get('deviceSerial')
         verify_android_device(self, install=True, xre=False, network=True,
                               app=app, device_serial=device_serial)
