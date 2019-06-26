@@ -6669,12 +6669,13 @@ tls(char *reqfn)
 
     CK_MECHANISM master_mech = { CKM_TLS_MASTER_KEY_DERIVE, NULL, 0 };
     CK_MECHANISM key_block_mech = { CKM_TLS_KEY_AND_MAC_DERIVE, NULL, 0 };
-    CK_SSL3_MASTER_KEY_DERIVE_PARAMS master_params;
-    CK_SSL3_KEY_MAT_PARAMS key_block_params;
+    CK_TLS12_MASTER_KEY_DERIVE_PARAMS master_params;
+    CK_TLS12_KEY_MAT_PARAMS key_block_params;
     CK_SSL3_KEY_MAT_OUT key_material;
     CK_RV crv;
 
     /* set up PKCS #11 parameters */
+    master_params.prfHashMechanism = CKM_SHA256;
     master_params.pVersion = NULL;
     master_params.RandomInfo.pClientRandom = clientHello_random;
     master_params.RandomInfo.ulClientRandomLen = sizeof(clientHello_random);
@@ -6682,6 +6683,7 @@ tls(char *reqfn)
     master_params.RandomInfo.ulServerRandomLen = sizeof(serverHello_random);
     master_mech.pParameter = (void *)&master_params;
     master_mech.ulParameterLen = sizeof(master_params);
+    key_block_params.prfHashMechanism = CKM_SHA256;
     key_block_params.ulMacSizeInBits = 0;
     key_block_params.ulKeySizeInBits = 0;
     key_block_params.ulIVSizeInBits = 0;
@@ -6724,13 +6726,39 @@ tls(char *reqfn)
         if (buf[0] == '[') {
             if (strncmp(buf, "[TLS", 4) == 0) {
                 if (buf[7] == '0') {
+                    /* CK_SSL3_MASTER_KEY_DERIVE_PARAMS is a subset of
+                     * CK_TLS12_MASTER_KEY_DERIVE_PARAMS and
+                     * CK_SSL3_KEY_MAT_PARAMS is a subset of
+                     * CK_TLS12_KEY_MAT_PARAMS. The latter params have
+                     * an extra prfHashMechanism field at the end. */
                     master_mech.mechanism = CKM_TLS_MASTER_KEY_DERIVE;
                     key_block_mech.mechanism = CKM_TLS_KEY_AND_MAC_DERIVE;
+                    master_mech.ulParameterLen = sizeof(CK_SSL3_MASTER_KEY_DERIVE_PARAMS);
+                    key_block_mech.ulParameterLen = sizeof(CK_SSL3_KEY_MAT_PARAMS);
                 } else if (buf[7] == '2') {
-                    master_mech.mechanism =
-                        CKM_NSS_TLS_MASTER_KEY_DERIVE_SHA256;
-                    key_block_mech.mechanism =
-                        CKM_NSS_TLS_KEY_AND_MAC_DERIVE_SHA256;
+                    if (strncmp(&buf[10], "SHA-1", 5) == 0) {
+                        master_params.prfHashMechanism = CKM_SHA_1;
+                        key_block_params.prfHashMechanism = CKM_SHA_1;
+                    } else if (strncmp(&buf[10], "SHA-224", 7) == 0) {
+                        master_params.prfHashMechanism = CKM_SHA224;
+                        key_block_params.prfHashMechanism = CKM_SHA224;
+                    } else if (strncmp(&buf[10], "SHA-256", 7) == 0) {
+                        master_params.prfHashMechanism = CKM_SHA256;
+                        key_block_params.prfHashMechanism = CKM_SHA256;
+                    } else if (strncmp(&buf[10], "SHA-384", 7) == 0) {
+                        master_params.prfHashMechanism = CKM_SHA384;
+                        key_block_params.prfHashMechanism = CKM_SHA384;
+                    } else if (strncmp(&buf[10], "SHA-512", 7) == 0) {
+                        master_params.prfHashMechanism = CKM_SHA512;
+                        key_block_params.prfHashMechanism = CKM_SHA512;
+                    } else {
+                        fprintf(tlsresp, "ERROR: Unable to find prf Hash type");
+                        goto loser;
+                    }
+                    master_mech.mechanism = CKM_TLS12_MASTER_KEY_DERIVE;
+                    key_block_mech.mechanism = CKM_TLS12_KEY_AND_MAC_DERIVE;
+                    master_mech.ulParameterLen = sizeof(master_params);
+                    key_block_mech.ulParameterLen = sizeof(key_block_params);
                 } else {
                     fprintf(stderr, "Unknown TLS type %x\n",
                             (unsigned int)buf[0]);

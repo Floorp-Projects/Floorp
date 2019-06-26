@@ -237,7 +237,7 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
     /* <------ Cipher suite --------------------> <auth> <KEA>  <bulk cipher> <MAC> <FIPS> */
     { 0, CS_(TLS_AES_128_GCM_SHA256), S_ANY, K_ANY, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_ANY, ssl_hash_sha256 },
     { 0, CS_(TLS_CHACHA20_POLY1305_SHA256), S_ANY, K_ANY, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_ANY, ssl_hash_sha256 },
-    { 0, CS_(TLS_AES_256_GCM_SHA384), S_ANY, K_ANY, C_AESGCM, B_256, M_AEAD_128, F_NFIPS_STD, A_ANY, ssl_hash_sha384 },
+    { 0, CS_(TLS_AES_256_GCM_SHA384), S_ANY, K_ANY, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_ANY, ssl_hash_sha384 },
 
     { 0, CS(RSA_WITH_AES_128_GCM_SHA256), S_RSA, K_RSA, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_RSAD, ssl_hash_sha256 },
     { 0, CS(DHE_RSA_WITH_CHACHA20_POLY1305_SHA256), S_RSA, K_DHE, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_RSAS, ssl_hash_sha256 },
