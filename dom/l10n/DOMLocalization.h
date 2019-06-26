@@ -33,8 +33,8 @@ class DOMLocalization : public intl::Localization {
    * Methods documentation in DOMLocalization.webidl
    */
 
-  void ConnectRoot(Element& aNode, ErrorResult& aRv);
-  void DisconnectRoot(Element& aNode, ErrorResult& aRv);
+  void ConnectRoot(nsINode& aNode, ErrorResult& aRv);
+  void DisconnectRoot(nsINode& aNode, ErrorResult& aRv);
 
   void PauseObserving(ErrorResult& aRv);
   void ResumeObserving(ErrorResult& aRv);
@@ -87,7 +87,7 @@ class DOMLocalization : public intl::Localization {
                                intl::L10nArgs& aRetVal, ErrorResult& aRv);
 
   RefPtr<L10nMutations> mMutations;
-  nsTHashtable<nsRefPtrHashKey<Element>> mRoots;
+  nsTHashtable<nsRefPtrHashKey<nsINode>> mRoots;
 };
 
 }  // namespace dom
