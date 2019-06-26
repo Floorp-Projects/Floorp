@@ -3517,14 +3517,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gl.allow-high-power",
-  GLAllowHighPower,
+   gl_allow_high_power,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gl.ignore-dx-interop2-blacklist",
-  IgnoreDXInterop2Blacklist,
+   gl_ignore_dx_interop2_blacklist,
   RelaxedAtomicBool, false
 )
 
@@ -3532,7 +3532,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gl.multithreaded",
-  GLMultithreaded,
+   gl_multithreaded,
   RelaxedAtomicBool, false
 )
 #endif
@@ -3540,14 +3540,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gl.require-hardware",
-  RequireHardwareGL,
+   gl_require_hardware,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gl.use-tls-is-current",
-  UseTLSIsCurrent,
+   gl_use_tls_is_current,
   RelaxedAtomicInt32, 0
 )
 

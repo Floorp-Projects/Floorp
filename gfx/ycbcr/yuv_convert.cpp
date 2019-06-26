@@ -291,14 +291,13 @@ void ScaleYCbCrToRGB32(const uint8* y_buf,
                        YUVType yuv_type,
                        YUVColorSpace yuv_color_space,
                        ScaleFilter filter) {
-
   bool use_deprecated =
       StaticPrefs::gfx_ycbcr_accurate_conversion() ||
 #if defined(XP_WIN) && defined(_M_X64)
-                        // libyuv does not support SIMD scaling on win 64bit. See Bug 1295927.
-                        supports_sse3() ||
+      // libyuv does not support SIMD scaling on win 64bit. See Bug 1295927.
+      supports_sse3() ||
 #endif
-                        (supports_mmx() && supports_sse() && !supports_sse3());
+      (supports_mmx() && supports_sse() && !supports_sse3());
   // The deprecated function only support BT601.
   // See Bug 1210357.
   if (yuv_color_space != YUVColorSpace::BT601) {
