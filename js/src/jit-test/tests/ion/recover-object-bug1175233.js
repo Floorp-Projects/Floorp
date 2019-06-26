@@ -16,6 +16,9 @@ if (getJitCompilerOptions()["ion.warmup.trigger"] <= 130)
 if (getJitCompilerOptions()["ion.forceinlineCaches"])
     setJitCompilerOption("ion.forceinlineCaches", 0);
 
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
 var uceFault = function (j) {
     if (j >= max)
         uceFault = function (j) { return true; };
