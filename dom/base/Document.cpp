@@ -34,6 +34,7 @@
 #include "mozilla/StorageAccess.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/URLExtraData.h"
+#include "mozilla/Base64.h"
 #include <algorithm>
 
 #include "mozilla/Logging.h"
@@ -70,6 +71,9 @@
 #include "nsIX509CertValidity.h"
 #include "nsIX509CertList.h"
 #include "nsITransportSecurityInfo.h"
+#include "nsINSSErrorsService.h"
+#include "nsISocketProvider.h"
+#include "nsISiteSecurityService.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
@@ -1482,6 +1486,8 @@ void Document::GetFailedCertSecurityInfo(
   aInfo.mSubjectAltNames = subjectAltNames;
 
   nsAutoString issuerCommonName;
+  nsAutoString certChainPEMString;
+  Sequence<nsString>& certChainStrings = aInfo.mCertChainStrings.Construct();
   int64_t maxValidity = std::numeric_limits<int64_t>::max();
   int64_t minValidity = 0;
   PRTime notBefore, notAfter;
@@ -1562,7 +1568,28 @@ void Document::GetFailedCertSecurityInfo(
 
     notBefore = std::max(minValidity, notBefore);
     notAfter = std::min(maxValidity, notAfter);
+    nsTArray<uint8_t> certArray;
+    rv = certificate->GetRawDER(certArray);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
 
+    certArray.AppendElement(
+        0);  // Append null terminator, required by nsC*String.
+    nsDependentCString derString(reinterpret_cast<char*>(certArray.Elements()),
+                                 certArray.Length() - 1);
+    nsAutoCString der64;
+    rv = mozilla::Base64Encode(derString, der64);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+    if (!certChainStrings.AppendElement(NS_ConvertUTF8toUTF16(der64),
+                                        mozilla::fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
     rv = enumerator->HasMoreElements(&hasMore);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
@@ -1574,6 +1601,46 @@ void Document::GetFailedCertSecurityInfo(
   aInfo.mCertValidityRangeNotAfter = DOMTimeStamp(notAfter / PR_USEC_PER_MSEC);
   aInfo.mCertValidityRangeNotBefore =
       DOMTimeStamp(notBefore / PR_USEC_PER_MSEC);
+
+  int32_t errorCode;
+  rv = tsi->GetErrorCode(&errorCode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  nsCOMPtr<nsINSSErrorsService> nsserr =
+      do_GetService("@mozilla.org/nss_errors_service;1");
+  if (NS_WARN_IF(!nsserr)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  nsresult res;
+  rv = nsserr->GetXPCOMFromNSSError(errorCode, &res);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  rv = nsserr->GetErrorMessage(res, aInfo.mErrorMessage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  bool isPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(this);
+  uint32_t flags =
+      isPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
+  mozilla::OriginAttributes attrs;
+  attrs = nsContentUtils::GetOriginAttributes(this);
+  nsCOMPtr<nsIURI> aURI;
+  mFailedChannel->GetURI(getter_AddRefs(aURI));
+  mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+  mozilla::ipc::URIParams uri;
+  SerializeURI(aURI, uri);
+  cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, flags, attrs,
+                      &aInfo.mHasHSTS);
+  cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, uri, flags, attrs,
+                      &aInfo.mHasHPKP);
 }
 
 bool Document::IsAboutPage() const {
