@@ -8874,6 +8874,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.step-position-jump.enabled")) {
   );
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled")) {
+  gCSSProperties["backdrop-filter"] = {
+    domProp: "backdropFilter",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: gCSSProperties["filter"].other_values,
+    invalid_values: gCSSProperties["filter"].invalid_values,
+  }
+}
+
 // Copy aliased properties' fields from their alias targets. Keep this logic
 // at the bottom of this file to ensure all the aliased properties are
 // processed.

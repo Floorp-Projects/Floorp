@@ -248,6 +248,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "-webkit-text-stroke-color",
   ])],
   ["custom", new Set([
+    "backdrop-filter",
     "background-position-x",
     "background-position-y",
     "background-size",
