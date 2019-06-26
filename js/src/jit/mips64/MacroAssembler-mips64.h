@@ -221,6 +221,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void mov(Address src, Register dest) { MOZ_CRASH("NYI-IC"); }
 
   void writeDataRelocation(const Value& val) {
+    // Raw GC pointer relocations and Value relocations both end up in
+    // TraceOneDataRelocation.
     if (val.isGCThing()) {
       gc::Cell* cell = val.toGCThing();
       if (cell && gc::IsInsideNursery(cell)) {
@@ -371,7 +373,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   template <typename T>
   void unboxObjectOrNull(const T& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
-    JS_STATIC_ASSERT(JSVAL_OBJECT_OR_NULL_BIT ==
+    JS_STATIC_ASSERT(JS::detail::ValueObjectOrNullBit ==
                      (uint64_t(0x8) << JSVAL_TAG_SHIFT));
     ma_dins(dest, zero, Imm32(JSVAL_TAG_SHIFT + 3), Imm32(1));
   }
@@ -392,6 +394,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void unboxDouble(const ValueOperand& operand, FloatRegister dest);
   void unboxDouble(Register src, Register dest);
   void unboxDouble(const Address& src, FloatRegister dest);
+  void unboxDouble(const BaseIndex& src, FloatRegister dest);
   void unboxString(const ValueOperand& operand, Register dest);
   void unboxString(Register src, Register dest);
   void unboxString(const Address& src, Register dest);

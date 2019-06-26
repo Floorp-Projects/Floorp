@@ -9,7 +9,7 @@ const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/actions/messages");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const { MODE } = require("devtools/client/shared/components/reps/reps");
-const GripMessageBody = createFactory(require("devtools/client/webconsole/components/GripMessageBody"));
+const GripMessageBody = createFactory(require("devtools/client/webconsole/components/Output/GripMessageBody"));
 
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 

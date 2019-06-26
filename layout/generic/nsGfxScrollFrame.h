@@ -119,69 +119,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool IsSmoothScrollingEnabled();
 
   /**
-   * This class handles the dispatching of scroll events to content.
-   *
-   * Scroll events are posted to the refresh driver via
-   * nsRefreshDriver::PostScrollEvent(), and they are fired during a refresh
-   * driver tick, after running requestAnimationFrame callbacks but before
-   * the style flush. This allows rAF callbacks to perform scrolling and have
-   * that scrolling be reflected on the same refresh driver tick, while at
-   * the same time allowing scroll event listeners to make style changes and
-   * have those style changes be reflected on the same refresh driver tick.
-   *
-   * ScrollEvents cannot be refresh observers, because none of the existing
-   * categories of refresh observers (FlushType::Style, FlushType::Layout,
-   * and FlushType::Display) are run at the desired time in a refresh driver
-   * tick. They behave similarly to refresh observers in that their presence
-   * causes the refresh driver to tick.
-   *
-   * ScrollEvents are one-shot runnables; the refresh driver drops them after
-   * running them.
-   */
-  class ScrollEvent : public Runnable {
-   public:
-    NS_DECL_NSIRUNNABLE
-    explicit ScrollEvent(ScrollFrameHelper* aHelper, bool aDelayed);
-    void Revoke() { mHelper = nullptr; }
-
-   private:
-    ScrollFrameHelper* mHelper;
-  };
-
-  class ScrollEndEvent : public Runnable {
-   public:
-    NS_DECL_NSIRUNNABLE
-    explicit ScrollEndEvent(ScrollFrameHelper* aHelper);
-    void Revoke() { mHelper = nullptr; }
-
-   private:
-    ScrollFrameHelper* mHelper;
-  };
-
-  class AsyncScrollPortEvent : public Runnable {
-   public:
-    NS_DECL_NSIRUNNABLE
-    explicit AsyncScrollPortEvent(ScrollFrameHelper* helper)
-        : Runnable("ScrollFrameHelper::AsyncScrollPortEvent"),
-          mHelper(helper) {}
-    void Revoke() { mHelper = nullptr; }
-
-   private:
-    ScrollFrameHelper* mHelper;
-  };
-
-  class ScrolledAreaEvent : public Runnable {
-   public:
-    NS_DECL_NSIRUNNABLE
-    explicit ScrolledAreaEvent(ScrollFrameHelper* helper)
-        : Runnable("ScrollFrameHelper::ScrolledAreaEvent"), mHelper(helper) {}
-    void Revoke() { mHelper = nullptr; }
-
-   private:
-    ScrollFrameHelper* mHelper;
-  };
-
-  /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
   void FinishReflowForScrollbar(mozilla::dom::Element* aElement, nscoord aMinXY,
@@ -581,6 +518,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsCOMPtr<mozilla::dom::Element> mVScrollbarContent;
   nsCOMPtr<mozilla::dom::Element> mScrollCornerContent;
   nsCOMPtr<mozilla::dom::Element> mResizerContent;
+
+  class ScrollEvent;
+  class ScrollEndEvent;
+  class AsyncScrollPortEvent;
+  class ScrolledAreaEvent;
 
   RefPtr<ScrollEvent> mScrollEvent;
   RefPtr<ScrollEndEvent> mScrollEndEvent;

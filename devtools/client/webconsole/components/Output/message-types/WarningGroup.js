@@ -11,7 +11,7 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Message = createFactory(require("devtools/client/webconsole/components/Message"));
+const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
 
 WarningGroup.displayName = "WarningGroup";
 

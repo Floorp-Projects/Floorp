@@ -33,6 +33,54 @@
           </div>
         </div>
         <div class="card-body">
+          <div class="body-wrapper">
+            <p class="graph-week-summary">
+              Firefox blocked 970 trackers over the past week
+            </p>
+            <div id="graph-wrapper">
+              <div id="graph"></div>
+              <div id="legend">
+                <input id="tab-social" data-type="social" type="radio" name="tabs" checked>
+                <label for="tab-social" data-type="social">Social</label>
+
+                <input id="tab-crossSite" data-type="crossSite" type="radio" name="tabs">
+                <label for="tab-crossSite" data-type="crossSite">cross-site-tracker</label>
+
+                <input id="tab-tracker" data-type="tracker" type="radio" name="tabs">
+                <label for="tab-tracker" data-type="tracker">ad-tracker</label>
+
+                <input id="tab-fingerprinter" data-type="fingerprinter" type="radio" name="tabs">
+                <label for="tab-fingerprinter" data-type="fingerprinter">fingerprinter</label>
+
+                <input id="tab-cryptominer" data-type="cryptominer" type="radio" name="tabs">
+                <label for="tab-cryptominer" data-type="cryptominer">cryptominer</label>
+
+                <div id="social" class="tab-content">
+                  <p class="content-title">Social Media Trackers</p>
+                  <p>Social media like, post, and comment buttons on other websites can track you — even if you don’t use them. Logging in to sites using your Facebook or Twitter account is another way they can track what you do on those sites. We remove these trackers so Facebook and Twitter see less of what you do online.</p>
+                </div>
+                <div id="crossSite" class="tab-content">
+                  <p class="content-title">Cross-Site Tracking Cookies</p>
+                  <p>Cross-site tracking cookies follow you from site to site to collect data about your browsing habits. Advertisers and analytics companies gather this data to create a profile of your interests across many sites. Blocking them reduces the number of personalized ads that follow you around.</p>
+                </div>
+                <div id="tracker" class="tab-content">
+                  <p class="content-title">Tracking Content</p>
+                  <p>Websites may load outside ads, videos, and other content that contain hidden trackers. Blocking tracking content can make websites load faster, but some buttons, forms, and login fields might not work.</p>
+                </div>
+                <div id="fingerprinter" class="tab-content">
+                  <p class="content-title">Fingerprinters</p>
+                  <p>Fingerprinting is a form of online tracking that’s different from your real fingerprints. Companies use it to create a unique profile of you using data about your browser, device, and other settings. We block ad trackers from fingerprinting your device.</p>
+                </div>
+                <div id="cryptominer" class="tab-content">
+                  <p class="content-title">Cryptominers</p>
+                  <p>Some websites host hidden malware that secretly uses your system’s computing power to mine cryptocurrency, or digital money. It drains your battery, slows down your computer, and increases your energy bill. We block known cryptominers from using your computing resources to make money.</p>
+                </div>
+              </div>
+            </div>
+            <p class="graph-total-summary">
+              125,324 trackers blocked since August, 2018
+            </p>
+          </div>
         </div>
       </div>
     </div>
