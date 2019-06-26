@@ -1230,7 +1230,7 @@ nsresult nsXREDirProvider::GetInstallHash(nsAString& aPathHash) {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = NS_NewLocalFileWithFSRef(&ref, true, getter_AddRefs(macFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  installDir = do_QueryInterface(macFile);
+  installDir = static_cast<nsIFile*>(macFile);
 #endif
   // On linux XRE_EXECUTABLE_FILE already seems to be set to the correct path.
 
