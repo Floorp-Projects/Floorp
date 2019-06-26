@@ -1448,57 +1448,9 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 //
 //   * A non-empty array of GCCellPtr in gcthings()
 //
-// Accessing any of these arrays just requires calling the appropriate public
+// Accessing this array just requires calling the appropriate public
 // Span-computing function.
-//
-// Under the hood, PrivateScriptData is a small class followed by a memory
-// layout that compactly encodes all these arrays, in this manner (only
-// explicit padding, "--" separators for readability only):
-//
-//   <PrivateScriptData itself>
-//   --
-//   (OPTIONAL) PackedSpan for gcthings()
-//   --
-//   (REQUIRED) All the GCCellPtrs that constitute gcthings()
-//
-// The contents of PrivateScriptData indicate which optional items are present.
-// PrivateScriptData::packedOffsets contains bit-fields, one per array.
-// Multiply each packed offset by sizeof(uint32_t) to compute a *real* offset.
-//
-// PrivateScriptData::gcthingsOffset indicates where gcthings() begins. The
-// bound of five PackedSpans ensures we can encode this offset compactly.
-// PrivateScriptData::ngcthings indicates the number of GCCellPtrs in
-// gcthings().
-//
-// The other PackedScriptData::*Offset fields indicate where a potential
-// corresponding PackedSpan resides. If the packed offset is 0, there is no
-// PackedSpan, and the array is empty. Otherwise the PackedSpan's uint32_t
-// offset and length fields store: 1) a *non-packed* offset (a literal count of
-// bytes offset from the *start* of PrivateScriptData struct) to the
-// corresponding array, and 2) the number of elements in the array,
-// respectively.
 class alignas(uintptr_t) PrivateScriptData final {
-  struct PackedOffsets {
-    static constexpr size_t SCALE = sizeof(uint32_t);
-    static constexpr size_t MAX_OFFSET = 0b1111;
-
-    // (Scaled) offset to GC things.
-    uint32_t gcthingsOffset : 8;
-  };
-
-  // Detect accidental size regressions.
-  static_assert(sizeof(PackedOffsets) == sizeof(uint32_t),
-                "unexpected bit-field packing");
-
-  // A span describes base offset and length of one variable length array in
-  // the private data.
-  struct alignas(uintptr_t) PackedSpan {
-    uint32_t offset;
-    uint32_t length;
-  };
-
-  // Concrete Fields
-  PackedOffsets packedOffsets = {};  // zeroes
   uint32_t ngcthings = 0;
 
   js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
@@ -1511,25 +1463,7 @@ class alignas(uintptr_t) PrivateScriptData final {
     return reinterpret_cast<T*>(elem);
   }
 
-  // Translate a PackedOffsets member into a pointer.
-  template <typename T>
-  T* packedOffsetToPointer(size_t packedOffset) {
-    return offsetToPointer<T>(packedOffset * PackedOffsets::SCALE);
-  }
-
-  // Translates a PackedOffsets member into a PackedSpan* and then unpacks
-  // that to a mozilla::Span.
-  template <typename T>
-  mozilla::Span<T> packedOffsetToSpan(size_t scaledSpanOffset) {
-    PackedSpan* span = packedOffsetToPointer<PackedSpan>(scaledSpanOffset);
-    T* base = offsetToPointer<T>(span->offset);
-    return mozilla::MakeSpan(base, span->length);
-  }
-
   // Helpers for creating initializing trailing data
-  template <typename T>
-  void initSpan(size_t* cursor, uint32_t scaledSpanOffset, size_t length);
-
   template <typename T>
   void initElements(size_t offset, size_t length);
 
@@ -1542,9 +1476,8 @@ class alignas(uintptr_t) PrivateScriptData final {
  public:
   // Accessors for typed array spans.
   mozilla::Span<JS::GCCellPtr> gcthings() {
-    JS::GCCellPtr* base =
-        packedOffsetToPointer<JS::GCCellPtr>(packedOffsets.gcthingsOffset);
-    return mozilla::MakeSpan(base, ngcthings);
+    size_t offset = sizeof(PrivateScriptData);
+    return mozilla::MakeSpan(offsetToPointer<JS::GCCellPtr>(offset), ngcthings);
   }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
