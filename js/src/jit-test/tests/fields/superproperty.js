@@ -1,3 +1,4 @@
+// |jit-test| --enable-experimental-fields
 // SuperProperty syntax is allowed in fields.
 
 class Base {

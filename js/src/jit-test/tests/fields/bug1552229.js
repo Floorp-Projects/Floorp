@@ -1,3 +1,5 @@
+// |jit-test| --enable-experimental-fields
+
 let i = 0;
 function f(x) {
     assertEq(++i, x);
