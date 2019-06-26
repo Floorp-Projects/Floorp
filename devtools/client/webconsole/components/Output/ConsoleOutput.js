@@ -21,7 +21,7 @@ const {
 } = require("devtools/client/webconsole/selectors/messages");
 
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "MessageContainer", "devtools/client/webconsole/components/MessageContainer", true);
+loader.lazyRequireGetter(this, "MessageContainer", "devtools/client/webconsole/components/Output/MessageContainer", true);
 ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");
 
 const {
