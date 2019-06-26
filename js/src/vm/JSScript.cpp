@@ -626,9 +626,6 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
                                      HandleScope scriptEnclosingScope,
                                      HandleFunction fun) {
   uint32_t ngcthings = 0;
-  uint32_t ntrynotes = 0;
-  uint32_t nscopenotes = 0;
-  uint32_t nresumeoffsets = 0;
 
   JSContext* cx = xdr->cx();
   PrivateScriptData* data = nullptr;
@@ -637,25 +634,12 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
     data = script->data_;
 
     ngcthings = data->gcthings().size();
-    if (data->hasTryNotes()) {
-      ntrynotes = data->tryNotes().size();
-    }
-    if (data->hasScopeNotes()) {
-      nscopenotes = data->scopeNotes().size();
-    }
-    if (data->hasResumeOffsets()) {
-      nresumeoffsets = data->resumeOffsets().size();
-    }
   }
 
   MOZ_TRY(xdr->codeUint32(&ngcthings));
-  MOZ_TRY(xdr->codeUint32(&ntrynotes));
-  MOZ_TRY(xdr->codeUint32(&nscopenotes));
-  MOZ_TRY(xdr->codeUint32(&nresumeoffsets));
 
   if (mode == XDR_DECODE) {
-    if (!JSScript::createPrivateScriptData(cx, script, ngcthings, ntrynotes,
-                                           nscopenotes, nresumeoffsets)) {
+    if (!JSScript::createPrivateScriptData(cx, script, ngcthings)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
@@ -672,35 +656,20 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   // mismatch here indicates we will almost certainly crash in release.
   MOZ_TRY(xdr->codeMarker(0xF83B989A));
 
-  if (ntrynotes) {
-    for (JSTryNote& elem : data->tryNotes()) {
-      MOZ_TRY(elem.XDR(xdr));
-    }
-  }
-
-  if (nscopenotes) {
-    for (ScopeNote& elem : data->scopeNotes()) {
-      MOZ_TRY(elem.XDR(xdr));
-    }
-  }
-
-  if (nresumeoffsets) {
-    for (uint32_t& elem : data->resumeOffsets()) {
-      MOZ_TRY(xdr->codeUint32(&elem));
-    }
-  }
-
   return Ok();
 }
 
-/* static */ size_t SharedScriptData::AllocationSize(uint32_t codeLength,
-                                                     uint32_t noteLength,
-                                                     uint32_t natoms) {
+/* static */ size_t SharedScriptData::AllocationSize(
+    uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
+    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
   size_t size = sizeof(SharedScriptData);
 
   size += natoms * sizeof(GCPtrAtom);
   size += codeLength * sizeof(jsbytecode);
   size += noteLength * sizeof(jssrcnote);
+  size += numResumeOffsets * sizeof(uint32_t);
+  size += numScopeNotes * sizeof(ScopeNote);
+  size += numTryNotes * sizeof(JSTryNote);
 
   return size;
 }
@@ -714,7 +683,8 @@ void SharedScriptData::initElements(size_t offset, size_t length) {
 }
 
 SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
-                                   uint32_t natoms)
+                                   uint32_t natoms, uint32_t numResumeOffsets,
+                                   uint32_t numScopeNotes, uint32_t numTryNotes)
     : codeLength_(codeLength) {
   // Variable-length data begins immediately after SharedScriptData itself.
   size_t cursor = sizeof(*this);
@@ -745,6 +715,25 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
     MOZ_ASSERT(cursor % CodeNoteAlign == 0);
   }
 
+  static_assert(alignof(uint32_t) >= alignof(uint32_t),
+                "Incompatible alignment");
+  resumeOffsetsOffset_ = cursor;
+  initElements<uint32_t>(cursor, numResumeOffsets);
+  cursor += numResumeOffsets * sizeof(uint32_t);
+
+  static_assert(alignof(uint32_t) >= alignof(ScopeNote),
+                "Incompatible alignment");
+  scopeNotesOffset_ = cursor;
+  initElements<ScopeNote>(cursor, numScopeNotes);
+  cursor += numScopeNotes * sizeof(ScopeNote);
+
+  static_assert(alignof(ScopeNote) >= alignof(JSTryNote),
+                "Incompatible alignment");
+  tryNotesOffset_ = cursor;
+  initElements<JSTryNote>(cursor, numTryNotes);
+  cursor += numTryNotes * sizeof(JSTryNote);
+
+  // Offset to end of SharedScriptData
   tailOffset_ = cursor;
 
   // Check that we correctly recompute the expected values.
@@ -753,7 +742,8 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
   MOZ_ASSERT(this->noteLength() == noteLength);
 
   // Sanity check
-  MOZ_ASSERT(AllocationSize(codeLength, noteLength, natoms) == cursor);
+  MOZ_ASSERT(AllocationSize(codeLength, noteLength, natoms, numResumeOffsets,
+                            numScopeNotes, numTryNotes) == cursor);
 }
 
 template <XDRMode mode>
@@ -762,6 +752,9 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   uint32_t natoms = 0;
   uint32_t codeLength = 0;
   uint32_t noteLength = 0;
+  uint32_t numResumeOffsets = 0;
+  uint32_t numScopeNotes = 0;
+  uint32_t numTryNotes = 0;
 
   JSContext* cx = xdr->cx();
   SharedScriptData* ssd = nullptr;
@@ -772,14 +765,23 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
     natoms = ssd->natoms();
     codeLength = ssd->codeLength();
     noteLength = ssd->noteLength();
+
+    numResumeOffsets = ssd->resumeOffsets().size();
+    numScopeNotes = ssd->scopeNotes().size();
+    numTryNotes = ssd->tryNotes().size();
   }
 
   MOZ_TRY(xdr->codeUint32(&natoms));
   MOZ_TRY(xdr->codeUint32(&codeLength));
   MOZ_TRY(xdr->codeUint32(&noteLength));
+  MOZ_TRY(xdr->codeUint32(&numResumeOffsets));
+  MOZ_TRY(xdr->codeUint32(&numScopeNotes));
+  MOZ_TRY(xdr->codeUint32(&numTryNotes));
 
   if (mode == XDR_DECODE) {
-    if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms)) {
+    if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms,
+                                        numResumeOffsets, numScopeNotes,
+                                        numTryNotes)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
     ssd = script->scriptData();
@@ -814,6 +816,18 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
         vector[i].init(atom);
       }
     }
+  }
+
+  for (uint32_t& elem : ssd->resumeOffsets()) {
+    MOZ_TRY(xdr->codeUint32(&elem));
+  }
+
+  for (ScopeNote& elem : ssd->scopeNotes()) {
+    MOZ_TRY(elem.XDR(xdr));
+  }
+
+  for (JSTryNote& elem : ssd->tryNotes()) {
+    MOZ_TRY(elem.XDR(xdr));
   }
 
   return Ok();
@@ -3381,21 +3395,25 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
  *
  * Shared script data management.
  *
- * SharedScriptData::data contains data that can be shared within a
- * runtime. The atoms() data is placed first to simplify its alignment.
+ * SharedScriptData::data contains data that can be shared within a runtime.
+ * The atoms() data is placed first to simplify its alignment.
  *
  * Array elements   Pointed to by         Length
  * --------------   -------------         ------
  * GCPtrAtom        atoms()               natoms()
  * jsbytecode       code()                codeLength()
  * jsscrnote        notes()               noteLength()
+ * uint32_t         resumeOffsets()
+ * ScopeNote        scopeNotes()
+ * JSTryNote        tryNotes()
  */
 
-SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
-                                             uint32_t noteLength,
-                                             uint32_t natoms) {
+SharedScriptData* js::SharedScriptData::new_(
+    JSContext* cx, uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
+    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
   // Compute size including trailing arrays
-  size_t size = AllocationSize(codeLength, noteLength, natoms);
+  size_t size = AllocationSize(codeLength, noteLength, natoms, numResumeOffsets,
+                               numScopeNotes, numTryNotes);
 
   // Allocate contiguous raw buffer
   void* raw = cx->pod_malloc<uint8_t>(size);
@@ -3406,15 +3424,22 @@ SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
 
   // Constuct the SharedScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) SharedScriptData(codeLength, noteLength, natoms);
+  return new (raw)
+      SharedScriptData(codeLength, noteLength, natoms, numResumeOffsets,
+                       numScopeNotes, numTryNotes);
 }
 
 bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
-                                      uint32_t noteLength, uint32_t natoms) {
+                                      uint32_t noteLength, uint32_t natoms,
+                                      uint32_t numResumeOffsets,
+                                      uint32_t numScopeNotes,
+                                      uint32_t numTryNotes) {
   MOZ_ASSERT((codeLength + noteLength) % sizeof(uint32_t) == 0,
              "Source notes should have been padded already");
   MOZ_ASSERT(!scriptData_);
-  scriptData_ = SharedScriptData::new_(cx, codeLength, noteLength, natoms);
+  scriptData_ =
+      SharedScriptData::new_(cx, codeLength, noteLength, natoms,
+                             numResumeOffsets, numScopeNotes, numTryNotes);
   return !!scriptData_;
 }
 
@@ -3514,32 +3539,10 @@ void js::FreeScriptData(JSRuntime* rt) {
 }
 
 /* static */
-size_t PrivateScriptData::AllocationSize(uint32_t ngcthings, uint32_t ntrynotes,
-                                         uint32_t nscopenotes,
-                                         uint32_t nresumeoffsets) {
+size_t PrivateScriptData::AllocationSize(uint32_t ngcthings) {
   size_t size = sizeof(PrivateScriptData);
 
-  if (ntrynotes) {
-    size += sizeof(PackedSpan);
-  }
-  if (nscopenotes) {
-    size += sizeof(PackedSpan);
-  }
-  if (nresumeoffsets) {
-    size += sizeof(PackedSpan);
-  }
-
   size += ngcthings * sizeof(JS::GCCellPtr);
-
-  if (ntrynotes) {
-    size += ntrynotes * sizeof(JSTryNote);
-  }
-  if (nscopenotes) {
-    size += nscopenotes * sizeof(ScopeNote);
-  }
-  if (nresumeoffsets) {
-    size += nresumeoffsets * sizeof(uint32_t);
-  }
 
   return size;
 }
@@ -3573,23 +3576,12 @@ void PrivateScriptData::initSpan(size_t* cursor, uint32_t scaledSpanOffset,
 }
 
 // Initialize PackedSpans and placement-new the trailing arrays.
-PrivateScriptData::PrivateScriptData(uint32_t ngcthings, uint32_t ntrynotes,
-                                     uint32_t nscopenotes,
-                                     uint32_t nresumeoffsets)
+PrivateScriptData::PrivateScriptData(uint32_t ngcthings)
     : ngcthings(ngcthings) {
   // Convert cursor possition to a packed offset.
   auto ToPackedOffset = [](size_t cursor) {
     MOZ_ASSERT(cursor % PackedOffsets::SCALE == 0);
     return cursor / PackedOffsets::SCALE;
-  };
-
-  // Helper to allocate a PackedSpan from the variable length data.
-  auto TakeSpan = [=](size_t* cursor) {
-    size_t packedOffset = ToPackedOffset(*cursor);
-    MOZ_ASSERT(packedOffset <= PackedOffsets::MAX_OFFSET);
-
-    (*cursor) += sizeof(PackedSpan);
-    return packedOffset;
   };
 
   // Variable-length data begins immediately after PrivateScriptData itself.
@@ -3600,15 +3592,6 @@ PrivateScriptData::PrivateScriptData(uint32_t ngcthings, uint32_t ntrynotes,
   // Layout PackedSpan structures and initialize packedOffsets fields.
   static_assert(alignof(PrivateScriptData) >= alignof(PackedSpan),
                 "Incompatible alignment");
-  if (ntrynotes) {
-    packedOffsets.tryNotesSpanOffset = TakeSpan(&cursor);
-  }
-  if (nscopenotes) {
-    packedOffsets.scopeNotesSpanOffset = TakeSpan(&cursor);
-  }
-  if (nresumeoffsets) {
-    packedOffsets.resumeOffsetsSpanOffset = TakeSpan(&cursor);
-  }
 
   // Layout and initialize the gcthings array.
   {
@@ -3622,32 +3605,15 @@ PrivateScriptData::PrivateScriptData(uint32_t ngcthings, uint32_t ntrynotes,
     cursor += ngcthings * sizeof(JS::GCCellPtr);
   }
 
-  // Layout arrays, initialize PackedSpans and placement-new the elements.
-  static_assert(alignof(JS::GCCellPtr) >= alignof(JSTryNote),
-                "Incompatible alignment");
-  initSpan<JSTryNote>(&cursor, packedOffsets.tryNotesSpanOffset, ntrynotes);
-  static_assert(alignof(JSTryNote) >= alignof(ScopeNote),
-                "Incompatible alignment");
-  initSpan<ScopeNote>(&cursor, packedOffsets.scopeNotesSpanOffset, nscopenotes);
-  static_assert(alignof(ScopeNote) >= alignof(uint32_t),
-                "Incompatible alignment");
-  initSpan<uint32_t>(&cursor, packedOffsets.resumeOffsetsSpanOffset,
-                     nresumeoffsets);
-
   // Sanity check
-  MOZ_ASSERT(AllocationSize(ngcthings, ntrynotes, nscopenotes,
-                            nresumeoffsets) == cursor);
+  MOZ_ASSERT(AllocationSize(ngcthings) == cursor);
 }
 
 /* static */
 PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings,
-                                           uint32_t ntrynotes,
-                                           uint32_t nscopenotes,
-                                           uint32_t nresumeoffsets,
                                            uint32_t* dataSize) {
   // Compute size including trailing arrays
-  size_t size =
-      AllocationSize(ngcthings, ntrynotes, nscopenotes, nresumeoffsets);
+  size_t size = AllocationSize(ngcthings);
 
   // Allocate contiguous raw buffer
   void* raw = cx->pod_malloc<uint8_t>(size);
@@ -3662,35 +3628,21 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings,
 
   // Constuct the PrivateScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw)
-      PrivateScriptData(ngcthings, ntrynotes, nscopenotes, nresumeoffsets);
+  return new (raw) PrivateScriptData(ngcthings);
 }
 
 /* static */ bool PrivateScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
   uint32_t ngcthings = bce->perScriptData().gcThingList().length();
-  uint32_t ntrynotes = bce->bytecodeSection().tryNoteList().length();
-  uint32_t nscopenotes = bce->bytecodeSection().scopeNoteList().length();
-  uint32_t nresumeoffsets = bce->bytecodeSection().resumeOffsetList().length();
 
   // Create and initialize PrivateScriptData
-  if (!JSScript::createPrivateScriptData(cx, script, ngcthings, ntrynotes,
-                                         nscopenotes, nresumeoffsets)) {
+  if (!JSScript::createPrivateScriptData(cx, script, ngcthings)) {
     return false;
   }
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
     bce->perScriptData().gcThingList().finish(data->gcthings());
-  }
-  if (ntrynotes) {
-    bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
-  }
-  if (nscopenotes) {
-    bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
-  }
-  if (nresumeoffsets) {
-    bce->bytecodeSection().resumeOffsetList().finish(data->resumeOffsets());
   }
 
   return true;
@@ -3847,16 +3799,13 @@ bool JSScript::initScriptName(JSContext* cx) {
 
 /* static */
 bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
-                                       uint32_t ngcthings, uint32_t ntrynotes,
-                                       uint32_t nscopenotes,
-                                       uint32_t nresumeoffsets) {
+                                       uint32_t ngcthings) {
   cx->check(script);
   MOZ_ASSERT(!script->data_);
 
   uint32_t dataSize;
 
-  PrivateScriptData* data = PrivateScriptData::new_(
-      cx, ngcthings, ntrynotes, nscopenotes, nresumeoffsets, &dataSize);
+  PrivateScriptData* data = PrivateScriptData::new_(cx, ngcthings, &dataSize);
   if (!data) {
     return false;
   }
@@ -3872,11 +3821,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
                                      HandleFunction functionProto) {
   uint32_t numGCThings = 1;
-  uint32_t numTryNotes = 0;
-  uint32_t numScopeNotes = 0;
-  uint32_t nresumeoffsets = 0;
-  if (!createPrivateScriptData(cx, script, numGCThings, numTryNotes,
-                               numScopeNotes, nresumeoffsets)) {
+  if (!createPrivateScriptData(cx, script, numGCThings)) {
     return false;
   }
 
@@ -3893,7 +3838,12 @@ bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
   uint32_t codeLength = 1;
   uint32_t noteLength = 3;
   uint32_t numAtoms = 0;
-  if (!script->createSharedScriptData(cx, codeLength, noteLength, numAtoms)) {
+  uint32_t numResumeOffsets = 0;
+  uint32_t numScopeNotes = 0;
+  uint32_t numTryNotes = 0;
+  if (!script->createSharedScriptData(cx, codeLength, noteLength, numAtoms,
+                                      numResumeOffsets, numScopeNotes,
+                                      numTryNotes)) {
     return false;
   }
 
@@ -4498,11 +4448,6 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
                               MutableHandle<GCVector<Scope*>> scopes) {
   PrivateScriptData* srcData = src->data_;
   uint32_t ngcthings = srcData->gcthings().size();
-  uint32_t ntrynotes = srcData->hasTryNotes() ? srcData->tryNotes().size() : 0;
-  uint32_t nscopenotes =
-      srcData->hasScopeNotes() ? srcData->scopeNotes().size() : 0;
-  uint32_t nresumeoffsets =
-      srcData->hasResumeOffsets() ? srcData->resumeOffsets().size() : 0;
 
   // Clone GC things.
   JS::RootedVector<StackGCCellPtr> gcThings(cx);
@@ -4555,8 +4500,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   }
 
   // Create the new PrivateScriptData on |dst| and fill it in.
-  if (!JSScript::createPrivateScriptData(cx, dst, ngcthings, ntrynotes,
-                                         nscopenotes, nresumeoffsets)) {
+  if (!JSScript::createPrivateScriptData(cx, dst, ngcthings)) {
     return false;
   }
 
@@ -4566,18 +4510,6 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
     for (uint32_t i = 0; i < ngcthings; ++i) {
       array[i] = gcThings[i].get().get();
     }
-  }
-  if (ntrynotes) {
-    std::copy_n(srcData->tryNotes().begin(), ntrynotes,
-                dstData->tryNotes().begin());
-  }
-  if (nscopenotes) {
-    std::copy_n(srcData->scopeNotes().begin(), nscopenotes,
-                dstData->scopeNotes().begin());
-  }
-  if (nresumeoffsets) {
-    std::copy_n(srcData->resumeOffsets().begin(), nresumeoffsets,
-                dstData->resumeOffsets().begin());
   }
 
   return true;
@@ -4960,9 +4892,15 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 
   size_t nullLength = ComputeNotePadding(codeLength, noteLength);
 
+  uint32_t numResumeOffsets =
+      bce->bytecodeSection().resumeOffsetList().length();
+  uint32_t numScopeNotes = bce->bytecodeSection().scopeNoteList().length();
+  uint32_t numTryNotes = bce->bytecodeSection().tryNoteList().length();
+
   // Create and initialize SharedScriptData
   if (!script->createSharedScriptData(cx, codeLength, noteLength + nullLength,
-                                      natoms)) {
+                                      natoms, numResumeOffsets, numScopeNotes,
+                                      numTryNotes)) {
     return false;
   }
 
@@ -4988,6 +4926,10 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   std::copy_n(bce->bytecodeSection().notes().begin(), noteLength,
               data->notes());
   std::fill_n(data->notes() + noteLength, nullLength, SRC_NULL);
+
+  bce->bytecodeSection().resumeOffsetList().finish(data->resumeOffsets());
+  bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
+  bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
 
   return true;
 }
