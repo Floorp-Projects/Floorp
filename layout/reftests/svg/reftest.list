@@ -571,6 +571,7 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == currentColor-override-stop.svg pass.svg
 
 == mask-invalidation.html mask-invalidation-ref.html
+== overflow-visible-image.html overflow-visible-image-ref.html
 
 # Shadow DOM id tracking.
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106
