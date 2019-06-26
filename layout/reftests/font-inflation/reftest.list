@@ -90,9 +90,9 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-2.html threshold-scope-cell-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-3.html threshold-scope-cell-3-ref.html
 
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-flex-container-1.html threshold-scope-flex-container-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-flex-container-2.html threshold-scope-flex-container-2.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-grid-container-1.html threshold-scope-grid-container-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-flex-container-1.html threshold-scope-flex-container-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-flex-container-2.html threshold-scope-flex-container-2.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-grid-container-1.html threshold-scope-grid-container-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-flex-container-items-1.html threshold-scope-flex-container-items-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-flex-container-items-2.html threshold-scope-flex-container-items-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-grid-container-items-1.html threshold-scope-grid-container-items-1.html
