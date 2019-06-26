@@ -138,7 +138,7 @@ def build_dict(config, env=os.environ):
 
 def write_mozinfo(file, config, env=os.environ):
     """Write JSON data about the configuration specified in config and an
-    environment variable dict to |file|, which may be a filename or file-like
+    environment variable dict to ``|file|``, which may be a filename or file-like
     object.
     See build_dict for information about what  environment variables are used,
     and what keys are produced.
