@@ -3,18 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'Actor',
-    'Front',
-]
-
 DevToolsModules(
-    'Actor.js',
-    'Front.js',
-    'lazy-pool.js',
-    'Pool.js',
-    'Request.js',
-    'Response.js',
-    'types.js',
-    'utils.js',
+    'generateActorSpec.js',
 )
