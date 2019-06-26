@@ -1038,6 +1038,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       fullCompartmentChecks(false),
       gcCallbackDepth(0),
       alwaysPreserveCode(false),
+      lowMemoryState(false),
 #ifdef DEBUG
       arenasEmptyAtShutdown(true),
 #endif
@@ -8916,6 +8917,10 @@ JS_PUBLIC_API JS::GCNurseryCollectionCallback
 JS::SetGCNurseryCollectionCallback(JSContext* cx,
                                    GCNurseryCollectionCallback callback) {
   return cx->runtime()->gc.setNurseryCollectionCallback(callback);
+}
+
+JS_PUBLIC_API void JS::SetLowMemoryState(JSContext* cx, bool newState) {
+  return cx->runtime()->gc.setLowMemoryState(newState);
 }
 
 JS_PUBLIC_API void JS::DisableIncrementalGC(JSContext* cx) {
