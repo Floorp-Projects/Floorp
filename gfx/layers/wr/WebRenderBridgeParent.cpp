@@ -327,7 +327,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
   }
 
   if (!IsRootWebRenderBridgeParent() &&
-      StaticPrefs::WebRenderSplitRenderRoots()) {
+      StaticPrefs::gfx_webrender_split_render_roots()) {
     mRenderRoot = wr::RenderRoot::Content;
   }
 
@@ -926,7 +926,7 @@ bool WebRenderBridgeParent::SetDisplayList(
       }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
       LayoutDeviceIntRect rect;
-      if (StaticPrefs::WebRenderSplitRenderRoots()) {
+      if (StaticPrefs::gfx_webrender_split_render_roots()) {
         rect = RoundedToInt(aRect);
         rect.SetWidth(
             std::max(0, std::min(widgetSize.width - rect.X(), rect.Width())));
@@ -1620,7 +1620,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   for (auto renderRoot : wr::kRenderRoots) {
     if (renderRoot == wr::RenderRoot::Default ||
         (IsRootWebRenderBridgeParent() &&
-         StaticPrefs::WebRenderSplitRenderRoots())) {
+         StaticPrefs::gfx_webrender_split_render_roots())) {
       // Clear resources
       wr::TransactionBuilder txn;
       txn.SetLowPriority(true);
@@ -1708,7 +1708,7 @@ void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
   for (auto renderRoot : wr::kRenderRoots) {
     if (renderRoot == wr::RenderRoot::Default ||
         (IsRootWebRenderBridgeParent() &&
-         StaticPrefs::WebRenderSplitRenderRoots())) {
+         StaticPrefs::gfx_webrender_split_render_roots())) {
       wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
       fastTxn.InvalidateRenderedFrame();
       Api(renderRoot)->SendTransaction(fastTxn);
@@ -1745,7 +1745,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(
   for (size_t i = 0; i < aTargets.Length(); i++) {
     // Guard against bad data from hijacked child processes
     if (aTargets[i].mRenderRoot > wr::kHighestRenderRoot ||
-        (!StaticPrefs::WebRenderSplitRenderRoots() &&
+        (!StaticPrefs::gfx_webrender_split_render_roots() &&
          aTargets[i].mRenderRoot != wr::RenderRoot::Default)) {
       NS_ERROR(
           "Unexpected render root in RecvSetConfirmedTargetAPZC; dropping "
@@ -2111,7 +2111,7 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
   if (lastVsyncId == VsyncId() || !mMostRecentComposite ||
       mMostRecentComposite >= lastVsync ||
       ((TimeStamp::Now() - lastVsync).ToMilliseconds() >
-       StaticPrefs::WebRenderLateSceneBuildThreshold())) {
+       StaticPrefs::gfx_webrender_late_scenebuild_threshold())) {
     mCompositorScheduler->ScheduleComposition();
     return;
   }

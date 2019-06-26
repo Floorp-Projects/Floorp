@@ -312,7 +312,7 @@ bool ClientLayerManager::EndTransactionInternal(
 
   // Skip the painting if the device is in device-reset status.
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-    if (StaticPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
+    if (StaticPrefs::gfx_content_always_paint() && XRE_IsContentProcess()) {
       TimeStamp start = TimeStamp::Now();
       root->RenderLayer();
       mLastPaintTime = TimeStamp::Now() - start;
@@ -700,7 +700,7 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
     refreshStart = mTransactionStart;
   }
 
-  if (StaticPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
+  if (StaticPrefs::gfx_content_always_paint() && XRE_IsContentProcess()) {
     mForwarder->SendPaintTime(mLatestTransactionId, mLastPaintTime);
   }
 
