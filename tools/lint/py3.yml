@@ -20,7 +20,6 @@ py3:
         - layout/tools/reftest
         - media
         - modules/freetype2
-        - python/safety
         - security/manager/ssl
         - servo
         - testing/awsy
