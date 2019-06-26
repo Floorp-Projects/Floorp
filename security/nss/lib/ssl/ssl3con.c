@@ -11378,7 +11378,19 @@ ssl3_CacheWrappedSecret(sslSocket *ss, sslSessionID *sid,
             wrappingKey = PK11_KeyGen(symKeySlot, mechanism, NULL,
                                       keyLength, pwArg);
             if (wrappingKey) {
+                /* The thread safety characteristics of PK11_[SG]etWrapKey is
+                * abominable.  This protects against races in calling
+                * PK11_SetWrapKey by dropping and re-acquiring the canonical
+                * value once it is set.  The mutex in PK11_[SG]etWrapKey will
+                * ensure that races produce the same value in the end. */
                 PK11_SetWrapKey(symKeySlot, wrapKeyIndex, wrappingKey);
+                PK11_FreeSymKey(wrappingKey);
+                wrappingKey = PK11_GetWrapKey(symKeySlot, wrapKeyIndex,
+                                              CKM_INVALID_MECHANISM, incarnation, pwArg);
+                if (!wrappingKey) {
+                    PK11_FreeSlot(symKeySlot);
+                    return SECFailure;
+                }
             }
         }
     } else {
