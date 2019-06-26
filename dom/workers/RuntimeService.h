@@ -158,6 +158,8 @@ class RuntimeService final : public nsIObserver {
   void UpdateAllWorkerGCZeal();
 #endif
 
+  void SetLowMemoryStateAllWorkers(bool aState);
+
   void GarbageCollectAllWorkers(bool aShrinking);
 
   void CycleCollectAllWorkers();

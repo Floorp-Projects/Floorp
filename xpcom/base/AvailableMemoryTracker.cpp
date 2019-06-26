@@ -94,6 +94,7 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   bool OngoingMemoryPressure() { return mUnderMemoryPressure; }
   void AdjustPollingInterval(const bool aLowMemory);
   void SendMemoryPressureEvent();
+  void MaybeSendMemoryPressureStopEvent();
   void MaybeSaveMemoryReport();
   void Shutdown();
 
@@ -188,6 +189,12 @@ void nsAvailableMemoryWatcher::SendMemoryPressureEvent() {
   NS_DispatchEventualMemoryPressure(state);
 }
 
+void nsAvailableMemoryWatcher::MaybeSendMemoryPressureStopEvent() {
+  if (OngoingMemoryPressure()) {
+    NS_DispatchEventualMemoryPressure(MemPressure_Stopping);
+  }
+}
+
 void nsAvailableMemoryWatcher::MaybeSaveMemoryReport() {
   if (!mSavedReport && OngoingMemoryPressure()) {
     nsCOMPtr<nsICrashReporter> cr =
@@ -221,6 +228,11 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
 
   if (lowMemory) {
     SendMemoryPressureEvent();
+  } else {
+    MaybeSendMemoryPressureStopEvent();
+  }
+
+  if (lowMemory) {
     MaybeSaveMemoryReport();
   } else {
     mSavedReport = false;  // Save a new report if memory gets low again
