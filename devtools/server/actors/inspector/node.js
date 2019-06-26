@@ -534,16 +534,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       innerHeight: win.innerHeight,
     };
   },
-
-  /**
-   * The breakpoint values to toggle off and on for this node. Only
-   * breakpoint types specified in 'bps' will be toggled.
-   *
-   * @param {Object} bps The subset of bp types to set the state for.
-   */
-  setMutationBreakpoints(bps) {
-    this.walker.setMutationBreakpoints(this, bps);
-  },
 });
 
 /**
