@@ -13,6 +13,7 @@
 #include "nsIStringEnumerator.h"
 #include "nsMimeTypes.h"
 
+#include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs.h"
 
@@ -43,47 +44,11 @@ ScriptLoadHandler::~ScriptLoadHandler() {}
 NS_IMPL_ISUPPORTS(ScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
 
 template <typename Unit>
-struct RawDataDecoding;
-
-template <>
-struct RawDataDecoding<char16_t> {
-  static CheckedInt<size_t> MaxBufferLength(const UniquePtr<Decoder>& aDecoder,
-                                            uint32_t aDataLength) {
-    return aDecoder->MaxUTF16BufferLength(aDataLength);
-  }
-
-  static void PerformDecode(UniquePtr<Decoder>& aDecoder,
-                            Span<const uint8_t> aSrc, Span<char16_t> aDst,
-                            bool aEndOfStream, uint32_t* aResult, size_t* aRead,
-                            size_t* aWritten, bool* aHadErrors) {
-    Tie(*aResult, *aRead, *aWritten, *aHadErrors) =
-        aDecoder->DecodeToUTF16(aSrc, aDst, aEndOfStream);
-  }
-};
-
-template <>
-struct RawDataDecoding<Utf8Unit> {
-  static CheckedInt<size_t> MaxBufferLength(const UniquePtr<Decoder>& aDecoder,
-                                            uint32_t aDataLength) {
-    return aDecoder->MaxUTF8BufferLength(aDataLength);
-  }
-
-  static void PerformDecode(UniquePtr<Decoder>& aDecoder,
-                            Span<const uint8_t> aSrc, Span<Utf8Unit> aDst,
-                            bool aEndOfStream, uint32_t* aResult, size_t* aRead,
-                            size_t* aWritten, bool* aHadErrors) {
-    Tie(*aResult, *aRead, *aWritten, *aHadErrors) =
-        aDecoder->DecodeToUTF8(aSrc, AsWritableBytes(aDst), aEndOfStream);
-  }
-};
-
-template <typename Unit>
 nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
                                                 uint32_t aDataLength,
                                                 bool aEndOfStream) {
-  using Decoding = RawDataDecoding<Unit>;
-
-  CheckedInt<size_t> needed = Decoding::MaxBufferLength(mDecoder, aDataLength);
+  CheckedInt<size_t> needed =
+      ScriptDecoding<Unit>::MaxBufferLength(mDecoder, aDataLength);
   if (!needed.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -101,18 +66,10 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  uint32_t result;
-  size_t read;
-  size_t written;
-  bool hadErrors;
-  Decoding::PerformDecode(
+  size_t written = ScriptDecoding<Unit>::DecodeInto(
       mDecoder, MakeSpan(aData, aDataLength),
-      MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream,
-      &result, &read, &written, &hadErrors);
-  MOZ_ASSERT(result == kInputEmpty);
-  MOZ_ASSERT(read == aDataLength);
+      MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream);
   MOZ_ASSERT(written <= needed.value());
-  Unused << hadErrors;
 
   haveRead += written;
   MOZ_ASSERT(haveRead <= capacity.value(),
