@@ -208,9 +208,11 @@ static const char* const sExtensionNames[] = {
     "GL_OVR_multiview2"};
 
 static bool ShouldUseTLSIsCurrent(bool useTLSIsCurrent) {
-  if (StaticPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
+  if (StaticPrefs::gl_use_tls_is_current() == 0) {
+    return useTLSIsCurrent;
+  }
 
-  return StaticPrefs::UseTLSIsCurrent() > 0;
+  return StaticPrefs::gl_use_tls_is_current() > 0;
 }
 
 static bool ParseVersion(const std::string& versionStr,
