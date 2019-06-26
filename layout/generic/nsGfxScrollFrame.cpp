@@ -5409,7 +5409,7 @@ nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
   return frame;
 }
 
-nsIFrame* ScrollFrameHelper::GetFrameForScrollSnap() const {
+nsIFrame* ScrollFrameHelper::GetFrameForStyle() const {
   nsIFrame* styleFrame = nullptr;
   if (mIsRoot) {
     if (const Element* rootElement =
@@ -5425,7 +5425,7 @@ nsIFrame* ScrollFrameHelper::GetFrameForScrollSnap() const {
 
 bool ScrollFrameHelper::NeedsScrollSnap() const {
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    nsIFrame* scrollSnapFrame = GetFrameForScrollSnap();
+    nsIFrame* scrollSnapFrame = GetFrameForStyle();
     if (!scrollSnapFrame) {
       return false;
     }
@@ -6869,7 +6869,7 @@ static nsMargin ResolveScrollPaddingStyle(
 }
 
 nsMargin ScrollFrameHelper::GetScrollPadding() const {
-  nsIFrame* styleFrame = GetFrameForScrollSnap();
+  nsIFrame* styleFrame = GetFrameForStyle();
   if (!styleFrame) {
     return nsMargin();
   }
@@ -6886,7 +6886,7 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
 
   ScrollSnapInfo result;
 
-  nsIFrame* scrollSnapFrame = GetFrameForScrollSnap();
+  nsIFrame* scrollSnapFrame = GetFrameForStyle();
   if (!scrollSnapFrame) {
     return result;
   }
