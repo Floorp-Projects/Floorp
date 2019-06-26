@@ -2,7 +2,7 @@
 
 # BrowserMenu
 
-`class BrowserMenu` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L29)
+`class BrowserMenu` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L28)
 
 A popup menu composed of BrowserMenuItem objects.
 

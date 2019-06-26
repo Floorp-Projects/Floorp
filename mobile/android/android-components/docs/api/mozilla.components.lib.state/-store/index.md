@@ -51,4 +51,4 @@ The [State](../-state.md) can only be modified by dispatching [Action](../-actio
 
 | Name | Summary |
 |---|---|
-| [BrowserStore](../../mozilla.components.browser.session.store/-browser-store/index.md) | `class BrowserStore : `[`Store`](./index.md)`<`[`BrowserState`](../../mozilla.components.browser.session.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.session.action/-browser-action.md)`>`<br>The [BrowserStore](../../mozilla.components.browser.session.store/-browser-store/index.md) holds the [BrowserState](../../mozilla.components.browser.session.state/-browser-state/index.md) (state tree). |
+| [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md) | `class BrowserStore : `[`Store`](./index.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>`<br>The [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree). |

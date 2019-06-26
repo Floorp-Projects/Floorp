@@ -14,4 +14,4 @@ state changes.
 
 | Name | Summary |
 |---|---|
-| [BrowserAction](../mozilla.components.browser.session.action/-browser-action.md) | `sealed class BrowserAction : `[`Action`](./-action.md)<br>[Action](./-action.md) implementation related to [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md). |
+| [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) | `sealed class BrowserAction : `[`Action`](./-action.md)<br>[Action](./-action.md) implementation related to [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |

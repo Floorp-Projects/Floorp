@@ -2,7 +2,7 @@
 
 # BrowserToolbar
 
-`class BrowserToolbar : `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L68)
+`class BrowserToolbar : `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L67)
 
 A customizable toolbar for browsers.
 

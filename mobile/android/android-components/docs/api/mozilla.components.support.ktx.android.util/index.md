@@ -7,3 +7,9 @@
 | Name | Summary |
 |---|---|
 | [Base64](-base64/index.md) | `object Base64` |
+
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [kotlin.Int](kotlin.-int/index.md) |  |

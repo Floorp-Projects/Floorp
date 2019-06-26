@@ -30,6 +30,8 @@ $dokka.location:mozilla.components.support.base.ids$cancel(androidx.core.app.Not
 $dokka.location:mozilla.components.support.base.ids$notify(androidx.core.app.NotificationManagerCompat, , kotlin.String, )mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/notify.md
 $dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObservers(androidx.lifecycle.Lifecycle, kotlin.Array((androidx.lifecycle.LifecycleObserver)))mozilla.components.support.ktx.android.arch.lifecycle/androidx.lifecycle.-lifecycle/add-observers.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$toJSON(kotlin.collections.Map((kotlin.String, )))mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/to-j-s-o-n.md
+$dokka.location:mozilla.components.support.ktx.android.util$dpToFloat(kotlin.Int, )mozilla.components.support.ktx.android.util/kotlin.-int/dp-to-float.md
+$dokka.location:mozilla.components.support.ktx.android.util$dpToPx(kotlin.Int, )mozilla.components.support.ktx.android.util/kotlin.-int/dp-to-px.md
 $dokka.location:mozilla.components.support.ktx.java.io$truncateDirectory(java.io.File)mozilla.components.support.ktx.java.io/java.io.-file/truncate-directory.md
 $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.md
 $dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md
@@ -44,6 +46,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collection
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toUri(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-uri.md
+$dokka.location:mozilla.components.support.test.ext$joinBlocking(kotlinx.coroutines.Job)mozilla.components.support.test.ext/kotlinx.coroutines.-job/join-blocking.md
 mozilla.components
 mozilla.components.browser.awesomebar
 mozilla.components.browser.awesomebar.layout
@@ -77,15 +80,15 @@ mozilla.components.browser.search.provider.filter
 mozilla.components.browser.search.provider.localization
 mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
-mozilla.components.browser.session.action
 mozilla.components.browser.session.engine.request
 mozilla.components.browser.session.ext
-mozilla.components.browser.session.selector
-mozilla.components.browser.session.state
 mozilla.components.browser.session.storage
-mozilla.components.browser.session.store
 mozilla.components.browser.session.tab
 mozilla.components.browser.session.utils
+mozilla.components.browser.state.action
+mozilla.components.browser.state.selector
+mozilla.components.browser.state.state
+mozilla.components.browser.state.store
 mozilla.components.browser.storage.memory
 mozilla.components.browser.storage.sync
 mozilla.components.browser.tabstray
@@ -208,6 +211,7 @@ mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
 mozilla.components.support.rustlog
 mozilla.components.support.test
+mozilla.components.support.test.ext
 mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
 mozilla.components.support.utils

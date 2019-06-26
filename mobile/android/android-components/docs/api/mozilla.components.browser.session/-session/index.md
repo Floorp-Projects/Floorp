@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L29)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L38)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -74,3 +74,5 @@ Value type that represents the state of a browser session. Changes can be observ
 | Name | Summary |
 |---|---|
 | [isInstallable](../../mozilla.components.feature.pwa.ext/is-installable.md) | `fun `[`Session`](./index.md)`.isInstallable(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks if the current session represents an installable web app. |
+| [toCustomTabSessionState](../../mozilla.components.browser.session.ext/to-custom-tab-session-state.md) | `fun `[`Session`](./index.md)`.toCustomTabSessionState(): `[`CustomTabSessionState`](../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md)<br>Creates a matching [CustomTabSessionState](../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) from a [Session](./index.md) |
+| [toTabSessionState](../../mozilla.components.browser.session.ext/to-tab-session-state.md) | `fun `[`Session`](./index.md)`.toTabSessionState(): `[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)<br>Create a matching [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) from a [Session](./index.md). |

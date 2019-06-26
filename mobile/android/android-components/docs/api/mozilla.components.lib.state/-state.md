@@ -10,4 +10,4 @@ Generic interface for a [State](./-state.md) maintained by a [Store](-store/inde
 
 | Name | Summary |
 |---|---|
-| [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md) | `data class BrowserState : `[`State`](./-state.md)<br>Value type that represents the complete state of the browser/engine. |
+| [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md) | `data class BrowserState : `[`State`](./-state.md)<br>Value type that represents the complete state of the browser/engine. |

@@ -2,7 +2,7 @@
 
 # DefaultIconGenerator
 
-`class DefaultIconGenerator : `[`IconGenerator`](../-icon-generator/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/generator/DefaultIconGenerator.kt#L24)
+`class DefaultIconGenerator : `[`IconGenerator`](../-icon-generator/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/generator/DefaultIconGenerator.kt#L25)
 
 [IconGenerator](../-icon-generator/index.md) implementation that will generate an icon with a background color, rounded corners and a letter
 representing the URL.
