@@ -25,7 +25,6 @@ py3:
         - security/manager/ssl
         - servo
         - testing/awsy
-        - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
         - testing/mochitest
         - testing/mozharness
         - testing/raptor
