@@ -2,6 +2,7 @@
 /* global contextMenu:true */
 
 var lastElement;
+const FRAME_OS_PID = "context-frameOsPid";
 
 function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
     // Context menu should be closed before we open it again.
@@ -73,7 +74,9 @@ function getVisibleMenuItems(aMenu, aData) {
                        // XXX Screenshots doesn't have an access key. This needs
                        // at least bug 1320462 fixing first.
                        item.id != "screenshots_mozilla_org-menuitem-_create-screenshot") {
-              ok(key, "menuitem " + item.id + " has an access key");
+              if (item.id != FRAME_OS_PID) {
+                ok(key, "menuitem " + item.id + " has an access key");
+              }
               if (accessKeys[key])
                   ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
               else
