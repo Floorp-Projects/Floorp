@@ -133,7 +133,8 @@ nsresult nsWindowBase::SynthesizeNativeTouchPoint(
     uint32_t aPointerOrientation, nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "touchpoint");
 
-  if (StaticPrefs::APZTestFailsWithNativeInjection() || !InitTouchInjection()) {
+  if (StaticPrefs::apz_test_fails_with_native_injection() ||
+      !InitTouchInjection()) {
     // If we don't have touch injection from the OS, or if we are running a test
     // that cannot properly inject events to satisfy the OS requirements (see
     // bug 1313170)  we can just fake it and synthesize the events from here.

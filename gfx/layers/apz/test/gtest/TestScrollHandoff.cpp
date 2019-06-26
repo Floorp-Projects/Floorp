@@ -524,6 +524,7 @@ TEST_F(APZScrollHandoffTester, Scrollgrab) {
 
 TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
+
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
