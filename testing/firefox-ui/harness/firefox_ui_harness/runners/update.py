@@ -105,4 +105,4 @@ class UpdateTestRunner(FirefoxUITestRunner):
         # If exceptions happened, re-throw the last one
         if self.exc_info:
             ex_type, exception, tb = self.exc_info
-            raise ex_type(exception).with_traceback(tb)
+            raise ex_type, exception, tb
