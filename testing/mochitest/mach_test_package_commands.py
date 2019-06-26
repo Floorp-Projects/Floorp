@@ -60,7 +60,7 @@ def run_mochitest_desktop(context, args):
 
 
 def run_mochitest_android(context, args):
-    args.app = args.app or 'org.mozilla.fennec'
+    args.app = args.app or 'org.mozilla.geckoview.test'
     args.extraProfileFiles.append(os.path.join(context.package_root, 'mochitest', 'fonts'))
     args.utilityPath = context.hostutils
     args.xrePath = context.hostutils

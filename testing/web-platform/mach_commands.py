@@ -41,7 +41,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             # package_name may be non-fennec in the future
             package_name = kwargs["package_name"]
             if not package_name:
-                package_name = self.substs["ANDROID_PACKAGE_NAME"]
+                kwargs["package_name"] = package_name = "org.mozilla.geckoview.test"
 
             # Note that this import may fail in non-fennec trees
             from mozrunner.devices.android_device import verify_android_device, grant_runtime_permissions

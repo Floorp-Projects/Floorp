@@ -95,7 +95,7 @@ class ReftestRunner(MozbuildObject):
         return rv
 
     def run_android_test(self, **kwargs):
-        """Runs a reftest, in Firefox for Android."""
+        """Runs a reftest, in an Android application."""
 
         args = Namespace(**kwargs)
         if args.suite not in ('reftest', 'crashtest', 'jstestbrowser'):
@@ -130,7 +130,7 @@ class ReftestRunner(MozbuildObject):
         if not args.xrePath:
             args.xrePath = os.environ.get("MOZ_HOST_BIN")
         if not args.app:
-            args.app = self.substs["ANDROID_PACKAGE_NAME"]
+            args.app = "org.mozilla.geckoview.test"
         if not args.utilityPath:
             args.utilityPath = args.xrePath
         args.ignoreWindowSize = True
