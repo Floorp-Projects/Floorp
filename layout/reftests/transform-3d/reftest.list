@@ -22,6 +22,7 @@ fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(co
 == preserve3d-4a.html about:blank
 fuzzy-if(gtkWidget,0-4,0-200) fuzzy-if(Android,0-4,0-300) fuzzy-if(winWidget&&!layersGPUAccelerated,0-2,0-100) fuzzy-if(skiaContent,0-16,0-100) == preserve3d-5a.html preserve3d-5-ref.html
 == preserve3d-6a.html preserve3d-6-ref.html
+== preserve3d-table.html preserve3d-table-ref.html
 == scale3d-z.html scalez-1-ref.html
 fuzzy-if(winWidget,0-143,0-689) fuzzy-if(OSX,0-224,0-924) fuzzy-if(winWidget,0-154,0-644) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == scale3d-all.html scale3d-1-ref.html # subpixel AA
 fuzzy-if(winWidget,0-143,0-689) fuzzy-if(OSX,0-224,0-924) fuzzy-if(winWidget,0-154,0-644) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
