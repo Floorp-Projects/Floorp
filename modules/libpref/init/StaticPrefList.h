@@ -5463,6 +5463,21 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+#ifdef EARLY_BETA_OR_EARLIER
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+// Are the width and height attributes on image-like elements mapped to the
+// internal-for-now aspect-ratio property?
+VARCACHE_PREF(
+  Live,
+  "layout.css.width-and-height-map-to-aspect-ratio.enabled",
+  layout_css_width_and_height_map_to_aspect_ratio_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 //---------------------------------------------------------------------------
 // Prefs starting with "media."
 //---------------------------------------------------------------------------
