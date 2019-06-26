@@ -47,7 +47,7 @@
         android:layout_marginTop="8dp"
         android:drawableStart="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
-        android:drawableTint="@color/primary_text_light_theme"
+        android:drawableTint="?primaryText"
         android:textColor="?secondaryText"
         android:textSize="16sp"
         tools:targetApi="m"

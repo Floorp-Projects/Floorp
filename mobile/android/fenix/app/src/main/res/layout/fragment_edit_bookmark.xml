@@ -79,7 +79,7 @@
         android:textColor="?secondaryText"
         android:drawableStart="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
-        android:drawableTint="@color/primary_text_light_theme"
+        android:drawableTint="?primaryText"
         tools:text="Mobile Bookmarks"
         tools:targetApi="m" />
 
