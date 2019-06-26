@@ -163,6 +163,7 @@ whitelist-vars = [
     "mozilla::detail::gGkAtoms",
     "mozilla::detail::kGkAtomsArrayOffset",
     "mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures",
+    "mozilla::StaticPrefs::.*",
 ]
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
 # structs together.
