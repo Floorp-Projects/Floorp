@@ -72,7 +72,7 @@
     <LinearLayout
         android:id="@+id/pill_wrapper"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:background="?foundation"
         android:orientation="horizontal"
         android:paddingStart="20dp"
