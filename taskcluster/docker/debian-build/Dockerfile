@@ -64,7 +64,6 @@ RUN apt-get update && \
       linux-libc-dev:$ARCH$BACKPORT \
       $PKG_CONFIG \
       libdbus-glib-1-dev:$ARCH \
-      libdrm-dev:$ARCH \
       libfontconfig1-dev:$ARCH \
       libfreetype6-dev:$ARCH \
       libgconf2-dev:$ARCH \
