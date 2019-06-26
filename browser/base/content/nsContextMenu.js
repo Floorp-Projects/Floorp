@@ -525,6 +525,13 @@ nsContextMenu.prototype = {
                   this.onTextInput && this.onKeywordField);
     this.showItem("frame", this.inFrame);
 
+    if (this.inFrame) {
+      // To make it easier to debug the browser running with out-of-process iframes, we
+      // display the process PID of the iframe in the context menu for the subframe.
+      let frameOsPid = this.actor.manager.browsingContext.currentWindowGlobal.osPid;
+      this.setItemAttr("context-frameOsPid", "label", "PID: " + frameOsPid);
+    }
+
     let showSearchSelect = !this.inAboutDevtoolsToolbox &&
                            (this.isTextSelected || this.onLink) && !this.onImage;
     this.showItem("context-searchselect", showSearchSelect);
