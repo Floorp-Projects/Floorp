@@ -134,8 +134,7 @@ class ToolbarUIView(
             newState = SearchState("", "", it.isEditing, it.engine, it.focused, it.isQueryUpdated)
         }
 
-        // Need to set edit mode if the url value was cleared
-        if (newState.focused || shouldClearSearchURL(it) || shouldUpdateEditingState(newState)) {
+        if (newState != it || shouldUpdateEditingState(newState)) {
             updateEditingState(newState)
         }
 
