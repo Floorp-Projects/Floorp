@@ -3555,52 +3555,21 @@ void PrivateScriptData::initElements(size_t offset, size_t length) {
   DefaultInitializeElements<T>(raw, length);
 }
 
-template <typename T>
-void PrivateScriptData::initSpan(size_t* cursor, uint32_t scaledSpanOffset,
-                                 size_t length) {
-  // PackedSpans are elided when arrays are empty
-  if (scaledSpanOffset == 0) {
-    MOZ_ASSERT(length == 0);
-    return;
-  }
-
-  // Placement-new the PackedSpan
-  PackedSpan* span = packedOffsetToPointer<PackedSpan>(scaledSpanOffset);
-  span = new (span) PackedSpan{uint32_t(*cursor), uint32_t(length)};
-
-  // Placement-new the elements
-  initElements<T>(*cursor, length);
-
-  // Advance cursor
-  (*cursor) += length * sizeof(T);
-}
-
-// Initialize PackedSpans and placement-new the trailing arrays.
+// Initialize and placement-new the trailing arrays.
 PrivateScriptData::PrivateScriptData(uint32_t ngcthings)
     : ngcthings(ngcthings) {
-  // Convert cursor possition to a packed offset.
-  auto ToPackedOffset = [](size_t cursor) {
-    MOZ_ASSERT(cursor % PackedOffsets::SCALE == 0);
-    return cursor / PackedOffsets::SCALE;
-  };
-
   // Variable-length data begins immediately after PrivateScriptData itself.
   // NOTE: Alignment is computed using cursor/offset so the alignment of
   // PrivateScriptData must be stricter than any trailing array type.
   size_t cursor = sizeof(*this);
 
-  // Layout PackedSpan structures and initialize packedOffsets fields.
-  static_assert(alignof(PrivateScriptData) >= alignof(PackedSpan),
-                "Incompatible alignment");
-
   // Layout and initialize the gcthings array.
   {
     MOZ_ASSERT(ngcthings > 0);
 
-    static_assert(alignof(PackedSpan) >= alignof(JS::GCCellPtr),
+    static_assert(alignof(PrivateScriptData) >= alignof(JS::GCCellPtr),
                   "Incompatible alignment");
     initElements<JS::GCCellPtr>(cursor, ngcthings);
-    packedOffsets.gcthingsOffset = ToPackedOffset(cursor);
 
     cursor += ngcthings * sizeof(JS::GCCellPtr);
   }
