@@ -9,6 +9,13 @@ Unreleased
 
 ### Added
 
+- Added support for HTTP `HEAD` requests to the HTTPD
+
+  geckodriver now responds correctly to HTTP `HEAD` requests,
+  which can be used for probing whether it supports a particular API.
+
+  Thanks to [Bastien Orivel] for this patch.
+
 - Added support for searching for Nightly’s default path on macOS
 
   If the location of the Firefox binary is not given, geckodriver

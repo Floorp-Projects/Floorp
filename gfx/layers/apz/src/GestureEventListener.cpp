@@ -291,13 +291,13 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
 
     // The user has performed a double tap, but not lifted her finger.
     case GESTURE_SECOND_SINGLE_TOUCH_DOWN: {
-      // If touch has moved noticeably (within StaticPrefs::APZMaxTapTime()),
+      // If touch has moved noticeably (within StaticPrefs::apz_max_tap_time()),
       // change state.
       if (MoveDistanceIsLarge()) {
         CancelLongTapTimeoutTask();
         CancelMaxTapTimeoutTask();
         mSingleTapSent = Nothing();
-        if (!StaticPrefs::APZOneTouchPinchEnabled()) {
+        if (!StaticPrefs::apz_one_touch_pinch_enabled()) {
           // If the one-touch-pinch feature is disabled, bail out of the double-
           // tap gesture instead.
           SetState(GESTURE_NONE);
@@ -629,7 +629,7 @@ void GestureEventListener::CreateMaxTapTimeoutTask() {
 
   mMaxTapTimeoutTask = task;
   mAsyncPanZoomController->PostDelayedTask(task.forget(),
-                                           StaticPrefs::APZMaxTapTime());
+                                           StaticPrefs::apz_max_tap_time());
 }
 
 }  // namespace layers

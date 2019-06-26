@@ -3575,7 +3575,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // FIXME: bug 1525793 -- this may need to handle zooming or not on a per-document basis.
-  if (StaticPrefs::APZAllowZooming()) {
+  if (StaticPrefs::apz_allow_zooming()) {
     NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
     ScreenPoint position =
         ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],

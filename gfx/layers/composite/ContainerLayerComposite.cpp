@@ -509,7 +509,7 @@ void RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
         }
       }
 
-      if (StaticPrefs::APZMinimap()) {
+      if (StaticPrefs::apz_minimap_enabled()) {
         RenderMinimap(aContainer, sampler, aManager, aClipRect, layer);
       }
     }

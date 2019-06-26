@@ -1487,9 +1487,9 @@ void AsyncCompositionManager::SetFixedLayerMargins(ScreenIntCoord aTop,
 }
 ScreenMargin AsyncCompositionManager::GetFixedLayerMargins() const {
   ScreenMargin result = mFixedLayerMargins;
-  if (StaticPrefs::APZFixedMarginOverrideEnabled()) {
-    result.top = StaticPrefs::APZFixedMarginOverrideTop();
-    result.bottom = StaticPrefs::APZFixedMarginOverrideBottom();
+  if (StaticPrefs::apz_fixed_margin_override_enabled()) {
+    result.top = StaticPrefs::apz_fixed_margin_override_top();
+    result.bottom = StaticPrefs::apz_fixed_margin_override_bottom();
   }
   return result;
 }

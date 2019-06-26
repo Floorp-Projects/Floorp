@@ -2467,7 +2467,7 @@ void ScrollFrameHelper::ResetDisplayPortExpiryTimer() {
   if (mDisplayPortExpiryTimer) {
     mDisplayPortExpiryTimer->InitWithNamedFuncCallback(
         RemoveDisplayPortCallback, this,
-        StaticPrefs::APZDisplayPortExpiryTime(), nsITimer::TYPE_ONE_SHOT,
+        StaticPrefs::apz_displayport_expiry_ms(), nsITimer::TYPE_ONE_SHOT,
         "ScrollFrameHelper::ResetDisplayPortExpiryTimer");
   }
 }
@@ -2487,7 +2487,7 @@ void ScrollFrameHelper::TriggerDisplayPortExpiration() {
     return;
   }
 
-  if (!StaticPrefs::APZDisplayPortExpiryTime()) {
+  if (!StaticPrefs::apz_displayport_expiry_ms()) {
     // a zero time disables the expiry
     return;
   }
@@ -2803,7 +2803,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   bool schedulePaint = true;
   if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
       !nsLayoutUtils::ShouldDisableApzForElement(content) &&
-      StaticPrefs::APZPaintSkipping()) {
+      StaticPrefs::apz_paint_skipping_enabled()) {
     // If APZ is enabled with paint-skipping, there are certain conditions in
     // which we can skip paints:
     // 1) If APZ triggered this scroll, and the tile-aligned displayport is
@@ -2838,7 +2838,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
       bool haveScrollLinkedEffects =
           content->GetComposedDoc()->HasScrollLinkedEffect();
       bool apzDisabled = haveScrollLinkedEffects &&
-                         StaticPrefs::APZDisableForScrollLinkedEffects();
+                         StaticPrefs::apz_disable_for_scroll_linked_effects();
       if (!apzDisabled && !HasPluginFrames()) {
         if (LastScrollOrigin() == nsGkAtoms::apz) {
           schedulePaint = false;
