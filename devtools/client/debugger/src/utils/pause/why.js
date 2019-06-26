@@ -17,6 +17,7 @@ const reasons = {
   resumeLimit: "whyPaused.resumeLimit",
   breakpointConditionThrown: "whyPaused.breakpointConditionThrown",
   eventBreakpoint: "whyPaused.eventBreakpoint",
+  mutationBreakpoint: "whyPaused.mutationBreakpoint",
 
   // V8
   DOM: "whyPaused.breakpoint",
