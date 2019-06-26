@@ -374,6 +374,11 @@
                     label="&viewFrameInfoCmd.label;"
                     accesskey="&viewFrameInfoCmd.accesskey;"
                     oncommand="gContextMenu.viewFrameInfo();"/>
+#ifdef NIGHTLY_BUILD
+          <menuitem id="context-frameOsPid"
+                    label="PID: Unknown"
+                    disabled="true"/>
+#endif
         </menupopup>
       </menu>
       <menuitem id="context-viewpartialsource-selection"
