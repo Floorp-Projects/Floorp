@@ -18,23 +18,27 @@ function f2(n) {
 
   if (i % 2 == 0) {
     for (var i = 0; i < n; i++) {
-      this.x += i;
-      print(uneval(i));
-      obj[i] = i * i;
-      if (i > 10) {
-        f2(i / f1());
-      }
+      (function() {
+        this.x += i;
+        print(uneval(i));
+        obj[i] = i * i;
+        if (i > 10) {
+          f2(i / f1());
+        }
+      })();
     }
   }
 
   if (i % 3 == 0) {
     for (var i = 0; i < n; i++) {
-      this.x *= i;
-      print(uneval(i));
-      obj[i] = i * i;
-      if (i > 10) {
-        f2(i / f1());
-      }
+      (function() {
+        this.x *= i;
+        print(uneval(i));
+        obj[i] = i * i;
+        if (i > 10) {
+          f2(i / f1());
+        }
+      })();
     }
   }
 
