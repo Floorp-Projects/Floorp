@@ -1554,6 +1554,12 @@ class alignas(uintptr_t) SharedScriptData final {
   // NOTE: The raw bytes of this structure are used for hashing so use explicit
   // padding values as needed for predicatable results across compilers.
 
+  struct Flags {
+    uint8_t _unused : 8;
+  };
+  static_assert(sizeof(Flags) == sizeof(uint8_t),
+                "Structure packing is broken");
+
   friend class ::JSScript;
 
  private:
@@ -1561,6 +1567,7 @@ class alignas(uintptr_t) SharedScriptData final {
   // each offset and the next offset is the size of each array and is defined
   // even if an array is empty.
   size_t atomOffset() const { return offsetOfAtoms(); }
+  size_t flagOffset() const { return codeOffset_ - sizeof(Flags); }
   size_t codeOffset() const { return codeOffset_; }
   size_t noteOffset() const { return codeOffset_ + codeLength_; }
   size_t resumeOffsetsOffset() const { return resumeOffsetsOffset_; }
@@ -1601,8 +1608,9 @@ class alignas(uintptr_t) SharedScriptData final {
 
   // Compute number of null notes to pad out source notes with.
   static uint32_t ComputeNotePadding(uint32_t codeLength, uint32_t noteLength) {
+    uint32_t flagLength = sizeof(Flags);
     uint32_t nullLength =
-        CodeNoteAlign - (codeLength + noteLength) % CodeNoteAlign;
+        CodeNoteAlign - (flagLength + codeLength + noteLength) % CodeNoteAlign;
 
     // The source notes must have at least one null-terminator.
     MOZ_ASSERT(nullLength >= 1);
@@ -1644,9 +1652,11 @@ class alignas(uintptr_t) SharedScriptData final {
   }
 
   uint32_t natoms() const {
-    return (codeOffset_ - atomOffset()) / sizeof(GCPtrAtom);
+    return (flagOffset() - atomOffset()) / sizeof(GCPtrAtom);
   }
   GCPtrAtom* atoms() { return offsetToPointer<GCPtrAtom>(atomOffset()); }
+
+  Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
 
   uint32_t codeLength() const { return codeLength_; }
   jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset_); }
