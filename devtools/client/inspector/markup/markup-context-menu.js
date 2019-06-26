@@ -473,6 +473,37 @@ class MarkupContextMenu {
     return copySubmenu;
   }
 
+  _getDOMBreakpointSubmenu(isSelectionElement) {
+    const menu = new Menu();
+    const mutationBreakpoints = this.selection.nodeFront.mutationBreakpoints;
+
+    menu.append(new MenuItem({
+      checked: mutationBreakpoints.subtree,
+      click: () => this.markup.toggleMutationBreakpoint("subtree"),
+      disabled: !isSelectionElement,
+      label: INSPECTOR_L10N.getStr("inspectorSubtreeModification.label"),
+      type: "checkbox",
+    }));
+
+    menu.append(new MenuItem({
+      checked: mutationBreakpoints.attribute,
+      click: () => this.markup.toggleMutationBreakpoint("attribute"),
+      disabled: !isSelectionElement,
+      label: INSPECTOR_L10N.getStr("inspectorAttributeModification.label"),
+      type: "checkbox",
+    }));
+
+    menu.append(new MenuItem({
+      checked: mutationBreakpoints.removal,
+      click: () => this.markup.toggleMutationBreakpoint("removal"),
+      disabled: !isSelectionElement,
+      label: INSPECTOR_L10N.getStr("inspectorNodeRemoval.label"),
+      type: "checkbox",
+    }));
+
+    return menu;
+  }
+
   /**
    * Link menu items can be shown or hidden depending on the context and
    * selected node, and their labels can vary.
@@ -672,6 +703,14 @@ class MarkupContextMenu {
     menu.append(new MenuItem({
       type: "separator",
     }));
+
+    if (Services.prefs.getBoolPref("devtools.markup.mutationBreakpoints.enabled") &&
+        this.selection.nodeFront.mutationBreakpoints) {
+      menu.append(new MenuItem({
+        label: INSPECTOR_L10N.getStr("inspectorBreakpointSubmenu.label"),
+        submenu: this._getDOMBreakpointSubmenu(isSelectionElement),
+      }));
+    }
 
     menu.append(new MenuItem({
       id: "node-menu-useinconsole",

@@ -81,12 +81,12 @@ pref("devtools.eyedropper.zoom", 6);
 
 // Enable to collapse attributes that are too long.
 pref("devtools.markup.collapseAttributes", true);
-
 // Length to collapse attributes
 pref("devtools.markup.collapseAttributeLength", 120);
-
 // Whether to auto-beautify the HTML on copy.
 pref("devtools.markup.beautifyOnCopy", false);
+// Whether or not the DOM mutation breakpoints context menu are enabled in the markup view
+pref("devtools.markup.mutationBreakpoints.enabled", false);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");
