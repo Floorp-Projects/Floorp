@@ -16,19 +16,13 @@
 namespace mozilla {
 namespace dom {
 
-nsStaticAtom* const SVGTests::sStringListNames[3] = {
-    nsGkAtoms::requiredFeatures,
+nsStaticAtom* const SVGTests::sStringListNames[2] = {
     nsGkAtoms::requiredExtensions,
     nsGkAtoms::systemLanguage,
 };
 
 SVGTests::SVGTests() {
   mStringListAttributes[LANGUAGE].SetIsCommaSeparated(true);
-}
-
-already_AddRefed<DOMSVGStringList> SVGTests::RequiredFeatures() {
-  return DOMSVGStringList::GetDOMWrapper(&mStringListAttributes[FEATURES],
-                                         AsSVGElement(), true, FEATURES);
 }
 
 already_AddRefed<DOMSVGStringList> SVGTests::RequiredExtensions() {

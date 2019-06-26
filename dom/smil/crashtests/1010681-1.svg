@@ -11,7 +11,7 @@ function boom()
   animate.setAttribute("dur", "2s");
   document.documentElement.appendChild(animate);
   animate.targetElement;
-  animate.requiredFeatures.insertItemBefore(0, 0);
+  animate.requiredExtensions.insertItemBefore(0, 0);
   document.documentElement.setCurrentTime(4);
   document.documentElement.setCurrentTime(0);
   document.documentElement.removeAttribute("class");

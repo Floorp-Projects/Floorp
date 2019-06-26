@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=631437
   <path id="path" d="M0,0 L100,100"/>
   <polygon id="poly" points="50,50 70,70 90,50"/>
   <g id="g" transform="translate(20 30) rotate(50 60 70) scale(2)"
-     requiredFeatures="foo bar baz"/>
+     requiredExtensions="foo bar baz"/>
 </svg>
 <script type="text/javascript"><![CDATA[
 
@@ -64,8 +64,8 @@ var tests = [
                 { values: "translate(1 2) rotate(3) scale(4) skewY(5) skewX(6)",
                   length: 5 } ] },
   { element: g,
-    attribute: "requiredFeatures",
-    listProperty: "requiredFeatures",
+    attribute: "requiredExtensions",
+    listProperty: "requiredExtensions",
     type: "SVGStringList",
     subtests: [ { values: null, length: 3 },
                 { values: "foo", length: 1 },

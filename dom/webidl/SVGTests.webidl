@@ -13,7 +13,6 @@
 [NoInterfaceObject]
 interface SVGTests {
 
-  readonly attribute SVGStringList requiredFeatures;
   readonly attribute SVGStringList requiredExtensions;
   readonly attribute SVGStringList systemLanguage;
 };
