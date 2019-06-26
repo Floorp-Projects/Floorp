@@ -1661,6 +1661,13 @@ class alignas(uintptr_t) SharedScriptData final {
   static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
                                uint32_t natoms);
 
+  // Translate an offset into a concrete pointer.
+  template <typename T>
+  T* offsetToPointer(size_t offset) {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<T*>(base + offset);
+  }
+
   template <typename T>
   void initElements(size_t offset, size_t length);
 
@@ -1707,22 +1714,13 @@ class alignas(uintptr_t) SharedScriptData final {
   uint32_t natoms() const {
     return (codeOffset_ - atomOffset()) / sizeof(GCPtrAtom);
   }
-  GCPtrAtom* atoms() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
-  }
+  GCPtrAtom* atoms() { return offsetToPointer<GCPtrAtom>(atomOffset()); }
 
   uint32_t codeLength() const { return codeLength_; }
-  jsbytecode* code() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<jsbytecode*>(base + codeOffset_);
-  }
+  jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset_); }
 
   uint32_t noteLength() const { return tailOffset_ - noteOffset(); }
-  jssrcnote* notes() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<jssrcnote*>(base + noteOffset());
-  }
+  jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
 
   static constexpr size_t offsetOfCodeOffset() {
     return offsetof(SharedScriptData, codeOffset_);

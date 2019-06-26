@@ -3537,8 +3537,8 @@ size_t PrivateScriptData::AllocationSize(uint32_t ngcthings, uint32_t ntrynotes,
 // trivial default initiation.
 template <typename T>
 void PrivateScriptData::initElements(size_t offset, size_t length) {
-  uintptr_t base = reinterpret_cast<uintptr_t>(this);
-  DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
+  void* raw = offsetToPointer<void>(offset);
+  DefaultInitializeElements<T>(raw, length);
 }
 
 template <typename T>
