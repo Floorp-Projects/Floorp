@@ -218,6 +218,8 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       this._form.pseudoClassLocks = change.pseudoClassLocks;
     } else if (change.type === "events") {
       this._form.hasEventListeners = change.hasEventListeners;
+    } else if (change.type === "mutationBreakpoint") {
+      this._form.mutationBreakpoints = change.mutationBreakpoints;
     }
   }
 
@@ -341,6 +343,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
 
   get attributes() {
     return this._form.attrs;
+  }
+
+  get mutationBreakpoints() {
+    return this._form.mutationBreakpoints;
   }
 
   get pseudoClassLocks() {

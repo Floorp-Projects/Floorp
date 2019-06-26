@@ -1784,9 +1784,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const actor = this.getNode(rawNode);
     if (actor) {
       this.queueMutation({
-        type: "mutationBreakpointUpdate",
         target: actor.actorID,
-        mutationBreakpoints: this.getMutationBreakpoints(rawNode),
+        type: "mutationBreakpoint",
+        mutationBreakpoints: this.getMutationBreakpoints(actor),
       });
     }
   },
