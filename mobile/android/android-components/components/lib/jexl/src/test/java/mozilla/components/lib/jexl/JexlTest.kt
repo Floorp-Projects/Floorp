@@ -13,6 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class JexlTest {
+
     @Test
     fun `Should evaluate expressions`() {
         val jexl = Jexl()

@@ -4,9 +4,9 @@
 
 package mozilla.components.lib.jexl.evaluator
 
+import mozilla.components.lib.jexl.ast.AstNode
 import mozilla.components.lib.jexl.grammar.Grammar
 import mozilla.components.lib.jexl.lexer.Lexer
-import mozilla.components.lib.jexl.ast.AstNode
 import mozilla.components.lib.jexl.parser.Parser
 import mozilla.components.lib.jexl.value.JexlArray
 import mozilla.components.lib.jexl.value.JexlInteger
@@ -346,8 +346,7 @@ class EvaluatorTest {
     ) {
         val tree = toTree(expression)
 
-        println()
-        tree.print()
+        println(tree)
 
         val evaluator = Evaluator(context, grammar, transforms)
         val actual = evaluator.evaluate(tree)
