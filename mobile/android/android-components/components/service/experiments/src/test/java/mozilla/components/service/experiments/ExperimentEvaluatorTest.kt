@@ -482,10 +482,17 @@ class ExperimentEvaluatorTest {
         }
 
         distribution
+            .groupingBy { it }
+            .eachCount()
+            .forEach {
+                Assert.assertTrue(it.value in 0..9)
+            }
+
+        distribution
             .groupingBy { it / 10 }
             .eachCount()
             .forEach {
-                Assert.assertTrue(it.value in 0..25)
+                Assert.assertTrue(it.value in 0..29)
             }
 
         distribution
