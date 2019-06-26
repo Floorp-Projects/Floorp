@@ -1678,6 +1678,22 @@ class alignas(uintptr_t) SharedScriptData final {
   static SharedScriptData* new_(JSContext* cx, uint32_t codeLength,
                                 uint32_t noteLength, uint32_t natoms);
 
+  // The code() and note() arrays together maintain an target alignment by
+  // padding the source notes with null. This allows arrays with stricter
+  // alignment requirements to follow them.
+  static constexpr size_t CodeNoteAlign = sizeof(uint32_t);
+
+  // Compute number of null notes to pad out source notes with.
+  static uint32_t ComputeNotePadding(uint32_t codeLength, uint32_t noteLength) {
+    uint32_t nullLength =
+        CodeNoteAlign - (codeLength + noteLength) % CodeNoteAlign;
+
+    // The source notes must have at least one null-terminator.
+    MOZ_ASSERT(nullLength >= 1);
+
+    return nullLength;
+  }
+
   uint32_t refCount() const { return refCount_; }
   void AddRef() { refCount_++; }
   void Release() {

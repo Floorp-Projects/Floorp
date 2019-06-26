@@ -9582,14 +9582,6 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
   return true;
 }
 
-void BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes) {
-  unsigned count = bytecodeSection().notes().length();
-  // nsrcnotes includes SN_MAKE_TERMINATOR in addition to the srcnotes.
-  MOZ_ASSERT(nsrcnotes == count + 1);
-  PodCopy(destination, bytecodeSection().notes().begin(), count);
-  SN_MAKE_TERMINATOR(&destination[count]);
-}
-
 const JSSrcNoteSpec js_SrcNoteSpec[] = {
 #define DEFINE_SRC_NOTE_SPEC(sym, name, arity) {name, arity},
     FOR_EACH_SRC_NOTE_TYPE(DEFINE_SRC_NOTE_SPEC)
