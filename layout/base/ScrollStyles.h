@@ -23,7 +23,6 @@ struct ScrollStyles {
   StyleOverflow mVertical;
   // Always one of NS_STYLE_SCROLL_BEHAVIOR_AUTO or
   // NS_STYLE_SCROLL_BEHAVIOR_SMOOTH
-  uint8_t mScrollBehavior;
   StyleOverscrollBehavior mOverscrollBehaviorX;
   StyleOverscrollBehavior mOverscrollBehaviorY;
   StyleScrollSnapStrictness mScrollSnapStrictnessX;
@@ -32,7 +31,6 @@ struct ScrollStyles {
   ScrollStyles(StyleOverflow aH, StyleOverflow aV)
       : mHorizontal(aH),
         mVertical(aV),
-        mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
         mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
         mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
         mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
@@ -46,7 +44,6 @@ struct ScrollStyles {
   bool operator==(const ScrollStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal &&
            aStyles.mVertical == mVertical &&
-           aStyles.mScrollBehavior == mScrollBehavior &&
            aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
            aStyles.mOverscrollBehaviorY == mOverscrollBehaviorY &&
            aStyles.mScrollSnapStrictnessX == mScrollSnapStrictnessX &&
@@ -58,11 +55,6 @@ struct ScrollStyles {
   bool IsHiddenInBothDirections() const {
     return mHorizontal == StyleOverflow::Hidden &&
            mVertical == StyleOverflow::Hidden;
-  }
-  bool IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
-    return aBehavior == dom::ScrollBehavior::Smooth ||
-           (aBehavior == dom::ScrollBehavior::Auto &&
-            mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
   }
 };
 

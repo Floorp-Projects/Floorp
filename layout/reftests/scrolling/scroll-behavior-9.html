@@ -48,7 +48,7 @@
     document.documentElement.removeAttribute("class");
   }
   window.scrollTo({left: 0, top: 0, behavior: "instant"});
-  document.body.style.scrollBehavior = "smooth";
+  document.documentElement.style.scrollBehavior = "smooth";
   window.addEventListener("MozReftestInvalidate", doTest);
 </script>
 </body>
