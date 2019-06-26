@@ -4107,7 +4107,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   presShell->EndPaint();
   builder->Check();
 
-  if (StaticPrefs::GfxLoggingPaintedPixelCountEnabled()) {
+  if (StaticPrefs::gfx_logging_painted_pixel_count_enabled()) {
     LogPaintedPixelCount(layerManager, paintStart);
   }
 

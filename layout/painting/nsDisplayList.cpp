@@ -2857,7 +2857,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
                                    docShell);
 #endif
 
-    if (XRE_IsContentProcess() && StaticPrefs::AlwaysPaint()) {
+    if (XRE_IsContentProcess() && StaticPrefs::gfx_content_always_paint()) {
       FrameLayerBuilder::InvalidateAllLayers(aLayerManager);
     }
 
@@ -6968,7 +6968,7 @@ nsDisplayRenderRoot::nsDisplayRenderRoot(
       mRenderRoot(aRenderRoot),
       mBuiltWRCommands(false) {
   MOZ_ASSERT(aRenderRoot != wr::RenderRoot::Default);
-  MOZ_ASSERT(StaticPrefs::WebRenderSplitRenderRoots());
+  MOZ_ASSERT(StaticPrefs::gfx_webrender_split_render_roots());
   ExpandDisplayListBuilderRenderRootRect(aBuilder);
   MOZ_COUNT_CTOR(nsDisplayRenderRoot);
 }
@@ -10261,7 +10261,8 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& aWrFilters) {
 
   // If there are too many filters to render, then just pretend that we
   // succeeded, and don't render any of them.
-  if (filters.Length() > StaticPrefs::WebRenderMaxFilterOpsPerChain()) {
+  if (filters.Length() >
+      StaticPrefs::gfx_webrender_max_filter_ops_per_chain()) {
     return true;
   }
   aWrFilters.filters.SetCapacity(filters.Length());

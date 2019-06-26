@@ -85,17 +85,20 @@
 //   the StaticPrefs class. For consistency, the identifier for every pref
 //   should be created by starting with <pref-name-string> and converting any
 //   '.' or '-' chars to '_'. For example, "foo.bar_baz" becomes
-//   |foo_bar_baz|. This is arguably ugly, but clear, and you can search for
-//   both using the regexp /foo.bar.baz/.
+//   `foo_bar_baz`. This is arguably ugly, but clear, and you can search for
+//   both using the regexp /foo.bar.baz/. Some getter functions have
+//   `_do_not_use_directly` appended to indicate that there is some other
+//   wrapper getter that should be used in preference to the normal static pref
+//   getter.
 //
 // - <cpp-type> is one of bool, int32_t, uint32_t, float, or an Atomic version
 //   of one of those. The C++ preprocessor doesn't like template syntax in a
 //   macro argument, so use the typedefs defines in StaticPrefs.h; for example,
 //   use `ReleaseAcquireAtomicBool` instead of `Atomic<bool, ReleaseAcquire>`.
-//   Pref with a Skip or Once policy can be non-atomic as they are only ever
-//   written to once during the parent process startup.
-//   Pref with a Live policy must be made Atomic if ever accessed outside the
-//   main thread; assertions are in place to prevent incorrect usage.
+//   A pref with a Skip or Once policy can be non-atomic as it is only ever
+//   written to once during the parent process startup. A pref with a Live
+//   policy must be made Atomic if ever accessed outside the main thread;
+//   assertions are in place to ensure this.
 //
 // - <default-value> is the same as for normal prefs.
 //
@@ -2924,21 +2927,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.allow-texture-direct-mapping",
-  AllowTextureDirectMapping,
+   gfx_allow_texture_direct_mapping,
   bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.android.rgb16.force",
-  AndroidRGB16Force,
+   gfx_android_rgb16_force,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.apitrace.enabled",
-  UseApitrace,
+   gfx_apitrace_enabled,
   bool, false
 )
 
@@ -2947,14 +2950,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Skip,
   "gfx.blocklist.all",
-  BlocklistAll,
+   gfx_blocklist_all,
   int32_t, 0
 )
 #else
 VARCACHE_PREF(
   Once,
   "gfx.blocklist.all",
-  BlocklistAll,
+   gfx_blocklist_all,
   int32_t, 0
 )
 #endif
@@ -2963,28 +2966,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.canvas.max-size",
-  MaxCanvasSize,
+   gfx_canvas_max_size,
   RelaxedAtomicInt32, 0x7fff
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.canvas.remote",
-  CanvasRemote,
+   gfx_canvas_remote,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.color_management.enablev4",
-  CMSEnableV4,
+   gfx_color_management_enablev4,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.color_management.mode",
-  CMSMode,
+   gfx_color_management_mode,
   RelaxedAtomicInt32, -1
 )
 
@@ -2992,21 +2995,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.color_management.rendering_intent",
-  CMSRenderingIntent,
+   gfx_color_management_rendering_intent,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.compositor.clearstate",
-  CompositorClearState,
+   gfx_compositor_clearstate,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.compositor.glcontext.opaque",
-  CompositorGLContextOpaque,
+   gfx_compositor_glcontext_opaque,
   RelaxedAtomicBool, false
 )
 
@@ -3016,28 +3019,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.compositor.override.clear-color.r",
-  CompositorOverrideClearColorR,
+   gfx_compositor_override_clear_color_r,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.compositor.override.clear-color.g",
-  CompositorOverrideClearColorG,
+   gfx_compositor_override_clear_color_g,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.compositor.override.clear-color.b",
-  CompositorOverrideClearColorB,
+   gfx_compositor_override_clear_color_b,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.compositor.override.clear-color.a",
-  CompositorOverrideClearColorA,
+   gfx_compositor_override_clear_color_a,
   AtomicFloat, 0.0f
 )
 #endif // defined(MOZ_WIDGET_ANDROID)
@@ -3045,7 +3048,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.content.always-paint",
-  AlwaysPaint,
+   gfx_content_always_paint,
   RelaxedAtomicBool, false
 )
 
@@ -3053,21 +3056,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.content.skia-font-cache-size",
-  SkiaContentFontCacheSize,
+   gfx_content_skia_font_cache_size,
   int32_t, 5
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.device-reset.limit",
-  DeviceResetLimitCount,
+   gfx_device_reset_limit,
   int32_t, 10
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.device-reset.threshold-ms",
-  DeviceResetThresholdMilliseconds,
+   gfx_device_reset_threshold_ms,
   int32_t, -1
 )
 
@@ -3076,7 +3079,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.direct2d.disabled",
-  Direct2DDisabled,
+   gfx_direct2d_disabled,
   bool, false
 )
 
@@ -3085,63 +3088,63 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.direct2d.force-enabled",
-  Direct2DForceEnabled,
+   gfx_direct2d_force_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.direct2d.destroy-dt-on-paintthread",
-  Direct2DDestroyDTOnPaintThread,
+   gfx_direct2d_destroy_dt_on_paintthread,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.direct3d11.reuse-decoder-device",
-  Direct3D11ReuseDecoderDevice,
+   gfx_direct3d11_reuse_decoder_device,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.direct3d11.allow-keyed-mutex",
-  Direct3D11AllowKeyedMutex,
+   gfx_direct3d11_allow_keyed_mutex,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.direct3d11.use-double-buffering",
-  Direct3D11UseDoubleBuffering,
+   gfx_direct3d11_use_double_buffering,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.direct3d11.enable-debug-layer",
-  Direct3D11EnableDebugLayer,
+   gfx_direct3d11_enable_debug_layer,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.direct3d11.break-on-error",
-  Direct3D11BreakOnError,
+   gfx_direct3d11_break_on_error,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.direct3d11.sleep-on-create-device",
-  Direct3D11SleepOnCreateDevice,
+   gfx_direct3d11_sleep_on_create_device,
   int32_t, 0
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.downloadable_fonts.keep_color_bitmaps",
-  KeepColorBitmaps,
+   gfx_downloadable_fonts_keep_color_bitmaps,
   RelaxedAtomicBool, false
 )
 
@@ -3156,35 +3159,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.downloadable_fonts.validate_variation_tables",
-  ValidateVariationTables,
+   gfx_downloadable_fonts_validate_variation_tables,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.downloadable_fonts.otl_validation",
-  ValidateOTLTables,
+   gfx_downloadable_fonts_otl_validation,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.draw-color-bars",
-  CompositorDrawColorBars,
+   gfx_draw_color_bars,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.e10s.hide-plugins-for-scroll",
-  HidePluginsForScroll,
+   gfx_e10s_hide_plugins_for_scroll,
   bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.e10s.font-list.shared",
-  SharedFontList,
+   gfx_e10s_font_list_shared,
   bool, false
 )
 
@@ -3199,7 +3202,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.font_rendering.coretext.enabled",
-  CoreTextEnabled,
+   gfx_font_rendering_coretext_enabled,
   RelaxedAtomicBool, false
 )
 #endif
@@ -3214,14 +3217,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.layerscope.enabled",
-  LayerScopeEnabled,
+   gfx_layerscope_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.layerscope.port",
-  LayerScopePort,
+   gfx_layerscope_port,
   RelaxedAtomicInt32, 23456
 )
 
@@ -3229,21 +3232,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.logging.level",
-  GfxLoggingLevel,
+   gfx_logging_level,
   RelaxedAtomicInt32, mozilla::gfx::LOG_DEFAULT
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.logging.crash.length",
-  GfxLoggingCrashLength,
+   gfx_logging_crash_length,
   uint32_t, 16
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.logging.painted-pixel-count.enabled",
-  GfxLoggingPaintedPixelCountEnabled,
+   gfx_logging_painted_pixel_count_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3251,37 +3254,37 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.logging.texture-usage.enabled",
-  GfxLoggingTextureUsageEnabled,
+   gfx_logging_texture_usage_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.logging.peak-texture-usage.enabled",
-  GfxLoggingPeakTextureUsageEnabled,
+   gfx_logging_peak_texture_usage_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.logging.slow-frames.enabled",
-  LoggingSlowFramesEnabled,
+   gfx_logging_slow_frames_enabled,
   bool, false
 )
 
-// Use gfxPlatform::MaxAllocSize instead of the pref directly
+// Use gfxPlatform::MaxAllocSize instead of the pref directly.
 VARCACHE_PREF(
   Once,
   "gfx.max-alloc-size",
-  MaxAllocSizeDoNotUseDirectly,
+   gfx_max_alloc_size_do_not_use_directly,
   int32_t, (int32_t)500000000
 )
 
-// Use gfxPlatform::MaxTextureSize instead of the pref directly
+// Use gfxPlatform::MaxTextureSize instead of the pref directly.
 VARCACHE_PREF(
   Once,
   "gfx.max-texture-size",
-  MaxTextureSizeDoNotUseDirectly,
+   gfx_max_texture_size_do_not_use_directly,
   int32_t, (int32_t)32767
 )
 
@@ -3308,35 +3311,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.partialpresent.force",
-  PartialPresent,
+   gfx_partialpresent_force,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.perf-warnings.enabled",
-  PerfWarnings,
+   gfx_perf_warnings_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.testing.device-fail",
-  DeviceFailForTesting,
+   gfx_testing_device_fail,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.testing.device-reset",
-  DeviceResetForTesting,
+   gfx_testing_device_reset,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.text.disable-aa",
-  DisableAllTextAA,
+   gfx_text_disable_aa,
   bool, false
 )
 
@@ -3345,42 +3348,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.use-glx-texture-from-pixmap",
-  UseGLXTextureFromPixmap,
+   gfx_use_glx_texture_from_pixmap,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.use-iosurface-textures",
-  UseIOSurfaceTextures,
+   gfx_use_iosurface_textures,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.use-mutex-on-present",
-  UseMutexOnPresent,
+   gfx_use_mutex_on_present,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.use-surfacetexture-textures",
-  UseSurfaceTextureTextures,
+   gfx_use_surfacetexture_textures,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.vsync.collect-scroll-transforms",
-  CollectScrollTransforms,
+   gfx_vsync_collect_scroll_transforms,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.vsync.compositor.unobserve-count",
-  CompositorUnobserveCount,
+   gfx_vsync_compositor_unobserve_count,
   int32_t, 10
 )
 
@@ -3395,7 +3398,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.webrender.all",
-  WebRenderAll,
+   gfx_webrender_all,
   bool, false
 )
 
@@ -3407,7 +3410,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.webrender.enabled",
-  WebRenderEnabledDoNotUseDirectly,
+   gfx_webrender_enabled_do_not_use_directly,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3415,28 +3418,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.webrender.blob-images",
-  WebRenderBlobImages,
+   gfx_webrender_blob_images,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.blob.paint-flashing",
-  WebRenderBlobPaintFlashing,
+   gfx_webrender_blob_paint_flashing,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.dl.dump-parent",
-  WebRenderDLDumpParent,
+   gfx_webrender_dl_dump_parent,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.dl.dump-content",
-  WebRenderDLDumpContent,
+   gfx_webrender_dl_dump_content,
   RelaxedAtomicBool, false
 )
 
@@ -3446,49 +3449,49 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.webrender.force-disabled",
-  WebRenderForceDisabled,
+   gfx_webrender_force_disabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.highlight-painted-layers",
-  WebRenderHighlightPaintedLayers,
+   gfx_webrender_highlight_painted_layers,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.late-scenebuild-threshold",
-  WebRenderLateSceneBuildThreshold,
+   gfx_webrender_late_scenebuild_threshold,
   RelaxedAtomicInt32, 4
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.max-filter-ops-per-chain",
-  WebRenderMaxFilterOpsPerChain,
+   gfx_webrender_max_filter_ops_per_chain,
   RelaxedAtomicUint32, 64
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.picture-caching",
-  WebRenderPictureCaching,
+   gfx_webrender_picture_caching,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.webrender.split-render-roots",
-  WebRenderSplitRenderRoots,
+   gfx_webrender_split_render_roots,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.webrender.start-debug-server",
-  WebRenderStartDebugServer,
+   gfx_webrender_start_debug_server,
   RelaxedAtomicBool, false
 )
 
@@ -3496,14 +3499,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "gfx.work-around-driver-bugs",
-  WorkAroundDriverBugs,
+   gfx_work_around_driver_bugs,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.ycbcr.accurate-conversion",
-  YCbCrAccurateConversion,
+   gfx_ycbcr_accurate_conversion,
   RelaxedAtomicBool, false
 )
 

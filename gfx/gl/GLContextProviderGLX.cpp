@@ -185,7 +185,7 @@ bool GLXLibrary::EnsureInitialized() {
 
   if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
       fnLoadSymbols(symbols_texturefrompixmap)) {
-    mUseTextureFromPixmap = StaticPrefs::UseGLXTextureFromPixmap();
+    mUseTextureFromPixmap = StaticPrefs::gfx_use_glx_texture_from_pixmap();
   } else {
     mUseTextureFromPixmap = false;
     NS_WARNING("Texture from pixmap disabled");

@@ -77,8 +77,9 @@ class NewRenderer : public RendererEvent {
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions,
-            StaticPrefs::WebRenderPictureCaching() && supportPictureCaching,
-            StaticPrefs::WebRenderStartDebugServer(), compositor->gl(),
+            StaticPrefs::gfx_webrender_picture_caching() &&
+                supportPictureCaching,
+            StaticPrefs::gfx_webrender_start_debug_server(), compositor->gl(),
             aRenderThread.GetProgramCache()
                 ? aRenderThread.GetProgramCache()->Raw()
                 : nullptr,

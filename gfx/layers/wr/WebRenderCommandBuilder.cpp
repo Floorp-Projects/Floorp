@@ -1651,8 +1651,10 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 bool WebRenderCommandBuilder::ShouldDumpDisplayList(
     nsDisplayListBuilder* aBuilder) {
   return aBuilder != nullptr && aBuilder->IsInActiveDocShell() &&
-         ((XRE_IsParentProcess() && StaticPrefs::WebRenderDLDumpParent()) ||
-          (XRE_IsContentProcess() && StaticPrefs::WebRenderDLDumpContent()));
+         ((XRE_IsParentProcess() &&
+           StaticPrefs::gfx_webrender_dl_dump_parent()) ||
+          (XRE_IsContentProcess() &&
+           StaticPrefs::gfx_webrender_dl_dump_content()));
 }
 
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
@@ -2111,10 +2113,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
     nsDisplayListBuilder* aDisplayListBuilder, LayoutDeviceRect& aImageRect) {
-  bool useBlobImage =
-      StaticPrefs::WebRenderBlobImages() && !aItem->MustPaintOnContentSide();
+  bool useBlobImage = StaticPrefs::gfx_webrender_blob_images() &&
+                      !aItem->MustPaintOnContentSide();
   Maybe<gfx::Color> highlight = Nothing();
-  if (StaticPrefs::WebRenderHighlightPaintedLayers()) {
+  if (StaticPrefs::gfx_webrender_highlight_painted_layers()) {
     highlight = Some(useBlobImage ? gfx::Color(1.0, 0.0, 0.0, 0.5)
                                   : gfx::Color(1.0, 1.0, 0.0, 0.5));
   }
