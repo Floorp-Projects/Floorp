@@ -513,17 +513,17 @@ static void qcms_transform_data_template_lut_precache(const qcms_transform *tran
 	}
 }
 
-static void qcms_transform_data_rgb_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+void qcms_transform_data_rgb_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_rgba_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+void qcms_transform_data_rgba_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_bgra_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+void qcms_transform_data_bgra_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut_precache<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
@@ -772,17 +772,17 @@ static void qcms_transform_data_template_lut(const qcms_transform *transform, co
 	}
 }
 
-static void qcms_transform_data_rgb_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+void qcms_transform_data_rgb_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_rgba_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+void qcms_transform_data_rgba_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_bgra_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+void qcms_transform_data_bgra_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }

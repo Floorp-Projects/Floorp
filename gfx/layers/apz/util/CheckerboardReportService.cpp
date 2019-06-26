@@ -191,7 +191,7 @@ void CheckerboardReportService::GetReports(
 }
 
 bool CheckerboardReportService::IsRecordingEnabled() const {
-  return StaticPrefs::APZRecordCheckerboarding();
+  return StaticPrefs::apz_record_checkerboarding();
 }
 
 void CheckerboardReportService::SetRecordingEnabled(bool aEnabled) {
