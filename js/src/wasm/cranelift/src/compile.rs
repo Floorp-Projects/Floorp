@@ -268,7 +268,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
 
                     // Instructions that are not going to trap in our use, even though their opcode
                     // says they can.
-                    ir::Opcode::Spill | ir::Opcode::Fill => {}
+                    ir::Opcode::Spill | ir::Opcode::Fill | ir::Opcode::JumpTableEntry => {}
 
                     _ if BatchCompiler::platform_specific_ignores_metadata(opcode) => {}
 
