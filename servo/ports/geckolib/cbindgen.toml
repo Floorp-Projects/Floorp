@@ -156,6 +156,7 @@ include = [
   "Filter",
   "Gradient",
   "GridTemplateAreas",
+  "GridLine",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -467,16 +468,17 @@ renaming_overrides_prefixing = true
   StyleAtom(size_t) = delete;
   StyleAtom() = delete;
 
-  // NOTE(emilio): For now we don't need to expose anything else, but it'd be trivial if we wanted to.
   inline bool IsStatic() const;
   inline nsAtom* AsAtom() const;
 
+ private:
+  inline void AddRef();
+  inline void Release();
+
+ public:
   inline explicit StyleAtom(already_AddRefed<nsAtom> aAtom);
-
-  // Could be implemented if wanted.
-  StyleAtom& operator=(const StyleAtom&) = delete;
-
   inline StyleAtom(const StyleAtom& aOther);
+  inline StyleAtom& operator=(const StyleAtom&);
   inline ~StyleAtom();
 """
 
@@ -595,4 +597,12 @@ renaming_overrides_prefixing = true
   // initializing the fields properly.
   StyleGridTemplateAreas() {}
  public:
+"""
+
+"GenericGridLine" = """
+  // Returns the `auto` value.
+  inline StyleGenericGridLine();
+  inline bool IsAuto() const;
+  // The line name, or nsGkAtoms::_empty if not present.
+  inline nsAtom* LineName() const;
 """
