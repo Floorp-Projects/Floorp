@@ -15,10 +15,10 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://modules/PlacesUtils.jsm",
+  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarProviderExtension: "resource:///modules/UrlbarUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -72,51 +72,6 @@ class ProvidersManager {
       let {[symbol]: muxer} = ChromeUtils.import(module, {});
       this.registerMuxer(muxer);
     }
-
-    // Extension listeners.
-    this._extensionListeners = new Map([
-      ["queryready", new Map()],
-    ]);
-  }
-
-  /**
-   * Registers an extension listener for a specific event.
-   * When queries are executed the extension gets queries through these
-   * listeners. There can only be one listener per [provider, event] tuple.
-   * For the special and mandatory "queryready" event, this also registers a
-   * new extension provider.
-   * @param {string} providerName
-   *   The name of the provider to add.
-   * @param {string} eventName
-   *   The name of the event to register.
-   * @param {function} callback
-   *   The callback to be invoked. Gets the UrlbarQueryContext as argument and
-   *   returns a string having a value of "active", "inactive" or "restricting".
-   */
-  addExtensionListener(providerName, eventName, callback) {
-    // The "queryready" event is the first one to be registered, and it's
-    // mandatory, thus we register and unregister the provider on it.
-    if (eventName == "queryready") {
-      let provider = new UrlbarProviderExtension(providerName);
-      this.registerProvider(provider);
-    }
-    this._extensionListeners.get(eventName).set(providerName, callback);
-  }
-
-  /**
-   * Removes a previously added extension listener.
-   * For the special and mandatory "queryready" event, this also unregisters a
-   * previously added extension provider.
-   * @param {string} providerName
-   *   The name of the provider to remove.
-   * @param {string} eventName
-   *   The name of the event to unregister.
-   */
-  removeExtensionListener(providerName, eventName) {
-    this._extensionListeners.get(eventName).delete(providerName);
-    if (eventName == "queryready") {
-      this.unregisterProvider({name: providerName}, true);
-    }
   }
 
   /**
@@ -141,18 +96,22 @@ class ProvidersManager {
   /**
    * Unregisters a previously registered provider object.
    * @param {object} provider
-   * @param {boolean} isExtensionRequest
-   *   Whether this request comes from an extension. Extensions can only remove
-   *   EXTENSION providers.
    */
-  unregisterProvider(provider, isExtensionRequest = false) {
+  unregisterProvider(provider) {
     logger.info(`Unregistering provider ${provider.name}`);
     let index = this.providers.findIndex(p => p.name == provider.name);
-    if (index != -1 &&
-        (!isExtensionRequest ||
-         this.providers[index].type == UrlbarUtils.PROVIDER_TYPE.EXTENSION)) {
+    if (index != -1) {
       this.providers.splice(index, 1);
     }
+  }
+
+  /**
+   * Returns the provider with the given name.
+   * @param {string} name The provider name.
+   * @returns {UrlbarProvider} The provider.
+   */
+  getProvider(name) {
+    return this.providers.find(p => p.name == name);
   }
 
   /**
@@ -208,27 +167,16 @@ class ProvidersManager {
     queryContext.acceptableSources = getAcceptableMatchSources(queryContext);
     logger.debug(`Acceptable sources ${queryContext.acceptableSources}`);
 
-    // Update behavior for extension providers.
-    for (let [name, listener] of this._extensionListeners.get("queryready")) {
-      // Handle bogus case where the extension may not be responding or may
-      // throw.
-      let timer = new SkippableTimer(() => {
-        Cu.reportError("An extension didn't handle the queryready callback");
-      }, 50);
-      let behavior = await Promise.race([timer.promise, listener(queryContext)]) || "inactive";
-      timer.cancel();
-      // Look up the provider and set its properties accordingly.
-      let provider =
-        UrlbarProvidersManager.providers.find(p => p.name == name);
-      if (provider) {
-        provider.behavior = behavior;
-      } else {
-        Cu.reportError("Couldn't find expected urlbar provider " + name);
+    let query = new Query(queryContext, controller, muxer, providers);
+    this.queries.set(queryContext, query);
+
+    // Update the behavior of extension providers.
+    for (let provider of this.providers) {
+      if (provider.type == UrlbarUtils.PROVIDER_TYPE.EXTENSION) {
+        await provider.updateBehavior(queryContext);
       }
     }
 
-    let query = new Query(queryContext, controller, muxer, providers);
-    this.queries.set(queryContext, query);
     await query.start();
   }
 
@@ -332,7 +280,11 @@ class Query {
         // Tracks the delay timer. We will fire (in this specific case, cancel
         // would do the same, since the callback is empty) the timer when the
         // search is canceled, unblocking start().
-        this._sleepTimer = new SkippableTimer(() => {}, UrlbarPrefs.get("delay"));
+        this._sleepTimer = new SkippableTimer({
+          name: "Query provider timer",
+          time: UrlbarPrefs.get("delay"),
+          logger,
+        });
         await this._sleepTimer.promise;
       }
       promises.push(provider.startQuery(this.context, this.add.bind(this)));
@@ -420,66 +372,13 @@ class Query {
     if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
       notifyResults();
     } else if (!this._chunkTimer) {
-      this._chunkTimer = new SkippableTimer(notifyResults, CHUNK_MATCHES_DELAY_MS);
+      this._chunkTimer = new SkippableTimer({
+        name: "Query chunk timer",
+        callback: notifyResults,
+        time: CHUNK_MATCHES_DELAY_MS,
+        logger,
+      });
     }
-  }
-}
-
-/**
- * Class used to create a timer that can be manually fired, to immediately
- * invoke the callback, or canceled, as necessary.
- * Examples:
- *   let timer = new SkippableTimer();
- *   // Invokes the callback immediately without waiting for the delay.
- *   await timer.fire();
- *   // Cancel the timer, the callback won't be invoked.
- *   await timer.cancel();
- *   // Wait for the timer to have elapsed.
- *   await timer.promise;
- */
-class SkippableTimer {
-  /**
-   * Creates a skippable timer for the given callback and time.
-   * @param {function} callback To be invoked when requested
-   * @param {number} time A delay in milliseconds to wait for
-   */
-  constructor(callback, time) {
-    let timerPromise = new Promise(resolve => {
-      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._timer.initWithCallback(() => {
-        logger.debug(`Elapsed ${time}ms timer`);
-        resolve();
-      }, time, Ci.nsITimer.TYPE_ONE_SHOT);
-      logger.debug(`Started ${time}ms timer`);
-    });
-
-    let firePromise = new Promise(resolve => {
-      this.fire = () => {
-        logger.debug(`Skipped ${time}ms timer`);
-        resolve();
-        return this.promise;
-      };
-    });
-
-    this.promise = Promise.race([timerPromise, firePromise]).then(() => {
-      // If we've been canceled, don't call back.
-      if (this._timer) {
-        callback();
-      }
-    });
-  }
-
-  /**
-   * Allows to cancel the timer and the callback won't be invoked.
-   * It is not strictly necessary to await for this, the promise can just be
-   * used to ensure all the internal work is complete.
-   * @returns {promise} Resolved once all the cancelation work is complete.
-   */
-  cancel() {
-    logger.debug(`Canceling timer for ${this._timer.delay}ms`);
-    this._timer.cancel();
-    delete this._timer;
-    return this.fire();
   }
 }
 
