@@ -6,7 +6,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
 
 add_task(async function test_bookmarks() {
-  function background() {
+  async function background() {
     let unsortedId, ourId;
     let initialBookmarkCount = 0;
     let createdBookmarks = new Set();
@@ -41,10 +41,6 @@ add_task(async function test_bookmarks() {
       if ("parentId" in expected) {
         browser.test.assertEq(expected.parentId, bookmark.parentId, "Bookmark has the expected parentId");
       }
-    }
-
-    function expectedError() {
-      browser.test.fail("Did not get expected error");
     }
 
     function checkOnCreated(id, parentId, index, title, url, dateAdded, type = "bookmark") {
@@ -116,19 +112,16 @@ add_task(async function test_bookmarks() {
       collectedEvents.push({event: "onRemoved", id, info});
     });
 
-    browser.bookmarks.get(["not-a-bookmark-guid"]).then(expectedError, invalidGuidError => {
-      browser.test.assertTrue(
-        invalidGuidError.message.includes("Invalid value for property 'guid': \"not-a-bookmark-guid\""),
-        "Expected error thrown when trying to get a bookmark using an invalid guid"
-      );
+    await browser.test.assertRejects(
+      browser.bookmarks.get(["not-a-bookmark-guid"]),
+      /Invalid value for property 'guid': "not-a-bookmark-guid"/,
+      "Expected error thrown when trying to get a bookmark using an invalid guid");
 
-      return browser.bookmarks.get([nonExistentId]).then(expectedError, nonExistentIdError => {
-        browser.test.assertTrue(
-          nonExistentIdError.message.includes("Bookmark not found"),
-          "Expected error thrown when trying to get a bookmark using a non-existent Id"
-        );
-      });
-    }).then(() => {
+    await browser.test.assertRejects(
+      browser.bookmarks.get([nonExistentId]),
+      /Bookmark not found/,
+      "Expected error thrown when trying to get a bookmark using a non-existent Id")
+    .then(() => {
       return browser.bookmarks.search({});
     }).then(results => {
       initialBookmarkCount = results.length;
@@ -161,19 +154,16 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq("folder", folder.type, "Folder has a type of folder");
 
       return browser.bookmarks.getChildren(unsortedId);
-    }).then(results => {
+    }).then(async results => {
       browser.test.assertEq(1, results.length, "The folder has one child");
       checkOurBookmark(results[0]);
 
-      return browser.bookmarks.update(nonExistentId, {title: "new test title"}).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("No bookmarks found for the provided GUID"),
-          "Expected error thrown when trying to update a non-existent bookmark"
-        );
-
-        return browser.bookmarks.update(ourId, {title: "new test title", url: "http://example.com/"});
-      });
-    }).then(result => {
+      await browser.test.assertRejects(
+        browser.bookmarks.update(nonExistentId, {title: "new test title"}),
+        /No bookmarks found for the provided GUID/,
+        "Expected error thrown when trying to update a non-existent bookmark");
+      return browser.bookmarks.update(ourId, {title: "new test title", url: "http://example.com/"});
+    }).then(async result => {
       browser.test.assertEq("new test title", result.title, "Updated bookmark has the expected title");
       browser.test.assertEq("http://example.com/", result.url, "Updated bookmark has the expected URL");
       browser.test.assertEq(ourId, result.id, "Updated bookmark has the expected id");
@@ -182,15 +172,11 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(2, collectedEvents.length, "2 expected events received");
       checkOnChanged(ourId, "http://example.com/", "new test title");
 
-      return Promise.resolve().then(() => {
-        return browser.bookmarks.update(ourId, {url: "this is not a valid url"});
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Invalid bookmark:"),
-          "Expected error thrown when trying update with an invalid url"
-        );
-        return browser.bookmarks.getTree();
-      });
+      await browser.test.assertRejects(
+        browser.bookmarks.update(ourId, {url: "this is not a valid url"}),
+        /Invalid bookmark:/,
+        "Expected error thrown when trying update with an invalid url");
+      return browser.bookmarks.getTree();
     }).then(results => {
       browser.test.assertEq(1, results.length, "getTree returns one result");
       let bookmark = results[0].children.find(bookmarkItem => bookmarkItem.id == unsortedId);
@@ -201,15 +187,10 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq("folder", bookmark.type,
                             "Folder returned from getTree has the expected type");
 
-      return browser.bookmarks.create({parentId: "invalid"}).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Invalid bookmark"),
-          "Expected error thrown when trying to create a bookmark with an invalid parentId"
-        );
-        browser.test.assertTrue(
-          error.message.includes(`"parentGuid":"invalid"`),
-          "Expected error thrown when trying to create a bookmark with an invalid parentId");
-      });
+      return browser.test.assertRejects(
+        browser.bookmarks.create({parentId: "invalid"}),
+        error => error.message.includes("Invalid bookmark") && error.message.includes(`"parentGuid":"invalid"`),
+        "Expected error thrown when trying to create a bookmark with an invalid parentId");
     }).then(() => {
       return browser.bookmarks.remove(ourId);
     }).then(result => {
@@ -218,19 +199,15 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
       checkOnRemoved(ourId, bookmarkGuids.unfiledGuid, 0, "http://example.com/", "bookmark");
 
-      return browser.bookmarks.get(ourId).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Bookmark not found"),
-          "Expected error thrown when trying to get a removed bookmark"
-        );
-      });
+      return browser.test.assertRejects(
+        browser.bookmarks.get(ourId),
+        /Bookmark not found/,
+        "Expected error thrown when trying to get a removed bookmark");
     }).then(() => {
-      return browser.bookmarks.remove(nonExistentId).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("No bookmarks found for the provided GUID"),
-          "Expected error thrown when trying removed a non-existent bookmark"
-        );
-      });
+      return browser.test.assertRejects(
+        browser.bookmarks.remove(nonExistentId),
+        /No bookmarks found for the provided GUID/,
+        "Expected error thrown when trying removed a non-existent bookmark");
     }).then(() => {
       // test bookmarks.search
       return Promise.all([
@@ -281,18 +258,14 @@ add_task(async function test_bookmarks() {
 
         // returns all items on empty object
         return browser.bookmarks.search({});
-      }).then(bookmarksSearchResults => {
+      }).then(async bookmarksSearchResults => {
         browser.test.assertTrue(bookmarksSearchResults.length >= 10, "At least as many bookmarks as added were returned by search({})");
 
-        return Promise.resolve().then(() => {
-          return browser.bookmarks.remove(createdFolderId);
-        }).then(expectedError, error => {
-          browser.test.assertTrue(
-            error.message.includes("Cannot remove a non-empty folder"),
-            "Expected error thrown when trying to remove a non-empty folder"
-          );
-          return browser.bookmarks.getSubTree(createdFolderId);
-        });
+        await browser.test.assertRejects(
+          browser.bookmarks.remove(createdFolderId),
+          /Cannot remove a non-empty folder/,
+          "Expected error thrown when trying to remove a non-empty folder");
+        return browser.bookmarks.getSubTree(createdFolderId);
       });
     }).then(results => {
       browser.test.assertEq(1, results.length, "Expected number of nodes returned by getSubTree");
@@ -313,51 +286,30 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq("Mozilla", children[4].title, "Bookmark has the expected title");
 
       // throws an error for invalid query objects
-      Promise.resolve().then(() => {
-        return browser.bookmarks.search();
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Incorrect argument types for bookmarks.search"),
-          "Expected error thrown when trying to search with no arguments"
-        );
-      });
+      browser.test.assertThrows(
+        () => browser.bookmarks.search(),
+        /Incorrect argument types for bookmarks.search/,
+        "Expected error thrown when trying to search with no arguments");
 
-      Promise.resolve().then(() => {
-        return browser.bookmarks.search(null);
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Incorrect argument types for bookmarks.search"),
-          "Expected error thrown when trying to search with null as an argument"
-        );
-      });
+      browser.test.assertThrows(
+        () => browser.bookmarks.search(null),
+        /Incorrect argument types for bookmarks.search/,
+        "Expected error thrown when trying to search with null as an argument");
 
-      Promise.resolve().then(() => {
-        return browser.bookmarks.search(function() {});
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Incorrect argument types for bookmarks.search"),
-          "Expected error thrown when trying to search with a function as an argument"
-        );
-      });
+      browser.test.assertThrows(
+        () => browser.bookmarks.search(() => {}),
+        /Incorrect argument types for bookmarks.search/,
+        "Expected error thrown when trying to search with a function as an argument");
 
-      Promise.resolve().then(() => {
-        return browser.bookmarks.search({banana: "banana"});
-      }).then(expectedError, error => {
-        let substr = `an unexpected "banana" property`;
-        browser.test.assertTrue(
-          error.message.includes(substr),
-          `Expected error ${JSON.stringify(error.message)} to contain ${JSON.stringify(substr)}`);
-      });
+      browser.test.assertThrows(
+        () => browser.bookmarks.search({banana: "banana"}),
+        /an unexpected "banana" property/,
+        "Expected error thrown when trying to search with a banana as an argument");
 
-      Promise.resolve().then(() => {
-        return browser.bookmarks.search({url: "spider-man vs. batman"});
-      }).then(expectedError, error => {
-        let substr = 'must match the format "url"';
-        browser.test.assertTrue(
-          error.message.includes(substr),
-          `Expected error ${JSON.stringify(error.message)} to contain ${JSON.stringify(substr)}`);
-      });
-
+      browser.test.assertThrows(
+        () => browser.bookmarks.search({url: "spider-man vs. batman"}),
+        /must match the format "url"/,
+        "Expected error thrown when trying to search with a illegally formatted URL");
       // queries the full url
       return browser.bookmarks.search("http://example.org/");
     }).then(results => {
@@ -460,23 +412,15 @@ add_task(async function test_bookmarks() {
     }).then(results => {
       browser.test.assertEq(0, results.length, "Expected number of results returned for non-matching search");
 
-      return Promise.resolve().then(() => {
-        return browser.bookmarks.getRecent("");
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Incorrect argument types for bookmarks.getRecent"),
-          "Expected error thrown when calling getRecent with an empty string"
-        );
-      });
+      browser.test.assertThrows(
+        () => browser.bookmarks.getRecent(""),
+        /Incorrect argument types for bookmarks.getRecent/,
+        "Expected error thrown when calling getRecent with an empty string");
     }).then(() => {
-      return Promise.resolve().then(() => {
-        return browser.bookmarks.getRecent(1.234);
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Incorrect argument types for bookmarks.getRecent"),
-          "Expected error thrown when calling getRecent with a decimal number"
-        );
-      });
+      browser.test.assertThrows(
+        () => browser.bookmarks.getRecent(1.234),
+        /Incorrect argument types for bookmarks.getRecent/,
+        "Expected error thrown when calling getRecent with a decimal number");
     }).then(() => {
       return Promise.all([
         browser.bookmarks.search("corporation"),
@@ -580,28 +524,20 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
       checkOnRemoved(createdFolderId, bookmarkGuids.unfiledGuid, 3);
 
-      return browser.bookmarks.get(createdFolderId).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("Bookmark not found"),
-          "Expected error thrown when trying to get a removed folder"
-        );
-      });
+      return browser.test.assertRejects(
+        browser.bookmarks.get(createdFolderId),
+        /Bookmark not found/,
+        "Expected error thrown when trying to get a removed folder");
     }).then(() => {
-      return browser.bookmarks.getChildren(nonExistentId).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("root is null"),
-          "Expected error thrown when trying to getChildren for a non-existent folder"
-        );
-      });
+      return browser.test.assertRejects(
+        browser.bookmarks.getChildren(nonExistentId),
+        /root is null/,
+        "Expected error thrown when trying to getChildren for a non-existent folder");
     }).then(() => {
-      return Promise.resolve().then(() => {
-        return browser.bookmarks.move(nonExistentId, {});
-      }).then(expectedError, error => {
-        browser.test.assertTrue(
-          error.message.includes("No bookmarks found for the provided GUID"),
-          "Expected error thrown when calling move with a non-existent bookmark"
-        );
-      });
+      return browser.test.assertRejects(
+        browser.bookmarks.move(nonExistentId, {}),
+        /No bookmarks found for the provided GUID/,
+        "Expected error thrown when calling move with a non-existent bookmark");
     }).then(() => {
       return browser.test.assertRejects(
         browser.bookmarks.create({title: "test root folder", parentId: bookmarkGuids.rootGuid}),
