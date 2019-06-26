@@ -3835,7 +3835,7 @@ VARCACHE_PREF(
   Live,
   "javascript.options.experimental.fields",
   javascript_options_experimental_fields,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(

@@ -9,7 +9,7 @@
 // React & Redux
 const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Message = createFactory(require("devtools/client/webconsole/components/Message"));
+const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
 
 ConsoleCommand.displayName = "ConsoleCommand";
 

@@ -796,6 +796,8 @@ class AssemblerMIPSShared : public AssemblerShared {
   // As opposed to x86/x64 version, the data relocation has to be executed
   // before to recover the pointer, and not after.
   void writeDataRelocation(ImmGCPtr ptr) {
+    // Raw GC pointer relocations and Value relocations both end up in
+    // TraceOneDataRelocation.
     if (ptr.value) {
       if (gc::IsInsideNursery(ptr.value)) {
         embedsNurseryPointers_ = true;

@@ -1620,6 +1620,31 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     dumpn("Got an exception: " + exception.message + "\n" + exception.stack);
   },
 
+  pauseForMutationBreakpoint: function(mutationType) {
+    if (
+      ![
+        "subtreeModified",
+        "nodeRemoved",
+        "attributeModified",
+      ].includes(mutationType)
+    ) {
+      throw new Error("Unexpected mutation breakpoint type");
+    }
+
+    if (this.skipBreakpoints) {
+      return;
+    }
+
+    const frame = this.dbg.getNewestFrame();
+    if (frame) {
+      this._pauseAndRespond(frame, {
+        type: "mutationBreakpoint",
+        mutationType,
+        message: `DOM Mutation: '${mutationType}'`,
+      });
+    }
+  },
+
   /**
    * A function that the engine calls when a debugger statement has been
    * executed in the specified frame.
