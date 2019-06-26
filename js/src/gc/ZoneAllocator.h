@@ -129,7 +129,7 @@ class ZoneAllocator : public JS::shadow::Zone,
   // Check malloc allocation threshold and trigger a zone GC if necessary.
   void maybeMallocTriggerZoneGC() {
     JSRuntime* rt = runtimeFromAnyThread();
-    if (gcMallocBytes.gcBytes() >= threshold.gcTriggerBytes() &&
+    if (gcMallocBytes.gcBytes() >= gcMallocThreshold.gcTriggerBytes() &&
         rt->heapState() == JS::HeapState::Idle) {
       gc::MaybeMallocTriggerZoneGC(rt, this);
     }
