@@ -306,6 +306,8 @@ class LookupCacheV2 final : public LookupCache {
   nsresult Build(AddPrefixArray& aAddPrefixes, AddCompleteArray& aAddCompletes);
 
   nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes);
+  nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes,
+                       FallibleTArray<nsCString>& aAddCompletes);
 
   // This will Clear() the passed arrays when done.
   // 'aExpirySec' is used by testcase to config an expired time.

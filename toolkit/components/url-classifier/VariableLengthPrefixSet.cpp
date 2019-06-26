@@ -27,6 +27,29 @@ namespace safebrowsing {
 
 #define PREFIX_SIZE_FIXED 4
 
+#ifdef DEBUG
+namespace {
+
+template <class T>
+static void EnsureSorted(T* aArray) {
+  typename T::elem_type* start = aArray->Elements();
+  typename T::elem_type* end = aArray->Elements() + aArray->Length();
+  typename T::elem_type* iter = start;
+  typename T::elem_type* previous = start;
+
+  while (iter != end) {
+    previous = iter;
+    ++iter;
+    if (iter != end) {
+      MOZ_ASSERT(*previous <= *iter);
+    }
+  }
+  return;
+}
+
+}  // namespace
+#endif
+
 NS_IMPL_ISUPPORTS(VariableLengthPrefixSet, nsIMemoryReporter)
 
 // This class will process prefix size between 4~32. But for 4 bytes prefixes,
@@ -49,6 +72,62 @@ nsresult VariableLengthPrefixSet::Init(const nsACString& aName) {
 
 VariableLengthPrefixSet::~VariableLengthPrefixSet() {
   UnregisterWeakMemoryReporter(this);
+}
+
+nsresult VariableLengthPrefixSet::SetPrefixes(AddPrefixArray& aAddPrefixes,
+                                              AddCompleteArray& aAddCompletes) {
+  MutexAutoLock lock(mLock);
+
+  // We may modify the prefix string in this function, clear this data
+  // before returning to ensure no one use the data after this API.
+  auto scopeExit = MakeScopeExit([&]() {
+    aAddPrefixes.Clear();
+    aAddCompletes.Clear();
+  });
+
+  // Clear old prefixSet before setting new one.
+  mFixedPrefixSet->SetPrefixes(nullptr, 0);
+  mVLPrefixSet.Clear();
+
+  // Build fixed-length prefix set
+  nsTArray<uint32_t> array;
+  if (!array.SetCapacity(aAddPrefixes.Length(), fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (size_t i = 0; i < aAddPrefixes.Length(); i++) {
+    array.AppendElement(aAddPrefixes[i].PrefixHash().ToUint32());
+  }
+
+#ifdef DEBUG
+  // PrefixSet requires sorted order
+  EnsureSorted(&array);
+#endif
+
+  nsresult rv = mFixedPrefixSet->SetPrefixes(array.Elements(), array.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+  uint32_t size;
+  size = mFixedPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
+  LOG(("SB tree done, size = %d bytes\n", size));
+#endif
+
+  CompletionArray completions;
+  for (size_t i = 0; i < aAddCompletes.Length(); i++) {
+    completions.AppendElement(aAddCompletes[i].CompleteHash());
+  }
+  completions.Sort();
+
+  nsCString* completionStr = new nsCString;
+  completionStr->SetCapacity(completions.Length() * COMPLETE_SIZE);
+  for (size_t i = 0; i < completions.Length(); i++) {
+    const char* buf = reinterpret_cast<const char*>(completions[i].buf);
+    completionStr->Append(buf, COMPLETE_SIZE);
+  }
+  mVLPrefixSet.Put(COMPLETE_SIZE, completionStr);
+
+  return NS_OK;
 }
 
 nsresult VariableLengthPrefixSet::SetPrefixes(PrefixStringMap& aPrefixMap) {
@@ -144,15 +223,44 @@ nsresult VariableLengthPrefixSet::GetPrefixes(PrefixStringMap& aPrefixMap) {
   return NS_OK;
 }
 
+// This is used by V2 protocol which prefixes are either 4-bytes or 32-bytes.
 nsresult VariableLengthPrefixSet::GetFixedLengthPrefixes(
-    FallibleTArray<uint32_t>& aPrefixes) {
-  return mFixedPrefixSet->GetPrefixesNative(aPrefixes);
+    FallibleTArray<uint32_t>* aPrefixes,
+    FallibleTArray<nsCString>* aCompletes) {
+  MOZ_ASSERT(aPrefixes || aCompletes);
+  MOZ_ASSERT_IF(aPrefixes, aPrefixes->IsEmpty());
+  MOZ_ASSERT_IF(aCompletes, aCompletes->IsEmpty());
+
+  if (aPrefixes) {
+    nsresult rv = mFixedPrefixSet->GetPrefixesNative(*aPrefixes);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  if (aCompletes) {
+    nsCString* completes = mVLPrefixSet.Get(COMPLETE_SIZE);
+    if (completes) {
+      uint32_t count = completes->Length() / COMPLETE_SIZE;
+      if (!aCompletes->SetCapacity(count, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      for (uint32_t i = 0; i < count; i++) {
+        aCompletes->AppendElement(
+            Substring(*completes, i * COMPLETE_SIZE, COMPLETE_SIZE), fallible);
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 // It should never be the case that more than one hash prefixes match a given
 // full hash. However, if that happens, this method returns any one of them.
 // It does not guarantee which one of those will be returned.
-nsresult VariableLengthPrefixSet::Matches(const nsACString& aFullHash,
+nsresult VariableLengthPrefixSet::Matches(uint32_t aPrefix,
+                                          const nsACString& aFullHash,
                                           uint32_t* aLength) const {
   MutexAutoLock lock(mLock);
 
@@ -163,12 +271,8 @@ nsresult VariableLengthPrefixSet::Matches(const nsACString& aFullHash,
   *aLength = 0;
 
   // Check if it matches 4-bytes prefixSet first
-  const uint32_t* hash =
-      reinterpret_cast<const uint32_t*>(aFullHash.BeginReading());
-  uint32_t value = BigEndian::readUint32(hash);
-
   bool found = false;
-  nsresult rv = mFixedPrefixSet->Contains(value, &found);
+  nsresult rv = mFixedPrefixSet->Contains(aPrefix, &found);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (found) {
