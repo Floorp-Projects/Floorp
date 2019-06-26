@@ -22,6 +22,38 @@ job-defaults:
         tier: 1
 
 jobs:
+    linux-shippable/opt:
+        description: "Linux Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: linux-profile
+        treeherder:
+            platform: linux32-shippable/opt
+        worker-type: b-linux
+        worker:
+            max-run-time: 1200
+            docker-image: {in-tree: desktop1604-test}
+            artifacts:
+                - type: file
+                  name: public/build/profdata.tar.xz
+                  path: /builds/worker/artifacts/profdata.tar.xz
+                - type: file
+                  name: public/build/xvfb.log
+                  path: /builds/worker/artifacts/xvfb/xvfb.log
+                - type: file
+                  name: public/build/profile-run-1.log
+                  path: /builds/worker/artifacts/profile-run-1.log
+                - type: file
+                  name: public/build/profile-run-2.log
+                  path: /builds/worker/artifacts/profile-run-2.log
+        run:
+            using: run-task
+            command: >
+                cd /builds/worker/checkouts/gecko &&
+                ./taskcluster/scripts/misc/run-profileserver.sh
+
     linux64-shippable/opt:
         description: "Linux64 Profile Generation"
         shipping-phase: build
