@@ -37,7 +37,6 @@ class ArchlinuxBootstrapper(NodeInstall, StyloInstall, SccacheInstall,
     BROWSER_PACKAGES = [
         'alsa-lib',
         'dbus-glib',
-        'gconf',
         'gtk2',
         'gtk3',
         'libevent',
