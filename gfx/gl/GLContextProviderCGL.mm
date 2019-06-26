@@ -202,7 +202,7 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
     return nullptr;
   }
 
-  GLint opaque = StaticPrefs::CompositorGLContextOpaque();
+  GLint opaque = StaticPrefs::gfx_compositor_glcontext_opaque();
   [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
 
   RefPtr<GLContextCGL> glContext =
