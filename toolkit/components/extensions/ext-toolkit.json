@@ -106,6 +106,14 @@
       ["management"]
     ]
   },
+  "normandyAddonStudy": {
+    "url": "chrome://extensions/content/parent/ext-normandyAddonStudy.js",
+    "schema": "chrome://extensions/content/schemas/normandyAddonStudy.json",
+    "scopes": ["addon_parent", "content_parent", "devtools_parent"],
+    "paths": [
+      ["normandyAddonStudy"]
+    ]
+  },
   "notifications": {
     "url": "chrome://extensions/content/parent/ext-notifications.js",
     "schema": "chrome://extensions/content/schemas/notifications.json",
