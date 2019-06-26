@@ -664,7 +664,7 @@ function h1ServerWK(metadata, response) {
   response.setHeader("Access-Control-Allow-Origin", "*", false);
   response.setHeader("Access-Control-Allow-Method", "GET", false);
 
-  var body = '{"http://foo.example.com:' + httpserv.identity.primaryPort + '": { "tls-ports": [' + serverPort + '] }}';
+  var body = '["http://foo.example.com:' + httpserv.identity.primaryPort + '"]';
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -687,7 +687,7 @@ function h1ServerWK2(metadata, response) {
   response.setHeader("Access-Control-Allow-Origin", "*", false);
   response.setHeader("Access-Control-Allow-Method", "GET", false);
 
-  var body = '{"http://foo.example.com:' + httpserv2.identity.primaryPort + '": { "tls-ports": [' + serverPort + '] }}';
+  var body = '["http://foo.example.com:' + httpserv2.identity.primaryPort + '"]';
   response.bodyOutputStream.write(body, body.length);
 }
 function test_http2_altsvc() {

@@ -17,10 +17,7 @@
 interface nsIWellKnownOpportunisticUtils : nsISupports
 {
     [must_use] void verify(in ACString aJSON,
-               in ACString  aOrigin,
-               in long      aAlternatePort);
+               in ACString  aOrigin);
 
     [must_use] readonly attribute bool valid;
-    [must_use] readonly attribute bool mixed; /* mixed-scheme */
-    [must_use] readonly attribute long lifetime;
 };

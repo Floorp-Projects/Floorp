@@ -640,37 +640,14 @@ class WellKnownChecker {
       if (accepted) {
         MOZ_ASSERT(!mMapping->HTTPS());  // https:// does not use .wk
 
-        nsresult rv = uu->Verify(mTransactionAlternate->mWKResponse, mOrigin,
-                                 mAlternatePort);
+        nsresult rv = uu->Verify(mTransactionAlternate->mWKResponse, mOrigin);
         if (NS_SUCCEEDED(rv)) {
           bool validWK = false;
-          bool mixedScheme = false;
-          int32_t lifetime = 0;
           Unused << uu->GetValid(&validWK);
-          Unused << uu->GetLifetime(&lifetime);
-          Unused << uu->GetMixed(&mixedScheme);
           if (!validWK) {
             LOG(("WellKnownChecker::Done %p json parser declares invalid\n%s\n",
                  this, mTransactionAlternate->mWKResponse.get()));
             accepted = false;
-          }
-          if (accepted && (lifetime > 0)) {
-            if (mMapping->TTL() > lifetime) {
-              LOG((
-                  "WellKnownChecker::Done %p atl-svc lifetime reduced by .wk\n",
-                  this));
-              mMapping->SetExpiresAt(NowInSeconds() + lifetime);
-            } else {
-              LOG(
-                  ("WellKnownChecker::Done %p .wk lifetime exceeded alt-svc ma "
-                   "so ignored\n",
-                   this));
-            }
-          }
-          if (accepted && mixedScheme) {
-            mMapping->SetMixedScheme(true);
-            LOG(("WellKnownChecker::Done %p atl-svc .wk allows mixed scheme\n",
-                 this));
           }
         } else {
           LOG(("WellKnownChecker::Done %p .wk jason eval failed to run\n",

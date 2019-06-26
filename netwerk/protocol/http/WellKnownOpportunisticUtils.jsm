@@ -14,15 +14,12 @@ function WellKnownOpportunisticUtils() {
 WellKnownOpportunisticUtils.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWellKnownOpportunisticUtils]),
 
-  verify(aJSON, aOrigin, aAlternatePort) {
+  verify(aJSON, aOrigin) {
     try {
-      let obj = JSON.parse(aJSON.toLowerCase());
-      let ports = obj[aOrigin.toLowerCase()]["tls-ports"];
-      if (!ports.includes(aAlternatePort)) {
-        throw new Error("invalid port");
+      let arr = JSON.parse(aJSON.toLowerCase());
+      if (!arr.includes(aOrigin.toLowerCase())) {
+        throw new Error("invalid origin");
       }
-      this.lifetime = obj[aOrigin.toLowerCase()].lifetime;
-      this.mixed = obj[aOrigin.toLowerCase()]["mixed-scheme"];
     } catch (e) {
       return;
     }
