@@ -6,11 +6,19 @@ package mozilla.components.browser.icons
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
+import androidx.annotation.MainThread
+import androidx.annotation.WorkerThread
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.IconDecoder
@@ -30,6 +38,7 @@ import mozilla.components.browser.icons.preparer.TippyTopIconPreparer
 import mozilla.components.browser.icons.processor.DiskIconProcessor
 import mozilla.components.browser.icons.processor.IconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
+import mozilla.components.browser.icons.utils.CancelOnDetach
 import mozilla.components.browser.icons.utils.DiskCache
 import mozilla.components.browser.icons.utils.MemoryCache
 import mozilla.components.browser.session.SessionManager
@@ -37,6 +46,7 @@ import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.support.base.log.logger.Logger
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
 private const val MAXIMUM_SCALE_FACTOR = 2.0f
@@ -91,6 +101,7 @@ class BrowserIcons(
         }
     }
 
+    @WorkerThread
     private fun loadIconInternal(initialRequest: IconRequest): Icon {
         val desiredSize = DesiredSize(
             targetSize = context.resources.getDimensionPixelSize(initialRequest.size.dimen),
@@ -110,9 +121,8 @@ class BrowserIcons(
             is IconLoader.Result.BitmapResult -> Icon(result.bitmap, source = result.source)
 
             is IconLoader.Result.BytesResult ->
-                decode(result.bytes, decoders, desiredSize)?.let { bitmap ->
-                    Icon(bitmap, source = result.source)
-                } ?: return generator.generate(context, request)
+                decode(result.bytes, decoders, desiredSize)?.let { Icon(it, source = result.source) }
+                    ?: return generator.generate(context, request)
         }
 
         // (3) Finally process the icon.
@@ -137,6 +147,57 @@ class BrowserIcons(
             onError = { _, throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)
             })
+    }
+
+    /**
+     * Loads an icon asynchronously using [BrowserIcons] and then displays it in the [ImageView].
+     * If the view is detached from the window before loading is completed, then loading is cancelled.
+     *
+     * @param view [ImageView] to load icon into.
+     * @param request Load icon for this given [IconRequest].
+     * @param placeholder [Drawable] to display while icon is loading.
+     * @param error [Drawable] to display if loading fails.
+     */
+    fun loadIntoView(
+        view: ImageView,
+        request: IconRequest,
+        placeholder: Drawable? = null,
+        error: Drawable? = null
+    ) = scope.launch(Dispatchers.Main) {
+        loadIntoViewInternal(WeakReference(view), request, placeholder, error)
+    }
+
+    @Suppress("LongMethod")
+    @MainThread
+    private suspend fun loadIntoViewInternal(
+        view: WeakReference<ImageView>,
+        request: IconRequest,
+        placeholder: Drawable?,
+        error: Drawable?
+    ) {
+        // If we previously started loading into the view, cancel the job.
+        val existingJob = view.get()?.getTag(R.id.mozac_browser_icons_tag_job) as? Job
+        existingJob?.cancel()
+
+        view.get()?.setImageDrawable(placeholder)
+
+        // Create a loading job
+        val deferredIcon = loadIcon(request)
+
+        view.get()?.setTag(R.id.mozac_browser_icons_tag_job, deferredIcon)
+        val onAttachStateChangeListener = CancelOnDetach(deferredIcon).also {
+            view.get()?.addOnAttachStateChangeListener(it)
+        }
+
+        try {
+            val icon = deferredIcon.await()
+            view.get()?.setImageBitmap(icon.bitmap)
+        } catch (e: CancellationException) {
+            view.get()?.setImageDrawable(error)
+        } finally {
+            view.get()?.removeOnAttachStateChangeListener(onAttachStateChangeListener)
+            view.get()?.setTag(R.id.mozac_browser_icons_tag_job, null)
+        }
     }
 }
 

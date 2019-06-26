@@ -5,14 +5,22 @@
 package mozilla.components.browser.icons
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Okio
@@ -24,6 +32,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -185,5 +196,76 @@ class BrowserIconsTest {
         } finally {
             server.shutdown()
         }
+    }
+
+    @Test
+    fun `Automatically load icon into image view`() {
+        val mockedBitmap: Bitmap = mock()
+        val mockedIcon: Icon = mock()
+        val result = CompletableDeferred<Icon>()
+        val view: ImageView = mock()
+        val icons = spy(BrowserIcons(testContext, httpClient = mock()))
+
+        val request = IconRequest(url = "https://www.mozilla.org")
+
+        doReturn(mockedBitmap).`when`(mockedIcon).bitmap
+        doReturn(result).`when`(icons).loadIcon(request)
+
+        val job = icons.loadIntoView(view, request)
+
+        verify(view).setImageDrawable(null)
+        verify(view).addOnAttachStateChangeListener(any())
+        verify(view).setTag(eq(R.id.mozac_browser_icons_tag_job), any())
+        verify(view, never()).setImageBitmap(any())
+
+        result.complete(mockedIcon)
+        job.joinBlocking()
+
+        verify(view).setImageBitmap(mockedBitmap)
+        verify(view).removeOnAttachStateChangeListener(any())
+        verify(view).setTag(R.id.mozac_browser_icons_tag_job, null)
+    }
+
+    @Test
+    fun `loadIntoView sets drawable to error if cancelled`() {
+        val result = CompletableDeferred<Icon>()
+        val view: ImageView = mock()
+        val placeholder: Drawable = mock()
+        val error: Drawable = mock()
+        val icons = spy(BrowserIcons(testContext, httpClient = mock()))
+
+        val request = IconRequest(url = "https://www.mozilla.org")
+
+        doReturn(result).`when`(icons).loadIcon(request)
+
+        val job = icons.loadIntoView(view, request, placeholder = placeholder, error = error)
+
+        verify(view).setImageDrawable(placeholder)
+
+        result.cancel()
+        job.joinBlocking()
+
+        verify(view).setImageDrawable(error)
+        verify(view).removeOnAttachStateChangeListener(any())
+        verify(view).setTag(R.id.mozac_browser_icons_tag_job, null)
+    }
+
+    @Test
+    fun `loadIntoView cancels previous jobs`() {
+        val result = CompletableDeferred<Icon>()
+        val view: ImageView = mock()
+        val previousJob: Job = mock()
+        val icons = spy(BrowserIcons(testContext, httpClient = mock()))
+
+        val request = IconRequest(url = "https://www.mozilla.org")
+
+        doReturn(previousJob).`when`(view).getTag(R.id.mozac_browser_icons_tag_job)
+        doReturn(result).`when`(icons).loadIcon(request)
+
+        icons.loadIntoView(view, request)
+
+        verify(previousJob).cancel()
+
+        result.cancel()
     }
 }

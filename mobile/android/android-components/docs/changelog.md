@@ -14,6 +14,9 @@ permalink: /changelog/
 * **All components**
   * Increased `compileSdkVersion` to 29 (Android Q)
 
+* **browser-icons**
+  * Added `BrowserIcons.loadIntoView` to automatically load an icon into an `ImageView`.
+
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
 
@@ -80,6 +83,7 @@ permalink: /changelog/
 * **feature-prompts**
   * Improved file picker prompt by displaying the option to use the camera to capture images,
     microphone to record audio, or video camera to capture a video.
+  * The color picker has been redesigned based on Firefox for Android (Fennec).
 
 * **feature-pwa**
   * Added preliminary support for pinning websites to the home screen.
@@ -100,9 +104,6 @@ permalink: /changelog/
   * Deprecated `String.toUri()` in favour of Android Core KTX.
   * Deprecated `View.isGone` and `View.isInvisible` in favour of Android Core KTX.
   * Added `putCompoundDrawablesRelative` and `putCompoundDrawablesRelativeWithIntrinsicBounds`, aliases of `setCompoundDrawablesRelative` that use Kotlin named and default arguments.
-
-* **feature-prompts**
-  * The color picker has been redesigned based on Firefox for Android (Fennec).
 
 # 2.0.0
 
