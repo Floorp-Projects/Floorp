@@ -197,6 +197,8 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
 
   bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
+  bool RegisterRequestWithPromptImpl(nsGeolocationRequest* aRequest);
+
   // Check if clearWatch is already called
   bool IsAlreadyCleared(nsGeolocationRequest* aRequest);
 
