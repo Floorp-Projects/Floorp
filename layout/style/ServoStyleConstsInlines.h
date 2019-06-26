@@ -236,7 +236,13 @@ inline nsAtom* StyleAtom::AsAtom() const {
   return reinterpret_cast<nsAtom*>(_0);
 }
 
-inline StyleAtom::~StyleAtom() {
+inline void StyleAtom::AddRef() {
+  if (!IsStatic()) {
+    AsAtom()->AddRef();
+  }
+}
+
+inline void StyleAtom::Release() {
   if (!IsStatic()) {
     AsAtom()->Release();
   }
@@ -256,10 +262,19 @@ inline StyleAtom::StyleAtom(already_AddRefed<nsAtom> aAtom) {
 }
 
 inline StyleAtom::StyleAtom(const StyleAtom& aOther) : _0(aOther._0) {
-  if (!IsStatic()) {
-    reinterpret_cast<nsAtom*>(_0)->AddRef();
-  }
+  AddRef();
 }
+
+inline StyleAtom& StyleAtom::operator=(const StyleAtom& aOther) {
+  if (MOZ_LIKELY(this != &aOther)) {
+    Release();
+    _0 = aOther._0;
+    AddRef();
+  }
+  return *this;
+}
+
+inline StyleAtom::~StyleAtom() { Release(); }
 
 inline nsAtom* StyleCustomIdent::AsAtom() const { return _0.AsAtom(); }
 
@@ -368,6 +383,22 @@ inline bool StyleComputedUrl::HasRef() const {
 
 template <>
 bool StyleGradient::IsOpaque() const;
+
+template <typename Integer>
+inline StyleGenericGridLine<Integer>::StyleGenericGridLine()
+    : ident(do_AddRef(static_cast<nsAtom*>(nsGkAtoms::_empty))),
+      line_num(0),
+      is_span(false) {}
+
+template <>
+inline nsAtom* StyleGridLine::LineName() const {
+  return ident.AsAtom();
+}
+
+template <>
+inline bool StyleGridLine::IsAuto() const {
+  return LineName()->IsEmpty() && line_num == 0 && !is_span;
+}
 
 }  // namespace mozilla
 
