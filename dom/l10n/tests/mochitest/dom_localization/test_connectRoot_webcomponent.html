@@ -11,8 +11,8 @@
     class FluentWidget extends HTMLElement {
       constructor() {
         super();
-        const shadowRoot = this.attachShadow({mode: 'open'});
-        const t = document.querySelector('#fluent-widget-template');
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
         const instance = t.content.cloneNode(true);
         shadowRoot.appendChild(instance);
       }
@@ -40,7 +40,7 @@
         document.domLoc.setAttributes(label, "key1");
       }
     }
-    customElements.define('fluent-widget', FluentWidget);
+    customElements.define("fluent-widget", FluentWidget);
   </script>
   <script type="application/javascript">
   "use strict";
