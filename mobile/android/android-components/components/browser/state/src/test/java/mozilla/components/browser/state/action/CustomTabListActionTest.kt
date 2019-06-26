@@ -14,8 +14,7 @@ import org.junit.Test
 class CustomTabListActionTest {
     @Test
     fun `AddCustomTabAction - Adds provided tab`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         assertEquals(0, store.state.tabs.size)
         assertEquals(0, store.state.customTabs.size)

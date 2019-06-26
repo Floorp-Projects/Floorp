@@ -5,7 +5,6 @@
 package mozilla.components.browser.session
 
 import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -20,8 +19,7 @@ import org.junit.Test
 class SessionManagerMigrationTest {
     @Test
     fun `Add session`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         val sessionManager = SessionManager(engine = mock(), store = store)
 
@@ -41,8 +39,7 @@ class SessionManagerMigrationTest {
 
     @Test
     fun `Remove session`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         val sessionManager = SessionManager(engine = mock(), store = store)
 
@@ -62,8 +59,7 @@ class SessionManagerMigrationTest {
 
     @Test
     fun `Selecting session`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         val sessionManager = SessionManager(engine = mock(), store = store)
 
@@ -81,8 +77,7 @@ class SessionManagerMigrationTest {
 
     @Test
     fun `Remove session and update selection`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         val manager = SessionManager(engine = mock(), store = store)
 
@@ -133,8 +128,7 @@ class SessionManagerMigrationTest {
 
     @Test
     fun `Remove private session and select nearby session`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         val manager = SessionManager(engine = mock(), store = store)
         assertNull(manager.selectedSession)
@@ -171,8 +165,7 @@ class SessionManagerMigrationTest {
 
     @Test
     fun `Remove normal session and select nearby session`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         val manager = SessionManager(engine = mock(), store = store)
         assertNull(manager.selectedSession)

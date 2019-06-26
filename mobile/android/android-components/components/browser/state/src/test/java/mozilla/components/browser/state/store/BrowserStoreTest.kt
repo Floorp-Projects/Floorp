@@ -6,17 +6,23 @@ package mozilla.components.browser.state.store
 
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class BrowserStoreTest {
+
+    @Test
+    fun `Initial state is empty`() {
+        val store = BrowserStore()
+        assertEquals(0, store.state.tabs.size)
+        assertNull(store.state.selectedTabId)
+    }
+
     @Test
     fun `Adding a tab`() = runBlocking {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         assertEquals(0, store.state.tabs.size)
         assertNull(store.state.selectedTabId)

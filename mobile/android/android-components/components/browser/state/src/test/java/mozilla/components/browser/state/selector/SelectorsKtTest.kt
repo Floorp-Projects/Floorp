@@ -19,8 +19,7 @@ import org.junit.Test
 class SelectorsKtTest {
     @Test
     fun `selectedTab extension property`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         assertNull(store.state.selectedTab)
 

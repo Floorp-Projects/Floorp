@@ -16,7 +16,7 @@ import mozilla.components.lib.state.Store
  * The only way to change the [BrowserState] inside [BrowserStore] is to dispatch an [Action] on it.
  */
 class BrowserStore(
-    initialState: BrowserState
+    initialState: BrowserState = BrowserState()
 ) : Store<BrowserState, BrowserAction>(
     initialState,
     BrowserStateReducer::reduce

@@ -14,10 +14,10 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class TabListActionTest {
+
     @Test
     fun `AddTabAction - Adds provided SessionState`() {
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         assertEquals(0, store.state.tabs.size)
         assertNull(store.state.selectedTabId)
@@ -57,8 +57,7 @@ class TabListActionTest {
     fun `AddTabAction - Select first tab automatically`() {
         val existingTab = createTab("https://www.mozilla.org")
 
-        val state = BrowserState()
-        val store = BrowserStore(state)
+        val store = BrowserStore()
 
         assertEquals(0, store.state.tabs.size)
         assertNull(existingTab.id, store.state.selectedTabId)
