@@ -1105,8 +1105,8 @@ class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
 
  protected:
   /* Generates the state key for saving the form state in the session if not
-     computed already. The result is stored in mStateKey on success */
-  nsresult GenerateStateKey();
+     computed already. The result is stored in mStateKey. */
+  void GenerateStateKey();
 
   /* Used to store the key to that element in the session. Is void until
      GenerateStateKey has been used */
