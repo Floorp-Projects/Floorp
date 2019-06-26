@@ -52,14 +52,25 @@ def execute_node_cmd(node_cmd_list):
         print('Executing "{}"'.format(printable_cmd), file=sys.stderr)
         sys.stderr.flush()
 
-        output = subprocess.check_output(node_cmd_list)
+        # We need to redirect stderr to a pipe because
+        # https://github.com/nodejs/node/issues/14752 causes issues with make.
+        proc = subprocess.Popen(
+            node_cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        stdout, stderr = proc.communicate()
+        retcode = proc.wait()
+
+        if retcode != 0:
+            print(stderr, file=sys.stderr)
+            sys.stderr.flush()
+            sys.exit(retcode)
 
         # Process the node script output
         #
         # XXX Starting with an empty list means that node scripts can
         # (intentionally or inadvertently) remove deps.  Do we want this?
         deps = []
-        for line in output.splitlines():
+        for line in stdout.splitlines():
             if 'dep:' in line:
                 deps.append(line.replace('dep:', ''))
             else:
