@@ -3126,6 +3126,7 @@ exports.CSS_PROPERTIES = {
       "box-shadow",
       "clip",
       "filter",
+      "backdrop-filter",
       "mix-blend-mode",
       "font-family",
       "font-style",
@@ -10759,6 +10760,10 @@ exports.PREFERENCES = [
   [
     "overflow-inline",
     "layout.css.overflow-logical.enabled"
+  ],
+  [
+    "backdrop-filter",
+    "layout.css.backdrop-filter.enabled"
   ],
   [
     "font-variation-settings",

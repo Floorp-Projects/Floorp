@@ -3890,6 +3890,7 @@ nsStyleEffects::nsStyleEffects(const Document&)
 nsStyleEffects::nsStyleEffects(const nsStyleEffects& aSource)
     : mFilters(aSource.mFilters),
       mBoxShadow(aSource.mBoxShadow),
+      mBackdropFilters(aSource.mBackdropFilters),
       mClip(aSource.mClip),
       mOpacity(aSource.mOpacity),
       mClipFlags(aSource.mClipFlags),
@@ -3950,6 +3951,10 @@ nsChangeHint nsStyleEffects::CalcDifference(
 
   if (mMixBlendMode != aNewData.mMixBlendMode) {
     hint |= nsChangeHint_RepaintFrame;
+  }
+
+  if (mBackdropFilters != aNewData.mBackdropFilters) {
+    hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
   }
 
   if (!hint && !mClip.IsEqualEdges(aNewData.mClip)) {

@@ -4739,6 +4739,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is support for CSS backdrop-filter enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.backdrop-filter.enabled",
+  layout_css_backdrop_filter_enabled,
+  bool, false
+)
+
 // Is support for CSS contain enabled?
 #ifdef EARLY_BETA_OR_EARLIER
 #define PREF_VALUE true
