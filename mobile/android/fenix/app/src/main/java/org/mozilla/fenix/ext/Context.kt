@@ -45,7 +45,7 @@ fun Context.getPreferenceKey(@StringRes resourceId: Int): String =
     resources.getString(resourceId)
 
 /**
- *  Shares content via [ACTION_SEND] intent.
+ * Shares content via [ACTION_SEND] intent.
  *
  * @param text the data to be shared  [EXTRA_TEXT]
  * @param subject of the intent [EXTRA_TEXT]
@@ -74,7 +74,7 @@ fun Context.share(text: String, subject: String = ""): Boolean {
 }
 
 /**
- *  Gets the Root View with an activity context
+ * Gets the Root View with an activity context
  *
  * @return ViewGroup? if it is able to get a root view from the context
  */

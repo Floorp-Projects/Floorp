@@ -7,6 +7,8 @@ package org.mozilla.fenix.onboarding
 import android.content.Context
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatRadioButton
+import androidx.core.content.edit
+import androidx.core.content.withStyledAttributes
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
@@ -16,20 +18,12 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
     var key: Int = 0
 
     init {
-        attrs.let {
-            context.theme.obtainStyledAttributes(
-                it,
-                R.styleable.OnboardingRadioButton,
-                0, 0
-            ).apply {
-                try {
-                    key = getResourceId(
-                        R.styleable.OnboardingRadioButton_onboardingKey, 0
-                    )
-                } finally {
-                    recycle()
-                }
-            }
+        context.withStyledAttributes(
+            attrs,
+            R.styleable.OnboardingRadioButton,
+            0, 0
+        ) {
+            key = getResourceId(R.styleable.OnboardingRadioButton_onboardingKey, 0)
         }
     }
 
@@ -37,7 +31,7 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
         radioGroups.add(radioButton)
     }
 
-    fun onClickListener(listener: (() -> Unit)) {
+    fun onClickListener(listener: () -> Unit) {
         clickListener = listener
     }
 
@@ -51,12 +45,13 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
 
     private fun updateRadioValue(isChecked: Boolean) {
         this.isChecked = isChecked
-        Settings.getInstance(context).preferences.edit().putBoolean(context.getString(key), isChecked)
-            .apply()
+        Settings.getInstance(context).preferences.edit {
+            putBoolean(context.getString(key), isChecked)
+        }
     }
 
     private fun toggleRadioGroups() {
-        if (this.isChecked) {
+        if (isChecked) {
             radioGroups.forEach { it.updateRadioValue(false) }
         }
     }

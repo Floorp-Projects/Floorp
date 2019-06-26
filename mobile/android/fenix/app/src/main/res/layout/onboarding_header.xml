@@ -3,16 +3,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/onboarding_header"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp">
-    <TextView
-        android:id="@+id/header_text"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/onboarding_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/onboarding_header"
-        android:textAppearance="@style/HeaderTextStyle"
-        android:textSize="22sp" />
+        android:layout_marginBottom="8dp">
+    <TextView
+            android:id="@+id/header_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="@string/onboarding_header"
+            android:textAppearance="@style/HeaderTextStyle"
+            android:textSize="22sp" />
 </FrameLayout>

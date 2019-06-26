@@ -30,9 +30,9 @@ import org.mozilla.fenix.home.sessioncontrol.onNext
 import kotlin.coroutines.CoroutineContext
 
 class TabViewHolder(
-    val view: View,
+    view: View,
     actionEmitter: Observer<SessionControlAction>,
-    val job: Job,
+    private val job: Job,
     override val containerView: View? = view
 ) :
     RecyclerView.ViewHolder(view), LayoutContainer, CoroutineScope {

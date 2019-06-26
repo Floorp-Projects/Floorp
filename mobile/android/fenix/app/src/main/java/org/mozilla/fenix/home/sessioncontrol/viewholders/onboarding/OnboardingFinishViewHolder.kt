@@ -23,6 +23,7 @@ class OnboardingFinishViewHolder(
             actionEmitter.onNext(OnboardingAction.Finish)
         }
     }
+
     companion object {
         const val LAYOUT_ID = R.layout.onboarding_finish
     }

@@ -2,22 +2,24 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/onboarding_card"
-    style="@style/OnboardingCardDark"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        style="@style/OnboardingCardDark"
+        android:id="@+id/onboarding_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/header_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="14dp"
-        app:drawableStartCompat="@drawable/ic_onboarding_firefox_accounts"
+        tools:text="@string/onboarding_firefox_account_header"
+        tools:drawableStart="@drawable/ic_onboarding_firefox_accounts"
         android:drawablePadding="12dp"
-        android:text="@string/onboarding_firefox_account_header"
         android:textAppearance="@style/Header16TextStyle"
         android:textColor="@color/onboarding_card_primary_text_dark" />
 

@@ -5,21 +5,15 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
-import org.jetbrains.anko.dimen
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SupportUtils
 
 class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
-        val icon = AppCompatResources.getDrawable(view.context, R.drawable.ic_onboarding_privacy_notice)
-        val size = view.context.dimen(R.dimen.onboarding_header_icon_height_width)
-        icon?.setBounds(0, 0, size, size)
-
-        view.header_text.setCompoundDrawables(icon, null, null, null)
+        view.header_text.setOnboardingIcon(R.drawable.ic_onboarding_privacy_notice)
 
         val appName = view.context.getString(R.string.app_name)
         view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)

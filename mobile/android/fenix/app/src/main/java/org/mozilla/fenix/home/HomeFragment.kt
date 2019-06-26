@@ -88,7 +88,7 @@ class HomeFragment : Fragment(), AccountObserver {
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
             super.onTitleChanged(session, title)
-            if (deleteAllSessionsJob != null) { return }
+            if (deleteAllSessionsJob != null) return
             emitSessionChanges()
         }
     }

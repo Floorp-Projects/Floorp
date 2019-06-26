@@ -3,27 +3,27 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/private_session_description_wrapper"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="16dp"
-    android:orientation="vertical">
-    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-        android:textColor="?primaryText"
-        android:text="@string/private_browsing_title"
-        android:layout_marginBottom="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/private_session_description"
+        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/private_session_description_wrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="none"
-        android:gravity="center_vertical"
-        android:scrollHorizontally="false"
-        android:text="@string/private_browsing_explanation"
-        android:textColor="?primaryText"
-        android:textSize="14sp" />
+        android:layout_margin="16dp"
+        android:orientation="vertical">
+    <TextView
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="?primaryText"
+            android:text="@string/private_browsing_title"
+            android:layout_marginBottom="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    <TextView
+            android:id="@+id/private_session_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="none"
+            android:gravity="center_vertical"
+            android:scrollHorizontally="false"
+            tools:text="@string/private_browsing_explanation"
+            android:textColor="?primaryText"
+            android:textSize="14sp" />
 </LinearLayout>

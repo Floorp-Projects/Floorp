@@ -2,38 +2,43 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/onboarding_card"
-    style="@style/OnboardingCardLight"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-    <TextView
-        android:id="@+id/header_text"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:drawableStartCompat="@drawable/ic_onboarding_tracking_protection"
-        android:drawablePadding="12dp"
-        android:text="@string/onboarding_tracking_protection_header"
-        android:textAppearance="@style/HeaderTextStyle"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/tracking_protection_toggle"/>
-    <Switch
-        android:id="@+id/tracking_protection_toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-    <TextView
-        android:id="@+id/description_text"
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/onboarding_card"
+        style="@style/OnboardingCardLight"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/onboarding_tracking_protection_description"
-        android:textAppearance="@style/Body14TextStyle"
-        android:layout_marginTop="12dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header_text"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        android:layout_height="wrap_content">
+    <TextView
+            android:id="@+id/header_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/onboarding_tracking_protection_header"
+            tools:drawableStart="@drawable/ic_onboarding_tracking_protection"
+            android:drawablePadding="12dp"
+            android:textAppearance="@style/HeaderTextStyle"
+            android:gravity="center_vertical"
+            android:lines="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tracking_protection_toggle" />
+    <Switch
+            android:id="@+id/tracking_protection_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/header_text"
+            app:layout_constraintBottom_toBottomOf="@id/header_text"/>
+    <TextView
+            android:id="@+id/description_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/Body14TextStyle"
+            android:layout_marginTop="12dp"
+            tools:text="@string/onboarding_tracking_protection_description"
+            app:layout_constraintTop_toBottomOf="@id/header_text"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

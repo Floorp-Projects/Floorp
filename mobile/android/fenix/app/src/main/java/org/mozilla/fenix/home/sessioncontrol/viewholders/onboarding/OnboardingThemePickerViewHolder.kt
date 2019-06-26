@@ -4,37 +4,27 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
-import android.content.Context
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_section_header.view.*
 import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
-class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
-
-    fun bind(labelBuilder: (Context) -> String) {
-        view.section_header_text.text = labelBuilder(view.context)
-    }
-
-    companion object {
-        const val LAYOUT_ID = R.layout.onboarding_theme_picker
-    }
+class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
         val radioLightTheme = view.theme_light_radio_button
         val radioDarkTheme = view.theme_dark_radio_button
         val radioFollowDeviceTheme = view.theme_automatic_radio_button
 
-        if (SDK_INT >= Build.VERSION_CODES.P) {
-            radioFollowDeviceTheme?.key = R.string.pref_key_follow_device_theme
+        radioFollowDeviceTheme.key = if (SDK_INT >= Build.VERSION_CODES.P) {
+            R.string.pref_key_follow_device_theme
         } else {
-            radioFollowDeviceTheme?.key = R.string.pref_key_auto_battery_theme
+            R.string.pref_key_auto_battery_theme
         }
 
         radioLightTheme.addToRadioGroup(radioDarkTheme)
@@ -79,20 +69,25 @@ class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.Vie
         }
 
         with(Settings.getInstance(view.context)) {
-            when {
-                this.shouldUseLightTheme -> radioLightTheme.isChecked = true
-                this.shouldUseDarkTheme -> radioDarkTheme.isChecked = true
-                else -> radioFollowDeviceTheme.isChecked = true
+            val radio = when {
+                this.shouldUseLightTheme -> radioLightTheme
+                this.shouldUseDarkTheme -> radioDarkTheme
+                else -> radioFollowDeviceTheme
             }
+            radio.isChecked = true
         }
     }
 
     private fun setNewTheme(mode: Int) {
         if (AppCompatDelegate.getDefaultNightMode() == mode) return
         AppCompatDelegate.setDefaultNightMode(mode)
-        view.context?.components?.core?.let {
-            it.engine.settings.preferredColorScheme = it.getPreferredColorScheme()
+        with(itemView.context.components) {
+            core.engine.settings.preferredColorScheme = core.getPreferredColorScheme()
+            useCases.sessionUseCases.reload.invoke()
         }
-        view.context?.components?.useCases?.sessionUseCases?.reload?.invoke()
+    }
+
+    companion object {
+        const val LAYOUT_ID = R.layout.onboarding_theme_picker
     }
 }

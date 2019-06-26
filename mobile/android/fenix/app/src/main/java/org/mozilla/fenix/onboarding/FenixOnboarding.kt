@@ -6,34 +6,32 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
-class FenixOnboarding(private val context: Context) {
-    private val onboardingPrefs = context.applicationContext.getSharedPreferences(
-        OnboardingKeys.PREF_NAME.key,
+class FenixOnboarding(context: Context) {
+    private val metrics = context.components.analytics.metrics
+    private val onboardingPrefs = context.getSharedPreferences(
+        PREF_NAME_ONBOARDING_KEY,
         Context.MODE_PRIVATE
     )
 
     private var SharedPreferences.onboardedVersion: Int
-        get() = getInt(OnboardingKeys.LAST_VERSION.key, 0)
-        set(version) { edit().putInt(OnboardingKeys.LAST_VERSION.key, version).apply() }
+        get() = getInt(LAST_VERSION_ONBOARDING_KEY, 0)
+        set(version) { edit { putInt(LAST_VERSION_ONBOARDING_KEY, version) } }
 
     fun finish() {
         onboardingPrefs.onboardedVersion = CURRENT_ONBOARDING_VERSION
-        context.components.analytics.metrics.track(Event.DismissedOnboarding)
+        metrics.track(Event.DismissedOnboarding)
     }
 
-    fun userHasBeenOnboarded(): Boolean {
-        return onboardingPrefs.onboardedVersion == CURRENT_ONBOARDING_VERSION
-    }
-
-    private enum class OnboardingKeys(val key: String) {
-        PREF_NAME("fenix.onboarding"),
-        LAST_VERSION("fenix.onboarding.last_version")
-    }
+    fun userHasBeenOnboarded() = onboardingPrefs.onboardedVersion == CURRENT_ONBOARDING_VERSION
 
     companion object {
         private const val CURRENT_ONBOARDING_VERSION = 1
+
+        private const val PREF_NAME_ONBOARDING_KEY = "fenix.onboarding"
+        private const val LAST_VERSION_ONBOARDING_KEY = "fenix.onboarding.last_version"
     }
 }
