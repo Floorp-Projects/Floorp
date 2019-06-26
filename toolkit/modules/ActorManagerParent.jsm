@@ -131,23 +131,6 @@ let ACTORS = {
     allFrames: true,
   },
 
- DateTimePicker: {
-    parent: {
-      moduleURI: "resource://gre/actors/DateTimePickerParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource://gre/actors/DateTimePickerChild.jsm",
-      events: {
-        "MozOpenDateTimePicker": {},
-        "MozUpdateDateTimePicker": {},
-        "MozCloseDateTimePicker": {},
-      },
-    },
-
-    allFrames: true,
-  },
-
   InlineSpellChecker: {
     parent: {
       moduleURI: "resource://gre/actors/InlineSpellCheckerParent.jsm",
@@ -201,18 +184,6 @@ let ACTORS = {
 
     allFrames: true,
   },
-
-  UAWidgets: {
-    child: {
-      moduleURI: "resource://gre/actors/UAWidgetsChild.jsm",
-      events: {
-        "UAWidgetSetupOrChange": {},
-        "UAWidgetTeardown": {},
-      },
-    },
-
-    allFrames: true,
-  },
 };
 
 let LEGACY_ACTORS = {
@@ -235,6 +206,15 @@ let LEGACY_ACTORS = {
         "ControllerCommands:Do",
         "ControllerCommands:DoWithParams",
       ],
+    },
+  },
+
+  DateTimePicker: {
+    child: {
+      module: "resource://gre/actors/DateTimePickerChild.jsm",
+      events: {
+        "MozOpenDateTimePicker": {},
+      },
     },
   },
 
@@ -376,6 +356,16 @@ let LEGACY_ACTORS = {
         "Browser:Thumbnail:CheckState",
         "Browser:Thumbnail:GetOriginalURL",
       ],
+    },
+  },
+
+  UAWidgets: {
+    child: {
+      module: "resource://gre/actors/UAWidgetsChild.jsm",
+      events: {
+        "UAWidgetSetupOrChange": {},
+        "UAWidgetTeardown": {},
+      },
     },
   },
 

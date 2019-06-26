@@ -11,7 +11,9 @@ function debug(aStr) {
   }
 }
 
-var EXPORTED_SYMBOLS = ["DateTimePickerParent"];
+var EXPORTED_SYMBOLS = [
+  "DateTimePickerParent",
+];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "DateTimePickerPanel", "resource://gre/modules/DateTimePickerPanel.jsm");
@@ -22,53 +24,86 @@ ChromeUtils.defineModuleGetter(this, "DateTimePickerPanel", "resource://gre/modu
  * DateTimePickerParent listens for picker's events and notifies the content
  * side (input box) about them.
  */
-class DateTimePickerParent extends JSWindowActorParent {
+var DateTimePickerParent = {
+  picker: null,
+  weakBrowser: null,
+
+  MESSAGES: [
+    "FormDateTime:OpenPicker",
+    "FormDateTime:ClosePicker",
+    "FormDateTime:UpdatePicker",
+  ],
+
+  init() {
+    for (let msg of this.MESSAGES) {
+      Services.mm.addMessageListener(msg, this);
+    }
+  },
+
+  uninit() {
+    for (let msg of this.MESSAGES) {
+      Services.mm.removeMessageListener(msg, this);
+    }
+  },
+
+  // MessageListener
   receiveMessage(aMessage) {
     debug("receiveMessage: " + aMessage.name);
     switch (aMessage.name) {
       case "FormDateTime:OpenPicker": {
-        let topBrowsingContext = this.manager.browsingContext.top;
-        let browser = topBrowsingContext.embedderElement;
-        this.showPicker(browser, aMessage.data);
+        this.showPicker(aMessage.target, aMessage.data);
         break;
       }
       case "FormDateTime:ClosePicker": {
-        if (!this._picker) {
+        if (!this.picker) {
           return;
         }
-        this._picker.closePicker();
+        this.picker.closePicker();
         this.close();
         break;
       }
       case "FormDateTime:UpdatePicker": {
-        if (!this._picker) {
+        if (!this.picker) {
           return;
         }
-        this._picker.setPopupValue(aMessage.data);
+        this.picker.setPopupValue(aMessage.data);
         break;
       }
       default:
         break;
     }
-  }
+  },
 
+  // nsIDOMEventListener
   handleEvent(aEvent) {
     debug("handleEvent: " + aEvent.type);
     switch (aEvent.type) {
       case "DateTimePickerValueChanged": {
-        this.sendAsyncMessage("FormDateTime:PickerValueChanged", aEvent.detail);
+        this.updateInputBoxValue(aEvent);
         break;
       }
       case "popuphidden": {
-        this.sendAsyncMessage("FormDateTime:PickerClosed", {});
-        this._picker.closePicker();
+        let browser = this.weakBrowser ? this.weakBrowser.get() : null;
+        if (browser) {
+          browser.messageManager.sendAsyncMessage("FormDateTime:PickerClosed");
+        }
+        this.picker.closePicker();
         this.close();
         break;
       }
       default:
         break;
     }
-  }
+  },
+
+  // Called when picker value has changed, notify input box about it.
+  updateInputBoxValue(aEvent) {
+    let browser = this.weakBrowser ? this.weakBrowser.get() : null;
+    if (browser) {
+      browser.messageManager.sendAsyncMessage(
+        "FormDateTime:PickerValueChanged", aEvent.detail);
+    }
+  },
 
   // Get picker from browser and show it anchored to the input box.
   showPicker(aBrowser, aData) {
@@ -94,40 +129,42 @@ class DateTimePickerParent extends JSWindowActorParent {
       return;
     }
 
+    this.weakBrowser = Cu.getWeakReference(aBrowser);
     if (!aBrowser.dateTimePicker) {
       debug("aBrowser.dateTimePicker not found, exiting now.");
       return;
     }
-    this._picker = new DateTimePickerPanel(aBrowser.dateTimePicker);
+    this.picker = new DateTimePickerPanel(aBrowser.dateTimePicker);
     // The arrow panel needs an anchor to work. The popupAnchor (this._anchor)
     // is a transparent div that the arrow can point to.
-    this._picker.openPicker(type, this._anchor, detail);
+    this.picker.openPicker(type, this._anchor, detail);
 
     this.addPickerListeners();
-  }
+  },
 
   // Picker is closed, do some cleanup.
   close() {
     this.removePickerListeners();
-    this._picker = null;
+    this.picker = null;
+    this.weakBrowser = null;
     this._anchor.hidden = true;
-  }
+  },
 
   // Listen to picker's event.
   addPickerListeners() {
-    if (!this._picker) {
+    if (!this.picker) {
       return;
     }
-    this._picker.element.addEventListener("popuphidden", this);
-    this._picker.element.addEventListener("DateTimePickerValueChanged", this);
-  }
+    this.picker.element.addEventListener("popuphidden", this);
+    this.picker.element.addEventListener("DateTimePickerValueChanged", this);
+  },
 
   // Stop listening to picker's event.
   removePickerListeners() {
-    if (!this._picker) {
+    if (!this.picker) {
       return;
     }
-    this._picker.element.removeEventListener("popuphidden", this);
-    this._picker.element.removeEventListener("DateTimePickerValueChanged", this);
-  }
-}
+    this.picker.element.removeEventListener("popuphidden", this);
+    this.picker.element.removeEventListener("DateTimePickerValueChanged", this);
+  },
+};
