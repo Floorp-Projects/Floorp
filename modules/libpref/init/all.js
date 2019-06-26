@@ -4797,9 +4797,7 @@ pref("widget.content.allow-gtk-dark-theme", false);
 #endif
 #endif
 #ifdef MOZ_WAYLAND
-#ifdef HAVE_LIBDRM
 pref("widget.wayland_dmabuf_backend.enabled", false);
-#endif
 #endif
 
 pref("widget.window-transforms.disabled", false);
