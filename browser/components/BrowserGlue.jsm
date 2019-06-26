@@ -459,6 +459,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   Corroborate: "resource://gre/modules/Corroborate.jsm",
+  DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -1396,6 +1397,7 @@ BrowserGlue.prototype = {
     this._checkForOldBuildUpdates();
 
     AutoCompletePopup.init();
+    DateTimePickerParent.init();
     // Check if Sync is configured
     if (Services.prefs.prefHasUserValue("services.sync.username")) {
       WeaveService.init();
@@ -1567,6 +1569,7 @@ BrowserGlue.prototype = {
     AboutPrivateBrowsingHandler.uninit();
     AboutProtectionsHandler.uninit();
     AutoCompletePopup.uninit();
+    DateTimePickerParent.uninit();
 
     Normandy.uninit();
     RFPHelper.uninit();
