@@ -47,7 +47,7 @@ def run_reftest_desktop(context, args):
 def run_reftest_android(context, args):
     from remotereftest import run_test_harness
 
-    args.app = args.app or 'org.mozilla.fennec'
+    args.app = args.app or 'org.mozilla.geckoview.test'
     args.utilityPath = context.hostutils
     args.xrePath = context.hostutils
     args.httpdPath = context.module_dir
