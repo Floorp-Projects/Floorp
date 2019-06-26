@@ -86,9 +86,9 @@ runTest(async () => {
 
   src = `data:text/html;base64,${btoa(source)}`;
   is(await iframeGum({ src, sandbox: "allow-scripts" }),
-     "NotAllowedError", "gUM fails in sandboxed data iframe");
+     "TypeError", "navigator.mediaDevices undefined in sandboxed data iframe");
   is(await iframeGum({ src, sandbox: "allow-scripts allow-same-origin"}),
-     "NotAllowedError", "gUM fails in regular data iframe");
+     "TypeError", "navigator.mediaDevices undefined in regular data iframe");
 });
 </script>
 </pre>
