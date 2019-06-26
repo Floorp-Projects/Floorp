@@ -1619,6 +1619,42 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateRows() {
   return GetGridTemplateColumnsRows(StylePosition()->GridTemplateRows(), info);
 }
 
+already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridLine(
+    const nsStyleGridLine& aGridLine) {
+  if (aGridLine.IsAuto()) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    val->SetIdent(eCSSKeyword_auto);
+    return val.forget();
+  }
+
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
+
+  if (aGridLine.mHasSpan) {
+    RefPtr<nsROCSSPrimitiveValue> span = new nsROCSSPrimitiveValue;
+    span->SetIdent(eCSSKeyword_span);
+    valueList->AppendCSSValue(span.forget());
+  }
+
+  if (aGridLine.mInteger != 0) {
+    RefPtr<nsROCSSPrimitiveValue> integer = new nsROCSSPrimitiveValue;
+    integer->SetNumber(aGridLine.mInteger);
+    valueList->AppendCSSValue(integer.forget());
+  }
+
+  if (aGridLine.mLineName != nsGkAtoms::_empty) {
+    RefPtr<nsROCSSPrimitiveValue> lineName = new nsROCSSPrimitiveValue;
+    nsString escapedLineName;
+    nsStyleUtil::AppendEscapedCSSIdent(
+        nsDependentAtomString(aGridLine.mLineName), escapedLineName);
+    lineName->SetString(escapedLineName);
+    valueList->AppendCSSValue(lineName.forget());
+  }
+
+  NS_ASSERTION(valueList->Length() > 0,
+               "Should have appended at least one value");
+  return valueList.forget();
+}
+
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPaddingTop() {
   return GetPaddingWidthFor(eSideTop);
 }
