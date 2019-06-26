@@ -35,9 +35,10 @@ AnimationSurfaceProvider::AnimationSurfaceProvider(
   // enter decode-on-demand mode.
   IntSize frameSize = aSurfaceKey.Size();
   size_t threshold =
-      (size_t(StaticPrefs::ImageAnimatedDecodeOnDemandThresholdKB()) * 1024) /
+      (size_t(StaticPrefs::image_animated_decode_on_demand_threshold_kb()) *
+       1024) /
       (sizeof(uint32_t) * frameSize.width * frameSize.height);
-  size_t batch = StaticPrefs::ImageAnimatedDecodeOnDemandBatchSize();
+  size_t batch = StaticPrefs::image_animated_decode_on_demand_batch_size();
 
   mFrames.reset(
       new AnimationFrameRetainedBuffer(threshold, batch, aCurrentFrame));
@@ -407,7 +408,7 @@ void AnimationSurfaceProvider::RequestFrameDiscarding() {
       static_cast<AnimationFrameRetainedBuffer*>(mFrames.get());
 
   MOZ_ASSERT(!mDecoder->GetFrameRecycler());
-  if (StaticPrefs::ImageAnimatedDecodeOnDemandRecycle()) {
+  if (StaticPrefs::image_animated_decode_on_demand_recycle()) {
     mFrames.reset(new AnimationFrameRecyclingQueue(std::move(*oldFrameQueue)));
     mDecoder->SetFrameRecycler(this);
   } else {
@@ -464,7 +465,8 @@ bool AnimationSurfaceProvider::ShouldPreferSyncRun() const {
   MutexAutoLock lock(mDecodingMutex);
   MOZ_ASSERT(mDecoder);
 
-  return mDecoder->ShouldSyncDecode(StaticPrefs::ImageMemDecodeBytesAtATime());
+  return mDecoder->ShouldSyncDecode(
+      StaticPrefs::image_mem_decode_bytes_at_a_time());
 }
 
 RawAccessFrameRef AnimationSurfaceProvider::RecycleFrame(
