@@ -349,19 +349,16 @@ function initPageCertError() {
     }));
   });
 
-  addEventListener("AboutNetErrorOptions", function(event) {
-    var options = JSON.parse(event.detail);
-    if (options && options.enabled) {
-      // Display error reporting UI
-      document.getElementById("certificateErrorReporting").style.display = "block";
-
-      // set the checkbox
-      checkbox.checked = !!options.automatic;
-    }
-    if (options && options.hideAddExceptionButton) {
-      document.querySelector(".exceptionDialogButtonContainer").hidden = true;
-    }
-  }, true, true);
+  let errorReportingEnabled = RPMGetBoolPref("security.ssl.errorReporting.enabled");
+  if (errorReportingEnabled) {
+    document.getElementById("certificateErrorReporting").style.display = "block";
+    let errorReportingAutomatic = RPMGetBoolPref("security.ssl.errorReporting.automatic");
+    checkbox.checked = !!errorReportingAutomatic;
+  }
+  let hideAddExceptionButton = RPMGetBoolPref("security.certerror.hideAddException");
+  if (hideAddExceptionButton) {
+    document.querySelector(".exceptionDialogButtonContainer").hidden = true;
+  }
 
   let failedCertInfo = document.getFailedCertSecurityInfo();
   RPMSendAsyncMessage("RecordCertErrorLoad", {
@@ -370,14 +367,60 @@ function initPageCertError() {
     has_sts: getCSSClass() == "badStsCert",
     is_frame:  window.parent != window,
   });
-  window.addEventListener("ShowCertErrorDetails", setCertErrorDetails);
+
+  let certErrorButtons = ["advancedButton", "copyToClipboard"];
+  for (let button of certErrorButtons) {
+    let elem = document.getElementById(button);
+    elem.addEventListener("click", onClickHandler);
+  }
+
+  setCertErrorDetails();
   setTechnicalDetailsOnCertError();
 
+  // Dispatch this event only for tests.
   let event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});
-  document.getElementById("advancedButton").dispatchEvent(event);
+  document.dispatchEvent(event);
 }
 
-function setCertErrorDetails(event) {
+async function onClickHandler(e) {
+  switch (e.target.id) {
+    case "advancedButton":
+      setCertErrorDetails();
+      break;
+    case "copyToClipboard":
+      let details = await getCertErrorInfo();
+      navigator.clipboard.writeText(details);
+      break;
+  }
+}
+
+async function getCertErrorInfo() {
+  let location = document.location.href;
+  let failedCertInfo = document.getFailedCertSecurityInfo();
+  let errorMessage = failedCertInfo.errorMessage;
+  let hasHSTS = failedCertInfo.hasHSTS.toString();
+  let hasHPKP = failedCertInfo.hasHPKP.toString();
+  let [hstsLabel] =
+    await document.l10n.formatValues([{id: "cert-error-details-hsts-label", args: { hasHSTS }}]);
+  let [hpkpLabel] =
+    await document.l10n.formatValues([{id: "cert-error-details-key-pinning-label", args: { hasHPKP }}]);
+
+  let certStrings = failedCertInfo.certChainStrings;
+  let failedChainCertificates = "";
+  for (let der64 of certStrings) {
+    let wrapped = der64.replace(/(\S{64}(?!$))/g, "$1\r\n");
+    failedChainCertificates += "-----BEGIN CERTIFICATE-----\r\n"
+      + wrapped
+      + "\r\n-----END CERTIFICATE-----\r\n";
+  }
+  let [failedChainLabel] = await document.l10n.formatValues([{id: "cert-error-details-cert-chain-label"}]);
+
+  let details = location + "\r\n\r\n" + errorMessage + "\r\n\r\n" + hstsLabel + "\r\n" + hpkpLabel +
+    "\r\n\r\n" + failedChainLabel + "\r\n\r\n" + failedChainCertificates;
+  return details;
+}
+
+async function setCertErrorDetails(event) {
   // Check if the connection is being man-in-the-middled. When the parent
   // detects an intercepted connection, the page may be reloaded with a new
   // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
@@ -391,7 +434,7 @@ function setCertErrorDetails(event) {
   }
 
   let div = document.getElementById("certificateErrorText");
-  div.textContent = event.detail.info;
+  div.textContent = await getCertErrorInfo();
   let learnMoreLink = document.getElementById("learnMoreLink");
   let baseURL = RPMGetFormatURLPref("app.support.baseURL");
   learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
@@ -499,8 +542,8 @@ function setCertErrorDetails(event) {
       learnMoreLink.href = baseURL + "time-errors";
       // We check against the remote-settings server time first if available, because that allows us
       // to give the user an approximation of what the correct time is.
-      let difference = event.detail.clockSkewDifference;
-      let lastFetched = event.detail.settingsLastFetched * 1000;
+      let difference = RPMGetIntPref("services.settings.clock_skew_seconds");
+      let lastFetched = RPMGetIntPref("services.settings.last_update_seconds") * 1000;
 
       let now = Date.now();
       let certRange = {
@@ -516,7 +559,7 @@ function setCertErrorDetails(event) {
       // If there is no clock skew with Kinto servers, check against the build date.
       // (The Kinto ping could have happened when the time was still right, or not at all)
       } else {
-        let appBuildID = event.detail.appBuildID;
+        let appBuildID = RPMGetAppBuildID();
         let year = parseInt(appBuildID.substr(0, 4), 10);
         let month = parseInt(appBuildID.substr(4, 2), 10) - 1;
         let day = parseInt(appBuildID.substr(6, 2), 10);

@@ -70,3 +70,12 @@ cert-error-symantec-distrust-description = Websites prove their identity via cer
 
 cert-error-symantec-distrust-admin = You may notify the website’s administrator about this problem.
 
+# Variables:
+# $hasHSTS (Boolean) - Indicates whether HSTS header is present.
+cert-error-details-hsts-label = HTTP Strict Transport Security: { $hasHSTS }
+
+# Variables:
+# $hasHPKP (Boolean) - Indicates whether HPKP header is present.
+cert-error-details-key-pinning-label = HTTP Public Key Pinning: { $hasHPKP }
+
+cert-error-details-cert-chain-label = Certificate chain:

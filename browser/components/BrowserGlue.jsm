@@ -232,9 +232,6 @@ let LEGACY_ACTORS = {
       },
       matches: ["about:certerror?*", "about:neterror?*"],
       allFrames: true,
-      messages: [
-        "CertErrorDetails",
-      ],
     },
   },
 
