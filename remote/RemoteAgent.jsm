@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["RemoteAgent"];
+var EXPORTED_SYMBOLS = ["RemoteAgent", "RemoteAgentFactory"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -219,3 +219,8 @@ class RemoteAgentClass {
 }
 
 var RemoteAgent = new RemoteAgentClass();
+
+// This is used by the XPCOM codepath which expects a constructor
+var RemoteAgentFactory = function() {
+  return RemoteAgent;
+};
