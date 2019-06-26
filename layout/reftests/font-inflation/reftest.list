@@ -73,7 +73,8 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 # MobileViewportManager eventually calculates, so we use a bigger value here.
 test-pref(font.size.inflation.emPerLine,20) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) test-pref(browser.viewport.desktopWidth,1000) == fixed-width-body-viewport.html fixed-width-body-viewport-ref.html
 
-# The tests below use nonzero values of the lineThreshold preference.
+# The tests in the two groups below use nonzero values of the lineThreshold
+# preference.
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == text-1.html text-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(cocoaWidget) == list-1.html list-1-ref.html # Bug 1392106, Bug 1434812
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-1a.html threshold-1a.html
@@ -105,6 +106,7 @@ fuzzy-if(gtkWidget,0-1,0-8) fuzzy-if(Android,0-4,0-2) test-pref(font.size.inflat
 fuzzy-if(gtkWidget,0-1,0-8) fuzzy-if(Android,0-1,0-2) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) fuzzy-if(geckoview,0-4,0-2) == threshold-select-combobox-contents-under-2.html threshold-select-combobox-contents-under-2.html
 fuzzy-if(gtkWidget,0-1,0-8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) fuzzy-if(geckoview,0-4,0-2) == threshold-select-combobox-contents-at-1.html threshold-select-combobox-contents-at-1-ref.html
 fuzzy-if(gtkWidget,0-1,0-8) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) fuzzy-if(geckoview,0-4,0-2) == threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2-ref.html
+# End of nonzero lineThreshold preference group.
 
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-1.html relevant-width-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-overflow-1.html relevant-width-overflow-1-ref.html
