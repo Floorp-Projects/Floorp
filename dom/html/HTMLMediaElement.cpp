@@ -1708,6 +1708,7 @@ void HTMLMediaElement::ShutdownDecoder() {
     mNextAvailableMediaDecoderOutputTrackID =
         mDecoder->GetNextOutputStreamTrackID();
   }
+  DiscardFinishWhenEndedOutputStreams();
   mDecoder->Shutdown();
   DDUNLINKCHILD(mDecoder.get());
   mDecoder = nullptr;
@@ -1809,6 +1810,8 @@ void HTMLMediaElement::AbortExistingLoads() {
   if (mSrcStream) {
     EndSrcMediaStreamPlayback();
   }
+
+  DiscardFinishWhenEndedOutputStreams();
 
   RemoveMediaElementFromURITable();
   mLoadingSrc = nullptr;
@@ -3137,6 +3140,23 @@ void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
       ("Created %s track %p with id %d from track %p through MediaInputPort %p",
        inputTrack->AsAudioStreamTrack() ? "audio" : "video", track.get(),
        destinationTrackID, inputTrack, port.get()));
+}
+
+void HTMLMediaElement::DiscardFinishWhenEndedOutputStreams() {
+  // Discard all output streams that have finished now.
+  for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
+    if (!mOutputStreams[i].mFinishWhenEnded) {
+      continue;
+    }
+    LOG(LogLevel::Debug,
+        ("Playback ended. Letting output stream %p go inactive",
+         mOutputStreams[i].mStream.get()));
+    mOutputStreams[i].mStream->SetFinishedOnInactive(true);
+    if (mOutputStreams[i].mCapturingDecoder) {
+      mDecoder->RemoveOutputStream(mOutputStreams[i].mStream);
+    }
+    mOutputStreams.RemoveElementAt(i);
+  }
 }
 
 bool HTMLMediaElement::CanBeCaptured(StreamCaptureType aCaptureType) {
@@ -5104,19 +5124,7 @@ void HTMLMediaElement::PlaybackEnded() {
   NS_ASSERTION(!mDecoder || mDecoder->IsEnded(),
                "Decoder fired ended, but not in ended state");
 
-  // Discard all output streams that have finished now.
-  for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
-    if (mOutputStreams[i].mFinishWhenEnded) {
-      LOG(LogLevel::Debug,
-          ("Playback ended. Letting output stream %p go inactive",
-           mOutputStreams[i].mStream.get()));
-      mOutputStreams[i].mStream->SetFinishedOnInactive(true);
-      if (mOutputStreams[i].mCapturingDecoder) {
-        mDecoder->RemoveOutputStream(mOutputStreams[i].mStream);
-      }
-      mOutputStreams.RemoveElementAt(i);
-    }
-  }
+  DiscardFinishWhenEndedOutputStreams();
 
   if (mSrcStream) {
     LOG(LogLevel::Debug,
