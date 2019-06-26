@@ -4062,6 +4062,8 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
 
   gfxFloat lineThickness = NS_round(aParams.lineSize.height);
   lineThickness = std::max(lineThickness, 1.0);
+  gfxFloat defaultLineThickness = NS_round(aParams.defaultLineThickness);
+  defaultLineThickness = std::max(defaultLineThickness, 1.0);
 
   gfxFloat ascent = NS_round(aParams.ascent);
   gfxFloat descentLimit = floor(aParams.descentLimit);
@@ -4154,18 +4156,22 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
       }
     }
   } else if (aParams.decoration == StyleTextDecorationLine_OVERLINE) {
-    // For overline, we adjust the offset by lineThickness (the thickness of
-    // a single decoration line) because empirically it looks better to draw
-    // the overline just inside rather than outside the font's ascent, which
-    // is what nsTextFrame passes as aParams.offset (as fonts don't provide
-    // an explicit overline-offset).
-    offset = aParams.offset - lineThickness + r.Height();
+    // For overline, we adjust the offset by defaultlineThickness (the default
+    // thickness of a single decoration line) because empirically it looks
+    // better to draw the overline just inside rather than outside the font's
+    // ascent, which is what nsTextFrame passes as aParams.offset (as fonts
+    // don't provide an explicit overline-offset).
+    offset = aParams.offset - defaultLineThickness + r.Height();
   } else if (aParams.decoration == StyleTextDecorationLine_LINE_THROUGH) {
     // To maintain a consistent mid-point for line-through decorations,
     // we adjust the offset by half of the decoration rect's height.
     gfxFloat extra = floor(r.Height() / 2.0 + 0.5);
     extra = std::max(extra, lineThickness);
-    offset = aParams.offset - lineThickness + extra;
+    // computes offset for when user specifies a decoration width since
+    // aParams.offset is derived from the font metric's line height
+    gfxFloat decorationWidthOffset =
+        (lineThickness - defaultLineThickness) / 2.0;
+    offset = aParams.offset - lineThickness + extra + decorationWidthOffset;
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid text decoration value");
   }
