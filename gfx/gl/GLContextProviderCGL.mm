@@ -226,7 +226,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   std::vector<NSOpenGLPixelFormatAttribute> attribs;
 
-  if (!StaticPrefs::GLAllowHighPower()) {
+  if (!StaticPrefs::gl_allow_high_power()) {
     flags &= ~CreateContextFlags::HIGH_POWER;
   }
   if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER ||
@@ -236,7 +236,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
     attribs.push_back(NSOpenGLPFAAllowOfflineRenderers);
   }
 
-  if (StaticPrefs::RequireHardwareGL()) {
+  if (StaticPrefs::gl_require_hardware()) {
     attribs.push_back(NSOpenGLPFAAccelerated);
   }
 
@@ -260,7 +260,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   RefPtr<GLContextCGL> glContext = new GLContextCGL(flags, SurfaceCaps::Any(), context, true);
 
-  if (StaticPrefs::GLMultithreaded()) {
+  if (StaticPrefs::gl_multithreaded()) {
     CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);
   }
   return glContext.forget();
