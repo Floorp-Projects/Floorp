@@ -12,33 +12,24 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.onNext
-import kotlin.coroutines.CoroutineContext
 
 class TabViewHolder(
     view: View,
     actionEmitter: Observer<SessionControlAction>,
-    private val job: Job,
     override val containerView: View? = view
 ) :
-    RecyclerView.ViewHolder(view), LayoutContainer, CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + job
+    RecyclerView.ViewHolder(view), LayoutContainer {
 
     var tab: Tab? = null
     private var tabMenu: TabItemMenu
@@ -92,13 +83,7 @@ class TabViewHolder(
     private fun updateTabUI(tab: Tab) {
         hostname.text = tab.hostname
         tab_title.text = tab.title
-        launch(Dispatchers.IO) {
-            val bitmap = favicon_image.context.components.core.icons
-                .loadIcon(IconRequest(tab.url)).await().bitmap
-            launch(Dispatchers.Main) {
-                favicon_image.setImageBitmap(bitmap)
-            }
-        }
+        favicon_image.context.components.core.icons.loadIntoView(favicon_image, tab.url)
     }
 
     fun updateSelected(selected: Boolean) {

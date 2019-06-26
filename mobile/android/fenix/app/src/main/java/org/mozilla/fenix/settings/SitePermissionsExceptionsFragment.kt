@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings
 
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,20 +23,17 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.IconRequest
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.noButton
 import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.nav
-import kotlin.coroutines.CoroutineContext
 
 private const val MAX_ITEMS_PER_PAGE = 50
 
@@ -135,21 +131,7 @@ class SitePermissionsViewHolder(val view: View, val iconView: ImageView, val sit
     RecyclerView.ViewHolder(view)
 
 class ExceptionsAdapter(private val clickListener: View.OnClickListener) :
-    PagedListAdapter<SitePermissions, SitePermissionsViewHolder>(diffCallback), CoroutineScope {
-    private lateinit var job: Job
-
-    override val coroutineContext: CoroutineContext
-        get() = Main + job
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        job = Job()
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        job.cancel()
-    }
+    PagedListAdapter<SitePermissions, SitePermissionsViewHolder>(diffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SitePermissionsViewHolder {
         val context = parent.context
@@ -164,15 +146,7 @@ class ExceptionsAdapter(private val clickListener: View.OnClickListener) :
         val sitePermissions = requireNotNull(getItem(position))
         val context = holder.view.context
 
-        launch(IO) {
-
-            val bitmap = context.components.core.icons
-                .loadIcon(IconRequest("https://${sitePermissions.origin}/")).await().bitmap
-            launch(Main) {
-                val drawable = BitmapDrawable(context.resources, bitmap)
-                holder.iconView.setImageDrawable(drawable)
-            }
-        }
+        context.components.core.icons.loadIntoView(holder.iconView, "https://${sitePermissions.origin}/")
         holder.siteTextView.text = sitePermissions.origin
         holder.view.tag = sitePermissions
         holder.view.setOnClickListener(clickListener)

@@ -14,7 +14,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.viewholders.HistoryDeleteButtonViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryHeaderViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
-import org.mozilla.fenix.utils.AdapterWithJob
 import java.util.Calendar
 import java.util.Date
 
@@ -94,7 +93,7 @@ private class HistoryList(val history: List<HistoryItem>) {
 }
 
 class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
-    AdapterWithJob<RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var historyList: HistoryList = HistoryList(emptyList())
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
     var selected = listOf<HistoryItem>()
@@ -158,16 +157,9 @@ class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
-            HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(
-                view,
-                historyInteractor
-            )
+            HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(view, historyInteractor)
             HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
-            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(
-                view,
-                historyInteractor,
-                adapterJob
-            )
+            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, historyInteractor)
             else -> throw IllegalStateException()
         }
     }

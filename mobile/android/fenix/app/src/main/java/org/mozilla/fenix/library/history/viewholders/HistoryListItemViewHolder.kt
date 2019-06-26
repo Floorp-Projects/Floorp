@@ -9,29 +9,20 @@ import android.widget.CompoundButton
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.history_list_item.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem
 import org.mozilla.fenix.library.history.HistoryItemMenu
 import org.mozilla.fenix.library.history.HistoryState
-import kotlin.coroutines.CoroutineContext
 
 class HistoryListItemViewHolder(
     view: View,
-    private val historyInteractor: HistoryInteractor,
-    val job: Job
-) : RecyclerView.ViewHolder(view), CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + job
+    private val historyInteractor: HistoryInteractor
+) : RecyclerView.ViewHolder(view) {
 
     private val favicon = view.history_favicon
     private val title = view.history_title
@@ -124,13 +115,7 @@ class HistoryListItemViewHolder(
     }
 
     private fun updateFavIcon(url: String) {
-        launch(Dispatchers.IO) {
-            val bitmap = favicon.context.components.core.icons
-                .loadIcon(IconRequest(url)).await().bitmap
-            launch(Dispatchers.Main) {
-                favicon.setImageBitmap(bitmap)
-            }
-        }
+        favicon.context.components.core.icons.loadIntoView(favicon, url)
     }
 
     private fun setClickListeners(

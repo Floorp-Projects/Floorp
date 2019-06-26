@@ -7,25 +7,16 @@ package org.mozilla.fenix.exceptions.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.exception_item.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.IconRequest
 import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
 import org.mozilla.fenix.exceptions.ExceptionsItem
 import org.mozilla.fenix.ext.components
-import kotlin.coroutines.CoroutineContext
+import org.mozilla.fenix.ext.loadIntoView
 
 class ExceptionsListItemViewHolder(
     view: View,
-    private val interactor: ExceptionsInteractor,
-    val job: Job
-) : RecyclerView.ViewHolder(view), CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + job
+    private val interactor: ExceptionsInteractor
+) : RecyclerView.ViewHolder(view) {
 
     private val favicon = view.favicon_image
     private val url = view.domainView
@@ -48,13 +39,7 @@ class ExceptionsListItemViewHolder(
     }
 
     private fun updateFavIcon(url: String) {
-        launch(Dispatchers.IO) {
-            val bitmap = favicon.context.components.core.icons
-                .loadIcon(IconRequest(url)).await().bitmap
-            launch(Dispatchers.Main) {
-                favicon.setImageBitmap(bitmap)
-            }
-        }
+        favicon.context.components.core.icons.loadIntoView(favicon, url)
     }
 
     companion object {

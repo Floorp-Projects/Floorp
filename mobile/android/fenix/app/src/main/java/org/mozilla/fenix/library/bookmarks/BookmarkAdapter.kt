@@ -13,12 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.bookmark_row.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -26,11 +21,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
-import org.mozilla.fenix.utils.AdapterWithJob
-import kotlin.coroutines.CoroutineContext
+import org.mozilla.fenix.ext.loadIntoView
 
 class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteractor) :
-    AdapterWithJob<BookmarkAdapter.BookmarkNodeViewHolder>() {
+    RecyclerView.Adapter<BookmarkAdapter.BookmarkNodeViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
@@ -86,13 +80,13 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
 
         return when (viewType) {
             BookmarkItemViewHolder.viewType.ordinal -> BookmarkItemViewHolder(
-                view, interactor, adapterJob
+                view, interactor
             )
             BookmarkFolderViewHolder.viewType.ordinal -> BookmarkFolderViewHolder(
-                view, interactor, adapterJob
+                view, interactor
             )
             BookmarkSeparatorViewHolder.viewType.ordinal -> BookmarkSeparatorViewHolder(
-                view, interactor, adapterJob
+                view, interactor
             )
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
@@ -120,13 +114,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     open class BookmarkNodeViewHolder(
         view: View,
         val interactor: BookmarkViewInteractor,
-        private val job: Job,
         override val containerView: View? = view
-    ) :
-        RecyclerView.ViewHolder(view), LayoutContainer, CoroutineScope {
-
-        override val coroutineContext: CoroutineContext
-            get() = Dispatchers.Main + job
+    ) : RecyclerView.ViewHolder(view), LayoutContainer {
 
         open fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {}
     }
@@ -134,10 +123,9 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     class BookmarkItemViewHolder(
         view: View,
         interactor: BookmarkViewInteractor,
-        job: Job,
         override val containerView: View? = view
     ) :
-        BookmarkNodeViewHolder(view, interactor, job, containerView) {
+        BookmarkNodeViewHolder(view, interactor, containerView) {
 
         @Suppress("ComplexMethod")
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
@@ -209,14 +197,9 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
             bookmark_favicon.backgroundTintList = backgroundTintList
             if (selected) bookmark_favicon.setImageResource(R.drawable.mozac_ic_check)
 
-            if (!selected && item.url?.startsWith("http") == true) {
-                launch(Dispatchers.IO) {
-                    val bitmap = bookmark_layout.context.components.core.icons
-                        .loadIcon(IconRequest(item.url!!)).await().bitmap
-                    launch(Dispatchers.Main) {
-                        bookmark_favicon.setImageBitmap(bitmap)
-                    }
-                }
+            val url = item.url ?: return
+            if (!selected && url.startsWith("http")) {
+                bookmark_layout.context.components.core.icons.loadIntoView(bookmark_favicon, url)
             }
         }
 
@@ -251,10 +234,9 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     class BookmarkFolderViewHolder(
         view: View,
         interactor: BookmarkViewInteractor,
-        job: Job,
         override val containerView: View? = view
     ) :
-        BookmarkNodeViewHolder(view, interactor, job, containerView) {
+        BookmarkNodeViewHolder(view, interactor, containerView) {
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
             containerView?.context?.let {
@@ -353,9 +335,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     class BookmarkSeparatorViewHolder(
         view: View,
         interactor: BookmarkViewInteractor,
-        job: Job,
         override val containerView: View? = view
-    ) : BookmarkNodeViewHolder(view, interactor, job, containerView) {
+    ) : BookmarkNodeViewHolder(view, interactor, containerView) {
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
 

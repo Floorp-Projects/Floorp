@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
-import org.mozilla.fenix.utils.AdapterWithJob
 
 private sealed class AdapterItem {
     object DeleteButton : AdapterItem()
@@ -34,7 +33,7 @@ private class ExceptionsList(val exceptions: List<ExceptionsItem>) {
 
 class ExceptionsAdapter(
     private val interactor: ExceptionsInteractor
-) : AdapterWithJob<RecyclerView.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var exceptionsList: ExceptionsList = ExceptionsList(emptyList())
 
     fun updateData(items: List<ExceptionsItem>) {
@@ -61,11 +60,7 @@ class ExceptionsAdapter(
                 interactor
             )
             ExceptionsHeaderViewHolder.LAYOUT_ID -> ExceptionsHeaderViewHolder(view)
-            ExceptionsListItemViewHolder.LAYOUT_ID -> ExceptionsListItemViewHolder(
-                view,
-                interactor,
-                adapterJob
-            )
+            ExceptionsListItemViewHolder.LAYOUT_ID -> ExceptionsListItemViewHolder(view, interactor)
             else -> throw IllegalStateException()
         }
     }

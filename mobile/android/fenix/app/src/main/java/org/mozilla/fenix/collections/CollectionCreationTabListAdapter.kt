@@ -11,20 +11,14 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.collection_tab_list_row.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.IconRequest
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.Tab
-import org.mozilla.fenix.utils.AdapterWithJob
-import kotlin.coroutines.CoroutineContext
 
 class CollectionCreationTabListAdapter(
     val actionEmitter: Observer<CollectionCreationAction>
-) : AdapterWithJob<TabViewHolder>() {
+) : RecyclerView.Adapter<TabViewHolder>() {
     private var tabs: List<Tab> = listOf()
     private var selectedTabs: MutableSet<Tab> = mutableSetOf()
     private var hideCheckboxes = false
@@ -33,7 +27,7 @@ class CollectionCreationTabListAdapter(
         val view =
             LayoutInflater.from(parent.context).inflate(TabViewHolder.LAYOUT_ID, parent, false)
 
-        return TabViewHolder(view, adapterJob)
+        return TabViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -44,11 +38,11 @@ class CollectionCreationTabListAdapter(
                 is CheckChanged -> {
                     val checkChanged = payloads[0] as CheckChanged
                     if (checkChanged.shouldBeChecked) {
-                        holder.view.tab_selected_checkbox.isChecked = true
+                        holder.itemView.tab_selected_checkbox.isChecked = true
                     } else if (checkChanged.shouldBeUnchecked) {
-                        holder.view.tab_selected_checkbox.isChecked = false
+                        holder.itemView.tab_selected_checkbox.isChecked = false
                     }
-                    holder.view.tab_selected_checkbox.visibility =
+                    holder.itemView.tab_selected_checkbox.visibility =
                         if (checkChanged.shouldHideCheckBox) View.GONE else View.VISIBLE
                 }
             }
@@ -58,7 +52,7 @@ class CollectionCreationTabListAdapter(
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tab = tabs[position]
         val isSelected = selectedTabs.contains(tab)
-        holder.view.tab_selected_checkbox.setOnCheckedChangeListener { _, isChecked ->
+        holder.itemView.tab_selected_checkbox.setOnCheckedChangeListener { _, isChecked ->
             val action = if (isChecked) {
                 selectedTabs.add(tab)
                 CollectionCreationAction.AddTabToSelection(tab)
@@ -124,14 +118,7 @@ private class TabDiffUtil(
 
 data class CheckChanged(val shouldBeChecked: Boolean, val shouldBeUnchecked: Boolean, val shouldHideCheckBox: Boolean)
 
-class TabViewHolder(
-    val view: View,
-    val job: Job
-) :
-    RecyclerView.ViewHolder(view), CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + job
+class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private var tab: Tab? = null
     private val checkbox = view.tab_selected_checkbox!!
@@ -144,21 +131,15 @@ class TabViewHolder(
 
     fun bind(tab: Tab, isSelected: Boolean, shouldHideCheckBox: Boolean) {
         this.tab = tab
-        view.hostname.text = tab.hostname
-        view.tab_title.text = tab.title
+        itemView.hostname.text = tab.hostname
+        itemView.tab_title.text = tab.title
         checkbox.visibility = if (shouldHideCheckBox) View.INVISIBLE else View.VISIBLE
-        view.isClickable = !shouldHideCheckBox
+        itemView.isClickable = !shouldHideCheckBox
         if (checkbox.isChecked != isSelected) {
             checkbox.isChecked = isSelected
         }
 
-        launch(Dispatchers.IO) {
-            val bitmap = view.favicon_image.context.components.core.icons
-                .loadIcon(IconRequest(tab.url)).await().bitmap
-            launch(Dispatchers.Main) {
-                view.favicon_image.setImageBitmap(bitmap)
-            }
-        }
+        itemView.context.components.core.icons.loadIntoView(itemView.favicon_image, tab.url)
     }
 
     companion object {

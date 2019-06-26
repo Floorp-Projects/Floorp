@@ -23,9 +23,6 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_collection_creation.*
 import kotlinx.android.synthetic.main.component_collection_creation.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
@@ -36,7 +33,6 @@ import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.UIView
-import kotlin.coroutines.CoroutineContext
 
 class CollectionCreationUIView(
     container: ViewGroup,
@@ -46,10 +42,7 @@ class CollectionCreationUIView(
     container,
     actionEmitter,
     changesObservable
-), CoroutineScope {
-    private lateinit var job: Job
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+) {
 
     override val view = LayoutInflater.from(container.context)
         .inflate(R.layout.component_collection_creation, container, true)
@@ -67,7 +60,6 @@ class CollectionCreationUIView(
     private val transition = AutoTransition()
 
     init {
-        job = Job()
         transition.duration = TRANSITION_DURATION
 
         selectTabsConstraints.clone(collection_constraint_layout)

@@ -12,34 +12,25 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_in_collection.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.jetbrains.anko.backgroundColor
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.home.sessioncontrol.onNext
-import kotlin.coroutines.CoroutineContext
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 class TabInCollectionViewHolder(
     val view: View,
     val actionEmitter: Observer<SessionControlAction>,
-    val job: Job,
     override val containerView: View? = view
-) : RecyclerView.ViewHolder(view), LayoutContainer, CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + job
+) : RecyclerView.ViewHolder(view), LayoutContainer {
 
     lateinit var collection: TabCollection
         private set
@@ -82,13 +73,7 @@ class TabInCollectionViewHolder(
         collection_tab_hostname.text = tab.url.urlToTrimmedHost(view.context)
 
         collection_tab_title.text = tab.title
-        launch(Dispatchers.IO) {
-            val bitmap = collection_tab_icon.context.components.core.icons
-                .loadIcon(IconRequest(tab.url)).await().bitmap
-            launch(Dispatchers.Main) {
-                collection_tab_icon.setImageBitmap(bitmap)
-            }
-        }
+        collection_tab_icon.context.components.core.icons.loadIntoView(collection_tab_icon, tab.url)
 
         // If I'm the last one...
         if (isLastTab) {

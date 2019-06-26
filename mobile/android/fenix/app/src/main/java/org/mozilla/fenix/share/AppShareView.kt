@@ -19,11 +19,10 @@ import io.reactivex.Observer
 import kotlinx.android.synthetic.main.app_share_list_item.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.AdapterWithJob
-import kotlin.coroutines.CoroutineContext
 
 class AppShareRecyclerView @JvmOverloads constructor(
     context: Context,
@@ -40,10 +39,10 @@ class AppShareAdapter(
     private val context: Context,
     val actionEmitter: Observer<ShareAction>,
     private val intentType: String = "text/plain"
-) : AdapterWithJob<AppShareItemViewHolder>(), CoroutineScope {
+) : RecyclerView.Adapter<AppShareItemViewHolder>() {
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + adapterJob
+    private var scope = CoroutineScope(Dispatchers.IO)
+
     private var size: Int = 0
     private val shareItems: MutableList<ShareItem> = mutableListOf()
 
@@ -53,7 +52,7 @@ class AppShareAdapter(
             flags = FLAG_ACTIVITY_NEW_TASK
         }
 
-        launch {
+        scope.launch {
             val activities = context.packageManager.queryIntentActivities(testIntent, 0)
 
             val items = activities.map { resolveInfo ->
@@ -85,6 +84,11 @@ class AppShareAdapter(
 
     override fun onBindViewHolder(holder: AppShareItemViewHolder, position: Int) {
         holder.bind(shareItems[position])
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        scope.cancel()
     }
 }
 

@@ -17,23 +17,17 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
-import kotlin.coroutines.CoroutineContext
 
 abstract class SearchEngineListPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = android.R.attr.preferenceStyle
-) : Preference(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener, CoroutineScope {
-    private val job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
+) : Preference(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener {
+
     protected var searchEngines: List<SearchEngine> = emptyList()
     protected var searchEngineGroup: RadioGroup? = null
 
@@ -52,11 +46,6 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
             .sortedBy { it.name }
 
         refreshSearchEngineViews(context)
-    }
-
-    override fun onDetached() {
-        job.cancel()
-        super.onDetached()
     }
 
     protected abstract fun onSearchEngineSelected(searchEngine: SearchEngine)
