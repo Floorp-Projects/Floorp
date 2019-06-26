@@ -20,7 +20,7 @@ import org.mozilla.fenix.ext.getColorIntFromAttr
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<SelectBookmarkFolderAdapter.BookmarkFolderViewHolder>() {
 
     private var tree: List<BookmarkNodeWithDepth> = listOf()
 
@@ -29,7 +29,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkFolderViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.bookmark_row, parent, false)
 
         return when (viewType) {
@@ -49,27 +49,22 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
 
     override fun getItemCount(): Int = tree.size
 
-    @SuppressWarnings("ComplexMethod")
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
-        when (holder) {
-            is SelectBookmarkFolderAdapter.BookmarkFolderViewHolder -> holder.bind(
-                tree[position],
-                tree[position].node == sharedViewModel.selectedFolder,
-                object : SelectionInterface {
-                    override fun itemSelected(node: BookmarkNode) {
-                        sharedViewModel.apply {
-                            when (selectedFolder) {
-                                node -> selectedFolder = null
-                                else -> selectedFolder = node
-                            }
+    override fun onBindViewHolder(holder: BookmarkFolderViewHolder, position: Int) {
+        holder.bind(
+            tree[position],
+            tree[position].node == sharedViewModel.selectedFolder,
+            object : SelectionInterface {
+                override fun itemSelected(node: BookmarkNode) {
+                    sharedViewModel.apply {
+                        when (selectedFolder) {
+                            node -> selectedFolder = null
+                            else -> selectedFolder = node
                         }
-                        notifyDataSetChanged()
                     }
-                })
-            else -> {
+                    notifyDataSetChanged()
+                }
             }
-        }
+        )
     }
 
     interface SelectionInterface {

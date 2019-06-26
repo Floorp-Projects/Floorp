@@ -12,7 +12,7 @@ import org.mozilla.fenix.R
 
 var rootTitles: Map<String, String> = emptyMap()
 
-@SuppressWarnings("ReturnCount", "ComplexMethod")
+@SuppressWarnings("ComplexMethod")
 suspend fun BookmarkNode?.withOptionalDesktopFolders(
     context: Context?,
     showMobileRoot: Boolean = false
@@ -25,7 +25,7 @@ suspend fun BookmarkNode?.withOptionalDesktopFolders(
     val loggedIn = context?.components?.backgroundServices?.accountManager?.authenticatedAccount() != null
 
     // If we're in the mobile root and logged in, add-in a synthetic "Desktop Bookmarks" folder.
-    if ((this.guid == BookmarkRoot.Mobile.id) && loggedIn) {
+    return if (guid == BookmarkRoot.Mobile.id && loggedIn) {
         // We're going to make a copy of the mobile node, and add-in a synthetic child folder to the top of the
         // children's list that contains all of the desktop roots.
         val childrenWithVirtualFolder: MutableList<BookmarkNode> = mutableListOf()
@@ -35,21 +35,20 @@ suspend fun BookmarkNode?.withOptionalDesktopFolders(
             childrenWithVirtualFolder.addAll(children)
         }
 
-        return this.copy(children = childrenWithVirtualFolder)
-    } else if (this.guid == BookmarkRoot.Root.id) {
-        return this.copy(
+        copy(children = childrenWithVirtualFolder)
+    } else if (guid == BookmarkRoot.Root.id) {
+        copy(
             title = rootTitles[this.title],
             children = if (showMobileRoot) restructureMobileRoots(context, children)
             else restructureDesktopRoots(children)
         )
-
+    } else if (guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
         // If we're looking at one of the desktop roots, change their titles to friendly names.
-    } else if (this.guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
-        return this.copy(title = rootTitles[this.title])
+        copy(title = rootTitles[this.title])
+    } else {
+        // Otherwise, just return the node as-is.
+        this
     }
-
-    // Otherwise, just return the node as-is.
-    return this
 }
 
 private suspend fun virtualDesktopFolder(context: Context?): BookmarkNode? {

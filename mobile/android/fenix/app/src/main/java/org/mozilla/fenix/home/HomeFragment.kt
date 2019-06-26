@@ -295,7 +295,6 @@ class HomeFragment : Fragment(), AccountObserver {
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
     }
 
-    @SuppressWarnings("ComplexMethod")
     override fun onStart() {
         super.onStart()
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
@@ -441,7 +440,6 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
-    @Suppress("ComplexMethod")
     private fun handleCollectionAction(action: CollectionAction) {
         when (action) {
             is CollectionAction.Expand -> {

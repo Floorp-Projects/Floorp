@@ -117,7 +117,7 @@ class CollectionViewHolder(
         }
     }
 
-    @Suppress("ComplexMethod", "MagicNumber")
+    @Suppress("MagicNumber")
     private fun getIconColor(id: Long): Int {
         val sessionColorIndex = (id % 5).toInt()
         return when (sessionColorIndex) {

@@ -12,8 +12,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.collections_list_item.view.*
-import kotlinx.android.synthetic.main.collections_list_item.view.collection_description
-import kotlinx.android.synthetic.main.collections_list_item.view.collection_icon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -94,7 +92,7 @@ class CollectionViewHolder(
         )
     }
 
-    @Suppress("ComplexMethod", "MagicNumber")
+    @Suppress("MagicNumber")
     private fun getIconColor(id: Long): Int {
         return when ((id % 5).toInt()) {
             0 -> R.color.collection_icon_color_violet

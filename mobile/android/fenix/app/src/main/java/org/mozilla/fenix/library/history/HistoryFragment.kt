@@ -113,7 +113,6 @@ class HistoryFragment : Fragment(), BackHandler {
         }
     }
 
-    @Suppress("ComplexMethod")
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.share_history_multi_select -> {
             val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
@@ -177,7 +176,6 @@ class HistoryFragment : Fragment(), BackHandler {
 
     override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
 
-    @SuppressWarnings("ComplexMethod")
     private fun handleNewHistoryAction(action: HistoryAction) {
         when (action) {
             is HistoryAction.Open ->

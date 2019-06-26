@@ -234,7 +234,6 @@ sealed class Event {
         get() = null
 }
 
-@Suppress("ComplexMethod")
 private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Component.FEATURE_FINDINPAGE to "previous" -> Event.FindInPagePrevious
     Component.FEATURE_FINDINPAGE to "next" -> Event.FindInPageNext

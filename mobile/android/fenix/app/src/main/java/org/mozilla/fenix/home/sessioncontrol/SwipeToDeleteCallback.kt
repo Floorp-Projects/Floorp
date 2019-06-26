@@ -128,7 +128,6 @@ class SwipeToDeleteCallback(
         const val MARGIN = 32
         const val DENSITY_CONVERSION = 160f
 
-        @Suppress("LongParameterList")
         private fun draw(
             background: Drawable,
             icon: Drawable,

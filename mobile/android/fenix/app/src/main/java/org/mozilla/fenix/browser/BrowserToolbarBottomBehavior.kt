@@ -65,7 +65,6 @@ class BrowserToolbarBottomBehavior(
         }
     }
 
-    @Suppress("MagicNumber")
     override fun onStopNestedScroll(
         coordinatorLayout: CoordinatorLayout,
         child: BrowserToolbar,
@@ -73,7 +72,7 @@ class BrowserToolbarBottomBehavior(
         type: Int
     ) {
         if (shouldSnapAfterScroll || type == TYPE_NON_TOUCH) {
-            if (child.translationY >= (child.height * 0.5f)) {
+            if (child.translationY >= (child.height / 2f)) {
                 animateSnap(child, SnapDirection.DOWN)
             } else {
                 animateSnap(child, SnapDirection.UP)
@@ -108,7 +107,6 @@ class BrowserToolbarBottomBehavior(
         start()
     }
 
-    @Suppress("MagicNumber")
     private fun positionSnackbar(view: View) {
         val params = view.layoutParams as CoordinatorLayout.LayoutParams
 

@@ -30,7 +30,7 @@ import org.mozilla.fenix.ext.increaseTapArea
 import kotlin.coroutines.CoroutineContext
 
 class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkAction>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<BookmarkAdapter.BookmarkNodeViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
@@ -50,7 +50,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkNodeViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.bookmark_row, parent, false)
 
         return when (viewType) {
@@ -88,25 +88,12 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
     override fun getItemCount(): Int = tree.size
 
-    @SuppressWarnings("ComplexMethod")
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
-        when (holder) {
-            is BookmarkItemViewHolder -> holder.bind(
-                tree[position],
-                mode,
-                tree[position] in selected
-            )
-            is BookmarkFolderViewHolder -> holder.bind(
-                tree[position],
-                mode,
-                tree[position] in selected
-            )
-            is BookmarkSeparatorViewHolder -> holder.bind(
-                tree[position], mode,
-                tree[position] in selected
-            )
-        }
+    override fun onBindViewHolder(holder: BookmarkNodeViewHolder, position: Int) {
+        holder.bind(
+            tree[position],
+            mode,
+            tree[position] in selected
+        )
     }
 
     open class BookmarkNodeViewHolder(

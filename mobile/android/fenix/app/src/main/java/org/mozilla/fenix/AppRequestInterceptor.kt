@@ -77,7 +77,6 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         }
     }
 
-    @Suppress("ComplexMethod")
     private fun getRiskLevel(errorType: ErrorType): RiskLevel {
         return when (errorType) {
             // Low risk errors
