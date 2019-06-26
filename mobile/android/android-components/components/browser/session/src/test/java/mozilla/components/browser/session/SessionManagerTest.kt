@@ -367,9 +367,9 @@ class SessionManagerTest {
 
         assertEquals(3, manager.size)
         assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
-        assertEquals("https://www.mozilla.org", manager.sessions[0].url)
-        assertEquals("https://www.firefox.com", manager.sessions[1].url)
-        assertEquals("https://getpocket.com", manager.sessions[2].url)
+        assertEquals("https://getpocket.com", manager.sessions[0].url)
+        assertEquals("https://www.mozilla.org", manager.sessions[1].url)
+        assertEquals("https://www.firefox.com", manager.sessions[2].url)
 
         verify(observer).onSessionsRestored()
     }

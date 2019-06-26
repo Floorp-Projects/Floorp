@@ -140,7 +140,7 @@ class LegacySessionManager(
         addInternal(session, selected, engineSession, parent = parent, viaRestore = false)
     }
 
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "ComplexMethod")
     private fun addInternal(
         session: Session,
         selected: Boolean = false,
@@ -160,7 +160,16 @@ class LegacySessionManager(
 
             values.add(parentIndex + 1, session)
         } else {
-            values.add(session)
+            if (viaRestore) {
+                // We always restore Sessions at the beginning of the list to pretend those sessions existed before
+                // we added any other sessions (e.g. coming from an Intent)
+                values.add(0, session)
+                if (selectedIndex != NO_SELECTION) {
+                    selectedIndex++
+                }
+            } else {
+                values.add(session)
+            }
         }
 
         if (engineSession != null) {
@@ -201,7 +210,7 @@ class LegacySessionManager(
             return
         }
 
-        snapshot.sessions.forEach {
+        snapshot.sessions.asReversed().forEach {
             addInternal(
                 it.session,
                 engineSession = it.engineSession,
