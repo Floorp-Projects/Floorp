@@ -160,23 +160,6 @@ nsCString GetFormattedTimeString(int64_t aCurTimeSec) {
                          pret.tm_month + 1, pret.tm_mday, pret.tm_hour,
                          pret.tm_min, pret.tm_sec);
 }
-
-template <class T>
-static void EnsureSorted(T* aArray) {
-  typename T::elem_type* start = aArray->Elements();
-  typename T::elem_type* end = aArray->Elements() + aArray->Length();
-  typename T::elem_type* iter = start;
-  typename T::elem_type* previous = start;
-
-  while (iter != end) {
-    previous = iter;
-    ++iter;
-    if (iter != end) {
-      MOZ_ASSERT(*previous <= *iter);
-    }
-  }
-  return;
-}
 #endif
 
 }  // end of unnamed namespace.
@@ -765,16 +748,65 @@ nsresult LookupCache::VerifyCRC32(nsCOMPtr<nsIInputStream>& aIn) {
 
 nsresult LookupCacheV2::Has(const Completion& aCompletion, bool* aHas,
                             uint32_t* aMatchLength, bool* aConfirmed) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aHas = *aConfirmed = false;
+  *aMatchLength = 0;
+
+  uint32_t length = 0;
+  nsDependentCSubstring fullhash;
+  fullhash.Rebind((const char*)aCompletion.buf, COMPLETE_SIZE);
+
+  uint32_t prefix = aCompletion.ToUint32();
+
+  nsresult rv = mVLPrefixSet->Matches(prefix, fullhash, &length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (length == 0) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(length == PREFIX_SIZE || length == COMPLETE_SIZE);
+
+  *aHas = true;
+  *aMatchLength = length;
+  *aConfirmed = length == COMPLETE_SIZE;
+
+  if (!(*aConfirmed)) {
+    rv = CheckCache(aCompletion, aHas, aConfirmed);
+  }
+
+  return rv;
 }
 
 nsresult LookupCacheV2::Build(AddPrefixArray& aAddPrefixes,
                               AddCompleteArray& aAddCompletes) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = mVLPrefixSet->SetPrefixes(aAddPrefixes, aAddCompletes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mPrimed = true;
+
+  return NS_OK;
 }
 
 nsresult LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mPrimed) {
+    // This can happen if its a new table, so no error.
+    LOG(("GetPrefixes from empty LookupCache"));
+    return NS_OK;
+  }
+
+  return mVLPrefixSet->GetFixedLengthPrefixes(&aAddPrefixes, nullptr);
+}
+
+nsresult LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes,
+                                    FallibleTArray<nsCString>& aAddCompletes) {
+  if (!mPrimed) {
+    // This can happen if its a new table, so no error.
+    LOG(("GetHashes from empty LookupCache"));
+    return NS_OK;
+  }
+
+  return mVLPrefixSet->GetFixedLengthPrefixes(&aAddPrefixes, &aAddCompletes);
 }
 
 void LookupCacheV2::AddGethashResultToCache(
