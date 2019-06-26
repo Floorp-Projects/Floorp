@@ -233,7 +233,7 @@ struct OpenVRKnucklesBinding {
     "             \"mode\" : \"trigger\", \n"
     "             \"path\" : \"/user/hand/right/input/finger/index\" \n"
     "           }, \n"
-      "           {\n"
+    "           {\n"
     "             \"inputs\" : { \n"
     "               \"pull\" : { \n"
     "                   \"output\" : \"/actions/firefox/in/LHand_finger_middle_value\" \n"
