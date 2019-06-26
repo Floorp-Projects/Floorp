@@ -33,6 +33,8 @@ jobs:
             platform: linux32-shippable/opt
         worker-type: b-linux
         worker:
+            env:
+                NEED_XVFB: "true"
             max-run-time: 1200
             docker-image: {in-tree: desktop1604-test}
             artifacts:
