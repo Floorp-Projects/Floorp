@@ -56,6 +56,7 @@ enum class OpenVRControllerType : uint16_t {
   Vive,
   WMR,
   Knuckles,
+  Cosmos,
   NumOpenVRControllerTypes
 };
 

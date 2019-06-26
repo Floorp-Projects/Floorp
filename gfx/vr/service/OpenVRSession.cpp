@@ -25,6 +25,7 @@
 
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "binding/OpenVRCosmosBinding.h"
 #include "binding/OpenVRKnucklesBinding.h"
 #include "binding/OpenVRViveBinding.h"
 #if defined(XP_WIN)  // Windows Mixed Reality is only available in Windows.
@@ -100,6 +101,7 @@ class ControllerManifestFile {
 
 // We wanna keep these temporary files existing
 // until Firefox is closed instead of following OpenVRSession's lifetime.
+StaticRefPtr<ControllerManifestFile> sCosmosBindingFile;
 StaticRefPtr<ControllerManifestFile> sKnucklesBindingFile;
 StaticRefPtr<ControllerManifestFile> sViveBindingFile;
 #if defined(XP_WIN)
@@ -324,6 +326,7 @@ bool OpenVRSession::SetupContollerActions() {
   nsCString viveManifest;
   nsCString WMRManifest;
   nsCString knucklesManifest;
+  nsCString cosmosManifest;
 
   // Getting / Generating manifest file paths.
   if (StaticPrefs::VRProcessEnabled()) {
@@ -367,7 +370,6 @@ bool OpenVRSession::SetupContollerActions() {
       }
     }
 #endif
-
     if (vrParent->GetOpenVRControllerManifestPath(
             OpenVRControllerType::Knuckles, &output)) {
       knucklesManifest = output;
@@ -381,6 +383,21 @@ bool OpenVRSession::SetupContollerActions() {
       if (knucklesBindingFile.is_open()) {
         knucklesBindingFile << knucklesBinding.binding;
         knucklesBindingFile.close();
+      }
+    }
+    if (vrParent->GetOpenVRControllerManifestPath(
+            OpenVRControllerType::Cosmos, &output)) {
+      cosmosManifest = output;
+    }
+    if (!cosmosManifest.Length() || !FileIsExisting(cosmosManifest)) {
+      if (!GenerateTempFileName(cosmosManifest)) {
+        return false;
+      }
+      OpenVRCosmosBinding cosmosBinding;
+      std::ofstream cosmosBindingFile(cosmosManifest.BeginReading());
+      if (cosmosBindingFile.is_open()) {
+        cosmosBindingFile << cosmosBinding.binding;
+        cosmosBindingFile.close();
       }
     }
   } else {
@@ -435,6 +452,26 @@ bool OpenVRSession::SetupContollerActions() {
     }
     knucklesManifest = sKnucklesBindingFile->GetFileName();
 
+    if (!sCosmosBindingFile) {
+      sCosmosBindingFile = ControllerManifestFile::CreateManifest();
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "ClearOnShutdown ControllerManifestFile",
+          []() { ClearOnShutdown(&sCosmosBindingFile); }));
+    }
+    if (!sCosmosBindingFile->IsExisting()) {
+      nsCString cosmosBindingPath;
+      if (!GenerateTempFileName(cosmosBindingPath)) {
+        return false;
+      }
+      sCosmosBindingFile->SetFileName(cosmosBindingPath.BeginReading());
+      OpenVRCosmosBinding cosmosBinding;
+      std::ofstream cosmosBindingFile(sCosmosBindingFile->GetFileName());
+      if (cosmosBindingFile.is_open()) {
+        cosmosBindingFile << cosmosBinding.binding;
+        cosmosBindingFile.close();
+      }
+    }
+    cosmosManifest = sCosmosBindingFile->GetFileName();
 #if defined(XP_WIN)
     if (!sWMRBindingFile) {
       sWMRBindingFile = ControllerManifestFile::CreateManifest();
@@ -508,6 +545,8 @@ bool OpenVRSession::SetupContollerActions() {
       "/actions/firefox/in/LHand_finger_ring_value", "vector1");
   leftContollerInfo.mActionFingerPinky_Value = ControllerAction(
       "/actions/firefox/in/LHand_finger_pinky_value", "vector1");
+  leftContollerInfo.mActionBumper_Pressed =
+      ControllerAction("/actions/firefox/in/LHand_bumper_pressed", "boolean");
 
   ControllerInfo rightContollerInfo;
   rightContollerInfo.mActionPose =
@@ -556,6 +595,8 @@ bool OpenVRSession::SetupContollerActions() {
       "/actions/firefox/in/RHand_finger_ring_value", "vector1");
   rightContollerInfo.mActionFingerPinky_Value = ControllerAction(
       "/actions/firefox/in/RHand_finger_pinky_value", "vector1");
+  rightContollerInfo.mActionBumper_Pressed =
+      ControllerAction("/actions/firefox/in/RHand_bumper_pressed", "boolean");
 
   mControllerHand[OpenVRHand::Left] = leftContollerInfo;
   mControllerHand[OpenVRHand::Right] = rightContollerInfo;
@@ -579,6 +620,10 @@ bool OpenVRSession::SetupContollerActions() {
     actionWriter.StartObjectElement();
     actionWriter.StringProperty("controller_type", "knuckles");
     actionWriter.StringProperty("binding_url", knucklesManifest.BeginReading());
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("controller_type", "vive_cosmos_controller");
+    actionWriter.StringProperty("binding_url", cosmosManifest.BeginReading());
     actionWriter.EndObject();
 #if defined(XP_WIN)
     actionWriter.StartObjectElement();
@@ -748,6 +793,13 @@ bool OpenVRSession::SetupContollerActions() {
       actionWriter.EndObject();
 
       actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionBumper_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionBumper_Pressed.type.BeginReading());
+      actionWriter.EndObject();
+
+      actionWriter.StartObjectElement();
       actionWriter.StringProperty("name",
                                   controller.mActionHaptic.name.BeginReading());
       actionWriter.StringProperty("type",
@@ -772,7 +824,8 @@ bool OpenVRSession::SetupContollerActions() {
   if (StaticPrefs::VRProcessEnabled()) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "SendOpenVRControllerActionPathToParent",
-        [controllerAction, viveManifest, WMRManifest, knucklesManifest]() {
+        [controllerAction, viveManifest, WMRManifest, knucklesManifest,
+         cosmosManifest]() {
           VRParent* vrParent = VRProcessChild::GetVRParent();
           Unused << vrParent->SendOpenVRControllerActionPathToParent(
               controllerAction);
@@ -782,6 +835,8 @@ bool OpenVRSession::SetupContollerActions() {
               OpenVRControllerType::WMR, WMRManifest);
           Unused << vrParent->SendOpenVRControllerManifestPathToParent(
               OpenVRControllerType::Knuckles, knucklesManifest);
+          Unused << vrParent->SendOpenVRControllerManifestPathToParent(
+              OpenVRControllerType::Cosmos, cosmosManifest);
         }));
   } else {
     sControllerActionFile->SetFileName(controllerAction.BeginReading());
@@ -1136,6 +1191,9 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
             mControllerHand[handIndex]
                 .mActionFingerPinky_Value.name.BeginReading(),
             &mControllerHand[handIndex].mActionFingerPinky_Value.handle);
+         vr::VRInput()->GetActionHandle(
+            mControllerHand[handIndex].mActionBumper_Pressed.name.BeginReading(),
+            &mControllerHand[handIndex].mActionBumper_Pressed.handle);
 
         nsCString deviceId;
         GetControllerDeviceId(deviceType, originInfo.trackedDeviceIndex,
@@ -1352,7 +1410,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       } else {
         controllerState.buttonPressed &= ~mask;
       }
-
       if (mControllerHand[stateIndex].mActionTrackpad_Touched.handle &&
           vr::VRInput()->GetDigitalActionData(
               mControllerHand[stateIndex].mActionTrackpad_Touched.handle,
@@ -1395,7 +1452,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       } else {
         controllerState.buttonPressed &= ~mask;
       }
-
       if (mControllerHand[stateIndex].mActionGrip_Touched.handle &&
           vr::VRInput()->GetDigitalActionData(
               mControllerHand[stateIndex].mActionGrip_Touched.handle,
@@ -1427,7 +1483,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       } else {
         controllerState.buttonPressed &= ~mask;
       }
-
       if (mControllerHand[stateIndex].mActionMenu_Touched.handle &&
           vr::VRInput()->GetDigitalActionData(
               mControllerHand[stateIndex].mActionMenu_Touched.handle,
@@ -1459,7 +1514,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       } else {
         controllerState.buttonPressed &= ~mask;
       }
-
       if (mControllerHand[stateIndex].mActionSystem_Touched.handle &&
           vr::VRInput()->GetDigitalActionData(
               mControllerHand[stateIndex].mActionSystem_Touched.handle,
@@ -1506,6 +1560,7 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       }
       ++buttonIdx;
     }
+
     // Button 5: B
     if (mControllerHand[stateIndex].mActionB_Pressed.handle &&
         vr::VRInput()->GetDigitalActionData(
@@ -1521,7 +1576,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       } else {
         controllerState.buttonPressed &= ~mask;
       }
-
       if (mControllerHand[stateIndex].mActionB_Touched.handle &&
           vr::VRInput()->GetDigitalActionData(
               mControllerHand[stateIndex].mActionB_Touched.handle, &actionData,
@@ -1537,6 +1591,7 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       }
       ++buttonIdx;
     }
+
     // Axis 2 3: Thumbstick
     // Button 6: Thumbstick
     if (mControllerHand[stateIndex].mActionThumbstick_Analog.handle &&
@@ -1550,7 +1605,6 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       controllerState.axisValue[axisIdx] = analogData.y * yAxisInvert;
       ++axisIdx;
     }
-
     if (mControllerHand[stateIndex].mActionThumbstick_Pressed.handle &&
         vr::VRInput()->GetDigitalActionData(
             mControllerHand[stateIndex].mActionThumbstick_Pressed.handle,
@@ -1558,13 +1612,13 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
             vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None &&
         actionData.bActive) {
       bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
       controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
       if (bPressed) {
         controllerState.buttonPressed |= mask;
       } else {
         controllerState.buttonPressed &= ~mask;
       }
-
       if (mControllerHand[stateIndex].mActionThumbstick_Touched.handle &&
           vr::VRInput()->GetDigitalActionData(
               mControllerHand[stateIndex].mActionThumbstick_Touched.handle,
@@ -1580,6 +1634,25 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       }
       ++buttonIdx;
     }
+
+    // Button 7: Bumper (Cosmos only)
+    if (mControllerHand[stateIndex].mActionBumper_Pressed.handle &&
+        vr::VRInput()->GetDigitalActionData(
+            mControllerHand[stateIndex].mActionBumper_Pressed.handle, &actionData,
+            sizeof(actionData),
+            vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None &&
+        actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+      ++buttonIdx;
+    }
+
     // Button 7: Finger index
     if (mControllerHand[stateIndex].mActionFingerIndex_Value.handle &&
         vr::VRInput()->GetAnalogActionData(
@@ -1590,6 +1663,7 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
       ++buttonIdx;
     }
+
     // Button 8: Finger middle
     if (mControllerHand[stateIndex].mActionFingerMiddle_Value.handle &&
         vr::VRInput()->GetAnalogActionData(
@@ -1600,6 +1674,7 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
       ++buttonIdx;
     }
+
     // Button 9: Finger ring
     if (mControllerHand[stateIndex].mActionFingerRing_Value.handle &&
         vr::VRInput()->GetAnalogActionData(
@@ -1610,6 +1685,7 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
       UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
       ++buttonIdx;
     }
+
     // Button 10: Finger pinky
     if (mControllerHand[stateIndex].mActionFingerPinky_Value.handle &&
         vr::VRInput()->GetAnalogActionData(
@@ -1902,6 +1978,9 @@ void OpenVRSession::GetControllerDeviceId(
       nsCString deviceId(charBuf);
       if (deviceId.Find("knuckles") != kNotFound) {
         aId.AssignLiteral("OpenVR Knuckles");
+        isFound = true;
+      } else if (deviceId.Find("vive_cosmos_controller") != kNotFound) {
+        aId.AssignLiteral("OpenVR Cosmos");
         isFound = true;
       }
       requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
