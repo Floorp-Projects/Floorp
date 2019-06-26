@@ -11,8 +11,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Provider = createFactory(require("react-redux").Provider);
 
 const actions = require("devtools/client/webconsole/actions/index");
-const FilterButton = require("devtools/client/webconsole/components/FilterButton");
-const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar"));
+const FilterButton = require("devtools/client/webconsole/components/FilterBar/FilterButton");
+const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar/FilterBar"));
 const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
 const { FILTERBAR_DISPLAY_MODES } = require("devtools/client/webconsole/constants");
 const {

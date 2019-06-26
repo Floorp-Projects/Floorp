@@ -9,8 +9,8 @@
 // React & Redux
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Message = createFactory(require("devtools/client/webconsole/components/Message"));
-const GripMessageBody = require("devtools/client/webconsole/components/GripMessageBody");
+const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
+const GripMessageBody = require("devtools/client/webconsole/components/Output/GripMessageBody");
 
 EvaluationResult.displayName = "EvaluationResult";
 

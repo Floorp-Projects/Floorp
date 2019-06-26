@@ -7,7 +7,7 @@ const expect = require("expect");
 const { render } = require("enzyme");
 
 // Components under test.
-const WarningGroup = require("devtools/client/webconsole/components/message-types/WarningGroup");
+const WarningGroup = require("devtools/client/webconsole/components/Output/message-types/WarningGroup");
 const { MESSAGE_SOURCE, MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
 const { ConsoleMessage } = require("devtools/client/webconsole/types");
 const { createWarningGroupMessage } = require("devtools/client/webconsole/utils/messages");
