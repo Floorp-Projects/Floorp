@@ -502,6 +502,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
       const nsPoint& aVisualViewportOffset,
       mozilla::layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType);
 
+  bool IsSmoothScroll(mozilla::dom::ScrollBehavior aBehavior) const;
+
   // Update minimum-scale size.  The minimum-scale size will be set/used only
   // if there is overflow-x:hidden region.
   void UpdateMinimumScaleSize(const nsRect& aScrollableOverflow,
@@ -1186,6 +1188,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.SmoothScrollVisual(aVisualViewportOffset, aUpdateType);
   }
 
+  bool IsSmoothScroll(mozilla::dom::ScrollBehavior aBehavior) const override {
+    return mHelper.IsSmoothScroll(aBehavior);
+  }
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -1673,6 +1679,10 @@ class nsXULScrollFrame final : public nsBoxFrame,
                           mozilla::layers::FrameMetrics::ScrollOffsetUpdateType
                               aUpdateType) override {
     return mHelper.SmoothScrollVisual(aVisualViewportOffset, aUpdateType);
+  }
+
+  bool IsSmoothScroll(mozilla::dom::ScrollBehavior aBehavior) const override {
+    return mHelper.IsSmoothScroll(aBehavior);
   }
 
 #ifdef DEBUG_FRAME_DUMP
