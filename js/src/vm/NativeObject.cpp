@@ -418,8 +418,12 @@ bool NativeObject::addDenseElementPure(JSContext* cx, NativeObject* obj) {
   return true;
 }
 
-static void FreeSlots(JSContext* cx, HeapSlot* slots) {
+static inline void FreeSlots(JSContext* cx, NativeObject* obj,
+                             HeapSlot* slots) {
   if (cx->isHelperThreadContext()) {
+    js_free(slots);
+  } else if (obj->isTenured()) {
+    MOZ_ASSERT(!cx->nursery().isInside(slots));
     js_free(slots);
   } else {
     cx->nursery().freeBuffer(slots);
@@ -433,7 +437,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCount,
   if (newCount == 0) {
     RemoveCellMemory(this, numDynamicSlots() * sizeof(HeapSlot),
                      MemoryUse::ObjectSlots);
-    FreeSlots(cx, slots_);
+    FreeSlots(cx, this, slots_);
     slots_ = nullptr;
     return;
   }
