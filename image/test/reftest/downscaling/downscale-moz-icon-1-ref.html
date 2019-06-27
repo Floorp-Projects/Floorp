@@ -8,12 +8,16 @@
   <script>
     function beginTest() {
       var canvas = document.getElementById("canvas");
-      var ctx = canvas.getContext("2d");
       var image = new Image();
 
       image.onload = function() {
         // When image loads: draw it to canvas, scale down the canvas, and
         // then let the reftest snapshot happen.
+        // The image can be larger than the requested size, so we resize the
+        // canvas to match it.
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var ctx = canvas.getContext("2d");
         ctx.drawImage(image, 0, 0);
         canvas.setAttribute("class", "downscale");
         document.documentElement.removeAttribute("class");
@@ -32,6 +36,6 @@
   </style>
 </head>
 <body onload="beginTest()">
-  <canvas id="canvas" height="100px" width="100px"></canvas>
+  <canvas id="canvas"></canvas>
 </body>
 </html>
