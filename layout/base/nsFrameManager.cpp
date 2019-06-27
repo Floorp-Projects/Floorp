@@ -146,8 +146,8 @@ void nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   nsAutoCString stateKey;
   nsIContent* content = aFrame->GetContent();
   Document* doc = content ? content->GetUncomposedDoc() : nullptr;
-  nsresult rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
-  if (NS_FAILED(rv) || stateKey.IsEmpty()) {
+  statefulFrame->GenerateStateKey(content, doc, stateKey);
+  if (stateKey.IsEmpty()) {
     return;
   }
 
@@ -207,8 +207,8 @@ void nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
 
   nsAutoCString stateKey;
   Document* doc = content->GetUncomposedDoc();
-  nsresult rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
-  if (NS_FAILED(rv) || stateKey.IsEmpty()) {
+  statefulFrame->GenerateStateKey(content, doc, stateKey);
+  if (stateKey.IsEmpty()) {
     return;
   }
 
@@ -219,7 +219,7 @@ void nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   // Restore it
-  rv = statefulFrame->RestoreState(frameState);
+  nsresult rv = statefulFrame->RestoreState(frameState);
   if (NS_FAILED(rv)) {
     return;
   }

@@ -20,4 +20,8 @@ dictionary FailedCertSecurityInfo {
   DOMString issuerCommonName = "";
   DOMTimeStamp certValidityRangeNotAfter = 0;
   DOMTimeStamp certValidityRangeNotBefore = 0;
+  DOMString errorMessage = "";
+  boolean hasHSTS = true;
+  boolean hasHPKP = true;
+  sequence<DOMString> certChainStrings;
 };

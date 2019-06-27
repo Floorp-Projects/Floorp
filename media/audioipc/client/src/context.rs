@@ -88,10 +88,10 @@ fn open_server_stream() -> Result<audioipc::MessageStream> {
 fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
     match promote_current_thread_to_real_time(0, 48000) {
         Ok(_) => {
-            debug!("Audio thread promoted to real-time.");
+            info!("Audio thread promoted to real-time.");
         }
         Err(_) => {
-            error!("Could not promote thread to real-time.");
+            warn!("Could not promote thread to real-time.");
         }
     }
     if let Some(func) = callback {

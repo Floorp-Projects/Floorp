@@ -2123,13 +2123,25 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
                  * ADBError
         """
+        def verify_mkdir(path):
+            # Verify that the directory was actually created. On some devices
+            # (x86_64 emulator, v 29.0.11) the directory is sometimes not
+            # immediately visible, so retries are allowed.
+            retry = 0
+            while retry < 10:
+                if self.is_dir(path, timeout=timeout, root=root):
+                    return True
+                time.sleep(1)
+                retry += 1
+            return False
+
         path = posixpath.normpath(path)
         if parents:
             if self._mkdir_p is None or self._mkdir_p:
                 # Use shell_bool to catch the possible
                 # non-zero exitcode if -p is not supported.
                 if self.shell_bool('mkdir -p %s' % path, timeout=timeout,
-                                   root=root):
+                                   root=root) or verify_mkdir(path):
                     self._mkdir_p = True
                     return
             # mkdir -p is not supported. create the parent
@@ -2152,7 +2164,7 @@ class ADBDevice(ADBCommand):
         # directory, mkdir will fail and we will raise an ADBError.
         if not parents or not self.is_dir(path, root=root):
             self.shell_output('mkdir %s' % path, timeout=timeout, root=root)
-        if not self.is_dir(path, timeout=timeout, root=root):
+        if not verify_mkdir(path):
             raise ADBError('mkdir %s Failed' % path)
 
     def push(self, local, remote, timeout=None):

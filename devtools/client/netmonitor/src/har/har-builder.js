@@ -112,7 +112,7 @@ HarBuilder.prototype = {
 
     entry.request = await this.buildRequest(file);
     entry.response = await this.buildResponse(file);
-    entry.cache = this.buildCache(file);
+    entry.cache = await this.buildCache(file);
     entry.timings = eventTimings ? eventTimings.timings : {};
 
     // Calculate total time by summing all timings. Note that
@@ -403,18 +403,21 @@ HarBuilder.prototype = {
     return content;
   },
 
-  buildCache: function(file) {
+  buildCache: async function(file) {
     const cache = {};
 
-    if (!file.fromCache) {
+    // if resource has changed, return early
+    if (file.status != "304") {
       return cache;
     }
 
-    // There is no such info yet in the Net panel.
-    // cache.beforeRequest = {};
-
-    if (file.cacheEntry) {
-      cache.afterRequest = this.buildCacheEntry(file.cacheEntry);
+    if (file.responseCacheAvailable && this._options.requestData) {
+      const responseCache = await this._options.requestData(file.id, "responseCache");
+      if (responseCache.cache) {
+        cache.afterRequest = this.buildCacheEntry(responseCache.cache);
+      }
+    } else if (file.responseCache && file.responseCache.cache) {
+      cache.afterRequest = this.buildCacheEntry(file.responseCache.cache);
     } else {
       cache.afterRequest = null;
     }
@@ -425,10 +428,19 @@ HarBuilder.prototype = {
   buildCacheEntry: function(cacheEntry) {
     const cache = {};
 
-    cache.expires = findValue(cacheEntry, "Expires");
-    cache.lastAccess = findValue(cacheEntry, "Last Fetched");
-    cache.eTag = "";
-    cache.hitCount = findValue(cacheEntry, "Fetch Count");
+    if (typeof cacheEntry !== "undefined") {
+      cache.expires = findKeys(cacheEntry, ["expires"]);
+      cache.lastFetched = findKeys(cacheEntry, ["lastFetched"]);
+      cache.eTag = findKeys(cacheEntry, ["eTag"]);
+      cache.fetchCount = findKeys(cacheEntry, ["fetchCount"]);
+
+      // har-importer.js, along with other files, use buildCacheEntry
+      // initial value comes from properties without underscores.
+      // this checks for both in appropriate order.
+      cache._dataSize = findKeys(cacheEntry, ["dataSize", "_dataSize"]);
+      cache._lastModified = findKeys(cacheEntry, ["lastModified", "_lastModified"]);
+      cache._device = findKeys(cacheEntry, ["device", "_device"]);
+    }
 
     return cache;
   },
@@ -466,6 +478,25 @@ HarBuilder.prototype = {
 };
 
 // Helpers
+
+/**
+ * Find specified keys within an object.
+ * Searches object for keys passed in, returns first value returned,
+ * Will return false if none found.
+ *
+ * @param obj (object)
+ * @param keys (array)
+ * @returns {boolean}
+ */
+function findKeys(obj, keys) {
+  if (!keys) {
+    return false;
+  }
+
+  const keyFound = keys.filter(key => obj.key);
+
+  return keyFound.length !== 0 ? keyFound[0] : false;
+}
 
 /**
  * Find specified value within an array of name-value pairs

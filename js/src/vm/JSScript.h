@@ -1447,72 +1447,10 @@ XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 // Abstractly a PrivateScriptData consists of all these arrays:
 //
 //   * A non-empty array of GCCellPtr in gcthings()
-//   * A possibly-empty array of JSTryNote in tryNotes()
-//   * A possibly-empty array of ScopeNote in scopeNotes()
-//   * A possibly-empty array of uint32_t in resumeOffsets()
 //
-// Accessing any of these arrays just requires calling the appropriate public
+// Accessing this array just requires calling the appropriate public
 // Span-computing function.
-//
-// Under the hood, PrivateScriptData is a small class followed by a memory
-// layout that compactly encodes all these arrays, in this manner (only
-// explicit padding, "--" separators for readability only):
-//
-//   <PrivateScriptData itself>
-//   --
-//   (OPTIONAL) PackedSpan for gcthings()
-//   --
-//   (REQUIRED) All the GCCellPtrs that constitute gcthings()
-//   --
-//   (OPTIONAL) All the JSTryNotes that constitute tryNotes()
-//   --
-//   (OPTIONAL) All the ScopeNotes that constitute scopeNotes()
-//   --
-//   (OPTIONAL) All the uint32_t's that constitute resumeOffsets()
-//
-// The contents of PrivateScriptData indicate which optional items are present.
-// PrivateScriptData::packedOffsets contains bit-fields, one per array.
-// Multiply each packed offset by sizeof(uint32_t) to compute a *real* offset.
-//
-// PrivateScriptData::gcthingsOffset indicates where gcthings() begins. The
-// bound of five PackedSpans ensures we can encode this offset compactly.
-// PrivateScriptData::ngcthings indicates the number of GCCellPtrs in
-// gcthings().
-//
-// The other PackedScriptData::*Offset fields indicate where a potential
-// corresponding PackedSpan resides. If the packed offset is 0, there is no
-// PackedSpan, and the array is empty. Otherwise the PackedSpan's uint32_t
-// offset and length fields store: 1) a *non-packed* offset (a literal count of
-// bytes offset from the *start* of PrivateScriptData struct) to the
-// corresponding array, and 2) the number of elements in the array,
-// respectively.
 class alignas(uintptr_t) PrivateScriptData final {
-  struct PackedOffsets {
-    static constexpr size_t SCALE = sizeof(uint32_t);
-    static constexpr size_t MAX_OFFSET = 0b1111;
-
-    // (Scaled) offset to GC things.
-    uint32_t gcthingsOffset : 8;
-
-    // (Scaled) offset to Spans. These are set to 0 if they don't exist.
-    uint32_t tryNotesSpanOffset : 4;
-    uint32_t scopeNotesSpanOffset : 4;
-    uint32_t resumeOffsetsSpanOffset : 4;
-  };
-
-  // Detect accidental size regressions.
-  static_assert(sizeof(PackedOffsets) == sizeof(uint32_t),
-                "unexpected bit-field packing");
-
-  // A span describes base offset and length of one variable length array in
-  // the private data.
-  struct alignas(uintptr_t) PackedSpan {
-    uint32_t offset;
-    uint32_t length;
-  };
-
-  // Concrete Fields
-  PackedOffsets packedOffsets = {};  // zeroes
   uint32_t ngcthings = 0;
 
   js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
@@ -1525,59 +1463,23 @@ class alignas(uintptr_t) PrivateScriptData final {
     return reinterpret_cast<T*>(elem);
   }
 
-  // Translate a PackedOffsets member into a pointer.
-  template <typename T>
-  T* packedOffsetToPointer(size_t packedOffset) {
-    return offsetToPointer<T>(packedOffset * PackedOffsets::SCALE);
-  }
-
-  // Translates a PackedOffsets member into a PackedSpan* and then unpacks
-  // that to a mozilla::Span.
-  template <typename T>
-  mozilla::Span<T> packedOffsetToSpan(size_t scaledSpanOffset) {
-    PackedSpan* span = packedOffsetToPointer<PackedSpan>(scaledSpanOffset);
-    T* base = offsetToPointer<T>(span->offset);
-    return mozilla::MakeSpan(base, span->length);
-  }
-
   // Helpers for creating initializing trailing data
-  template <typename T>
-  void initSpan(size_t* cursor, uint32_t scaledSpanOffset, size_t length);
-
   template <typename T>
   void initElements(size_t offset, size_t length);
 
   // Size to allocate
-  static size_t AllocationSize(uint32_t ngcthings, uint32_t ntrynotes,
-                               uint32_t nscopenotes, uint32_t nresumeoffsets);
+  static size_t AllocationSize(uint32_t ngcthings);
 
   // Initialize header and PackedSpans
-  PrivateScriptData(uint32_t ngcthings, uint32_t ntrynotes,
-                    uint32_t nscopenotes, uint32_t nresumeoffsets);
+  explicit PrivateScriptData(uint32_t ngcthings);
 
  public:
   // Accessors for typed array spans.
   mozilla::Span<JS::GCCellPtr> gcthings() {
-    JS::GCCellPtr* base =
-        packedOffsetToPointer<JS::GCCellPtr>(packedOffsets.gcthingsOffset);
-    return mozilla::MakeSpan(base, ngcthings);
-  }
-  mozilla::Span<JSTryNote> tryNotes() {
-    return packedOffsetToSpan<JSTryNote>(packedOffsets.tryNotesSpanOffset);
-  }
-  mozilla::Span<ScopeNote> scopeNotes() {
-    return packedOffsetToSpan<ScopeNote>(packedOffsets.scopeNotesSpanOffset);
-  }
-  mozilla::Span<uint32_t> resumeOffsets() {
-    return packedOffsetToSpan<uint32_t>(packedOffsets.resumeOffsetsSpanOffset);
+    size_t offset = sizeof(PrivateScriptData);
+    return mozilla::MakeSpan(offsetToPointer<JS::GCCellPtr>(offset), ngcthings);
   }
 
-  // Fast tests for if array exists
-  bool hasTryNotes() const { return packedOffsets.tryNotesSpanOffset != 0; }
-  bool hasScopeNotes() const { return packedOffsets.scopeNotesSpanOffset != 0; }
-  bool hasResumeOffsets() const {
-    return packedOffsets.resumeOffsetsSpanOffset != 0;
-  }
   void setFieldInitializers(FieldInitializers fieldInitializers) {
     fieldInitializers_ = fieldInitializers;
   }
@@ -1586,8 +1488,7 @@ class alignas(uintptr_t) PrivateScriptData final {
   // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
   // The size of allocation is returned as an out parameter.
   static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings,
-                                 uint32_t ntrynotes, uint32_t nscopenotes,
-                                 uint32_t nresumeoffsets, uint32_t* dataSize);
+                                 uint32_t* dataSize);
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
@@ -1610,9 +1511,64 @@ class alignas(uintptr_t) PrivateScriptData final {
   PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 };
 
-/*
- * Common data that can be shared between many scripts in a single runtime.
- */
+// [SMDOC] JSScript data layout (shared)
+//
+// SharedScriptData stores variable-length script data that may be shared
+// between scripts with the same bytecode, even across different GC Zones.
+// Abstractly this structure consists of multiple (optional) arrays that are
+// exposed as mozilla::Span<T>. These arrays exist in a single heap allocation.
+//
+// Under the hood, SharedScriptData is a fixed-size header class followed the
+// various array bodies interleaved with metadata to compactly encode the
+// bounds. These arrays have varying requirements for alignment, performance,
+// and jit-friendliness which leads to the complex indexing system below.
+//
+// Note: The '----' separators are for readability only.
+//
+// ----
+//   <SharedScriptData itself>
+// ----
+//   (OPTIONAL) Array of GCPtrAtom constituting atoms()
+// ----
+//   (REQUIRED) Flags structure
+//  codeOffset:
+//   (REQUIRED) Array of jsbytecode constituting code()
+//   (REQUIRED) Array of jssrcnote constituting notes()
+// ----
+//   (OPTIONAL) Array of uint32_t optional-offsets
+//  optArrayOffset:
+// ----
+//  L0:
+//   (OPTIONAL) Array of uint32_t constituting resumeOffsets()
+//  L1:
+//   (OPTIONAL) Array of ScopeNote constituting scopeNotes()
+//  L2:
+//   (OPTIONAL) Array of JSTryNote constituting tryNotes()
+//  L3:
+// ----
+//
+// NOTE: The notes() array must have been null-padded such that
+//       flags/code/notes together have uint32_t alignment.
+//
+// The 'codeOffset' and 'optArrayOffset' labels shown have their byte-offset
+// relative to 'this' stored as fields in SharedScriptData. They form the basis
+// of the indexing system.
+//
+// The L0/L1/L2/L3 labels indicate the start and end of the optional arrays.
+// Some of these labels may refer to the same location if the array between
+// them is empty. Each unique label position has an offset stored in the
+// optional-offsets table. Note that we also avoid entries for labels that
+// match 'optArrayOffset'. This is done to save memory when arrays are empty.
+//
+// The flags() data indicates (for each optional array) which entry from the
+// optional-offsets table marks the *end* of array. The array starts where the
+// previous array ends and the first array begins at 'optArrayOffset'. The
+// optional-offset table is addressed at negative indices from
+// 'optArrayOffset'.
+//
+// In general, the length of each array is computed from subtracting the start
+// offset of the array from the start offset of the subsequent array. The
+// notable exception is that bytecode length is stored explicitly.
 class alignas(uintptr_t) SharedScriptData final {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
@@ -1623,7 +1579,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
   uint32_t codeOffset_ = 0;  // Byte-offset from 'this'
   uint32_t codeLength_ = 0;
-  uint32_t tailOffset_ = 0;
+  uint32_t optArrayOffset_ = 0;
 
   // Offset of main entry point from code, after predef'ing prologue.
   uint32_t mainOffset = 0;
@@ -1649,27 +1605,113 @@ class alignas(uintptr_t) SharedScriptData final {
   // NOTE: The raw bytes of this structure are used for hashing so use explicit
   // padding values as needed for predicatable results across compilers.
 
+  struct Flags {
+    uint8_t resumeOffsetsEndIndex : 2;
+    uint8_t scopeNotesEndIndex : 2;
+    uint8_t tryNotesEndIndex : 2;
+    uint8_t _unused : 2;
+  };
+  static_assert(sizeof(Flags) == sizeof(uint8_t),
+                "Structure packing is broken");
+
   friend class ::JSScript;
 
  private:
-  // Layout of trailing arrays
+  // Offsets (in bytes) from 'this' to each component array. The delta between
+  // each offset and the next offset is the size of each array and is defined
+  // even if an array is empty.
   size_t atomOffset() const { return offsetOfAtoms(); }
+  size_t flagOffset() const { return codeOffset_ - sizeof(Flags); }
   size_t codeOffset() const { return codeOffset_; }
   size_t noteOffset() const { return codeOffset_ + codeLength_; }
+  size_t optionalOffsetsOffset() const {
+    // Determine the location to beginning of optional-offsets array by looking
+    // at index for try-notes.
+    //
+    //   optionalOffsetsOffset():
+    //     (OPTIONAL) tryNotesEndOffset
+    //     (OPTIONAL) scopeNotesEndOffset
+    //     (OPTIONAL) resumeOffsetsEndOffset
+    //   optArrayOffset_:
+    //     ....
+    unsigned numOffsets = flags().tryNotesEndIndex;
+    MOZ_ASSERT(numOffsets >= flags().scopeNotesEndIndex);
+    MOZ_ASSERT(numOffsets >= flags().resumeOffsetsEndIndex);
+
+    return optArrayOffset_ - (numOffsets * sizeof(uint32_t));
+  }
+  size_t resumeOffsetsOffset() const { return optArrayOffset_; }
+  size_t scopeNotesOffset() const {
+    return getOptionalOffset(flags().resumeOffsetsEndIndex);
+  }
+  size_t tryNotesOffset() const {
+    return getOptionalOffset(flags().scopeNotesEndIndex);
+  }
+  size_t endOffset() const {
+    return getOptionalOffset(flags().tryNotesEndIndex);
+  }
 
   // Size to allocate
   static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
-                               uint32_t natoms);
+                               uint32_t natoms, uint32_t numResumeOffsets,
+                               uint32_t numScopeNotes, uint32_t numTryNotes);
+
+  // Translate an offset into a concrete pointer.
+  template <typename T>
+  T* offsetToPointer(size_t offset) {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<T*>(base + offset);
+  }
 
   template <typename T>
   void initElements(size_t offset, size_t length);
 
+  void initOptionalArrays(size_t* cursor, Flags* flags,
+                          uint32_t numResumeOffsets, uint32_t numScopeNotes,
+                          uint32_t numTryNotes);
+
   // Initialize to GC-safe state
-  SharedScriptData(uint32_t codeLength, uint32_t noteLength, uint32_t natoms);
+  SharedScriptData(uint32_t codeLength, uint32_t noteLength, uint32_t natoms,
+                   uint32_t numResumeOffsets, uint32_t numScopeNotes,
+                   uint32_t numTryNotes);
+
+  void setOptionalOffset(int index, uint32_t offset) {
+    MOZ_ASSERT((index > 0) && (offset != optArrayOffset_),
+               "Implicit offset should not be stored");
+    offsetToPointer<uint32_t>(optArrayOffset_)[-index] = offset;
+  }
+  uint32_t getOptionalOffset(int index) const {
+    // The index 0 represents (implicitly) the offset 'optArrayOffset_'.
+    if (index == 0) {
+      return optArrayOffset_;
+    }
+
+    SharedScriptData* this_ = const_cast<SharedScriptData*>(this);
+    return this_->offsetToPointer<uint32_t>(optArrayOffset_)[-index];
+  }
 
  public:
   static SharedScriptData* new_(JSContext* cx, uint32_t codeLength,
-                                uint32_t noteLength, uint32_t natoms);
+                                uint32_t noteLength, uint32_t natoms,
+                                uint32_t numResumeOffsets,
+                                uint32_t numScopeNotes, uint32_t numTryNotes);
+
+  // The code() and note() arrays together maintain an target alignment by
+  // padding the source notes with null. This allows arrays with stricter
+  // alignment requirements to follow them.
+  static constexpr size_t CodeNoteAlign = sizeof(uint32_t);
+
+  // Compute number of null notes to pad out source notes with.
+  static uint32_t ComputeNotePadding(uint32_t codeLength, uint32_t noteLength) {
+    uint32_t flagLength = sizeof(Flags);
+    uint32_t nullLength =
+        CodeNoteAlign - (flagLength + codeLength + noteLength) % CodeNoteAlign;
+
+    // The source notes must have at least one null-terminator.
+    MOZ_ASSERT(nullLength >= 1);
+
+    return nullLength;
+  }
 
   uint32_t refCount() const { return refCount_; }
   void AddRef() { refCount_++; }
@@ -1683,7 +1725,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
   // Span over all raw bytes in this struct and its trailing arrays.
   mozilla::Span<const uint8_t> allocSpan() const {
-    size_t allocSize = tailOffset_;
+    size_t allocSize = endOffset();
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
   }
 
@@ -1705,23 +1747,32 @@ class alignas(uintptr_t) SharedScriptData final {
   }
 
   uint32_t natoms() const {
-    return (codeOffset_ - atomOffset()) / sizeof(GCPtrAtom);
+    return (flagOffset() - atomOffset()) / sizeof(GCPtrAtom);
   }
-  GCPtrAtom* atoms() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
+  GCPtrAtom* atoms() { return offsetToPointer<GCPtrAtom>(atomOffset()); }
+
+  Flags& flagsRef() { return *offsetToPointer<Flags>(flagOffset()); }
+  const Flags& flags() const {
+    return const_cast<SharedScriptData*>(this)->flagsRef();
   }
 
   uint32_t codeLength() const { return codeLength_; }
-  jsbytecode* code() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<jsbytecode*>(base + codeOffset_);
-  }
+  jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
 
-  uint32_t noteLength() const { return tailOffset_ - noteOffset(); }
-  jssrcnote* notes() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<jssrcnote*>(base + noteOffset());
+  uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
+  jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
+
+  mozilla::Span<uint32_t> resumeOffsets() {
+    return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),
+                             offsetToPointer<uint32_t>(scopeNotesOffset()));
+  }
+  mozilla::Span<ScopeNote> scopeNotes() {
+    return mozilla::MakeSpan(offsetToPointer<ScopeNote>(scopeNotesOffset()),
+                             offsetToPointer<ScopeNote>(tryNotesOffset()));
+  }
+  mozilla::Span<JSTryNote> tryNotes() {
+    return mozilla::MakeSpan(offsetToPointer<JSTryNote>(tryNotesOffset()),
+                             offsetToPointer<JSTryNote>(endOffset()));
   }
 
   static constexpr size_t offsetOfCodeOffset() {
@@ -2100,9 +2151,7 @@ class JSScript : public js::gc::TenuredCell {
   // after successfully creating the script.
   static bool createPrivateScriptData(JSContext* cx,
                                       JS::Handle<JSScript*> script,
-                                      uint32_t ngcthings, uint32_t ntrynotes,
-                                      uint32_t nscopenotes,
-                                      uint32_t nresumeoffsets);
+                                      uint32_t ngcthings);
 
  private:
   void initFromFunctionBox(js::frontend::FunctionBox* funbox);
@@ -2735,7 +2784,9 @@ class JSScript : public js::gc::TenuredCell {
   bool createJitScript(JSContext* cx);
 
   bool createSharedScriptData(JSContext* cx, uint32_t codeLength,
-                              uint32_t noteLength, uint32_t natoms);
+                              uint32_t noteLength, uint32_t natoms,
+                              uint32_t numResumeOffsets, uint32_t numScopeNotes,
+                              uint32_t numTryNotes);
   bool shareScriptData(JSContext* cx);
   void freeScriptData();
 
@@ -2816,27 +2867,26 @@ class JSScript : public js::gc::TenuredCell {
 
   size_t dataSize() const { return dataSize_; }
 
-  bool hasTrynotes() const { return data_->hasTryNotes(); }
-  bool hasScopeNotes() const { return data_->hasScopeNotes(); }
-  bool hasResumeOffsets() const { return data_->hasResumeOffsets(); }
+  bool hasTrynotes() const { return !scriptData_->tryNotes().empty(); }
+  bool hasScopeNotes() const { return !scriptData_->scopeNotes().empty(); }
+  bool hasResumeOffsets() const {
+    return !scriptData_->resumeOffsets().empty();
+  }
 
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_->gcthings();
   }
 
   mozilla::Span<const JSTryNote> trynotes() const {
-    MOZ_ASSERT(hasTrynotes());
-    return data_->tryNotes();
+    return scriptData_->tryNotes();
   }
 
   mozilla::Span<const js::ScopeNote> scopeNotes() const {
-    MOZ_ASSERT(hasScopeNotes());
-    return data_->scopeNotes();
+    return scriptData_->scopeNotes();
   }
 
   mozilla::Span<const uint32_t> resumeOffsets() const {
-    MOZ_ASSERT(hasResumeOffsets());
-    return data_->resumeOffsets();
+    return scriptData_->resumeOffsets();
   }
 
   uint32_t tableSwitchCaseOffset(jsbytecode* pc, uint32_t caseIndex) const {

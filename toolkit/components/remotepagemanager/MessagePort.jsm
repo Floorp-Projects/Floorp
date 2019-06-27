@@ -28,7 +28,13 @@ let RPMAccessManager = {
     "about:certerror": {
       "getFormatURLPref": ["app.support.baseURL"],
       "getBoolPref": ["security.certerrors.mitm.priming.enabled",
-                      "security.enterprise_roots.auto-enabled"],
+                      "security.enterprise_roots.auto-enabled",
+                      "security.certerror.hideAddException",
+                      "security.ssl.errorReporting.automatic",
+                      "security.ssl.errorReporting.enabled"],
+      "getIntPref": ["services.settings.clock_skew_seconds",
+                     "services.settings.last_update_seconds"],
+      "getAppBuildID": ["yes"],
     },
     "about:privatebrowsing": {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
@@ -305,12 +311,28 @@ class MessagePort {
     return new this.window.Promise((resolve, reject) => promise.then(resolve, reject));
   }
 
-  getBoolPref(aPref) {
+  getAppBuildID() {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getAppBuildID", "yes")) {
+      throw new Error("RPMAccessManager does not allow access to getAppBuildID");
+    }
+    return Services.appinfo.appBuildID;
+  }
+
+  getIntPref(aPref) {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getIntPref", aPref)) {
+      throw new Error("RPMAccessManager does not allow access to getIntPref");
+    }
+    return Services.prefs.getIntPref(aPref);
+  }
+
+  getBoolPref(aPref, defaultValue = false) {
     let principal = this.window.document.nodePrincipal;
     if (!RPMAccessManager.checkAllowAccess(principal, "getBoolPref", aPref)) {
       throw new Error("RPMAccessManager does not allow access to getBoolPref");
     }
-    return Services.prefs.getBoolPref(aPref);
+    return Services.prefs.getBoolPref(aPref, defaultValue);
   }
 
   setBoolPref(aPref, aVal) {

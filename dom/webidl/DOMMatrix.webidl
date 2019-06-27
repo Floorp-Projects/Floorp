@@ -40,8 +40,8 @@ interface DOMMatrixReadOnly {
     readonly attribute unrestricted double m44;
 
     // Immutable transform methods
-    DOMMatrix translate(unrestricted double tx,
-                        unrestricted double ty,
+    DOMMatrix translate(optional unrestricted double tx = 0,
+                        optional unrestricted double ty = 0,
                         optional unrestricted double tz = 0);
     DOMMatrix scale(unrestricted double scale,
                     optional unrestricted double originX = 0,
@@ -65,8 +65,8 @@ interface DOMMatrixReadOnly {
                               unrestricted double y,
                               unrestricted double z,
                               unrestricted double angle);
-    DOMMatrix skewX(unrestricted double sx);
-    DOMMatrix skewY(unrestricted double sy);
+    DOMMatrix skewX(optional unrestricted double sx = 0);
+    DOMMatrix skewY(optional unrestricted double sy = 0);
     DOMMatrix multiply(DOMMatrix other);
     DOMMatrix flipX();
     DOMMatrix flipY();
@@ -119,8 +119,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     // Mutable transform methods
     DOMMatrix multiplySelf(DOMMatrix other);
     DOMMatrix preMultiplySelf(DOMMatrix other);
-    DOMMatrix translateSelf(unrestricted double tx,
-                            unrestricted double ty,
+    DOMMatrix translateSelf(optional unrestricted double tx = 0,
+                            optional unrestricted double ty = 0,
                             optional unrestricted double tz = 0);
     DOMMatrix scaleSelf(unrestricted double scale,
                         optional unrestricted double originX = 0,
@@ -144,8 +144,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
                                   unrestricted double y,
                                   unrestricted double z,
                                   unrestricted double angle);
-    DOMMatrix skewXSelf(unrestricted double sx);
-    DOMMatrix skewYSelf(unrestricted double sy);
+    DOMMatrix skewXSelf(optional unrestricted double sx = 0);
+    DOMMatrix skewYSelf(optional unrestricted double sy = 0);
     DOMMatrix invertSelf();
     [Exposed=Window, Throws] DOMMatrix setMatrixValue(DOMString transformList);
 };

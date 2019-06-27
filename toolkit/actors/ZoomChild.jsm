@@ -6,11 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["ZoomChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-
-class ZoomChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+class ZoomChild extends JSWindowActorChild {
+  constructor() {
+    super();
 
     this._cache = {
       fullZoom: NaN,
@@ -77,14 +75,14 @@ class ZoomChild extends ActorChild {
   handleEvent(event) {
     if (event.type == "FullZoomChange") {
       if (this.refreshFullZoom()) {
-        this.mm.sendAsyncMessage("FullZoomChange", { value: this.fullZoom });
+        this.sendAsyncMessage("FullZoomChange", { value: this.fullZoom });
       }
     } else if (event.type == "TextZoomChange") {
       if (this.refreshTextZoom()) {
-        this.mm.sendAsyncMessage("TextZoomChange", { value: this.textZoom });
+        this.sendAsyncMessage("TextZoomChange", { value: this.textZoom });
       }
     } else if (event.type == "ZoomChangeUsingMouseWheel") {
-      this.mm.sendAsyncMessage("ZoomChangeUsingMouseWheel", {});
+      this.sendAsyncMessage("ZoomChangeUsingMouseWheel", {});
     }
   }
 }
