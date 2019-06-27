@@ -81,7 +81,7 @@ tasks:
             - tc-treeherder.v2.fenix.${head_rev}
           payload:
             maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
-            image: mozillamobile/fenix:1.3
+            image: mozillamobile/fenix:1.4
             command:
               - /bin/bash
               - --login

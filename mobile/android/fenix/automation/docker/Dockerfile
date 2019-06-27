@@ -15,16 +15,25 @@ ENV GOOGLE_SDK_VERSION 233
 
 # -- System -----------------------------------------------------------------------------
 
-RUN apt-get update -qq
+RUN apt-get update -qq \
+    # We need to install tzdata before all of the other packages. Otherwise it will show an interactive dialog that
+    # we cannot navigate while building the Docker image.
+    && apt-get install -y tzdata \
+    && apt-get install -y openjdk-8-jdk \
+                          wget \
+                          expect \
+                          git \
+                          curl \
+                          python \
+                          python-pip \
+                          locales \
+                          unzip \
+    && apt-get clean
 
-RUN apt-get install -y openjdk-8-jdk \
-					   curl \
-					   wget \
-					   git \
-					   python \
-					   python-pip \
-					   locales \
-					   unzip
+RUN pip install --upgrade pip
+RUN pip install 'taskcluster>=4,<5'
+RUN pip install arrow
+RUN pip install pyyaml
 
 RUN locale-gen en_US.UTF-8
 
@@ -47,19 +56,8 @@ RUN touch /opt/android-sdk/.android/repositories.cfg
 
 RUN yes | sdkmanager --licenses
 
-RUN sdkmanager --verbose "platform-tools" \
-    "platforms;android-28" \
-    "build-tools;${ANDROID_BUILD_TOOLS}" \
-    "extras;android;m2repository" \
-    "extras;google;m2repository"
-
 # Checkout source code
-#RUN git clone https://github.com/mozilla-mobile/fenix.git
-RUN git clone https://github.com/rpappalax/fenix.git -b dockerfile-add-test-deps --single-branch
-
-# Build project and run gradle tasks once to pull all dependencies
-WORKDIR /opt/fenix
-RUN ./gradlew -PversionName=0.0 --no-daemon assemble test lint
+RUN git clone https://github.com/mozilla-mobile/fenix.git
 
 # -- Test tools -------------------------------------------------------------------------
 
@@ -81,15 +79,7 @@ RUN URL_FLANK_BIN=$(curl -s "https://api.github.com/repos/TestArmada/flank/relea
     && wget "https:${URL_FLANK_BIN}" -O ${TEST_TOOLS}/flank.jar \
     && chmod +x ${TEST_TOOLS}/flank.jar
 
-# -- Post setup -------------------------------------------------------------------------
-
-# Install taskcluster python library (used by decision tasks)
-# 5.0.0 is still incompatible with taskclusterProxy, meaning no decision task is able
-# to schedule the rest of the Taskcluster tasks. Please upgrade to taskcluster>=5 once
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1460015 is fixed
-RUN pip install 'taskcluster>=4,<5'
-RUN pip install arrow
-
-# -- Cleanup ----------------------------------------------------------------------------
-
-RUN apt-get clean
+# Build project and run gradle tasks once to pull all dependencies
+WORKDIR /opt/fenix
+RUN ./gradlew -PversionName=0.0 --no-daemon assemble test lint \
+    && ./gradlew clean
