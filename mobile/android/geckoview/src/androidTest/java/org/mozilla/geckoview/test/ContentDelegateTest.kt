@@ -163,6 +163,9 @@ class ContentDelegateTest : BaseSessionTest() {
         // If we add multiple content processes, this test will need to be fixed to ensure the
         // test sessions go into the same one.
         val newSession = sessionRule.createOpenSession()
+        newSession.loadTestPath(HELLO_HTML_PATH)
+        newSession.waitForPageStop()
+
         mainSession.loadUri(CONTENT_CRASH_URL)
 
         // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
