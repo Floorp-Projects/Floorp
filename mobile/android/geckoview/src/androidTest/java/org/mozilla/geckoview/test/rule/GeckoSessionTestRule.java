@@ -1156,25 +1156,17 @@ public class GeckoSessionTestRule implements TestRule {
                 @SuppressWarnings("unchecked")
                 final GeckoResult<GeckoSession> result = (GeckoResult<GeckoSession>)returnValue;
                 final GeckoResult<GeckoSession> tmpResult = new GeckoResult<>();
-                result.then(new OnValueListener<GeckoSession, Void>() {
-                    @Override
-                    public GeckoResult<Void> onValue(final GeckoSession newSession) throws Throwable {
-                        tmpResult.complete(newSession);
+                result.accept(session -> {
+                    tmpResult.complete(session);
 
-                        // GeckoSession has already hooked up its then() listener earlier,
-                        // so ours will run after. We can wait for the session to
-                        // open here.
-                        tmpResult.then(new OnValueListener<GeckoSession, Void>() {
-                            @Override
-                            public GeckoResult<Void> onValue(GeckoSession newSession) throws Throwable {
-                                if (oldSession.isOpen() && newSession != null) {
-                                    GeckoSessionTestRule.this.waitForOpenSession(newSession);
-                                }
-                                return null;
-                            }
-                        });
-                        return null;
-                    }
+                    // GeckoSession has already hooked up its then() listener earlier,
+                    // so ours will run after. We can wait for the session to
+                    // open here.
+                    tmpResult.accept(newSession -> {
+                        if (oldSession.isOpen() && newSession != null) {
+                            GeckoSessionTestRule.this.waitForOpenSession(newSession);
+                        }
+                    });
                 });
 
                 return tmpResult;
