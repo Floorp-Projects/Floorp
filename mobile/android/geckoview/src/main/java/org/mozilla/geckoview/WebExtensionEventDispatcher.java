@@ -221,15 +221,9 @@ import java.util.Map;
             return;
         }
 
-        response.then(
-            value -> {
-                callback.sendSuccess(value);
-                return null;
-            },
-            exception -> {
-                callback.sendError(exception);
-                return null;
-            });
+        response.accept(
+            value -> callback.sendSuccess(value),
+            exception -> callback.sendError(exception));
     }
 
     public void handleMessage(final String event, final GeckoBundle message,

@@ -449,19 +449,10 @@ public class GeckoViewActivity extends AppCompatActivity {
     private void downloadFile(GeckoSession.WebResponseInfo response) {
         mTabSessionManager.getCurrentSession()
                 .getUserAgent()
-                .then(new GeckoResult.OnValueListener<String, Void>() {
-            @Override
-            public GeckoResult<Void> onValue(String userAgent) throws Throwable {
-                downloadFile(response, userAgent);
-                return null;
-            }
-        }, new GeckoResult.OnExceptionListener<Void>() {
-            @Override
-            public GeckoResult<Void> onException(Throwable exception) throws Throwable {
-                // getUserAgent() cannot fail.
-                throw new IllegalStateException("Could not get UserAgent string.");
-            }
-        });
+                .accept(userAgent -> downloadFile(response, userAgent),
+                        exception -> {
+                    throw new IllegalStateException("Could not get UserAgent string.");
+                });
     }
 
     private void downloadFile(GeckoSession.WebResponseInfo response, String userAgent) {
