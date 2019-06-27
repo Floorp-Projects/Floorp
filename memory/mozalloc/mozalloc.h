@@ -132,15 +132,8 @@ MOZ_END_EXTERN_C
 #    define MOZALLOC_EXPORT_NEW
 #  endif
 
-MOZALLOC_EXPORT_NEW
-#  if defined(__GNUC__) && !defined(__clang__) && defined(__SANITIZE_ADDRESS__)
-/* gcc's asan somehow doesn't like always_inline on this function. */
-__attribute__((gnu_inline)) inline
-#  else
-MOZ_ALWAYS_INLINE_EVEN_DEBUG
-#  endif
-    void*
-    operator new(size_t size) noexcept(false) {
+MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void* operator new(
+    size_t size) noexcept(false) {
   return moz_xmalloc(size);
 }
 
