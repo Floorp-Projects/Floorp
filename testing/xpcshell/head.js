@@ -101,8 +101,8 @@ var runningInParent = true;
 try {
   // Don't use Services.appinfo here as it disables replacing appinfo with stubs
   // for test usage.
-  // eslint-disable-next-line mozilla/use-services
   runningInParent =
+    // eslint-disable-next-line mozilla/use-services
     Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime).processType ==
     Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 } catch (e) {}

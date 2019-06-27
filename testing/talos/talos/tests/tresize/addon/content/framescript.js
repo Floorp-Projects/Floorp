@@ -4,10 +4,10 @@
   addEventListener(
     TRESIZE_PREFIX + "chrome-run-event",
     function(e) {
-      // eslint-disable-next-line mozilla/avoid-Date-timing
       var uniqueMessageId =
         TRESIZE_PREFIX +
         content.document.documentURI +
+        // eslint-disable-next-line mozilla/avoid-Date-timing
         Date.now() +
         Math.random();
 
