@@ -789,6 +789,7 @@ class ExtensionStorageSync {
     if (Object.keys(changes).length > 0) {
       this.notifyListeners(extension, changes);
     }
+    log.info(`Successfully synced '${collection.name}'`);
   }
 
   /**
@@ -824,7 +825,6 @@ class ExtensionStorageSync {
     try {
       return await f(fxaToken);
     } catch (e) {
-      log.error(`${description}: request failed`, e);
       if (e && e.response && e.response.status == 401) {
         // Our token might have expired. Refresh and retry.
         log.info("Token might have expired");
@@ -835,6 +835,7 @@ class ExtensionStorageSync {
         return f(newToken);
       }
       // Otherwise, we don't know how to handle this error, so just reraise.
+      log.error(`${description}: request failed`, e);
       throw e;
     }
   }
