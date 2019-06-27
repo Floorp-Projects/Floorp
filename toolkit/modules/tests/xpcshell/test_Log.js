@@ -274,7 +274,7 @@ add_task(async function log_message_with_params() {
   };
   Assert.equal(
     formatMessage("Broken valueOf ${}", vOf),
-    'Broken valueOf ({a:1, valueOf:(function() {throw new Error("oh noes valueOf");})})'
+    'Broken valueOf ({a:1, valueOf:(function() {\n      throw new Error("oh noes valueOf");\n    })})'
   );
   /* eslint-enable object-shorthand */
 
