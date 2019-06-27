@@ -144,7 +144,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "text-anchor",
     "text-combine-upright",
     "text-decoration-line",
-    "text-decoration-skip-ink",
     "text-decoration-style",
     "text-emphasis-position",
     "text-emphasis-style",
