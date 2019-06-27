@@ -38,7 +38,8 @@ class GCVector {
  public:
   using ElementType = T;
 
-  explicit GCVector(AllocPolicy alloc = AllocPolicy()) : vector(alloc) {}
+  explicit GCVector(AllocPolicy alloc = AllocPolicy())
+      : vector(std::move(alloc)) {}
 
   GCVector(GCVector&& vec) : vector(std::move(vec.vector)) {}
 
