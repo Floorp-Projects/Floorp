@@ -21,8 +21,6 @@
 //! The main entry point is the `make_isa()` function which allocates a configured `TargetISA`
 //! object.
 
-use std::str::FromStr;
-
 use cranelift_codegen::isa;
 use cranelift_codegen::settings::{self, Configurable};
 
@@ -39,51 +37,6 @@ impl From<settings::SetError> for BasicError {
     fn from(err: settings::SetError) -> BasicError {
         BasicError::new(err.to_string())
     }
-}
-
-/// Allocate a `TargetISA` object that can be used to generate code for the CPU we're running on.
-///
-/// TODO: SM runs on more than x86 chips. Support them.
-///
-/// # Errors
-///
-/// This function fails if Cranelift has not been compiled with support for the current CPU.
-pub fn make_isa(env: &StaticEnvironment) -> DashResult<Box<dyn isa::TargetIsa>> {
-    // Start with the ISA-independent settings.
-    let shared_flags = make_shared_flags().expect("Cranelift configuration error");
-
-    // We can use `#[cfg(target_arch = "...")]` to conditionally compile code per ISA.
-    let mut ib = isa::lookup(triple!("x86_64-unknown-unknown")).map_err(BasicError::from)?;
-
-    if !env.hasSse2 {
-        return Err("SSE2 is mandatory for Baldrdash!".into());
-    }
-    if env.hasSse3 {
-        ib.enable("has_sse3").map_err(BasicError::from)?;
-    }
-    if env.hasSse41 {
-        ib.enable("has_sse41").map_err(BasicError::from)?;
-    }
-    if env.hasSse42 {
-        ib.enable("has_sse42").map_err(BasicError::from)?;
-    }
-    if env.hasPopcnt {
-        ib.enable("has_popcnt").map_err(BasicError::from)?;
-    }
-    if env.hasAvx {
-        ib.enable("has_avx").map_err(BasicError::from)?;
-    }
-    if env.hasBmi1 {
-        ib.enable("has_bmi1").map_err(BasicError::from)?;
-    }
-    if env.hasBmi2 {
-        ib.enable("has_bmi2").map_err(BasicError::from)?;
-    }
-    if env.hasLzcnt {
-        ib.enable("has_lzcnt").map_err(BasicError::from)?;
-    }
-
-    Ok(ib.finish(shared_flags))
 }
 
 /// Create a `Flags` object for the shared settings.
@@ -120,8 +73,60 @@ fn make_shared_flags() -> settings::SetResult<settings::Flags> {
     // Let's optimize for speed.
     sb.set("opt_level", "best")?;
 
-    // TODO: Enable jump tables (requires emitting readonly data separately from text).
+    // Enable jump tables.
     sb.set("jump_tables_enabled", "true")?;
 
     Ok(settings::Flags::new(sb))
+}
+
+#[cfg(feature = "cranelift_x86")]
+fn make_isa_specific(env: &StaticEnvironment) -> DashResult<isa::Builder> {
+    use std::str::FromStr; // for the triple! macro below.
+
+    let mut ib = isa::lookup(triple!("x86_64-unknown-unknown")).map_err(BasicError::from)?;
+
+    if !env.hasSse2 {
+        return Err("SSE2 is mandatory for Baldrdash!".into());
+    }
+
+    if env.hasSse3 {
+        ib.enable("has_sse3").map_err(BasicError::from)?;
+    }
+    if env.hasSse41 {
+        ib.enable("has_sse41").map_err(BasicError::from)?;
+    }
+    if env.hasSse42 {
+        ib.enable("has_sse42").map_err(BasicError::from)?;
+    }
+    if env.hasPopcnt {
+        ib.enable("has_popcnt").map_err(BasicError::from)?;
+    }
+    if env.hasAvx {
+        ib.enable("has_avx").map_err(BasicError::from)?;
+    }
+    if env.hasBmi1 {
+        ib.enable("has_bmi1").map_err(BasicError::from)?;
+    }
+    if env.hasBmi2 {
+        ib.enable("has_bmi2").map_err(BasicError::from)?;
+    }
+    if env.hasLzcnt {
+        ib.enable("has_lzcnt").map_err(BasicError::from)?;
+    }
+
+    Ok(ib)
+}
+
+/// TODO: SM runs on more than x86 chips. Support them.
+#[cfg(not(feature = "cranelift_x86"))]
+fn make_isa_specific(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
+    Err("Platform not supported yet!".into())
+}
+
+/// Allocate a `TargetISA` object that can be used to generate code for the CPU we're running on.
+pub fn make_isa(env: &StaticEnvironment) -> DashResult<Box<dyn isa::TargetIsa>> {
+    // Start with the ISA-independent settings.
+    let shared_flags = make_shared_flags().map_err(BasicError::from)?;
+    let ib = make_isa_specific(env)?;
+    Ok(ib.finish(shared_flags))
 }
