@@ -307,7 +307,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
             view!!,
             getString(
                 R.string.bookmark_deletion_snackbar_message,
-                bookmarkNode.url?.urlToTrimmedHost(context!!)
+                bookmarkNode.url?.urlToTrimmedHost(context!!) ?: bookmarkNode.title
             ),
             getString(R.string.bookmark_undo_deletion),
             onCancel = {
