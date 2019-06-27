@@ -1374,14 +1374,22 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
   font.setSubpixel(useSubpixelText);
 
-  SkTextBlobBuilder builder;
-  auto runBuffer = builder.allocRunPos(font, aBuffer.mNumGlyphs);
-  for (uint32_t i = 0; i < aBuffer.mNumGlyphs; i++) {
-    runBuffer.glyphs[i] = aBuffer.mGlyphs[i].mIndex;
-    runBuffer.points()[i] = PointToSkPoint(aBuffer.mGlyphs[i].mPosition);
+  // Limit the amount of internal batch allocations Skia does.
+  const uint32_t kMaxGlyphBatchSize = 8192;
+
+  for (uint32_t offset = 0; offset < aBuffer.mNumGlyphs;) {
+    uint32_t batchSize =
+        std::min(aBuffer.mNumGlyphs - offset, kMaxGlyphBatchSize);
+    SkTextBlobBuilder builder;
+    auto runBuffer = builder.allocRunPos(font, batchSize);
+    for (uint32_t i = 0; i < batchSize; i++, offset++) {
+      runBuffer.glyphs[i] = aBuffer.mGlyphs[offset].mIndex;
+      runBuffer.points()[i] = PointToSkPoint(aBuffer.mGlyphs[offset].mPosition);
+    }
+
+    sk_sp<SkTextBlob> text = builder.make();
+    mCanvas->drawTextBlob(text, 0, 0, paint.mPaint);
   }
-  sk_sp<SkTextBlob> text = builder.make();
-  mCanvas->drawTextBlob(text, 0, 0, paint.mPaint);
 }
 
 void DrawTargetSkia::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
