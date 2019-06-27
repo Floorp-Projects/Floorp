@@ -75,6 +75,7 @@ class RemoteDecoderManagerThreadShutdownObserver : public nsIObserver {
                      const char16_t* aData) override {
     MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 
+    RemoteDecoderManagerParent::ShutdownVideoBridge();
     RemoteDecoderManagerParent::ShutdownThreads();
     return NS_OK;
   }
