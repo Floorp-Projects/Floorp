@@ -114,8 +114,9 @@ bool RemoteDecoderManagerParent::StartupThreads() {
 #endif
   if (XRE_IsGPUProcess()) {
     sRemoteDecoderManagerParentThread->Dispatch(
-        NS_NewRunnableFunction("RemoteDecoderManagerParent::StartupThreads",
-                               []() { layers::VideoBridgeChild::Startup(); }),
+        NS_NewRunnableFunction(
+            "RemoteDecoderManagerParent::StartupThreads",
+            []() { layers::VideoBridgeChild::StartupForGPUProcess(); }),
         NS_DISPATCH_NORMAL);
   }
 

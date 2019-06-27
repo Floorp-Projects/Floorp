@@ -6,6 +6,7 @@
 #ifndef include_dom_media_ipc_RemoteDecoderManagerParent_h
 #define include_dom_media_ipc_RemoteDecoderManagerParent_h
 #include "mozilla/PRemoteDecoderManagerParent.h"
+#include "mozilla/layers/VideoBridgeChild.h"
 
 namespace mozilla {
 
