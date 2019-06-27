@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`)`
+`BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)` = BrowserState())`
 
 The [BrowserStore](index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree).
 

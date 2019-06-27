@@ -331,10 +331,7 @@
 | [mozilla.components.feature.downloads.manager.OnDownloadCompleted](../mozilla.components.feature.downloads.manager/-on-download-completed.md) |  |
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
-| [mozilla.components.feature.downloads.OnNeedToRequestPermissions](../mozilla.components.feature.downloads/-on-need-to-request-permissions.md) |  |
-| [mozilla.components.feature.prompts.OnNeedToRequestPermissions](../mozilla.components.feature.prompts/-on-need-to-request-permissions.md) |  |
-| [mozilla.components.feature.qr.OnNeedToRequestPermissions](../mozilla.components.feature.qr/-on-need-to-request-permissions.md) |  |
-| [mozilla.components.feature.sitepermissions.OnNeedToRequestPermissions](../mozilla.components.feature.sitepermissions/-on-need-to-request-permissions.md) |  |
+| [mozilla.components.support.base.feature.OnNeedToRequestPermissions](../mozilla.components.support.base.feature/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.readerview.OnReaderViewAvailableChange](../mozilla.components.feature.readerview/-on-reader-view-available-change.md) |  |
 | [mozilla.components.feature.qr.OnScanResult](../mozilla.components.feature.qr/-on-scan-result.md) |  |
 | [mozilla.components.ui.autocomplete.OnSearchStateChangeListener](../mozilla.components.ui.autocomplete/-on-search-state-change-listener.md) |  |
@@ -349,6 +346,7 @@
 | [mozilla.components.service.fxa.manager.PeriodicRefreshManager](../mozilla.components.service.fxa.manager/-periodic-refresh-manager/index.md) |  |
 | [mozilla.components.concept.engine.permission.Permission](../mozilla.components.concept.engine.permission/-permission/index.md) | Represents all the different supported permission types. |
 | [mozilla.components.concept.engine.permission.PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md) | Represents a permission request, used when engines need access to protected resources. Every request must be handled by either calling [grant](../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [reject](../mozilla.components.concept.engine.permission/-permission-request/reject.md). |
+| [mozilla.components.support.base.feature.PermissionsFeature](../mozilla.components.support.base.feature/-permissions-feature/index.md) | Interface for features that need to request permissions from the user. |
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
 | [mozilla.components.service.glean.private.PingType](../mozilla.components.service.glean.private/-ping-type/index.md) | This implements the developer facing API for custom pings. |
@@ -538,6 +536,7 @@
 | [org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement](../org.mozilla.telemetry.measurement/-timezone-offset-measurement/index.md) |  |
 | [mozilla.components.service.glean.storages.TimingDistributionData](../mozilla.components.service.glean.storages/-timing-distribution-data/index.md) | This class represents the structure of a timing distribution according to the pipeline schema. It is meant to help serialize and deserialize data to the correct format for transport and storage, as well as including a helper function to calculate the bucket sizes. |
 | [mozilla.components.service.glean.private.TimingDistributionMetricType](../mozilla.components.service.glean.private/-timing-distribution-metric-type/index.md) | This implements the developer facing API for recording timing distribution metrics. |
+| [mozilla.components.browser.icons.preparer.TippyTopIconPreparer](../mozilla.components.browser.icons.preparer/-tippy-top-icon-preparer/index.md) | [IconPreprarer](../mozilla.components.browser.icons.preparer/-icon-preprarer/index.md) implementation that looks up the host in our "tippy top" list. If it can find a match then it inserts the icon URL into the request. |
 | [mozilla.components.lib.jexl.lexer.Token](../mozilla.components.lib.jexl.lexer/-token/index.md) | A token emitted by the [Lexer](#). |
 | [mozilla.components.concept.toolbar.Toolbar](../mozilla.components.concept.toolbar/-toolbar/index.md) | Interface to be implemented by components that provide browser toolbar functionality. |
 | [mozilla.components.feature.toolbar.ToolbarAutocompleteFeature](../mozilla.components.feature.toolbar/-toolbar-autocomplete-feature/index.md) | Feature implementation for connecting a toolbar with a list of autocomplete providers. |

@@ -2,7 +2,7 @@
 
 # sitePermissionsRules
 
-`var sitePermissionsRules: `[`SitePermissionsRules`](../-site-permissions-rules/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L69)
+`var sitePermissionsRules: `[`SitePermissionsRules`](../-site-permissions-rules/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L70)
 
 indicates how permissions should behave per permission category.
 

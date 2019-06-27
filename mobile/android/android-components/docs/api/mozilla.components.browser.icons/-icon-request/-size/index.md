@@ -19,4 +19,4 @@ We are trying to limit the supported sizes in order to optimize our caching stra
 
 | Name | Summary |
 |---|---|
-| [value](value.md) | `val value: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [dimen](dimen.md) | `val dimen: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

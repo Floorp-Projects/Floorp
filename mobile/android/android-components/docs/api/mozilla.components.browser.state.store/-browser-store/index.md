@@ -12,7 +12,7 @@ The only way to change the [BrowserState](../../mozilla.components.browser.state
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`)`<br>The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree). |
+| [&lt;init&gt;](-init-.md) | `BrowserStore(initialState: `[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)` = BrowserState())`<br>The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree). |
 
 ### Inherited Properties
 

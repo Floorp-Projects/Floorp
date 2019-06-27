@@ -2,7 +2,7 @@
 
 # QrFeature
 
-`class QrFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFeature.kt#L32)
+`class QrFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md)`, `[`PermissionsFeature`](../../mozilla.components.support.base.feature/-permissions-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/qr/src/main/java/mozilla/components/feature/qr/QrFeature.kt#L33)
 
 Feature implementation that provides QR scanning functionality via the [QrFragment](../-qr-fragment/index.md).
 
@@ -10,7 +10,13 @@ Feature implementation that provides QR scanning functionality via the [QrFragme
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `QrFeature(context: <ERROR CLASS>, fragmentManager: FragmentManager, onScanResult: `[`OnScanResult`](../-on-scan-result.md)` = { }, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)` = { })`<br>Feature implementation that provides QR scanning functionality via the [QrFragment](../-qr-fragment/index.md). |
+| [&lt;init&gt;](-init-.md) | `QrFeature(context: <ERROR CLASS>, fragmentManager: FragmentManager, onScanResult: `[`OnScanResult`](../-on-scan-result.md)` = { }, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../../mozilla.components.support.base.feature/-on-need-to-request-permissions.md)` = { })`<br>Feature implementation that provides QR scanning functionality via the [QrFragment](../-qr-fragment/index.md). |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [onNeedToRequestPermissions](on-need-to-request-permissions.md) | `val onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../../mozilla.components.support.base.feature/-on-need-to-request-permissions.md)<br>a callback invoked when permissions need to be requested before a QR scan can be performed. Once the request is completed, [onPermissionsResult](on-permissions-result.md) needs to be invoked. This feature will request [android.Manifest.permission.CAMERA](#). |
 
 ### Functions
 

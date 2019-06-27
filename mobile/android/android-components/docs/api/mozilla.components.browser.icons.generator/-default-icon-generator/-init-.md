@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`DefaultIconGenerator(context: <ERROR CLASS>, cornerRadius: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = DEFAULT_CORNER_RADIUS, textColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Color.WHITE, backgroundColors: `[`IntArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int-array/index.html)` = DEFAULT_COLORS)`
+`DefaultIconGenerator(@DimenRes cornerRadiusDimen: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = R.dimen.mozac_browser_icons_generator_default_corner_radius, @ColorRes textColorRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = R.color.mozac_browser_icons_generator_default_text_color, @ArrayRes backgroundColorsRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = R.array.mozac_browser_icons_photon_palette)`
 
 [IconGenerator](../-icon-generator/index.md) implementation that will generate an icon with a background color, rounded corners and a letter
 representing the URL.

@@ -2,7 +2,7 @@
 
 # DialogConfig
 
-`data class DialogConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L497)
+`data class DialogConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L498)
 
 Customization options for feature request dialog
 

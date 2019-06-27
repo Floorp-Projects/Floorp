@@ -2,7 +2,7 @@
 
 # Type
 
-`enum class Type` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L51)
+`enum class Type` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L49)
 
 An icon resource type.
 
@@ -17,3 +17,4 @@ An icon resource type.
 | [OPENGRAPH](-o-p-e-n-g-r-a-p-h.md) | An "Open Graph" image. |
 | [TWITTER](-t-w-i-t-t-e-r.md) | A "Twitter Card" image. |
 | [MICROSOFT_TILE](-m-i-c-r-o-s-o-f-t_-t-i-l-e.md) | A "Microsoft tile" image. |
+| [TIPPY_TOP](-t-i-p-p-y_-t-o-p.md) | An icon found in Mozilla's "tippy top" list. |

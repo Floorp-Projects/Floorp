@@ -6,10 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [PromptFeature](-prompt-feature/index.md) | `class PromptFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)<br>Feature for displaying native dialogs for html elements like: input type date, file, time, color, option, menu, authentication, confirmation and alerts. |
-
-### Type Aliases
-
-| Name | Summary |
-|---|---|
-| [OnNeedToRequestPermissions](-on-need-to-request-permissions.md) | `typealias OnNeedToRequestPermissions = (permissions: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [PromptFeature](-prompt-feature/index.md) | `class PromptFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`PermissionsFeature`](../mozilla.components.support.base.feature/-permissions-feature/index.md)<br>Feature for displaying native dialogs for html elements like: input type date, file, time, color, option, menu, authentication, confirmation and alerts. |

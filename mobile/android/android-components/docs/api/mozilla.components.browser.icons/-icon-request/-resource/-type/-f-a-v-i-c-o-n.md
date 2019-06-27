@@ -2,7 +2,7 @@
 
 # FAVICON
 
-`FAVICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L57)
+`FAVICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L55)
 
 A favicon ("icon" or "shortcut icon").
 
