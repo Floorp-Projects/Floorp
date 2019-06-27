@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
@@ -305,6 +306,7 @@ class TextInputDelegateTest : BaseSessionTest() {
                                          checkGecko: Boolean = true) =
             assertTextAndSelection(message, ic, expected, value, value, checkGecko)
 
+    @ReuseSession(false) // Test is only reliable on automation when not reusing session.
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection() {
         // too slow on debug

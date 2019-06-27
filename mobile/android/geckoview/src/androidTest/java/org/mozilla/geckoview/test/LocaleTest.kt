@@ -5,6 +5,7 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 import android.support.test.filters.MediumTest

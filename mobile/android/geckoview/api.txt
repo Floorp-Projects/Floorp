@@ -239,8 +239,6 @@ package org.mozilla.geckoview {
     ctor public GeckoResult();
     ctor public GeckoResult(Handler);
     ctor public GeckoResult(GeckoResult<T>);
-    method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>);
-    method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>, @Nullable GeckoResult.Consumer<Throwable>);
     method public synchronized void complete(@Nullable T);
     method public synchronized void completeExceptionally(@NonNull Throwable);
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);
@@ -254,10 +252,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoResult<T> withHandler(@Nullable Handler);
     field public static final GeckoResult<AllowOrDeny> ALLOW;
     field public static final GeckoResult<AllowOrDeny> DENY;
-  }
-
-  public static interface GeckoResult.Consumer<T> {
-    method @AnyThread public void accept(@Nullable T);
   }
 
   public static interface GeckoResult.OnExceptionListener<V> {

@@ -5,6 +5,7 @@
 package org.mozilla.geckoview.test
 
 import android.support.test.InstrumentationRegistry
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
@@ -27,6 +28,7 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
+@ReuseSession(false)
 class WebExtensionTest : BaseSessionTest() {
     companion object {
         val TEST_ENDPOINT: String = "http://localhost:4243"
