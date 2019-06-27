@@ -382,7 +382,7 @@ class RemoteSettingsClient extends EventEmitter {
         }
         // The records imported from the dump should be considered as "created" for the
         // listeners.
-        syncResult.created = importedFromDump.concat(syncResult.created);
+        syncResult.add("created", importedFromDump);
       } catch (e) {
         if (e instanceof RemoteSettingsClient.InvalidSignatureError) {
           // Signature verification failed during synchronization.
