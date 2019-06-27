@@ -17,7 +17,6 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
@@ -93,7 +92,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @Test fun crashContent() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
@@ -123,7 +121,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @WithDisplay(width = 10, height = 10)
     @Test fun crashContent_tapAfterCrash() {
         // This test doesn't make sense without multiprocess
@@ -150,7 +147,6 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @IgnoreCrash
-    @ReuseSession(false)
     @Test fun crashContentMultipleSessions() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
