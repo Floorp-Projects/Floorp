@@ -139,8 +139,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                 hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
                 equalTo(true))
 
-        val url = "https://example.com/"
-        mainSession.loadUri(url)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
@@ -149,7 +148,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                     session: GeckoSession, uri: String?, type: Int,
                     callback: GeckoSession.PermissionDelegate.Callback) {
-                assertThat("URI should match", uri, endsWith(url))
+                assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Type should match", type,
                         equalTo(GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION))
                 callback.grant()
@@ -165,18 +164,13 @@ class PermissionDelegateTest : BaseSessionTest() {
             }
         })
 
-        try {
-            val position = mainSession.waitForJS("""new Promise((resolve, reject) =>
-                    window.navigator.geolocation.getCurrentPosition(resolve, reject))""")
+        val position = mainSession.waitForJS("""new Promise((resolve, reject) =>
+                window.navigator.geolocation.getCurrentPosition(resolve, reject))""")
 
-            assertThat("Request should succeed",
-                    position.asJSMap(),
-                    hasEntry(equalTo("coords"),
-                            both(hasKey("longitude")).and(hasKey("latitude"))))
-        } catch (ex: RejectedPromiseException) {
-            assertThat("Error should not because the permission was denied.",
-                    ex.reason.asJSMap(), hasEntry(equalTo("code"), not(1.0)))
-        }
+        assertThat("Request should succeed",
+                position.asJSMap(),
+                hasEntry(equalTo("coords"),
+                        both(hasKey("longitude")).and(hasKey("latitude"))))
     }
 
     @WithDevToolsAPI
