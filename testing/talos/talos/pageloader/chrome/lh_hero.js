@@ -41,6 +41,7 @@ function _contentHeroLoadHandler() {
 
 addEventListener(
   "load",
+  // eslint-disable-next-line no-undef
   contentLoadHandlerCallback(_contentHeroLoadHandler),
   true
-); // eslint-disable-line no-undef
+);

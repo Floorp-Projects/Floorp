@@ -19,6 +19,7 @@ function _contentPaintHandler() {
 
 addEventListener(
   "load",
+  // eslint-disable-next-line no-undef
   contentLoadHandlerCallback(_contentPaintHandler),
   true
-); // eslint-disable-line no-undef
+);
