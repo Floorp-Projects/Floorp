@@ -21,12 +21,13 @@
 //! The main entry point is the `make_isa()` function which allocates a configured `TargetISA`
 //! object.
 
+use std::str::FromStr;
+
 use cranelift_codegen::isa;
 use cranelift_codegen::settings::{self, Configurable};
-use std::str::FromStr;
-use utils::{BasicError, DashResult};
 
-use bindings::StaticEnvironment;
+use crate::bindings::StaticEnvironment;
+use crate::utils::{BasicError, DashResult};
 
 impl From<isa::LookupError> for BasicError {
     fn from(err: isa::LookupError) -> BasicError {
