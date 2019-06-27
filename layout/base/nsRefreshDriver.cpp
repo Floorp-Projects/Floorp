@@ -2141,7 +2141,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   NS_ASSERTION(mInRefresh, "Still in refresh");
 
   if (mPresContext->IsRoot() && XRE_IsContentProcess() &&
-      StaticPrefs::AlwaysPaint()) {
+      StaticPrefs::gfx_content_always_paint()) {
     ScheduleViewManagerFlush();
   }
 

@@ -410,7 +410,7 @@ class ImageSurfaceCache {
     // Typically an image cache will not have too many size-varying surfaces, so
     // if we exceed the given threshold, we should consider using a subset.
     int32_t thresholdSurfaces =
-        StaticPrefs::ImageCacheFactor2ThresholdSurfaces();
+        StaticPrefs::image_cache_factor2_threshold_surfaces();
     if (thresholdSurfaces < 0 ||
         mSurfaces.Count() <= static_cast<uint32_t>(thresholdSurfaces)) {
       return;
@@ -1056,7 +1056,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     // difference between this and UnlockImage.)
     DoUnlockSurfaces(
         WrapNotNull(cache),
-        /* aStaticOnly = */ !StaticPrefs::ImageMemAnimatedDiscardable(),
+        /* aStaticOnly = */ !StaticPrefs::image_mem_animated_discardable(),
         aAutoLock);
   }
 
@@ -1378,17 +1378,18 @@ void SurfaceCache::Initialize() {
   // Length of time before an unused surface is removed from the cache, in
   // milliseconds.
   uint32_t surfaceCacheExpirationTimeMS =
-      StaticPrefs::ImageMemSurfaceCacheMinExpirationMS();
+      StaticPrefs::image_mem_surfacecache_min_expiration_ms();
 
   // What fraction of the memory used by the surface cache we should discard
   // when we get a memory pressure notification. This value is interpreted as
   // 1/N, so 1 means to discard everything, 2 means to discard about half of the
   // memory we're using, and so forth. We clamp it to avoid division by zero.
   uint32_t surfaceCacheDiscardFactor =
-      max(StaticPrefs::ImageMemSurfaceCacheDiscardFactor(), 1u);
+      max(StaticPrefs::image_mem_surfacecache_discard_factor(), 1u);
 
   // Maximum size of the surface cache, in kilobytes.
-  uint64_t surfaceCacheMaxSizeKB = StaticPrefs::ImageMemSurfaceCacheMaxSizeKB();
+  uint64_t surfaceCacheMaxSizeKB =
+      StaticPrefs::image_mem_surfacecache_max_size_kb();
 
   // A knob determining the actual size of the surface cache. Currently the
   // cache is (size of main memory) / (surface cache size factor) KB
@@ -1399,7 +1400,7 @@ void SurfaceCache::Initialize() {
   // of memory, which would yield a 64MB cache on this setting.
   // We clamp this value to avoid division by zero.
   uint32_t surfaceCacheSizeFactor =
-      max(StaticPrefs::ImageMemSurfaceCacheSizeFactor(), 1u);
+      max(StaticPrefs::image_mem_surfacecache_size_factor(), 1u);
 
   // Compute the size of the surface cache.
   uint64_t memorySize = PR_GetPhysicalMemorySize();
@@ -1637,7 +1638,8 @@ IntSize SurfaceCache::ClampVectorSize(const IntSize& aSize) {
   // It shouldn't get here if it is significantly larger because
   // VectorImage::UseSurfaceCacheForSize should prevent us from requesting
   // a rasterized version of a surface greater than 4x the maximum.
-  int32_t maxSizeKB = StaticPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
+  int32_t maxSizeKB =
+      StaticPrefs::image_cache_max_rasterized_svg_threshold_kb();
   if (maxSizeKB <= 0) {
     return aSize;
   }

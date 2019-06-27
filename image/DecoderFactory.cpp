@@ -74,7 +74,7 @@ DecoderType DecoderFactory::GetDecoderType(const char* aMimeType) {
 
     // WebP
   } else if (!strcmp(aMimeType, IMAGE_WEBP) &&
-             StaticPrefs::ImageWebPEnabled()) {
+             StaticPrefs::image_webp_enabled()) {
     type = DecoderType::WEBP;
   }
 

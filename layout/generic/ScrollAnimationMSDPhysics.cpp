@@ -10,10 +10,14 @@ using namespace mozilla;
 
 ScrollAnimationMSDPhysics::ScrollAnimationMSDPhysics(const nsPoint& aStartPos)
     : mStartPos(aStartPos),
-      mModelX(0, 0, 0,
-              StaticPrefs::SmoothScrollMSDPhysicsRegularSpringConstant(), 1),
-      mModelY(0, 0, 0,
-              StaticPrefs::SmoothScrollMSDPhysicsRegularSpringConstant(), 1),
+      mModelX(
+          0, 0, 0,
+          StaticPrefs::general_smoothScroll_msdPhysics_regularSpringConstant(),
+          1),
+      mModelY(
+          0, 0, 0,
+          StaticPrefs::general_smoothScroll_msdPhysics_regularSpringConstant(),
+          1),
       mIsFirstIteration(true) {}
 
 void ScrollAnimationMSDPhysics::Update(const TimeStamp& aTime,
@@ -56,7 +60,8 @@ double ScrollAnimationMSDPhysics::ComputeSpringConstant(
   if (!mPreviousEventTime) {
     mPreviousEventTime = aTime;
     mPreviousDelta = TimeDuration();
-    return StaticPrefs::SmoothScrollMSDPhysicsMotionBeginSpringConstant();
+    return StaticPrefs::
+        general_smoothScroll_msdPhysics_motionBeginSpringConstant();
   }
 
   TimeDuration delta = aTime - mPreviousEventTime;
@@ -67,23 +72,28 @@ double ScrollAnimationMSDPhysics::ComputeSpringConstant(
 
   double deltaMS = delta.ToMilliseconds();
   if (deltaMS >=
-      StaticPrefs::SmoothScrollMSDPhysicsContinuousMotionMaxDeltaMS()) {
-    return StaticPrefs::SmoothScrollMSDPhysicsMotionBeginSpringConstant();
+      StaticPrefs::
+          general_smoothScroll_msdPhysics_continuousMotionMaxDeltaMS()) {
+    return StaticPrefs::
+        general_smoothScroll_msdPhysics_motionBeginSpringConstant();
   }
 
   if (previousDelta &&
-      deltaMS >= StaticPrefs::SmoothScrollMSDPhysicsSlowdownMinDeltaMS() &&
+      deltaMS >=
+          StaticPrefs::general_smoothScroll_msdPhysics_slowdownMinDeltaMS() &&
       deltaMS >=
           previousDelta.ToMilliseconds() *
-              StaticPrefs::SmoothScrollMSDPhysicsSlowdownMinDeltaRatio()) {
+              StaticPrefs::
+                  general_smoothScroll_msdPhysics_slowdownMinDeltaRatio()) {
     // The rate of events has slowed (the time delta between events has
     // increased) enough that we think that the current scroll motion is coming
     // to a stop. Use a stiffer spring in order to reach the destination more
     // quickly.
-    return StaticPrefs::SmoothScrollMSDPhysicsSlowdownSpringConstant();
+    return StaticPrefs::
+        general_smoothScroll_msdPhysics_slowdownSpringConstant();
   }
 
-  return StaticPrefs::SmoothScrollMSDPhysicsRegularSpringConstant();
+  return StaticPrefs::general_smoothScroll_msdPhysics_regularSpringConstant();
 }
 
 void ScrollAnimationMSDPhysics::SimulateUntil(const TimeStamp& aTime) {

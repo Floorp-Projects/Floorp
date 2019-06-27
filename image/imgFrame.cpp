@@ -81,14 +81,14 @@ static bool ShouldUseHeap(const IntSize& aSize, int32_t aStride,
 
   // For as long as an animated image is retained, its frames will never be
   // released to let the OS purge volatile buffers.
-  if (aIsAnimated && StaticPrefs::ImageMemAnimatedUseHeap()) {
+  if (aIsAnimated && StaticPrefs::image_mem_animated_use_heap()) {
     return true;
   }
 
   // Lets us avoid too many small images consuming all of the handles. The
   // actual allocation checks for overflow.
   int32_t bufferSize = (aStride * aSize.width) / 1024;
-  if (bufferSize < StaticPrefs::ImageMemVolatileMinThresholdKB()) {
+  if (bufferSize < StaticPrefs::image_mem_volatile_min_threshold_kb()) {
     return true;
   }
 
@@ -99,7 +99,7 @@ static already_AddRefed<DataSourceSurface> AllocateBufferForImage(
     const IntSize& size, SurfaceFormat format, bool aIsAnimated = false) {
   int32_t stride = VolatileSurfaceStride(size, format);
 
-  if (gfxVars::GetUseWebRenderOrDefault() && StaticPrefs::ImageMemShared()) {
+  if (gfxVars::GetUseWebRenderOrDefault() && StaticPrefs::image_mem_shared()) {
     RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
     if (newSurf->Init(size, stride, format)) {
       return newSurf.forget();

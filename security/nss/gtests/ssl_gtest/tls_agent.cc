@@ -251,6 +251,10 @@ bool TlsAgent::MaybeSetResumptionToken() {
   return true;
 }
 
+void TlsAgent::SetAntiReplayContext(ScopedSSLAntiReplayContext& ctx) {
+  EXPECT_EQ(SECSuccess, SSL_SetAntiReplayContext(ssl_fd_.get(), ctx.get()));
+}
+
 void TlsAgent::SetupClientAuth() {
   EXPECT_TRUE(EnsureTlsSetup());
   ASSERT_EQ(CLIENT, role_);

@@ -1991,7 +1991,7 @@ void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
   // Read preferences only on first iteration or for a different event origin.
   if (!mAnimationPhysics || aOrigin != mOrigin) {
     mOrigin = aOrigin;
-    if (StaticPrefs::SmoothScrollMSDPhysicsEnabled()) {
+    if (StaticPrefs::general_smoothScroll_msdPhysics_enabled()) {
       mAnimationPhysics =
           MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
     } else {

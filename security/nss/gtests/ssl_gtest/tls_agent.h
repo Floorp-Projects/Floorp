@@ -108,6 +108,8 @@ class TlsAgent : public PollTarget {
   void PrepareForRenegotiate();
   // Prepares for renegotiation, then actually triggers it.
   void StartRenegotiate();
+  void SetAntiReplayContext(ScopedSSLAntiReplayContext& ctx);
+
   static bool LoadCertificate(const std::string& name,
                               ScopedCERTCertificate* cert,
                               ScopedSECKEYPrivateKey* priv);

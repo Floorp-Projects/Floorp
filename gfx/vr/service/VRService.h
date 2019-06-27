@@ -66,7 +66,8 @@ class VRService {
 #if defined(XP_WIN)
   HANDLE mMutex;
 #endif
-  // We store the value of StaticPrefs::VRProcessEnabled() in mVRProcessEnabled.
+  // We store the value of StaticPrefs::dom_vr_process_enabled() in
+  // mVRProcessEnabled.
   bool mVRProcessEnabled;
 
   bool IsInServiceThread();

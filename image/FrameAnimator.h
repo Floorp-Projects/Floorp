@@ -80,7 +80,7 @@ class AnimationState {
    * Sets the composited frame as valid or invalid.
    */
   void SetCompositedFrameInvalid(bool aInvalid) {
-    MOZ_ASSERT(!aInvalid || StaticPrefs::ImageMemAnimatedDiscardable());
+    MOZ_ASSERT(!aInvalid || StaticPrefs::image_mem_animated_discardable());
     mCompositedFrameInvalid = aInvalid;
   }
 
