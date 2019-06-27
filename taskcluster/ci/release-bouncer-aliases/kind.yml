@@ -97,6 +97,15 @@ jobs:
                     firefox-beta-latest: installer
                     firefox-beta-stub: stub-installer
                 default: {}
+        partner-bouncer-products-per-alias:
+            by-project:
+                mozilla-beta:
+                    partner-firefox-beta-PARTNER-latest: installer
+                    partner-firefox-beta-PARTNER-stub: stub-installer
+                mozilla-release:
+                    partner-firefox-release-PARTNER-latest: installer
+                    partner-firefox-release-PARTNER-stub: stub-installer
+                default: {}
         shipping-product: firefox
         treeherder:
             platform: firefox-release/opt
