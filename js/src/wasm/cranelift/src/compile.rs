@@ -30,10 +30,10 @@ use cranelift_codegen::CodegenResult;
 use cranelift_codegen::Context;
 use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult};
 
-use bindings;
-use cpu::make_isa;
-use utils::DashResult;
-use wasm2clif::{init_sig, native_pointer_size, TransEnv};
+use crate::bindings;
+use crate::cpu::make_isa;
+use crate::utils::DashResult;
+use crate::wasm2clif::{init_sig, native_pointer_size, TransEnv};
 
 // Namespace for user-defined functions.
 const USER_FUNCTION_NAMESPACE: u32 = 0;

@@ -25,8 +25,8 @@ use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
 use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
 
-use compile;
-use utils::BasicError;
+use crate::compile;
+use crate::utils::BasicError;
 
 use self::low_level::*;
 
