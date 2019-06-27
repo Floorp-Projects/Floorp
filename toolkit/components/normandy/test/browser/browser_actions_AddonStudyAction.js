@@ -6,6 +6,9 @@ ChromeUtils.import("resource://normandy/actions/AddonStudyAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
+const {NormandyTestUtils} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
+const {addonStudyFactory} = NormandyTestUtils.factories;
+
 function addonStudyRecipeFactory(overrides = {}) {
   let args = {
     name: "Fake name",
