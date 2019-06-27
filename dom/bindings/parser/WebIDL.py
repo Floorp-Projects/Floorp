@@ -565,6 +565,9 @@ class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
     def isNavigatorProperty(self):
         return False
 
+    def isSerializable(self):
+        return False
+
     def _getDependentObjects(self):
         return set()
 
@@ -1741,7 +1744,8 @@ class IDLInterface(IDLInterfaceOrNamespace):
                   identifier == "ProbablyShortLivingWrapper" or
                   identifier == "LegacyUnenumerableNamedProperties" or
                   identifier == "RunConstructorInCallerCompartment" or
-                  identifier == "WantsEventListenerHooks"):
+                  identifier == "WantsEventListenerHooks" or
+                  identifier == "Serializable"):
                 # Known extended attributes that do not take values
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must take no arguments" % identifier,
@@ -1765,6 +1769,19 @@ class IDLInterface(IDLInterfaceOrNamespace):
 
             attrlist = attr.listValue()
             self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True
+
+    def validate(self):
+        IDLInterfaceOrNamespace.validate(self)
+        if self.parent and self.isSerializable() and not self.parent.isSerializable():
+            raise WebIDLError(
+                "Serializable interface inherits from non-serializable "
+                "interface.  Per spec, that means the object should not be "
+                "serializable, so chances are someone made a mistake here "
+                "somewhere.",
+                [self.location, self.parent.location])
+
+    def isSerializable(self):
+        return self.getExtendedAttribute("Serializable")
 
 
 class IDLNamespace(IDLInterfaceOrNamespace):
@@ -1815,6 +1832,9 @@ class IDLNamespace(IDLInterfaceOrNamespace):
 
             attrlist = attr.listValue()
             self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True
+
+    def isSerializable(self):
+        return False
 
 
 class IDLDictionary(IDLObjectWithScope):
