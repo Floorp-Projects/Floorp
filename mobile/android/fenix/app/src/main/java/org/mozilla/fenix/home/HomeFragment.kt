@@ -95,6 +95,29 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private lateinit var sessionObserver: BrowserSessionsObserver
 
+    private val collectionStorageObserver = object : TabCollectionStorage.Observer {
+        override fun onCollectionCreated(title: String, sessions: List<Session>) {
+            super.onCollectionCreated(title, sessions)
+            scrollAndAnimateCollection(sessions.size)
+        }
+
+        override fun onTabsAdded(
+            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
+            sessions: List<Session>
+        ) {
+            super.onTabsAdded(tabCollection, sessions)
+            scrollAndAnimateCollection(sessions.size, tabCollection)
+        }
+
+        override fun onCollectionRenamed(
+            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
+            title: String
+        ) {
+            super.onCollectionRenamed(tabCollection, title)
+            showRenamedSnackbar()
+        }
+    }
+
     private var homeMenu: HomeMenu? = null
 
     private val sessionManager: SessionManager
@@ -297,9 +320,11 @@ class HomeFragment : Fragment(), AccountObserver {
 
     override fun onStart() {
         super.onStart()
-        requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
         sessionObserver.onStart()
         tabCollectionObserver = subscribeToTabCollections()
+
+        // We only want this observer live just before we navigate away to the collection creation screen
+        requireComponents.core.tabCollectionStorage.unregister(collectionStorageObserver)
     }
 
     override fun onStop() {
@@ -676,6 +701,9 @@ class HomeFragment : Fragment(), AccountObserver {
         viewModel?.saveCollectionStep =
             step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
 
+        // Only register the observer right before moving to collection creation
+        requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
+
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
             nav(R.id.homeFragment, directions)
@@ -778,29 +806,6 @@ class HomeFragment : Fragment(), AccountObserver {
                 ?.setListener(listener)?.start()
         }.invokeOnCompletion {
             showSavedSnackbar(addedTabsSize)
-        }
-    }
-
-    private val collectionStorageObserver = object : TabCollectionStorage.Observer {
-        override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            super.onCollectionCreated(title, sessions)
-            scrollAndAnimateCollection(sessions.size)
-        }
-
-        override fun onTabsAdded(
-            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
-            sessions: List<Session>
-        ) {
-            super.onTabsAdded(tabCollection, sessions)
-            scrollAndAnimateCollection(sessions.size, tabCollection)
-        }
-
-        override fun onCollectionRenamed(
-            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
-            title: String
-        ) {
-            super.onCollectionRenamed(tabCollection, title)
-            showRenamedSnackbar()
         }
     }
 
