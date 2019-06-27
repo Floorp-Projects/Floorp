@@ -990,8 +990,6 @@ bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
 void ServoStyleSet::ClearCachedStyleData() {
   ClearNonInheritingComputedStyles();
   Servo_StyleSet_RebuildCachedData(mRawSet.get());
-  mCachedAnonymousContentStyles.Clear();
-  PodArrayZero(mCachedAnonymousContentStyleIndexes);
 }
 
 void ServoStyleSet::ForceDirtyAllShadowStyles() {

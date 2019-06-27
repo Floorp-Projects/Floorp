@@ -7,7 +7,6 @@
 #ifndef mozilla_ServoStyleSet_h
 #define mozilla_ServoStyleSet_h
 
-#include "mozilla/AnonymousContentKey.h"
 #include "mozilla/AtomArray.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
@@ -295,8 +294,8 @@ class ServoStyleSet {
    * Clears any cached style data that may depend on all sorts of computed
    * values.
    *
-   * Right now this clears the non-inheriting ComputedStyle cache, resets the
-   * default computed values, and clears cached anonymous content style.
+   * Right now this clears the non-inheriting ComputedStyle cache, and resets
+   * the default computed values.
    *
    * This does _not_, however, clear the stylist.
    */
@@ -323,8 +322,7 @@ class ServoStyleSet {
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  static inline already_AddRefed<ComputedStyle> ResolveServoStyle(
-      const dom::Element&);
+  inline already_AddRefed<ComputedStyle> ResolveServoStyle(const dom::Element&);
 
   bool GetKeyframesForName(const dom::Element&, const ComputedStyle&,
                            nsAtom* aName,
@@ -553,42 +551,6 @@ class ServoStyleSet {
   EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
                   nsCSSAnonBoxes::NonInheriting::_Count, RefPtr<ComputedStyle>>
       mNonInheritingComputedStyles;
-
- public:
-  void PutCachedAnonymousContentStyles(
-      AnonymousContentKey aKey, nsTArray<RefPtr<ComputedStyle>>&& aStyles) {
-    auto index = static_cast<size_t>(aKey);
-
-    MOZ_ASSERT(mCachedAnonymousContentStyles.Length() + aStyles.Length() < 256,
-               "(index, length) pairs must be bigger");
-    MOZ_ASSERT(mCachedAnonymousContentStyleIndexes[index].second == 0,
-               "shouldn't need to overwrite existing cached styles");
-    MOZ_ASSERT(!aStyles.IsEmpty(), "should have some styles to cache");
-
-    mCachedAnonymousContentStyleIndexes[index] = std::make_pair(
-        mCachedAnonymousContentStyles.Length(), aStyles.Length());
-    mCachedAnonymousContentStyles.AppendElements(std::move(aStyles));
-  }
-
-  void GetCachedAnonymousContentStyles(
-      AnonymousContentKey aKey, nsTArray<RefPtr<ComputedStyle>>& aStyles) {
-    auto index = static_cast<size_t>(aKey);
-    auto loc = mCachedAnonymousContentStyleIndexes[index];
-    aStyles.AppendElements(mCachedAnonymousContentStyles.Elements() + loc.first,
-                           loc.second);
-  }
-
- private:
-  // Map of AnonymousContentKey values to an (index, length) pair pointing into
-  // mCachedAnonymousContentStyles.
-  //
-  // We assert that the index and length values fit into uint8_ts.
-  std::pair<uint8_t, uint8_t>
-      mCachedAnonymousContentStyleIndexes[1
-                                          << sizeof(AnonymousContentKey) * 8]{};
-
-  // Stores cached ComputedStyles for certain native anonymous content.
-  nsTArray<RefPtr<ComputedStyle>> mCachedAnonymousContentStyles;
 
   StylistState mStylistState = StylistState::NotDirty;
   bool mAuthorStyleDisabled = false;
