@@ -18,7 +18,7 @@ import android.support.annotation.UiThread;
 import android.util.Log;
 
 /**
- * A class that automatically adjusts font size settings for web content in Gecko
+ * A class that automatically adjusts font size and font inflation settings for web content in Gecko
  * in accordance with the device's OS font scale setting.
  *
  * @see android.provider.Settings.System#FONT_SCALE
@@ -41,6 +41,7 @@ import android.util.Log;
     private boolean mRunning;
 
     private float mPrevGeckoFontScale;
+    private boolean mPrevFontInflationState;
 
     public static GeckoFontScaleListener getInstance() {
         return sInstance;
@@ -130,6 +131,7 @@ import android.util.Log;
         }
 
         mPrevGeckoFontScale = mSettings.getFontSizeFactor();
+        mPrevFontInflationState = mSettings.getFontInflationEnabled();
         ContentResolver contentResolver = mApplicationContext.getContentResolver();
         Uri fontSizeSetting = Settings.System.getUriFor(Settings.System.FONT_SCALE);
         contentResolver.registerContentObserver(fontSizeSetting, false, this);
@@ -153,13 +155,17 @@ import android.util.Log;
     private void onSystemFontScaleChange(final ContentResolver contentResolver,
                                          final boolean stopping) {
         float fontScale;
+        boolean fontInflationEnabled;
 
         if (!stopping) { // Either we were enabled, or else the system font scale changed.
             fontScale = Settings.System.getFloat(contentResolver, Settings.System.FONT_SCALE, DEFAULT_FONT_SCALE);
+            fontInflationEnabled = true;
         } else { // We were turned off.
             fontScale = mPrevGeckoFontScale;
+            fontInflationEnabled = mPrevFontInflationState;
         }
 
+        mSettings.setFontInflationEnabledInternal(fontInflationEnabled);
         mSettings.setFontSizeFactorInternal(fontScale);
     }
 
