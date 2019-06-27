@@ -3459,8 +3459,8 @@ void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
 
     StartAnimation(new SmoothScrollAnimation(
         *this, initialPosition, initialVelocity, destination,
-        StaticPrefs::ScrollBehaviorSpringConstant(),
-        StaticPrefs::ScrollBehaviorDampingRatio()));
+        StaticPrefs::layout_css_scroll_behavior_spring_constant(),
+        StaticPrefs::layout_css_scroll_behavior_damping_ratio()));
   }
 }
 

@@ -470,7 +470,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                         new DisplayPortPropertyData(displayport, aPriority),
                         nsINode::DeleteProperty<DisplayPortPropertyData>);
 
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (StaticPrefs::layout_scroll_root_frame_containers()) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame && aElement == rootScrollFrame->GetContent() &&
         nsLayoutUtils::UsesAsyncScrolling(rootScrollFrame)) {

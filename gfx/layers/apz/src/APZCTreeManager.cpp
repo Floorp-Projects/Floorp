@@ -3322,7 +3322,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
   // content resolution, which requires some special handling.
   bool scrollbarSubjectToResolution =
       aMetrics.IsRootContent() &&
-      StaticPrefs::LayoutUseContainersForRootFrames();
+      StaticPrefs::layout_scroll_root_frame_containers();
 
   // |asyncTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned

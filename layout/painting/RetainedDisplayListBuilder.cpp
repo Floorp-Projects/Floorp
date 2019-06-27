@@ -1332,7 +1332,8 @@ bool RetainedDisplayListBuilder::ShouldBuildPartial(
     return false;
   }
 
-  if (aModifiedFrames.Length() > StaticPrefs::LayoutRebuildFrameLimit()) {
+  if (aModifiedFrames.Length() >
+      StaticPrefs::layout_display_list_rebuild_frame_limit()) {
     // Computing a dirty rect with too many modified frames can be slow.
     Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::RebuildLimit;
     return false;

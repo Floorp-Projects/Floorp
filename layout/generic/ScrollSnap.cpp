@@ -333,7 +333,8 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
 
   bool snapped = false;
   nsPoint finalPos = calcSnapPoints.GetBestEdge();
-  nscoord proximityThreshold = StaticPrefs::ScrollSnapProximityThreshold();
+  nscoord proximityThreshold =
+      StaticPrefs::layout_css_scroll_snap_proximity_threshold();
   proximityThreshold = nsPresContext::CSSPixelsToAppUnits(proximityThreshold);
   if (aSnapInfo.mScrollSnapStrictnessY ==
           StyleScrollSnapStrictness::Proximity &&
