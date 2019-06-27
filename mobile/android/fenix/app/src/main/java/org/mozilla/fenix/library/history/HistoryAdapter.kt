@@ -8,9 +8,12 @@ import android.content.Context
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
+import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.history.viewholders.HistoryDeleteButtonViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryHeaderViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
@@ -149,18 +152,23 @@ class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
         return when (historyList.items[position]) {
             is AdapterItem.DeleteButton -> HistoryDeleteButtonViewHolder.LAYOUT_ID
             is AdapterItem.SectionHeader -> HistoryHeaderViewHolder.LAYOUT_ID
-            is AdapterItem.Item -> HistoryListItemViewHolder.LAYOUT_ID
+            is AdapterItem.Item -> HistoryListItemViewHolder.ID
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-
-        return when (viewType) {
-            HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(view, historyInteractor)
-            HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
-            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, historyInteractor)
-            else -> throw IllegalStateException()
+        return if (viewType == HistoryListItemViewHolder.ID) {
+            val view = LibrarySiteItemView(parent.context).apply {
+                layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            }
+            HistoryListItemViewHolder(view, historyInteractor)
+        } else {
+            val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+            when (viewType) {
+                HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(view, historyInteractor)
+                HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
+                else -> throw IllegalStateException()
+            }
         }
     }
 

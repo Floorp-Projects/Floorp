@@ -4,19 +4,15 @@
 
 package org.mozilla.fenix.library.bookmarks.selectfolder
 
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.bookmark_row.*
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getColorResFromAttr
+import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
@@ -30,21 +26,9 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkFolderViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.bookmark_row, parent, false)
+        val view = LibrarySiteItemView(parent.context)
 
-        return when (viewType) {
-            BookmarkFolderViewHolder.viewType -> SelectBookmarkFolderAdapter.BookmarkFolderViewHolder(
-                view
-            )
-            else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
-        }
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return when (tree[position].node.type) {
-            BookmarkNodeType.FOLDER -> BookmarkFolderViewHolder.viewType
-            else -> throw IllegalStateException("Item $tree[position] does not match to a ViewType")
-        }
+        return BookmarkFolderViewHolder(view)
     }
 
     override fun getItemCount(): Int = tree.size
@@ -52,63 +36,40 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
     override fun onBindViewHolder(holder: BookmarkFolderViewHolder, position: Int) {
         holder.bind(
             tree[position],
-            tree[position].node == sharedViewModel.selectedFolder,
-            object : SelectionInterface {
-                override fun itemSelected(node: BookmarkNode) {
-                    sharedViewModel.apply {
-                        when (selectedFolder) {
-                            node -> selectedFolder = null
-                            else -> selectedFolder = node
-                        }
-                    }
-                    notifyDataSetChanged()
+            tree[position].node == sharedViewModel.selectedFolder
+        ) { node ->
+            sharedViewModel.apply {
+                when (selectedFolder) {
+                    node -> selectedFolder = null
+                    else -> selectedFolder = node
                 }
             }
-        )
-    }
-
-    interface SelectionInterface {
-        fun itemSelected(node: BookmarkNode)
+            notifyDataSetChanged()
+        }
     }
 
     class BookmarkFolderViewHolder(
-        view: View,
-        override val containerView: View? = view
+        val view: LibrarySiteItemView
     ) :
         RecyclerView.ViewHolder(view), LayoutContainer {
 
+        override val containerView get() = view
+
         init {
-            bookmark_favicon.visibility = View.VISIBLE
-            bookmark_title.visibility = View.VISIBLE
-            bookmark_url.visibility = View.GONE
-            bookmark_separator.visibility = View.GONE
-            bookmark_layout.isClickable = true
+            view.displayAs(LibrarySiteItemView.ItemType.FOLDER)
+            view.overflowView.visibility = View.GONE
         }
 
-        fun bind(folder: BookmarkNodeWithDepth, selected: Boolean, selectionInterface: SelectionInterface) {
-            val backgroundTintAttr = if (selected) R.attr.accentBright else R.attr.neutral
-
-            // Center the bookmark title since we don't have a url
-            val constraintSet = ConstraintSet()
-            constraintSet.clone(bookmark_layout)
-            constraintSet.connect(
-                bookmark_title.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
-            )
-            constraintSet.applyTo(bookmark_layout)
-
-            val backgroundTint = containerView!!.context.getColorResFromAttr(backgroundTintAttr)
-            val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
-            bookmark_favicon.backgroundTintList = backgroundTintList
-            val res = if (selected) R.drawable.mozac_ic_check else R.drawable.ic_folder_icon
-            bookmark_favicon.setImageResource(res)
-            bookmark_overflow.visibility = View.GONE
-            bookmark_title?.text = folder.node.title
-            bookmark_layout.setOnClickListener {
-                selectionInterface.itemSelected(folder.node)
+        fun bind(folder: BookmarkNodeWithDepth, selected: Boolean, onSelect: (BookmarkNode) -> Unit) {
+            view.changeSelected(selected)
+            view.iconView.setImageResource(R.drawable.ic_folder_icon)
+            view.titleView.text = folder.node.title
+            view.setOnClickListener {
+                onSelect(folder.node)
             }
-            val pxToIndent = dpsToIndent.dpToPx(containerView.resources.displayMetrics)
+            val pxToIndent = dpsToIndent.dpToPx(view.context.resources.displayMetrics)
             val padding = pxToIndent * if (folder.depth > maxDepth) maxDepth else folder.depth
-            bookmark_layout.setPadding(padding, 0, 0, 0)
+            view.setPadding(padding, 0, 0, 0)
         }
 
         companion object {
@@ -118,17 +79,12 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
 
     data class BookmarkNodeWithDepth(val depth: Int, val node: BookmarkNode, val parent: String?)
 
-    private fun BookmarkNode?.convertToFolderDepthTree(
-        depth: Int = 0,
-        list: List<BookmarkNodeWithDepth> = listOf()
-    ): List<BookmarkNodeWithDepth> {
-        return if (this != null) {
-            val newList = list.plus(listOf(BookmarkNodeWithDepth(depth, this, this.parentGuid)))
-            newList.plus(
-                children?.filter { it.type == BookmarkNodeType.FOLDER }
-                    ?.flatMap { it.convertToFolderDepthTree(depth + 1) }
-                    ?: listOf())
-        } else listOf()
+    private fun BookmarkNode.convertToFolderDepthTree(depth: Int = 0): List<BookmarkNodeWithDepth> {
+        val newList = listOf(BookmarkNodeWithDepth(depth, this, this.parentGuid))
+        return newList + children
+            ?.filter { it.type == BookmarkNodeType.FOLDER }
+            ?.flatMap { it.convertToFolderDepthTree(depth = depth + 1) }
+            .orEmpty()
     }
 
     companion object {

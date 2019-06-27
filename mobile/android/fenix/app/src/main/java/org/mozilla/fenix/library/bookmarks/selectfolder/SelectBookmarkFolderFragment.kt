@@ -24,12 +24,12 @@ import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
@@ -75,26 +75,22 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
-        context?.let {
-            setRootTitles(it, showMobileRoot = true)
-        }
-        (activity as AppCompatActivity).title =
-            getString(R.string.bookmark_select_folder_fragment_label)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        context?.let { setRootTitles(it, showMobileRoot = true) }
+        activity?.title = getString(R.string.bookmark_select_folder_fragment_label)
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
 
         folderGuid = SelectBookmarkFolderFragmentArgs.fromBundle(arguments!!).folderGuid ?: BookmarkRoot.Root.id
         checkIfSignedIn()
 
-        lifecycleScope.launch(IO) {
-            bookmarkNode =
+        lifecycleScope.launch(Main) {
+            bookmarkNode = withContext(IO) {
                 requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)
                     .withOptionalDesktopFolders(context, showMobileRoot = true)
-            launch(Main) {
-                (activity as HomeActivity).title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
-                val adapter = SelectBookmarkFolderAdapter(sharedViewModel)
-                recylerView_bookmark_folders.adapter = adapter
-                adapter.updateData(bookmarkNode)
             }
+            activity?.title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
+            val adapter = SelectBookmarkFolderAdapter(sharedViewModel)
+            recylerView_bookmark_folders.adapter = adapter
+            adapter.updateData(bookmarkNode)
         }
     }
 

@@ -31,7 +31,7 @@ class BookmarkItemMenu(
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {
-        listOf(
+        listOfNotNull(
             if (item.type in listOf(BookmarkNodeType.ITEM, BookmarkNodeType.FOLDER)) {
                 SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_edit_button)) {
                     onItemTapped.invoke(BookmarkItemMenu.Item.Edit)
@@ -63,6 +63,6 @@ class BookmarkItemMenu(
             ) {
                 onItemTapped.invoke(BookmarkItemMenu.Item.Delete)
             }
-        ).filterNotNull()
+        )
     }
 }
