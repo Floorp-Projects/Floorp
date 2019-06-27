@@ -76,7 +76,7 @@ void RotatedBuffer::BeginCapture() {
   MOZ_ASSERT(!mCapture);
   MOZ_ASSERT(target);
   mCapture = Factory::CreateCaptureDrawTargetForTarget(
-      target, StaticPrefs::LayersOMTPCaptureLimit());
+      target, StaticPrefs::layers_omtp_capture_limit());
 }
 
 RefPtr<gfx::DrawTargetCapture> RotatedBuffer::EndCapture() {

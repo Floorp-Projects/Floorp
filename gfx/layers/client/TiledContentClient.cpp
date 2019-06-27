@@ -600,7 +600,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
     // later (copying pixels and texture upload). But this could increase
     // our memory usage and lead to OOM more frequently from spikes in usage,
     // so we have this behavior behind a pref.
-    if (!StaticPrefs::LayersTileRetainBackBuffer()) {
+    if (!StaticPrefs::layers_tiles_retain_back_buffer()) {
       DiscardBackBuffer();
     }
     Flip();
@@ -678,7 +678,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
   RefPtr<DrawTargetCapture> capture;
   if (aFlags & TilePaintFlags::Async) {
     capture = Factory::CreateCaptureDrawTargetForTarget(
-        target, StaticPrefs::LayersOMTPCaptureLimit());
+        target, StaticPrefs::layers_omtp_capture_limit());
     target = capture;
   }
 

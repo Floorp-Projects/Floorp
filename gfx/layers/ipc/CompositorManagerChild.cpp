@@ -269,7 +269,7 @@ void CompositorManagerChild::SetReplyTimeout() {
 #ifndef DEBUG
   // Add a timeout for release builds to kill GPU process when it hangs.
   if (XRE_IsParentProcess() && GPUProcessManager::Get()->GetGPUChild()) {
-    int32_t timeout = StaticPrefs::GPUProcessIPCReplyTimeoutMs();
+    int32_t timeout = StaticPrefs::layers_gpu_process_ipc_reply_timeout_ms();
     SetReplyTimeoutMs(timeout);
   }
 #endif

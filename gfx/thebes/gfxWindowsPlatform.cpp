@@ -1367,7 +1367,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   }
 
   // Check if the user really, really wants WARP.
-  if (StaticPrefs::LayersD3D11ForceWARP()) {
+  if (StaticPrefs::layers_d3d11_force_warp()) {
     // Force D3D11 on even if we disabled it.
     d3d11.UserForceEnable("User force-enabled WARP");
   }
@@ -1384,14 +1384,14 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
 
   FeatureState& al = gfxConfig::GetFeature(Feature::ADVANCED_LAYERS);
   al.SetDefaultFromPref(
-      StaticPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefName(),
+      StaticPrefs::Getlayers_mlgpu_enabled_do_not_use_directlyPrefName(),
       true /* aIsEnablePref */,
-      StaticPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefDefault());
+      StaticPrefs::Getlayers_mlgpu_enabled_do_not_use_directlyPrefDefault());
 
   // Windows 7 has an extra pref since it uses totally different buffer paths
   // that haven't been performance tested yet.
   if (al.IsEnabled() && !IsWin8OrLater()) {
-    if (StaticPrefs::AdvancedLayersEnableOnWindows7()) {
+    if (StaticPrefs::layers_mlgpu_enable_on_windows7()) {
       al.UserEnable("Enabled for Windows 7 via user-preference");
     } else {
       al.Disable(FeatureStatus::Disabled,
@@ -1637,7 +1637,7 @@ bool gfxWindowsPlatform::InitGPUProcessSupport() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     // Don't use the GPU process if not using D3D11, unless software
     // compositor is allowed
-    if (StaticPrefs::GPUProcessAllowSoftware()) {
+    if (StaticPrefs::layers_gpu_process_allow_software()) {
       return gpuProc.IsEnabled();
     }
     gpuProc.Disable(FeatureStatus::Unavailable,
@@ -1944,7 +1944,7 @@ gfxWindowsPlatform::CreateHardwareVsyncSource() {
 void gfxWindowsPlatform::GetAcceleratedCompositorBackends(
     nsTArray<LayersBackend>& aBackends) {
   if (gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING) &&
-      StaticPrefs::LayersPreferOpenGL()) {
+      StaticPrefs::layers_prefer_opengl()) {
     aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 

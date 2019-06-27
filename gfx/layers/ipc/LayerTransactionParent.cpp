@@ -475,9 +475,10 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
 #endif
 
   // Enable visual warning for long transaction when draw FPS option is enabled
-  bool drawFps = StaticPrefs::LayersDrawFPS();
+  bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
   if (drawFps) {
-    uint32_t visualWarningTrigger = StaticPrefs::LayerTransactionWarning();
+    uint32_t visualWarningTrigger =
+        StaticPrefs::layers_transaction_warning_ms();
     // The default theshold is 200ms to trigger, hit red when it take 4 times
     // longer
     TimeDuration latency = TimeStamp::Now() - aInfo.transactionStart();
