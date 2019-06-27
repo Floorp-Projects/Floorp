@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.4.3 - 50de713
+ * Version 12.5.0 - 1eae474
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -431,6 +431,7 @@ const cursorHandlers = {
 
   in(values, filters, done) {
     const results = [];
+    let i = 0;
     return function (event) {
       const cursor = event.target.result;
 
@@ -443,8 +444,7 @@ const cursorHandlers = {
         key,
         value
       } = cursor; // `key` can be an array of two values (see `keyPath` in indices definitions).
-
-      let i = 0; // `values` can be an array of arrays if we filter using an index whose key path
+      // `values` can be an array of arrays if we filter using an index whose key path
       // is an array (eg. `cursorHandlers.in([["bid/cid", 42], ["bid/cid", 43]], ...)`)
 
       while (key > values[i]) {
@@ -1236,6 +1236,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const RECORD_FIELDS_TO_CLEAN = ["_status"];
 const AVAILABLE_HOOKS = ["incoming-changes"];
+const IMPORT_CHUNK_SIZE = 200;
 /**
  * Compare two records omitting local fields and synchronization
  * attributes (like _status and last_modified)
@@ -1259,36 +1260,18 @@ function recordsEqual(a, b, localFields = []) {
 
 class SyncResultObject {
   /**
-   * Object default values.
-   * @type {Object}
-   */
-  static get defaults() {
-    return {
-      ok: true,
-      lastModified: null,
-      errors: [],
-      created: [],
-      updated: [],
-      deleted: [],
-      published: [],
-      conflicts: [],
-      skipped: [],
-      resolved: []
-    };
-  }
-  /**
    * Public constructor.
    */
-
-
   constructor() {
     /**
      * Current synchronization result status; becomes `false` when conflicts or
      * errors are registered.
      * @type {Boolean}
      */
-    this.ok = true;
-    Object.assign(this, SyncResultObject.defaults);
+    this.lastModified = null;
+    this._lists = {};
+    ["errors", "created", "updated", "deleted", "published", "conflicts", "skipped", "resolved", "void"].forEach(l => this._lists[l] = []);
+    this._cached = {};
   }
   /**
    * Adds entries for a given result type.
@@ -1300,32 +1283,75 @@ class SyncResultObject {
 
 
   add(type, entries) {
-    if (!Array.isArray(this[type])) {
+    if (!Array.isArray(this._lists[type])) {
+      console.warn(`Unknown type "${type}"`);
       return;
     }
 
     if (!Array.isArray(entries)) {
       entries = [entries];
-    } // Deduplicate entries by id. If the values don't have `id` attribute, just
-    // keep all.
-
-
-    const recordsWithoutId = new Set();
-    const recordsById = new Map();
-
-    function addOneRecord(record) {
-      if (!record.id) {
-        recordsWithoutId.add(record);
-      } else {
-        recordsById.set(record.id, record);
-      }
     }
 
-    this[type].forEach(addOneRecord);
-    entries.forEach(addOneRecord);
-    this[type] = Array.from(recordsById.values()).concat(Array.from(recordsWithoutId));
-    this.ok = this.errors.length + this.conflicts.length === 0;
+    this._lists[type] = this._lists[type].concat(entries);
+    delete this._cached[type];
     return this;
+  }
+
+  get ok() {
+    return this.errors.length + this.conflicts.length === 0;
+  }
+
+  get errors() {
+    return this._lists["errors"];
+  }
+
+  get conflicts() {
+    return this._lists["conflicts"];
+  }
+
+  get skipped() {
+    return this._deduplicate("skipped");
+  }
+
+  get resolved() {
+    return this._deduplicate("resolved");
+  }
+
+  get created() {
+    return this._deduplicate("created");
+  }
+
+  get updated() {
+    return this._deduplicate("updated");
+  }
+
+  get deleted() {
+    return this._deduplicate("deleted");
+  }
+
+  get published() {
+    return this._deduplicate("published");
+  }
+
+  _deduplicate(list) {
+    if (!(list in this._cached)) {
+      // Deduplicate entries by id. If the values don't have `id` attribute, just
+      // keep all.
+      const recordsWithoutId = new Set();
+      const recordsById = new Map();
+
+      this._lists[list].forEach(record => {
+        if (!record.id) {
+          recordsWithoutId.add(record);
+        } else {
+          recordsById.set(record.id, record);
+        }
+      });
+
+      this._cached[list] = Array.from(recordsById.values()).concat(Array.from(recordsWithoutId));
+    }
+
+    return this._cached[list];
   }
   /**
    * Reinitializes result entries for a given result type.
@@ -1336,9 +1362,25 @@ class SyncResultObject {
 
 
   reset(type) {
-    this[type] = SyncResultObject.defaults[type];
-    this.ok = this.errors.length + this.conflicts.length === 0;
+    this._lists[type] = [];
+    delete this._cached[type];
     return this;
+  }
+
+  toObject() {
+    // Only used in tests.
+    return {
+      ok: this.ok,
+      lastModified: this.lastModified,
+      errors: this.errors,
+      created: this.created,
+      updated: this.updated,
+      deleted: this.deleted,
+      skipped: this.skipped,
+      published: this.published,
+      conflicts: this.conflicts,
+      resolved: this.resolved
+    };
   }
 
 }
@@ -2062,33 +2104,36 @@ class Collection {
   async importChanges(syncResultObject, decodedChanges, strategy = Collection.strategy.MANUAL) {
     // Retrieve records matching change ids.
     try {
-      const {
-        imports,
-        resolved
-      } = await this.db.execute(transaction => {
-        const imports = decodedChanges.map(remote => {
-          // Store remote change into local database.
-          return importChange(transaction, remote, this.localFields);
-        });
-        const conflicts = imports.filter(i => i.type === "conflicts").map(i => i.data);
-
-        const resolved = this._handleConflicts(transaction, conflicts, strategy);
-
-        return {
+      for (let i = 0; i < decodedChanges.length; i += IMPORT_CHUNK_SIZE) {
+        const slice = decodedChanges.slice(i, i + IMPORT_CHUNK_SIZE);
+        const {
           imports,
           resolved
-        };
-      }, {
-        preload: decodedChanges.map(record => record.id)
-      }); // Lists of created/updated/deleted records
+        } = await this.db.execute(transaction => {
+          const imports = slice.map(remote => {
+            // Store remote change into local database.
+            return importChange(transaction, remote, this.localFields);
+          });
+          const conflicts = imports.filter(i => i.type === "conflicts").map(i => i.data);
 
-      imports.forEach(({
-        type,
-        data
-      }) => syncResultObject.add(type, data)); // Automatically resolved conflicts (if not manual)
+          const resolved = this._handleConflicts(transaction, conflicts, strategy);
 
-      if (resolved.length > 0) {
-        syncResultObject.reset("conflicts").add("resolved", resolved);
+          return {
+            imports,
+            resolved
+          };
+        }, {
+          preload: slice.map(record => record.id)
+        }); // Lists of created/updated/deleted records
+
+        imports.forEach(({
+          type,
+          data
+        }) => syncResultObject.add(type, data)); // Automatically resolved conflicts (if not manual)
+
+        if (resolved.length > 0) {
+          syncResultObject.reset("conflicts").add("resolved", resolved);
+        }
       }
     } catch (err) {
       const data = {
