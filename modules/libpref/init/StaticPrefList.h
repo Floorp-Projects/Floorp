@@ -4735,6 +4735,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// text decoration skip ink
+VARCACHE_PREF(
+  Live,
+  "layout.css.text-decoration-skip-ink.enabled",
+  layout_css_text_decoration_skip_ink_enabled,
+  bool, false
+)
+
 // Is support for CSS column-span enabled?
 VARCACHE_PREF(
   Live,
