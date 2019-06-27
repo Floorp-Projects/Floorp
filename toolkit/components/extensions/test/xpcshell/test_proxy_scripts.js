@@ -78,7 +78,7 @@ async function testProxyScript(script, expected = {}) {
     ok(error.fileName.includes("proxy.js"), "Error should include file name");
     equal(error.lineNumber, 3, "Error should include line number");
     ok(
-      error.stack.includes("proxy.js:3:7"),
+      error.stack.includes("proxy.js:3:9"),
       "Error should include stack trace"
     );
   }
