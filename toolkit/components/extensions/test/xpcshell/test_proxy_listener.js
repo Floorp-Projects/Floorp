@@ -199,3 +199,33 @@ add_task(async function test_ftp() {
 
   await extension.unload();
 });
+
+add_task(async function test_ws() {
+  let proxyRequestCount = 0;
+  let proxy = createHttpServer();
+  proxy.registerPathHandler("CONNECT", (request, response) => {
+    response.setStatusLine(request.httpVersion, 404, "Proxy not found");
+    ++proxyRequestCount;
+  });
+
+  let extension = await getExtension({
+    host: proxy.identity.primaryHost,
+    port: proxy.identity.primaryPort,
+    type: "http",
+  });
+
+  // We need a page to use the WebSocket constructor, so let's use an extension.
+  let dummy = ExtensionTestUtils.loadExtension({
+    background() {
+      // The connection will not be upgraded to WebSocket, so it will close.
+      let ws = new WebSocket("wss://example.net/");
+      ws.onclose = () => browser.test.sendMessage("websocket_closed");
+    },
+  });
+  await dummy.startup();
+  await dummy.awaitMessage("websocket_closed");
+  await dummy.unload();
+
+  equal(proxyRequestCount, 1, "Expected one proxy request");
+  await extension.unload();
+});
