@@ -192,6 +192,9 @@ async function checkAutocompleteResults(expected) {
     delete expected[url];
   }
 
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
+
   // Make sure there is no reported open page that is not open.
   for (let entry in expected) {
     Assert.ok(!entry, `Should have been found in autocomplete`);
