@@ -838,37 +838,35 @@ bool GLContext::InitImpl() {
   raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
 
   if (mWorkAroundDriverBugs) {
+    int maxTexSize = INT32_MAX;
+    int maxCubeSize = INT32_MAX;
 #ifdef XP_MACOSX
     if (!nsCocoaFeatures::IsAtLeastVersion(10, 12)) {
       if (mVendor == GLVendor::Intel) {
         // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-        mMaxTextureSize = std::min(mMaxTextureSize, 4096);
-        mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
-        // for good measure, we align renderbuffers on what we do for 2D
-        // textures
-        mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
-        mNeedsTextureSizeChecks = true;
+        maxTexSize = 4096;
+        maxCubeSize = 512;
       } else if (mVendor == GLVendor::NVIDIA) {
         // See bug 879656.  8192 fails, 8191 works.
-        mMaxTextureSize = std::min(mMaxTextureSize, 8191);
-        mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
-
-        // Part of the bug 879656, but it also doesn't hurt the 877949
-        mNeedsTextureSizeChecks = true;
+        maxTexSize = 8191;
       }
+    } else {
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
+      // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
+      // 16k*16k FB except rgba8 without depth/stencil.
+      // The max supported sizes changes based on involved formats.
+      // (RGBA32F more restrictive than RGBA16F)
+      maxTexSize = 8192;
     }
 #endif
 #ifdef MOZ_X11
     if (mVendor == GLVendor::Nouveau) {
       // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
-      mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 2048);
-      mNeedsTextureSizeChecks = true;
+      maxCubeSize = 2048;
     } else if (mVendor == GLVendor::Intel) {
       // Bug 1199923. Driver seems to report a larger max size than
       // actually supported.
-      mMaxTextureSize /= 2;
-      mMaxRenderbufferSize /= 2;
-      mNeedsTextureSizeChecks = true;
+      maxTexSize = mMaxTextureSize / 2;
     }
     // Bug 1367570. Explicitly set vertex attributes [1,3] to opaque
     // black because Nvidia doesn't do it for us.
@@ -902,6 +900,21 @@ bool GLContext::InitImpl() {
       mNeedsCheckAfterAttachTextureToFb = true;
     }
 #endif
+
+    // -
+
+    const auto fnLimit = [&](int* const driver, const int limit) {
+      if (*driver > limit) {
+        *driver = limit;
+        mNeedsTextureSizeChecks = true;
+      }
+    };
+
+    fnLimit(&mMaxTextureSize, maxTexSize);
+    fnLimit(&mMaxRenderbufferSize, maxTexSize);
+
+    maxCubeSize = std::min(maxCubeSize, maxTexSize);
+    fnLimit(&mMaxCubeMapTextureSize, maxCubeSize);
   }
 
   if (IsSupported(GLFeature::framebuffer_multisample)) {
