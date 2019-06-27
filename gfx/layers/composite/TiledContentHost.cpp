@@ -36,12 +36,12 @@ class Layer;
 
 float TileHost::GetFadeInOpacity(float aOpacity) {
   TimeStamp now = TimeStamp::Now();
-  if (!StaticPrefs::LayerTileFadeInEnabled() || mFadeStart.IsNull() ||
+  if (!StaticPrefs::layers_tiles_fade_in_enabled() || mFadeStart.IsNull() ||
       now < mFadeStart) {
     return aOpacity;
   }
 
-  float duration = StaticPrefs::LayerTileFadeInDuration();
+  float duration = StaticPrefs::layers_tiles_fade_in_duration_ms();
   float elapsed = (now - mFadeStart).ToMilliseconds();
   if (elapsed > duration) {
     mFadeStart = TimeStamp();
@@ -339,8 +339,9 @@ bool TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       tile.mFadeStart = TimeStamp::Now();
 
       aLayerManager->CompositeUntil(
-          tile.mFadeStart + TimeDuration::FromMilliseconds(
-                                StaticPrefs::LayerTileFadeInDuration()));
+          tile.mFadeStart +
+          TimeDuration::FromMilliseconds(
+              StaticPrefs::layers_tiles_fade_in_duration_ms()));
     }
   }
 
@@ -423,7 +424,7 @@ void TiledContentHost::Composite(
   // we end up changing the expected overall transparency of the content,
   // and it just looks wrong.
   Color backgroundColor;
-  if (aOpacity == 1.0f && StaticPrefs::LowPrecisionOpacity() < 1.0f) {
+  if (aOpacity == 1.0f && StaticPrefs::layers_low_precision_opacity() < 1.0f) {
     // Background colors are only stored on scrollable layers. Grab
     // the one from the nearest scrollable ancestor layer.
     for (LayerMetricsWrapper ancestor(GetLayer(),
@@ -437,7 +438,7 @@ void TiledContentHost::Composite(
   }
   float lowPrecisionOpacityReduction =
       (aOpacity == 1.0f && backgroundColor.a == 1.0f)
-          ? StaticPrefs::LowPrecisionOpacity()
+          ? StaticPrefs::layers_low_precision_opacity()
           : 1.0f;
 
   nsIntRegion tmpRegion;
@@ -632,7 +633,7 @@ void TiledContentHost::PrintInfo(std::stringstream& aStream,
   aStream << nsPrintfCString("TiledContentHost (0x%p)", this).get();
 
 #if defined(MOZ_DUMP_PAINTING)
-  if (StaticPrefs::LayersDumpTexture()) {
+  if (StaticPrefs::layers_dump_texture()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
 

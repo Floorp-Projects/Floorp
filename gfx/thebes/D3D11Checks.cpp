@@ -212,7 +212,7 @@ static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
       gfxInfo->GetAdapterVendorID(vendorID);
       gfxInfo->GetAdapterVendorID2(vendorID2);
       if (vendorID.EqualsLiteral("0x8086") && vendorID2.IsEmpty()) {
-        if (!StaticPrefs::LayersAMDSwitchableGfxEnabled()) {
+        if (!StaticPrefs::layers_amd_switchable_gfx_enabled()) {
           return false;
         }
         gfxCriticalError(CriticalLog::DefaultOptions(false))

@@ -367,7 +367,7 @@ bool BasicCompositor::SupportsEffect(EffectTypes aEffect) {
 }
 
 bool BasicCompositor::SupportsLayerGeometry() const {
-  return StaticPrefs::BasicLayerGeometry();
+  return StaticPrefs::layers_geometry_basic_enabled();
 }
 
 static RefPtr<gfx::Path> BuildPathFromPolygon(const RefPtr<DrawTarget>& aDT,
