@@ -805,10 +805,11 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
 #if defined(MOZ_WIDGET_ANDROID)
   if ((mSurfaceOrigin.x > 0) || (mSurfaceOrigin.y > 0)) {
-    mGLContext->fClearColor(StaticPrefs::CompositorOverrideClearColorR(),
-                            StaticPrefs::CompositorOverrideClearColorG(),
-                            StaticPrefs::CompositorOverrideClearColorB(),
-                            StaticPrefs::CompositorOverrideClearColorA());
+    mGLContext->fClearColor(
+        StaticPrefs::gfx_compositor_override_clear_color_r(),
+        StaticPrefs::gfx_compositor_override_clear_color_g(),
+        StaticPrefs::gfx_compositor_override_clear_color_b(),
+        StaticPrefs::gfx_compositor_override_clear_color_a());
   } else {
     mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b,
                             mClearColor.a);
@@ -1972,7 +1973,7 @@ GLuint CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit) {
 }
 
 bool CompositorOGL::SupportsTextureDirectMapping() {
-  if (!StaticPrefs::AllowTextureDirectMapping()) {
+  if (!StaticPrefs::gfx_allow_texture_direct_mapping()) {
     return false;
   }
 

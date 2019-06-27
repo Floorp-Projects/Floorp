@@ -37,8 +37,8 @@ static uint32_t ComputeImageFlags(nsIURI* uri, const nsCString& aMimeType,
   nsresult rv;
 
   // We default to the static globals.
-  bool isDiscardable = StaticPrefs::ImageMemDiscardable();
-  bool doDecodeImmediately = StaticPrefs::ImageDecodeImmediatelyEnabled();
+  bool isDiscardable = StaticPrefs::image_mem_discardable();
+  bool doDecodeImmediately = StaticPrefs::image_decode_immediately_enabled();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
   // discarding for chrome URLS.

@@ -675,7 +675,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
       mozilla::gfx::SurfaceFormat aFormat);
 
   /**
-   * Wrapper around StaticPrefs::PerfWarnings().
+   * Wrapper around StaticPrefs::gfx_perf_warnings_enabled().
    * Extracted into a function to avoid including StaticPrefs.h from this file.
    */
   static bool PerfWarnings();

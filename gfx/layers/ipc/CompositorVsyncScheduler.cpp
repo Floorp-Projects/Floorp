@@ -255,7 +255,7 @@ void CompositorVsyncScheduler::Composite(VsyncId aId,
         mozilla::Telemetry::COMPOSITE_FRAME_ROUNDTRIP_TIME,
         compositeFrameTotal.ToMilliseconds());
   } else if (mVsyncNotificationsSkipped++ >
-             StaticPrefs::CompositorUnobserveCount()) {
+             StaticPrefs::gfx_vsync_compositor_unobserve_count()) {
     UnobserveVsync();
   }
 }

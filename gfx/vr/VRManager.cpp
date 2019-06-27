@@ -79,7 +79,7 @@ VRManager::VRManager()
 #if !defined(MOZ_WIDGET_ANDROID)
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
-  if (!StaticPrefs::VRProcessEnabled() || !XRE_IsGPUProcess()) {
+  if (!StaticPrefs::dom_vr_process_enabled() || !XRE_IsGPUProcess()) {
     VRServiceManager::Get().CreateService();
   }
   if (VRServiceManager::Get().IsServiceValid()) {
@@ -144,7 +144,7 @@ void VRManager::Shutdown() {
   }
   // XRE_IsGPUProcess() is helping us to check some platforms like
   // Win 7 try which are not using GPU process but VR process is enabled.
-  if (XRE_IsGPUProcess() && StaticPrefs::VRProcessEnabled() &&
+  if (XRE_IsGPUProcess() && StaticPrefs::dom_vr_process_enabled() &&
       mVRServiceStarted) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "VRServiceManager::ShutdownVRProcess",
@@ -388,7 +388,7 @@ void VRManager::CheckForInactiveTimeout() {
     Shutdown();
   } else {
     TimeDuration duration = TimeStamp::Now() - mLastActiveTime;
-    if (duration.ToMilliseconds() > StaticPrefs::VRInactiveTimeout()) {
+    if (duration.ToMilliseconds() > StaticPrefs::dom_vr_inactive_timeout()) {
       Shutdown();
       // We must not throttle the next enumeration request
       // after an idle timeout, as it may result in the
@@ -419,11 +419,12 @@ void VRManager::EnumerateVRDisplays() {
   StartTasks();
   /**
    * Throttle the rate of enumeration to the interval set in
-   * VRDisplayEnumerateInterval
+   * dom_vr_display_enumerate_interval.
    */
   if (!mLastDisplayEnumerationTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastDisplayEnumerationTime;
-    if (duration.ToMilliseconds() < StaticPrefs::VRDisplayEnumerateInterval()) {
+    if (duration.ToMilliseconds() <
+        StaticPrefs::dom_vr_display_enumerate_interval()) {
       return;
     }
   }
@@ -440,8 +441,8 @@ void VRManager::EnumerateVRDisplays() {
   }
 
   /**
-   * If we get this far, don't try again until
-   * the VRDisplayEnumerateInterval elapses
+   * If we get this far, don't try again until the
+   * dom_vr_display_enumerate_interval elapses.
    */
   mLastDisplayEnumerationTime = TimeStamp::Now();
 
@@ -456,7 +457,7 @@ void VRManager::EnumerateVRDisplays() {
    */
 #if !defined(MOZ_WIDGET_ANDROID)
   if (!mVRServiceStarted) {
-    if (XRE_IsGPUProcess() && StaticPrefs::VRProcessEnabled()) {
+    if (XRE_IsGPUProcess() && StaticPrefs::dom_vr_process_enabled()) {
       VRServiceManager::Get().CreateVRProcess();
       mVRServiceStarted = true;
     } else {
@@ -699,7 +700,7 @@ void VRManager::ScanForControllers() {
   if (!mLastControllerEnumerationTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastControllerEnumerationTime;
     if (duration.ToMilliseconds() <
-        StaticPrefs::VRControllerEnumerateInterval()) {
+        StaticPrefs::dom_vr_controller_enumerate_interval()) {
       return;
     }
   }

@@ -36,7 +36,7 @@ Atomic<uint32_t> ScaledFont::sDeletionCounter(0);
 ScaledFont::~ScaledFont() { sDeletionCounter++; }
 
 AntialiasMode ScaledFont::GetDefaultAAMode() {
-  if (StaticPrefs::DisableAllTextAA()) {
+  if (StaticPrefs::gfx_text_disable_aa()) {
     return AntialiasMode::NONE;
   }
 

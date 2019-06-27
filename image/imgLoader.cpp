@@ -86,7 +86,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
     layers::CompositorManagerChild* manager =
         CompositorManagerChild::GetInstance();
-    if (!manager || !StaticPrefs::ImageMemDebugReporting()) {
+    if (!manager || !StaticPrefs::image_mem_debug_reporting()) {
       layers::SharedSurfacesMemoryReport sharedSurfaces;
       FinishCollectReports(aHandleReport, aData, aAnonymize, sharedSurfaces);
       return NS_OK;
@@ -263,7 +263,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
       summaryTotal += counter;
 
-      if (counter.IsNotable() || StaticPrefs::ImageMemDebugReporting()) {
+      if (counter.IsNotable() || StaticPrefs::image_mem_debug_reporting()) {
         ReportImage(aHandleReport, aData, aPathPrefix, counter,
                     aSharedSurfaces);
       } else {
@@ -344,7 +344,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
       if (counter.Type() == SurfaceMemoryCounterType::NORMAL) {
         PlaybackType playback = counter.Key().Playback();
         if (playback == PlaybackType::eAnimated) {
-          if (StaticPrefs::ImageMemDebugReporting()) {
+          if (StaticPrefs::image_mem_debug_reporting()) {
             surfacePathPrefix.AppendPrintf(
                 " (animation %4u)", uint32_t(counter.Values().FrameIndex()));
           } else {
@@ -1251,8 +1251,8 @@ imgCacheQueue& imgLoader::GetCacheQueue(const ImageCacheKey& aKey) {
 }
 
 void imgLoader::GlobalInit() {
-  sCacheTimeWeight = StaticPrefs::ImageCacheTimeWeight() / 1000.0;
-  int32_t cachesize = StaticPrefs::ImageCacheSize();
+  sCacheTimeWeight = StaticPrefs::image_cache_timeweight() / 1000.0;
+  int32_t cachesize = StaticPrefs::image_cache_size();
   sCacheMaxSize = cachesize > 0 ? cachesize : 0;
 
   sMemReporter = new imgMemoryReporter();

@@ -115,10 +115,16 @@ SECStatus tls13_NegotiateVersion(sslSocket *ss,
 PRBool tls13_ShouldRequestClientAuth(sslSocket *ss);
 
 PRBool tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid);
-void tls13_AntiReplayRollover(PRTime now);
+void tls13_AntiReplayRollover(SSLAntiReplayContext *ctx, PRTime now);
+SSLAntiReplayContext *tls13_RefAntiReplayContext(SSLAntiReplayContext *ctx);
+void tls13_ReleaseAntiReplayContext(SSLAntiReplayContext *ctx);
 
-SECStatus SSLExp_InitAntiReplay(PRTime now, PRTime window, unsigned int k,
-                                unsigned int bits);
+SECStatus SSLExp_CreateAntiReplayContext(
+    PRTime now, PRTime window, unsigned int k, unsigned int bits,
+    SSLAntiReplayContext **ctx);
+SECStatus SSLExp_SetAntiReplayContext(PRFileDesc *fd,
+                                      SSLAntiReplayContext *ctx);
+SECStatus SSLExp_ReleaseAntiReplayContext(SSLAntiReplayContext *ctx);
 
 SECStatus SSLExp_HelloRetryRequestCallback(PRFileDesc *fd,
                                            SSLHelloRetryRequestCallback cb,

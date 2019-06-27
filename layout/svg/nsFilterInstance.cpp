@@ -146,7 +146,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
   // If there are too many filters to render, then just pretend that we
   // succeeded, and don't render any of them.
   if (instance.mFilterDescription.mPrimitives.Length() >
-      StaticPrefs::WebRenderMaxFilterOpsPerChain()) {
+      StaticPrefs::gfx_webrender_max_filter_ops_per_chain()) {
     return true;
   }
 

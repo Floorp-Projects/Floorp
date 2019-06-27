@@ -1543,8 +1543,8 @@ void gfxWindowsPlatform::InitializeD2DConfig() {
     return;
   }
 
-  d2d1.SetDefaultFromPref(StaticPrefs::GetDirect2DDisabledPrefName(), false,
-                          StaticPrefs::GetDirect2DDisabledPrefDefault());
+  d2d1.SetDefaultFromPref(StaticPrefs::Getgfx_direct2d_disabledPrefName(), false,
+                          StaticPrefs::Getgfx_direct2d_disabledPrefDefault());
 
   nsCString message;
   nsCString failureId;
@@ -1553,7 +1553,7 @@ void gfxWindowsPlatform::InitializeD2DConfig() {
     d2d1.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
-  if (!d2d1.IsEnabled() && StaticPrefs::Direct2DForceEnabled()) {
+  if (!d2d1.IsEnabled() && StaticPrefs::gfx_direct2d_force_enabled()) {
     d2d1.UserForceEnable("Force-enabled via user-preference");
   }
 }
