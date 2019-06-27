@@ -55,7 +55,10 @@ class NotificationManager(private val context: Context) {
         logger.debug("Showing ${event.entries.size} tab(s) received from deviceID=${event.from?.id}")
         event.entries.forEach { tab ->
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.url))
-            val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.putExtra(RECEIVE_TABS_TAG, true)
+            val pendingIntent: PendingIntent =
+                PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
 
             val builder = NotificationCompat.Builder(context, RECEIVE_TABS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_status_logo)

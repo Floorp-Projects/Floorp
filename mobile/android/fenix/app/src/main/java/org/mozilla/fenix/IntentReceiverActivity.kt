@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.components.NotificationManager.Companion.RECEIVE_TABS_TAG
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
@@ -38,7 +39,9 @@ class IntentReceiverActivity : Activity() {
             }
             intent.action == Intent.ACTION_VIEW -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                if (!intent.getBooleanExtra(RECEIVE_TABS_TAG, false)) {
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
                 true
             }
             else -> {
