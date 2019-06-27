@@ -1761,7 +1761,7 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
     // above. We need to grab style with animations from the pseudo element and
     // replace old one.
     mPresShell->StyleSet()->StyleNewSubtree(container);
-    pseudoStyle = styleSet->ResolveServoStyle(*container);
+    pseudoStyle = ServoStyleSet::ResolveServoStyle(*container);
   }
 
   uint32_t contentCount = pseudoStyle->StyleContent()->ContentCount();
@@ -2253,7 +2253,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   }
 
   RefPtr<ComputedStyle> computedStyle =
-      mPresShell->StyleSet()->ResolveServoStyle(*aDocElement);
+      ServoStyleSet::ResolveServoStyle(*aDocElement);
 
   const nsStyleDisplay* display = computedStyle->StyleDisplay();
 
@@ -4621,10 +4621,8 @@ void nsCSSFrameConstructor::InitAndRestoreFrame(
 
 already_AddRefed<ComputedStyle> nsCSSFrameConstructor::ResolveComputedStyle(
     nsIContent* aContent) {
-  ServoStyleSet* styleSet = mPresShell->StyleSet();
-
   if (auto* element = Element::FromNode(aContent)) {
-    return styleSet->ResolveServoStyle(*element);
+    return ServoStyleSet::ResolveServoStyle(*element);
   }
 
   MOZ_ASSERT(aContent->IsText(),
@@ -4646,7 +4644,7 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::ResolveComputedStyle(
   // out.
   RefPtr<ComputedStyle> parentStyle =
       Servo_Element_GetPrimaryComputedValues(parent).Consume();
-  return styleSet->ResolveStyleForText(aContent, parentStyle);
+  return mPresShell->StyleSet()->ResolveStyleForText(aContent, parentStyle);
 }
 
 // MathML Mod - RBS
