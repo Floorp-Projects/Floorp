@@ -240,6 +240,10 @@ class ComputedStyle {
   nsChangeHint CalcStyleDifference(const ComputedStyle& aNewContext,
                                    uint32_t* aEqualStructs) const;
 
+#ifdef DEBUG
+  bool EqualForCachedAnonymousContentStyle(const ComputedStyle&) const;
+#endif
+
  public:
   /**
    * Get a color that depends on link-visitedness using this and
