@@ -152,7 +152,7 @@ scrollbar[value="hidden"] {
 }
 
 @media (-moz-scrollbar-thumb-proportional) {
-  thumb[sbattr="scrollbar-thumb"] {
+  thumb {
     -moz-box-flex: 1;
   }
 }
