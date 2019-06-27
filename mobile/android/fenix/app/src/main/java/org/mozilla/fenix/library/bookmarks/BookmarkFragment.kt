@@ -131,7 +131,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
 
                 activity?.run {
                     ViewModelProviders.of(this).get(BookmarksSharedViewModel::class.java)
-                }!!.selectedFolder = null
+                }!!.selectedFolder = currentRoot
             }
         }
     }
@@ -152,7 +152,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         when (val mode = (bookmarkComponent.uiView as BookmarkUIView).mode) {
             BookmarkState.Mode.Normal -> {
-                inflater.inflate(R.menu.library_menu, menu)
+                inflater.inflate(R.menu.bookmarks_menu, menu)
             }
             is BookmarkState.Mode.Selecting -> {
                 inflater.inflate(R.menu.bookmarks_select_multi, menu)
@@ -324,6 +324,14 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
             R.id.libraryClose -> {
                 navigation
                     .popBackStack(R.id.libraryFragment, true)
+                true
+            }
+            R.id.add_bookmark_folder -> {
+                nav(
+                    R.id.bookmarkFragment,
+                    BookmarkFragmentDirections
+                        .actionBookmarkFragmentToBookmarkAddFolderFragment()
+                )
                 true
             }
             R.id.open_bookmarks_in_new_tabs_multi_select -> {

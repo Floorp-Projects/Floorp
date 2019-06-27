@@ -201,6 +201,9 @@
         <action
             android:id="@+id/action_bookmarkFragment_to_shareFragment"
             app:destination="@id/shareFragment" />
+        <action
+            android:id="@+id/action_bookmarkFragment_to_bookmarkAddFolderFragment"
+            app:destination="@id/bookmarkAddFolderFragment" />
     </fragment>
 
     <fragment
