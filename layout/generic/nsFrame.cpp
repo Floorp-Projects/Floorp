@@ -697,8 +697,13 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   if (disp->IsContainLayout() && disp->IsContainSize() &&
       // All frames that support contain:layout also support contain:size.
-      IsFrameOfType(eSupportsContainLayoutAndPaint)) {
-    // Frames that have contain:layout+size can be reflow roots.
+      IsFrameOfType(eSupportsContainLayoutAndPaint) && !IsTableWrapperFrame()) {
+    // In general, frames that have contain:layout+size can be reflow roots.
+    // (One exception: table-wrapper frames don't work well as reflow roots,
+    // because their inner-table ReflowInput init path tries to reuse & deref
+    // the wrapper's containing block reflow input, which may be null if we
+    // initiate reflow from the table-wrapper itself.)
+    //
     // Changes to `contain` force frame reconstructions, so this bit can be set
     // for the whole lifetime of this frame.
     AddStateBits(NS_FRAME_REFLOW_ROOT);
