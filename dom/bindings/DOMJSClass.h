@@ -21,6 +21,9 @@
 #include "mozilla/dom/JSSlots.h"
 
 class nsCycleCollectionParticipant;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
+class nsIGlobalObject;
 
 // All DOM globals must have a slot at DOM_PROTOTYPE_SLOT.
 #define DOM_PROTOTYPE_SLOT JSCLASS_GLOBAL_SLOT_COUNT
@@ -393,6 +396,23 @@ typedef JSObject* (*ProtoGetter)(JSContext* aCx);
  */
 typedef JS::Handle<JSObject*> (*ProtoHandleGetter)(JSContext* aCx);
 
+/**
+ * Serializes a WebIDL object for structured cloning.  aObj may not be in the
+ * compartment of aCx in cases when we were working with a cross-compartment
+ * wrapper.  aObj is expected to be an object of the DOMJSClass that we got the
+ * serializer from.
+ */
+typedef bool (*WebIDLSerializer)(JSContext* aCx,
+                                 JSStructuredCloneWriter* aWriter,
+                                 JS::Handle<JSObject*> aObj);
+
+/**
+ * Deserializes a WebIDL object from a structured clone serialization.
+ */
+typedef JSObject* (*WebIDLDeserializer)(JSContext* aCx,
+                                        nsIGlobalObject* aGlobal,
+                                        JSStructuredCloneReader* aReader);
+
 // Special JSClass for reflected DOM objects.
 struct DOMJSClass {
   // It would be nice to just inherit from JSClass, but that precludes pure
@@ -422,6 +442,10 @@ struct DOMJSClass {
   // implement cycle collection or if it inherits from nsISupports (we can get
   // the CC participant by QI'ing in that case).
   nsCycleCollectionParticipant* mParticipant;
+
+  // The serializer for this class if the relevant object is [Serializable].
+  // Null otherwise.
+  WebIDLSerializer mSerializer;
 
   static const DOMJSClass* FromJSClass(const JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMJSCLASS);
