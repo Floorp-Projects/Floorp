@@ -12,11 +12,12 @@ const {
   RESET_EDITOR,
   SET_FONT_EDITOR_DISABLED,
   UPDATE_AXIS_VALUE,
-  UPDATE_CUSTOM_INSTANCE,
   UPDATE_EDITOR_STATE,
   UPDATE_PROPERTY_VALUE,
   UPDATE_WARNING_MESSAGE,
 } = require("../actions/index");
+
+const CUSTOM_INSTANCE_NAME = getStr("fontinspector.customInstanceName");
 
 const INITIAL_STATE = {
   // Variable font axes.
@@ -29,7 +30,7 @@ const INITIAL_STATE = {
   fonts: [],
   // Current selected font variation instance.
   instance: {
-    name: getStr("fontinspector.customInstanceName"),
+    name: CUSTOM_INSTANCE_NAME,
     values: [],
   },
   // CSS font properties defined on the selected rule.
@@ -65,16 +66,17 @@ const reducers = {
   [UPDATE_AXIS_VALUE](state, { axis, value }) {
     const newState = { ...state };
     newState.axes[axis] = value;
-    return newState;
-  },
 
-  // Copy state of current axes in the format of the "values" property of a named font
-  // variation instance.
-  [UPDATE_CUSTOM_INSTANCE](state) {
-    const newState = { ...state };
+    // Cache the latest axes and their values to restore them when switching back from
+    // a named font variation instance to the custom font variation instance.
     newState.customInstanceValues = Object.keys(state.axes).map(axis => {
       return { axis: [axis], value: state.axes[axis] };
     });
+
+    // As soon as an axis value is manually updated, mark the custom font variation
+    // instance as selected.
+    newState.instance.name = CUSTOM_INSTANCE_NAME;
+
     return newState;
   },
 
