@@ -65,6 +65,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   bool CanSend() { return mCanSend; }
 
+  static void OpenToParentProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
   static void OpenToGPUProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
 
  private:
