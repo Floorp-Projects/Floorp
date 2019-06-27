@@ -2037,3 +2037,7 @@ void Gecko_LoadData_DeregisterLoad(const StyleLoadData* aData) {
   MOZ_ASSERT(aData->load_id != 0);
   ImageLoader::DeregisterCSSImageFromAllLoaders(*aData);
 }
+
+void Gecko_PrintfStderr(const nsCString* aStr) {
+  printf_stderr("%s", aStr->get());
+}

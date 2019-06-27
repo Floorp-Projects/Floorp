@@ -732,6 +732,8 @@ bool Gecko_MediaFeatures_IsResourceDocument(const mozilla::dom::Document*);
 nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
     const mozilla::dom::Document*);
 
+void Gecko_PrintfStderr(const nsCString*);
+
 }  // extern "C"
 
 #endif  // mozilla_GeckoBindings_h

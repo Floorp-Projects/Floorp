@@ -282,21 +282,50 @@ int32_t nsScrollbarFrame::MoveToNewPosition() {
   return curpos;
 }
 
+static already_AddRefed<Element> MakeScrollbarButton(
+    dom::NodeInfo* aNodeInfo, bool aVertical, bool aBottom, bool aDown,
+    AnonymousContentKey& aKey) {
+  MOZ_ASSERT(aNodeInfo);
+  MOZ_ASSERT(
+      aNodeInfo->Equals(nsGkAtoms::scrollbarbutton, nullptr, kNameSpaceID_XUL));
+
+  static constexpr nsLiteralString kSbattrValues[2][2] = {
+      {
+          NS_LITERAL_STRING("scrollbar-up-top"),
+          NS_LITERAL_STRING("scrollbar-up-bottom"),
+      },
+      {
+          NS_LITERAL_STRING("scrollbar-down-top"),
+          NS_LITERAL_STRING("scrollbar-down-bottom"),
+      },
+  };
+
+  static constexpr nsLiteralString kTypeValues[2] = {
+      NS_LITERAL_STRING("decrement"),
+      NS_LITERAL_STRING("increment"),
+  };
+
+  aKey = AnonymousContentKey::Type_ScrollbarButton;
+  if (aVertical) {
+    aKey |= AnonymousContentKey::Flag_Vertical;
+  }
+  if (aBottom) {
+    aKey |= AnonymousContentKey::Flag_ScrollbarButton_Bottom;
+  }
+  if (aDown) {
+    aKey |= AnonymousContentKey::Flag_ScrollbarButton_Down;
+  }
+
+  RefPtr<Element> e;
+  NS_TrustedNewXULElement(getter_AddRefs(e), do_AddRef(aNodeInfo));
+  e->SetAttr(kNameSpaceID_None, nsGkAtoms::sbattr,
+             kSbattrValues[aDown][aBottom], false);
+  e->SetAttr(kNameSpaceID_None, nsGkAtoms::type, kTypeValues[aDown], false);
+  return e.forget();
+}
+
 nsresult nsScrollbarFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
-  // clang-format off
-
-  // <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="curpos,maxpos,disabled"/>
-  // <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" xbl:inherits="curpos,maxpos,disabled"/>
-  // <xul:slider flex="1" xbl:inherits="disabled,curpos,maxpos,pageincrement,increment,orient">
-  //   <xul:thumb sbattr="scrollbar-thumb" xbl:inherits="orient,collapsed=disabled"
-  //              align="center" pack="center"/>
-  // </xul:slider>
-  // <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" xbl:inherits="curpos,maxpos,disabled"/>
-  // <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="curpos,maxpos,disabled"/>
-
-  // clang-format on
-
   nsNodeInfoManager* nodeInfoManager = mContent->NodeInfo()->NodeInfoManager();
 
   Element* el(GetContent()->AsElement());
@@ -309,82 +338,79 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
 
   nsAutoString orient;
   el->GetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient);
+  bool vertical = orient.EqualsLiteral("vertical");
 
-  NS_TrustedNewXULElement(
-      getter_AddRefs(mUpTopButton),
+  RefPtr<dom::NodeInfo> sbbNodeInfo =
       nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
-                                   kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
-  mUpTopButton->SetAttr(kNameSpaceID_None, nsGkAtoms::sbattr,
-                        NS_LITERAL_STRING("scrollbar-up-top"), false);
-  mUpTopButton->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                        NS_LITERAL_STRING("decrement"), false);
+                                   kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
 
-  if (!aElements.AppendElement(mUpTopButton)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  {
+    AnonymousContentKey key;
+    mUpTopButton =
+        MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ false,
+                            /* aDown */ false, key);
+    aElements.AppendElement(ContentInfo(mUpTopButton, key));
   }
 
-  NS_TrustedNewXULElement(
-      getter_AddRefs(mDownTopButton),
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
-                                   kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
-  mDownTopButton->SetAttr(kNameSpaceID_None, nsGkAtoms::sbattr,
-                          NS_LITERAL_STRING("scrollbar-down-top"), false);
-  mDownTopButton->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                          NS_LITERAL_STRING("increment"), false);
-
-  if (!aElements.AppendElement(mDownTopButton)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  {
+    AnonymousContentKey key;
+    mDownTopButton =
+        MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ false,
+                            /* aDown */ true, key);
+    aElements.AppendElement(ContentInfo(mDownTopButton, key));
   }
 
-  NS_TrustedNewXULElement(
-      getter_AddRefs(mSlider),
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::slider, nullptr, kNameSpaceID_XUL,
-                                   nsINode::ELEMENT_NODE));
-  mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
-  mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, NS_LITERAL_STRING("1"),
-                   false);
+  {
+    AnonymousContentKey key = AnonymousContentKey::Type_Slider;
+    if (vertical) {
+      key |= AnonymousContentKey::Flag_Vertical;
+    }
 
-  if (!aElements.AppendElement(mSlider)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    NS_TrustedNewXULElement(
+        getter_AddRefs(mSlider),
+        nodeInfoManager->GetNodeInfo(nsGkAtoms::slider, nullptr,
+                                     kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
+    mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
+    mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, NS_LITERAL_STRING("1"),
+                     false);
+
+    aElements.AppendElement(ContentInfo(mSlider, key));
+
+    NS_TrustedNewXULElement(
+        getter_AddRefs(mThumb),
+        nodeInfoManager->GetNodeInfo(nsGkAtoms::thumb, nullptr,
+                                     kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
+    mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
+    mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::align,
+                    NS_LITERAL_STRING("center"), false);
+    mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::pack,
+                    NS_LITERAL_STRING("center"), false);
+    mSlider->AppendChildTo(mThumb, false);
   }
 
-  NS_TrustedNewXULElement(
-      getter_AddRefs(mThumb),
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::thumb, nullptr, kNameSpaceID_XUL,
-                                   nsINode::ELEMENT_NODE));
-  mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::sbattr,
-                  NS_LITERAL_STRING("scrollbar-thumb"), false);
-  mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
-  mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::align,
-                  NS_LITERAL_STRING("center"), false);
-  mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::pack,
-                  NS_LITERAL_STRING("center"), false);
-  mSlider->AppendChildTo(mThumb, false);
-
-  NS_TrustedNewXULElement(
-      getter_AddRefs(mUpBottomButton),
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
-                                   kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
-  mUpBottomButton->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                           NS_LITERAL_STRING("decrement"), false);
-  mUpBottomButton->SetAttr(kNameSpaceID_None, nsGkAtoms::sbattr,
-                           NS_LITERAL_STRING("scrollbar-up-bottom"), false);
-
-  if (!aElements.AppendElement(mUpBottomButton)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  {
+    AnonymousContentKey key;
+    mUpBottomButton =
+        MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ true,
+                            /* aDown */ false, key);
+    aElements.AppendElement(ContentInfo(mUpBottomButton, key));
   }
 
-  NS_TrustedNewXULElement(
-      getter_AddRefs(mDownBottomButton),
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbarbutton, nullptr,
-                                   kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
-  mDownBottomButton->SetAttr(kNameSpaceID_None, nsGkAtoms::sbattr,
-                             NS_LITERAL_STRING("scrollbar-down-bottom"), false);
-  mDownBottomButton->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                             NS_LITERAL_STRING("increment"), false);
+  {
+    AnonymousContentKey key;
+    mDownBottomButton =
+        MakeScrollbarButton(sbbNodeInfo, vertical, /* aBottom */ true,
+                            /* aDown */ true, key);
+    aElements.AppendElement(ContentInfo(mDownBottomButton, key));
+  }
 
-  if (!aElements.AppendElement(mDownBottomButton)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  // Don't cache styles if we are inside a <select> element, since we have
+  // some UA style sheet rules that depend on the <select>'s attributes.
+  if (GetContent()->GetParent() &&
+      GetContent()->GetParent()->IsHTMLElement(nsGkAtoms::select)) {
+    for (auto& info : aElements) {
+      info.mKey = AnonymousContentKey::None;
+    }
   }
 
   UpdateChildrenAttributeValue(nsGkAtoms::curpos, false);
