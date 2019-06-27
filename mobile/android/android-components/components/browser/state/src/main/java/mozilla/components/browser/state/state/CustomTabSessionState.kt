@@ -8,6 +8,9 @@ import java.util.UUID
 
 /**
  * Value type that represents the state of a Custom Tab.
+ *
+ * @property id the ID of this custom tab and session.
+ * @property content the [ContentState] of this custom tab.
  */
 data class CustomTabSessionState(
     override val id: String = UUID.randomUUID().toString(),

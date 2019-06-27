@@ -8,6 +8,9 @@ import java.util.UUID
 
 /**
  * Value type that represents the state of a tab (private or normal).
+ *
+ * @property id the ID of this tab and session.
+ * @property content the [ContentState] of this tab.
  */
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
