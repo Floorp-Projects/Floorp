@@ -3366,6 +3366,15 @@ pref("dom.largeAllocationHeader.enabled", true);
 // Disable e10s for Gecko by default. This is overridden in firefox.js.
 pref("browser.tabs.remote.autostart", false);
 
+// Disable fission for Gecko by default. Lock it on release and beta because
+// it is not ready for use and can leak URIs to telemetry until bug 1561653 is
+// fixed.
+#ifdef RELEASE_OR_BETA
+pref("fission.autostart", false, locked);
+#else
+pref("fission.autostart", false);
+#endif
+
 // Pref to control whether we use separate content processes for top-level load
 // of file:// URIs.
 pref("browser.tabs.remote.separateFileUriProcess", true);
