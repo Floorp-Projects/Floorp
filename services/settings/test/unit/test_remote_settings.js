@@ -96,7 +96,7 @@ add_task(async function test_records_from_dump_are_listed_as_created_in_event() 
 
   const list = await clientWithDump.get();
   ok(list.length > 20, "The dump was loaded");
-  equal(received.created[received.created.length - 1].id, "xx", "Last record comes from the sync.");
+  equal(received.created[0].id, "xx", "Record from the sync come first.");
   equal(received.created.length, list.length, "The list of created records contains the dump");
   equal(received.current.length, received.created.length);
 });
