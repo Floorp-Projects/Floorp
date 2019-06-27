@@ -6358,7 +6358,7 @@ VARCACHE_PREF(
   Live,
   "media.devices.insecure.enabled",
   media_devices_insecure_enabled,
-  bool, false
+  bool, true
 )
 
 // If the above pref is also enabled, this pref enabled getUserMedia() support
