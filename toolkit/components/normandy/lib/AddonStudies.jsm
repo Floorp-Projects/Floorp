@@ -345,23 +345,9 @@ var AddonStudies = {
   },
 
   /**
-   * Unregister a callback to be invoked when a given study ends.
-   *
-   * @param {string} id         The extension id
-   * @param {function} listener The callback
-   */
-  removeUnenrollListener(id, listener) {
-    let listeners = this._unenrollListeners.get(id);
-    if (listeners) {
-      listeners.delete(listener);
-    }
-  },
-
-  /**
    * Invoke the unenroll callback (if any) for the given extension
    *
    * @param {string} id The extension id
-   * @param {string} reason Why the study is ending
    *
    * @returns {Promise} A Promise resolved after the unenroll listener
    *                    (if any) has finished its unenroll tasks.
