@@ -536,13 +536,11 @@ class BackgroundClipRenderingObserver : public SVGRenderingObserver {
  public:
   explicit BackgroundClipRenderingObserver(nsIFrame* aFrame) : mFrame(aFrame) {}
 
-  // We do not have a dtor to call StopObserving() since the observing and
-  // observed element are the same element (and because we could crash - see
-  // bug 1556441).
-
   NS_DECL_ISUPPORTS
 
  private:
+  virtual ~BackgroundClipRenderingObserver() { StopObserving(); }
+
   Element* GetReferencedElementWithoutObserving() final {
     return mFrame->GetContent()->AsElement();
   }
