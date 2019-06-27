@@ -4915,6 +4915,17 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Pref to control whether the ::marker property restrictions defined in [1]
+// apply.
+//
+// [1]: https://drafts.csswg.org/css-pseudo-4/#selectordef-marker
+VARCACHE_PREF(
+  Live,
+  "layout.css.marker.restricted",
+   layout_css_marker_restricted,
+  bool, true
+)
+
 // Pref to control whether @-moz-document rules are enabled in content pages.
 VARCACHE_PREF(
   Live,
