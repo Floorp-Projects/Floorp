@@ -661,7 +661,7 @@ bool BasicLayerManager::EndTransactionInternal(
 }
 
 void BasicLayerManager::FlashWidgetUpdateArea(gfxContext* aContext) {
-  if (StaticPrefs::WidgetUpdateFlashing()) {
+  if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;

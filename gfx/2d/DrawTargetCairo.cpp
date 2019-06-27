@@ -1309,7 +1309,7 @@ void DrawTargetCairo::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   }
 
   if (!SupportsVariationSettings(mSurface) && aFont->HasVariationSettings() &&
-      StaticPrefs::PrintFontVariationsAsPaths()) {
+      StaticPrefs::print_font_variations_as_paths()) {
     cairo_set_fill_rule(mContext, CAIRO_FILL_RULE_WINDING);
     cairo_new_path(mContext);
     cairo_glyph_path(mContext, &glyphs[0], aBuffer.mNumGlyphs);

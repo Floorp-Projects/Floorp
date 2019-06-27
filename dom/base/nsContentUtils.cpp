@@ -7861,7 +7861,7 @@ nsresult nsContentUtils::SendMouseEvent(
     }
     return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
   }
-  if (StaticPrefs::TestEventsAsyncEnabled()) {
+  if (StaticPrefs::test_events_async_enabled()) {
     status = widget->DispatchInputEvent(&event);
   } else {
     nsresult rv = widget->DispatchEvent(&event, status);

@@ -2007,7 +2007,7 @@ void nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform) {
     return;
   }
 
-  if (StaticPrefs::WindowTransformsDisabled()) {
+  if (StaticPrefs::widget_window_transforms_disabled()) {
     // CGSSetWindowTransform is a private API. In case calling it causes
     // problems either now or in the future, we'll want to have an easy kill
     // switch. So we allow disabling it with a pref.

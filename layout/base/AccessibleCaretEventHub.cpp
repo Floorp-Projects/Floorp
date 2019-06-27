@@ -563,7 +563,7 @@ void AccessibleCaretEventHub::LaunchLongTapInjector() {
     return;
   }
 
-  int32_t longTapDelay = StaticPrefs::UiClickHoldContextMenusDelay();
+  int32_t longTapDelay = StaticPrefs::ui_click_hold_context_menus_delay();
   mLongTapInjectorTimer->InitWithNamedFuncCallback(
       FireLongTap, this, longTapDelay, nsITimer::TYPE_ONE_SHOT,
       "AccessibleCaretEventHub::LaunchLongTapInjector");
