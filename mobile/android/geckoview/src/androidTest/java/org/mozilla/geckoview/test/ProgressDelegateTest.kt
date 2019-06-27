@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
@@ -284,30 +285,6 @@ class ProgressDelegateTest : BaseSessionTest() {
         })
     }
 
-    val errorEpsilon = 0.1
-
-    private fun waitForScroll(offset: Double, timeout: Double, param: String) {
-        sessionRule.evaluateJS(mainSession, """
-           new Promise((resolve, reject) => {
-             const start = Date.now();
-             function step() {
-               if (window.visualViewport.$param >= ($offset - $errorEpsilon)) {
-                 resolve();
-               } else if ($timeout < (Date.now() - start)) {
-                 reject();
-               } else {
-                 window.requestAnimationFrame(step);
-               }
-             }
-             window.requestAnimationFrame(step);
-           });
-        """.trimIndent()).asJSPromise().value
-    }
-
-    private fun waitForVerticalScroll(offset: Double, timeout: Double) {
-        waitForScroll(offset, timeout, "pageTop")
-    }
-
     @WithDevToolsAPI
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreState() {
@@ -317,11 +294,9 @@ class ProgressDelegateTest : BaseSessionTest() {
         mainSession.loadUri(startUri)
         sessionRule.waitForPageStop()
 
-        mainSession.evaluateJS("$('#name').value = 'the name';")
+        mainSession.evaluateJS("$('#name').value = 'the name'; window.setTimeout(() => window.scrollBy(0, 100),0);")
         mainSession.evaluateJS("$('#name').dispatchEvent(new Event('input'));")
-
-        mainSession.evaluateJS("window.scrollBy(0, 100);")
-        waitForVerticalScroll(100.0, sessionRule.env.defaultTimeoutMillis.toDouble())
+        sessionRule.waitUntilCalled(Callbacks.ScrollDelegate::class, "onScrollChanged")
 
         var savedState : GeckoSession.SessionState? = null
         sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {

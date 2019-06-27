@@ -17,6 +17,7 @@ import org.mozilla.geckoview.WebRequestError
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
@@ -30,11 +31,11 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.util.HttpBin
-import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
+@ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
     companion object {
         val TEST_ENDPOINT: String = "http://localhost:4242"
@@ -1194,7 +1195,6 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.session.waitUntilCalled(GeckoSession.NavigationDelegate::class,
                                             "onNewSession")
-        UiThreadUtils.loopUntilIdle(sessionRule.env.defaultTimeoutMillis)
     }
 
     @Test
