@@ -11,8 +11,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/layers/VideoBridgeParent.h"
-#include "mozilla/layers/CompositorThread.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
 #include "RDDChild.h"
@@ -161,26 +159,6 @@ void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
     Unused << NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
   }
   mQueuedPrefs.Clear();
-
-  ipc::Endpoint<PVideoBridgeParent> parentPipe;
-  ipc::Endpoint<PVideoBridgeChild> childPipe;
-
-  // Currently hardcoded to use the current process as the parent side,
-  // we need to add support for the GPU process.
-  nsresult rv = PVideoBridge::CreateEndpoints(
-      base::GetCurrentProcId(), mRDDChild->OtherPid(), &parentPipe, &childPipe);
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(sPDMLog, LogLevel::Debug,
-            ("Could not create video bridge: %d", int(rv)));
-    DestroyProcess();
-    return;
-  }
-
-  mRDDChild->SendCreateVideoBridgeToParentProcess(std::move(childPipe));
-
-  CompositorThreadHolder::Loop()->PostTask(
-      NewRunnableFunction("gfx::VideoBridgeParent::Open",
-                          &VideoBridgeParent::Open, std::move(parentPipe)));
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::RDDProcessStatus,

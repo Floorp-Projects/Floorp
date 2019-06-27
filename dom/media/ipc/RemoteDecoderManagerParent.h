@@ -6,7 +6,6 @@
 #ifndef include_dom_media_ipc_RemoteDecoderManagerParent_h
 #define include_dom_media_ipc_RemoteDecoderManagerParent_h
 #include "mozilla/PRemoteDecoderManagerParent.h"
-#include "mozilla/layers/VideoBridgeChild.h"
 
 namespace mozilla {
 
@@ -20,9 +19,6 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
 
   static bool CreateForContent(
       Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
-
-  static bool CreateVideoBridgeToParentProcess(
-      Endpoint<layers::PVideoBridgeChild>&& aEndpoint);
 
   // Can be called from any thread
   SurfaceDescriptorGPUVideo StoreImage(layers::Image* aImage,
@@ -39,9 +35,9 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
   PRemoteDecoderParent* AllocPRemoteDecoderParent(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
-      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-      bool* aSuccess, nsCString* aBlacklistedD3D11Driver,
-      nsCString* aBlacklistedD3D9Driver, nsCString* aErrorDescription);
+      const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
+      nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
+      nsCString* aErrorDescription);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,
