@@ -5,13 +5,11 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.test.TestCrashHandler;
 
 import android.os.Process;
-import android.support.annotation.UiThread;
 import android.support.test.InstrumentationRegistry;
 
 public class RuntimeCreator {
     private static GeckoRuntime sRuntime;
 
-    @UiThread
     public static GeckoRuntime getRuntime() {
         if (sRuntime != null) {
             return sRuntime;
@@ -32,7 +30,12 @@ public class RuntimeCreator {
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
 
-        sRuntime.setDelegate(() -> Process.killProcess(Process.myPid()));
+        sRuntime.setDelegate(new GeckoRuntime.Delegate() {
+            @Override
+            public void onShutdown() {
+                Process.killProcess(Process.myPid());
+            }
+        });
 
         return sRuntime;
     }
