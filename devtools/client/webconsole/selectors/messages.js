@@ -59,12 +59,12 @@ function getAllWarningGroupsById(state) {
   return state.messages.warningGroupsById;
 }
 
-function isMessageInWarningGroup(state, message) {
+function isMessageInWarningGroup(message, visibleMessages = []) {
   if (!getWarningGroupType(message)) {
     return false;
   }
 
-  return getVisibleMessages(state).includes(getParentWarningGroupMessageId(message));
+  return visibleMessages.includes(getParentWarningGroupMessageId(message));
 }
 
 module.exports = {
