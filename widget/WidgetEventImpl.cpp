@@ -662,12 +662,16 @@ bool WidgetMouseEvent::IsMiddleClickPasteEnabled() {
 /* static */
 double WidgetWheelEvent::ComputeOverriddenDelta(double aDelta,
                                                 bool aIsForVertical) {
-  if (!StaticPrefs::MouseWheelHasRootScrollDeltaOverride()) {
+  if (!StaticPrefs::
+          mousewheel_system_scroll_override_on_root_content_enabled()) {
     return aDelta;
   }
-  int32_t intFactor = aIsForVertical
-                          ? StaticPrefs::MouseWheelRootScrollVerticalFactor()
-                          : StaticPrefs::MouseWheelRootScrollHorizontalFactor();
+  int32_t intFactor =
+      aIsForVertical
+          ? StaticPrefs::
+                mousewheel_system_scroll_override_on_root_content_vertical_factor()
+          : StaticPrefs::
+                mousewheel_system_scroll_override_on_root_content_horizontal_factor();
   // Making the scroll speed slower doesn't make sense. So, ignore odd factor
   // which is less than 1.0.
   if (intFactor <= 100) {
