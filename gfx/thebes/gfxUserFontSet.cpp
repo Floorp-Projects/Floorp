@@ -185,11 +185,13 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
  public:
   gfxOTSContext() {
     // Whether to apply OTS validation to OpenType Layout tables
-    mCheckOTLTables = StaticPrefs::ValidateOTLTables();
+    mCheckOTLTables = StaticPrefs::gfx_downloadable_fonts_otl_validation();
     // Whether to preserve Variation tables in downloaded fonts
-    mCheckVariationTables = StaticPrefs::ValidateVariationTables();
+    mCheckVariationTables =
+        StaticPrefs::gfx_downloadable_fonts_validate_variation_tables();
     // Whether to preserve color bitmap glyphs
-    mKeepColorBitmaps = StaticPrefs::KeepColorBitmaps();
+    mKeepColorBitmaps =
+        StaticPrefs::gfx_downloadable_fonts_keep_color_bitmaps();
   }
 
   virtual ~gfxOTSContext() {

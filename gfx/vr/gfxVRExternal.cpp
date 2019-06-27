@@ -537,7 +537,7 @@ void VRSystemManagerExternal::OpenShmem() {
 
 #elif defined(XP_WIN)
   if (mShmemFile == NULL) {
-    if (StaticPrefs::VRProcessEnabled()) {
+    if (StaticPrefs::dom_vr_process_enabled()) {
       mShmemFile =
           CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
                              sizeof(VRExternalShmem), kShmemName);
@@ -639,7 +639,7 @@ already_AddRefed<VRSystemManagerExternal> VRSystemManagerExternal::Create(
     return nullptr;
   }
 
-  if ((!StaticPrefs::VRExternalEnabled() && aAPIShmem == nullptr)
+  if ((!StaticPrefs::dom_vr_external_enabled() && aAPIShmem == nullptr)
 #if defined(XP_WIN)
       || !XRE_IsGPUProcess()
 #endif

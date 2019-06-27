@@ -1391,26 +1391,29 @@ tls13_NegotiateZeroRtt(sslSocket *ss, const sslSessionID *sid)
         return;
     }
 
-    /* If we rejected 0-RTT on the first ClientHello, then we can just say that
-     * there is no 0-RTT for the second.  We shouldn't get any more.  Reset the
-     * ignore state so that we treat decryption failure normally. */
-    if (ss->ssl3.hs.zeroRttIgnore == ssl_0rtt_ignore_hrr) {
-        PORT_Assert(ss->ssl3.hs.helloRetry);
-        ss->ssl3.hs.zeroRttState = ssl_0rtt_none;
-        ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_none;
+    if (ss->ssl3.hs.zeroRttState == ssl_0rtt_ignored) {
+        /* HelloRetryRequest causes 0-RTT to be ignored. On the second
+         * ClientHello, reset the ignore state so that decryption failure is
+         * handled normally. */
+        if (ss->ssl3.hs.zeroRttIgnore == ssl_0rtt_ignore_hrr) {
+            PORT_Assert(ss->ssl3.hs.helloRetry);
+            ss->ssl3.hs.zeroRttState = ssl_0rtt_none;
+            ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_none;
+        } else {
+            SSL_TRC(3, ("%d: TLS13[%d]: application ignored 0-RTT",
+                        SSL_GETPID(), ss->fd));
+        }
         return;
     }
 
     if (!tls13_CanNegotiateZeroRtt(ss, sid)) {
-        SSL_TRC(3, ("%d: TLS13[%d]: ignore 0-RTT",
-                    SSL_GETPID(), ss->fd));
+        SSL_TRC(3, ("%d: TLS13[%d]: ignore 0-RTT", SSL_GETPID(), ss->fd));
         ss->ssl3.hs.zeroRttState = ssl_0rtt_ignored;
         ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_trial;
         return;
     }
 
-    SSL_TRC(3, ("%d: TLS13[%d]: enable 0-RTT",
-                SSL_GETPID(), ss->fd));
+    SSL_TRC(3, ("%d: TLS13[%d]: enable 0-RTT", SSL_GETPID(), ss->fd));
     PORT_Assert(ss->statelessResume);
     ss->ssl3.hs.zeroRttState = ssl_0rtt_accepted;
     ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_none;
@@ -1639,6 +1642,11 @@ tls13_MaybeSendHelloRetry(sslSocket *ss, const sslNamedGroupDef *requestedGroup,
     if (action == ssl_hello_retry_fail) {
         FATAL_ERROR(ss, SSL_ERROR_APPLICATION_ABORT, handshake_failure);
         return SECFailure;
+    }
+
+    if (action == ssl_hello_retry_reject_0rtt) {
+        ss->ssl3.hs.zeroRttState = ssl_0rtt_ignored;
+        ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_trial;
     }
 
     if (!requestedGroup && action != ssl_hello_retry_request) {

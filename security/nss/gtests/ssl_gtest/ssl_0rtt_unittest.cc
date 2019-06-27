@@ -45,11 +45,40 @@ TEST_P(TlsConnectTls13, ZeroRttServerRejectByOption) {
   SendReceive();
 }
 
+TEST_P(TlsConnectTls13, ZeroRttApplicationReject) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+
+  auto reject_0rtt = [](PRBool firstHello, const PRUint8* clientToken,
+                        unsigned int clientTokenLen, PRUint8* appToken,
+                        unsigned int* appTokenLen, unsigned int appTokenMax,
+                        void* arg) {
+    auto* called = reinterpret_cast<bool*>(arg);
+    *called = true;
+
+    EXPECT_TRUE(firstHello);
+    EXPECT_EQ(0U, clientTokenLen);
+    return ssl_hello_retry_reject_0rtt;
+  };
+
+  bool cb_run = false;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(server_->ssl_fd(),
+                                                      reject_0rtt, &cb_run));
+  ZeroRttSendReceive(true, false);
+  Handshake();
+  EXPECT_TRUE(cb_run);
+  CheckConnected();
+  SendReceive();
+}
+
 TEST_P(TlsConnectTls13, ZeroRttApparentReplayAfterRestart) {
-  // The test fixtures call SSL_InitAntiReplay() in SetUp().  This results in
-  // 0-RTT being rejected until at least one window passes.  SetupFor0Rtt()
-  // forces a rollover of the anti-replay filters, which clears this state.
-  // Here, we do the setup manually here without that forced rollover.
+  // The test fixtures enable anti-replay in SetUp().  This results in 0-RTT
+  // being rejected until at least one window passes.  SetupFor0Rtt() forces a
+  // rollover of the anti-replay filters, which clears that state and allows
+  // 0-RTT to work.  Make the first connection manually to avoid that rollover
+  // and cause 0-RTT to be rejected.
 
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
@@ -189,7 +218,7 @@ TEST_P(TlsConnectTls13, ZeroRttServerOnly) {
 // delay exceeds half the anti-replay window.
 TEST_P(TlsConnectTls13, ZeroRttRejectOldTicket) {
   static const PRTime kWindow = 10 * PR_USEC_PER_SEC;
-  EXPECT_EQ(SECSuccess, SSL_InitAntiReplay(now(), kWindow, 1, 3));
+  ResetAntiReplay(kWindow);
   SetupForZeroRtt();
 
   Reset();
@@ -214,7 +243,7 @@ TEST_P(TlsConnectTls13, ZeroRttRejectOldTicket) {
 // arrive prematurely, causing the server to reject early data.
 TEST_P(TlsConnectTls13, ZeroRttRejectPrematureTicket) {
   static const PRTime kWindow = 10 * PR_USEC_PER_SEC;
-  EXPECT_EQ(SECSuccess, SSL_InitAntiReplay(now(), kWindow, 1, 3));
+  ResetAntiReplay(kWindow);
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   server_->Set0RttEnabled(true);
@@ -876,19 +905,20 @@ TEST_F(TlsConnectDatagram13, ZeroRttShortReadDtls) {
 // that a small sleep results in rejection of early data. 0-RTT has a
 // configurable timer, which makes it ideal for this.
 TEST_F(TlsConnectStreamTls13, TimePassesByDefault) {
+  // Calling EnsureTlsSetup() replaces the time function on client and server,
+  // and sets up anti-replay, which we don't want, so initialize each directly.
+  client_->EnsureTlsSetup();
+  server_->EnsureTlsSetup();
+  // StartConnect() calls EnsureTlsSetup(), so avoid that too.
+  client_->StartConnect();
+  server_->StartConnect();
+
   // Set a tiny anti-replay window.  This has to be at least 2 milliseconds to
   // have any chance of being relevant as that is the smallest window that we
   // can detect.  Anything smaller rounds to zero.
   static const unsigned int kTinyWindowMs = 5;
-  EXPECT_EQ(SECSuccess, SSL_InitAntiReplay(
-                            PR_Now(), kTinyWindowMs * PR_USEC_PER_MSEC, 1, 5));
-
-  // Calling EnsureTlsSetup() replaces the time function on client and server,
-  // which we don't want, so initialize each directly.
-  client_->EnsureTlsSetup();
-  server_->EnsureTlsSetup();
-  client_->StartConnect();  // Also avoid StartConnect().
-  server_->StartConnect();
+  ResetAntiReplay(static_cast<PRTime>(kTinyWindowMs * PR_USEC_PER_MSEC));
+  server_->SetAntiReplayContext(anti_replay_);
 
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
@@ -921,6 +951,35 @@ TEST_F(TlsConnectStreamTls13, TimePassesByDefault) {
   Handshake();
   ExpectEarlyDataAccepted(false);
   CheckConnected();
+}
+
+// Test that SSL_CreateAntiReplayContext doesn't pass bad inputs.
+TEST_F(TlsConnectStreamTls13, BadAntiReplayArgs) {
+  SSLAntiReplayContext* p;
+  // Zero or negative window.
+  EXPECT_EQ(SECFailure, SSL_CreateAntiReplayContext(0, -1, 1, 1, &p));
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+  EXPECT_EQ(SECFailure, SSL_CreateAntiReplayContext(0, 0, 1, 1, &p));
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+  // Zero k.
+  EXPECT_EQ(SECFailure, SSL_CreateAntiReplayContext(0, 1, 0, 1, &p));
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+  // Zero bits.
+  EXPECT_EQ(SECFailure, SSL_CreateAntiReplayContext(0, 1, 1, 0, &p));
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+  EXPECT_EQ(SECFailure, SSL_CreateAntiReplayContext(0, 1, 1, 1, nullptr));
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+
+  // Prove that these parameters do work, even if they are useless..
+  EXPECT_EQ(SECSuccess, SSL_CreateAntiReplayContext(0, 1, 1, 1, &p));
+  ASSERT_NE(nullptr, p);
+  ScopedSSLAntiReplayContext ctx(p);
+
+  // The socket isn't a client or server until later, so configuring a client
+  // should work OK.
+  client_->EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_SetAntiReplayContext(client_->ssl_fd(), ctx.get()));
+  EXPECT_EQ(SECSuccess, SSL_SetAntiReplayContext(client_->ssl_fd(), nullptr));
 }
 
 #ifndef NSS_DISABLE_TLS_1_3

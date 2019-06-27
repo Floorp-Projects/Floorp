@@ -565,5 +565,20 @@ ER3(SSL_ERROR_MISSING_ESNI_EXTENSION, (SSL_ERROR_BASE + 178),
 ER3(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, (SSL_ERROR_BASE + 179),
     "SSL received an unexpected record type.")
 
+ER3(SSL_ERROR_MISSING_POST_HANDSHAKE_AUTH_EXTENSION, (SSL_ERROR_BASE + 180),
+    "SSL cannot send a CertificateRequest because the client doesn't support post-handshake authentication.")
+
 ER3(SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT, (SSL_ERROR_BASE + 181),
     "SSL received a certificate_required alert.")
+
+ER3(SSL_ERROR_DC_CERT_VERIFY_ALG_MISMATCH, (SSL_ERROR_BASE + 182),
+    "SSL received a delegated credential with unexpected certificate verification algorithm.")
+
+ER3(SSL_ERROR_DC_BAD_SIGNATURE, (SSL_ERROR_BASE + 183),
+    "SSL received a delegated credential with an invalid signature.")
+
+ER3(SSL_ERROR_DC_INVALID_KEY_USAGE, (SSL_ERROR_BASE + 184),
+    "SSL received a delegated credential from a certificate with invalid key usage.")
+
+ER3(SSL_ERROR_DC_EXPIRED, (SSL_ERROR_BASE + 185),
+    "SSL received a delegated credential that expired.")

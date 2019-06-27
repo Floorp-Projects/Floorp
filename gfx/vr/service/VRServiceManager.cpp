@@ -46,7 +46,7 @@ void VRServiceManager::ShutdownVRProcess() {
     }
     VRGPUChild::Shutdown();
   }
-  if (StaticPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::dom_vr_process_enabled()) {
     // Using PGPU channel to tell the main process
     // to shutdown VR process.
     gfx::GPUParent* gpu = GPUParent::GetSingleton();
@@ -56,7 +56,7 @@ void VRServiceManager::ShutdownVRProcess() {
 }
 
 void VRServiceManager::CreateService() {
-  if (!StaticPrefs::VRProcessEnabled()) {
+  if (!StaticPrefs::dom_vr_process_enabled()) {
     mVRService = VRService::Create();
   }
 }
