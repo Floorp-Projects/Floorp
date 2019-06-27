@@ -58,11 +58,11 @@ function test() {
   checkSelectedTab();
 
   // Remove #3 (non active)
-  gBrowser.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+  gBrowser.removeTab(gBrowser.tabContainer.lastElementChild);
   checkPreviews(2, "Expected number of previews after closing unselected via browser");
 
   // Remove #1 (active)
-  gBrowser.removeTab(gBrowser.tabs[0]);
+  gBrowser.removeTab(gBrowser.tabContainer.firstElementChild);
   checkPreviews(1, "Expected number of previews after closing selected tab via browser");
 
   // Add a new tab

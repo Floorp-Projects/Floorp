@@ -9,7 +9,7 @@
  */
 
 const kGlobalNewTabButton = document.getElementById("new-tab-button");
-const kInnerNewTabButton = gBrowser.tabContainer.newTabButton;
+const kInnerNewTabButton = document.getAnonymousElementByAttribute(gBrowser.tabContainer, "anonid", "tabs-newtab-button");
 
 function assertNewTabButton(which) {
   if (which == "global") {
