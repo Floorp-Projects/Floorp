@@ -1055,7 +1055,7 @@ public class GeckoSessionTestRule implements TestRule {
         return new RuntimeException(cause != null ? cause : e);
     }
 
-    protected void prepareStatement(final Description description) throws Throwable {
+    protected void prepareStatement(final Description description) {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
         mTimeoutMillis = env.getDefaultTimeoutMillis();
         mNullDelegates = new HashSet<>();
@@ -1195,9 +1195,13 @@ public class GeckoSessionTestRule implements TestRule {
         }
     }
 
-    protected void prepareSession(final GeckoSession session) throws Throwable {
+    protected void prepareSession(final GeckoSession session) {
         for (final Class<?> cls : DEFAULT_DELEGATES) {
-            setDelegate(cls, session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
+            try {
+                setDelegate(cls, session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -1234,6 +1238,7 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     private void waitForInitialLoad(final GeckoSession session) {
+        ThreadUtils.assertOnUiThread();
         // We receive an initial about:blank load; don't expose that to the test. The initial
         // load ends with the first onPageStop call, so ignore everything from the session
         // until the first onPageStop call.
@@ -1295,7 +1300,7 @@ public class GeckoSessionTestRule implements TestRule {
         }
     }
 
-    protected void cleanupStatement() throws Throwable {
+    protected void cleanupStatement() {
         mWaitScopeDelegates.clear();
         mTestScopeDelegates.clear();
 
@@ -1339,21 +1344,19 @@ public class GeckoSessionTestRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 final AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
-                mInstrumentation.runOnMainSync(new Runnable() {
-                    @Override
-                    public void run() {
+
+                mInstrumentation.runOnMainSync(() -> {
+                    try {
+                        prepareStatement(description);
+                        base.evaluate();
+                        performTestEndCheck();
+                    } catch (Throwable t) {
+                        exceptionRef.set(t);
+                    } finally {
                         try {
-                            prepareStatement(description);
-                            base.evaluate();
-                            performTestEndCheck();
+                            cleanupStatement();
                         } catch (Throwable t) {
-                            exceptionRef.set(t);
-                        } finally {
-                            try {
-                                cleanupStatement();
-                            } catch (Throwable t) {
-                                exceptionRef.set(t);
-                            }
+                            exceptionRef.compareAndSet(null, t);
                         }
                     }
                 });
@@ -1553,9 +1556,11 @@ public class GeckoSessionTestRule implements TestRule {
         forCallbacksDuringWait(session, callback);
     }
 
-    protected void waitUntilCalled(final @Nullable GeckoSession session,
-                                   final @NonNull Class<?> delegate,
-                                   final @NonNull List<MethodCall> methodCalls) {
+    private void waitUntilCalled(final @Nullable GeckoSession session,
+                                 final @NonNull Class<?> delegate,
+                                 final @NonNull List<MethodCall> methodCalls) {
+        ThreadUtils.assertOnUiThread();
+
         if (session != null && !session.equals(mMainSession)) {
             assertThat("Session should be wrapped through wrapSession",
                        session, isIn(mSubSessions));
@@ -1602,15 +1607,8 @@ public class GeckoSessionTestRule implements TestRule {
         beforeWait();
 
         while (!calledAny || !methodCalls.isEmpty()) {
-            while (index >= mCallRecords.size()) {
-                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
-                // We could loop forever here if the UI thread keeps receiving
-                // messages that don't result in any methods being called.
-                // Check whether we've exceeded our allotted time and bail out.
-                if (SystemClock.uptimeMillis() - startTime > mTimeoutMillis) {
-                    break;
-                }
-            }
+            final int checkIndex = index;
+            UiThreadUtils.waitForCondition(() -> (checkIndex < mCallRecords.size()), mTimeoutMillis);
 
             if (SystemClock.uptimeMillis() - startTime > mTimeoutMillis) {
                 throw new UiThreadUtils.TimeoutException("Timed out after " + mTimeoutMillis + "ms");

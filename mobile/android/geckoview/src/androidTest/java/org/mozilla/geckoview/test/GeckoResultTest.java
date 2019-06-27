@@ -1,8 +1,7 @@
 package org.mozilla.geckoview.test;
 
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoResult;
-import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
-import org.mozilla.geckoview.GeckoResult.OnValueListener;
 import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 
@@ -34,19 +33,11 @@ public class GeckoResultTest {
 
     private void waitUntilDone() {
         assertThat("We should not be done", mDone, equalTo(false));
-
-        while (!mDone) {
-            UiThreadUtils.loopUntilIdle(mEnv.getDefaultTimeoutMillis());
-        }
+        UiThreadUtils.waitForCondition(() -> mDone, mEnv.getDefaultTimeoutMillis());
     }
 
     private void done() {
-        UiThreadUtils.HANDLER.post(new Runnable() {
-            @Override
-            public void run() {
-                mDone = true;
-            }
-        });
+        UiThreadUtils.HANDLER.post(() -> mDone = true);
     }
 
     @Before
