@@ -322,7 +322,8 @@ class ServoStyleSet {
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  inline already_AddRefed<ComputedStyle> ResolveServoStyle(const dom::Element&);
+  static inline already_AddRefed<ComputedStyle> ResolveServoStyle(
+      const dom::Element&);
 
   bool GetKeyframesForName(const dom::Element&, const ComputedStyle&,
                            nsAtom* aName,

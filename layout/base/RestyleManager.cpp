@@ -2431,7 +2431,7 @@ struct RestyleManager::TextPostTraversalState {
   ComputedStyle& ParentStyle() {
     if (!mParentContext) {
       mLazilyResolvedParentContext =
-          mParentRestyleState.StyleSet().ResolveServoStyle(mParentElement);
+          ServoStyleSet::ResolveServoStyle(mParentElement);
       mParentContext = mLazilyResolvedParentContext;
     }
     return *mParentContext;
@@ -2668,8 +2668,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
       static_cast<nsChangeHint>(Servo_TakeChangeHint(aElement, &wasRestyled));
 
   RefPtr<ComputedStyle> upToDateStyleIfRestyled =
-      wasRestyled ? aRestyleState.StyleSet().ResolveServoStyle(*aElement)
-                  : nullptr;
+      wasRestyled ? ServoStyleSet::ResolveServoStyle(*aElement) : nullptr;
 
   // We should really fix the weird primary frame mapping for image maps
   // (bug 135040)...
@@ -2767,8 +2766,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   const bool isDisplayContents = !styleFrame && aElement->HasServoData() &&
                                  Servo_Element_IsDisplayContents(aElement);
   if (isDisplayContents) {
-    oldOrDisplayContentsStyle =
-        aRestyleState.StyleSet().ResolveServoStyle(*aElement);
+    oldOrDisplayContentsStyle = ServoStyleSet::ResolveServoStyle(*aElement);
   }
 
   Maybe<ServoRestyleState> thisFrameRestyleState;

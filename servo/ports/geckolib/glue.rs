@@ -5089,7 +5089,6 @@ pub extern "C" fn Servo_TakeChangeHint(
 #[no_mangle]
 pub extern "C" fn Servo_ResolveStyle(
     element: &RawGeckoElement,
-    _raw_data: &RawServoStyleSet,
 ) -> Strong<ComputedValues> {
     let element = GeckoElement(element);
     debug!("Servo_ResolveStyle: {:?}", element);
