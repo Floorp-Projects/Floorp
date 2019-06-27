@@ -175,10 +175,8 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
 }
 
 TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
-  TimeStamp now = TimeStamp::Now();
-  TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
-  TimeStamp future2 = now + TimeDuration::FromMilliseconds(200);
-  TimeStamp future3 = now + TimeDuration::FromMilliseconds(150);
+  TimeStamp start = TimeStamp::Now();
+  TimeStamp future1 = start + TimeDuration::FromMilliseconds(100);
 
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future1), false);
   WaitForNConverted(1);
@@ -186,11 +184,15 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   // We are now at t=100ms+. Queue a future frame and jump back in time to
   // signal a reset.
 
+  TimeStamp step1 = TimeStamp::Now();
+  ASSERT_GT(step1 - start, future1 - start);
+  TimeStamp future2 = step1 + TimeDuration::FromMilliseconds(200);
+  TimeStamp future3 = step1 + TimeDuration::FromMilliseconds(100);
+  ASSERT_LT(future2 - start, future1 + TimeDuration::FromSeconds(1) - start);
   mConverter->QueueVideoChunk(GenerateChunk(800, 600, future2), false);
   VideoChunk nullChunk;
   nullChunk.mFrame = VideoFrame(nullptr, gfx::IntSize(800, 600));
-  nullChunk.mTimeStamp = TimeStamp::Now();
-  ASSERT_GT(nullChunk.mTimeStamp, future1);
+  nullChunk.mTimeStamp = step1;
   mConverter->QueueVideoChunk(nullChunk, false);
 
   // We queue one more chunk after the reset so we don't have to wait a full
@@ -199,8 +201,8 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   mConverter->QueueVideoChunk(GenerateChunk(320, 240, future3), false);
 
   auto frames = WaitForNConverted(2);
-  EXPECT_GT(TimeStamp::Now(), future3);
-  EXPECT_LT(TimeStamp::Now(), future2);
+  TimeStamp step2 = TimeStamp::Now();
+  EXPECT_GT(step2 - start, future3 - start);
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
