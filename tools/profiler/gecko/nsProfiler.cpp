@@ -141,9 +141,8 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  profiler_start(PowerOfTwo32(aEntries), aInterval, features,
-                 filterStringVector.begin(), filterStringVector.length(),
-                 duration);
+  profiler_start(aEntries, aInterval, features, filterStringVector.begin(),
+                 filterStringVector.length(), duration);
 
   return NS_OK;
 }

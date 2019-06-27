@@ -472,7 +472,7 @@ class ActivePS {
     return aFeatures;
   }
 
-  ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
+  ActivePS(PSLockRef aLock, uint32_t aCapacity, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
            const Maybe<double>& aDuration)
       : mGeneration(sNextGeneration++),
@@ -575,7 +575,7 @@ class ActivePS {
   }
 
  public:
-  static void Create(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
+  static void Create(PSLockRef aLock, uint32_t aCapacity, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
                      uint32_t aFilterCount, const Maybe<double>& aDuration) {
     sInstance = new ActivePS(aLock, aCapacity, aInterval, aFeatures, aFilters,
@@ -592,7 +592,7 @@ class ActivePS {
 
   static bool Exists(PSLockRef) { return !!sInstance; }
 
-  static bool Equals(PSLockRef, PowerOfTwo32 aCapacity,
+  static bool Equals(PSLockRef, uint32_t aCapacity,
                      const Maybe<double>& aDuration, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
                      uint32_t aFilterCount) {
@@ -635,7 +635,7 @@ class ActivePS {
 
   PS_GET(uint32_t, Generation)
 
-  PS_GET(PowerOfTwo32, Capacity)
+  PS_GET(uint32_t, Capacity)
 
   PS_GET(Maybe<double>, Duration)
 
@@ -918,7 +918,7 @@ class ActivePS {
   static uint32_t sNextGeneration;
 
   // The maximum number of entries in mBuffer.
-  const PowerOfTwo32 mCapacity;
+  const uint32_t mCapacity;
 
   // The maximum duration of entries in mBuffer, in seconds.
   const Maybe<double> mDuration;
@@ -2025,7 +2025,7 @@ static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData() {
   // locked_profiler_start uses sample count is 1000 for Java thread.
   // This entry size is enough now, but we might have to estimate it
   // if we can customize it
-  auto buffer = MakeUnique<ProfileBuffer>(MakePowerOfTwo32<1024 * 1024>());
+  auto buffer = MakeUnique<ProfileBuffer>(1000 * 1000);
 
   int sampleId = 0;
   while (true) {
@@ -2288,11 +2288,10 @@ static void PrintUsageThenExit(int aExitCode) {
       "\n"
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
       "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n",
-      unsigned(PROFILER_DEFAULT_ENTRIES.Value()),
-      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES.Value()),
-      sizeof(ProfileBufferEntry),
-      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_ENTRIES.Value(),
-      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_STARTUP_ENTRIES.Value());
+      unsigned(PROFILER_DEFAULT_ENTRIES),
+      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES), sizeof(ProfileBufferEntry),
+      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_ENTRIES,
+      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_STARTUP_ENTRIES);
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
   printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
@@ -2791,7 +2790,7 @@ static void NotifyObservers(const char* aTopic,
   }
 }
 
-static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
+static void NotifyProfilerStarted(const int aCapacity,
                                   const Maybe<double>& aDuration,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters,
@@ -2801,15 +2800,14 @@ static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
     filtersArray.AppendElement(aFilters[i]);
   }
 
-  nsCOMPtr<nsIProfilerStartParams> params =
-      new nsProfilerStartParams(aCapacity.Value(), aDuration, aInterval,
-                                aFeatures, std::move(filtersArray));
+  nsCOMPtr<nsIProfilerStartParams> params = new nsProfilerStartParams(
+      aCapacity, aDuration, aInterval, aFeatures, std::move(filtersArray));
 
   ProfilerParent::ProfilerStarted(params);
   NotifyObservers("profiler-started", params);
 }
 
-static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
+static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
                                   const Maybe<double>& aDuration);
@@ -2876,7 +2874,7 @@ void profiler_init(void* aStackTop) {
   MOZ_RELEASE_ASSERT(filters.append("Compositor"));
   MOZ_RELEASE_ASSERT(filters.append("DOM Worker"));
 
-  PowerOfTwo32 capacity = PROFILER_DEFAULT_ENTRIES;
+  uint32_t capacity = PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = Nothing();
   double interval = PROFILER_DEFAULT_INTERVAL;
 
@@ -2926,13 +2924,12 @@ void profiler_init(void* aStackTop) {
       errno = 0;
       long capacityLong = strtol(startupCapacity, nullptr, 10);
       // `long` could be 32 or 64 bits, so we force a 64-bit comparison with
-      // the maximum 32-bit signed number (as more than that is clamped down to
-      // 2^31 anyway).
+      // the maximum 32-bit unsigned number.
       if (errno == 0 && capacityLong > 0 &&
           static_cast<uint64_t>(capacityLong) <=
-              static_cast<uint64_t>(INT32_MAX)) {
-        capacity = PowerOfTwo32(static_cast<uint32_t>(capacityLong));
-        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %u", unsigned(capacity.Value()));
+              static_cast<uint64_t>(UINT32_MAX)) {
+        capacity = static_cast<uint32_t>(capacityLong);
+        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %u", unsigned(capacity));
       } else {
         LOG("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
             startupCapacity);
@@ -3152,7 +3149,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
     return;
   }
 
-  *aCapacity = ActivePS::Capacity(lock).Value();
+  *aCapacity = ActivePS::Capacity(lock);
   *aDuration = ActivePS::Duration(lock);
   *aInterval = ActivePS::Interval(lock);
   *aFeatures = ActivePS::Features(lock);
@@ -3178,8 +3175,7 @@ void GetProfilerEnvVarsForChildProcess(
   }
 
   aSetEnv("MOZ_PROFILER_STARTUP", "1");
-  auto capacityString =
-      Smprintf("%u", unsigned(ActivePS::Capacity(lock).Value()));
+  auto capacityString = Smprintf("%d", ActivePS::Capacity(lock));
   aSetEnv("MOZ_PROFILER_STARTUP_ENTRIES", capacityString.get());
 
   // Use AppendFloat instead of Smprintf with %f because the decimal
@@ -3304,7 +3300,7 @@ Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
 
   return Some(ProfilerBufferInfo{ActivePS::Buffer(lock).mRangeStart,
                                  ActivePS::Buffer(lock).mRangeEnd,
-                                 ActivePS::Capacity(lock).Value()});
+                                 ActivePS::Capacity(lock)});
 }
 
 static void PollJSSamplingForCurrentThread() {
@@ -3343,13 +3339,13 @@ static void TriggerPollJSSamplingOnMainThread() {
   }
 }
 
-static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
+static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
                                   const Maybe<double>& aDuration) {
   if (LOG_TEST) {
     LOG("locked_profiler_start");
-    LOG("- capacity  = %u", unsigned(aCapacity.Value()));
+    LOG("- capacity  = %d", aCapacity);
     LOG("- duration  = %.2f", aDuration ? *aDuration : -1);
     LOG("- interval = %.2f", aInterval);
 
@@ -3374,10 +3370,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #endif
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  // Less than 1024 would not be enough for the most complex stack, so we should
-  // be able to store at least one full stack. TODO: Review magic numbers.
-  PowerOfTwo32 capacity =
-      (aCapacity.Value() >= 1024) ? aCapacity : PROFILER_DEFAULT_ENTRIES;
+  uint32_t capacity = aCapacity > 0 ? aCapacity : PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = aDuration;
 
   if (aDuration && *aDuration <= 0) {
@@ -3473,9 +3466,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   RacyFeatures::SetActive(ActivePS::Features(aLock));
 }
 
-void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
-                    uint32_t aFeatures, const char** aFilters,
-                    uint32_t aFilterCount, const Maybe<double>& aDuration) {
+void profiler_start(uint32_t aCapacity, double aInterval, uint32_t aFeatures,
+                    const char** aFilters, uint32_t aFilterCount,
+                    const Maybe<double>& aDuration) {
   LOG("profiler_start");
 
   SamplerThread* samplerThread = nullptr;
@@ -3515,7 +3508,7 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
                         aFilterCount);
 }
 
-void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
+void profiler_ensure_started(uint32_t aCapacity, double aInterval,
                              uint32_t aFeatures, const char** aFilters,
                              uint32_t aFilterCount,
                              const Maybe<double>& aDuration) {
@@ -3959,8 +3952,8 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
   regs.Clear();
 #endif
 
-  // 1024 should be plenty for a single backtrace.
-  auto buffer = MakeUnique<ProfileBuffer>(MakePowerOfTwo32<1024>());
+  // 1000 should be plenty for a single backtrace.
+  auto buffer = MakeUnique<ProfileBuffer>(1000);
 
   DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
 
