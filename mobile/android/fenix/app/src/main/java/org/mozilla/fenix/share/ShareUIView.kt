@@ -50,6 +50,7 @@ class ShareUIView(
             account_header.visibility = View.GONE
         }
 
+        container.setOnClickListener { actionEmitter.onNext(ShareAction.Close) }
         close_button.setOnClickListener { actionEmitter.onNext(ShareAction.Close) }
     }
 
