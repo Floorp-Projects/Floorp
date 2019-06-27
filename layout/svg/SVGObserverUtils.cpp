@@ -539,7 +539,9 @@ class BackgroundClipRenderingObserver : public SVGRenderingObserver {
   NS_DECL_ISUPPORTS
 
  private:
-  virtual ~BackgroundClipRenderingObserver() { StopObserving(); }
+  // We do not call StopObserving() since the observing and observed element
+  // are the same element (and because we could crash - see bug 1556441).
+  virtual ~BackgroundClipRenderingObserver() = default;
 
   Element* GetReferencedElementWithoutObserving() final {
     return mFrame->GetContent()->AsElement();
