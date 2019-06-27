@@ -26,7 +26,7 @@ use cranelift_codegen::settings::{self, Configurable};
 use std::str::FromStr;
 use utils::{BasicError, DashResult};
 
-use baldrdash::StaticEnvironment;
+use bindings::StaticEnvironment;
 
 impl From<isa::LookupError> for BasicError {
     fn from(err: isa::LookupError) -> BasicError {
