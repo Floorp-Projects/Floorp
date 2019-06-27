@@ -8,12 +8,10 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
+import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,11 +20,14 @@ import androidx.recyclerview.widget.RecyclerView
 private const val KEY_SELECTED_COLOR = "KEY_SELECTED_COLOR"
 
 /**
- * [android.support.v4.app.DialogFragment] implementation for a color picker dialog.
+ * [androidx.fragment.app.DialogFragment] implementation for a color picker dialog.
  */
-internal class ColorPickerDialogFragment : PromptDialogFragment() {
+internal class ColorPickerDialogFragment : PromptDialogFragment(), DialogInterface.OnClickListener {
 
-    private lateinit var selectColorTexView: TextView
+    @ColorInt
+    private var initiallySelectedCustomColor: Int? = null
+    private lateinit var defaultColors: List<ColorItem>
+    private lateinit var listAdapter: BasicColorAdapter
 
     @VisibleForTesting
     internal var selectedColor: Int
@@ -35,138 +36,113 @@ internal class ColorPickerDialogFragment : PromptDialogFragment() {
             safeArguments.putInt(KEY_SELECTED_COLOR, value)
         }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder = AlertDialog.Builder(requireContext())
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        AlertDialog.Builder(requireContext())
             .setCancelable(true)
-            .setNegativeButton(R.string.mozac_feature_prompts_cancel) { _, _ ->
-                feature?.onCancel(sessionId)
-            }
-            .setPositiveButton(R.string.mozac_feature_prompts_set_date) { _, _ ->
-                onPositiveClickAction()
-            }
+            .setTitle(R.string.mozac_feature_prompts_choose_a_color)
+            .setNegativeButton(R.string.mozac_feature_prompts_cancel, this)
+            .setPositiveButton(R.string.mozac_feature_prompts_set_date, this)
             .setView(createDialogContentView())
-        return builder.create()
-    }
+            .create()
 
     override fun onCancel(dialog: DialogInterface?) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId)
+        onClick(dialog, DialogInterface.BUTTON_NEGATIVE)
     }
 
-    companion object {
-        fun newInstance(sessionId: String, defaultColor: String): ColorPickerDialogFragment {
-            val fragment = ColorPickerDialogFragment()
-            val arguments = fragment.arguments ?: Bundle()
-
-            with(arguments) {
-                putString(KEY_SESSION_ID, sessionId)
-                putInt(KEY_SELECTED_COLOR, defaultColor.toColor())
-            }
-
-            fragment.arguments = arguments
-
-            return fragment
+    override fun onClick(dialog: DialogInterface?, which: Int) {
+        when (which) {
+            DialogInterface.BUTTON_POSITIVE -> feature?.onConfirm(sessionId, selectedColor.toHexColor())
+            DialogInterface.BUTTON_NEGATIVE -> feature?.onCancel(sessionId)
         }
     }
 
     @SuppressLint("InflateParams")
     internal fun createDialogContentView(): View {
-        val inflater = LayoutInflater.from(requireContext())
-        val view = inflater.inflate(R.layout.mozac_feature_prompts_color_picker_dialogs, null)
+        val view = LayoutInflater
+            .from(requireContext())
+            .inflate(R.layout.mozac_feature_prompts_color_picker_dialogs, null)
 
-        initSelectedColor(view)
-        initRecyclerView(view, inflater)
+        // Save the color selected when this dialog opened to show at the end
+        initiallySelectedCustomColor = selectedColor
 
+        // Load list of colors from resources
+        val typedArray = resources.obtainTypedArray(R.array.mozac_feature_prompts_default_colors)
+
+        defaultColors = List(typedArray.length()) { i ->
+            val color = typedArray.getColor(i, Color.BLACK)
+            if (color == initiallySelectedCustomColor) {
+                // No need to save the initial color, its already in the list
+                initiallySelectedCustomColor = null
+            }
+
+            color.toColorItem()
+        }
+        typedArray.recycle()
+
+        setupRecyclerView(view)
+        onColorChange(selectedColor)
         return view
     }
 
-    private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, selectedColor.toHexColor())
-    }
-
-    fun onColorChange(newColor: Int) {
-        selectedColor = newColor
-        selectColorTexView.changeColor(newColor)
-    }
-
-    /**
-     * RecyclerView adapter for displaying color items.
-     */
-    internal class ColorAdapter(
-        private val fragment: ColorPickerDialogFragment,
-        private val inflater: LayoutInflater
-    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-        @Suppress("MagicNumber")
-        internal val defaultColors = arrayOf(
-            Color.rgb(215, 57, 32),
-            Color.rgb(255, 134, 5),
-            Color.rgb(255, 203, 19),
-            Color.rgb(95, 173, 71),
-            Color.rgb(33, 161, 222),
-            Color.rgb(16, 36, 87),
-            Color.rgb(91, 32, 103),
-            Color.rgb(212, 221, 228),
-            Color.WHITE
-        )
-
-        override fun getItemCount(): Int = defaultColors.size
-
-        override fun onCreateViewHolder(parent: ViewGroup, type: Int): RecyclerView.ViewHolder {
-            val view = inflater.inflate(R.layout.mozac_feature_prompts_color_item, parent, false)
-            return ColorViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
-            with(holder as ColorViewHolder) {
-                val color = defaultColors[position]
-                bind(color, fragment)
-            }
-        }
-    }
-
-    /**
-     * View holder for a color item.
-     */
-    internal class ColorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(color: Int, fragment: ColorPickerDialogFragment) {
-
-            with(itemView) {
-                changeColor(color)
-                tag = color
-
-                setOnClickListener {
-                    val newColor = it.tag as Int
-                    fragment.onColorChange(newColor)
-                }
-            }
-        }
-    }
-
-    private fun initSelectedColor(view: View) {
-        selectColorTexView = view.findViewById(R.id.selected_color)
-        selectColorTexView.changeColor(selectedColor)
-    }
-
-    private fun initRecyclerView(view: View, inflater: LayoutInflater) {
+    private fun setupRecyclerView(view: View) {
+        listAdapter = BasicColorAdapter(this::onColorChange)
         view.findViewById<RecyclerView>(R.id.recyclerView).apply {
-            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-            adapter = ColorAdapter(this@ColorPickerDialogFragment, inflater)
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false).apply {
+                stackFromEnd = true
+            }
+            adapter = listAdapter
+            setHasFixedSize(true)
+            itemAnimator = null
+        }
+    }
+
+    /**
+     * Called when a new color is selected by the user.
+     */
+    @VisibleForTesting
+    internal fun onColorChange(newColor: Int) {
+        selectedColor = newColor
+
+        val colorItems = defaultColors.toMutableList()
+        val index = colorItems.indexOfFirst { it.color == newColor }
+        val lastColor = if (index > -1) {
+            colorItems[index] = colorItems[index].copy(selected = true)
+            initiallySelectedCustomColor
+        } else {
+            newColor
+        }
+        if (lastColor != null) {
+            colorItems.add(lastColor.toColorItem(selected = lastColor == newColor))
+        }
+
+        listAdapter.submitList(colorItems)
+    }
+
+    companion object {
+
+        fun newInstance(sessionId: String, defaultColor: String) = ColorPickerDialogFragment().apply {
+            arguments = (arguments ?: Bundle()).apply {
+                putString(KEY_SESSION_ID, sessionId)
+                putInt(KEY_SELECTED_COLOR, defaultColor.toColor())
+            }
         }
     }
 }
 
-@Suppress("Deprecation")
-private fun View.changeColor(newColor: Int) {
-    background.setColorFilter(newColor, PorterDuff.Mode.MULTIPLY)
+internal fun Int.toColorItem(selected: Boolean = false): ColorItem {
+    return ColorItem(
+        color = this,
+        contentDescription = toHexColor(),
+        selected = selected
+    )
 }
 
 internal fun String.toColor(): Int {
     return try {
         Color.parseColor(this)
     } catch (e: IllegalArgumentException) {
-        0
+        Color.BLACK
     }
 }
 

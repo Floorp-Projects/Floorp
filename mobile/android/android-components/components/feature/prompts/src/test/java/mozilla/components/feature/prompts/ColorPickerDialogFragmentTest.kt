@@ -10,11 +10,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.ext.appCompatContext
-import mozilla.components.feature.prompts.ColorPickerDialogFragment.ColorAdapter
-import mozilla.components.feature.prompts.ColorPickerDialogFragment.ColorViewHolder
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -115,12 +113,15 @@ class ColorPickerDialogFragmentTest {
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val adapter = getAdapterFrom(fragment)
-        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0) as ColorViewHolder
-        val labelView = holder.itemView as TextView
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0)
         adapter.bindViewHolder(holder, 0)
 
-        val selectedColor = adapter.defaultColors.first()
-        assertEquals(labelView.tag as Int, selectedColor)
+        val selectedColor = appCompatContext.resources
+            .obtainTypedArray(R.array.mozac_feature_prompts_default_colors).let {
+                it.getColor(0, 0)
+            }
+
+        assertEquals(selectedColor, holder.color)
     }
 
     @Test
@@ -132,20 +133,23 @@ class ColorPickerDialogFragmentTest {
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
         val adapter = getAdapterFrom(fragment)
-        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0) as ColorViewHolder
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0)
         val colorItem = holder.itemView as TextView
         adapter.bindViewHolder(holder, 0)
 
         colorItem.performClick()
 
-        val selectedColor = adapter.defaultColors.first()
+        val selectedColor = appCompatContext.resources
+            .obtainTypedArray(R.array.mozac_feature_prompts_default_colors).let {
+                it.getColor(0, 0)
+            }
         assertEquals(fragment.selectedColor, selectedColor)
     }
 
-    private fun getAdapterFrom(fragment: ColorPickerDialogFragment): ColorAdapter {
+    private fun getAdapterFrom(fragment: ColorPickerDialogFragment): BasicColorAdapter {
         val view = fragment.createDialogContentView()
         val recyclerViewId = R.id.recyclerView
 
-        return view.findViewById<RecyclerView>(recyclerViewId).adapter as ColorAdapter
+        return view.findViewById<RecyclerView>(recyclerViewId).adapter as BasicColorAdapter
     }
 }

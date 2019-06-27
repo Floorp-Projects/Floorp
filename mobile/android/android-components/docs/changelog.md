@@ -34,6 +34,9 @@ permalink: /changelog/
 * **support-ktx**
   * Added `putCompoundDrawablesRelative` and `putCompoundDrawablesRelativeWithIntrinsicBounds`, aliases of `setCompoundDrawablesRelative` that use Kotlin named and default arguments.
 
+* **feature-prompts**
+  * The color picker has been redesigned based on Firefox for Android (Fennec).
+
 # 2.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v1.0.0...v2.0.0)
