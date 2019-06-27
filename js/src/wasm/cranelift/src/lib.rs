@@ -13,14 +13,16 @@
  * limitations under the License.
  */
 
+#[cfg(feature = "cranelift_x86")]
 #[macro_use]
 extern crate target_lexicon;
+
 #[macro_use]
 extern crate log;
 
 mod bindings; // High-level bindings for C++ data structures.
 mod compile; // Cranelift function compiler.
-mod cpu; // CPU detection and `TargetISA` configuration.
+mod isa; // `TargetISA` configuration.
 mod utils; // Helpers for other source files.
 mod wasm2clif; // WebAssembly to Cranelift translation callbacks.
 

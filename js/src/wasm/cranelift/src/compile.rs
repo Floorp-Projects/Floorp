@@ -31,7 +31,7 @@ use cranelift_codegen::Context;
 use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult};
 
 use crate::bindings;
-use crate::cpu::make_isa;
+use crate::isa::make_isa;
 use crate::utils::DashResult;
 use crate::wasm2clif::{init_sig, native_pointer_size, TransEnv};
 
