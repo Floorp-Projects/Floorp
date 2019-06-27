@@ -840,6 +840,10 @@ WebGLVertexAttrib0Status WebGLContext::WhatDoesVertexAttrib0Need() const {
     // Failures in conformance/attribs/gl-disabled-vertex-attrib.
     // Even in Core profiles on NV. Sigh.
     legacyAttrib0 |= (gl->Vendor() == gl::GLVendor::NVIDIA);
+
+    // Also programs with no attribs:
+    // conformance/attribs/gl-vertex-attrib-unconsumed-out-of-bounds.html
+    legacyAttrib0 |= !mActiveProgramLinkInfo->attribs.size();
   }
 #endif
 
