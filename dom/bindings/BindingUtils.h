@@ -887,15 +887,9 @@ bool MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
     return JS_WrapValue(cx, rval);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
-  if (IsDOMObject(obj)) {
-    return TryToOuterize(rval);
-  }
-
-  // It's not a WebIDL object, so it's OK to just leave it as-is: only WebIDL
-  // objects (specifically only windows) require outerization.
-  return true;
+  // We're same-compartment, but we might still need to outerize if we
+  // have a Window.
+  return TryToOuterize(rval);
 }
 
 // Like MaybeWrapObjectValue, but working with a
@@ -906,15 +900,9 @@ bool MaybeWrapObject(JSContext* cx, JS::MutableHandle<JSObject*> obj) {
     return JS_WrapObject(cx, obj);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
-  if (IsDOMObject(obj)) {
-    return TryToOuterize(obj);
-  }
-
-  // It's not a WebIDL object, so it's OK to just leave it as-is: only WebIDL
-  // objects (specifically only windows) require outerization.
-  return true;
+  // We're same-compartment, but we might still need to outerize if we
+  // have a Window.
+  return TryToOuterize(obj);
 }
 
 // Like MaybeWrapObjectValue, but also allows null
