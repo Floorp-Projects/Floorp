@@ -28,7 +28,8 @@ class PriorityQueue {
   PriorityQueue& operator=(const PriorityQueue&) = delete;
 
  public:
-  explicit PriorityQueue(AllocPolicy ap = AllocPolicy()) : heap(ap) {}
+  explicit PriorityQueue(AllocPolicy ap = AllocPolicy())
+      : heap(std::move(ap)) {}
 
   MOZ_MUST_USE bool reserve(size_t capacity) { return heap.reserve(capacity); }
 

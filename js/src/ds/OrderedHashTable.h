@@ -99,7 +99,7 @@ class OrderedHashTable {
   }
 
  public:
-  OrderedHashTable(AllocPolicy& ap, mozilla::HashCodeScrambler hcs)
+  OrderedHashTable(AllocPolicy ap, mozilla::HashCodeScrambler hcs)
       : hashTable(nullptr),
         data(nullptr),
         dataLength(0),
@@ -108,7 +108,7 @@ class OrderedHashTable {
         hashShift(0),
         ranges(nullptr),
         nurseryRanges(nullptr),
-        alloc(ap),
+        alloc(std::move(ap)),
         hcs(hcs) {}
 
   MOZ_MUST_USE bool init() {
@@ -796,7 +796,7 @@ class OrderedHashMap {
   typedef typename Impl::Range Range;
 
   OrderedHashMap(AllocPolicy ap, mozilla::HashCodeScrambler hcs)
-      : impl(ap, hcs) {}
+      : impl(std::move(ap), hcs) {}
   MOZ_MUST_USE bool init() { return impl.init(); }
   uint32_t count() const { return impl.count(); }
   bool has(const Key& key) const { return impl.has(key); }
@@ -852,7 +852,7 @@ class OrderedHashSet {
   typedef typename Impl::Range Range;
 
   explicit OrderedHashSet(AllocPolicy ap, mozilla::HashCodeScrambler hcs)
-      : impl(ap, hcs) {}
+      : impl(std::move(ap), hcs) {}
   MOZ_MUST_USE bool init() { return impl.init(); }
   uint32_t count() const { return impl.count(); }
   bool has(const T& value) const { return impl.has(value); }
