@@ -67,7 +67,7 @@ class NetErrorChild extends ActorChild {
 
     switch (aEvent.type) {
     case "AboutNetErrorLoad":
-      this.onPageLoad(aEvent.originalTarget, doc.defaultView);
+      this.onPageLoad(doc.defaultView);
       break;
     case "AboutNetErrorSetAutomatic":
       this.onSetAutomatic(aEvent);
@@ -87,22 +87,6 @@ class NetErrorChild extends ActorChild {
           this.recordClick(aEvent.originalTarget);
       }
       break;
-    }
-  }
-
-  receiveMessage(msg) {
-    if (msg.name == "CertErrorDetails") {
-      let frameDocShell = WebNavigationFrames.findDocShell(msg.data.frameId, this.docShell);
-      // We need nsIWebNavigation to access docShell.document.
-      frameDocShell && frameDocShell.QueryInterface(Ci.nsIWebNavigation);
-      if (!frameDocShell || !this.isAboutCertError(frameDocShell.document)) {
-        return;
-      }
-
-      let data = msg.data;
-      let win = frameDocShell.document.ownerGlobal;
-      let event = Cu.cloneInto({ detail: data }, win);
-      win.dispatchEvent(new win.CustomEvent("ShowCertErrorDetails", event));
     }
   }
 
@@ -165,17 +149,10 @@ class NetErrorChild extends ActorChild {
     return msg;
   }
 
-  onPageLoad(originalTarget, win) {
+  onPageLoad(win) {
     // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
     const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
 
-    let hideAddExceptionButton = false;
-
-    if (this.isAboutCertError(win.document)) {
-      this.onCertError(originalTarget, win);
-      hideAddExceptionButton =
-        Services.prefs.getBoolPref("security.certerror.hideAddException", false);
-    }
     if (this.isAboutNetError(win.document)) {
       let docShell = win.docShell;
       if (docShell) {
@@ -193,20 +170,19 @@ class NetErrorChild extends ActorChild {
       let learnMoreLink = win.document.getElementById("learnMoreLink");
       let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
       learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
+
+      let automatic = Services.prefs.getBoolPref("security.ssl.errorReporting.automatic");
+      win.dispatchEvent(new win.CustomEvent("AboutNetErrorOptions", {
+        detail: JSON.stringify({
+          enabled: Services.prefs.getBoolPref("security.ssl.errorReporting.enabled"),
+          changedCertPrefs: this.changedCertPrefs(),
+          automatic,
+        }),
+      }));
+
+      this.mm.sendAsyncMessage("Browser:SSLErrorReportTelemetry",
+                              {reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN});
     }
-
-    let automatic = Services.prefs.getBoolPref("security.ssl.errorReporting.automatic");
-    win.dispatchEvent(new win.CustomEvent("AboutNetErrorOptions", {
-      detail: JSON.stringify({
-        enabled: Services.prefs.getBoolPref("security.ssl.errorReporting.enabled"),
-        changedCertPrefs: this.changedCertPrefs(),
-        automatic,
-        hideAddExceptionButton,
-      }),
-    }));
-
-    this.mm.sendAsyncMessage("Browser:SSLErrorReportTelemetry",
-                            {reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN});
   }
 
   onResetPreferences(evt) {

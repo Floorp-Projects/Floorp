@@ -29,6 +29,12 @@ class ChildMessagePort extends MessagePort {
       defineAs: "RPMRemoveMessageListener",
       allowCallbacks: true,
     });
+    Cu.exportFunction(this.getAppBuildID.bind(this), window, {
+      defineAs: "RPMGetAppBuildID",
+    });
+    Cu.exportFunction(this.getIntPref.bind(this), window, {
+      defineAs: "RPMGetIntPref",
+    });
     Cu.exportFunction(this.getBoolPref.bind(this), window, {
       defineAs: "RPMGetBoolPref",
     });

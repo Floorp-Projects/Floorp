@@ -559,6 +559,12 @@ struct nsCSSRendering {
     // for a vertical textrun, width will actually be a physical height;
     // and conversely, height will be a physical width.
     Size lineSize;
+    // The default height [thickness] of the line given by the font metrics.
+    // This is used for obtaining the correct offset for the decoration line
+    // when CSS specifies a unique thickness for a text-decoration,
+    // since the offset given by the font is derived from the font metric's
+    // assumed line height
+    Float defaultLineThickness = 0.0f;
     // The ascent of the text.
     Float ascent = 0.0f;
     // The offset of the decoration line from the baseline of the text

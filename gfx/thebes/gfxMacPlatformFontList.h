@@ -164,6 +164,7 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
 
   // special case font faces treated as font families (set via prefs)
   void InitSingleFaceList();
+  void InitAliasesForSingleFaceList();
 
   // initialize system fonts
   void InitSystemFontNames();
