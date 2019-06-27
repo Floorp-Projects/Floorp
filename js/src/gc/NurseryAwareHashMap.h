@@ -86,9 +86,11 @@ class NurseryAwareHashMap {
   using Range = typename MapType::Range;
   using Entry = typename MapType::Entry;
 
-  explicit NurseryAwareHashMap(AllocPolicy a = AllocPolicy()) : map(a) {}
+  explicit NurseryAwareHashMap(AllocPolicy a = AllocPolicy())
+      : map(std::move(a)) {}
   explicit NurseryAwareHashMap(size_t length) : map(length) {}
-  NurseryAwareHashMap(AllocPolicy a, size_t length) : map(a, length) {}
+  NurseryAwareHashMap(AllocPolicy a, size_t length)
+      : map(std::move(a), length) {}
 
   bool empty() const { return map.empty(); }
   Ptr lookup(const Lookup& l) const { return map.lookup(l); }
