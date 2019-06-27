@@ -19,7 +19,6 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
-const { getStr } = require("./utils/l10n");
 const { parseFontVariationAxes } = require("./utils/font-utils");
 const { updateFonts } = require("./actions/fonts");
 const {
@@ -27,13 +26,11 @@ const {
   resetFontEditor,
   setEditorDisabled,
   updateAxis,
-  updateCustomInstance,
   updateFontEditor,
   updateFontProperty,
 } = require("./actions/font-editor");
 const { updatePreviewText } = require("./actions/font-options");
 
-const CUSTOM_INSTANCE_NAME = getStr("fontinspector.customInstanceName");
 const FONT_PROPERTIES = [
   "font-family",
   "font-optical-sizing",
@@ -76,7 +73,6 @@ class FontInspector {
     // certain cascade circumstances and platform support. @see `getWriterForAxis(axis)`
     this.writers = new Map();
 
-    this.snapshotChanges = debounce(this.snapshotChanges, 100, this);
     this.syncChanges = debounce(this.syncChanges, 100, this);
     this.onInstanceChange = this.onInstanceChange.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
@@ -687,9 +683,6 @@ class FontInspector {
    */
   onAxisUpdate(tag, value) {
     this.store.dispatch(updateAxis(tag, value));
-    this.store.dispatch(applyInstance(CUSTOM_INSTANCE_NAME, null));
-    this.snapshotChanges();
-
     const writer = this.getWriterForProperty(tag);
     writer(value.toString());
   }
@@ -945,15 +938,6 @@ class FontInspector {
     this.inspector.emit("fonteditor-updated");
     // Listen to manual changes in the Rule view that could update the Font Editor state
     this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
-  }
-
-  /**
-   * Capture the state of all variation axes. Allows the user to return to this state with
-   * the "Custom" instance after they've selected a font-defined named variation instance.
-   * This method is debounced. See constructor.
-   */
-  snapshotChanges() {
-    this.store.dispatch(updateCustomInstance());
   }
 
   async update() {
