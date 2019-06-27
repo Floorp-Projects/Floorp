@@ -397,9 +397,8 @@ public class GeckoSessionTestRule implements TestRule {
          * @return Fulfilled value of the promise.
          */
         public Object getValue() {
-            while (mPromise.isPending()) {
-                UiThreadUtils.loopUntilIdle(mTimeoutMillis);
-            }
+            UiThreadUtils.waitForCondition(() -> !mPromise.isPending(), mTimeoutMillis);
+
             if (mPromise.isRejected()) {
                 throw new RejectedPromiseException(mPromise.getReason());
             }
@@ -1188,7 +1187,6 @@ public class GeckoSessionTestRule implements TestRule {
                                                 classes, recorder);
         mAllDelegates = new HashSet<>(DEFAULT_DELEGATES);
 
-        final boolean useDefaultSession = !mClosedSession && mDefaultSettings.equals(settings);
         mMainSession = new GeckoSession(settings);
         prepareSession(mMainSession);
 
@@ -1264,10 +1262,8 @@ public class GeckoSessionTestRule implements TestRule {
                 }
             };
 
-            do {
-                UiThreadUtils.loopUntilIdle(env.getDefaultTimeoutMillis());
-            } while (mCallRecordHandler != null);
-
+            UiThreadUtils.waitForCondition(() -> mCallRecordHandler == null,
+                    env.getDefaultTimeoutMillis());
         } finally {
             mCallRecordHandler = null;
         }
@@ -1986,9 +1982,7 @@ public class GeckoSessionTestRule implements TestRule {
 
     private Object evaluateJS(final @NonNull Tab tab, final @NonNull String js) {
         final Actor.Reply<Object> reply = tab.getConsole().evaluateJS(js);
-        while (!reply.hasResult()) {
-            UiThreadUtils.loopUntilIdle(mTimeoutMillis);
-        }
+        UiThreadUtils.waitForCondition(reply::hasResult, mTimeoutMillis);
 
         final Object result = reply.get();
         if (result instanceof Promise) {
