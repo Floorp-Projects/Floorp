@@ -11,6 +11,8 @@ import logging
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.bouncer_submission import craft_bouncer_product_name
+from taskgraph.transforms.bouncer_submission_partners import craft_partner_bouncer_product_name
+from taskgraph.util.partners import get_partners_to_be_published
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 
@@ -34,10 +36,17 @@ def make_task_worker(config, jobs):
             job, 'bouncer-products-per-alias',
             item_name=job['name'], project=config.params['project']
         )
+        if 'partner-bouncer-products-per-alias' in job:
+            resolve_keyed_by(
+                job, 'partner-bouncer-products-per-alias',
+                item_name=job['name'], project=config.params['project']
+            )
 
         job['worker']['entries'] = craft_bouncer_entries(config, job)
 
         del job['bouncer-products-per-alias']
+        if 'partner-bouncer-products-per-alias' in job:
+            del job['partner-bouncer-products-per-alias']
 
         if job['worker']['entries']:
             yield job
@@ -53,9 +62,22 @@ def craft_bouncer_entries(config, job):
     current_version = release_config['version']
     bouncer_products_per_alias = job['bouncer-products-per-alias']
 
-    return {
+    entries = {
         bouncer_alias: craft_bouncer_product_name(
             product, bouncer_product, current_version,
         )
         for bouncer_alias, bouncer_product in bouncer_products_per_alias.items()
     }
+
+    partner_bouncer_products_per_alias = job.get('partner-bouncer-products-per-alias')
+    if partner_bouncer_products_per_alias:
+        partners = get_partners_to_be_published(config)
+        for partner, sub_config_name, _ in partners:
+            entries.update({
+                bouncer_alias.replace('PARTNER', '{}-{}'.format(partner, sub_config_name)):
+                    craft_partner_bouncer_product_name(
+                        product, bouncer_product, current_version, partner, sub_config_name)
+                for bouncer_alias, bouncer_product in partner_bouncer_products_per_alias.items()
+            })
+
+    return entries
