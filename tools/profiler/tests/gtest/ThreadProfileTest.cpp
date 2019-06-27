@@ -7,12 +7,14 @@
 #include "ProfileBufferEntry.h"
 #include "ThreadInfo.h"
 
+#include "mozilla/PowerOfTwo.h"
+
 #include "gtest/gtest.h"
 
 // Make sure we can record one entry and read it
 TEST(ThreadProfile, InsertOneEntry)
 {
-  auto pb = MakeUnique<ProfileBuffer>(10);
+  auto pb = MakeUnique<ProfileBuffer>(mozilla::PowerOfTwo32(10));
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).IsTime());
   ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).GetDouble() == 123.1);
@@ -21,7 +23,7 @@ TEST(ThreadProfile, InsertOneEntry)
 // See if we can insert some entries
 TEST(ThreadProfile, InsertEntriesNoWrap)
 {
-  auto pb = MakeUnique<ProfileBuffer>(100);
+  auto pb = MakeUnique<ProfileBuffer>(mozilla::PowerOfTwo32(100));
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
     pb->AddEntry(ProfileBufferEntry::Time(i));
@@ -38,7 +40,7 @@ TEST(ThreadProfile, InsertEntriesNoWrap)
 TEST(ThreadProfile, InsertEntriesWrap)
 {
   int entries = 32;
-  auto pb = MakeUnique<ProfileBuffer>(entries);
+  auto pb = MakeUnique<ProfileBuffer>(mozilla::PowerOfTwo32(entries));
   ASSERT_TRUE(pb->mRangeStart == 0);
   ASSERT_TRUE(pb->mRangeEnd == 0);
   int test_size = 43;
