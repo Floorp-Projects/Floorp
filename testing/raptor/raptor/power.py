@@ -128,12 +128,20 @@ def finish_android_power_test(raptor, test_name):
     full_screen = 0
     full_wifi = 0
     re_uid = re.compile(r'proc=([^:]+):"%s"' % raptor.config["binary"])
+    re_wifi = re.compile(r'.*wifi=([\d.]+).*')
+    re_cpu = re.compile(r'.*cpu=([\d.]+).*')
     re_estimated_power = re.compile(r"\s+Estimated power use [(]mAh[)]")
     re_proportional = re.compile(r"proportional=([\d.]+)")
     re_screen = re.compile(r"screen=([\d.]+)")
     re_full_screen = re.compile(r"\s+Screen:\s+([\d.]+)")
     re_full_wifi = re.compile(r"\s+Wifi:\s+([\d.]+)")
-    re_power = None
+
+    re_smear = re.compile(r".*smearing:\s+([\d.]+)\s+.*")
+    re_power = re.compile(
+        r"\s+Uid\s+\w+[:]\s+([\d.]+) [(]([\s\w\d.\=]*)(?:([)] "
+        r"Including smearing:.*)|(?:[)]))"
+    )
+
     batterystats = batterystats.split("\n")
     for line in batterystats:
         if uid is None:
@@ -143,8 +151,8 @@ def finish_android_power_test(raptor, test_name):
             if match:
                 uid = match.group(1)
                 re_power = re.compile(
-                    r"\s+Uid %s:\s+([\d.]+) ([(] cpu=([\d.]+) wifi=([\d.]+) [)] "
-                    r"Including smearing: ([\d.]+))?" % uid
+                    r"\s+Uid %s[:]\s+([\d.]+) [(]([\s\w\d.\=]*)(?:([)] "
+                    r"Including smearing:.*)|(?:[)]))" % uid
                 )
                 continue
         if not estimated_power:
@@ -157,27 +165,38 @@ def finish_android_power_test(raptor, test_name):
         if full_screen == 0:
             match = re_full_screen.match(line)
             if match:
-                full_screen = match.group(1)
+                full_screen += float(match.group(1))
                 continue
         if full_wifi == 0:
             match = re_full_wifi.match(line)
             if match:
-                full_wifi = match.group(1)
+                full_wifi += float(match.group(1))
                 continue
         if re_power:
             match = re_power.match(line)
             if match:
-                (total, android8, cpu, wifi, smearing) = match.groups()
-                if android8:
-                    # android8 is not None only if the Uid line
-                    # contained values for cpu and wifi, which is
-                    # true only for Android 8+.
-                    match = re_screen.search(line)
-                    if match:
-                        screen = match.group(1)
-                    match = re_proportional.search(line)
-                    if match:
-                        proportional = match.group(1)
+                total, breakdown, smear_info = match.groups()
+
+                cpu_match = re_cpu.match(breakdown)
+                if cpu_match:
+                    cpu += float(cpu_match.group(1))
+
+                wifi_match = re_wifi.match(breakdown)
+                if wifi_match:
+                    wifi += float(wifi_match.group(1))
+
+                if smear_info:
+                    # Smearing and screen power are only
+                    # available on android 8+
+                    smear_match = re_smear.match(smear_info)
+                    if smear_match:
+                        smearing += float(smear_match.group(1))
+                    screen_match = re_screen.search(line)
+                    if screen_match:
+                        screen += float(screen_match.group(1))
+                    prop_match = re_proportional.search(smear_info)
+                    if prop_match:
+                        proportional += float(prop_match.group(1))
         if full_screen and full_wifi and (cpu and wifi and smearing or total):
             # Stop parsing batterystats once we have a full set of data.
             break
