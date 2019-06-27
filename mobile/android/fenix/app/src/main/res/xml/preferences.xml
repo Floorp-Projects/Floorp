@@ -20,7 +20,7 @@
         app:isPreferenceVisible="false">
 
         <org.mozilla.fenix.settings.AccountPreference
-            android:icon="@drawable/ic_shortcuts"
+            android:icon="@drawable/ic_account"
             android:key="@string/pref_key_account" />
 
         <org.mozilla.fenix.settings.AccountAuthErrorPreference
