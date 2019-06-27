@@ -250,19 +250,6 @@ window._gBrowser = {
     return i;
   },
 
-  get popupAnchor() {
-    if (this.selectedTab._popupAnchor) {
-      return this.selectedTab._popupAnchor;
-    }
-    let stack = this.selectedBrowser.parentNode;
-    // Create an anchor for the popup
-    let popupAnchor = document.createXULElement("hbox");
-    popupAnchor.className = "popup-anchor";
-    popupAnchor.hidden = true;
-    stack.appendChild(popupAnchor);
-    return this.selectedTab._popupAnchor = popupAnchor;
-  },
-
   set selectedTab(val) {
     if (gNavToolbox.collapsed && !this._allowTabChange) {
       return this.tabbox.selectedTab;

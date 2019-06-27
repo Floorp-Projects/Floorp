@@ -105,7 +105,7 @@ function h1ServerWK(metadata, response) {
   response.setHeader("Access-Control-Allow-Method", "GET", false);
   response.setHeader("Access-Control-Allow-Headers", "x-altsvc", false);
 
-  var body = '{"http://foo.example.com:' + h1Foo.identity.primaryPort + '": { "tls-ports": [' + h2Port + '] }}';
+  var body = '["http://foo.example.com:' + h1Foo.identity.primaryPort + '"]';
   response.bodyOutputStream.write(body, body.length);
 }
 

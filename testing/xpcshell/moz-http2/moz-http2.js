@@ -817,7 +817,7 @@ function handleRequest(req, res) {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Content-Type', 'application/json');
     res.writeHead(200, "OK");
-    res.end('{"http://' + req.headers['host'] + '": { "tls-ports": [' + serverPort + '] }}');
+    res.end('["http://' + req.headers['host'] + '"]');
     return;
   }
 

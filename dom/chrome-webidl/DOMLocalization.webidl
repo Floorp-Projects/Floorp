@@ -4,38 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * An object used to carry localization information from and to an
- * Element.
- *
- * Fields:
- *    id - identifier of a message used to localize the element.
- *  args - an optional map of arguments used to format the message.
- *         The argument will be converted to/from JSON, so can
- *         handle any value that JSON can, but in practice, the API
- *         will only use a string or a number for now.
- */
-dictionary L10nKey {
-  DOMString? id = null;
-  object? args = null;
-};
-
-callback GenerateMessages = Promise<any> (sequence<DOMString> aAppLocales, sequence<DOMString> aResourceIds);
-
-/**
  * DOMLocalization is an extension of the Fluent Localization API.
- *
- * An instance of a Localization class stores a state of a mix
- * of localization resources and provides the API to resolve
- * translation value for localization identifiers from the
- * resources.
- *
- * Methods:
- *    - addResourceIds     - add resources
- *    - removeResourceIds  - remove resources
- *    - formatValue        - format a single value
- *    - formatValues       - format multiple values
- *    - formatMessages     - format multiple compound messages
- *
  *
  * DOMLocalization adds a state for storing `roots` - DOM elements
  * which translation status is controlled by the DOMLocalization
@@ -65,90 +34,18 @@ callback GenerateMessages = Promise<any> (sequence<DOMString> aAppLocales, seque
  *                           over FluentBundle instances.
  */
 [ChromeOnly, Constructor(optional sequence<DOMString> aResourceIds, optional GenerateMessages aGenerateMessages)]
-interface DOMLocalization {
-  /**
-   * Localization API
-   */
-
-  /**
-   * A method for adding resources to the localization context.
-   *
-   * Returns a new count of resources used by the context.
-   */
-  unsigned long addResourceIds(sequence<DOMString> aResourceIds, optional boolean aEager = false);
-
-  /**
-   * A method for removing resources from the localization context.
-   *
-   * Returns a new count of resources used by the context.
-   */
-  unsigned long removeResourceIds(sequence<DOMString> aResourceIds);
-
-  /**
-   * Formats a value of a localization message with a given id.
-   * An optional dictionary of arguments can be passed to inform
-   * the message formatting logic.
-   *
-   * Example:
-   *    let value = await document.l10n.formatValue("unread-emails", {count: 5});
-   *    assert.equal(value, "You have 5 unread emails");
-   */
-  [NewObject] Promise<DOMString> formatValue(DOMString aId, optional object aArgs);
-
-  /**
-   * Formats values of a list of messages with given ids.
-   *
-   * Example:
-   *    let values = await document.l10n.formatValues([
-   *      {id: "hello-world"},
-   *      {id: "unread-emails", args: {count: 5}
-   *    ]);
-   *    assert.deepEqual(values, [
-   *      "Hello World",
-   *      "You have 5 unread emails"
-   *    ]);
-   */
-  [NewObject] Promise<sequence<DOMString>> formatValues(sequence<L10nKey> aKeys);
-
-  /**
-   * Formats values and attributes of a list of messages with given ids.
-   *
-   * Example:
-   *    let values = await document.l10n.formatMessages([
-   *      {id: "hello-world"},
-   *      {id: "unread-emails", args: {count: 5}
-   *    ]);
-   *    assert.deepEqual(values, [
-   *      {
-   *        value: "Hello World",
-   *        attributes: null
-   *      },
-   *      {
-   *        value: "You have 5 unread emails",
-   *        attributes: {
-   *          tooltip: "Click to select them all"
-   *        }
-   *      }
-   *    ]);
-   */
-  [NewObject] Promise<sequence<DOMString>> formatMessages(sequence<L10nKey> aKeys);
-
-
-  /**
-   * DOMLocalization API
-   */
-
+interface DOMLocalization : Localization {
   /**
    * Adds a node to nodes observed for localization
    * related changes.
    */
-  [Throws] void connectRoot(Element aElement);
+  [Throws] void connectRoot(Node aElement);
 
   /**
    * Removes a node from nodes observed for localization
    * related changes.
    */
-  [Throws] void disconnectRoot(Element aElement);
+  [Throws] void disconnectRoot(Node aElement);
 
   /**
    * Pauses the MutationObserver set to observe

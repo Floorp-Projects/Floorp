@@ -25,7 +25,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
             'llvm',
             'nasm',
             'yasm',
-            'gconf2',
             'gtk+2',
             'gtk+3',
             'dbus-glib',

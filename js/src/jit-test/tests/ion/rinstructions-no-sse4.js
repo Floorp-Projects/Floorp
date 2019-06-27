@@ -6,6 +6,9 @@
 setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 20);
 
+// Prevent the GC from cancelling Ion compilations, when we expect them to succeed
+gczeal(0);
+
 const max = 200;
 
 // Check that we are able to remove the operation inside recover test

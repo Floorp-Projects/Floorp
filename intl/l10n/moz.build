@@ -4,6 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.intl += [
+    'Localization.h',
+]
+
+UNIFIED_SOURCES += [
+    'Localization.cpp',
+]
+
 EXTRA_JS_MODULES += [
     'Fluent.jsm',
     'L10nRegistry.jsm',
@@ -25,6 +33,7 @@ LOCAL_INCLUDES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
 
 SPHINX_TREES['l10n'] = 'docs'
 

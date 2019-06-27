@@ -46,6 +46,7 @@ WEBIDL_FILES = [
     'IteratorResult.webidl',
     'JSWindowActor.webidl',
     'L10nOverlays.webidl',
+    'Localization.webidl',
     'MatchGlob.webidl',
     'MatchPattern.webidl',
     'MessageManager.webidl',

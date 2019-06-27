@@ -1697,6 +1697,18 @@ class Document : public nsINode,
 
   void SetKeyPressEventModel(uint16_t aKeyPressEventModel);
 
+  // Gets the next form number.
+  //
+  // Used by nsContentUtils::GenerateStateKey to get a unique number for each
+  // parser inserted form element.
+  int32_t GetNextFormNumber() { return mNextFormNumber++; }
+
+  // Gets the next form control number.
+  //
+  // Used by nsContentUtils::GenerateStateKey to get a unique number for each
+  // parser inserted form control element.
+  int32_t GetNextControlNumber() { return mNextControlNumber++; }
+
  protected:
   friend class nsUnblockOnloadEvent;
 
@@ -5196,6 +5208,10 @@ class Document : public nsINode,
 
   // The principal to use for the storage area of this document.
   nsCOMPtr<nsIPrincipal> mIntrinsicStoragePrincipal;
+
+  // See GetNextFormNumber and GetNextControlNumber.
+  int32_t mNextFormNumber;
+  int32_t mNextControlNumber;
 
  public:
   // Needs to be public because the bindings code pokes at it.

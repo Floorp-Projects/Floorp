@@ -46,9 +46,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-/* static */ const int32_t nsStyleGridLine::kMinLine;
-/* static */ const int32_t nsStyleGridLine::kMaxLine;
-
 static const nscoord kMediumBorderWidth = nsPresContext::CSSPixelsToAppUnits(3);
 
 // We set the size limit of style structs to 504 bytes so that when they
@@ -1280,6 +1277,7 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mGridAutoColumnsMax(eStyleUnit_Auto),
       mGridAutoRowsMin(eStyleUnit_Auto),
       mGridAutoRowsMax(eStyleUnit_Auto),
+      mAspectRatio(0.0f),
       mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW),
       mBoxSizing(StyleBoxSizing::Content),
       mAlignContent(NS_STYLE_ALIGN_NORMAL),
@@ -1326,6 +1324,7 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mGridAutoColumnsMax(aSource.mGridAutoColumnsMax),
       mGridAutoRowsMin(aSource.mGridAutoRowsMin),
       mGridAutoRowsMax(aSource.mGridAutoRowsMax),
+      mAspectRatio(aSource.mAspectRatio),
       mGridAutoFlow(aSource.mGridAutoFlow),
       mBoxSizing(aSource.mBoxSizing),
       mAlignContent(aSource.mAlignContent),
@@ -1498,6 +1497,11 @@ nsChangeHint nsStylePosition::CalcDifference(
 
   if (isVertical ? heightChanged : widthChanged) {
     hint |= nsChangeHint_ReflowHintsForISizeChange;
+  }
+
+  if (mAspectRatio != aNewData.mAspectRatio) {
+    hint |= nsChangeHint_ReflowHintsForISizeChange |
+            nsChangeHint_ReflowHintsForBSizeChange;
   }
 
   // If any of the offsets have changed, then return the respective hints
@@ -3886,6 +3890,7 @@ nsStyleEffects::nsStyleEffects(const Document&)
 nsStyleEffects::nsStyleEffects(const nsStyleEffects& aSource)
     : mFilters(aSource.mFilters),
       mBoxShadow(aSource.mBoxShadow),
+      mBackdropFilters(aSource.mBackdropFilters),
       mClip(aSource.mClip),
       mOpacity(aSource.mOpacity),
       mClipFlags(aSource.mClipFlags),
@@ -3946,6 +3951,10 @@ nsChangeHint nsStyleEffects::CalcDifference(
 
   if (mMixBlendMode != aNewData.mMixBlendMode) {
     hint |= nsChangeHint_RepaintFrame;
+  }
+
+  if (mBackdropFilters != aNewData.mBackdropFilters) {
+    hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
   }
 
   if (!hint && !mClip.IsEqualEdges(aNewData.mClip)) {

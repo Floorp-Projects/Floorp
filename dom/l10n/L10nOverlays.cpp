@@ -398,7 +398,7 @@ void L10nOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
 
 void L10nOverlays::TranslateElement(
     const GlobalObject& aGlobal, Element& aElement,
-    const L10nValue& aTranslation,
+    const L10nMessage& aTranslation,
     Nullable<nsTArray<L10nOverlaysError>>& aErrors) {
   nsTArray<L10nOverlaysError> errors;
 
@@ -445,7 +445,7 @@ bool L10nOverlays::ContainsMarkup(const nsAString& aStr) {
 }
 
 void L10nOverlays::TranslateElement(Element& aElement,
-                                    const L10nValue& aTranslation,
+                                    const L10nMessage& aTranslation,
                                     nsTArray<L10nOverlaysError>& aErrors,
                                     ErrorResult& aRv) {
   if (!aTranslation.mValue.IsVoid()) {
