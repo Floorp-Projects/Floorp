@@ -56,7 +56,7 @@ class LetterSpacing extends PureComponent {
     // When the initial value of "letter-spacing" is "normal", the parsed value
     // is not a number (NaN). Guard by setting the default value to 0.
     const isKeywordValue = this.props.value === "normal";
-    const value = isKeywordValue ? 1.2 : parseFloat(this.props.value);
+    const value = isKeywordValue ? 0 : parseFloat(this.props.value);
 
     let { min, max } = this.getDefaultMinMax(unit);
     min = Math.min(min, value);
