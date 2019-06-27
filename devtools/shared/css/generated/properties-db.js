@@ -3186,6 +3186,7 @@ exports.CSS_PROPERTIES = {
       "text-rendering",
       "-moz-control-character-visibility",
       "text-underline-offset",
+      "text-decoration-skip-ink",
       "cursor",
       "pointer-events",
       "-moz-user-input",
@@ -10720,6 +10721,10 @@ exports.PREFERENCES = [
   [
     "scrollbar-width",
     "layout.css.scrollbar-width.enabled"
+  ],
+  [
+    "text-decoration-skip-ink",
+    "layout.css.text-decoration-skip-ink.enabled"
   ],
   [
     "text-justify",
