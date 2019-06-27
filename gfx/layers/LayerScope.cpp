@@ -1420,7 +1420,7 @@ LayerScopeWebSocketManager::LayerScopeWebSocketManager()
   NS_NewNamedThread("LayerScope", getter_AddRefs(mDebugSenderThread));
 
   mServerSocket = do_CreateInstance(NS_SERVERSOCKET_CONTRACTID);
-  int port = StaticPrefs::LayerScopePort();
+  int port = StaticPrefs::gfx_layerscope_port();
   mServerSocket->Init(port, false, -1);
   mServerSocket->AsyncListen(new SocketListener);
 }
@@ -1465,7 +1465,7 @@ NS_IMETHODIMP LayerScopeWebSocketManager::SocketListener::OnSocketAccepted(
 // ----------------------------------------------
 /*static*/
 void LayerScope::Init() {
-  if (!StaticPrefs::LayerScopeEnabled() || XRE_IsGPUProcess()) {
+  if (!StaticPrefs::gfx_layerscope_enabled() || XRE_IsGPUProcess()) {
     return;
   }
 
@@ -1563,7 +1563,7 @@ bool LayerScope::CheckSendable() {
   // Only compositor threads check LayerScope status
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() || gIsGtest);
 
-  if (!StaticPrefs::LayerScopeEnabled()) {
+  if (!StaticPrefs::gfx_layerscope_enabled()) {
     return false;
   }
   if (!gLayerScopeManager.GetSocketManager()) {

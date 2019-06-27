@@ -2708,6 +2708,27 @@ void nsRootPresContext::CollectPluginGeometryUpdates(
 #endif  // #ifndef XP_MACOSX
 }
 
+void nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable) {
+  if (!mWillPaintFallbackEvent.IsPending()) {
+    mWillPaintFallbackEvent = new RunWillPaintObservers(this);
+    Document()->Dispatch(TaskCategory::Other,
+                         do_AddRef(mWillPaintFallbackEvent));
+  }
+  mWillPaintObservers.AppendElement(aRunnable);
+}
+
+/**
+ * Run all runnables that need to get called before the next paint.
+ */
+void nsRootPresContext::FlushWillPaintObservers() {
+  mWillPaintFallbackEvent = nullptr;
+  nsTArray<nsCOMPtr<nsIRunnable>> observers;
+  observers.SwapElements(mWillPaintObservers);
+  for (uint32_t i = 0; i < observers.Length(); ++i) {
+    observers[i]->Run();
+  }
+}
+
 size_t nsRootPresContext::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {
   return nsPresContext::SizeOfExcludingThis(aMallocSizeOf);
@@ -2715,4 +2736,6 @@ size_t nsRootPresContext::SizeOfExcludingThis(
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
   // - mRegisteredPlugins
+  // - mWillPaintObservers
+  // - mWillPaintFallbackEvent
 }

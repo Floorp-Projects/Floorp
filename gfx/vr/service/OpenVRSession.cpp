@@ -252,7 +252,7 @@ OpenVRSession::~OpenVRSession() {
 }
 
 bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::VROpenVREnabled()) {
+  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::dom_vr_openvr_enabled()) {
     return false;
   }
   if (mVRSystem != nullptr) {
@@ -308,7 +308,7 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return false;
   }
 
-  if (StaticPrefs::VROpenVRActionInputEnabled() && !SetupContollerActions()) {
+  if (StaticPrefs::dom_vr_openvr_action_input() && !SetupContollerActions()) {
     return false;
   }
 
@@ -329,7 +329,7 @@ bool OpenVRSession::SetupContollerActions() {
   nsCString cosmosManifest;
 
   // Getting / Generating manifest file paths.
-  if (StaticPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::dom_vr_process_enabled()) {
     VRParent* vrParent = VRProcessChild::GetVRParent();
     nsCString output;
 
@@ -821,7 +821,7 @@ bool OpenVRSession::SetupContollerActions() {
   // End of setup controller actions.
 
   // Notify the parent process these manifest files are already been recorded.
-  if (StaticPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::dom_vr_process_enabled()) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "SendOpenVRControllerActionPathToParent",
         [controllerAction, viveManifest, WMRManifest, knucklesManifest,
@@ -1365,7 +1365,8 @@ void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
   // value. In order to not affect the current VR content, we add a workaround
   // for yAxis.
   const float yAxisInvert = (mIsWindowsMR) ? -1.0f : 1.0f;
-  const float triggerThreshold = StaticPrefs::VRControllerTriggerThreshold();
+  const float triggerThreshold =
+      StaticPrefs::dom_vr_controller_trigger_threshold();
 
   for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount;
        ++stateIndex) {
@@ -1709,7 +1710,8 @@ void OpenVRSession::UpdateControllerButtonsObsolete(VRSystemState& aState) {
   // value. In order to not affect the current VR content, we add a workaround
   // for yAxis.
   const float yAxisInvert = (mIsWindowsMR) ? -1.0f : 1.0f;
-  const float triggerThreshold = StaticPrefs::VRControllerTriggerThreshold();
+  const float triggerThreshold =
+      StaticPrefs::dom_vr_controller_trigger_threshold();
 
   for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount;
        stateIndex++) {
@@ -2014,7 +2016,7 @@ void OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState) {
   UpdateHeadsetPose(aSystemState);
   UpdateEyeParameters(aSystemState);
 
-  if (StaticPrefs::VROpenVRActionInputEnabled()) {
+  if (StaticPrefs::dom_vr_openvr_action_input()) {
     EnumerateControllers(aSystemState);
 
     vr::VRActiveActionSet_t actionSet = {0};
@@ -2226,7 +2228,7 @@ void OpenVRSession::HapticTimerCallback(nsITimer* aTimer, void* aClosure) {
    */
   OpenVRSession* self = static_cast<OpenVRSession*>(aClosure);
 
-  if (StaticPrefs::VROpenVRActionInputEnabled()) {
+  if (StaticPrefs::dom_vr_openvr_action_input()) {
     self->UpdateHaptics();
   } else {
     self->UpdateHapticsObsolete();

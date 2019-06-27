@@ -134,6 +134,8 @@ class TlsConnectTestBase : public ::testing::Test {
   // Move the DTLS timers for both endpoints to pop the next timer.
   void ShiftDtlsTimers();
   void AdvanceTime(PRTime time_shift);
+
+  void ResetAntiReplay(PRTime window);
   void RolloverAntiReplay();
 
   void SaveAlgorithmPolicy();
@@ -149,6 +151,7 @@ class TlsConnectTestBase : public ::testing::Test {
   SessionResumptionMode expected_resumption_mode_;
   uint8_t expected_resumptions_;
   std::vector<std::vector<uint8_t>> session_ids_;
+  ScopedSSLAntiReplayContext anti_replay_;
 
   // A simple value of "a", "b".  Note that the preferred value of "a" is placed
   // at the end, because the NSS API follows the now defunct NPN specification,

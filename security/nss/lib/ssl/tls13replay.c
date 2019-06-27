@@ -9,7 +9,6 @@
 #include "nss.h"      /* for NSS_RegisterShutdown */
 #include "nssilock.h" /* for PZMonitor */
 #include "pk11pub.h"
-#include "prinit.h" /* for PR_CallOnce */
 #include "prmon.h"
 #include "prtime.h"
 #include "secerr.h"
@@ -18,10 +17,10 @@
 #include "sslimpl.h"
 #include "tls13hkdf.h"
 
-static struct {
-    /* Used to ensure that we only initialize the cleanup function once. */
-    PRCallOnceType init;
-    /* Used to serialize access to the filters. */
+struct SSLAntiReplayContextStr {
+    /* The number of outstanding references to this context. */
+    PRInt32 refCount;
+    /* Used to serialize access. */
     PZMonitor *lock;
     /* The filters, use of which alternates. */
     sslBloomFilter filters[2];
@@ -33,43 +32,55 @@ static struct {
     PRTime window;
     /* This key ensures that the bloom filter index is unpredictable. */
     PK11SymKey *key;
-} ssl_anti_replay;
+};
+
+void
+tls13_ReleaseAntiReplayContext(SSLAntiReplayContext *ctx)
+{
+    if (!ctx) {
+        return;
+    }
+    if (PR_ATOMIC_DECREMENT(&ctx->refCount) >= 1) {
+        return;
+    }
+
+    if (ctx->lock) {
+        PZ_DestroyMonitor(ctx->lock);
+        ctx->lock = NULL;
+    }
+    PK11_FreeSymKey(ctx->key);
+    ctx->key = NULL;
+    sslBloom_Destroy(&ctx->filters[0]);
+    sslBloom_Destroy(&ctx->filters[1]);
+    PORT_Free(ctx);
+}
 
 /* Clear the current state and free any resources we allocated. The signature
  * here is odd to allow this to be called during shutdown. */
-static SECStatus
-tls13_AntiReplayReset(void *appData, void *nssData)
+SECStatus
+SSLExp_ReleaseAntiReplayContext(SSLAntiReplayContext *ctx)
 {
-    if (ssl_anti_replay.key) {
-        PK11_FreeSymKey(ssl_anti_replay.key);
-        ssl_anti_replay.key = NULL;
-    }
-    if (ssl_anti_replay.lock) {
-        PZ_DestroyMonitor(ssl_anti_replay.lock);
-        ssl_anti_replay.lock = NULL;
-    }
-    sslBloom_Destroy(&ssl_anti_replay.filters[0]);
-    sslBloom_Destroy(&ssl_anti_replay.filters[1]);
+    tls13_ReleaseAntiReplayContext(ctx);
     return SECSuccess;
 }
 
-static PRStatus
-tls13_AntiReplayInit(void)
+SSLAntiReplayContext *
+tls13_RefAntiReplayContext(SSLAntiReplayContext *ctx)
 {
-    SECStatus rv = NSS_RegisterShutdown(tls13_AntiReplayReset, NULL);
-    if (rv != SECSuccess) {
-        return PR_FAILURE;
-    }
-    return PR_SUCCESS;
+    PORT_Assert(ctx);
+    PR_ATOMIC_INCREMENT(&ctx->refCount);
+    return ctx;
 }
 
 static SECStatus
-tls13_AntiReplayKeyGen()
+tls13_AntiReplayKeyGen(SSLAntiReplayContext *ctx)
 {
     PRUint8 buf[32];
     SECItem keyItem = { siBuffer, buf, sizeof(buf) };
     PK11SlotInfo *slot;
     SECStatus rv;
+
+    PORT_Assert(ctx);
 
     slot = PK11_GetInternalSlot();
     if (!slot) {
@@ -81,10 +92,10 @@ tls13_AntiReplayKeyGen()
         goto loser;
     }
 
-    ssl_anti_replay.key = PK11_ImportSymKey(slot, CKM_NSS_HKDF_SHA256,
-                                            PK11_OriginUnwrap, CKA_DERIVE,
-                                            &keyItem, NULL);
-    if (!ssl_anti_replay.key) {
+    ctx->key = PK11_ImportSymKey(slot, CKM_NSS_HKDF_SHA256,
+                                 PK11_OriginUnwrap, CKA_DERIVE,
+                                 &keyItem, NULL);
+    if (!ctx->key) {
         goto loser;
     }
 
@@ -100,20 +111,18 @@ loser:
 #define SSL_MAX_BLOOM_FILTER_SIZE 64
 
 /*
- * The structures created by this function can be called concurrently on
- * multiple threads if the server is multi-threaded.  A monitor is used to
- * ensure that only one thread can access the structures that change over time,
- * but no such guarantee is provided for configuration data.
- *
- * Functions that read from static configuration data depend on there being a
- * memory barrier between the setup and use of this function.
+ * The context created by this function can be called concurrently on multiple
+ * threads if the server is multi-threaded.  A monitor is used to ensure that
+ * only one thread can access the structures that change over time, but no such
+ * guarantee is provided for configuration data.
  */
 SECStatus
-SSLExp_InitAntiReplay(PRTime now, PRTime window, unsigned int k, unsigned int bits)
+SSLExp_CreateAntiReplayContext(PRTime now, PRTime window, unsigned int k,
+                               unsigned int bits, SSLAntiReplayContext **pctx)
 {
     SECStatus rv;
 
-    if (k == 0 || bits == 0) {
+    if (window <= 0 || k == 0 || bits == 0 || pctx == NULL) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -122,54 +131,69 @@ SSLExp_InitAntiReplay(PRTime now, PRTime window, unsigned int k, unsigned int bi
         return SECFailure;
     }
 
-    if (PR_SUCCESS != PR_CallOnce(&ssl_anti_replay.init,
-                                  tls13_AntiReplayInit)) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
+    SSLAntiReplayContext *ctx = PORT_ZNew(SSLAntiReplayContext);
+    if (!ctx) {
+        return SECFailure; /* Code already set. */
     }
 
-    (void)tls13_AntiReplayReset(NULL, NULL);
-
-    ssl_anti_replay.lock = PZ_NewMonitor(nssILockSSL);
-    if (!ssl_anti_replay.lock) {
+    ctx->refCount = 1;
+    ctx->lock = PZ_NewMonitor(nssILockSSL);
+    if (!ctx->lock) {
         goto loser; /* Code already set. */
     }
 
-    rv = tls13_AntiReplayKeyGen();
+    rv = tls13_AntiReplayKeyGen(ctx);
     if (rv != SECSuccess) {
         goto loser; /* Code already set. */
     }
 
-    rv = sslBloom_Init(&ssl_anti_replay.filters[0], k, bits);
+    rv = sslBloom_Init(&ctx->filters[0], k, bits);
     if (rv != SECSuccess) {
         goto loser; /* Code already set. */
     }
-    rv = sslBloom_Init(&ssl_anti_replay.filters[1], k, bits);
+    rv = sslBloom_Init(&ctx->filters[1], k, bits);
     if (rv != SECSuccess) {
         goto loser; /* Code already set. */
     }
     /* When starting out, ensure that 0-RTT is not accepted until the window is
      * updated.  A ClientHello might have been accepted prior to a restart. */
-    sslBloom_Fill(&ssl_anti_replay.filters[1]);
+    sslBloom_Fill(&ctx->filters[1]);
 
-    ssl_anti_replay.current = 0;
-    ssl_anti_replay.nextUpdate = now + window;
-    ssl_anti_replay.window = window;
+    ctx->current = 0;
+    ctx->nextUpdate = now + window;
+    ctx->window = window;
+    *pctx = ctx;
     return SECSuccess;
 
 loser:
-    (void)tls13_AntiReplayReset(NULL, NULL);
+    tls13_ReleaseAntiReplayContext(ctx);
     return SECFailure;
 }
 
-static void
-tls13_AntiReplayUpdate(PRTime now)
+SECStatus
+SSLExp_SetAntiReplayContext(PRFileDesc *fd, SSLAntiReplayContext *ctx)
 {
-    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(ssl_anti_replay.lock);
-    if (now >= ssl_anti_replay.nextUpdate) {
-        ssl_anti_replay.current ^= 1;
-        ssl_anti_replay.nextUpdate = now + ssl_anti_replay.window;
-        sslBloom_Zero(ssl_anti_replay.filters + ssl_anti_replay.current);
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure; /* Code already set. */
+    }
+    tls13_ReleaseAntiReplayContext(ss->antiReplay);
+    if (ctx != NULL) {
+        ss->antiReplay = tls13_RefAntiReplayContext(ctx);
+    } else {
+        ss->antiReplay = NULL;
+    }
+    return SECSuccess;
+}
+
+static void
+tls13_AntiReplayUpdate(SSLAntiReplayContext *ctx, PRTime now)
+{
+    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(ctx->lock);
+    if (now >= ctx->nextUpdate) {
+        ctx->current ^= 1;
+        ctx->nextUpdate = now + ctx->window;
+        sslBloom_Zero(ctx->filters + ctx->current);
     }
 }
 
@@ -207,7 +231,10 @@ tls13_InWindow(const sslSocket *ss, const sslSessionID *sid)
      * prevent the same 0-RTT attempt from being accepted during window 1 and
      * later window 3.
      */
-    return PR_ABS(timeDelta) < (ssl_anti_replay.window / (PR_USEC_PER_MSEC * 2));
+    PRInt32 allowance = ss->antiReplay->window / (PR_USEC_PER_MSEC * 2);
+    SSL_TRC(10, ("%d: TLS13[%d]: replay check time delta=%d, allow=%d",
+                 SSL_GETPID(), ss->fd, timeDelta, allowance));
+    return PR_ABS(timeDelta) < allowance;
 }
 
 /* Checks for a duplicate in the two filters we have.  Performs maintenance on
@@ -222,12 +249,13 @@ tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid)
     unsigned int size;
     PRUint8 index;
     SECStatus rv;
-    static const char *label = "tls13 anti-replay";
+    static const char *label = "anti-replay";
     PRUint8 buf[SSL_MAX_BLOOM_FILTER_SIZE];
+    SSLAntiReplayContext *ctx = ss->antiReplay;
 
-    /* If SSL_SetupAntiReplay hasn't been called, then treat all attempts at
-     * 0-RTT as a replay. */
-    if (!ssl_anti_replay.init.initialized) {
+    /* If SSL_SetAntiReplayContext hasn't been called with a valid context, then
+     * treat all attempts at 0-RTT as a replay. */
+    if (ctx == NULL) {
         return PR_TRUE;
     }
 
@@ -235,10 +263,9 @@ tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid)
         return PR_TRUE;
     }
 
-    size = ssl_anti_replay.filters[0].k *
-           (ssl_anti_replay.filters[0].bits + 7) / 8;
+    size = ctx->filters[0].k * (ctx->filters[0].bits + 7) / 8;
     PORT_Assert(size <= SSL_MAX_BLOOM_FILTER_SIZE);
-    rv = tls13_HkdfExpandLabelRaw(ssl_anti_replay.key, ssl_hash_sha256,
+    rv = tls13_HkdfExpandLabelRaw(ctx->key, ssl_hash_sha256,
                                   ss->xtnData.pskBinder.data,
                                   ss->xtnData.pskBinder.len,
                                   label, strlen(label),
@@ -247,15 +274,19 @@ tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid)
         return PR_TRUE;
     }
 
-    PZ_EnterMonitor(ssl_anti_replay.lock);
-    tls13_AntiReplayUpdate(ssl_Time(ss));
+    PZ_EnterMonitor(ctx->lock);
+    tls13_AntiReplayUpdate(ctx, ssl_Time(ss));
 
-    index = ssl_anti_replay.current;
-    replay = sslBloom_Add(&ssl_anti_replay.filters[index], buf);
+    index = ctx->current;
+    replay = sslBloom_Add(&ctx->filters[index], buf);
+    SSL_TRC(10, ("%d: TLS13[%d]: replay check current window: %s",
+                 SSL_GETPID(), ss->fd, replay ? "replay" : "ok"));
     if (!replay) {
-        replay = sslBloom_Check(&ssl_anti_replay.filters[index ^ 1], buf);
+        replay = sslBloom_Check(&ctx->filters[index ^ 1], buf);
+        SSL_TRC(10, ("%d: TLS13[%d]: replay check previous window: %s",
+                     SSL_GETPID(), ss->fd, replay ? "replay" : "ok"));
     }
 
-    PZ_ExitMonitor(ssl_anti_replay.lock);
+    PZ_ExitMonitor(ctx->lock);
     return replay;
 }

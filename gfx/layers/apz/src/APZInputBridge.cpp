@@ -115,13 +115,13 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
       if (Maybe<APZWheelAction> action = ActionForWheelEvent(&wheelEvent)) {
         ScrollWheelInput::ScrollMode scrollMode =
             ScrollWheelInput::SCROLLMODE_INSTANT;
-        if (StaticPrefs::SmoothScrollEnabled() &&
+        if (StaticPrefs::general_smoothScroll() &&
             ((wheelEvent.mDeltaMode ==
                   dom::WheelEvent_Binding::DOM_DELTA_LINE &&
-              StaticPrefs::WheelSmoothScrollEnabled()) ||
+              StaticPrefs::general_smoothScroll_mouseWheel()) ||
              (wheelEvent.mDeltaMode ==
                   dom::WheelEvent_Binding::DOM_DELTA_PAGE &&
-              StaticPrefs::PageSmoothScrollEnabled()))) {
+              StaticPrefs::general_smoothScroll_pages()))) {
           scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
         }
 
