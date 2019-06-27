@@ -105,10 +105,6 @@ class MozTabbrowserTab extends MozElements.MozTab {
     }
   }
 
-  get container() {
-    return gBrowser.tabContainer;
-  }
-
   set _visuallySelected(val) {
     if (val == (this.getAttribute("visuallyselected") == "true")) {
       return val;
@@ -275,7 +271,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
 
   on_mousedown(event) {
     let eventMaySelectTab = true;
-    let tabContainer = this.container;
+    let tabContainer = this.parentNode;
 
     if (tabContainer._closeTabByDblclick &&
         event.button == 0 &&
@@ -396,7 +392,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
       event.stopPropagation();
     }
 
-    let tabContainer = this.container;
+    let tabContainer = this.parentNode;
     if (tabContainer._closeTabByDblclick &&
         this._selectedOnFirstMouseDown &&
         this.selected &&
@@ -420,7 +416,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
       return;
     }
 
-    let tabContainer = this.container;
+    let tabContainer = this.parentNode;
     let visibleTabs = tabContainer._getVisibleTabs();
     let tabIndex = visibleTabs.indexOf(this);
 
@@ -468,7 +464,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
   }
 
   _mouseleave() {
-    let tabContainer = this.container;
+    let tabContainer = this.parentNode;
     if (tabContainer._beforeHoveredTab) {
       tabContainer._beforeHoveredTab.removeAttribute("beforehovered");
       tabContainer._beforeHoveredTab = null;
