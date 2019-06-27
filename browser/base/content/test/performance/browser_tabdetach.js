@@ -12,9 +12,8 @@
 const EXPECTED_REFLOWS = [
   {
     stack: [
-      "clientX@chrome://browser/content/tabbrowser-tabs.js",
-      "on_dragstart@chrome://browser/content/tabbrowser-tabs.js",
-      "handleEvent@chrome://browser/content/tabbrowser-tabs.js",
+      "clientX@chrome://browser/content/tabbrowser.xml",
+      "onxbldragstart@chrome://browser/content/tabbrowser.xml",
       "synthesizeMouseAtPoint@chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
       "synthesizeMouse@chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
       "synthesizePlainDragAndDrop@chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
@@ -24,8 +23,7 @@ const EXPECTED_REFLOWS = [
 
   {
     stack: [
-      "on_dragstart@chrome://browser/content/tabbrowser-tabs.js",
-      "handleEvent@chrome://browser/content/tabbrowser-tabs.js",
+      "onxbldragstart@chrome://browser/content/tabbrowser.xml",
       "synthesizeMouseAtPoint@chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
       "synthesizeMouse@chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
       "synthesizePlainDragAndDrop@chrome://mochikit/content/tests/SimpleTest/EventUtils.js",

@@ -3,35 +3,40 @@
 "use strict";
 
 add_task(async function() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+  let window1 = await BrowserTestUtils.openNewBrowserWindow();
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
+  window1.gBrowser.pinTab(tab1);
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },
 
-    async background() {
-      const URL = "http://example.com/";
+    background: function() {
+      browser.tabs.query(
+        {url: "<all_urls>"},
+        tabs => {
+          let destination = tabs[0];
+          let source = tabs[1]; // remember, pinning moves it to the left.
+          browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
 
-      let mainWin = await browser.windows.getCurrent();
-      let tab = await browser.tabs.create({url: URL});
-
-      let newWin = await browser.windows.create({url: URL});
-      let tab2 = newWin.tabs[0];
-      await browser.tabs.update(tab2.id, {pinned: true});
-
-      // Try to move a tab before the pinned tab.  The move should be ignored.
-      let moved = await browser.tabs.move(tab.id, {windowId: newWin.id, index: 0});
-      browser.test.assertEq(moved.length, 0, "move() returned no moved tab");
-
-      tab = await browser.tabs.get(tab.id);
-      browser.test.assertEq(tab.windowId, mainWin.id, "Tab stayed in its original window");
-
-      await browser.tabs.remove(tab.id);
-      await browser.windows.remove(newWin.id);
-      browser.test.notifyPass("tabs.move.pin");
+          browser.tabs.query(
+            {url: "<all_urls>"},
+            tabs => {
+              browser.test.assertEq(true, tabs[0].pinned);
+              browser.test.notifyPass("tabs.move.pin");
+            });
+        });
     },
   });
 
   await extension.startup();
   await extension.awaitFinish("tabs.move.pin");
   await extension.unload();
+
+  for (let tab of window.gBrowser.tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
+  await BrowserTestUtils.closeWindow(window1);
 });

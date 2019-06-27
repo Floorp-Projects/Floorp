@@ -32,6 +32,18 @@ const whitelist = [
   },
 
   {
+    file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",
+    hidpi: "chrome://browser/skin/tabbrowser/tabDragIndicator@2x.png",
+    platforms: ["macosx"],
+  },
+
+  {
+    file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",
+    hidpi: "<not loaded>",
+    platforms: ["linux", "win"],
+  },
+
+  {
     file: "resource://gre-resources/loading-image.png",
     platforms: ["win", "macosx"],
     intermittentNotLoaded: ["win", "macosx"],

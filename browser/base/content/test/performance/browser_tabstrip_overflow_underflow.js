@@ -114,7 +114,7 @@ add_task(async function() {
 
   // Now switch to the first tab. We shouldn't flush layout at all.
   await withPerfObserver(async function() {
-    let firstTab = gBrowser.tabs[0];
+    let firstTab = gBrowser.tabContainer.firstElementChild;
     await BrowserTestUtils.switchTab(gBrowser, firstTab);
     await BrowserTestUtils.waitForCondition(() => {
       return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtostart");
@@ -132,7 +132,7 @@ add_task(async function() {
   // removals to put the tab strip out of the overflow state, so we'll just
   // keep testing removals until that occurs.
   while (gBrowser.tabContainer.hasAttribute("overflow")) {
-    lastTab = gBrowser.tabs[gBrowser.tabs.length - 1];
+    lastTab = gBrowser.tabContainer.lastElementChild;
     if (gBrowser.selectedTab !== lastTab) {
       await BrowserTestUtils.switchTab(gBrowser, lastTab);
     }

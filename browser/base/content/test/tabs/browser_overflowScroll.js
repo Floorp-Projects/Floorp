@@ -10,6 +10,7 @@ add_task(async function() {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
   let scrollbox = arrowScrollbox.scrollbox;
   let originalSmoothScroll = arrowScrollbox.smoothScroll;
+  let tabs = gBrowser.tabs;
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
 
   let rect = ele => ele.getBoundingClientRect();
@@ -24,7 +25,7 @@ add_task(async function() {
   let elementFromPoint = x => arrowScrollbox._elementFromPoint(x);
   let nextLeftElement = () => elementFromPoint(left(scrollbox) - 1);
   let nextRightElement = () => elementFromPoint(right(scrollbox) + 1);
-  let firstScrollable = () => gBrowser.tabs[gBrowser._numPinnedTabs];
+  let firstScrollable = () => tabs[gBrowser._numPinnedTabs];
   let waitForNextFrame = async function() {
     await window.promiseDocumentFlushed(() => {});
     await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
@@ -35,11 +36,11 @@ add_task(async function() {
     arrowScrollbox.smoothScroll = originalSmoothScroll;
   });
 
-  while (gBrowser.tabs.length < tabCountForOverflow) {
+  while (tabs.length < tabCountForOverflow) {
     BrowserTestUtils.addTab(gBrowser, "about:blank", { skipAnimation: true });
   }
 
-  gBrowser.pinTab(gBrowser.tabs[0]);
+  gBrowser.pinTab(tabs[0]);
 
   await BrowserTestUtils.waitForCondition(() => {
     return Array.from(gBrowser.tabs).every(tab => tab._fullyOpen);
@@ -61,7 +62,7 @@ add_task(async function() {
   await waitForNextFrame();
   isRight(element, "Scrolled one tab to the right with a single click");
 
-  gBrowser.selectedTab = gBrowser.tabs[gBrowser.tabs.length - 1];
+  gBrowser.selectedTab = tabs[tabs.length - 1];
   await waitForNextFrame();
   ok(right(gBrowser.selectedTab) <= right(scrollbox), "Selecting the last tab scrolls it into view " +
      "(" + right(gBrowser.selectedTab) + " <= " + right(scrollbox) + ")");
@@ -87,7 +88,7 @@ add_task(async function() {
   ok(left(scrollbox) <= firstScrollableLeft, "Scrolled to the start with a triple click " +
      "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");
 
-  while (gBrowser.tabs.length > 1) {
+  while (tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs[0]);
   }
 });

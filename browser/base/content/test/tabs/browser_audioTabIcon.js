@@ -164,7 +164,7 @@ async function test_playing_icon_on_hidden_tab(tab) {
     await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE, true, true),
     await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE, true, true),
   ];
-  let tabContainer = tab.container;
+  let tabContainer = tab.parentNode;
   let alltabsButton = document.getElementById("alltabs-button");
   let alltabsBadge = alltabsButton.badgeLabel;
 

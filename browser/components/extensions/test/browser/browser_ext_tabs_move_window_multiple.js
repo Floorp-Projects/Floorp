@@ -3,46 +3,41 @@
 "use strict";
 
 add_task(async function() {
+  let window1 = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.net/");
+  await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.com/");
+  await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.net/");
+  await BrowserTestUtils.openNewForegroundTab(window1.gBrowser, "http://example.com/");
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },
 
-    async background() {
-      const URL = "http://example.com/";
-      let mainWin = await browser.windows.getCurrent();
-      let tab1 = await browser.tabs.create({url: URL});
-      let tab2 = await browser.tabs.create({url: URL});
-
-      let newWin = await browser.windows.create({url: [URL, URL]});
-      browser.test.assertEq(newWin.tabs.length, 2, "New window has 2 tabs");
-      let [tab3, tab4] = newWin.tabs;
-
-      // move tabs in both windows to index 0 in a single call
-      await browser.tabs.move([tab2.id, tab4.id], {index: 0});
-
-      tab1 = await browser.tabs.get(tab1.id);
-      browser.test.assertEq(tab1.windowId, mainWin.id, "tab 1 is still in main window");
-
-      tab2 = await browser.tabs.get(tab2.id);
-      browser.test.assertEq(tab2.windowId, mainWin.id, "tab 2 is still in main window");
-      browser.test.assertEq(tab2.index, 0, "tab 2 moved to index 0");
-
-      tab3 = await browser.tabs.get(tab3.id);
-      browser.test.assertEq(tab3.windowId, newWin.id, "tab 3 is still in new window");
-
-      tab4 = await browser.tabs.get(tab4.id);
-      browser.test.assertEq(tab4.windowId, newWin.id, "tab 4 is still in new window");
-      browser.test.assertEq(tab4.index, 0, "tab 4 moved to index 0");
-
-      await browser.tabs.remove([tab1.id, tab2.id]);
-      await browser.windows.remove(newWin.id);
-
-      browser.test.notifyPass("tabs.move.multiple");
+    background: function() {
+      browser.tabs.query(
+        {url: "<all_urls>"},
+        tabs => {
+          let move1 = tabs[1];
+          let move3 = tabs[3];
+          browser.tabs.move([move1.id, move3.id], {index: 0});
+          browser.tabs.query(
+            {url: "<all_urls>"},
+            tabs => {
+              browser.test.assertEq(tabs[0].url, move1.url);
+              browser.test.assertEq(tabs[2].url, move3.url);
+              browser.test.notifyPass("tabs.move.multiple");
+            });
+        });
     },
   });
 
   await extension.startup();
   await extension.awaitFinish("tabs.move.multiple");
   await extension.unload();
+
+  for (let tab of window.gBrowser.tabs) {
+    BrowserTestUtils.removeTab(tab);
+  }
+  await BrowserTestUtils.closeWindow(window1);
 });

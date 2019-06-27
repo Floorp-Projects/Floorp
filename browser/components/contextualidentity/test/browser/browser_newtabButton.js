@@ -3,23 +3,18 @@
 // Testing that when the user opens the add tab menu and clicks menu items
 // the correct context id is opened
 
-function findPopup(browser = gBrowser) {
-  return browser.tabContainer.querySelector(".new-tab-popup");
-}
-
 add_task(async function test_menu_with_timeout() {
   await SpecialPowers.pushPrefEnv({"set": [
       ["privacy.userContext.enabled", true],
       ["privacy.userContext.longPressBehavior", 2],
   ]});
 
-  let newTabButton = gBrowser.tabContainer.newTabButton;
+  let newTab = document.getElementById("tabbrowser-tabs");
+  let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
-
-  await BrowserTestUtils.waitForCondition(() => !!findPopup(), "Wait for popup to exist");
-
-  let popup = findPopup();
+  await BrowserTestUtils.waitForCondition(() => !!document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup"), "Wait for popup to exist");
+  let popup = document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
 
   for (let i = 1; i <= 4; i++) {
     let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
@@ -46,12 +41,12 @@ add_task(async function test_menu_without_timeout() {
       ["privacy.userContext.longPressBehavior", 1],
   ]});
 
-  let newTabButton = gBrowser.tabContainer.newTabButton;
+  let newTab = document.getElementById("tabbrowser-tabs");
+  let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
-
-  await BrowserTestUtils.waitForCondition(() => !!findPopup(), "Wait for popup to exist");
-  let popup = findPopup();
+  await BrowserTestUtils.waitForCondition(() => !!document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup"), "Wait for popup to exist");
+  let popup = document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(popup, "popuphidden");
@@ -93,10 +88,11 @@ add_task(async function test_no_menu() {
       ["privacy.userContext.longPressBehavior", 0],
   ]});
 
-  let newTabButton = gBrowser.tabContainer.newTabButton;
+  let newTab = document.getElementById("tabbrowser-tabs");
+  let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
-  let popup = findPopup();
+  let popup = document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
   ok(!popup, "new tab should not have a popup");
 });
 
@@ -104,13 +100,12 @@ add_task(async function test_private_mode() {
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
   let privateDocument = privateWindow.document;
   let {tabContainer} = privateWindow.gBrowser;
-  let newTab = tabContainer.newTabButton;
+  let newTab = privateDocument.getAnonymousElementByAttribute(tabContainer, "anonid", "tabs-newtab-button");
   let newTab2 = privateDocument.getElementById("new-tab-button");
   // Check to ensure we are talking about the right button
   ok(!!newTab.clientWidth, "new tab button should not be hidden");
   ok(!newTab2.clientWidth, "overflow new tab button should be hidden");
-  let popup = findPopup(privateWindow.gBrowser);
+  let popup = privateDocument.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
   ok(!popup, "new tab should not have a popup");
   await BrowserTestUtils.closeWindow(privateWindow);
 });
-
