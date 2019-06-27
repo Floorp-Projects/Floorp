@@ -796,12 +796,12 @@ void MemoryTracker::registerPolicy(ZoneAllocPolicy* policy) {
 
   auto ptr = policyMap.lookupForAdd(policy);
   if (ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registeredd", policy);
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registered", policy);
   }
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!policyMap.add(ptr, policy, 0)) {
-    oomUnsafe.crash("MemoryTracker::incTrackedPolicyMemory");
+    oomUnsafe.crash("MemoryTracker::registerPolicy");
   }
 }
 
@@ -819,6 +819,28 @@ void MemoryTracker::unregisterPolicy(ZoneAllocPolicy* policy) {
   }
 
   policyMap.remove(ptr);
+}
+
+void MemoryTracker::movePolicy(ZoneAllocPolicy* dst, ZoneAllocPolicy* src) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto srcPtr = policyMap.lookup(src);
+  if (!srcPtr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", src);
+  }
+
+  size_t nbytes = srcPtr->value();
+  policyMap.remove(srcPtr);
+
+  auto dstPtr = policyMap.lookupForAdd(dst);
+  if (dstPtr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registered", dst);
+  }
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!policyMap.add(dstPtr, dst, nbytes)) {
+    oomUnsafe.crash("MemoryTracker::movePolicy");
+  }
 }
 
 void MemoryTracker::incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
