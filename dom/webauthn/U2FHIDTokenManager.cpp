@@ -320,8 +320,9 @@ void U2FHIDTokenManager::HandleRegisterResult(UniquePtr<U2FResult>&& aResult) {
     return;
   }
 
+  nsTArray<WebAuthnExtensionResult> extensions;
   WebAuthnMakeCredentialResult result(mTransaction.ref().mClientDataJSON,
-                                      attObj, keyHandle, regData);
+                                      attObj, keyHandle, regData, extensions);
   mRegisterPromise.Resolve(std::move(result), __func__);
 }
 
