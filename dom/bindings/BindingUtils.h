@@ -916,14 +916,16 @@ bool MaybeWrapObjectOrNullValue(JSContext* cx,
   return MaybeWrapObjectValue(cx, rval);
 }
 
-// Wrapping for objects that are known to not be DOM or XPConnect objects
+// Wrapping for objects that are known to not be DOM objects
 MOZ_ALWAYS_INLINE
 bool MaybeWrapNonDOMObjectValue(JSContext* cx,
                                 JS::MutableHandle<JS::Value> rval) {
   MOZ_ASSERT(rval.isObject());
+  // Compared to MaybeWrapObjectValue we just skip the TryToOuterize call.  The
+  // only reason it would be needed is if we have a Window object, which would
+  // have a DOM class.  Assert that we don't have any DOM-class objects coming
+  // through here.
   MOZ_ASSERT(!GetDOMClass(&rval.toObject()));
-  MOZ_ASSERT(!(js::GetObjectClass(&rval.toObject())->flags &
-               JSCLASS_PRIVATE_IS_NSISUPPORTS));
 
   JSObject* obj = &rval.toObject();
   if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
