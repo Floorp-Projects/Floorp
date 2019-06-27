@@ -990,7 +990,7 @@ void gfxPlatform::Init() {
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
   Preferences::RegisterCallback(
       FrameRatePrefChanged,
-      nsDependentCString(StaticPrefs::GetLayoutFrameRatePrefName()));
+      nsDependentCString(StaticPrefs::Getlayout_frame_ratePrefName()));
   // Set up the vsync source for the parent process.
   ReInitFrameRate();
 
@@ -3150,18 +3150,18 @@ bool gfxPlatform::IsInLayoutAsapMode() {
   // the second is that the compositor goes ASAP and the refresh driver
   // goes at whatever the configurated rate is. This only checks the version
   // talos uses, which is the refresh driver and compositor are in lockstep.
-  return StaticPrefs::LayoutFrameRate() == 0;
+  return StaticPrefs::layout_frame_rate() == 0;
 }
 
 /* static */
 bool gfxPlatform::ForceSoftwareVsync() {
-  return StaticPrefs::LayoutFrameRate() > 0 ||
+  return StaticPrefs::layout_frame_rate() > 0 ||
          recordreplay::IsRecordingOrReplaying();
 }
 
 /* static */
 int gfxPlatform::GetSoftwareVsyncRate() {
-  int preferenceRate = StaticPrefs::LayoutFrameRate();
+  int preferenceRate = StaticPrefs::layout_frame_rate();
   if (preferenceRate <= 0) {
     return gfxPlatform::GetDefaultFrameRate();
   }

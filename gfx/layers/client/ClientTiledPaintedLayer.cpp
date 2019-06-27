@@ -85,7 +85,7 @@ static LayerToParentLayerMatrix4x4 GetTransformToAncestorsParentLayer(
        iter = iter.GetParent()) {
     transform = transform * iter.GetTransform();
 
-    if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+    if (StaticPrefs::layout_scroll_root_frame_containers()) {
       // When scrolling containers, layout adds a post-scale into the transform
       // of the displayport-ancestor (which we pick up in GetTransform() above)
       // to cancel out the pres shell resolution (for historical reasons). The

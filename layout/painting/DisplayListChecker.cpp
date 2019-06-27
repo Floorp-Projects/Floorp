@@ -81,7 +81,8 @@ class DisplayListBlueprint {
                        unsigned& aIndex);
 
   std::vector<DisplayItemBlueprint> mItems;
-  const bool mVerifyOrder = StaticPrefs::LayoutVerifyRetainDisplayListOrder();
+  const bool mVerifyOrder =
+      StaticPrefs::layout_display_list_retain_verify_order();
 };
 
 // Object representing one display item, with just enough information to

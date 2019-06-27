@@ -1461,10 +1461,10 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
 
 /* static */
 bool gfxUtils::DumpDisplayList() {
-  return StaticPrefs::LayoutDumpDisplayList() ||
-         (StaticPrefs::LayoutDumpDisplayListParent() &&
+  return StaticPrefs::layout_display_list_dump() ||
+         (StaticPrefs::layout_display_list_dump_parent() &&
           XRE_IsParentProcess()) ||
-         (StaticPrefs::LayoutDumpDisplayListContent() &&
+         (StaticPrefs::layout_display_list_dump_content() &&
           XRE_IsContentProcess());
 }
 
