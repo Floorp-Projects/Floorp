@@ -7,9 +7,6 @@ ChromeUtils.import("resource://normandy/lib/ShieldPreferences.jsm", this);
 
 const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 
-const {NormandyTestUtils} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
-const {addonStudyFactory, preferenceStudyFactory} = NormandyTestUtils.factories;
-
 ShieldPreferences.init();
 
 decorate_task(
