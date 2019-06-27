@@ -41,6 +41,7 @@ cp $1/src/cubeb_ringbuffer.h src
 cp $1/src/cubeb_sndio.c src
 cp $1/src/cubeb_strings.c src
 cp $1/src/cubeb_strings.h src
+cp $1/src/cubeb_sun.c src
 cp $1/src/cubeb_utils.h src
 cp $1/src/cubeb_utils.cpp src
 cp $1/src/cubeb_utils_unix.h src
