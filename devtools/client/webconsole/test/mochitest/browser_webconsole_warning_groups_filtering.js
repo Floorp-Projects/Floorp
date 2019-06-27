@@ -36,12 +36,12 @@ add_task(async function testContentBlockingMessage() {
   let onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
-  await logString(hud, "simple message 1");
+  await logStrings(hud, "simple message A");
   let onContentBlockingWarningGroupMessage =
     waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
   emitContentBlockedMessage(hud);
   const warningGroupMessage1 = (await onContentBlockingWarningGroupMessage).node;
-  await logString(hud, "simple message 2");
+  await logStrings(hud, "simple message B");
   emitContentBlockedMessage(hud);
   await waitForBadgeNumber(warningGroupMessage1, "3");
   emitContentBlockedMessage(hud);
@@ -52,10 +52,11 @@ add_task(async function testContentBlockingMessage() {
 
   // Wait for the navigation message to be displayed.
   await waitFor(() => findMessage(hud, "Navigated to"));
+
   onContentBlockingWarningMessage = waitForMessage(hud, BLOCKED_URL, ".warn");
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
-  await logString(hud, "simple message 3");
+  await logStrings(hud, "simple message C");
   onContentBlockingWarningGroupMessage =
     waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
   emitContentBlockedMessage(hud);
@@ -65,11 +66,14 @@ add_task(async function testContentBlockingMessage() {
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Filter warnings");
@@ -77,10 +81,13 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   checkConsoleOutputForWarningGroup(hud, [
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Display warning messages again");
@@ -89,11 +96,14 @@ add_task(async function testContentBlockingMessage() {
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Expand the first warning group");
@@ -106,11 +116,14 @@ add_task(async function testContentBlockingMessage() {
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
     `| ${BLOCKED_URL}?4`,
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Filter warnings");
@@ -118,10 +131,13 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
   checkConsoleOutputForWarningGroup(hud, [
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Display warning messages again");
@@ -133,11 +149,14 @@ add_task(async function testContentBlockingMessage() {
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
     `| ${BLOCKED_URL}?4`,
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Filter on warning group text");
@@ -200,24 +219,30 @@ add_task(async function testContentBlockingMessage() {
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
     `| ${BLOCKED_URL}?4`,
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?5`,
     `| ${BLOCKED_URL}?6`,
     `| ${BLOCKED_URL}?7`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Filter warnings with two opened warning groups");
   await setFilterState(hud, {warn: false});
   await waitFor(() => !findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
   checkConsoleOutputForWarningGroup(hud, [
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 
   info("Display warning messages again with two opened warning groups");
@@ -229,14 +254,17 @@ add_task(async function testContentBlockingMessage() {
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
     `| ${BLOCKED_URL}?4`,
-    `simple message 1`,
-    `simple message 2`,
+    `simple message A #1`,
+    `simple message A #2`,
+    `simple message B #1`,
+    `simple message B #2`,
     `Navigated to`,
     `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?5`,
     `| ${BLOCKED_URL}?6`,
     `| ${BLOCKED_URL}?7`,
-    `simple message 3`,
+    `simple message C #1`,
+    `simple message C #2`,
   ]);
 });
 
@@ -254,17 +282,21 @@ function emitContentBlockedMessage(hud) {
 }
 
 /**
- * Log a string from the content page.
+ * Log 2 string messages from the content page. This is done in order to increase the
+ * chance to have messages sharing the same timestamp (and making sure filtering and
+ * ordering still works fine).
  *
  * @param {WebConsole} hud
  * @param {String} str
  */
-function logString(hud, str) {
-  const onMessage = waitForMessage(hud, str);
+function logStrings(hud, str) {
+  const onFirstMessage = waitForMessage(hud, `${str} #1`);
+  const onSecondMessage = waitForMessage(hud, `${str} #2`);
   ContentTask.spawn(gBrowser.selectedBrowser, str, function(arg) {
-    content.console.log(arg);
+    content.console.log(arg, "#1");
+    content.console.log(arg, "#2");
   });
-  return onMessage;
+  return Promise.all([onFirstMessage, onSecondMessage]);
 }
 
 function waitForBadgeNumber(message, expectedNumber) {
