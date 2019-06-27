@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 
@@ -133,6 +134,7 @@ class HistoryDelegateTest : BaseSessionTest() {
         )
     }
 
+    @ReuseSession(false)
     @Ignore //disable test on debug for frequent failures Bug 1544169
     @Test fun onHistoryStateChange() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
