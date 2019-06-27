@@ -4664,35 +4664,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.partial",
-  PartiallyPrerenderAnimatedContent,
+   layout_animation_prerender_partial,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.viewport-ratio-limit-x",
-  AnimationPrerenderViewportRatioLimitX,
+   layout_animation_prerender_viewport_ratio_limit_x,
   AtomicFloat, 1.125f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.viewport-ratio-limit-y",
-  AnimationPrerenderViewportRatioLimitY,
+   layout_animation_prerender_viewport_ratio_limit_y,
   AtomicFloat, 1.125f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.absolute-limit-x",
-  AnimationPrerenderAbsoluteLimitX,
+   layout_animation_prerender_absolute_limit_x,
   RelaxedAtomicUint32, 4096
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.absolute-limit-y",
-  AnimationPrerenderAbsoluteLimitY,
+   layout_animation_prerender_absolute_limit_y,
   RelaxedAtomicUint32, 4096
 )
 
@@ -4986,7 +4986,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.paint-order.enabled",
-  PaintOrderEnabled,
+   layout_css_paint_order_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -5072,7 +5072,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-behavior.damping-ratio",
-  ScrollBehaviorDampingRatio,
+   layout_css_scroll_behavior_damping_ratio,
   AtomicFloat, 1.0f
 )
 
@@ -5108,35 +5108,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-behavior.enabled",
-  ScrollBehaviorEnabled,
+   layout_css_scroll_behavior_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-behavior.spring-constant",
-  ScrollBehaviorSpringConstant,
+   layout_css_scroll_behavior_spring_constant,
   AtomicFloat, 250.0f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap.prediction-max-velocity",
-  ScrollSnapPredictionMaxVelocity,
+   layout_css_scroll_snap_prediction_max_velocity,
   RelaxedAtomicInt32, 2000
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap.prediction-sensitivity",
-  ScrollSnapPredictionSensitivity,
+   layout_css_scroll_snap_prediction_sensitivity,
   AtomicFloat, 0.750f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap.proximity-threshold",
-  ScrollSnapProximityThreshold,
+   layout_css_scroll_snap_proximity_threshold,
   RelaxedAtomicInt32, 200
 )
 
@@ -5243,77 +5243,77 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.display-list.build-twice",
-  LayoutDisplayListBuildTwice,
+   layout_display_list_build_twice,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain",
-  LayoutRetainDisplayList,
+   layout_display_list_retain,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain.chrome",
-  LayoutRetainDisplayListChrome,
+   layout_display_list_retain_chrome,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain.verify",
-  LayoutVerifyRetainDisplayList,
+   layout_display_list_retain_verify,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain.verify.order",
-  LayoutVerifyRetainDisplayListOrder,
+   layout_display_list_retain_verify_order,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.rebuild-frame-limit",
-  LayoutRebuildFrameLimit,
+   layout_display_list_rebuild_frame_limit,
   RelaxedAtomicUint32, 500
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.dump",
-  LayoutDumpDisplayList,
+   layout_display_list_dump,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.dump-content",
-  LayoutDumpDisplayListContent,
+   layout_display_list_dump_content,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.dump-parent",
-  LayoutDumpDisplayListParent,
+   layout_display_list_dump_parent,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.show-rebuild-area",
-  LayoutDisplayListShowArea,
+   layout_display_list_show_rebuild_area,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.flatten-transform",
-  LayoutFlattenTransform,
+   layout_display_list_flatten_transform,
   RelaxedAtomicBool, true
 )
 
@@ -5334,21 +5334,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.frame_rate",
-  LayoutFrameRate,
+   layout_frame_rate,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Live,
   "layout.min-active-layer-size",
-  LayoutMinActiveLayerSize,
+   layout_min_active_layer_size,
   int, 64
 )
 
 VARCACHE_PREF(
   Once,
   "layout.paint_rects_separately",
-  LayoutPaintRectsSeparately,
+   layout_paint_rects_separately,
   bool, true
 )
 
@@ -5356,7 +5356,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.scroll.root-frame-containers",
-  LayoutUseContainersForRootFrames,
+   layout_scroll_root_frame_containers,
   RelaxedAtomicBool, false
 )
 
@@ -5364,14 +5364,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.scrollbars.always-layerize-track",
-  AlwaysLayerizeScrollbarTrackTestOnly,
+   layout_scrollbars_always_layerize_track,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.smaller-painted-layers",
-  LayoutSmallerPaintedLayers,
+   layout_smaller_painted_layers,
   RelaxedAtomicBool, false
 )
 

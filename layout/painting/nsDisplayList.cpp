@@ -1502,8 +1502,9 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
 
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
-  mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document) &&
-                             !StaticPrefs::LayoutUseContainersForRootFrames();
+  mBuildAsyncZoomContainer =
+      nsLayoutUtils::AllowZoomingForDocument(document) &&
+      !StaticPrefs::layout_scroll_root_frame_containers();
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
@@ -2694,7 +2695,7 @@ bool nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
 
   nsRegion r;
   const ActiveScrolledRoot* rootASR = nullptr;
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (StaticPrefs::layout_scroll_root_frame_containers()) {
     rootASR = aBuilder->ActiveScrolledRootForRootScrollframe();
   }
   r.And(*aVisibleRegion, GetClippedBoundsWithRespectToASR(aBuilder, rootASR));
@@ -2872,7 +2873,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
     }
 
-    float resolutionUniform = StaticPrefs::LayoutUseContainersForRootFrames()
+    float resolutionUniform = StaticPrefs::layout_scroll_root_frame_containers()
                                   ? presShell->GetResolution()
                                   : 1.0f;
     float resolutionX = resolutionUniform;
@@ -2909,7 +2910,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     }
     // Root is being scaled up by the X/Y resolution. Scale it back down.
     root->SetPostScale(1.0f / resolutionX, 1.0f / resolutionY);
-    if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+    if (StaticPrefs::layout_scroll_root_frame_containers()) {
       root->SetScaleToResolution(resolutionUniform);
     }
 
@@ -3573,7 +3574,7 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
     return Some(clip->GetClipRect());
   }
 #ifdef DEBUG
-  if (!StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (!StaticPrefs::layout_scroll_root_frame_containers()) {
     MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
   }
 #endif
@@ -6379,8 +6380,8 @@ static bool IsItemTooSmallForActiveLayer(nsIFrame* aFrame) {
       aFrame->GetVisualOverflowRectRelativeToSelf().ToOutsidePixels(
           aFrame->PresContext()->AppUnitsPerDevPixel());
   return visibleDevPixels.Size() <
-         nsIntSize(StaticPrefs::LayoutMinActiveLayerSize(),
-                   StaticPrefs::LayoutMinActiveLayerSize());
+         nsIntSize(StaticPrefs::layout_min_active_layer_size(),
+                   StaticPrefs::layout_min_active_layer_size());
 }
 
 /* static */
@@ -7256,7 +7257,7 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
   PresShell* presShell = mFrame->PresShell();
-  float rootLayerResolution = StaticPrefs::LayoutUseContainersForRootFrames()
+  float rootLayerResolution = StaticPrefs::layout_scroll_root_frame_containers()
                                   ? presShell->GetResolution()
                                   : 1.0f;
   ContainerLayerParameters containerParameters(
@@ -7266,7 +7267,7 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
   RefPtr<Layer> layer =
       nsDisplaySubDocument::BuildLayer(aBuilder, aManager, containerParameters);
 
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (StaticPrefs::layout_scroll_root_frame_containers()) {
     layer->SetPostScale(1.0f / presShell->GetResolution(),
                         1.0f / presShell->GetResolution());
     layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
@@ -8008,7 +8009,8 @@ void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-  if (gfxVars::UseWebRender() || !StaticPrefs::LayoutFlattenTransform()) {
+  if (gfxVars::UseWebRender() ||
+      !StaticPrefs::layout_display_list_flatten_transform()) {
     return false;
   }
 
@@ -8374,10 +8376,14 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return FullPrerender;
   }
 
-  float viewportRatioX = StaticPrefs::AnimationPrerenderViewportRatioLimitX();
-  float viewportRatioY = StaticPrefs::AnimationPrerenderViewportRatioLimitY();
-  uint32_t absoluteLimitX = StaticPrefs::AnimationPrerenderAbsoluteLimitX();
-  uint32_t absoluteLimitY = StaticPrefs::AnimationPrerenderAbsoluteLimitY();
+  float viewportRatioX =
+      StaticPrefs::layout_animation_prerender_viewport_ratio_limit_x();
+  float viewportRatioY =
+      StaticPrefs::layout_animation_prerender_viewport_ratio_limit_y();
+  uint32_t absoluteLimitX =
+      StaticPrefs::layout_animation_prerender_absolute_limit_x();
+  uint32_t absoluteLimitY =
+      StaticPrefs::layout_animation_prerender_absolute_limit_y();
   nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
   // Only prerender if the transformed frame's size is <= a multiple of the
   // reference frame size (~viewport), and less than an absolute limit.
@@ -8404,7 +8410,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return FullPrerender;
   }
 
-  if (StaticPrefs::PartiallyPrerenderAnimatedContent()) {
+  if (StaticPrefs::layout_animation_prerender_partial()) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
                                                              overflow, maxSize);
     return PartialPrerender;
@@ -10114,7 +10120,7 @@ Maybe<nsRect> nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
     return Some(childList->GetClippedBoundsWithRespectToASR(aBuilder, aASR));
   }
 #ifdef DEBUG
-  if (!StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (!StaticPrefs::layout_scroll_root_frame_containers()) {
     MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
   }
 #endif

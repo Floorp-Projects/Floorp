@@ -755,7 +755,7 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   // containers are enabled, then the APZ transform might not be on |layer| but
   // instead would be on the parent of |layer|, if that is the root scrollable
   // metrics. So we special-case that behaviour.
-  if (StaticPrefs::LayoutUseContainersForRootFrames() &&
+  if (StaticPrefs::layout_scroll_root_frame_containers() &&
       !layer->HasScrollableFrameMetrics() && layer->GetParent() &&
       layer->GetParent()->HasRootScrollableFrameMetrics()) {
     transform *= layer->GetParent()->AsHostLayer()->GetShadowBaseTransform();

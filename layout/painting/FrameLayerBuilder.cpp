@@ -3091,7 +3091,7 @@ PaintedLayerData* PaintedLayerDataNode::FindPaintedLayerFor(
         break;
       }
 
-      if (StaticPrefs::LayoutSmallerPaintedLayers()) {
+      if (StaticPrefs::layout_smaller_painted_layers()) {
         lowestUsableLayer = nullptr;
       }
     }
@@ -5077,7 +5077,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       } else if ((itemType == DisplayItemType::TYPE_SUBDOCUMENT ||
                   itemType == DisplayItemType::TYPE_ZOOM ||
                   itemType == DisplayItemType::TYPE_RESOLUTION) &&
-                 StaticPrefs::LayoutUseContainersForRootFrames()) {
+                 StaticPrefs::layout_scroll_root_frame_containers()) {
         newLayerEntry->mBaseScrollMetadata =
             static_cast<nsDisplaySubDocument*>(item)->ComputeScrollMetadata(
                 ownLayer->Manager(), mParameters);
@@ -5965,9 +5965,9 @@ void ContainerState::Finish(uint32_t* aTextContentFlags,
                             nsDisplayList* aChildItems) {
   mPaintedLayerDataTree.Finish();
 
-  if (!StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (!StaticPrefs::layout_scroll_root_frame_containers()) {
     // Bug 1336544 tracks re-enabling this assertion in the
-    // StaticPrefs::LayoutUseContainersForRootFrames() case.
+    // StaticPrefs::layout_scroll_root_frame_containers() case.
     NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),
                  "Bounds computation mismatch");
   }
@@ -6304,7 +6304,7 @@ already_AddRefed<ContainerLayer> FrameLayerBuilder::BuildContainerLayerFor(
       aParameters.mScrollMetadataASR;
   const ActiveScrolledRoot* containerCompositorASR = aParameters.mCompositorASR;
 
-  if (!aContainerItem && StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (!aContainerItem && StaticPrefs::layout_scroll_root_frame_containers()) {
     containerASR = aBuilder->ActiveScrolledRootForRootScrollframe();
     containerScrollMetadataASR = containerASR;
     containerCompositorASR = containerASR;
@@ -7155,7 +7155,7 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
  */
 static bool ShouldDrawRectsSeparately(DrawTarget* aDrawTarget,
                                       DrawRegionClip aClip) {
-  if (!StaticPrefs::LayoutPaintRectsSeparately() ||
+  if (!StaticPrefs::layout_paint_rects_separately() ||
       aClip == DrawRegionClip::NONE) {
     return false;
   }

@@ -1702,12 +1702,12 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
                        nsPresContext* aPresContext)
       : mXAxisModel(aInitialPosition.x, aInitialDestination.x,
                     aInitialVelocity.width,
-                    StaticPrefs::ScrollBehaviorSpringConstant(),
-                    StaticPrefs::ScrollBehaviorDampingRatio()),
+                    StaticPrefs::layout_css_scroll_behavior_spring_constant(),
+                    StaticPrefs::layout_css_scroll_behavior_damping_ratio()),
         mYAxisModel(aInitialPosition.y, aInitialDestination.y,
                     aInitialVelocity.height,
-                    StaticPrefs::ScrollBehaviorSpringConstant(),
-                    StaticPrefs::ScrollBehaviorDampingRatio()),
+                    StaticPrefs::layout_css_scroll_behavior_spring_constant(),
+                    StaticPrefs::layout_css_scroll_behavior_damping_ratio()),
         mRange(aRange),
         mLastRefreshTime(aStartTime),
         mCallee(nullptr),
@@ -2332,7 +2332,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
 
   nsSize currentVelocity(0, 0);
 
-  if (StaticPrefs::ScrollBehaviorEnabled()) {
+  if (StaticPrefs::layout_css_scroll_behavior_enabled()) {
     if (aMode == ScrollMode::SmoothMsd) {
       mIgnoreMomentumScroll = true;
       if (!mAsyncSmoothMSDScroll) {
@@ -3181,7 +3181,7 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
         scrollDirection.isSome() && overlayScrollbars;
     const bool createLayer =
         aCreateLayer || isOverlayScrollbar ||
-        StaticPrefs::AlwaysLayerizeScrollbarTrackTestOnly();
+        StaticPrefs::layout_scrollbars_always_layerize_track();
 
     nsDisplayListCollection partList(aBuilder);
     {
@@ -3437,7 +3437,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
           aBuilder);
       if (aBuilder->IsPaintingToWindow() &&
-          StaticPrefs::LayoutUseContainersForRootFrames() && mIsRoot) {
+          StaticPrefs::layout_scroll_root_frame_containers() && mIsRoot) {
         asrSetter.EnterScrollFrame(sf);
         if (isRcdRsf) {
           aBuilder->SetActiveScrolledRootForRootScrollframe(
@@ -3485,7 +3485,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           // scroll frame for the display root, then we don't need a scroll
           // info layer. nsDisplayList::PaintForFrame already calls
           // ComputeFrameMetrics for us.
-          (!(StaticPrefs::LayoutUseContainersForRootFrames() && mIsRoot) ||
+          (!(StaticPrefs::layout_scroll_root_frame_containers() && mIsRoot) ||
            (aBuilder->RootReferenceFrame()->PresContext() !=
             mOuter->PresContext()));
     }
@@ -3575,7 +3575,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
     clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    if ((StaticPrefs::LayoutUseContainersForRootFrames() ||
+    if ((StaticPrefs::layout_scroll_root_frame_containers() ||
          !aBuilder->IsPaintingToWindow()) &&
         mOuter->PresContext()->IsRootContentDocument()) {
       double res = mOuter->PresShell()->GetResolution();
@@ -3688,7 +3688,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, set);
 
       if (dirtyRectHasBeenOverriden &&
-          StaticPrefs::LayoutDisplayListShowArea()) {
+          StaticPrefs::layout_display_list_show_rebuild_area()) {
         nsDisplaySolidColor* color = MakeDisplayItem<nsDisplaySolidColor>(
             aBuilder, mOuter,
             dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
@@ -3713,7 +3713,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       mIsScrollParent = idSetter.ShouldForceLayerForScrollParent();
     }
     if (idSetter.ShouldForceLayerForScrollParent() &&
-        !StaticPrefs::LayoutUseContainersForRootFrames()) {
+        !StaticPrefs::layout_scroll_root_frame_containers()) {
       // Note that forcing layerization of scroll parents follows the scroll
       // handoff chain which is subject to the out-of-flow-frames caveat noted
       // above (where the idSetter variable is created).
@@ -4022,7 +4022,7 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   }
 
   mIsScrollableLayerInRootContainer =
-      StaticPrefs::LayoutUseContainersForRootFrames() &&
+      StaticPrefs::layout_scroll_root_frame_containers() &&
       mWillBuildScrollableLayer && mIsRoot;
   return mWillBuildScrollableLayer;
 }
@@ -4069,7 +4069,7 @@ void ScrollFrameHelper::ClipLayerToDisplayPort(
   if (!nsLayoutUtils::UsesAsyncScrolling(mOuter)) {
     Maybe<nsRect> parentLayerClip;
     // For containerful frames, the clip is on the container layer.
-    if (aClip && (!StaticPrefs::LayoutUseContainersForRootFrames() ||
+    if (aClip && (!StaticPrefs::layout_scroll_root_frame_containers() ||
                   mAddClipRectToLayer)) {
       parentLayerClip = Some(aClip->GetClipRect());
     }
@@ -4395,8 +4395,10 @@ void ScrollFrameHelper::ScrollByCSSPixels(
 }
 
 void ScrollFrameHelper::ScrollSnap(ScrollMode aMode) {
-  float flingSensitivity = StaticPrefs::ScrollSnapPredictionSensitivity();
-  int maxVelocity = StaticPrefs::ScrollSnapPredictionMaxVelocity();
+  float flingSensitivity =
+      StaticPrefs::layout_css_scroll_snap_prediction_sensitivity();
+  int maxVelocity =
+      StaticPrefs::layout_css_scroll_snap_prediction_max_velocity();
   maxVelocity = nsPresContext::CSSPixelsToAppUnits(maxVelocity);
   int maxOffset = maxVelocity * flingSensitivity;
   nsPoint velocity = mVelocityQueue.GetVelocity();
@@ -6973,7 +6975,7 @@ bool ScrollFrameHelper::GetSnapPointForDestination(
 }
 
 bool ScrollFrameHelper::UsesContainerScrolling() const {
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (StaticPrefs::layout_scroll_root_frame_containers()) {
     return mIsRoot;
   }
   return false;
@@ -7133,9 +7135,9 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
 bool ScrollFrameHelper::SmoothScrollVisual(
     const nsPoint& aVisualViewportOffset,
     FrameMetrics::ScrollOffsetUpdateType aUpdateType) {
-  bool canDoApzSmoothScroll = StaticPrefs::ScrollBehaviorEnabled() &&
-                              nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
-                              WantAsyncScroll();
+  bool canDoApzSmoothScroll =
+      StaticPrefs::layout_css_scroll_behavior_enabled() &&
+      nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll();
   if (!canDoApzSmoothScroll) {
     return false;
   }
