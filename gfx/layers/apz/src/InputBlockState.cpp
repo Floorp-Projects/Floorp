@@ -406,7 +406,7 @@ bool WheelBlockState::MaybeTimeout(const ScrollWheelInput& aEvent) {
     // early.
     TimeDuration duration = TimeStamp::Now() - mLastMouseMove;
     if (duration.ToMilliseconds() >=
-        StaticPrefs::MouseWheelIgnoreMoveDelayMs()) {
+        StaticPrefs::mousewheel_transaction_ignoremovedelay()) {
       TBS_LOG("%p wheel transaction timed out after mouse move\n", this);
       EndTransaction();
       return true;
@@ -423,7 +423,7 @@ bool WheelBlockState::MaybeTimeout(const TimeStamp& aTimeStamp) {
   // seen wheel event.
   TimeDuration duration = aTimeStamp - mLastEventTime;
   if (duration.ToMilliseconds() <
-      StaticPrefs::MouseWheelTransactionTimeoutMs()) {
+      StaticPrefs::mousewheel_transaction_timeout()) {
     return false;
   }
 
@@ -454,7 +454,7 @@ void WheelBlockState::OnMouseMove(const ScreenIntPoint& aPoint) {
     TimeStamp now = TimeStamp::Now();
     TimeDuration duration = now - mLastEventTime;
     if (duration.ToMilliseconds() >=
-        StaticPrefs::MouseWheelIgnoreMoveDelayMs()) {
+        StaticPrefs::mousewheel_transaction_ignoremovedelay()) {
       mLastMouseMove = now;
     }
   }

@@ -6505,14 +6505,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "mousewheel.acceleration.factor",
-  MouseWheelAccelerationFactor,
+   mousewheel_acceleration_factor,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.acceleration.start",
-  MouseWheelAccelerationStart,
+   mousewheel_acceleration_start,
   RelaxedAtomicInt32, -1
 )
 
@@ -6520,35 +6520,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "mousewheel.system_scroll_override_on_root_content.enabled",
-  MouseWheelHasRootScrollDeltaOverride,
+   mousewheel_system_scroll_override_on_root_content_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.system_scroll_override_on_root_content.horizontal.factor",
-  MouseWheelRootScrollHorizontalFactor,
+   mousewheel_system_scroll_override_on_root_content_horizontal_factor,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.system_scroll_override_on_root_content.vertical.factor",
-  MouseWheelRootScrollVerticalFactor,
+   mousewheel_system_scroll_override_on_root_content_vertical_factor,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.transaction.ignoremovedelay",
-  MouseWheelIgnoreMoveDelayMs,
+   mousewheel_transaction_ignoremovedelay,
   RelaxedAtomicInt32, (int32_t)100
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.transaction.timeout",
-  MouseWheelTransactionTimeoutMs,
+   mousewheel_transaction_timeout,
   RelaxedAtomicInt32, (int32_t)1500
 )
 
