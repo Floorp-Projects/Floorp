@@ -382,7 +382,19 @@ class RemoteSettingsClient extends EventEmitter {
         }
         // The records imported from the dump should be considered as "created" for the
         // listeners.
-        syncResult.add("created", importedFromDump);
+        const importedById = importedFromDump.reduce((acc, r) => {
+          acc.set(r.id, r);
+          return acc;
+        }, new Map());
+        // Deleted records should not appear as created.
+        syncResult.deleted.forEach(r => importedById.delete(r.id));
+        // Records from dump that were updated should appear in their newest form.
+        syncResult.updated.forEach(u => {
+          if (importedById.has(u.old.id)) {
+            importedById.set(u.old.id, u.new);
+          }
+        });
+        syncResult.add("created", Array.from(importedById.values()));
       } catch (e) {
         if (e instanceof RemoteSettingsClient.InvalidSignatureError) {
           // Signature verification failed during synchronization.
