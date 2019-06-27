@@ -956,13 +956,15 @@ bitflags! {
         const APPLIES_TO_PLACEHOLDER = 1 << 5;
         ///  This longhand property applies to ::cue.
         const APPLIES_TO_CUE = 1 << 6;
+        /// This longhand property applies to ::marker.
+        const APPLIES_TO_MARKER = 1 << 7;
         /// This property's getComputedStyle implementation requires layout
         /// to be flushed.
-        const GETCS_NEEDS_LAYOUT_FLUSH = 1 << 7;
+        const GETCS_NEEDS_LAYOUT_FLUSH = 1 << 8;
         /// This property is a legacy shorthand.
         ///
         /// https://drafts.csswg.org/css-cascade/#legacy-shorthand
-        const IS_LEGACY_SHORTHAND = 1 << 8;
+        const IS_LEGACY_SHORTHAND = 1 << 9;
 
         /* The following flags are currently not used in Rust code, they
          * only need to be listed in corresponding properties so that
@@ -2835,6 +2837,19 @@ impl ComputedValues {
     #[inline]
     pub fn resolve_color(&self, color: computed::Color) -> RGBA {
         color.to_rgba(self.get_inherited_text().clone_color())
+    }
+
+    /// Returns which longhand properties have different values in the two
+    /// ComputedValues.
+    #[cfg(feature = "gecko_debug")]
+    pub fn differing_properties(&self, other: &ComputedValues) -> LonghandIdSet {
+        let mut set = LonghandIdSet::new();
+        % for prop in data.longhands:
+        if self.clone_${prop.ident}() != other.clone_${prop.ident}() {
+            set.insert(LonghandId::${prop.camel_case});
+        }
+        % endfor
+        set
     }
 }
 

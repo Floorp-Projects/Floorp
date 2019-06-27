@@ -286,7 +286,7 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     //
     // Maybe we should change that though.
     RefPtr<ComputedStyle> kidStyle =
-        presShell->StyleSet()->ResolveServoStyle(*child->AsElement());
+        ServoStyleSet::ResolveServoStyle(*child->AsElement());
     nsIFrame* frame;
     if (child->IsHTMLElement(nsGkAtoms::frameset)) {
       frame = NS_NewHTMLFramesetFrame(presShell, kidStyle);

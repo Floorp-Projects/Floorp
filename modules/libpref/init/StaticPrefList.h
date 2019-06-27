@@ -4703,6 +4703,14 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 4096
 )
 
+// Is the codepath for using cached scrollbar styles enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.cached-scrollbar-styles.enabled",
+  layout_css_cached_scrollbar_styles_enabled,
+  bool, false
+)
+
 // Is path() supported in clip-path?
 VARCACHE_PREF(
   Live,
@@ -4901,6 +4909,17 @@ VARCACHE_PREF(
   "layout.css.moz-binding.content.enabled",
   layout_css_moz_binding_content_enabled,
   bool, false
+)
+
+// Pref to control whether the ::marker property restrictions defined in [1]
+// apply.
+//
+// [1]: https://drafts.csswg.org/css-pseudo-4/#selectordef-marker
+VARCACHE_PREF(
+  Live,
+  "layout.css.marker.restricted",
+   layout_css_marker_restricted,
+  bool, true
 )
 
 // Pref to control whether @-moz-document rules are enabled in content pages.
