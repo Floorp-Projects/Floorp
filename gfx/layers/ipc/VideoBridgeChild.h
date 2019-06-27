@@ -19,11 +19,10 @@ class VideoBridgeChild final : public PVideoBridgeChild,
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoBridgeChild, override);
 
-  static void StartupForGPUProcess();
+  static void Startup();
   static void Shutdown();
 
-  static VideoBridgeChild* GetSingletonToParentProcess();
-  static VideoBridgeChild* GetSingletonToGPUProcess();
+  static VideoBridgeChild* GetSingleton();
 
   // PVideoBridgeChild
   PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
@@ -64,9 +63,6 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   bool IsSameProcess() const override;
 
   bool CanSend() { return mCanSend; }
-
-  static void OpenToParentProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
-  static void OpenToGPUProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
 
  private:
   VideoBridgeChild();

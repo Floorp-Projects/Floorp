@@ -58,8 +58,9 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
   nsCString errorDescription;
   nsCString blacklistedD3D11Driver;
   nsCString blacklistedD3D9Driver;
+  layers::TextureFactoryIdentifier defaultIdent;
   if (manager->SendPRemoteDecoderConstructor(
-          this, aAudioInfo, aOptions, Nothing(), &success,
+          this, aAudioInfo, aOptions, defaultIdent, &success,
           &blacklistedD3D11Driver, &blacklistedD3D9Driver, &errorDescription)) {
     mCanSend = true;
   }
