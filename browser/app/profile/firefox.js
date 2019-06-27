@@ -163,8 +163,9 @@ pref("app.update.service.enabled", true);
 #endif
 
 #ifdef XP_WIN
-// This pref prevents BITS from being used by Firefox to download updates.
-pref("app.update.BITS.enabled", false);
+// If set to true, the Update Service will attempt to use Windows BITS to
+// download updates and will fallback to downloading internally if that fails.
+pref("app.update.BITS.enabled", true);
 #endif
 
 // Symmetric (can be overridden by individual extensions) update preferences.
@@ -1493,6 +1494,13 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 pref("media.autoplay.block-webaudio", true);
 #else
 pref("media.autoplay.block-webaudio", false);
+#endif
+
+#if defined(XP_WIN)
+#if defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)
+pref("media.videocontrols.picture-in-picture.enabled", true);
+pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
+#endif
 #endif
 
 // Play with different values of the decay time and get telemetry,

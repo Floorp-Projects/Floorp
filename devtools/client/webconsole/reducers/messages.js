@@ -1391,6 +1391,22 @@ function maybeSortVisibleMessages(
   }
 
   if (state.warningGroupsById.size > 0 && sortWarningGroupMessage) {
+    function getNaturalOrder(messageA, messageB) {
+      const aFirst = -1;
+      const bFirst = 1;
+
+      // It can happen that messages are emitted in the same microsecond, making their
+      // timestamp similar. In such case, we rely on which message came first through
+      // the console API service, checking their id.
+      if (
+        messageA.timeStamp === messageB.timeStamp &&
+        !Number.isNaN(parseInt(messageA.id, 10)) &&
+        !Number.isNaN(parseInt(messageB.id, 10))
+      ) {
+        return parseInt(messageA.id, 10) < parseInt(messageB.id, 10) ? aFirst : bFirst;
+      }
+      return messageA.timeStamp < messageB.timeStamp ? aFirst : bFirst;
+    }
     state.visibleMessages.sort((a, b) => {
       const messageA = state.messagesById.get(a);
       const messageB = state.messagesById.get(b);
@@ -1409,7 +1425,7 @@ function maybeSortVisibleMessages(
         (warningGroupA && warningGroupB) ||
         (!warningGroupA && !warningGroupB)
       ) {
-        return messageA.timeStamp < messageB.timeStamp ? aFirst : bFirst;
+        return getNaturalOrder(messageA, messageB);
       }
 
       // If `a` is in a warningGroup (and `b` isn't).
@@ -1420,7 +1436,7 @@ function maybeSortVisibleMessages(
         }
         // `b` is a regular message, we place `a` before `b` if `b` came after `a`'s
         // warningGroup.
-        return messageB.timeStamp > warningGroupA.timeStamp ? aFirst : bFirst;
+        return getNaturalOrder(warningGroupA, messageB);
       }
 
       // If `b` is in a warningGroup (and `a` isn't).
@@ -1431,7 +1447,7 @@ function maybeSortVisibleMessages(
         }
         // `a` is a regular message, we place `a` after `b` if `a` came after `b`'s
         // warningGroup.
-        return messageA.timeStamp > warningGroupB.timeStamp ? bFirst : aFirst;
+        return getNaturalOrder(messageA, warningGroupB);
       }
 
       return 0;

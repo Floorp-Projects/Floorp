@@ -1,5 +1,3 @@
-// |jit-test| --enable-experimental-fields
-
 class C {
   1 = eval();
 }

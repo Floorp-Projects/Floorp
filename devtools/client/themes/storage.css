@@ -14,6 +14,24 @@
   background: var(--theme-sidebar-background);
 }
 
+/* Let the component gain focus when a click hits an empty area */
+#storage-tree {
+  -moz-user-focus: normal;
+}
+
+#storage-tree:focus {
+  outline: 0;
+}
+
+/* Let the component gain focus when a click hits an empty area */
+#storage-table {
+  -moz-user-focus: normal;
+}
+
+#storage-table:focus {
+  outline: 0;
+}
+
 /* The minimum column width needs to be determined by the header width */
 .table-widget-cell {
   min-width: unset;

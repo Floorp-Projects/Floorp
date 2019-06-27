@@ -153,7 +153,6 @@ class DebuggerWeakMap
   using Ptr = typename Base::Ptr;
   using AddPtr = typename Base::AddPtr;
   using Range = typename Base::Range;
-  using Enum = typename Base::Enum;
   using Lookup = typename Base::Lookup;
 
   // Expose WeakMap public interface.
@@ -164,6 +163,11 @@ class DebuggerWeakMap
   using Base::lookupForAdd;
   using Base::remove;
   using Base::trace;
+
+  class Enum : public Base::Enum {
+   public:
+    explicit Enum(DebuggerWeakMap& map) : Base::Enum(map) {}
+  };
 
   template <typename KeyInput, typename ValueInput>
   bool relookupOrAdd(AddPtr& p, const KeyInput& k, const ValueInput& v) {
@@ -176,22 +180,10 @@ class DebuggerWeakMap
     return ok;
   }
 
-  // Remove all entries for which test(key, value) returns true.
-  template <typename Predicate>
-  void removeIf(Predicate test) {
-    for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
-      JSObject* key = e.front().key();
-      JSObject* value = e.front().value();
-      if (test(key, value)) {
-        e.removeFront();
-      }
-    }
-  }
-
  public:
   template <void(traceValueEdges)(JSTracer*, JSObject*)>
   void traceCrossCompartmentEdges(JSTracer* tracer) {
-    for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
+    for (Enum e(*this); !e.empty(); e.popFront()) {
       traceValueEdges(tracer, e.front().value());
       Key key = e.front().key();
       TraceEdge(tracer, &key, "Debugger WeakMap key");
@@ -274,6 +266,7 @@ typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*>
 
 class Debugger : private mozilla::LinkedListElement<Debugger> {
   friend class Breakpoint;
+  friend class DebuggerFrame;
   friend class DebuggerMemory;
   friend struct JSRuntime::GlobalObjectWatchersLinkAccess<Debugger>;
   friend class SavedStacks;
@@ -1227,23 +1220,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   JSObject* wrapWasmSource(JSContext* cx,
                            Handle<WasmInstanceObject*> wasmInstance);
 
-  /*
-   * Add a link between the given generator object and a Debugger.Frame
-   * object.  This link is used to make sure the same Debugger.Frame stays
-   * associated with a given generator object (or async function activation),
-   * even while it is suspended and removed from the stack.
-   *
-   * The context `cx` and `frameObj` must be in the debugger realm, and
-   * `genObj` must be in a debuggee realm.
-   *
-   * `frameObj` must be this `Debugger`'s debug wrapper for the generator or
-   * async function call associated with `genObj`. This activation may
-   * or may not actually be on the stack right now.
-   */
-  MOZ_MUST_USE bool addGeneratorFrame(JSContext* cx,
-                                      Handle<AbstractGeneratorObject*> genObj,
-                                      HandleDebuggerFrame frameObj);
-
  private:
   Debugger(const Debugger&) = delete;
   Debugger& operator=(const Debugger&) = delete;
@@ -1523,14 +1499,51 @@ class DebuggerFrame : public NativeObject {
   OnPopHandler* onPopHandler() const;
   void setOnPopHandler(OnPopHandler* handler);
 
-  bool setGenerator(JSContext* cx,
-                    Handle<AbstractGeneratorObject*> unwrappedGenObj);
   bool hasGenerator() const;
-  void clearGenerator(FreeOp* fop);
 
   // If hasGenerator(), return an direct cross-compartment reference to this
   // Debugger.Frame's generator object.
   AbstractGeneratorObject& unwrappedGenerator() const;
+
+  /*
+   * Associate the generator object genObj with this Debugger.Frame. This
+   * association allows the Debugger.Frame to track the generator's execution
+   * across suspensions and resumptions, and to implement some methods even
+   * while the generator is suspended.
+   *
+   * The context `cx` must be in the Debugger.Frame's realm, and `genObj` must
+   * be in a debuggee realm.
+   *
+   * Technically, the generator activation need not actually be on the stack
+   * right now; it's okay to call this method on a Debugger.Frame that has no
+   * ScriptFrameIter::Data at present. However, this function has no way to
+   * verify that genObj really is the generator associated with the call for
+   * which this Debugger.Frame was originally created, so it's best to make the
+   * association while the call is on the stack, and the relationships are easy
+   * to discern.
+   */
+  MOZ_MUST_USE bool setGenerator(JSContext* cx,
+                                 Handle<AbstractGeneratorObject*> genObj);
+
+  /*
+   * Undo the effects of a prior call to setGenerator.
+   *
+   * If provided, owner must be the Debugger to which this Debugger.Frame
+   * belongs; remove this frame's entry from its generatorFrames map, and clean
+   * up its cross-compartment wrapper table entries. The owner must be passed
+   * unless this method is being called from the Debugger.Frame's finalizer. (In
+   * that case, the owner is not reliably available, and is not actually
+   * necessary.)
+   *
+   * If maybeGeneratorFramesEnum is non-null, use it to remove this frame's
+   * entry from the Debugger's generatorFrames weak map. In this case, this
+   * function will not otherwise disturb generatorFrames. Passing the enum
+   * allows this function to be used while iterating over generatorFrames.
+   */
+  void clearGenerator(FreeOp* fop);
+  void clearGenerator(
+      FreeOp* fop, Debugger* owner,
+      Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
 
   /*
    * Called after a generator/async frame is resumed, before exposing this
@@ -1594,7 +1607,6 @@ class DebuggerFrame : public NativeObject {
   void maybeDecrementFrameScriptStepperCount(FreeOp* fop,
                                              AbstractFramePtr frame);
 
- private:
   class GeneratorInfo;
   inline GeneratorInfo* generatorInfo() const;
 };

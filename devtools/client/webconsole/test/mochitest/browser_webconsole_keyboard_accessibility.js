@@ -30,7 +30,13 @@ async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
-  await waitFor(() => findMessages(hud, "").length == 100);
+  await waitFor(
+    () => findMessages(hud, "").length == 100,
+    "waiting for all the messages to be displayed",
+    100,
+    1000
+  );
+
   let currentPosition = outputScroller.scrollTop;
   const bottom = currentPosition;
   hud.jsterm.focus();

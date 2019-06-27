@@ -16,6 +16,7 @@ import shutil
 import sys
 import tempfile
 import time
+import traceback
 
 import mozcrash
 import mozdevice
@@ -387,6 +388,7 @@ def main():
         log.info("gtest | Received keyboard interrupt")
     except Exception as e:
         log.error(str(e))
+        traceback.print_exc()
         if isinstance(e, mozdevice.ADBTimeoutError):
             device_exception = True
     finally:

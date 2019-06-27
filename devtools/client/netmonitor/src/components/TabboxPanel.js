@@ -54,6 +54,7 @@ class TabboxPanel extends Component {
       hideToggleButton: PropTypes.bool,
       toggleNetworkDetails: PropTypes.func.isRequired,
       openNetworkDetails: PropTypes.func.isRequired,
+      showWebSocketsTab: PropTypes.bool,
     };
   }
 
@@ -84,6 +85,7 @@ class TabboxPanel extends Component {
       selectTab,
       sourceMapService,
       toggleNetworkDetails,
+      showWebSocketsTab,
     } = this.props;
 
     if (!request) {
@@ -94,7 +96,9 @@ class TabboxPanel extends Component {
     const showWebSocketsPanel =
       request.cause.type === "websocket" &&
       Services.prefs.getBoolPref(
-        "devtools.netmonitor.features.webSockets");
+        "devtools.netmonitor.features.webSockets") &&
+      showWebSocketsTab === undefined ? true : showWebSocketsTab;
+
     return (
       Tabbar({
         activeTabId,

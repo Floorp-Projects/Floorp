@@ -28,6 +28,15 @@
   --sidebar-width: 185px;
 }
 
+/* Let the component gain focus when a click hits an empty area */
+.performance-tool {
+  -moz-user-focus: normal;
+}
+
+.performance-tool:focus {
+  outline: 0;
+}
+
 /**
  * A generic class to hide elements, replacing the `element.hidden` attribute
  * that we use to hide elements that can later be active
