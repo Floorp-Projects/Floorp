@@ -17,7 +17,6 @@ import org.mozilla.geckoview.WebRequestError
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
@@ -35,7 +34,6 @@ import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-@ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
     companion object {
         val TEST_ENDPOINT: String = "http://localhost:4242"
