@@ -8,6 +8,9 @@ exclude: true
 
 <h1> GeckoView API Changelog. </h1>
 
+## v69
+- Added [`GeckoResult.accept`] for consuming a result without transforming it.
+
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
   configuration has changed.
@@ -320,4 +323,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 29ff764a2ca4aaa16dbe79a269d6c1c8a166775e
+[api-version]: 783f253fda7287f55497c15f867dc14cd1622666
