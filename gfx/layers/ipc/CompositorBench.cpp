@@ -335,7 +335,7 @@ static void RunCompositorBench(Compositor* aCompositor,
 
 void CompositorBench(Compositor* aCompositor, const gfx::IntRect& aScreenRect) {
   static bool sRanBenchmark = false;
-  bool wantBenchmark = StaticPrefs::LayersBenchEnabled();
+  bool wantBenchmark = StaticPrefs::layers_bench_enabled();
   if (wantBenchmark && !sRanBenchmark) {
     RunCompositorBench(aCompositor, aScreenRect);
   }

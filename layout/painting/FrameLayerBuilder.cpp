@@ -601,7 +601,7 @@ class PaintedLayerData {
   nsCString mLog;
 
 #  define FLB_LOG_PAINTED_LAYER_DECISION(pld, ...) \
-    if (StaticPrefs::LayersDumpDecision()) {       \
+    if (StaticPrefs::layers_dump_decision()) {     \
       pld->mLog.AppendPrintf("\t\t\t\t");          \
       pld->mLog.AppendPrintf(__VA_ARGS__);         \
     }
@@ -4482,7 +4482,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 
   nsPoint topLeft(0, 0);
 
-  int32_t maxLayers = StaticPrefs::MaxActiveLayers();
+  int32_t maxLayers = StaticPrefs::layers_max_active();
   int layerCount = 0;
 
   if (!mManager->IsWidgetLayerManager()) {
@@ -6205,7 +6205,7 @@ static bool ChooseScaleAndSetTransform(
   // tiling, that's not a problem, since we'll automatically choose a tiled
   // layer for layers of that size. If not, we need to apply clamping to
   // prevent this.
-  if (aTransform && !StaticPrefs::LayersTilesEnabled()) {
+  if (aTransform && !StaticPrefs::layers_enable_tiles()) {
     RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
   }
 

@@ -139,7 +139,7 @@ already_AddRefed<ImageContainer> LayerManager::CreateImageContainer(
 }
 
 bool LayerManager::AreComponentAlphaLayersEnabled() {
-  return StaticPrefs::ComponentAlphaEnabled();
+  return StaticPrefs::layers_componentalpha_enabled();
 }
 
 /*static*/

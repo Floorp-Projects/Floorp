@@ -501,7 +501,7 @@ static inline int32_t GetNextDeviceCounter() {
 }
 
 void DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11) {
-  if (StaticPrefs::LayersD3D11ForceWARP()) {
+  if (StaticPrefs::layers_d3d11_force_warp()) {
     CreateWARPCompositorDevice();
     return;
   }
@@ -620,7 +620,7 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
 
 void DeviceManagerDx::CreateWARPCompositorDevice() {
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP",
-                                        StaticPrefs::LayersD3D11ForceWARP());
+                                        StaticPrefs::layers_d3d11_force_warp());
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
 
   HRESULT hr;

@@ -107,7 +107,7 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
     return nullptr;
   }
 
-  if (!StaticPrefs::PersistentBufferProviderSharedEnabled()) {
+  if (!StaticPrefs::layers_shared_buffer_provider_enabled()) {
     return nullptr;
   }
 

@@ -302,7 +302,7 @@ double gfxPlatformGtk::GetFontScaleFactor() {
 
 bool gfxPlatformGtk::UseImageOffscreenSurfaces() {
   return GetDefaultContentBackend() != mozilla::gfx::BackendType::CAIRO ||
-         StaticPrefs::UseImageOffscreenSurfaces();
+         StaticPrefs::layers_use_image_offscreen_surfaces();
 }
 
 gfxImageFormat gfxPlatformGtk::GetOffscreenFormat() {
