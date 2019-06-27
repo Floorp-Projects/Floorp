@@ -49,7 +49,7 @@ To add it on Mac/Linux, run this command from the project root:
 ```sh
 ln -s ../../config/pre-push-recommended.sh .git/hooks/pre-push
 ```
-or for Windows run this command with administrative priveleges:
+or for Windows run this command with administrative privileges:
 ```sh
 mklink /d .git\hooks\pre-push ..\..\config\pre-push-recommended.sh
 ```
