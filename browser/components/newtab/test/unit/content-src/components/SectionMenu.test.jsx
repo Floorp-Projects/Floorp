@@ -1,11 +1,7 @@
 import {ContextMenu} from "content-src/components/ContextMenu/ContextMenu";
-import {IntlProvider} from "react-intl";
 import React from "react";
 import {_SectionMenu as SectionMenu} from "content-src/components/SectionMenu/SectionMenu";
 import {shallow} from "enzyme";
-import {shallowWithIntl} from "test/unit/utils";
-
-const messages = require("data/locales.json")["en-US"]; // eslint-disable-line import/no-commonjs
 
 const DEFAULT_PROPS = {
   name: "Section Name",
@@ -22,7 +18,7 @@ const DEFAULT_PROPS = {
 describe("<SectionMenu>", () => {
   let wrapper;
   beforeEach(() => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} />);
   });
   it("should render a ContextMenu element", () => {
     assert.ok(wrapper.find(ContextMenu).exists());
@@ -51,90 +47,71 @@ describe("<SectionMenu>", () => {
     }
   });
   it("should show the correct default options", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} />);
     const {options} = wrapper.find(ContextMenu).props();
     let i = 0;
-    assert.propertyVal(options[i++], "id", "section_menu_action_move_up");
-    assert.propertyVal(options[i++], "id", "section_menu_action_move_down");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-move-up");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-move-down");
     assert.propertyVal(options[i++], "type", "separator");
-    assert.propertyVal(options[i++], "id", "section_menu_action_remove_section");
-    assert.propertyVal(options[i++], "id", "section_menu_action_collapse_section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-remove-section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-collapse-section");
     assert.propertyVal(options[i++], "type", "separator");
-    assert.propertyVal(options[i++], "id", "section_menu_action_manage_section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-manage-section");
     assert.propertyVal(options, "length", i);
   });
   it("should show the correct default options for a web extension", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} isWebExtension={true} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} isWebExtension={true} />);
     const {options} = wrapper.find(ContextMenu).props();
     let i = 0;
-    assert.propertyVal(options[i++], "id", "section_menu_action_move_up");
-    assert.propertyVal(options[i++], "id", "section_menu_action_move_down");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-move-up");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-move-down");
     assert.propertyVal(options[i++], "type", "separator");
-    assert.propertyVal(options[i++], "id", "section_menu_action_collapse_section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-collapse-section");
     assert.propertyVal(options[i++], "type", "separator");
-    assert.propertyVal(options[i++], "id", "section_menu_action_manage_webext");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-manage-webext");
     assert.propertyVal(options, "length", i);
   });
   it("should show Collapse option for an expanded section if CheckCollapsed in options list", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} collapsed={false} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} collapsed={false} />);
     const {options} = wrapper.find(ContextMenu).props();
-    assert.isDefined(options.find(o => (o.id && o.id === "section_menu_action_collapse_section")));
+    assert.isDefined(options.find(o => (o.id && o.id === "newtab-section-menu-collapse-section")));
   });
   it("should show Expand option for a collapsed section if CheckCollapsed in options list", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} collapsed={true} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} collapsed={true} />);
     const {options} = wrapper.find(ContextMenu).props();
-    assert.isDefined(options.find(o => (o.id && o.id === "section_menu_action_expand_section")));
+    assert.isDefined(options.find(o => (o.id && o.id === "newtab-section-menu-expand-section")));
   });
   it("should show Add Top Site option", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} extraOptions={["AddTopSite"]} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} extraOptions={["AddTopSite"]} />);
     const {options} = wrapper.find(ContextMenu).props();
-    assert.equal(options[0].id, "section_menu_action_add_topsite");
+    assert.equal(options[0].id, "newtab-section-menu-add-topsite");
   });
   it("should show Add Search Engine option", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} extraOptions={["AddSearchShortcut"]} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} extraOptions={["AddSearchShortcut"]} />);
     const {options} = wrapper.find(ContextMenu).props();
-    assert.equal(options[0].id, "section_menu_action_add_search_engine");
+    assert.equal(options[0].id, "newtab-section-menu-add-search-engine");
   });
   it("should show Privacy Notice option if privacyNoticeURL is passed", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} privacyNoticeURL="https://mozilla.org/privacy" />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} privacyNoticeURL="https://mozilla.org/privacy" />);
     const {options} = wrapper.find(ContextMenu).props();
     let i = 0;
-    assert.propertyVal(options[i++], "id", "section_menu_action_move_up");
-    assert.propertyVal(options[i++], "id", "section_menu_action_move_down");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-move-up");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-move-down");
     assert.propertyVal(options[i++], "type", "separator");
-    assert.propertyVal(options[i++], "id", "section_menu_action_remove_section");
-    assert.propertyVal(options[i++], "id", "section_menu_action_collapse_section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-remove-section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-collapse-section");
     assert.propertyVal(options[i++], "type", "separator");
-    assert.propertyVal(options[i++], "id", "section_menu_action_privacy_notice");
-    assert.propertyVal(options[i++], "id", "section_menu_action_manage_section");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-privacy-notice");
+    assert.propertyVal(options[i++], "id", "newtab-section-menu-manage-section");
     assert.propertyVal(options, "length", i);
   });
-  it("should call intl.formatMessage with the correct string ids", () => {
-    const intlProvider = new IntlProvider({locale: "en", messages});
-    const {intl} = intlProvider.getChildContext();
-    const spy = sinon.spy(intl, "formatMessage");
-
-    // Identical to calling shallowWithIntl, but passing in the mocked intl object
-    const node = <SectionMenu {...DEFAULT_PROPS} />;
-    shallow(React.cloneElement(node, {intl}), {context: {intl}});
-
-    // Called once for each option in the menu
-    assert.equal(spy.callCount, 5);
-
-    // Called with correct ids
-    assert.ok(spy.calledWith(sinon.match({id: "section_menu_action_move_up"})));
-    assert.ok(spy.calledWith(sinon.match({id: "section_menu_action_move_down"})));
-    assert.ok(spy.calledWith(sinon.match({id: "section_menu_action_remove_section"})));
-    assert.ok(spy.calledWith(sinon.match({id: "section_menu_action_collapse_section"})));
-    assert.ok(spy.calledWith(sinon.match({id: "section_menu_action_manage_section"})));
-  });
   it("should disable Move Up on first section", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} isFirst={true} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} isFirst={true} />);
     const {options} = wrapper.find(ContextMenu).props();
     assert.ok(options[0].disabled);
   });
   it("should disable Move Down on last section", () => {
-    wrapper = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} isLast={true} />);
+    wrapper = shallow(<SectionMenu {...DEFAULT_PROPS} isLast={true} />);
     const {options} = wrapper.find(ContextMenu).props();
     assert.ok(options[1].disabled);
   });
@@ -142,16 +119,16 @@ describe("<SectionMenu>", () => {
     const dispatch = sinon.stub();
     const propOptions = ["Separator", "MoveUp", "MoveDown", "RemoveSection", "CollapseSection", "ExpandSection", "ManageSection", "AddTopSite", "PrivacyNotice"];
     const expectedActionData = {
-      section_menu_action_move_up: {id: "sectionId", direction: -1},
-      section_menu_action_move_down: {id: "sectionId", direction: +1},
-      section_menu_action_remove_section: {name: "showSection", value: false},
-      section_menu_action_collapse_section: {id: DEFAULT_PROPS.id, value: {collapsed: true}},
-      section_menu_action_expand_section: {id: DEFAULT_PROPS.id, value: {collapsed: false}},
-      section_menu_action_manage_section: undefined,
-      section_menu_action_add_topsite: {index: -1},
-      section_menu_action_privacy_notice: {url: DEFAULT_PROPS.privacyNoticeURL},
+      "newtab-section-menu-move-up": {id: "sectionId", direction: -1},
+      "newtab-section-menu-move-down": {id: "sectionId", direction: +1},
+      "newtab-section-menu-remove-section": {name: "showSection", value: false},
+      "newtab-section-menu-collapse-section": {id: DEFAULT_PROPS.id, value: {collapsed: true}},
+      "newtab-section-menu-expand-section": {id: DEFAULT_PROPS.id, value: {collapsed: false}},
+      "newtab-section-menu-manage-section": undefined,
+      "newtab-section-menu-add-topsite": {index: -1},
+      "newtab-section-menu-privacy-notice": {url: DEFAULT_PROPS.privacyNoticeURL},
     };
-    const {options} = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} dispatch={dispatch} options={propOptions} />)
+    const {options} = shallow(<SectionMenu {...DEFAULT_PROPS} dispatch={dispatch} options={propOptions} />)
       .find(ContextMenu).props();
     afterEach(() => dispatch.reset());
     options.filter(o => o.type !== "separator").forEach(option => {

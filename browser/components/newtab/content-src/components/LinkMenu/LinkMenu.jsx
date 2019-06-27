@@ -1,7 +1,6 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import {ContextMenu} from "content-src/components/ContextMenu/ContextMenu";
-import {injectIntl} from "react-intl";
 import {LinkMenuOptions} from "content-src/lib/link-menu-options";
 import React from "react";
 
@@ -16,9 +15,8 @@ export class _LinkMenu extends React.PureComponent {
     const propOptions = (!site.isDefault || site.searchTopSite) ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
     const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled, siteInfo, platform)).map(option => {
-      const {action, impression, id, string_id, type, userEvent} = option;
+      const {action, impression, id, type, userEvent} = option;
       if (!type && id) {
-        option.label = props.intl.formatMessage({id: string_id || id});
         option.onClick = () => {
           props.dispatch(action);
           if (userEvent) {
@@ -54,4 +52,4 @@ export class _LinkMenu extends React.PureComponent {
 }
 
 const getState = state => ({isPrivateBrowsingEnabled: state.Prefs.values.isPrivateBrowsingEnabled, platform: state.Prefs.values.platform});
-export const LinkMenu = connect(getState)(injectIntl(_LinkMenu));
+export const LinkMenu = connect(getState)(_LinkMenu);

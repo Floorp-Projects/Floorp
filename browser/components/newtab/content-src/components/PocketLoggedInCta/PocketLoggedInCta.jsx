@@ -1,5 +1,4 @@
 import {connect} from "react-redux";
-import {FormattedMessage} from "react-intl";
 import React from "react";
 
 export class _PocketLoggedInCta extends React.PureComponent {
@@ -8,12 +7,12 @@ export class _PocketLoggedInCta extends React.PureComponent {
     return (
       <span className="pocket-logged-in-cta">
         <a className="pocket-cta-button" href={pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/"}>
-         {pocketCta.ctaButton ? pocketCta.ctaButton : <FormattedMessage id="pocket_cta_button" />}
+         {pocketCta.ctaButton ? pocketCta.ctaButton : <span data-l10n-id="newtab-pocket-cta-button" />}
         </a>
 
         <a href={pocketCta.ctaUrl ? pocketCta.ctaUrl : "https://getpocket.com/"}>
           <span className="cta-text">
-           {pocketCta.ctaText ? pocketCta.ctaText : <FormattedMessage id="pocket_cta_text" />}
+           {pocketCta.ctaText ? pocketCta.ctaText : <span data-l10n-id="newtab-pocket-cta-text" />}
           </span>
         </a>
       </span>

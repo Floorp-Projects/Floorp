@@ -3,7 +3,6 @@ import {MIN_CORNER_FAVICON_SIZE, MIN_RICH_FAVICON_SIZE, TOP_SITES_SOURCE} from "
 import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
 import {connect} from "react-redux";
-import {injectIntl} from "react-intl";
 import {ModalOverlayWrapper} from "../../asrouter/components/ModalOverlay/ModalOverlay";
 import React from "react";
 import {SearchShortcutsForm} from "./SearchShortcutsForm";
@@ -127,7 +126,7 @@ export class _TopSites extends React.PureComponent {
         className="top-sites"
         icon="topsites"
         id="topsites"
-        title={this.props.title || {id: "header_top_sites"}}
+        title={this.props.title || {id: "newtab-section-header-topsites"}}
         extraMenuOptions={extraMenuOptions}
         showPrefName="feeds.topsites"
         eventSource={TOP_SITES_SOURCE}
@@ -170,4 +169,4 @@ export const TopSites = connect(state => ({
   TopSites: state.TopSites,
   Prefs: state.Prefs,
   TopSitesRows: state.Prefs.values.topSitesRows,
-}))(injectIntl(_TopSites));
+}))(_TopSites);

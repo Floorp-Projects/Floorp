@@ -1,5 +1,5 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {addLocaleData, injectIntl, IntlProvider} from "react-intl";
+import {addLocaleData, IntlProvider} from "react-intl";
 import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {ASRouterUISurface} from "../../asrouter/asrouter-content";
 import {ConfirmDialog} from "content-src/components/ConfirmDialog/ConfirmDialog";
@@ -10,11 +10,11 @@ import React from "react";
 import {Search} from "content-src/components/Search/Search";
 import {Sections} from "content-src/components/Sections/Sections";
 
-const PrefsButton = injectIntl(props => (
+const PrefsButton = props => (
   <div className="prefs-button">
-    <button className="icon icon-settings" onClick={props.onClick} title={props.intl.formatMessage({id: "settings_pane_button_label"})} />
+    <button className="icon icon-settings" onClick={props.onClick} data-l10n-id="newtab-settings-button" />
   </div>
-));
+);
 
 // Add the locale data for pluralization and relative-time formatting for now,
 // this just uses english locale data. We can make this more sophisticated if
