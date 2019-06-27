@@ -222,37 +222,22 @@ public class GeckoResultTest {
     public void resultChaining() {
         assertThat("We're on the UI thread", Thread.currentThread(), equalTo(Looper.getMainLooper().getThread()));
 
-        GeckoResult.fromValue(42).then(new OnValueListener<Integer, String>() {
-            @Override
-            public GeckoResult<String> onValue(Integer value) {
-                assertThat("Value should match", value, equalTo(42));
-                return GeckoResult.fromValue("hello");
-            }
-        }).then(new OnValueListener<String, Float>() {
-            @Override
-            public GeckoResult<Float> onValue(String value) {
-                assertThat("Value should match", value, equalTo("hello"));
-                return GeckoResult.fromValue(42.0f);
-            }
-        }).then(new OnValueListener<Float, Float>() {
-            @Override
-            public GeckoResult<Float> onValue(Float value) {
-                assertThat("Value should match", value, equalTo(42.0f));
-                return GeckoResult.fromException(new Exception("boom"));
-            }
-        }).exceptionally(new OnExceptionListener<Void>() {
-            @Override
-            public GeckoResult<Void> onException(Throwable error) {
-                assertThat("Error message should match", error.getMessage(), equalTo("boom"));
-                throw new MockException();
-            }
-        }).exceptionally(new OnExceptionListener<Void>() {
-            @Override
-            public GeckoResult<Void> onException(Throwable exception) {
-                assertThat("Exception should be MockException", exception, instanceOf(MockException.class));
-                done();
-                return null;
-            }
+        GeckoResult.fromValue(42).then(value -> {
+            assertThat("Value should match", value, equalTo(42));
+            return GeckoResult.fromValue("hello");
+        }).then(value -> {
+            assertThat("Value should match", value, equalTo("hello"));
+            return GeckoResult.fromValue(42.0f);
+        }).then(value -> {
+            assertThat("Value should match", value, equalTo(42.0f));
+            return GeckoResult.fromException(new Exception("boom"));
+        }).exceptionally(error -> {
+            assertThat("Error message should match", error.getMessage(), equalTo("boom"));
+            throw new MockException();
+        }).exceptionally(exception -> {
+            assertThat("Exception should be MockException", exception, instanceOf(MockException.class));
+            done();
+            return null;
         });
 
         waitUntilDone();
