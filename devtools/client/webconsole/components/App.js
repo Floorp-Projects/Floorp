@@ -17,6 +17,7 @@ const ConsoleOutput = createFactory(require("devtools/client/webconsole/componen
 const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar/FilterBar"));
 const SideBar = createFactory(require("devtools/client/webconsole/components/SideBar"));
 const ReverseSearchInput = createFactory(require("devtools/client/webconsole/components/Input/ReverseSearchInput"));
+const EditorToolbar = createFactory(require("devtools/client/webconsole/components/Input/EditorToolbar"));
 const JSTerm = createFactory(require("devtools/client/webconsole/components/Input/JSTerm"));
 const ConfirmDialog = createFactory(require("devtools/client/webconsole/components/Input/ConfirmDialog"));
 const NotificationBox = createFactory(require("devtools/client/shared/components/NotificationBox").NotificationBox);
@@ -238,7 +239,7 @@ class App extends Component {
         ref: node => {
           this.node = node;
         }},
-        div({className: "webconsole-flex-wrapper"},
+        div({className: "webconsole-wrapper"},
           FilterBar({
             hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
             hideShowContentMessagesCheckbox,
@@ -253,6 +254,10 @@ class App extends Component {
             id: "webconsole-notificationbox",
             wrapping: true,
             notifications,
+          }),
+          EditorToolbar({
+            editorMode,
+            webConsoleUI,
           }),
           JSTerm({
             webConsoleUI,
