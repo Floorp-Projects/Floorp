@@ -221,8 +221,8 @@ mozilla::gfx::Config* Factory::sConfig = nullptr;
 
 static void PrefChanged(const char* aPref, void*) {
   mozilla::gfx::LoggingPrefs::sGfxLogLevel =
-      Preferences::GetInt(StaticPrefs::GetGfxLoggingLevelPrefName(),
-                          StaticPrefs::GetGfxLoggingLevelPrefDefault());
+      Preferences::GetInt(StaticPrefs::Getgfx_logging_levelPrefName(),
+                          StaticPrefs::Getgfx_logging_levelPrefDefault());
 }
 
 void Factory::Init(const Config& aConfig) {
@@ -230,7 +230,7 @@ void Factory::Init(const Config& aConfig) {
   sConfig = new Config(aConfig);
   Preferences::RegisterCallback(
       PrefChanged,
-      nsDependentCString(StaticPrefs::GetGfxLoggingLevelPrefName()));
+      nsDependentCString(StaticPrefs::Getgfx_logging_levelPrefName()));
 }
 
 void Factory::ShutDown() {

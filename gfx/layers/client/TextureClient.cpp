@@ -295,13 +295,13 @@ GetTextureType(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
 #endif
 
 #ifdef XP_MACOSX
-  if (StaticPrefs::UseIOSurfaceTextures()) {
+  if (StaticPrefs::gfx_use_iosurface_textures()) {
     return TextureType::MacIOSurface;
   }
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (StaticPrefs::UseSurfaceTextureTextures()) {
+  if (StaticPrefs::gfx_use_surfacetexture_textures()) {
     return TextureType::AndroidNativeWindow;
   }
 #endif

@@ -183,7 +183,7 @@ bool DeviceManagerDx::CreateCompositorDevices() {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
 
-  if (int32_t sleepSec = StaticPrefs::Direct3D11SleepOnCreateDevice()) {
+  if (int32_t sleepSec = StaticPrefs::gfx_direct3d11_sleep_on_create_device()) {
     printf_stderr("Attach to PID: %d\n", GetCurrentProcessId());
     Sleep(sleepSec * 1000);
   }
@@ -442,7 +442,7 @@ bool DeviceManagerDx::CreateCompositorDeviceHelper(
     FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport,
     RefPtr<ID3D11Device>& aOutDevice) {
   // Check if a failure was injected for testing.
-  if (StaticPrefs::DeviceFailForTesting()) {
+  if (StaticPrefs::gfx_testing_device_fail()) {
     aD3d11.SetFailed(FeatureStatus::Failed,
                      "Direct3D11 device failure simulated by preference",
                      NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_SIM"));
@@ -571,8 +571,8 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                    D3D_DRIVER_TYPE aDriverType, UINT aFlags,
                                    HRESULT& aResOut,
                                    RefPtr<ID3D11Device>& aOutDevice) {
-  if (StaticPrefs::Direct3D11EnableDebugLayer() ||
-      StaticPrefs::Direct3D11BreakOnError()) {
+  if (StaticPrefs::gfx_direct3d11_enable_debug_layer() ||
+      StaticPrefs::gfx_direct3d11_break_on_error()) {
     aFlags |= D3D11_CREATE_DEVICE_DEBUG;
   }
 
@@ -584,7 +584,7 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
   }
   MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { return false; }
 
-  if (StaticPrefs::Direct3D11BreakOnError()) {
+  if (StaticPrefs::gfx_direct3d11_break_on_error()) {
     do {
       if (!aOutDevice) break;
 
@@ -745,13 +745,13 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateDecoderDevice() {
   }
 
   bool reuseDevice = false;
-  if (StaticPrefs::Direct3D11ReuseDecoderDevice() < 0) {
+  if (StaticPrefs::gfx_direct3d11_reuse_decoder_device() < 0) {
     // Use the default logic, which is to allow reuse of devices on AMD, but
     // create separate devices everywhere else.
     if (isAMD) {
       reuseDevice = true;
     }
-  } else if (StaticPrefs::Direct3D11ReuseDecoderDevice() > 0) {
+  } else if (StaticPrefs::gfx_direct3d11_reuse_decoder_device() > 0) {
     reuseDevice = true;
   }
 
@@ -1035,7 +1035,7 @@ bool DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason) {
   }
 
   if (XRE_IsParentProcess() && NS_IsMainThread() &&
-      StaticPrefs::DeviceResetForTesting()) {
+      StaticPrefs::gfx_testing_device_reset()) {
     Preferences::SetInt("gfx.testing.device-reset", 0);
     *aOutReason = DeviceResetReason::FORCED_RESET;
     return true;
@@ -1143,7 +1143,7 @@ bool DeviceManagerDx::TextureSharingWorks() {
 
 bool DeviceManagerDx::CanInitializeKeyedMutexTextures() {
   MutexAutoLock lock(mDeviceLock);
-  return mDeviceStatus && StaticPrefs::Direct3D11AllowKeyedMutex() &&
+  return mDeviceStatus && StaticPrefs::gfx_direct3d11_allow_keyed_mutex() &&
          gfxVars::AllowD3D11KeyedMutex();
 }
 

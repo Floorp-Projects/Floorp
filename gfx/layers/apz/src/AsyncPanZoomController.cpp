@@ -2012,7 +2012,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
       MaybeAdjustDestinationForScrollSnapping(aEvent, destination);
 
   // If smooth scrolling is disabled, then scroll immediately to the destination
-  if (!StaticPrefs::SmoothScrollEnabled()) {
+  if (!StaticPrefs::general_smoothScroll()) {
     CancelAnimation();
 
     // CallDispatchScroll interprets the start and end points as the start and
@@ -5089,7 +5089,8 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
       // Let the compositor know about scroll state changes so it can manage
       // windowed plugins.
-      if (StaticPrefs::HidePluginsForScroll() && mCompositorController) {
+      if (StaticPrefs::gfx_e10s_hide_plugins_for_scroll() &&
+          mCompositorController) {
         mCompositorController->ScheduleHideAllPluginWindows();
       }
 #endif
@@ -5111,7 +5112,8 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
       controller->NotifyAPZStateChange(GetGuid(),
                                        APZStateChange::eTransformEnd);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      if (StaticPrefs::HidePluginsForScroll() && mCompositorController) {
+      if (StaticPrefs::gfx_e10s_hide_plugins_for_scroll() &&
+          mCompositorController) {
         mCompositorController->ScheduleShowAllPluginWindows();
       }
 #endif
