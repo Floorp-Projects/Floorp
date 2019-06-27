@@ -481,20 +481,10 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     private fun waitUntilCollected(ref: QueuedWeakReference<*>) {
-        val start = SystemClock.uptimeMillis()
-        while (ref.queue.poll() == null) {
-            val elapsed = SystemClock.uptimeMillis() - start
-            if (elapsed > sessionRule.timeoutMillis) {
-                dumpHprof()
-                throw UiThreadUtils.TimeoutException("Timed out after " + elapsed + "ms")
-            }
-
-            try {
-                UiThreadUtils.loopUntilIdle(100)
-            } catch (e: UiThreadUtils.TimeoutException) {
-            }
+        UiThreadUtils.waitForCondition({
             Runtime.getRuntime().gc()
-        }
+            ref.queue.poll() != null
+        }, sessionRule.timeoutMillis)
     }
 
     class QueuedWeakReference<T> @JvmOverloads constructor(obj: T, var queue: ReferenceQueue<T> =
