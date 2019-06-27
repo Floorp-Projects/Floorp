@@ -1194,6 +1194,12 @@ function defineAddonWrapperProperty(name, getter) {
 
     let [result, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
 
+    if (result == null) {
+      // Legacy add-ons may be partially localized. Fall back to the default
+      // locale ensure that the result is a string where possible.
+      [result, usedRepository] = chooseValue(addon, addon.defaultLocale, aProp);
+    }
+
     if (result && !usedRepository && aProp == "creator")
       return new AddonManagerPrivate.AddonAuthor(result);
 
