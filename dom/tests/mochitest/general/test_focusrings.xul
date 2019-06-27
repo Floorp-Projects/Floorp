@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script src="/tests/SimpleTest/SimpleTest.js"></script>
-<script src="/tests/SimpleTest/EventUtils.js"></script>
-<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
 <html:style xmlns:html="http://www.w3.org/1999/xhtml" type="text/css">
 * { outline: none; }
@@ -120,15 +120,21 @@ var htmlElementsMacPrefSet = [
   "<input id='elem' type='checkbox' class='canfocus'>",
 ];
 
+function createElement(str) {
+  let doc = new DOMParser().parseFromString(`<html><body>${str}</body></html>`, "text/html");
+  return doc.body.firstChild;
+}
+
 function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 {
   var childwin = frames[0];
   var childdoc = childwin.document;
   var container = childdoc.getElementById("container");
   for (var e = 0; e < list.length; e++) {
-    container.innerHTML = list[e];
-
-    var elem = container.firstChild;
+    // Using innerHTML would be sanitized, so use the DOM parser instead to
+    // create the elements.
+    var elem = childdoc.adoptNode(createElement(list[e]));
+    container.appendChild(elem);
 
     var shouldFocus = !isMac || (elem.className == "canfocus");
     var ringSize = (shouldFocus ? (expectedNoRingsOnWin ? 2 : 1) : 0) + "px";
@@ -150,6 +156,11 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
        "focus() on " + list[e] + " ring");
 
     childdoc.activeElement.blur();
+
+    // Clear out the container for the next test.
+    while (container.firstChild) {
+      container.firstChild.remove();
+    }
   }
 }
 

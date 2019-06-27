@@ -392,6 +392,15 @@
   -moz-user-focus: normal;
 }
 
+/* Let the component gain focus when a click hits an empty area */
+#toolbox-container {
+  -moz-user-focus: normal;
+}
+
+#toolbox-container:focus {
+  outline: 0;
+}
+
 /* Toolbox tabs reordering */
 #toolbox-container.tabs-reordering > .theme-body {
   pointer-events: none;

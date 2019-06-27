@@ -886,16 +886,8 @@ public class GeckoViewActivity extends AppCompatActivity {
 
         @Override
         public GeckoResult<GeckoSession> onNewSession(final GeckoSession session, final String uri) {
-            GeckoSession newSession = new GeckoSession(session.getSettings());
-
-            Intent intent = new Intent(GeckoViewActivity.this, SessionActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-            intent.setAction(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(uri));
-            intent.putExtra("session", newSession);
-
-            startActivity(intent);
-
+            final TabSession newSession = createSession();
+            mToolbarView.updateTabCount();
             return GeckoResult.fromValue(newSession);
         }
 

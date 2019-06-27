@@ -27,6 +27,7 @@
 #include "nsJSUtils.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ScriptDecoding.h"  // mozilla::dom::ScriptDecoding
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -3150,67 +3151,6 @@ bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {
 }
 
 template <typename Unit>
-struct Conversion;
-
-template <>
-struct Conversion<char16_t> {
-  static CheckedInt<size_t> MaxBufferLength(
-      const UniquePtr<Decoder>& aUnicodeDecoder, size_t aByteLength) {
-    return aUnicodeDecoder->MaxUTF16BufferLength(aByteLength);
-  }
-
-  static size_t DecodeInto(const UniquePtr<Decoder>& aUnicodeDecoder,
-                           const Span<const uint8_t>& aData, char16_t* aDest,
-                           size_t aDestLength) {
-    uint32_t result;
-    size_t read;
-    size_t written;
-    bool hadErrors;
-    Tie(result, read, written, hadErrors) = aUnicodeDecoder->DecodeToUTF16(
-        aData, MakeSpan(aDest, aDestLength), true);
-    MOZ_ASSERT(result == kInputEmpty);
-    MOZ_ASSERT(read == aData.Length());
-    MOZ_ASSERT(written <= aDestLength);
-    Unused << hadErrors;
-
-    return written;
-  }
-};
-
-template <>
-struct Conversion<Utf8Unit> {
-  static CheckedInt<size_t> MaxBufferLength(
-      const UniquePtr<Decoder>& aUnicodeDecoder, size_t aByteLength) {
-    return aUnicodeDecoder->MaxUTF8BufferLength(aByteLength);
-  }
-
-  static size_t DecodeInto(const UniquePtr<Decoder>& aUnicodeDecoder,
-                           const Span<const uint8_t>& aData, Utf8Unit* aDest,
-                           size_t aDestLength) {
-    uint32_t result;
-    size_t read;
-    size_t written;
-    bool hadErrors;
-    // Until C++ char8_t happens, our decoder APIs deal in |uint8_t| while
-    // |Utf8Unit| internally deals with |char|, so there's inevitable impedance
-    // mismatch.  :-(  The written memory will be interpreted through
-    // |char Utf8Unit::mValue| which is *permissible* because any object's
-    // memory can be interpreted as |char|.  Unfortunately, until
-    // twos-complement is mandated, we have to play fast and loose and *hope*
-    // interpreting memory storing |uint8_t| as |char| will pick up the desired
-    // wrapped-around value.  ¯\_(ツ)_/¯
-    Tie(result, read, written, hadErrors) = aUnicodeDecoder->DecodeToUTF8(
-        aData, MakeSpan(reinterpret_cast<uint8_t*>(aDest), aDestLength), true);
-    MOZ_ASSERT(result == kInputEmpty);
-    MOZ_ASSERT(read == aData.Length());
-    MOZ_ASSERT(written <= aDestLength);
-    Unused << hadErrors;
-
-    return written;
-  }
-};
-
-template <typename Unit>
 static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
                                  uint32_t aLength,
                                  const nsAString& aHintCharset,
@@ -3269,7 +3209,7 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
   });
 
   CheckedInt<size_t> bufferLength =
-      Conversion<Unit>::MaxBufferLength(unicodeDecoder, aLength);
+      ScriptDecoding<Unit>::MaxBufferLength(unicodeDecoder, aLength);
   if (!bufferLength.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -3285,8 +3225,9 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
   }
 
   signalOOM.release();
-  aLengthOut = Conversion<Unit>::DecodeInto(unicodeDecoder, data, aBufOut,
-                                            bufferLength.value());
+  aLengthOut = ScriptDecoding<Unit>::DecodeInto(
+      unicodeDecoder, data, MakeSpan(aBufOut, bufferLength.value()),
+      /* aEndOfSource = */ true);
   return NS_OK;
 }
 

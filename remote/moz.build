@@ -7,9 +7,8 @@ DIRS += [
   "test",
 ]
 
-EXTRA_COMPONENTS += [
-    "command-line-handler.js",
-    "RemoteAgent.manifest",
+XPCOM_MANIFESTS += [
+  "RemoteAgent.conf",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]

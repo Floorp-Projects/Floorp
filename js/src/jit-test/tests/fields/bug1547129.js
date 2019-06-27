@@ -1,5 +1,3 @@
-// |jit-test| --enable-experimental-fields
-
 load(libdir + "asserts.js");
 
 new class foo extends Array {

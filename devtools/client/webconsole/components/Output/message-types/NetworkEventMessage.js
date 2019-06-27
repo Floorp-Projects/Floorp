@@ -158,6 +158,7 @@ function NetworkEventMessage({
         dispatch(actions.selectNetworkMessageTab(tabId));
       },
       hideToggleButton: true,
+      showWebSocketsTab: false,
     })
   );
 

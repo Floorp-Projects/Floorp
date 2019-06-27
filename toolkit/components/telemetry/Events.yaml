@@ -227,9 +227,9 @@ addonsManager:
 extensions.data:
   migrateResult:
     objects: ["storageLocal"]
-    bug_numbers: [1470213]
+    bug_numbers: [1470213, 1553297]
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "70"
+    expiry_version: "73"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     extra_keys:

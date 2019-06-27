@@ -21,7 +21,6 @@
 #include "nsICSSLoaderObserver.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ScriptLoader.h"
 
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"

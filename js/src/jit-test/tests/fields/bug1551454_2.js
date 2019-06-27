@@ -1,5 +1,3 @@
-// |jit-test| --enable-experimental-fields
-
 let f = 1;
 class X { f=f; }
 assertEq(new X().f, 1);
