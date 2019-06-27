@@ -140,5 +140,11 @@ void PublicKeyCredential::SetClientExtensionResultAppId(bool aResult) {
   mClientExtensionOutputs.mAppid.Value() = aResult;
 }
 
+void PublicKeyCredential::SetClientExtensionResultHmacSecret(
+    bool aHmacCreateSecret) {
+  mClientExtensionOutputs.mHmacCreateSecret.Construct();
+  mClientExtensionOutputs.mHmacCreateSecret.Value() = aHmacCreateSecret;
+}
+
 }  // namespace dom
 }  // namespace mozilla

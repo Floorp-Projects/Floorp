@@ -222,9 +222,10 @@ void AndroidWebAuthnTokenManager::HandleRegisterResult(
         "AndroidWebAuthnTokenManager::RegisterComplete",
         [self = RefPtr<AndroidWebAuthnTokenManager>(this), aResult]() {
           CryptoBuffer emptyBuffer;
-          WebAuthnMakeCredentialResult result(aResult.mClientDataJSON,
-                                              aResult.mAttObj,
-                                              aResult.mKeyHandle, emptyBuffer);
+          nsTArray<WebAuthnExtensionResult> extensions;
+          WebAuthnMakeCredentialResult result(
+              aResult.mClientDataJSON, aResult.mAttObj, aResult.mKeyHandle,
+              emptyBuffer, extensions);
           self->mRegisterPromise.Resolve(std::move(result), __func__);
         }));
   }
