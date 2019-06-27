@@ -30,6 +30,9 @@ let whitelist = [
   {sourceName: /\b(html|mathml|ua)\.css$/i,
    errorMessage: /Unknown property.*-moz-/i,
    isFromDevTools: false},
+  {sourceName: /minimal-xul\.css$/i,
+   errorMessage: /Unknown property.*-moz-list-reversed/i,
+   isFromDevTools: false},
   // Reserved to UA sheets unless layout.css.overflow-clip-box.enabled flipped to true.
   {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,

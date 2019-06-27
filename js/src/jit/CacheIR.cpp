@@ -2260,6 +2260,12 @@ AttachDecision GetPropIRGenerator::tryAttachTypedElement(
     return AttachDecision::NoAction;
   }
 
+  // BigInt boxing not yet implemented.
+  if (obj->is<TypedArrayObject>() &&
+      Scalar::isBigIntType(obj->as<TypedArrayObject>().type())) {
+    return AttachDecision::NoAction;
+  }
+
   // Don't attach typed object stubs if the underlying storage could be
   // detached, as the stub will always bail out.
   if (IsPrimitiveArrayTypedObject(obj) && cx_->zone()->detachedTypedObjects) {
@@ -3880,6 +3886,12 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
   }
 
   if (!rhsVal_.isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // bigIntArray[index] = rhsVal_ will throw as the RHS is a number.
+  if (obj->is<TypedArrayObject>() &&
+      Scalar::isBigIntType(obj->as<TypedArrayObject>().type())) {
     return AttachDecision::NoAction;
   }
 

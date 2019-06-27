@@ -38,6 +38,61 @@
   visibility: collapse;
 }
 
+/* Rules required for style caching of anonymous content scrollbar parts */
+
+scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
+  /* All scrollbar parts must not inherit any properties from the scrollable
+   * element (except for visibility), for the anonymous content style caching
+   * system to work.
+   */
+  all: initial;
+  visibility: inherit;
+
+  /* These properties are not included in 'all'. */
+  -moz-list-reversed: initial;
+  -moz-font-smoothing-background-color: initial;
+
+  /* Using initial is not sufficient for direction, since its initial value can
+   * depend on the document's language.
+   *
+   * LTR is what we want for all scrollbar parts anyway, so that e.g. we don't
+   * reverse the rendering of a horizontal scrollbar.
+   */
+  direction: ltr;
+
+  /* Similarly for font properties, whose initial values depend on the
+   * document's language.  Scrollbar parts don't have any text or rely on
+   * font metrics.
+   */
+  font: 16px sans-serif;
+
+  /* Duplicate the rules from the '*' rule above, which were clobbered by the
+   * 'all: initial' declaration.
+   *
+   * The other zero specificity rules above are on :root, and scrollbar parts
+   * cannot match :root, so no need to duplicate them.
+   */
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+  display: -moz-box;
+  box-sizing: border-box;
+}
+
+thumb {
+  /* Prevent -moz-user-modify declaration from designmode.css having an
+   * effect. */
+  -moz-user-modify: initial;
+}
+
+/* There are other rules that set direction and cursor on scrollbar,
+ * expecting them to inherit into its children.  Explicitly inherit those,
+ * overriding the 'all: initial; direction: ltr;' declarations above.
+ */
+scrollbarbutton, slider, thumb {
+  direction: inherit;
+  cursor: inherit;
+}
+
 /********** resizer **********/
 
 resizer {
@@ -97,11 +152,6 @@ resizer[dir="topright"] {
 
 /********** scrollbar **********/
 
-/* Scrollbars are never flipped even if BiDI kicks in. */
-scrollbar[orient="horizontal"] {
-  direction: ltr;
-}
-
 thumb {
   display: -moz-box !important;
 }
@@ -152,7 +202,7 @@ scrollbar[value="hidden"] {
 }
 
 @media (-moz-scrollbar-thumb-proportional) {
-  thumb[sbattr="scrollbar-thumb"] {
+  thumb {
     -moz-box-flex: 1;
   }
 }
