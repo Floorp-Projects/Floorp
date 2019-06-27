@@ -208,9 +208,11 @@ static const char* const sExtensionNames[] = {
     "GL_OVR_multiview2"};
 
 static bool ShouldUseTLSIsCurrent(bool useTLSIsCurrent) {
-  if (StaticPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
+  if (StaticPrefs::gl_use_tls_is_current() == 0) {
+    return useTLSIsCurrent;
+  }
 
-  return StaticPrefs::UseTLSIsCurrent() > 0;
+  return StaticPrefs::gl_use_tls_is_current() > 0;
 }
 
 static bool ParseVersion(const std::string& versionStr,
@@ -275,7 +277,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
       mDebugFlags(ChooseDebugFlags(flags)),
       mSharedContext(sharedContext),
       mCaps(caps),
-      mWorkAroundDriverBugs(StaticPrefs::WorkAroundDriverBugs()) {
+      mWorkAroundDriverBugs(StaticPrefs::gfx_work_around_driver_bugs()) {
   mOwningThreadId = PlatformThread::CurrentId();
   MOZ_ALWAYS_TRUE(sCurrentContext.init());
   sCurrentContext.set(0);

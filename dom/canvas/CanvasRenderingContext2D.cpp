@@ -1231,8 +1231,9 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   }
 
   // Check that the dimensions are sane
-  if (mWidth > StaticPrefs::MaxCanvasSize() ||
-      mHeight > StaticPrefs::MaxCanvasSize() || mWidth < 0 || mHeight < 0) {
+  if (mWidth > StaticPrefs::gfx_canvas_max_size() ||
+      mHeight > StaticPrefs::gfx_canvas_max_size() || mWidth < 0 ||
+      mHeight < 0) {
     SetErrorState();
     return false;
   }
@@ -5667,7 +5668,8 @@ size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext) {
   int32_t height = aContext->GetHeight();
 
   // TODO: Bug 1552137: No memory will be allocated if either dimension is
-  // greater than gfxPrefs::MaxCanvasSize(). We should check this here too.
+  // greater than gfxPrefs::gfx_canvas_max_size(). We should check this here
+  // too.
 
   CheckedInt<uint32_t> bytes = CheckedInt<uint32_t>(width) * height * 4;
   if (!bytes.isValid()) {

@@ -109,7 +109,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent,
       mIsDoubleBuffered(false),
       mVerifyBuffersFailed(false),
       mUseMutexOnPresent(false) {
-  mUseMutexOnPresent = StaticPrefs::UseMutexOnPresent();
+  mUseMutexOnPresent = StaticPrefs::gfx_use_mutex_on_present();
 }
 
 CompositorD3D11::~CompositorD3D11() {}
@@ -201,7 +201,7 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
         (IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
 
 #if (_WIN32_WINDOWS_MAXVER >= 0x0A00)
-    if (StaticPrefs::Direct3D11UseDoubleBuffering() && SUCCEEDED(hr) &&
+    if (StaticPrefs::gfx_direct3d11_use_double_buffering() && SUCCEEDED(hr) &&
         dxgiFactory2 && IsWindows10OrGreater()) {
       // DXGI_SCALING_NONE is not available on Windows 7 with Platform Update.
       // This looks awful for things like the awesome bar and browser window
@@ -291,10 +291,10 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
 }
 
 bool CanUsePartialPresents(ID3D11Device* aDevice) {
-  if (StaticPrefs::PartialPresent() > 0) {
+  if (StaticPrefs::gfx_partialpresent_force() > 0) {
     return true;
   }
-  if (StaticPrefs::PartialPresent() < 0) {
+  if (StaticPrefs::gfx_partialpresent_force() < 0) {
     return false;
   }
   if (DeviceManagerDx::Get()->IsWARP()) {
@@ -1247,7 +1247,7 @@ void CompositorD3D11::EndFrame() {
 
   if (oldSize == mSize) {
     Present();
-    if (StaticPrefs::CompositorClearState()) {
+    if (StaticPrefs::gfx_compositor_clearstate()) {
       mContext->ClearState();
     }
   } else {

@@ -152,7 +152,8 @@ ZoomConstraintsClient::Observe(nsISupports* aSubject, const char* aTopic,
     ZCC_LOG("Got a pref-change event in %p\n", this);
     // We need to run this later because all the pref change listeners need
     // to execute before we can be guaranteed that
-    // StaticPrefs::ForceUserScalable() returns the updated value.
+    // StaticPrefs::browser_ui_zoom_force_user_scalable() returns the updated
+    // value.
 
     RefPtr<nsRunnableMethod<ZoomConstraintsClient>> event =
         NewRunnableMethod("ZoomConstraintsClient::RefreshZoomConstraints", this,

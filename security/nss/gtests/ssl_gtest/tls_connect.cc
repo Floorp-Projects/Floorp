@@ -215,7 +215,7 @@ void TlsConnectTestBase::SetUp() {
   SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
   SSLInt_ClearSelfEncryptKey();
   now_ = PR_Now();
-  SSL_InitAntiReplay(now_, kAntiReplayWindow, 1, 3);
+  ResetAntiReplay(kAntiReplayWindow);
   ClearStats();
   SaveAlgorithmPolicy();
   Init();
@@ -240,6 +240,14 @@ void TlsConnectTestBase::Init() {
   }
 }
 
+void TlsConnectTestBase::ResetAntiReplay(PRTime window) {
+  SSLAntiReplayContext* p_anti_replay = nullptr;
+  EXPECT_EQ(SECSuccess,
+            SSL_CreateAntiReplayContext(now_, window, 1, 3, &p_anti_replay));
+  EXPECT_NE(nullptr, p_anti_replay);
+  anti_replay_.reset(p_anti_replay);
+}
+
 void TlsConnectTestBase::Reset() {
   // Take a copy of the names because they are about to disappear.
   std::string server_name = server_->name();
@@ -258,7 +266,8 @@ void TlsConnectTestBase::Reset(const std::string& server_name,
     server_->SkipVersionChecks();
   }
 
-  std::cerr << "Reset" << std::endl;
+  std::cerr << "Reset server:" << server_name << ", client:" << client_name
+            << std::endl;
   Init();
 }
 
@@ -290,6 +299,7 @@ void TlsConnectTestBase::EnsureTlsSetup() {
                                                     : nullptr));
   EXPECT_TRUE(client_->EnsureTlsSetup(client_model_ ? client_model_->ssl_fd()
                                                     : nullptr));
+  server_->SetAntiReplayContext(anti_replay_);
   EXPECT_EQ(SECSuccess, SSL_SetTimeFunc(client_->ssl_fd(),
                                         TlsConnectTestBase::TimeFunc, &now_));
   EXPECT_EQ(SECSuccess, SSL_SetTimeFunc(server_->ssl_fd(),

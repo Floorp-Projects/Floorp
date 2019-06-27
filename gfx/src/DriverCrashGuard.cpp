@@ -406,8 +406,8 @@ bool D3D11LayersCrashGuard::UpdateEnvironment() {
   bool changed = false;
   // Feature status.
 #if defined(XP_WIN)
-  bool d2dEnabled = StaticPrefs::Direct2DForceEnabled() ||
-                    (!StaticPrefs::Direct2DDisabled() &&
+  bool d2dEnabled = StaticPrefs::gfx_direct2d_force_enabled() ||
+                    (!StaticPrefs::gfx_direct2d_disabled() &&
                      FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT2D));
   changed |= CheckAndUpdateBoolPref("feature-d2d", d2dEnabled);
 

@@ -73,9 +73,9 @@ void WebRenderBridgeChild::DoDestroy() {
 
 void WebRenderBridgeChild::AddWebRenderParentCommand(
     const WebRenderParentCommand& aCmd, wr::RenderRoot aRenderRoot) {
-  MOZ_ASSERT(
-      aRenderRoot == wr::RenderRoot::Default ||
-      (XRE_IsParentProcess() && StaticPrefs::WebRenderSplitRenderRoots()));
+  MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default ||
+             (XRE_IsParentProcess() &&
+              StaticPrefs::gfx_webrender_split_render_roots()));
   mParentCommands[aRenderRoot].AppendElement(aCmd);
 }
 
@@ -118,9 +118,9 @@ void WebRenderBridgeChild::EndTransaction(
   TimeStamp fwdTime = TimeStamp::Now();
 
   for (auto& renderRoot : aRenderRoots) {
-    MOZ_ASSERT(
-        renderRoot.mRenderRoot == wr::RenderRoot::Default ||
-        (XRE_IsParentProcess() && StaticPrefs::WebRenderSplitRenderRoots()));
+    MOZ_ASSERT(renderRoot.mRenderRoot == wr::RenderRoot::Default ||
+               (XRE_IsParentProcess() &&
+                StaticPrefs::gfx_webrender_split_render_roots()));
     renderRoot.mCommands = std::move(mParentCommands[renderRoot.mRenderRoot]);
   }
 
@@ -156,9 +156,9 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   TimeStamp fwdTime = TimeStamp::Now();
 
   for (auto& update : aRenderRootUpdates) {
-    MOZ_ASSERT(
-        update.mRenderRoot == wr::RenderRoot::Default ||
-        (XRE_IsParentProcess() && StaticPrefs::WebRenderSplitRenderRoots()));
+    MOZ_ASSERT(update.mRenderRoot == wr::RenderRoot::Default ||
+               (XRE_IsParentProcess() &&
+                StaticPrefs::gfx_webrender_split_render_roots()));
     update.mCommands = std::move(mParentCommands[update.mRenderRoot]);
   }
 
@@ -187,7 +187,7 @@ void WebRenderBridgeChild::ProcessWebRenderParentCommands() {
   for (auto renderRoot : wr::kRenderRoots) {
     if (!mParentCommands[renderRoot].IsEmpty()) {
       MOZ_ASSERT(renderRoot == wr::RenderRoot::Default ||
-                 StaticPrefs::WebRenderSplitRenderRoots());
+                 StaticPrefs::gfx_webrender_split_render_roots());
       this->SendParentCommands(mParentCommands[renderRoot], renderRoot);
       mParentCommands[renderRoot].Clear();
     }

@@ -623,7 +623,7 @@ LayerComposite* LayerManagerComposite::RootLayer() const {
 void LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion,
                                                    const IntRect& aBounds) {
   bool drawFps = StaticPrefs::LayersDrawFPS();
-  bool drawFrameColorBars = StaticPrefs::CompositorDrawColorBars();
+  bool drawFrameColorBars = StaticPrefs::gfx_draw_color_bars();
 
   if (drawFps) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 650, 400));
@@ -633,7 +633,7 @@ void LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion,
   }
 
 #ifdef USE_SKIA
-  bool drawPaintTimes = StaticPrefs::AlwaysPaint();
+  bool drawPaintTimes = StaticPrefs::gfx_content_always_paint();
   if (drawPaintTimes) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(PaintCounter::GetPaintRect()));
   }
@@ -654,7 +654,7 @@ void LayerManagerComposite::DrawPaintTimes(Compositor* aCompositor) {
 static uint16_t sFrameCount = 0;
 void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
   bool drawFps = StaticPrefs::LayersDrawFPS();
-  bool drawFrameColorBars = StaticPrefs::CompositorDrawColorBars();
+  bool drawFrameColorBars = StaticPrefs::gfx_draw_color_bars();
 
   // Don't draw diagnostic overlays if we want to snapshot the output.
   if (mTarget) {
@@ -764,7 +764,7 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
   }
 
 #ifdef USE_SKIA
-  bool drawPaintTimes = StaticPrefs::AlwaysPaint();
+  bool drawPaintTimes = StaticPrefs::gfx_content_always_paint();
   if (drawPaintTimes) {
     DrawPaintTimes(mCompositor);
   }
