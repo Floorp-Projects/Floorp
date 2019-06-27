@@ -113,6 +113,10 @@ dictionary AuthenticationExtensionsClientInputs {
     // FIDO AppID Extension (appid)
     // <https://w3c.github.io/webauthn/#sctn-appid-extension>
     USVString appid;
+
+    // hmac-secret
+    // <https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#sctn-hmac-secret-extension>
+    boolean hmacCreateSecret;
 };
 
 // TODO - Use partial dictionaries when bug 1436329 is fixed.
@@ -120,6 +124,9 @@ dictionary AuthenticationExtensionsClientOutputs {
     // FIDO AppID Extension (appid)
     // <https://w3c.github.io/webauthn/#sctn-appid-extension>
     boolean appid;
+
+    // <https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#sctn-hmac-secret-extension>
+    boolean hmacCreateSecret;
 };
 
 typedef record<DOMString, DOMString> AuthenticationExtensionsAuthenticatorInputs;
