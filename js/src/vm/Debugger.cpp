@@ -4526,15 +4526,14 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
   // table, and the Debugger.Frame finalizer will fix up the generator observer
   // counts.
   if (fromSweep == FromSweep::No) {
-    generatorFrames.removeIf([global, fop](JSObject* key, JSObject* value) {
-      auto& genObj = key->as<AbstractGeneratorObject>();
-      auto& frameObj = value->as<DebuggerFrame>();
+    for (GeneratorWeakMap::Enum e(generatorFrames); !e.empty(); e.popFront()) {
+      auto& genObj = e.front().key()->as<AbstractGeneratorObject>();
+      auto& frameObj = e.front().value()->as<DebuggerFrame>();
       if (genObj.isClosed() || &genObj.callee().global() == global) {
         frameObj.clearGenerator(fop);
-        return true;
+        e.removeFront();
       }
-      return false;
-    });
+    }
   }
 
   auto* globalDebuggersVector = global->getDebuggers();
