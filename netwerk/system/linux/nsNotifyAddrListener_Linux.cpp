@@ -266,20 +266,20 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
     if (mNetworkId != output) {
       // new id
       if (found4 && !found6) {
-        Telemetry::Accumulate(Telemetry::NETWORK_ID, 1);  // IPv4 only
+        Telemetry::Accumulate(Telemetry::NETWORK_ID2, 1);  // IPv4 only
       } else if (!found4 && found6) {
-        Telemetry::Accumulate(Telemetry::NETWORK_ID, 3);  // IPv6 only
+        Telemetry::Accumulate(Telemetry::NETWORK_ID2, 3);  // IPv6 only
       } else {
-        Telemetry::Accumulate(Telemetry::NETWORK_ID, 4);  // Both!
+        Telemetry::Accumulate(Telemetry::NETWORK_ID2, 4);  // Both!
       }
       mNetworkId = output;
     } else {
       // same id
-      Telemetry::Accumulate(Telemetry::NETWORK_ID, 2);
+      Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
     }
   } else {
     // no id
-    Telemetry::Accumulate(Telemetry::NETWORK_ID, 0);
+    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
   }
 }
 
