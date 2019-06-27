@@ -30,10 +30,11 @@ const BUILT_IN_SECTIONS = {
     shouldHidePref: options.hidden,
     eventSource: "TOP_STORIES",
     icon: options.provider_icon,
-    title: {id: "header_recommended_by", values: {provider: options.provider_name}},
+    title: {id: "newtab-section-header-pocket", values: {provider: options.provider_name}},
     learnMore: {
       link: {
         href: "https://getpocket.com/firefox/new_tab_learn_more",
+        message: {id: "newtab-pocket-how-it-works"},
         id: "pocket_how_it_works",
       },
     },
@@ -43,7 +44,7 @@ const BUILT_IN_SECTIONS = {
     maxRows: 4,
     availableLinkMenuOptions: ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     emptyState: {
-      message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
+      message: {id: "newtab-empty-section-topstories", values: {provider: options.provider_name}},
       icon: "check",
     },
     shouldSendImpressionStats: true,
@@ -71,12 +72,12 @@ const BUILT_IN_SECTIONS = {
     shouldHidePref:  false,
     eventSource: "HIGHLIGHTS",
     icon: "highlights",
-    title: {id: "header_highlights"},
+    title: {id: "newtab-section-header-highlights"},
     compactCards: true,
     rowsPref: "section.highlights.rows",
     maxRows: 4,
     emptyState: {
-      message: {id: "highlights_empty_state"},
+      message: {id: "newtab-empty-section-highlights"},
       icon: "highlights",
     },
     shouldSendImpressionStats: false,

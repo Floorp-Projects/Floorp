@@ -1,6 +1,5 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {ContextMenu} from "content-src/components/ContextMenu/ContextMenu";
-import {injectIntl} from "react-intl";
 import React from "react";
 import {SectionMenuOptions} from "content-src/lib/section-menu-options";
 
@@ -28,7 +27,6 @@ export class _SectionMenu extends React.PureComponent {
     const options = propOptions.map(o => SectionMenuOptions[o](props)).map(option => {
       const {action, id, type, userEvent} = option;
       if (!type && id) {
-        option.label = props.intl.formatMessage({id});
         option.onClick = () => {
           props.dispatch(action);
           if (userEvent) {
@@ -57,4 +55,4 @@ export class _SectionMenu extends React.PureComponent {
   }
 }
 
-export const SectionMenu = injectIntl(_SectionMenu);
+export const SectionMenu = _SectionMenu;

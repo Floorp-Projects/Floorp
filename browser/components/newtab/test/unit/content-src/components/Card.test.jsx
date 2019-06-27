@@ -91,10 +91,10 @@ describe("<Card>", () => {
   it("should have a context based on type", () => {
     wrapper = shallow(<Card {...DEFAULT_PROPS} />);
     const context = wrapper.find(".card-context");
-    const {icon, intlID} = cardContextTypes[DEFAULT_PROPS.link.type];
+    const {icon, fluentID} = cardContextTypes[DEFAULT_PROPS.link.type];
     assert.isTrue(context.childAt(0).hasClass(`icon-${icon}`));
     assert.isTrue(context.childAt(1).hasClass("card-context-label"));
-    assert.equal(context.childAt(1).props().children.props.id, intlID);
+    assert.equal(context.childAt(1).prop("data-l10n-id"), fluentID);
   });
   it("should support setting custom context", () => {
     const linkWithCustomContext = {
