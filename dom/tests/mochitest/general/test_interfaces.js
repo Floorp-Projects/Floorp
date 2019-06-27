@@ -620,9 +620,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaCapabilitiesInfo", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MediaDeviceInfo", insecureContext: false},
+    {name: "MediaDeviceInfo", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MediaDevices", insecureContext: false},
+    {name: "MediaDevices", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MediaElementAudioSourceNode", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
