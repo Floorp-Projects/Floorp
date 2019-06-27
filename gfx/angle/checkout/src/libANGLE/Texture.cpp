@@ -1146,24 +1146,22 @@ angle::Result Texture::copyImage(Context *context,
 }
 
 angle::Result Texture::copySubImage(Context *context,
-                                    TextureTarget target,
-                                    GLint level,
+                                    const ImageIndex &index,
                                     const Offset &destOffset,
                                     const Rectangle &sourceArea,
                                     Framebuffer *source)
 {
-    ASSERT(TextureTargetToType(target) == mState.mType);
+    ASSERT(TextureTargetToType(index.getTarget()) == mState.mType);
 
     // Ensure source FBO is initialized.
     ANGLE_TRY(source->ensureReadAttachmentInitialized(context, GL_COLOR_BUFFER_BIT));
 
-    Box destBox(destOffset.x, destOffset.y, destOffset.y, sourceArea.width, sourceArea.height, 1);
-    ANGLE_TRY(ensureSubImageInitialized(context, target, level, destBox));
-
-    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
+    Box destBox(destOffset.x, destOffset.y, destOffset.z, sourceArea.width, sourceArea.height, 1);
+    ANGLE_TRY(
+        ensureSubImageInitialized(context, index.getTarget(), index.getLevelIndex(), destBox));
 
     ANGLE_TRY(mTexture->copySubImage(context, index, destOffset, sourceArea, source));
-    ANGLE_TRY(handleMipmapGenerationHint(context, level));
+    ANGLE_TRY(handleMipmapGenerationHint(context, index.getLevelIndex()));
 
     return angle::Result::Continue;
 }
