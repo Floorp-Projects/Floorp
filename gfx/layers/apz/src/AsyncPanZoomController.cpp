@@ -1964,7 +1964,8 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   // EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction
   // and WheelTransaction::OverrideSystemScrollSpeed. Note that we do *not*
   // restrict this to the root content, see bug 1217715 for discussion on this.
-  if (StaticPrefs::MouseWheelHasRootScrollDeltaOverride() &&
+  if (StaticPrefs::
+          mousewheel_system_scroll_override_on_root_content_enabled() &&
       !aEvent.IsCustomizedByUserPrefs() &&
       aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
       aEvent.mAllowToOverrideSystemScrollSpeed) {
@@ -1976,9 +1977,9 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   // it might need extra acceleration. See WheelHandlingHelper.cpp.
   if (aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
       aEvent.mScrollSeriesNumber > 0) {
-    int32_t start = StaticPrefs::MouseWheelAccelerationStart();
+    int32_t start = StaticPrefs::mousewheel_acceleration_start();
     if (start >= 0 && aEvent.mScrollSeriesNumber >= uint32_t(start)) {
-      int32_t factor = StaticPrefs::MouseWheelAccelerationFactor();
+      int32_t factor = StaticPrefs::mousewheel_acceleration_factor();
       if (factor > 0) {
         delta.x = ComputeAcceleratedWheelDelta(
             delta.x, aEvent.mScrollSeriesNumber, factor);
