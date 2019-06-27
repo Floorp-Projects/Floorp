@@ -42,6 +42,8 @@
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
         app:layout_constraintStart_toEndOf="@id/bookmark_favicon"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bookmark_url"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:text="Internet" />
 
     <TextView
@@ -56,7 +58,9 @@
         android:textSize="12sp"
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
         app:layout_constraintStart_toEndOf="@id/bookmark_favicon"
-        app:layout_constraintTop_toBottomOf="@id/bookmark_title" />
+        app:layout_constraintTop_toBottomOf="@id/bookmark_title"
+        tools:text="https://github.com/mozilla-mobile/fenix"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <ImageButton
         android:id="@+id/bookmark_overflow"

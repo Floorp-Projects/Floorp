@@ -8,7 +8,6 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -240,13 +239,6 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         BookmarkNodeViewHolder(view, actionEmitter, job, containerView) {
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
-
-            val constraintSet = ConstraintSet()
-            constraintSet.clone(bookmark_layout)
-            constraintSet.connect(
-                bookmark_title.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
-            )
-            constraintSet.applyTo(bookmark_layout)
 
             bookmark_favicon.setImageResource(R.drawable.ic_folder_icon)
             bookmark_favicon.visibility = View.VISIBLE
