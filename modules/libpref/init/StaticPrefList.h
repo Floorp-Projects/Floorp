@@ -6841,7 +6841,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "nglayout.debug.widget_update_flashing",
-  WidgetUpdateFlashing,
+   nglayout_debug_widget_update_flashing,
   RelaxedAtomicBool, false
 )
 
@@ -6898,7 +6898,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "print.font-variations-as-paths",
-  PrintFontVariationsAsPaths,
+   print_font_variations_as_paths,
   RelaxedAtomicBool, true
 )
 
@@ -7020,12 +7020,7 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-VARCACHE_PREF(
-  Live,
-  "privacy.resistFingerprinting",
-  ResistFingerprinting,
-  RelaxedAtomicBool, false
-)
+PREF("privacy.resistFingerprinting", bool, false)
 
 // Anti-tracking permission expiration
 VARCACHE_PREF(
@@ -7166,7 +7161,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
-  SliderSnapMultiplier,
+   slider_snapMultiplier,
   int32_t, 6
 )
 
@@ -7203,14 +7198,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "test.events.async.enabled",
-  TestEventsAsyncEnabled,
+   test_events_async_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "test.mousescroll",
-  MouseScrollTestingEnabled,
+   test_mousescroll,
   RelaxedAtomicBool, false
 )
 
@@ -7232,14 +7227,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "toolkit.scrollbox.horizontalScrollDistance",
-  ToolkitHorizontalScrollDistance,
+   toolkit_scrollbox_horizontalScrollDistance,
   RelaxedAtomicInt32, 5
 )
 
 VARCACHE_PREF(
   Live,
   "toolkit.scrollbox.verticalScrollDistance",
-  ToolkitVerticalScrollDistance,
+   toolkit_scrollbox_verticalScrollDistance,
   RelaxedAtomicInt32, 3
 )
 
@@ -7266,7 +7261,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "ui.click_hold_context_menus.delay",
-  UiClickHoldContextMenusDelay,
+   ui_click_hold_context_menus_delay,
   RelaxedAtomicInt32, 500
 )
 
@@ -7560,7 +7555,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "widget.window-transforms.disabled",
-  WindowTransformsDisabled,
+   widget_window_transforms_disabled,
   RelaxedAtomicBool, false
 )
 

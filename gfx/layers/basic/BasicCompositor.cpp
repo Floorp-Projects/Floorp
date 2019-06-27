@@ -1023,7 +1023,7 @@ void BasicCompositor::EndFrame() {
   // Pop aClipRectIn/bounds rect
   mRenderTarget->mDrawTarget->PopClip();
 
-  if (StaticPrefs::WidgetUpdateFlashing()) {
+  if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;
