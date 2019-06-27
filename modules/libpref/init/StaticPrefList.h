@@ -4707,14 +4707,6 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 4096
 )
 
-// Is the codepath for using cached scrollbar styles enabled?
-VARCACHE_PREF(
-  Live,
-  "layout.css.cached-scrollbar-styles.enabled",
-  layout_css_cached_scrollbar_styles_enabled,
-  bool, false
-)
-
 // Is path() supported in clip-path?
 VARCACHE_PREF(
   Live,
