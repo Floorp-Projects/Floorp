@@ -25,6 +25,7 @@ scripts:
     bundle: => bundle
     copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/
     stringsExport: cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties
+    fluentExport: cpx "$npm_package_config_locales_dir/*.ftl" $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
 # builduplift: Build and export to mozilla central for uplifts without exporting strings to browser/locales
@@ -45,12 +46,15 @@ scripts:
     pre: =>buildmc
     # This copies only the system addon sub-folder; changing anything outside of it will need a full rebuild.
     copy: cpx "{{,.}*,!(node_modules)/**/{,.}*}" $npm_package_config_mc_dir/browser/components/newtab/ -w
+    copyFluent: =>buildmc:fluentExport -- -w
     copyPingCentre: =>buildmc:copyPingCentre -- -w
     webpack: =>bundle:webpack -- --env.development -w
     css: =>bundle:css && =>bundle:css -- --source-map-embed --source-map-contents -w
 
   # importmc: Import changes from mc to github repo
-  importmc: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .
+  importmc:
+    src: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .
+    ftl: rsync -a $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/ $npm_package_config_locales_dir
 
   testmc:
     lint: =>lint

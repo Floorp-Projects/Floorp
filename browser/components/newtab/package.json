@@ -76,7 +76,7 @@
     "firefox": ">=45.0 <=*",
     "//": "when changing node versions, also edit .travis.yml and .nvmrc",
     "node": "8.*",
-    "npm": "6.4.1"
+    "npm": "6.9"
   },
   "homepage": "https://github.com/mozilla/activity-stream",
   "keywords": [
@@ -108,6 +108,7 @@
     "buildmc:bundle": "npm run  bundle",
     "buildmc:copy": "rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/",
     "buildmc:stringsExport": "cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties",
+    "buildmc:fluentExport": "cpx \"$npm_package_config_locales_dir/*.ftl\" $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/",
     "buildmc:copyPingCentre": "cpx \"ping-centre/PingCentre.jsm\" $npm_package_config_mc_dir/browser/modules",
     "builduplift": "npm-run-all builduplift:*",
     "prebuilduplift": "npm run prebuildmc",
@@ -120,10 +121,13 @@
     "startmc": "npm-run-all --parallel startmc:*",
     "prestartmc": "npm run buildmc",
     "startmc:copy": "cpx \"{{,.}*,!(node_modules)/**/{,.}*}\" $npm_package_config_mc_dir/browser/components/newtab/ -w",
+    "startmc:copyFluent": "npm run buildmc:fluentExport -- -w",
     "startmc:copyPingCentre": "npm run buildmc:copyPingCentre -- -w",
     "startmc:webpack": "npm run bundle:webpack -- --env.development -w",
     "startmc:css": "npm run bundle:css && npm run bundle:css -- --source-map-embed --source-map-contents -w",
-    "importmc": "rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .",
+    "importmc": "npm-run-all importmc:*",
+    "importmc:src": "rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .",
+    "importmc:ftl": "rsync -a $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/ $npm_package_config_locales_dir",
     "testmc": "npm-run-all testmc:*",
     "testmc:lint": "npm run lint",
     "testmc:build": "npm run bundle:webpack && npm run bundle:locales",

@@ -1,26 +1,22 @@
 export const cardContextTypes = {
   history: {
-    intlID: "type_label_visited",
+    fluentID: "newtab-label-visited",
     icon: "history-item",
   },
   bookmark: {
-    intlID: "type_label_bookmarked",
+    fluentID: "newtab-label-bookmarked",
     icon: "bookmark-added",
   },
   trending: {
-    intlID: "type_label_recommended",
+    fluentID: "newtab-label-recommended",
     icon: "trending",
   },
-  now: {
-    intlID: "type_label_now",
-    icon: "now",
-  },
   pocket: {
-    intlID: "type_label_pocket",
+    fluentID: "newtab-label-saved",
     icon: "pocket",
   },
   download: {
-    intlID: "type_label_downloaded",
+    fluentID: "newtab-label-download",
     icon: "download",
   },
 };

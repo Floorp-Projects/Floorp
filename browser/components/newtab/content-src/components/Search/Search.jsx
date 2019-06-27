@@ -2,7 +2,6 @@
 "use strict";
 
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {FormattedMessage, injectIntl} from "react-intl";
 import {connect} from "react-redux";
 import {IS_NEWTAB} from "content-src/lib/constants";
 import React from "react";
@@ -118,34 +117,28 @@ export class _Search extends React.PureComponent {
       }
       {!this.props.handoffEnabled &&
       <div className="search-inner-wrapper">
-        <label htmlFor="newtab-search-text" className="search-label">
-          <span className="sr-only"><FormattedMessage id="search_web_placeholder" /></span>
-        </label>
         <input
           id="newtab-search-text"
+          data-l10n-id="newtab-search-box-search-the-web-input"
           maxLength="256"
-          placeholder={this.props.intl.formatMessage({id: "search_web_placeholder"})}
           ref={this.onInputMount}
-          title={this.props.intl.formatMessage({id: "search_web_placeholder"})}
           type="search" />
         <button
           id="searchSubmit"
           className="search-button"
-          onClick={this.onSearchClick}
-          title={this.props.intl.formatMessage({id: "search_button"})}>
-          <span className="sr-only"><FormattedMessage id="search_button" /></span>
-        </button>
+          data-l10n-id="newtab-search-box-search-button"
+          onClick={this.onSearchClick} />
       </div>
       }
       {this.props.handoffEnabled &&
         <div className="search-inner-wrapper">
           <button
             className="search-handoff-button"
+            data-l10n-id="newtab-search-box-search-the-web-input"
             ref={this.onSearchHandoffButtonMount}
             onClick={this.onSearchHandoffClick}
-            tabIndex="-1"
-            title={this.props.intl.formatMessage({id: "search_web_placeholder"})}>
-            <div className="fake-textbox">{this.props.intl.formatMessage({id: "search_web_placeholder"})}</div>
+            tabIndex="-1">
+            <div className="fake-textbox" data-l10n-id="newtab-search-box-search-the-web-text" />
             <input type="search" className="fake-editable" tabIndex="-1" aria-hidden="true" onDrop={this.onSearchHandoffDrop} onPaste={this.onSearchHandoffPaste} />
             <div className="fake-caret" />
           </button>
@@ -163,4 +156,4 @@ export class _Search extends React.PureComponent {
   }
 }
 
-export const Search = connect()(injectIntl(_Search));
+export const Search = connect()(_Search);

@@ -9,6 +9,7 @@
     font-weight: bold;
     margin: 0;
 
+    &.grey-title,
     span {
       color: var(--newtab-section-header-text-color);
       display: inline-block;
@@ -65,7 +66,7 @@
       width: $context-menu-button-size;
 
       &:-moz-any(:active, :focus, :hover) {
-        fill: $grey-90;
+        fill: var(--newtab-section-header-text-color);
         opacity: 1;
       }
     }
@@ -103,7 +104,7 @@
     font-size: 11px;
     margin-inline-start: 12px;
 
-    a span {
+    a {
       color: var(--newtab-link-secondary-color);
     }
   }

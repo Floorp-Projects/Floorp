@@ -103,9 +103,7 @@ this.HighlightsFeed = class HighlightsFeed {
   _orderHighlights(pages) {
     const splitHighlights = {chronologicalCandidates: [], visited: []};
     for (let page of pages) {
-      // If we have a page that is both a history item and a bookmark, treat it
-      // as a bookmark
-      if (page.type === "history" && !page.bookmarkGuid) {
+      if (page.type === "history") {
         splitHighlights.visited.push(page);
       } else {
         splitHighlights.chronologicalCandidates.push(page);
