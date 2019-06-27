@@ -113,7 +113,11 @@ async function performTests() {
   await setInputValueForAutocompletion(hud, "window.foo.item0");
   prefix = getInputValue(hud).replace(/[\S]/g, " ");
   checkInputCompletionValue(hud, prefix + "0", "completeNode has expected value");
-  EventUtils.synthesizeKey("KEY_Home");
+  if (Services.appinfo.OS == "Darwin") {
+    EventUtils.synthesizeKey("a", {ctrlKey: true});
+  } else {
+    EventUtils.synthesizeKey("KEY_Home");
+  }
   checkInputCompletionValue(hud, "", "completeNode was cleared after hitting Home");
 
   info("Check that hitting End hides the completion text when the popup is hidden");
