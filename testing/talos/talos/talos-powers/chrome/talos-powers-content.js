@@ -130,8 +130,9 @@ addEventListener(
     let uniqueMessageId =
       "TalosPowers:ParentExec:" +
       content.document.documentURI +
+      // eslint-disable-next-line mozilla/avoid-Date-timing
       Date.now() +
-      Math.random(); // eslint-disable-line mozilla/avoid-Date-timing
+      Math.random();
 
     // Listener for the reply from the parent process
     addMessageListener("TalosPowers:ParentExec:ReplyMsg", function done(reply) {

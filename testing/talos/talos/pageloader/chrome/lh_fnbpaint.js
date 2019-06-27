@@ -36,6 +36,7 @@ function _contentFNBPaintHandler() {
 
 addEventListener(
   "load",
+  // eslint-disable-next-line no-undef
   contentLoadHandlerCallback(_contentFNBPaintHandler),
   true
-); // eslint-disable-line no-undef
+);

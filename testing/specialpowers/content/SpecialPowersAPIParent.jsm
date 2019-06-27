@@ -452,8 +452,8 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
    **/
+  // eslint-disable-next-line complexity
   receiveMessage(aMessage) {
-    // eslint-disable-line complexity
     // We explicitly return values in the below code so that this function
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
