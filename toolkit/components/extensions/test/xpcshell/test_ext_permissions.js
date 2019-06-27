@@ -439,7 +439,6 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "menus",
   "menus.overrideContext",
   "mozillaAddons",
-  "normandyAddonStudy",
   "search",
   "storage",
   "telemetry",
