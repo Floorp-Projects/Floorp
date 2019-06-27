@@ -34,11 +34,12 @@ add_task(async function test_updates_post_policy() {
 });
 
 const expectErrorPage = async function(url) {
-  info(`Wait for ${url} to open the net error page`);
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, false);
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    ok(content.document.documentURI.startsWith("about:neterror"),
-       "DevTools about: page should display the net error page");
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, async (browser) => {
+    BrowserTestUtils.loadURI(browser, url);
+    await BrowserTestUtils.browserLoaded(browser, false, url, true);
+    await ContentTask.spawn(browser, url, async function() {
+      ok(content.document.documentURI.startsWith("about:neterror?e=blockedByPolicy"),
+      content.document.documentURI + " should start with about:neterror?e=blockedByPolicy");
+    });
   });
-  BrowserTestUtils.removeTab(tab);
 };
