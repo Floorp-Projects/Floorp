@@ -55,8 +55,15 @@ MOZ_STATIC_ASSERT(sizeof(BLOCKSIZE) <
    instead of the NSPR equivalents. */
 #ifdef XP_WIN
 #include <winsock2.h>
+#ifdef __MINGW32__
+/* Avoid MinGW's _ftelli64() and _fseeki64() implementations because they
+ * are unreliable. */
+#define ftello ftello64
+#define fseeko fseeko64
+#else
 #define ftello _ftelli64
 #define fseeko _fseeki64
+#endif
 #else
 #define _FILE_OFFSET_BITS 64
 #include <netinet/in.h>
