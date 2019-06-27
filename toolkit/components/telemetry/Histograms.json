@@ -4832,14 +4832,14 @@
     "n_buckets": 10,
     "description": "Time spent (ms) during showdown deleting disk cache v2 for 'clear private data' option"
   },
-  "NETWORK_ID": {
-    "record_in_processes": ["main", "content"],
+  "NETWORK_ID2": {
+    "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1240932],
+    "bug_numbers": [1240932, 1395914],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
-    "description": "Network identification (0=None, 1=New, 2=Same)"
+    "description": "Network identification (0=None, 1=New Ipv4, 2=Same, 3=New IPv6, 4=New dual)"
   },
   "IDLE_NOTIFY_IDLE_MS": {
     "record_in_processes": ["main", "content"],
