@@ -28,8 +28,11 @@
 #include "nsProxyRelease.h"
 #include "nsContentSecurityManager.h"
 #include "nsNetUtil.h"
+#include "mozilla/RefPtr.h"
 
 #include <Cocoa/Cocoa.h>
+
+using namespace mozilla;
 
 // nsIconChannel methods
 nsIconChannel::nsIconChannel() {}
@@ -263,75 +266,51 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
     return NS_ERROR_FAILURE;
   }
 
-  // we have an icon now, size it
-  NSRect desiredSizeRect = NSMakeRect(0, 0, desiredImageSize, desiredImageSize);
-  [iconImage setSize:desiredSizeRect.size];
-
-  [iconImage lockFocus];
-  NSBitmapImageRep* bitmapRep =
-      [[[NSBitmapImageRep alloc] initWithFocusedViewRect:desiredSizeRect] autorelease];
-  [iconImage unlockFocus];
-
-  // we expect the following things to be true about our bitmapRep
-  NS_ENSURE_TRUE(![bitmapRep isPlanar] &&
-                     // Not necessarily: on a HiDPI-capable system, we'll get
-                     // a 2x bitmap
-                     // (unsigned int)[bitmapRep bytesPerPlane] ==
-                     //    desiredImageSize * desiredImageSize * 4 &&
-                     [bitmapRep bitsPerPixel] == 32 && [bitmapRep samplesPerPixel] == 4 &&
-                     [bitmapRep hasAlpha] == YES,
-                 NS_ERROR_UNEXPECTED);
-
-  // check what size we actually got, and ensure it isn't too big to return
-  uint32_t actualImageSize = [bitmapRep bytesPerRow] / 4;
-  NS_ENSURE_TRUE(actualImageSize < 256, NS_ERROR_UNEXPECTED);
-
-  // now we can validate the amount of data
-  NS_ENSURE_TRUE((unsigned int)[bitmapRep bytesPerPlane] == actualImageSize * actualImageSize * 4,
-                 NS_ERROR_UNEXPECTED);
-
-  // rgba, pre-multiplied data
-  uint8_t* bitmapRepData = (uint8_t*)[bitmapRep bitmapData];
-
-  // create our buffer
-  int32_t bufferCapacity = 2 + [bitmapRep bytesPerPlane];
-  AutoTArray<uint8_t, 3 + 16 * 16 * 5> iconBuffer;  // initial size is for
-                                                    // 16x16
-  iconBuffer.SetLength(bufferCapacity);
-
-  uint8_t* iconBufferPtr = iconBuffer.Elements();
-
-  // write header data into buffer
-  *iconBufferPtr++ = actualImageSize;
-  *iconBufferPtr++ = actualImageSize;
-
-  uint32_t dataCount = [bitmapRep bytesPerPlane];
-  uint32_t index = 0;
-  while (index < dataCount) {
-    // get data from the bitmap
-    uint8_t r = bitmapRepData[index++];
-    uint8_t g = bitmapRepData[index++];
-    uint8_t b = bitmapRepData[index++];
-    uint8_t a = bitmapRepData[index++];
-
-    // write data out to our buffer
-    // non-cairo uses native image format, but the A channel is ignored.
-    // cairo uses ARGB (highest to lowest bits)
-#if MOZ_LITTLE_ENDIAN
-    *iconBufferPtr++ = b;
-    *iconBufferPtr++ = g;
-    *iconBufferPtr++ = r;
-    *iconBufferPtr++ = a;
-#else
-    *iconBufferPtr++ = a;
-    *iconBufferPtr++ = r;
-    *iconBufferPtr++ = g;
-    *iconBufferPtr++ = b;
-#endif
+  if (desiredImageSize > 255) {
+    // The Icon image format represents width and height as u8, so it does not
+    // allow for images sized 256 or more.
+    return NS_ERROR_FAILURE;
   }
 
-  NS_ASSERTION(iconBufferPtr == iconBuffer.Elements() + bufferCapacity,
-               "buffer size miscalculation");
+  // Set the actual size to *twice* the requested size.
+  // We do this because our UI doesn't take the window's device pixel ratio into
+  // account when it requests these icons; e.g. it will request an icon with
+  // size 16, place it in a 16x16 CSS pixel sized image, and then display it in
+  // a window on a HiDPI screen where the icon now covers 32x32 physical screen
+  // pixels. So we just always double the size here in order to prevent blurriness.
+  uint32_t size = (desiredImageSize < 128) ? desiredImageSize * 2 : desiredImageSize;
+  uint32_t width = size;
+  uint32_t height = size;
+
+  // The "image format" we're outputting here (and which gets decoded by
+  // nsIconDecoder) has the following format:
+  //  - 1 byte for the image width, as u8
+  //  - 1 byte for the image height, as u8
+  //  - the raw image data as BGRA, width * height * 4 bytes.
+  size_t bufferCapacity = 2 + width * height * 4;
+  UniquePtr<uint8_t[]> fileBuf = MakeUnique<uint8_t[]>(bufferCapacity);
+  fileBuf[0] = uint8_t(width);
+  fileBuf[1] = uint8_t(height);
+  uint8_t* imageBuf = &fileBuf[2];
+
+  // Create a CGBitmapContext around imageBuf and draw iconImage to it.
+  // This gives us the image data in the format we want: BGRA, four bytes per
+  // pixel, in host endianness, with premultiplied alpha.
+  CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+  CGContextRef ctx =
+      CGBitmapContextCreate(imageBuf, width, height, 8 /* bitsPerComponent */, width * 4, cs,
+                            kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
+  CGColorSpaceRelease(cs);
+
+  NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx
+                                                                                  flipped:NO]];
+
+  [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
+
+  [NSGraphicsContext setCurrentContext:oldContext];
+
+  CGContextRelease(ctx);
 
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;
@@ -341,7 +320,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
 
   if (NS_SUCCEEDED(rv)) {
     uint32_t written;
-    rv = outStream->Write((char*)iconBuffer.Elements(), bufferCapacity, &written);
+    rv = outStream->Write((char*)fileBuf.get(), bufferCapacity, &written);
     if (NS_SUCCEEDED(rv)) {
       NS_IF_ADDREF(*_retval = inStream);
     }
