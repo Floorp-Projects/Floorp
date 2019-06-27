@@ -151,7 +151,8 @@ mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvOutput(
 
 MediaResult RemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions) {
+    const CreateDecoderParams::OptionSet& aOptions,
+    const layers::TextureFactoryIdentifier* aIdentifier) {
   RefPtr<RemoteDecoderManagerChild> manager =
       RemoteDecoderManagerChild::GetRDDProcessSingleton();
 
@@ -174,9 +175,8 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   nsCString blacklistedD3D11Driver;
   nsCString blacklistedD3D9Driver;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
-  TextureFactoryIdentifier defaultIdent;
   if (manager->SendPRemoteDecoderConstructor(
-          this, decoderInfo, aOptions, defaultIdent, &success,
+          this, decoderInfo, aOptions, ToMaybe(aIdentifier), &success,
           &blacklistedD3D11Driver, &blacklistedD3D9Driver, &errorDescription)) {
     mCanSend = true;
   }
@@ -242,7 +242,7 @@ MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
   nsCString errorDescription;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
   if (manager->SendPRemoteDecoderConstructor(
-          this, decoderInfo, aOptions, aIdentifier, &success,
+          this, decoderInfo, aOptions, Some(aIdentifier), &success,
           &mBlacklistedD3D11Driver, &mBlacklistedD3D9Driver,
           &errorDescription)) {
     mCanSend = true;
@@ -255,14 +255,14 @@ MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
 RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
     float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
-    const layers::TextureFactoryIdentifier& aIdentifier,
+    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
     TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
     nsCString* aErrorDescription)
     : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
       mVideoInfo(aVideoInfo) {
-  if (XRE_IsGPUProcess()) {
+  if (XRE_IsGPUProcess() && aIdentifier) {
     mKnowsCompositor = new KnowsCompositorVideo();
-    mKnowsCompositor->IdentifyTextureHost(aIdentifier);
+    mKnowsCompositor->IdentifyTextureHost(aIdentifier.value());
   }
 
   CreateDecoderParams params(mVideoInfo);
