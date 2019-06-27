@@ -842,8 +842,6 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
 
   setAppUpdateAutoSync(aAppUpdateAutoEnabled);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_BITS_ENABLED, aAllowBits);
-  // Set this preference so the trial doesn't override the decision.
-  Services.prefs.setBoolPref("app.update.BITS.inTrialGroup", aAllowBits);
 
   debugDump("finish - general test setup");
   return true;
