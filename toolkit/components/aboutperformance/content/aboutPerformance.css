@@ -123,7 +123,7 @@ tr:-moz-any([selected], :hover) > td > .action-icon {
 
 #dispatch-thead > tr > td {
   border: none;
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-button-background);
 }
 #dispatch-thead > tr > td:not(:first-child) {
   border-inline-start-width: 1px;
@@ -206,4 +206,24 @@ td {
 }
 #dispatch-tbody > tr:hover {
   background-color: var(--in-content-item-hover);
+}
+
+.clickable {
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+.clickable:dir(rtl) {
+  background-position: left 4px center;
+}
+.asc {
+  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+}
+.desc {
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+}
+#dispatch-thead > tr > td.clickable:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+#dispatch-thead > tr > td.clickable:active {
+  background-color: var(--in-content-button-background-active);
 }
