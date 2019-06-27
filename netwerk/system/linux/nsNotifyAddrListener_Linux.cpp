@@ -45,8 +45,8 @@ NS_IMPL_ISUPPORTS(nsNotifyAddrListener, nsINetworkLinkService, nsIRunnable,
                   nsIObserver)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
-    : mLinkUp(true)  // assume true by default
-      ,
+    : mMutex("nsNotifyAddrListener::mMutex"),
+      mLinkUp(true),  // assume true by default
       mStatusKnown(false),
       mAllowChangedEvent(true),
       mCoalescingActive(false) {
@@ -85,6 +85,13 @@ nsNotifyAddrListener::GetLinkType(uint32_t* aLinkType) {
 
   // XXX This function has not yet been implemented for this platform
   *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotifyAddrListener::GetNetworkID(nsACString& aNetworkID) {
+  MutexAutoLock lock(mMutex);
+  aNetworkID = mNetworkId;
   return NS_OK;
 }
 
@@ -246,6 +253,7 @@ static bool ipv6NetworkId(SHA1Sum* sha1) {
 // Figure out the "network identification".
 //
 void nsNotifyAddrListener::calculateNetworkId(void) {
+  MOZ_ASSERT(!NS_IsMainThread(), "Must not be called on the main thread");
   SHA1Sum sha1;
   bool found4 = ipv4NetworkId(&sha1);
   bool found6 = ipv6NetworkId(&sha1);
@@ -263,6 +271,7 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
     nsresult rv = Base64Encode(newString, output);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     LOG(("networkid: id %s\n", output.get()));
+    MutexAutoLock lock(mMutex);
     if (mNetworkId != output) {
       // new id
       if (found4 && !found6) {
@@ -275,10 +284,14 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
       mNetworkId = output;
     } else {
       // same id
+      LOG(("Same network id"));
       Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
     }
   } else {
     // no id
+    LOG(("No network id"));
+    MutexAutoLock lock(mMutex);
+    mNetworkId.Truncate();
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
   }
 }
@@ -491,7 +504,6 @@ nsNotifyAddrListener::Run() {
       double period = (TimeStamp::Now() - mChangeTime).ToMilliseconds();
       if (period >= kNetworkChangeCoalescingPeriod) {
         SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
-        calculateNetworkId();
         mCoalescingActive = false;
         pollWait = -1;  // restore to default
       } else {
@@ -587,6 +599,7 @@ nsresult nsNotifyAddrListener::SendEvent(const char* aEventID) {
 
   LOG(("SendEvent: %s\n", aEventID));
   nsresult rv = NS_OK;
+  calculateNetworkId();
   nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);
   if (NS_FAILED(rv = NS_DispatchToMainThread(event)))
     NS_WARNING("Failed to dispatch ChangeEvent");
