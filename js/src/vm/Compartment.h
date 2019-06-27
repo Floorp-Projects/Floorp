@@ -614,6 +614,11 @@ class JS::Compartment {
     crossCompartmentWrappers.remove(p);
   }
 
+  void removeWrapper(const js::CrossCompartmentKey& key) {
+    js::WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key);
+    crossCompartmentWrappers.remove(p);
+  }
+
   bool hasNurseryAllocatedWrapperEntries(const js::CompartmentFilter& f) {
     return crossCompartmentWrappers.hasNurseryAllocatedWrapperEntries(f);
   }
