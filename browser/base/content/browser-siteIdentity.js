@@ -893,6 +893,30 @@ var gIdentityHandler = {
       return;
     }
 
+    // If we are in DOM full-screen, exit it before showing the identity popup
+    if (document.fullscreen) {
+      // Open the identity popup after DOM full-screen exit
+      // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
+      // If we call _openPopup before the full-screen transition ends it can get cancelled
+      // Only waiting for painted is not sufficient because we could still be in the full-screen enter transition.
+      let exitedEventReceived = false;
+      window.messageManager.addMessageListener("DOMFullscreen:Painted", function listener() {
+        if (!exitedEventReceived) {
+          return;
+        }
+        window.messageManager.removeMessageListener("DOMFullscreen:Painted", listener);
+        gIdentityHandler._openPopup(event);
+      });
+      window.addEventListener("MozDOMFullscreen:Exited", () => {
+        exitedEventReceived = true;
+      }, { once: true });
+      document.exitFullscreen();
+      return;
+    }
+    this._openPopup(event);
+  },
+
+  _openPopup(event) {
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
