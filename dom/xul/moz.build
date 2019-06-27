@@ -10,6 +10,8 @@ with Files("**"):
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     DEFINES['MOZ_BREAK_XUL_OVERLAYS'] = True
 
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 if CONFIG['MOZ_XUL']:
