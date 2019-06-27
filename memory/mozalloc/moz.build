@@ -6,6 +6,7 @@
 NoVisibilityFlags()
 
 EXPORTS.mozilla += [
+    'cxxalloc.h',
     'mozalloc.h',
     'mozalloc_abort.h',
     'mozalloc_oom.h',
@@ -34,6 +35,11 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'mozalloc_abort.cpp',
 ]
+
+if CONFIG['MOZ_MEMORY']:
+    SOURCES += [
+        'cxxalloc.cpp',
+    ]
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] == 'clang':
     SOURCES['mozalloc_abort.cpp'].flags += ['-Wno-infinite-recursion']
