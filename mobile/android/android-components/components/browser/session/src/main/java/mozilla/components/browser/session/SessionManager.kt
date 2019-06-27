@@ -122,7 +122,32 @@ class SessionManager(
      * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
      * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
-    fun restore(snapshot: Snapshot, updateSelection: Boolean = true) = delegate.restore(snapshot, updateSelection)
+    fun restore(snapshot: Snapshot, updateSelection: Boolean = true) {
+        delegate.restore(snapshot, updateSelection)
+
+        val tabs = snapshot.sessions.mapNotNull { item ->
+            if (!item.session.isCustomTabSession()) {
+                item.session.toTabSessionState()
+            } else {
+                // A restored snapshot should not contain any custom tab so we should be able to safely ignore
+                // them here.
+                null
+            }
+        }
+
+        val selectedTabId = if (updateSelection && snapshot.selectedSessionIndex != NO_SELECTION) {
+            val index = snapshot.selectedSessionIndex
+            if (index in 0..snapshot.sessions.lastIndex) {
+                snapshot.sessions[index].session.id
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+
+        store?.syncDispatch(TabListAction.RestoreAction(tabs, selectedTabId))
+    }
 
     /**
      * Gets the linked engine session for the provided session (if it exists).

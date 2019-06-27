@@ -200,4 +200,100 @@ class SessionManagerMigrationTest {
         assertNull(manager.selectedSession)
         assertNull(store.state.selectedTabId)
     }
+
+    @Test
+    fun `Restoring snapshot with invalid index`() {
+        val store = BrowserStore(BrowserState())
+
+        val manager = SessionManager(engine = mock(), store = store)
+        manager.restore(SessionManager.Snapshot(listOf(), selectedSessionIndex = 0))
+
+        assertEquals(0, manager.sessions.size)
+        assertEquals(0, store.state.tabs.size)
+
+        assertNull(manager.selectedSession)
+        assertNull(store.state.selectedTabId)
+    }
+
+    @Test
+    fun `Restoring snapshot without updating selection`() {
+        val session: Session
+
+        val store = BrowserStore(BrowserState())
+
+        val manager = SessionManager(engine = mock(), store = store).apply {
+            session = Session("https://getpocket.com")
+
+            add(Session("https://www.mozilla.org"))
+            add(session)
+            add(Session("https://www.firefox.com"))
+        }
+
+        val item = manager.createSessionSnapshot(session)
+
+        manager.remove(session)
+
+        manager.restore(SessionManager.Snapshot.singleItem(item), updateSelection = false)
+
+        assertEquals(3, manager.size)
+        assertEquals(3, store.state.tabs.size)
+
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
+
+        assertEquals("https://getpocket.com", manager.sessions[0].url)
+        assertEquals("https://getpocket.com", store.state.tabs[0].content.url)
+
+        assertEquals("https://www.mozilla.org", manager.sessions[1].url)
+        assertEquals("https://www.mozilla.org", store.state.tabs[1].content.url)
+
+        assertEquals("https://www.firefox.com", manager.sessions[2].url)
+        assertEquals("https://www.firefox.com", store.state.tabs[2].content.url)
+    }
+
+    @Test
+    fun `Restoring snapshot into empty state`() {
+        val snapshot = SessionManager.Snapshot(
+            sessions = listOf(
+                SessionManager.Snapshot.Item(
+                    Session(id = "regular1", initialUrl = "https://www.mozilla.org", private = false)),
+                SessionManager.Snapshot.Item(
+                    Session(id = "private1", initialUrl = "https://example.org/private1", private = true)),
+                SessionManager.Snapshot.Item(
+                    Session(id = "private2", initialUrl = "https://example.org/private2", private = true)),
+                SessionManager.Snapshot.Item(
+                    Session(id = "regular2", initialUrl = "https://www.firefox.com", private = false)),
+                SessionManager.Snapshot.Item(
+                    Session(id = "regular3", initialUrl = "https://www.firefox.org", private = false))
+            ),
+            selectedSessionIndex = 2
+        )
+
+        val store = BrowserStore(BrowserState())
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.restore(snapshot)
+
+        assertEquals(5, manager.sessions.size)
+        assertEquals(5, store.state.tabs.size)
+
+        assertEquals("https://example.org/private2", manager.selectedSessionOrThrow.url)
+        assertEquals("https://example.org/private2", store.state.selectedTab!!.content.url)
+        assertEquals("private2", store.state.selectedTabId)
+
+        assertEquals("https://www.mozilla.org", manager.sessions[0].url)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+
+        assertEquals("https://example.org/private1", manager.sessions[1].url)
+        assertEquals("https://example.org/private1", store.state.tabs[1].content.url)
+
+        assertEquals("https://example.org/private2", manager.sessions[2].url)
+        assertEquals("https://example.org/private2", store.state.tabs[2].content.url)
+
+        assertEquals("https://www.firefox.com", manager.sessions[3].url)
+        assertEquals("https://www.firefox.com", store.state.tabs[3].content.url)
+
+        assertEquals("https://www.firefox.org", manager.sessions[4].url)
+        assertEquals("https://www.firefox.org", store.state.tabs[4].content.url)
+    }
 }

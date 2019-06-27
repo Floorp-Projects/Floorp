@@ -85,8 +85,8 @@ class AllSessionsObserverTest {
         AllSessionsObserver(sessionManager, observer)
             .start()
 
-        val session1: Session = mock()
-        val session2: Session = mock()
+        val session1: Session = spy(Session("https://www.mozilla.org"))
+        val session2: Session = spy(Session("https://www.firefox.com"))
 
         val snapshot = SessionManager.Snapshot(
             sessions = listOf(
