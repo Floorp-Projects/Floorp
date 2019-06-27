@@ -217,6 +217,8 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
     zone()->registerPolicy(this);
 #endif
   }
+  MOZ_IMPLICIT ZoneAllocPolicy(JS::Zone* z)
+      : ZoneAllocPolicy(ZoneAllocator::from(z)) {}
   ZoneAllocPolicy(ZoneAllocPolicy& other) : ZoneAllocPolicy(other.zone_) {}
   ZoneAllocPolicy(ZoneAllocPolicy&& other) : zone_(other.zone_) {
 #ifdef DEBUG
