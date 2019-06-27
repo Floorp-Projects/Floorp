@@ -645,7 +645,7 @@
     "Preferences": {
       "type": "object",
       "properties": {
-        "app.update.auto ": {
+        "app.update.auto": {
           "type": "boolean"
         },
         "browser.cache.disk.enable": {
@@ -669,6 +669,9 @@
         "browser.urlbar.suggest.history": {
           "type": "boolean"
         },
+        "datareporting.policy.dataSubmissionPolicyBypassNotification": {
+          "type": "boolean"
+        },
         "browser.urlbar.suggest.bookmark": {
           "type": "boolean"
         },
@@ -680,6 +683,12 @@
         },
         "dom.event.contextmenu.enabled": {
           "type": "boolean"
+        },
+        "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys.addl": {
+          "type": "string"
+        },
+        "dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl": {
+          "type": "string"
         },
         "extensions.getAddons.showPane": {
           "type": "boolean"
