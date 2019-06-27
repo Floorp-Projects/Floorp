@@ -46,6 +46,7 @@ remote.jar:
   content/domains/content/runtime/ExecutionContext.jsm (domains/content/runtime/ExecutionContext.jsm)
   content/domains/content/Security.jsm (domains/content/Security.jsm)
   content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
+  content/domains/parent/Input.jsm (domains/parent/Input.jsm)
   content/domains/parent/Page.jsm (domains/parent/Page.jsm)
   content/domains/parent/Target.jsm (domains/parent/Target.jsm)
 
@@ -54,3 +55,6 @@ remote.jar:
   content/server/Stream.jsm (server/Stream.jsm)
   content/server/WebSocket.jsm (server/WebSocket.jsm)
   content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)
+
+  # imports from external folders
+  content/external/EventUtils.js (../testing/mochitest/tests/SimpleTest/EventUtils.js)
