@@ -81,6 +81,30 @@ add_task(async function test_search() {
   });
 });
 
+add_task(async function test_search_wildcard() {
+  await AboutConfigTest.withNewTab(async function() {
+    const extra = 1; // "Add" row
+
+    // A trailing wildcard
+    this.search("test.about*");
+    Assert.equal(this.rows.length, 3 + extra);
+
+    // A wildcard in middle
+    this.search("test.about*a");
+    Assert.equal(this.rows.length, 2 + extra);
+    this.search("test.about*ab");
+    Assert.equal(this.rows.length, 1 + extra);
+    this.search("test.aboutcon*fig");
+    Assert.equal(this.rows.length, 3 + extra);
+
+    // Multiple wildcards in middle
+    this.search("test.about*fig*ab");
+    Assert.equal(this.rows.length, 1 + extra);
+    this.search("test.about*config*ab");
+    Assert.equal(this.rows.length, 1 + extra);
+  });
+});
+
 add_task(async function test_search_delayed() {
   await AboutConfigTest.withNewTab(async function() {
     // Start with the initial empty page.
