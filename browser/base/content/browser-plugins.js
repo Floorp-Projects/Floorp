@@ -156,7 +156,7 @@ var gPluginHandler = {
 
       case "block":
         permission = Ci.nsIPermissionManager.PROMPT_ACTION;
-        expireType = Ci.nsIPermissionManager.EXPIRE_SESSION;
+        expireType = Ci.nsIPermissionManager.EXPIRE_NEVER;
         expireTime = 0;
         histogram.add(2);
         switch (aPluginInfo.blocklistState) {
@@ -259,6 +259,8 @@ var gPluginHandler = {
 
     if (plugins.length == 1) {
       let pluginInfo = plugins[0];
+      let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+
       let active = pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
 
       let options = {
@@ -306,21 +308,25 @@ var gPluginHandler = {
         accessKey: gNavigatorBundle.getString("flashActivate.allow.accesskey"),
         dismiss: true,
       };
-      let secondaryActions = [{
-        callback: () => {
-          let browserRef = weakBrowser.get();
-          if (browserRef) {
-            if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
-              this._updatePluginPermission(browserRef, pluginInfo, "block");
-            } else {
-              this._updatePluginPermission(browserRef, pluginInfo, "continueblocking");
+
+      let secondaryActions = null;
+      if (!isWindowPrivate) {
+        secondaryActions = [{
+          callback: () => {
+            let browserRef = weakBrowser.get();
+            if (browserRef) {
+              if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+                this._updatePluginPermission(browserRef, pluginInfo, "block");
+              } else {
+                this._updatePluginPermission(browserRef, pluginInfo, "continueblocking");
+              }
             }
-          }
-        },
-        label: gNavigatorBundle.getString("flashActivate.noAllow"),
-        accessKey: gNavigatorBundle.getString("flashActivate.noAllow.accesskey"),
-        dismiss: true,
-      }];
+          },
+          label: gNavigatorBundle.getString("flashActivate.noAllow"),
+          accessKey: gNavigatorBundle.getString("flashActivate.noAllow.accesskey"),
+          dismiss: true,
+        }];
+      }
 
       PopupNotifications.show(browser, "click-to-play-plugins",
                                              description, "plugins-notification-icon",
