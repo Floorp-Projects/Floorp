@@ -13,6 +13,10 @@ EXTRA_JS_MODULES += [
     'ShieldContentProcess.jsm',
 ]
 
+TESTING_JS_MODULES += [
+    'test/NormandyTestUtils.jsm',
+]
+
 XPCOM_MANIFESTS += [
     'components.conf',
 ]
