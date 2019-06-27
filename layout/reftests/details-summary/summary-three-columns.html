@@ -4,9 +4,11 @@
 
 <html>
   <style>
-  summary {
+  summary::marker {
     /* Hide the triangle for comparing with div in reftest. */
     list-style-type: none;
+  }
+  summary {
     -moz-column-count: 3;
     -moz-column-rule: 1px solid lightgray;
     -webkit-column-count: 3;
