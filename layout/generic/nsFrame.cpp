@@ -9738,7 +9738,7 @@ ComputedStyle* nsFrame::DoGetParentComputedStyle(
           pseudo == PseudoStyleType::tableWrapper) {
         if (Servo_Element_IsDisplayContents(parentElement)) {
           RefPtr<ComputedStyle> style =
-              ServoStyleSet::ResolveServoStyle(*parentElement);
+              PresShell()->StyleSet()->ResolveServoStyle(*parentElement);
           // NOTE(emilio): we return a weak reference because the element also
           // holds the style context alive. This is a bit silly (we could've
           // returned a weak ref directly), but it's probably not worth

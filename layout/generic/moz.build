@@ -134,7 +134,6 @@ EXPORTS += [
 EXPORTS.mozilla += [
     '!FrameIdList.h',
     '!FrameTypeList.h',
-    'AnonymousContentKey.h',
     'AspectRatio.h',
     'AutoCopyListener.h',
     'ColumnUtils.h',
