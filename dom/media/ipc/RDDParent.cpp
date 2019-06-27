@@ -18,7 +18,6 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
-#include "mozilla/gfx/gfxVars.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
@@ -42,7 +41,6 @@
 namespace mozilla {
 
 using namespace ipc;
-using namespace gfx;
 
 static RDDParent* sRDDParent;
 
@@ -85,8 +83,6 @@ bool RDDParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     return false;
   }
 
-  gfxVars::Initialize();
-
   mozilla::ipc::SetThisProcessName("RDD Process");
   return true;
 }
@@ -119,14 +115,8 @@ static void StartRDDMacSandbox() {
 #endif
 
 mozilla::ipc::IPCResult RDDParent::RecvInit(
-    nsTArray<GfxVarUpdate>&& vars, const Maybe<FileDescriptor>& aBrokerFd,
-    bool aStartMacSandbox) {
+    const Maybe<FileDescriptor>& aBrokerFd, bool aStartMacSandbox) {
   Unused << SendInitComplete();
-
-  for (const auto& var : vars) {
-    gfxVars::ApplyUpdate(var);
-  }
-
 #if defined(MOZ_SANDBOX)
 #  if defined(XP_MACOSX)
   // Close all current connections to the WindowServer. This ensures that the
@@ -153,11 +143,6 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
   return IPC_OK();
 }
 
-IPCResult RDDParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
-  gfxVars::ApplyUpdate(aUpdate);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult RDDParent::RecvInitProfiler(
     Endpoint<PProfilerChild>&& aEndpoint) {
 #ifdef MOZ_GECKO_PROFILER
@@ -169,15 +154,6 @@ mozilla::ipc::IPCResult RDDParent::RecvInitProfiler(
 mozilla::ipc::IPCResult RDDParent::RecvNewContentRemoteDecoderManager(
     Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
   if (!RemoteDecoderManagerParent::CreateForContent(std::move(aEndpoint))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult RDDParent::RecvCreateVideoBridgeToParentProcess(
-    Endpoint<PVideoBridgeChild>&& aEndpoint) {
-  if (!RemoteDecoderManagerParent::CreateVideoBridgeToParentProcess(
-          std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -222,7 +198,7 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
     mProfilerController = nullptr;
   }
 #endif
-  gfxVars::Shutdown();
+
   CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }

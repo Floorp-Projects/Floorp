@@ -36,31 +36,13 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorVideo, override)
 
   layers::TextureForwarder* GetTextureForwarder() override {
-    return mTextureFactoryIdentifier.mParentProcessType == GeckoProcessType_GPU
-               ? VideoBridgeChild::GetSingletonToGPUProcess()
-               : VideoBridgeChild::GetSingletonToParentProcess();
+    return VideoBridgeChild::GetSingleton();
   }
   layers::LayersIPCActor* GetLayersIPCActor() override {
-    return GetTextureForwarder();
-  }
-
-  static already_AddRefed<KnowsCompositorVideo> TryCreateForIdentifier(
-      const layers::TextureFactoryIdentifier& aIdentifier) {
-    VideoBridgeChild* child =
-        (aIdentifier.mParentProcessType == GeckoProcessType_GPU)
-            ? VideoBridgeChild::GetSingletonToGPUProcess()
-            : VideoBridgeChild::GetSingletonToParentProcess();
-    if (!child) {
-      return nullptr;
-    }
-
-    RefPtr<KnowsCompositorVideo> knowsCompositor = new KnowsCompositorVideo();
-    knowsCompositor->IdentifyTextureHost(aIdentifier);
-    return knowsCompositor.forget();
+    return VideoBridgeChild::GetSingleton();
   }
 
  private:
-  KnowsCompositorVideo() = default;
   virtual ~KnowsCompositorVideo() = default;
 };
 
@@ -137,40 +119,23 @@ mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvOutput(
     const DecodedOutputIPDL& aDecodedData) {
   AssertOnManagerThread();
   MOZ_ASSERT(aDecodedData.type() == DecodedOutputIPDL::TRemoteVideoDataIPDL);
-
   const RemoteVideoDataIPDL& aData = aDecodedData.get_RemoteVideoDataIPDL();
 
-  if (aData.sd().type() == SurfaceDescriptor::TSurfaceDescriptorBuffer) {
-    RefPtr<Image> image = DeserializeImage(
-        aData.sd().get_SurfaceDescriptorBuffer(), aData.frameSize());
+  RefPtr<Image> image = DeserializeImage(
+      aData.sd().get_SurfaceDescriptorBuffer(), aData.frameSize());
 
-    RefPtr<VideoData> video = VideoData::CreateFromImage(
-        aData.display(), aData.base().offset(), aData.base().time(),
-        aData.base().duration(), image, aData.base().keyframe(),
-        aData.base().timecode());
+  RefPtr<VideoData> video = VideoData::CreateFromImage(
+      aData.display(), aData.base().offset(), aData.base().time(),
+      aData.base().duration(), image, aData.base().keyframe(),
+      aData.base().timecode());
 
-    mDecodedData.AppendElement(std::move(video));
-  } else {
-    // The Image here creates a TextureData object that takes ownership
-    // of the SurfaceDescriptor, and is responsible for making sure that
-    // it gets deallocated.
-    RefPtr<Image> image =
-        new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
-
-    RefPtr<VideoData> video = VideoData::CreateFromImage(
-        aData.display(), aData.base().offset(), aData.base().time(),
-        aData.base().duration(), image, aData.base().keyframe(),
-        aData.base().timecode());
-
-    mDecodedData.AppendElement(std::move(video));
-  }
+  mDecodedData.AppendElement(std::move(video));
   return IPC_OK();
 }
 
 MediaResult RemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions,
-    const layers::TextureFactoryIdentifier* aIdentifier) {
+    const CreateDecoderParams::OptionSet& aOptions) {
   RefPtr<RemoteDecoderManagerChild> manager =
       RemoteDecoderManagerChild::GetRDDProcessSingleton();
 
@@ -193,8 +158,9 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   nsCString blacklistedD3D11Driver;
   nsCString blacklistedD3D9Driver;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
+  TextureFactoryIdentifier defaultIdent;
   if (manager->SendPRemoteDecoderConstructor(
-          this, decoderInfo, aOptions, ToMaybe(aIdentifier), &success,
+          this, decoderInfo, aOptions, defaultIdent, &success,
           &blacklistedD3D11Driver, &blacklistedD3D9Driver, &errorDescription)) {
     mCanSend = true;
   }
@@ -221,6 +187,27 @@ static void ReportUnblacklistingTelemetry(
 
 GpuRemoteVideoDecoderChild::GpuRemoteVideoDecoderChild()
     : RemoteVideoDecoderChild(true) {}
+
+mozilla::ipc::IPCResult GpuRemoteVideoDecoderChild::RecvOutput(
+    const DecodedOutputIPDL& aDecodedData) {
+  AssertOnManagerThread();
+  MOZ_ASSERT(aDecodedData.type() == DecodedOutputIPDL::TRemoteVideoDataIPDL);
+  const RemoteVideoDataIPDL& aData = aDecodedData.get_RemoteVideoDataIPDL();
+
+  // The Image here creates a TextureData object that takes ownership
+  // of the SurfaceDescriptor, and is responsible for making sure that
+  // it gets deallocated.
+  RefPtr<Image> image =
+      new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
+
+  RefPtr<VideoData> video = VideoData::CreateFromImage(
+      aData.display(), aData.base().offset(), aData.base().time(),
+      aData.base().duration(), image, aData.base().keyframe(),
+      aData.base().timecode());
+
+  mDecodedData.AppendElement(std::move(video));
+  return IPC_OK();
+}
 
 void GpuRemoteVideoDecoderChild::RecordShutdownTelemetry(
     bool aAbnormalShutdown) {
@@ -260,7 +247,7 @@ MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
   nsCString errorDescription;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
   if (manager->SendPRemoteDecoderConstructor(
-          this, decoderInfo, aOptions, Some(aIdentifier), &success,
+          this, decoderInfo, aOptions, aIdentifier, &success,
           &mBlacklistedD3D11Driver, &mBlacklistedD3D9Driver,
           &errorDescription)) {
     mCanSend = true;
@@ -273,19 +260,14 @@ MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
 RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
     float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
-    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
+    const layers::TextureFactoryIdentifier& aIdentifier,
     TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
     nsCString* aErrorDescription)
     : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
       mVideoInfo(aVideoInfo) {
-  if (aIdentifier) {
-    // Check to see if we have a direct PVideoBridge connection to the destination
-    // process specified in aIdentifier, and create a KnowsCompositor representing
-    // that connection if so.
-    // If this fails, then we fall back to returning the decoded frames directly
-    // via Output().
-    mKnowsCompositor =
-        KnowsCompositorVideo::TryCreateForIdentifier(*aIdentifier);
+  if (XRE_IsGPUProcess()) {
+    mKnowsCompositor = new KnowsCompositorVideo();
+    mKnowsCompositor->IdentifyTextureHost(aIdentifier);
   }
 
   CreateDecoderParams params(mVideoInfo);

@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include GraphicsMessages;
 include MemoryReportTypes;
 include PrefsTypes;
 
 include protocol PProfiler;
 include protocol PRemoteDecoderManager;
-include protocol PVideoBridge;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 
@@ -23,9 +21,7 @@ protocol PRDD
 {
 parent:
 
-  async Init(GfxVarUpdate[] vars,
-             FileDescriptor? sandboxBroker,
-             bool startMacSandbox);
+  async Init(FileDescriptor? sandboxBroker, bool startMacSandbox);
 
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
@@ -36,10 +32,6 @@ parent:
                             bool anonymize,
                             bool minimizeMemoryUsage,
                             FileDescriptor? DMDFile);
-
-  async CreateVideoBridgeToParentProcess(Endpoint<PVideoBridgeChild> endpoint);
-
-  async UpdateVar(GfxVarUpdate var);
 
   async PreferenceUpdate(Pref pref);
 

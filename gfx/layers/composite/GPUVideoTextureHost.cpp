@@ -24,10 +24,6 @@ GPUVideoTextureHost::~GPUVideoTextureHost() {
 
 GPUVideoTextureHost* GPUVideoTextureHost::CreateFromDescriptor(
     TextureFlags aFlags, const SurfaceDescriptorGPUVideo& aDescriptor) {
-  // In the future when the RDD process has a PVideoBridge connection,
-  // then there might be two VideoBridgeParents (one within the GPU process,
-  // one from RDD). We'll need to flag which one to use to lookup our
-  // descriptor, or just try both.
   TextureHost* wrappedTextureHost =
       VideoBridgeParent::GetSingleton()->LookupTexture(aDescriptor.handle());
   if (!wrappedTextureHost) {
