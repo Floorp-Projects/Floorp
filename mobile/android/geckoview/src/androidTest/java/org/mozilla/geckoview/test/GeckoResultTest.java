@@ -3,6 +3,7 @@ package org.mozilla.geckoview.test;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
 import org.mozilla.geckoview.GeckoResult.OnValueListener;
+import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 
 import android.os.Handler;
@@ -24,18 +25,18 @@ import static org.junit.Assert.assertThat;
 @RunWith(AndroidJUnit4.class)
 @MediumTest
 public class GeckoResultTest {
-    private static final long DEFAULT_TIMEOUT = 5000;
-
     private static class MockException extends RuntimeException {
     }
 
     private boolean mDone;
 
+    private final Environment mEnv = new Environment();
+
     private void waitUntilDone() {
         assertThat("We should not be done", mDone, equalTo(false));
 
         while (!mDone) {
-            UiThreadUtils.loopUntilIdle(DEFAULT_TIMEOUT);
+            UiThreadUtils.loopUntilIdle(mEnv.getDefaultTimeoutMillis());
         }
     }
 
@@ -395,25 +396,6 @@ public class GeckoResultTest {
         GeckoResult.fromException(new MockException()).poll(0);
     }
 
-    @Test
-    public void pollIncompleteWithValue() throws Throwable {
-        final GeckoResult<Integer> result = new GeckoResult<>();
-
-        final Thread thread = new Thread(() -> result.complete(42));
-
-        thread.start();
-        assertThat("Value should match", result.poll(), equalTo(42));
-    }
-
-    @Test(expected = MockException.class)
-    public void pollIncompleteWithError() throws Throwable {
-        final GeckoResult<Void> result = new GeckoResult<>();
-
-        final Thread thread = new Thread(() -> result.completeExceptionally(new MockException()));
-
-        thread.start();
-        result.poll();
-    }
 
     @Test(expected = TimeoutException.class)
     public void pollTimeout() throws Throwable {
