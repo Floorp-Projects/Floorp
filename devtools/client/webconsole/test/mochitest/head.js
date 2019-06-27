@@ -1390,3 +1390,16 @@ function reloadPage() {
   });
   return onLoad;
 }
+
+         
+/**
+  * Check if the editor mode is enabled (i.e. .webconsole-app has the expected class).
+  *
+  * @param {WebConsole} hud
+  * @returns {Boolean}
+  */
+function isEditorModeEnabled(hud) {
+  const {outputNode} = hud.ui;
+  const appNode = outputNode.querySelector(".webconsole-app");
+  return appNode.classList.contains("jsterm-editor");
+}
