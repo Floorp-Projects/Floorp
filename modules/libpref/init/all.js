@@ -342,13 +342,8 @@ pref("media.decoder-doctor.verbose", false);
 // URL to report decode issues
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
-pref("media.videocontrols.picture-in-picture.enabled", true);
-pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
-#else
 pref("media.videocontrols.picture-in-picture.enabled", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
-#endif
 pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
 pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);

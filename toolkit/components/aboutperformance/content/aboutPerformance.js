@@ -587,15 +587,27 @@ var Control = {
     });
 
     document.getElementById("dispatch-thead").addEventListener("click", async (event) => {
-      const columnId = event.target.getAttribute("data-l10n-id");
+      if (!event.target.classList.contains("clickable"))
+        return;
+
+      if (this._sortOrder) {
+        let [column, direction] = this._sortOrder.split("_");
+        const td = document.getElementById(`column-${column}`);
+        td.classList.remove(direction);
+      }
+
+      const columnId = event.target.id;
       if (columnId == "column-type")
         this._sortOrder = this._sortOrder == "type_asc" ? "type_desc" : "type_asc";
       else if (columnId == "column-energy-impact")
-        this._sortOrder = this._sortOrder == "cpu_desc" ? "cpu_asc" : "cpu_desc";
+        this._sortOrder = this._sortOrder == "energy-impact_desc" ? "energy-impact_asc" : "energy-impact_desc";
       else if (columnId == "column-memory")
         this._sortOrder = this._sortOrder == "memory_desc" ? "memory_asc" : "memory_desc";
       else if (columnId == "column-name")
         this._sortOrder = this._sortOrder == "name_asc" ? "name_desc" : "name_asc";
+
+      let direction = this._sortOrder.split("_")[1];
+      event.target.classList.add(direction);
 
       await this._updateDisplay(true);
     });
@@ -773,7 +785,7 @@ var Control = {
           case "name":
             res = String.prototype.localeCompare.call(a.name, b.name);
             break;
-          case "cpu":
+          case "energy-impact":
             res = this._computeEnergyImpact(a.dispatchesSincePrevious,
                                             a.durationSincePrevious) -
               this._computeEnergyImpact(b.dispatchesSincePrevious,

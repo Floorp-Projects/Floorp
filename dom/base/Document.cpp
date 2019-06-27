@@ -10474,6 +10474,13 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
   return ret;
 }
 
+static bool HasHttpScheme(nsIURI* aURI) {
+  bool isHttpish = false;
+  return aURI &&
+         ((NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpish)) && isHttpish) ||
+          (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpish)) && isHttpish));
+}
+
 void Document::Destroy() {
   // The ContentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
@@ -10483,7 +10490,10 @@ void Document::Destroy() {
   if (!nsContentUtils::IsInPrivateBrowsing(this) &&
       IsTopLevelContentDocument()) {
     mContentBlockingLog.ReportLog(NodePrincipal());
-    mContentBlockingLog.ReportOrigins();
+
+    if (HasHttpScheme(GetDocumentURI())) {
+      mContentBlockingLog.ReportOrigins();
+    }
   }
 
   mIsGoingAway = true;
@@ -10828,13 +10838,6 @@ static void DispatchFullscreenChange(Document* aDocument, nsINode* aTarget) {
 }
 
 static void ClearPendingFullscreenRequests(Document* aDoc);
-
-static bool HasHttpScheme(nsIURI* aURI) {
-  bool isHttpish = false;
-  return aURI &&
-         ((NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpish)) && isHttpish) ||
-          (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpish)) && isHttpish));
-}
 
 void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {

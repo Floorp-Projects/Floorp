@@ -286,8 +286,8 @@ pref("devtools.webconsole.input.editor", false);
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
 
-// Enable message grouping in the console, false by default
-pref("devtools.webconsole.groupWarningMessages", false);
+// Enable message grouping in the console, true by default
+pref("devtools.webconsole.groupWarningMessages", true);
 
 // Saved state of the Display content messages checkbox in the browser console.
 pref("devtools.browserconsole.contentMessages", false);

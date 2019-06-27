@@ -66,7 +66,6 @@ class ConsoleOutput extends Component {
       messagesPayload: PropTypes.object.isRequired,
       messagesRepeat: PropTypes.object.isRequired,
       warningGroups: PropTypes.object.isRequired,
-      isInWarningGroup: PropTypes.func,
       networkMessagesUpdate: PropTypes.object.isRequired,
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
@@ -181,7 +180,6 @@ class ConsoleOutput extends Component {
       messagesPayload,
       messagesRepeat,
       warningGroups,
-      isInWarningGroup,
       networkMessagesUpdate,
       networkMessageActiveTabId,
       serviceContainer,
@@ -212,8 +210,8 @@ class ConsoleOutput extends Component {
         timestampsVisible,
         repeat: messagesRepeat[messageId],
         badge: warningGroups.has(messageId) ? warningGroups.get(messageId).length : null,
-        inWarningGroup: isInWarningGroup
-          ? isInWarningGroup(messages.get(messageId))
+        inWarningGroup: warningGroups && warningGroups.size > 0
+          ? isMessageInWarningGroup(messages.get(messageId), visibleMessages)
           : false,
         networkMessageUpdate: networkMessagesUpdate[messageId],
         networkMessageActiveTabId,
@@ -260,9 +258,6 @@ function mapStateToProps(state, props) {
     messagesPayload: getAllMessagesPayloadById(state),
     messagesRepeat: getAllRepeatById(state),
     warningGroups: getAllWarningGroupsById(state),
-    isInWarningGroup: state.prefs.groupWarnings
-      ? message => isMessageInWarningGroup(state, message)
-      : null,
     networkMessagesUpdate: getAllNetworkMessagesUpdateById(state),
     timestampsVisible: state.ui.timestampsVisible,
     networkMessageActiveTabId: state.ui.networkMessageActiveTabId,

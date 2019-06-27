@@ -196,8 +196,6 @@
 #ifdef ENABLE_REMOTE_AGENT
 @RESPATH@/chrome/remote@JAREXT@
 @RESPATH@/chrome/remote.manifest
-@RESPATH@/components/command-line-handler.js
-@RESPATH@/components/RemoteAgent.manifest
 @RESPATH@/defaults/pref/remote.js
 #endif
 

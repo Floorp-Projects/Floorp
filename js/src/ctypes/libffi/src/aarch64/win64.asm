@@ -19,9 +19,11 @@
 ;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#include "ksarm64.h"
+
 ;; Hand-converted from the sysv.S file in this directory.
 
-        AREA |.text|, CODE, ARM64
+        TEXTAREA
 
    ;; ffi_call_SYSV()
 
@@ -58,30 +60,26 @@
    ;; This function uses the following stack frame layout:
 
    ;; ==
-   ;;              saved x30(lr)
-   ;; x29(fp)->    saved x29(fp)
    ;;              saved x24
    ;;              saved x23
    ;;              saved x22
-   ;; sp'    ->    saved x21
+   ;;              saved x21
+   ;;              saved x20
+   ;;              saved x19
+   ;;              saved x30(lr)
+   ;; x29(fp)->    saved x29(fp)
    ;;              ...
    ;; sp     ->    (constructed callee stack arguments)
    ;; ==
 
    ;; Voila!
 
-	EXPORT |ffi_call_SYSV|
+        NESTED_ENTRY |ffi_call_SYSV|
 
-|ffi_call_SYSV| PROC
-;#define ffi_call_SYSV_FS (8 * 4)
-
-        stp     x29, x30, [sp, #-16]!
-
-        mov     x29, sp
-        sub     sp, sp, #32 	; ffi_call_SYSV_FS
-
-        stp     x21, x22, [sp, #0]
-        stp     x23, x24, [sp, #16]
+        PROLOG_SAVE_REG_PAIR x29, x30, #-64!
+        PROLOG_SAVE_REG_PAIR x19, x20, #16
+        PROLOG_SAVE_REG_PAIR x21, x22, #32
+        PROLOG_SAVE_REG_PAIR x23, x24, #48
 
         mov     x21, x1
         mov     x22, x2
@@ -145,19 +143,14 @@ noload_call
 
 nosave_call
         ; All done, unwind our stack frame.
-        ldp     x21, x22, [x29,  # - 32] ; ffi_call_SYSV_FS
+        EPILOG_STACK_RESTORE
+        EPILOG_RESTORE_REG_PAIR x19, x20, #16
+        EPILOG_RESTORE_REG_PAIR x21, x22, #32
+        EPILOG_RESTORE_REG_PAIR x23, x24, #48
+        EPILOG_RESTORE_REG_PAIR x29, x30, #64!
+        EPILOG_RETURN
 
-        ldp     x23, x24, [x29,  # - 32 + 16] ; ffi_call_SYSV_FS
-
-        mov     sp, x29
-
-        ldp     x29, x30, [sp], #16
-
-        ret
-
-	ENDP
-
-; #define ffi_closure_SYSV_FS (8 * 2 + AARCH64_CALL_CONTEXT_SIZE)
+        NESTED_END |ffi_call_SYSV|
 
    ;; ffi_closure_SYSV
 
@@ -186,10 +179,12 @@ nosave_call
    ;; This function uses the following stack frame layout:
 
    ;; ==
-   ;;              saved x30(lr)
-   ;; x29(fp)->    saved x29(fp)
    ;;              saved x22
    ;;              saved x21
+   ;;              saved x20
+   ;;              saved x19
+   ;;              saved x30(lr)
+   ;; x29(fp)->    saved x29(fp)
    ;;              ...
    ;; sp     ->    call_context
    ;; ==
@@ -197,16 +192,14 @@ nosave_call
    ;; Voila!
 
 	IMPORT |ffi_closure_SYSV_inner|
-	EXPORT |ffi_closure_SYSV|
 
-|ffi_closure_SYSV| PROC
-        stp     x29, x30, [sp, #-16]!
+        NESTED_ENTRY |ffi_closure_SYSV|
 
-        mov     x29, sp
+        PROLOG_SAVE_REG_PAIR fp, lr, #-48!
+        PROLOG_SAVE_REG_PAIR x19, x20, #16
+        PROLOG_SAVE_REG_PAIR x21, x22, #32
 
-        sub     sp, sp, #256+512+16
-
-        stp     x21, x22, [x29, #-16]
+        sub     sp, sp, #256+512
 
         ; Load x21 with &call_context.
         mov     x21, sp
@@ -260,13 +253,12 @@ noload_closure
         ; Note nothing useful is returned in x8.
 
         ; We are done, unwind our frame.
-        ldp     x21, x22, [x29,  #-16]
+        EPILOG_STACK_RESTORE
+        EPILOG_RESTORE_REG_PAIR x19, x20, #16
+        EPILOG_RESTORE_REG_PAIR x21, x22, #32
+        EPILOG_RESTORE_REG_PAIR x29, x30, #48!
+        EPILOG_RETURN
 
-        mov     sp, x29
+        NESTED_END |ffi_closure_SYSV|
 
-        ldp     x29, x30, [sp], #16
-
-        ret
-
-	ENDP
-	END
+        END

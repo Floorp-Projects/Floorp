@@ -33,6 +33,8 @@ registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
+pushPref("devtools.webconsole.groupWarningMessages", false);
+
 add_task(async function testContentBlockingMessage() {
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -90,8 +92,7 @@ add_task(async function testAllCookieBlockedMessage() {
   const message = await waitFor(() => findMessage(hud,
     `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
     `blocking all storage access requests`));
-  await testLearnMoreClickOpenNewTab(message,
-    getStorageErrorUrl("CookieBlockedAll"));
+  await testLearnMoreClickOpenNewTab(message, getStorageErrorUrl("CookieBlockedAll"));
   win.close();
 });
 
