@@ -74,7 +74,8 @@ nsNetworkLinkService::nsNetworkLinkService()
       mReachability(nullptr),
       mCFRunLoop(nullptr),
       mRunLoopSource(nullptr),
-      mStoreRef(nullptr) {}
+      mStoreRef(nullptr),
+      mMutex("nsNetworkLinkService::mMutex") {}
 
 nsNetworkLinkService::~nsNetworkLinkService() = default;
 
@@ -96,6 +97,13 @@ nsNetworkLinkService::GetLinkType(uint32_t* aLinkType) {
 
   // XXX This function has not yet been implemented for this platform
   *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
+  MutexAutoLock lock(mMutex);
+  aNetworkID = mNetworkId;
   return NS_OK;
 }
 
@@ -315,6 +323,7 @@ static bool ipv6NetworkId(SHA1Sum* sha1) {
 }
 
 void nsNetworkLinkService::calculateNetworkId(void) {
+  MOZ_ASSERT(!NS_IsMainThread(), "Should not be called on the main thread");
   SHA1Sum sha1;
   bool found4 = ipv4NetworkId(&sha1);
   bool found6 = ipv6NetworkId(&sha1);
@@ -331,6 +340,7 @@ void nsNetworkLinkService::calculateNetworkId(void) {
     nsresult rv = Base64Encode(newString, output);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     LOG(("networkid: id %s\n", output.get()));
+    MutexAutoLock lock(mMutex);
     if (mNetworkId != output) {
       // new id
       if (found4 && !found6) {
@@ -343,10 +353,14 @@ void nsNetworkLinkService::calculateNetworkId(void) {
       mNetworkId = output;
     } else {
       // same id
+      LOG(("Same network id"));
       Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
     }
   } else {
     // no id
+    LOG(("No network id"));
+    MutexAutoLock lock(mMutex);
+    mNetworkId.Truncate();
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
   }
 }
