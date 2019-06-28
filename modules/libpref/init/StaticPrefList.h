@@ -2199,10 +2199,10 @@ VARCACHE_PREF(
 # define PREF_VALUE false
 #endif
 VARCACHE_PREF(
-  Once,
+  Live,
   "dom.vr.enabled",
   dom_vr_enabled,
-  bool, PREF_VALUE
+  RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
 
