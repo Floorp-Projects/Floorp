@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
@@ -21,6 +22,7 @@ import org.mozilla.fenix.test.Mockable
 @Mockable
 class FindInPageIntegration(
     private val sessionManager: SessionManager,
+    private val sessionId: String? = null,
     private val view: FindInPageView,
     engineView: EngineView,
     private val toolbar: BrowserToolbar
@@ -49,11 +51,11 @@ class FindInPageIntegration(
     }
 
     private fun launch() {
-        val session = sessionManager.selectedSession ?: return
-
-        toolbar.visibility = View.GONE
-        view.asView().visibility = View.VISIBLE
-        feature.bind(session)
+        sessionManager.runWithSessionIdOrSelected(sessionId) {
+            toolbar.visibility = View.GONE
+            view.asView().visibility = View.VISIBLE
+            feature.bind(it)
+        }
     }
 
     companion object {

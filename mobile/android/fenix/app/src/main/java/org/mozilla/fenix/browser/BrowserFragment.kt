@@ -108,6 +108,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private var tabCollectionObserver: Observer<List<TabCollection>>? = null
     private var sessionObserver: Session.Observer? = null
     private var sessionManagerObserver: SessionManager.Observer? = null
+    private var pendingOpenInBrowserIntent: Intent? = null
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
@@ -272,7 +273,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
         findInPageIntegration.set(
             feature = FindInPageIntegration(
-                requireComponents.core.sessionManager, view.findInPageView, view.engineView, toolbar
+                requireComponents.core.sessionManager, customTabSessionId, view.findInPageView, view.engineView, toolbar
             ),
             owner = this,
             view = view
@@ -450,6 +451,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
     @SuppressWarnings("ComplexMethod")
     override fun onResume() {
+        super.onResume()
         sessionObserver = subscribeToSession()
         sessionManagerObserver = subscribeToSessions()
         tabCollectionObserver = subscribeToTabCollections()
@@ -458,7 +460,6 @@ class BrowserFragment : Fragment(), BackHandler {
         getSessionById()?.let { updateBookmarkState(it) }
 
         if (getSessionById() == null) findNavController(this).popBackStack(R.id.homeFragment, false)
-        super.onResume()
         context?.components?.core?.let {
             val preferredColorScheme = it.getPreferredColorScheme()
             if (it.engine.settings.preferredColorScheme != preferredColorScheme) {
@@ -629,6 +630,10 @@ class BrowserFragment : Fragment(), BackHandler {
         sessionManagerObserver?.let {
             requireComponents.core.sessionManager.unregister(it)
         }
+        pendingOpenInBrowserIntent?.let {
+            startActivity(it)
+            pendingOpenInBrowserIntent = null
+        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -760,14 +765,13 @@ class BrowserFragment : Fragment(), BackHandler {
             ToolbarMenu.Item.OpenInFenix -> {
                 // To not get a "Display Already Acquired" error we need to force remove the engineView here
                 swipeRefresh?.removeView(engineView as View)
-                val intent = Intent(context, IntentReceiverActivity::class.java)
-                intent.action = Intent.ACTION_VIEW
+                pendingOpenInBrowserIntent = Intent(context, IntentReceiverActivity::class.java)
+                pendingOpenInBrowserIntent?.action = Intent.ACTION_VIEW
                 getSessionById()?.customTabConfig = null
                 getSessionById()?.let {
                     requireComponents.core.sessionManager.select(it)
                 }
                 activity?.finish()
-                startActivity(intent)
             }
         }
     }
