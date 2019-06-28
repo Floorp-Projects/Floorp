@@ -61,6 +61,7 @@ add_task(async function checkMitmAutoEnableEnterpriseRoots() {
     [PREF_MITM_PRIMING, true],
     [PREF_MITM_PRIMING_ENDPOINT, UNKNOWN_ISSUER],
     [PREF_MITM_AUTO_ENABLE_ENTERPRISE_ROOTS, true],
+    [PREF_ENTERPRISE_ROOTS, false],
   ]});
 
   let browser;
