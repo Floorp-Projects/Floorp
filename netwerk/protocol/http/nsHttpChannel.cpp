@@ -7356,6 +7356,7 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
 
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
+  redirectLoadInfo->SetResultPrincipalURI(mURI);
 
   listener->TriggerCrossProcessRedirect(this, redirectLoadInfo,
                                         mCrossProcessRedirectIdentifier);
