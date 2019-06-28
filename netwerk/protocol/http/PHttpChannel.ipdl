@@ -52,9 +52,7 @@ parent:
 
   // Sent to the parent in order signal that the child side listeners have been
   // set up and the parent side of the channel can be opened.
-  // The passed loadInfo needs to be set on the channel - since the channel
-  // moved to a new process it now has different properties.
-  async CrossProcessRedirectDone(nsresult result, LoadInfoArgs? loadInfo);
+  async CrossProcessRedirectDone(nsresult result);
 
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow
