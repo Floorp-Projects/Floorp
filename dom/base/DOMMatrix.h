@@ -162,14 +162,15 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
   already_AddRefed<DOMMatrix> Translate(double aTx, double aTy,
                                         double aTz = 0) const;
-  already_AddRefed<DOMMatrix> Scale(double aScale, double aOriginX = 0,
-                                    double aOriginY = 0) const;
+  already_AddRefed<DOMMatrix> Scale(double aScaleX,
+                                    const Optional<double>& aScaleY,
+                                    double aScaleZ, double aOriginX,
+                                    double aOriginY, double aOriginZ) const;
   already_AddRefed<DOMMatrix> Scale3d(double aScale, double aOriginX = 0,
                                       double aOriginY = 0,
                                       double aOriginZ = 0) const;
-  already_AddRefed<DOMMatrix> ScaleNonUniform(
-      double aScaleX, double aScaleY = 1.0, double aScaleZ = 1.0,
-      double aOriginX = 0, double aOriginY = 0, double aOriginZ = 0) const;
+  already_AddRefed<DOMMatrix> ScaleNonUniform(double aScaleX,
+                                              double aScaleY) const;
   already_AddRefed<DOMMatrix> Rotate(double aAngle, double aOriginX = 0,
                                      double aOriginY = 0) const;
   already_AddRefed<DOMMatrix> RotateFromVector(double aX, double aY) const;
@@ -275,7 +276,9 @@ class DOMMatrix : public DOMMatrixReadOnly {
   DOMMatrix* MultiplySelf(const DOMMatrixInit& aOther, ErrorResult& aRv);
   DOMMatrix* PreMultiplySelf(const DOMMatrixInit& aOther, ErrorResult& aRv);
   DOMMatrix* TranslateSelf(double aTx, double aTy, double aTz = 0);
-  DOMMatrix* ScaleSelf(double aScale, double aOriginX = 0, double aOriginY = 0);
+  DOMMatrix* ScaleSelf(double aScaleX, const Optional<double>& aScaleY,
+                       double aScaleZ, double aOriginX, double aOriginY,
+                       double aOriginZ);
   DOMMatrix* Scale3dSelf(double aScale, double aOriginX = 0,
                          double aOriginY = 0, double aOriginZ = 0);
   DOMMatrix* ScaleNonUniformSelf(double aScaleX, double aScaleY = 1,

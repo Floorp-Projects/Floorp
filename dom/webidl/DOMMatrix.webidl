@@ -46,19 +46,18 @@ interface DOMMatrixReadOnly {
     DOMMatrix translate(optional unrestricted double tx = 0,
                         optional unrestricted double ty = 0,
                         optional unrestricted double tz = 0);
-    DOMMatrix scale(unrestricted double scale,
-                    optional unrestricted double originX = 0,
-                    optional unrestricted double originY = 0);
-    DOMMatrix scale3d(unrestricted double scale,
+    [NewObject] DOMMatrix scale(optional unrestricted double scaleX = 1,
+                                optional unrestricted double scaleY,
+                                optional unrestricted double scaleZ = 1,
+                                optional unrestricted double originX = 0,
+                                optional unrestricted double originY = 0,
+                                optional unrestricted double originZ = 0);
+    [NewObject] DOMMatrix scaleNonUniform(optional unrestricted double scaleX = 1,
+                                          optional unrestricted double scaleY = 1);
+    DOMMatrix scale3d(optional unrestricted double scale = 1,
                       optional unrestricted double originX = 0,
                       optional unrestricted double originY = 0,
                       optional unrestricted double originZ = 0);
-    DOMMatrix scaleNonUniform(unrestricted double scaleX,
-                              optional unrestricted double scaleY = 1,
-                              optional unrestricted double scaleZ = 1,
-                              optional unrestricted double originX = 0,
-                              optional unrestricted double originY = 0,
-                              optional unrestricted double originZ = 0);
     DOMMatrix rotate(unrestricted double angle,
                      optional unrestricted double originX = 0,
                      optional unrestricted double originY = 0);
@@ -128,10 +127,13 @@ interface DOMMatrix : DOMMatrixReadOnly {
     DOMMatrix translateSelf(optional unrestricted double tx = 0,
                             optional unrestricted double ty = 0,
                             optional unrestricted double tz = 0);
-    DOMMatrix scaleSelf(unrestricted double scale,
+    DOMMatrix scaleSelf(optional unrestricted double scaleX = 1,
+                        optional unrestricted double scaleY,
+                        optional unrestricted double scaleZ = 1,
                         optional unrestricted double originX = 0,
-                        optional unrestricted double originY = 0);
-    DOMMatrix scale3dSelf(unrestricted double scale,
+                        optional unrestricted double originY = 0,
+                        optional unrestricted double originZ = 0);
+    DOMMatrix scale3dSelf(optional unrestricted double scale = 1,
                           optional unrestricted double originX = 0,
                           optional unrestricted double originY = 0,
                           optional unrestricted double originZ = 0);
