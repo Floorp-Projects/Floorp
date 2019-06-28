@@ -14,7 +14,7 @@ load 855796.html
 load 860143.html
 load 861958.html
 load 863929.html
-skip-if(verify&&gtkWidget) load 1185191.html
+skip-if(verify&&gtkWidget) skip-if(OSX) load 1185191.html
 load 1281695.html
 load 1306476.html
 load 1348381.html
