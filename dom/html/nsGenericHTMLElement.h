@@ -787,6 +787,18 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
   /**
+   * Gets the unsigned integer-value of an attribute that is stored as a
+   * dimension (i.e. could be an integer or a percentage), returns specified
+   * default value if the attribute isn't set or isn't set to a dimension. Only
+   * works for attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   */
+  uint32_t GetDimensionAttrAsUnsignedInt(nsAtom* aAttr,
+                                         uint32_t aDefault) const;
+
+  /**
    * Sets value of attribute to specified double. Only works for attributes
    * in null namespace.
    *
