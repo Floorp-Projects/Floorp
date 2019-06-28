@@ -12,6 +12,14 @@
   box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }
 
+.gap svg {
+  pointer-events: none;
+}
+
+.gap polygon {
+  pointer-events: auto;
+}
+
 .theme-dark .popover .preview-popup {
   box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }
@@ -95,7 +103,7 @@
 
 .tooltip .gap {
   height: 4px;
-  padding-top: 4px;
+  padding-top: 0px;
 }
 
 .add-to-expression-bar {

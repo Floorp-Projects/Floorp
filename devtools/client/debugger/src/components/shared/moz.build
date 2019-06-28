@@ -20,6 +20,7 @@ CompiledModules(
     'ResultList.js',
     'SearchInput.js',
     'SourceIcon.js',
+    'SmartGap.js',
 )
 
 DevToolsModules(
