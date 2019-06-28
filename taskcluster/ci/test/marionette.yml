@@ -13,7 +13,7 @@ job-defaults:
             by-test-platform:
                 android-em.*:
                     - android/android_common.py
-                    - android/androidx86_7_0.py
+                    - android/androidx86_7_0-old.py
                 macosx.*:
                     - marionette/prod_config.py
                     - marionette/mac_taskcluster_config.py
