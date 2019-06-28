@@ -954,8 +954,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 //   mIsSubgrid is false, all three arrays are empty
 // * <track-list>:
 //   mIsSubgrid is false,
-//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions
-//   are of identical non-zero size,
+//   mTrackSizingFunctions is of non-zero size,
 //   and mLineNameLists is one element longer than that.
 //   (Delimiting N columns requires N+1 lines:
 //   one before each track, plus one at the very end.)
@@ -976,7 +975,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 // * subgrid <line-name-list>?:
 //   mIsSubgrid is true,
 //   mLineNameLists may or may not be empty,
-//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions are empty.
+//   mTrackSizingFunctions is empty.
 //
 // If mRepeatAutoIndex != -1 then that index is an <auto-repeat> and
 // mIsAutoFill == true means it's an 'auto-fill', otherwise 'auto-fit'.
@@ -987,8 +986,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 // names and mRepeatAutoLineNameListAfter is empty.
 struct nsStyleGridTemplate {
   nsTArray<nsTArray<RefPtr<nsAtom>>> mLineNameLists;
-  nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
-  nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
+  nsTArray<mozilla::StyleTrackSize> mTrackSizingFunctions;
   nsTArray<RefPtr<nsAtom>> mRepeatAutoLineNameListBefore;
   nsTArray<RefPtr<nsAtom>> mRepeatAutoLineNameListAfter;
   int16_t mRepeatAutoIndex;  // -1 or the track index for an auto-fill/fit track
@@ -1001,8 +999,7 @@ struct nsStyleGridTemplate {
   inline bool operator==(const nsStyleGridTemplate& aOther) const {
     return mIsSubgrid == aOther.mIsSubgrid &&
            mLineNameLists == aOther.mLineNameLists &&
-           mMinTrackSizingFunctions == aOther.mMinTrackSizingFunctions &&
-           mMaxTrackSizingFunctions == aOther.mMaxTrackSizingFunctions &&
+           mTrackSizingFunctions == aOther.mTrackSizingFunctions &&
            mIsAutoFill == aOther.mIsAutoFill &&
            mRepeatAutoIndex == aOther.mRepeatAutoIndex &&
            mRepeatAutoLineNameListBefore ==
@@ -1027,6 +1024,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using StyleMaxSize = mozilla::StyleMaxSize;
   using StyleFlexBasis = mozilla::StyleFlexBasis;
   using WritingMode = mozilla::WritingMode;
+  using StyleTrackSize = mozilla::StyleTrackSize;
 
   explicit nsStylePosition(const mozilla::dom::Document&);
   nsStylePosition(const nsStylePosition& aOther);
@@ -1068,10 +1066,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   StyleSize mMinHeight;
   StyleMaxSize mMaxHeight;
   StyleFlexBasis mFlexBasis;
-  nsStyleCoord mGridAutoColumnsMin;  // coord, percent, enum, calc, flex
-  nsStyleCoord mGridAutoColumnsMax;  // coord, percent, enum, calc, flex
-  nsStyleCoord mGridAutoRowsMin;     // coord, percent, enum, calc, flex
-  nsStyleCoord mGridAutoRowsMax;     // coord, percent, enum, calc, flex
+  StyleTrackSize mGridAutoColumns;
+  StyleTrackSize mGridAutoRows;
   float mAspectRatio;
   uint8_t mGridAutoFlow;             // NS_STYLE_GRID_AUTO_FLOW_*
   mozilla::StyleBoxSizing mBoxSizing;

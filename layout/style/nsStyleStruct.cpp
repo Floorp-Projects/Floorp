@@ -1273,10 +1273,8 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mMinHeight(StyleSize::Auto()),
       mMaxHeight(StyleMaxSize::None()),
       mFlexBasis(StyleFlexBasis::Size(StyleSize::Auto())),
-      mGridAutoColumnsMin(eStyleUnit_Auto),
-      mGridAutoColumnsMax(eStyleUnit_Auto),
-      mGridAutoRowsMin(eStyleUnit_Auto),
-      mGridAutoRowsMax(eStyleUnit_Auto),
+      mGridAutoColumns(StyleTrackSize::Breadth(StyleTrackBreadth::Auto())),
+      mGridAutoRows(StyleTrackSize::Breadth(StyleTrackBreadth::Auto())),
       mAspectRatio(0.0f),
       mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW),
       mBoxSizing(StyleBoxSizing::Content),
@@ -1320,10 +1318,8 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mMinHeight(aSource.mMinHeight),
       mMaxHeight(aSource.mMaxHeight),
       mFlexBasis(aSource.mFlexBasis),
-      mGridAutoColumnsMin(aSource.mGridAutoColumnsMin),
-      mGridAutoColumnsMax(aSource.mGridAutoColumnsMax),
-      mGridAutoRowsMin(aSource.mGridAutoRowsMin),
-      mGridAutoRowsMax(aSource.mGridAutoRowsMax),
+      mGridAutoColumns(aSource.mGridAutoColumns),
+      mGridAutoRows(aSource.mGridAutoRows),
       mAspectRatio(aSource.mAspectRatio),
       mGridAutoFlow(aSource.mGridAutoFlow),
       mBoxSizing(aSource.mBoxSizing),
@@ -1441,10 +1437,8 @@ nsChangeHint nsStylePosition::CalcDifference(
                            aNewData.mGridTemplateColumns) ||
       !IsGridTemplateEqual(mGridTemplateRows, aNewData.mGridTemplateRows) ||
       mGridTemplateAreas != aNewData.mGridTemplateAreas ||
-      mGridAutoColumnsMin != aNewData.mGridAutoColumnsMin ||
-      mGridAutoColumnsMax != aNewData.mGridAutoColumnsMax ||
-      mGridAutoRowsMin != aNewData.mGridAutoRowsMin ||
-      mGridAutoRowsMax != aNewData.mGridAutoRowsMax ||
+      mGridAutoColumns != aNewData.mGridAutoColumns ||
+      mGridAutoRows != aNewData.mGridAutoRows ||
       mGridAutoFlow != aNewData.mGridAutoFlow) {
     return hint | nsChangeHint_AllReflowHints;
   }
