@@ -174,7 +174,7 @@ class HeadersPanel extends Component {
    */
   renderSummary(summaryLabel, value) {
     return (
-      div({ className: "tabpanel-summary-container headers-summary" },
+      div({ key: summaryLabel, className: "tabpanel-summary-container headers-summary" },
         div({ className: "tabpanel-summary-labelvalue"},
           span({ className: "tabpanel-summary-label headers-summary-label"},
           summaryLabel
@@ -400,7 +400,8 @@ class HeadersPanel extends Component {
       const inputWidth = statusText.length + 1;
 
       summaryStatus = (
-        div({ className: "tabpanel-summary-container headers-summary" },
+        div({ key: "headers-summary",
+              className: "tabpanel-summary-container headers-summary" },
           div({
             className: "tabpanel-summary-label headers-summary-label",
           }, SUMMARY_STATUS),
@@ -428,7 +429,8 @@ class HeadersPanel extends Component {
       const trackingProtectionDocURL = getTrackingProtectionURL();
 
       trackingProtectionStatus = (
-        div({ className: "tabpanel-summary-container tracking-protection" },
+        div({ key: "tracking-protection",
+              className: "tabpanel-summary-container tracking-protection" },
           div({
             className: "tracking-resource",
           }),
