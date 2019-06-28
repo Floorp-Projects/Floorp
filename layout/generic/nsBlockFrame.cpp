@@ -1840,24 +1840,6 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     ComputeFinalBSize(aReflowInput, &aState.mReflowStatus,
                       aState.mBCoord + nonCarriedOutBDirMargin, borderPadding,
                       finalSize, aState.mConsumedBSize);
-    if (!aState.mReflowStatus.IsComplete()) {
-      // Use the current height; continuations will take up the rest.
-      // Do extend the height to at least consume the available
-      // height, otherwise our left/right borders (for example) won't
-      // extend all the way to the break.
-      finalSize.BSize(wm) = std::max(aReflowInput.AvailableBSize(),
-                                     aState.mBCoord + nonCarriedOutBDirMargin);
-      // ... but don't take up more block size than is available
-      nscoord effectiveComputedBSize =
-          GetEffectiveComputedBSize(aReflowInput, aState.ConsumedBSize());
-      finalSize.BSize(wm) =
-          std::min(finalSize.BSize(wm),
-                   borderPadding.BStart(wm) + effectiveComputedBSize);
-      // XXX It's pretty wrong that our bottom border still gets drawn on
-      // on its own on the last-in-flow, even if we ran out of height
-      // here. We need GetSkipSides to check whether we ran out of content
-      // height in the current frame, not whether it's last-in-flow.
-    }
 
     // Don't carry out a block-end margin when our BSize is fixed.
     aMetrics.mCarriedOutBEndMargin.Zero();
@@ -7467,6 +7449,25 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
       aStatus->SetIncomplete();
       if (!GetNextInFlow()) aStatus->SetNextInFlowNeedsReflow();
     }
+  }
+
+  if (aStatus->IsIncomplete()) {
+    // Use the current height; continuations will take up the rest.
+    // Do extend the height to at least consume the available
+    // height, otherwise our left/right borders (for example) won't
+    // extend all the way to the break.
+    aFinalSize.BSize(wm) =
+        std::max(aReflowInput.AvailableBSize(), aContentBSize);
+    // ... but don't take up more block size than is available
+    nscoord effectiveComputedBSize =
+        GetEffectiveComputedBSize(aReflowInput, aState.ConsumedBSize());
+    aFinalSize.BSize(wm) =
+        std::min(aFinalSize.BSize(wm),
+                 aBorderPadding.BStart(wm) + effectiveComputedBSize);
+    // XXX It's pretty wrong that our bottom border still gets drawn on
+    // on its own on the last-in-flow, even if we ran out of height
+    // here. We need GetSkipSides to check whether we ran out of content
+    // height in the current frame, not whether it's last-in-flow.
   }
 }
 
