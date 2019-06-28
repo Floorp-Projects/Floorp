@@ -63,25 +63,6 @@ namespace mozilla {
 namespace net {
 
 //-----------------------------------------------------------------------------
-// helpers
-//-----------------------------------------------------------------------------
-
-static void LogHeaders(const char* lineStart) {
-  nsAutoCString buf;
-  char* endOfLine;
-  while ((endOfLine = PL_strstr(lineStart, "\r\n"))) {
-    buf.Assign(lineStart, endOfLine - lineStart);
-    if (PL_strcasestr(buf.get(), "authorization: ") ||
-        PL_strcasestr(buf.get(), "proxy-authorization: ")) {
-      char* p = PL_strchr(PL_strchr(buf.get(), ' ') + 1, ' ');
-      while (p && *++p) *p = '*';
-    }
-    LOG1(("  %s\n", buf.get()));
-    lineStart = endOfLine + 2;
-  }
-}
-
-//-----------------------------------------------------------------------------
 // nsHttpTransaction <public>
 //-----------------------------------------------------------------------------
 
