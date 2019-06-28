@@ -29,8 +29,7 @@ ruleTester.run("use-default-preference-values", rule, {
     methods.map(m => "blah = branch." + m + "('blah', true);"),
     methods.map(m => "blah = branch." + m + "('blah');"),
     methods.map(
-      m =>
-        "try { canThrow();" + " blah = branch." + m + "('blah'); } catch(e) {}"
+      m => "try { canThrow(); blah = branch." + m + "('blah'); } catch(e) {}"
     )
   ),
 

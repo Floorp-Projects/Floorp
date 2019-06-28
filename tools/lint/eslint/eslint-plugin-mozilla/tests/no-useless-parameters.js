@@ -106,21 +106,21 @@ ruleTester.run("no-useless-parameters", rule, {
       code: "Services.obs.addObserver(this, 'topic', false);",
       output: "Services.obs.addObserver(this, 'topic');",
       errors: callError(
-        "addObserver's third parameter can be omitted when it's" + " false."
+        "addObserver's third parameter can be omitted when it's false."
       ),
     },
     {
       code: "Services.prefs.addObserver('branch', this, false);",
       output: "Services.prefs.addObserver('branch', this);",
       errors: callError(
-        "addObserver's third parameter can be omitted when it's" + " false."
+        "addObserver's third parameter can be omitted when it's false."
       ),
     },
     {
       code: "array.appendElement(elt, false);",
       output: "array.appendElement(elt);",
       errors: callError(
-        "appendElement's second parameter can be omitted when it's" + " false."
+        "appendElement's second parameter can be omitted when it's false."
       ),
     },
     {
