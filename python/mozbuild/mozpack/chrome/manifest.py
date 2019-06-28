@@ -17,6 +17,7 @@ class ManifestEntry(object):
     '''
     Base class for all manifest entry types.
     Subclasses may define the following class or member variables:
+
         - localized: indicates whether the manifest entry is used for localized
           data.
         - type: the manifest entry type (e.g. 'content' in

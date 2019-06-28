@@ -1,16 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                             Ci.nsILoginInfo, "init");
-const LOGIN_URL = "https://www.example.com";
-let TEST_LOGIN1 = new nsLoginInfo(LOGIN_URL, LOGIN_URL, null, "user1", "pass1");
-
 add_task(async function setup() {
-  let storageChangedPromised = TestUtils.topicObserved("passwordmgr-storage-changed",
-                                                       (_, data) => data == "addLogin");
-  TEST_LOGIN1 = Services.logins.addLogin(TEST_LOGIN1);
-  await storageChangedPromised;
+  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({gBrowser, url: "about:logins"});
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

@@ -11,14 +11,14 @@ fuzzy-if(Android,0-2,0-1568) == top-6.html top-6-ref.html
 == bottom-3.html bottom-3-ref.html
 == bottom-4.html bottom-4-ref.html
 fuzzy-if(Android,0-2,0-4) == left-1.html left-1-ref.html
-fuzzy-if(Android,0-2,0-4) fuzzy-if(geckoview,1-1,8-8) == left-2.html left-2-ref.html
-fuzzy-if(geckoview,1-1,20-20) == left-3.html left-3-ref.html
+fuzzy-if(Android,0-2,0-4) == left-2.html left-2-ref.html
+== left-3.html left-3-ref.html
 == right-1.html right-1-ref.html
 fuzzy-if(Android,0-2,0-4) == right-2.html right-2-ref.html
-fuzzy-if(Android,0-2,0-4) fuzzy-if(geckoview,1-1,10-10) == right-3.html right-3-ref.html
+fuzzy-if(Android,0-2,0-4) == right-3.html right-3-ref.html
 == margin-1.html margin-1-ref.html
 == padding-1.html padding-1-ref.html
-fuzzy-if(geckoview,1-1,6-6) == padding-2.html padding-2-ref.html
+== padding-2.html padding-2-ref.html
 == padding-3.html padding-3-ref.html
 == overcontain-1.html overcontain-1-ref.html
 == initial-1.html initial-1-ref.html

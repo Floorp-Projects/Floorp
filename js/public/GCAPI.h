@@ -125,9 +125,9 @@ typedef enum JSGCParamKey {
    * Max milliseconds to spend in an incremental GC slice.
    *
    * Pref: javascript.options.mem.gc_incremental_slice_ms
-   * Default: DefaultTimeBudget.
+   * Default: DefaultTimeBudgetMS.
    */
-  JSGC_SLICE_TIME_BUDGET = 9,
+  JSGC_SLICE_TIME_BUDGET_MS = 9,
 
   /**
    * Maximum size the GC mark stack can grow to.

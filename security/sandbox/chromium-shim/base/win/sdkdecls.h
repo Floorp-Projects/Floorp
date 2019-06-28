@@ -332,21 +332,4 @@ DeriveAppContainerSidFromAppContainerName(
 
 #endif // (_WIN32_WINNT >= 0x0A00)
 
-#if defined(__MINGW32__)
-// Required defines from winnt.h that are currently missing from MinGW.
-// Bug 1552706 tracks adding these to MinGW, so these can be removed.
-#define MEMORY_PRIORITY_VERY_LOW         1
-#define MEMORY_PRIORITY_NORMAL           5
-
-#define PROCESSOR_ARCHITECTURE_NEUTRAL          11
-#define PROCESSOR_ARCHITECTURE_ARM64            12
-#define PROCESSOR_ARCHITECTURE_ARM32_ON_WIN64   13
-#define PROCESSOR_ARCHITECTURE_IA32_ON_ARM64    14
-
-#define SECURITY_CAPABILITY_APPOINTMENTS                        (0x0000000BL)
-#define SECURITY_CAPABILITY_CONTACTS                            (0x0000000CL)
-
-#define SECURITY_BUILTIN_PACKAGE_ANY_RESTRICTED_PACKAGE (0x00000002L)
-#endif
-
 #endif // _SECURITY_SANDBOX_BASE_SHIM_SDKDECLS_H_

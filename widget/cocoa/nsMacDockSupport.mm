@@ -11,27 +11,73 @@
 
 NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
 
-nsMacDockSupport::nsMacDockSupport()
-    : mAppIcon(nil),
-      mProgressBackground(nil),
-      mProgressBounds(),
-      mProgressState(STATE_NO_PROGRESS),
-      mProgressFraction(0.0) {
-  mProgressTimer = NS_NewTimer();
+// This view is used in the dock tile when we're downloading a file.
+// It draws a progress bar that looks similar to the native progress bar on
+// 10.12. This style of progress bar is not animated, unlike the pre-10.10
+// progress bar look which had to redrawn multiple times per second.
+@interface MOZProgressDockOverlayView : NSView {
+  double mFractionValue;
+}
+@property double fractionValue;
+
+@end
+
+@implementation MOZProgressDockOverlayView
+
+@synthesize fractionValue = mFractionValue;
+
+- (void)drawRect:(NSRect)aRect {
+  // Erase the background behind this view, i.e. cut a rectangle hole in the icon.
+  [[NSColor clearColor] set];
+  NSRectFill(self.bounds);
+
+  // Split the height of this view into four quarters. The middle two quarters
+  // will be covered by the actual progress bar.
+  CGFloat radius = self.bounds.size.height / 4;
+  NSRect barBounds = NSInsetRect(self.bounds, 0, radius);
+
+  NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:barBounds
+                                                       xRadius:radius
+                                                       yRadius:radius];
+
+  // Draw a grayish background first.
+  [[NSColor colorWithDeviceWhite:0 alpha:0.1] setFill];
+  [path fill];
+
+  // Draw a blue or gray fill (depending on graphite or not) for the progress part.
+  NSRect progressFillRect = self.bounds;
+  progressFillRect.size.width *= mFractionValue;
+  [NSGraphicsContext saveGraphicsState];
+  [NSBezierPath clipRect:progressFillRect];
+  [[NSColor keyboardFocusIndicatorColor] setFill];
+  [path fill];
+  [NSGraphicsContext restoreGraphicsState];
+
+  // Add a shadowy stroke on top.
+  [NSGraphicsContext saveGraphicsState];
+  [path addClip];
+  [[NSColor colorWithDeviceWhite:0 alpha:0.2] setStroke];
+  path.lineWidth = barBounds.size.height / 10;
+  [path stroke];
+  [NSGraphicsContext restoreGraphicsState];
 }
 
+@end
+
+nsMacDockSupport::nsMacDockSupport()
+    : mDockTileWrapperView(nil),
+      mProgressDockOverlayView(nil),
+      mProgressState(STATE_NO_PROGRESS),
+      mProgressFraction(0.0) {}
+
 nsMacDockSupport::~nsMacDockSupport() {
-  if (mAppIcon) {
-    [mAppIcon release];
-    mAppIcon = nil;
+  if (mDockTileWrapperView) {
+    [mDockTileWrapperView release];
+    mDockTileWrapperView = nil;
   }
-  if (mProgressBackground) {
-    [mProgressBackground release];
-    mProgressBackground = nil;
-  }
-  if (mProgressTimer) {
-    mProgressTimer->Cancel();
-    mProgressTimer = nullptr;
+  if (mProgressDockOverlayView) {
+    [mProgressDockOverlayView release];
+    mProgressDockOverlayView = nil;
   }
 }
 
@@ -100,67 +146,50 @@ nsMacDockSupport::SetProgressState(nsTaskbarProgressState aState, uint64_t aCurr
     mProgressFraction = (double)aCurrentValue / aMaxValue;
   }
 
-  if (mProgressState == STATE_NORMAL || mProgressState == STATE_INDETERMINATE) {
-    int perSecond = 8;  // Empirically determined, see bug 848792
-    mProgressTimer->InitWithNamedFuncCallback(RedrawIconCallback, this, 1000 / perSecond,
-                                              nsITimer::TYPE_REPEATING_SLACK,
-                                              "nsMacDockSupport::RedrawIconCallback");
-    return NS_OK;
-  } else {
-    mProgressTimer->Cancel();
-    return RedrawIcon();
-  }
+  return UpdateDockTile();
 }
 
-// static
-void nsMacDockSupport::RedrawIconCallback(nsITimer* aTimer, void* aClosure) {
-  static_cast<nsMacDockSupport*>(aClosure)->RedrawIcon();
-}
-
-// Return whether to draw progress
-bool nsMacDockSupport::InitProgress() {
-  if (mProgressState != STATE_NORMAL && mProgressState != STATE_INDETERMINATE) {
-    return false;
-  }
-
-  if (!mAppIcon) {
-    mProgressTimer = NS_NewTimer();
-    mAppIcon = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
-    mProgressBackground = [mAppIcon copyWithZone:nil];
-    mTheme = new nsNativeThemeCocoa();
-
-    NSSize sz = [mProgressBackground size];
-    mProgressBounds =
-        CGRectMake(sz.width * 1 / 32, sz.height * 3 / 32, sz.width * 30 / 32, sz.height * 4 / 32);
-    [mProgressBackground lockFocus];
-    [[NSColor clearColor] set];
-    NSRectFill(NSRectFromCGRect(mProgressBounds));
-    [mProgressBackground unlockFocus];
-  }
-  return true;
-}
-
-nsresult nsMacDockSupport::RedrawIcon() {
+nsresult nsMacDockSupport::UpdateDockTile() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (InitProgress()) {
-    // TODO: - Implement ERROR and PAUSED states?
-    NSImage* icon = [mProgressBackground copyWithZone:nil];
+  if (mProgressState == STATE_NORMAL || mProgressState == STATE_INDETERMINATE) {
+    if (!mDockTileWrapperView) {
+      // Create the following NSView hierarchy:
+      // * mDockTileWrapperView (NSView)
+      //    * imageView (NSImageView) <- has the application icon
+      //    * mProgressDockOverlayView (MOZProgressDockOverlayView) <- draws the progress bar
 
-    [icon lockFocus];
-    CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-    nsNativeThemeCocoa::ProgressParams params;
-    params.value = mProgressFraction;
-    params.max = 1.0;
-    params.insideActiveWindow = true;
-    params.indeterminate = (mProgressState != STATE_NORMAL);
-    params.horizontal = true;
-    mTheme->DrawProgress(ctx, mProgressBounds, params);
-    [icon unlockFocus];
-    [NSApp setApplicationIconImage:icon];
-    [icon release];
-  } else {
-    [NSApp setApplicationIconImage:mAppIcon];
+      mDockTileWrapperView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 32, 32)];
+      mDockTileWrapperView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+
+      NSImageView* imageView = [[NSImageView alloc] initWithFrame:[mDockTileWrapperView bounds]];
+      imageView.image = [NSImage imageNamed:@"NSApplicationIcon"];
+      imageView.imageScaling = NSImageScaleAxesIndependently;
+      imageView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+      [mDockTileWrapperView addSubview:imageView];
+
+      mProgressDockOverlayView =
+          [[MOZProgressDockOverlayView alloc] initWithFrame:NSMakeRect(1, 3, 30, 4)];
+      mProgressDockOverlayView.autoresizingMask = NSViewMinXMargin | NSViewWidthSizable |
+                                                  NSViewMaxXMargin | NSViewMinYMargin |
+                                                  NSViewHeightSizable | NSViewMaxYMargin;
+      [mDockTileWrapperView addSubview:mProgressDockOverlayView];
+    }
+    if (NSApp.dockTile.contentView != mDockTileWrapperView) {
+      NSApp.dockTile.contentView = mDockTileWrapperView;
+    }
+
+    if (mProgressState == STATE_NORMAL) {
+      mProgressDockOverlayView.fractionValue = mProgressFraction;
+    } else {
+      // Indeterminate states are rare. Just fill the entire progress bar in
+      // that case.
+      mProgressDockOverlayView.fractionValue = 1.0;
+    }
+    [NSApp.dockTile display];
+  } else if (NSApp.dockTile.contentView) {
+    NSApp.dockTile.contentView = nil;
+    [NSApp.dockTile display];
   }
 
   return NS_OK;

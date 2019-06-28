@@ -56,11 +56,6 @@ function getBrowser(panel) {
                                                        /* fission */ false,
                                                        E10SUtils.EXTENSION_REMOTE_TYPE));
     readyPromise = promiseEvent(browser, "XULFrameLoaderCreated");
-
-    window.messageManager.addMessageListener("contextmenu", openContextMenu);
-    window.addEventListener("unload", () => {
-      window.messageManager.removeMessageListener("contextmenu", openContextMenu);
-    }, {once: true});
   } else {
     readyPromise = Promise.resolve();
   }

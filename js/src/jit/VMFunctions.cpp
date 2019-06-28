@@ -1120,6 +1120,15 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
     pc = blScript->retAddrEntryFromReturnAddress(retAddr).pc(script);
   }
 
+  // The Baseline Interpreter calls HandleDebugTrap for every op when the script
+  // is in step mode or has breakpoints. The Baseline Compiler can toggle
+  // breakpoints more granularly for specific bytecode PCs.
+  if (frame->runningInInterpreter()) {
+    MOZ_ASSERT(script->hasAnyBreakpointsOrStepMode());
+  } else {
+    MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
+  }
+
   if (*pc == JSOP_AFTERYIELD) {
     // JSOP_AFTERYIELD will set the frame's debuggee flag and call the
     // onEnterFrame handler, but if we set a breakpoint there we have to do
@@ -1132,18 +1141,15 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
     if (*mustReturn) {
       return true;
     }
+
+    // If the frame is not a debuggee we're done. This can happen, for instance,
+    // if the onEnterFrame hook called removeDebuggee.
+    if (!frame->isDebuggee()) {
+      return true;
+    }
   }
 
   MOZ_ASSERT(frame->isDebuggee());
-
-  // The Baseline Interpreter calls HandleDebugTrap for every op when the script
-  // is in step mode or has breakpoints. The Baseline Compiler can toggle
-  // breakpoints more granularly for specific bytecode PCs.
-  if (frame->runningInInterpreter()) {
-    MOZ_ASSERT(script->hasAnyBreakpointsOrStepMode());
-  } else {
-    MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
-  }
 
   RootedValue rval(cx);
   ResumeMode resumeMode = ResumeMode::Continue;

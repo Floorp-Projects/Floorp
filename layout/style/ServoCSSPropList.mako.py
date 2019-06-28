@@ -68,10 +68,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     # Resolved value should be zero when the column-rule-style is none.
     "column-rule-width",
 
-    # Clamping (need to get rid of nsStyleCoord storage before removing these).
-    "grid-auto-columns",
-    "grid-auto-rows",
-
     # These resolve auto to zero in a few cases, but not all.
     "max-block-size",
     "max-height",

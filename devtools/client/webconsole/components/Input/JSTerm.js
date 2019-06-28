@@ -210,7 +210,7 @@ class JSTerm extends Component {
           autofocus: true,
           enableCodeFolding: false,
           autoCloseBrackets: false,
-          gutters: [],
+          lineNumbers: this.props.editorMode,
           lineWrapping: true,
           mode: Editor.modes.js,
           styleActiveLine: false,
@@ -458,12 +458,19 @@ class JSTerm extends Component {
    * @param {Object} nextProps: props passed from shouldComponentUpdate.
    */
   imperativeUpdate(nextProps) {
+    if (!nextProps) {
+      return;
+    }
+
     if (
-      nextProps &&
       nextProps.autocompleteData !== this.props.autocompleteData &&
       nextProps.autocompleteData.pendingRequestId === null
     ) {
       this.updateAutocompletionPopup(nextProps.autocompleteData);
+    }
+
+    if (this.editor && nextProps.editorMode !== this.props.editorMode) {
+      this.editor.setOption("lineNumbers", nextProps.editorMode);
     }
   }
 

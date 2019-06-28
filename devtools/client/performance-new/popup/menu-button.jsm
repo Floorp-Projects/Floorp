@@ -72,6 +72,15 @@ function getIframeFromEvent(event) {
   return iframe;
 }
 
+// This function takes the button element, and returns a function that's used to
+// update the profiler button whenever the profiler activation status changed.
+const updateButtonColorForElement = buttonElement => () => {
+  const isRunning = Services.profiler.IsActive();
+
+  // Use photon blue-60 when active.
+  buttonElement.style.fill = isRunning ? "#0060df" : "";
+};
+
 /**
  * This function creates the widget definition for the CustomizableUI. It should
  * only be run if the profiler button is enabled.
@@ -112,33 +121,20 @@ function initialize() {
     },
     onBeforeCreated: (document) => {
       setMenuItemChecked(document, true);
-      observer = {
-        observe(subject, topic, data) {
-          switch (topic) {
-            case "profiler-started": {
-              const button = document.querySelector("#profiler-button");
-              if (button) {
-                // Photon blue-60.
-                button.style.fill = "#0060df";
-              }
-              break;
-            }
-            case "profiler-stopped": {
-              const button = document.querySelector("#profiler-button");
-              if (button) {
-                button.style.fill = "";
-              }
-              break;
-            }
-          }
-        },
-      };
+    },
+    onCreated: (buttonElement) => {
+      observer = updateButtonColorForElement(buttonElement);
       Services.obs.addObserver(observer, "profiler-started");
       Services.obs.addObserver(observer, "profiler-stopped");
+
+      // Also run the observer right away to update the color if the profiler is
+      // already running at startup.
+      observer();
     },
     onDestroyed: () => {
       Services.obs.removeObserver(observer, "profiler-started");
       Services.obs.removeObserver(observer, "profiler-stopped");
+      observer = null;
     },
   };
   CustomizableUI.createWidget(item);

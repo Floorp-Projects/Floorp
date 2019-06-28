@@ -11,6 +11,7 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    components/crashes/crash-manager/index
    crashreporter/crashreporter/index
    components/featuregates/featuregates/index
+   search/index
    components/normandy/normandy/index
    modules/subprocess/toolkit_modules/subprocess/index
    components/telemetry/telemetry/index

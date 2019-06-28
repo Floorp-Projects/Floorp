@@ -59,7 +59,7 @@ struct NurseryChunk {
   gc::ChunkTrailer trailer;
   static NurseryChunk* fromChunk(gc::Chunk* chunk);
   void poisonAndInit(JSRuntime* rt, size_t extent = ChunkSize);
-  void poisonAfterSweep(size_t extent = ChunkSize);
+  void poisonAfterEvict(size_t extent = ChunkSize);
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(&trailer); }
   gc::Chunk* toChunk(JSRuntime* rt);
@@ -78,7 +78,7 @@ inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t extent) {
   new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
 }
 
-inline void js::NurseryChunk::poisonAfterSweep(size_t extent) {
+inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
   // We can poison the same chunk more than once, so first make sure memory
   // sanitizers will let us poison it.
@@ -1125,11 +1125,11 @@ void js::Nursery::clear() {
 #if defined(JS_GC_ZEAL) || defined(JS_CRASH_DIAGNOSTICS)
   /* Poison the nursery contents so touching a freed object will crash. */
   for (unsigned i = currentStartChunk_; i < currentChunk_; ++i) {
-    chunk(i).poisonAfterSweep();
+    chunk(i).poisonAfterEvict();
   }
   MOZ_ASSERT(maxChunkCount() > 0);
   chunk(currentChunk_)
-      .poisonAfterSweep(position() - chunk(currentChunk_).start());
+      .poisonAfterEvict(position() - chunk(currentChunk_).start());
 #endif
 
   if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {

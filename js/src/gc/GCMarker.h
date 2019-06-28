@@ -130,6 +130,7 @@ class MarkStack {
 
   static const size_t DefaultCapacity = SIZE_MAX;
 
+  // The unit for MarkStack::capacity() is mark stack entries.
   size_t capacity() { return stack().length(); }
 
   size_t position() const { return topIndex_; }

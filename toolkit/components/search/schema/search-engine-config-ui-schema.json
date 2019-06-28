@@ -1,0 +1,15 @@
+{
+  "engineName": {
+    "ui:autofocus": true
+  },
+  "ui:order": [
+    "engineName",
+    "default",
+    "application",
+    "orderHint",
+    "telemetryId",
+    "webExtension",
+    "codes",
+    "appliesTo"
+  ]
+}

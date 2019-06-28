@@ -1242,6 +1242,10 @@ pref("privacy.popups.maxReported", 100);
 pref("privacy.trackingprotection.enabled",  false);
 // Enforce tracking protection in Private Browsing mode
 pref("privacy.trackingprotection.pbmode.enabled",  true);
+// Enable Origin Telemetry by default
+#ifdef NIGHTLY_BUILD
+pref("privacy.trackingprotection.origin_telemetry.enabled", true);
+#endif
 // First Party Isolation (double keying), disabled by default
 pref("privacy.firstparty.isolate",                        false);
 // If false, two windows in the same domain with different first party domains
@@ -1339,7 +1343,7 @@ pref("javascript.options.mem.nursery.max_kb", 16384);
 pref("javascript.options.mem.gc_per_zone", true);
 pref("javascript.options.mem.gc_incremental", true);
 
-// JSGC_SLICE_TIME_BUDGET
+// JSGC_SLICE_TIME_BUDGET_MS
 // Override the shell's default of unlimited slice time.
 pref("javascript.options.mem.gc_incremental_slice_ms", 5);
 

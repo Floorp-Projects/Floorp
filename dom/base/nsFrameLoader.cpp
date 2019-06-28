@@ -2591,29 +2591,29 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   // out of process iframes also get to skip this check.
   if (!OwnerIsMozBrowserFrame() && !XRE_IsContentProcess()) {
     if (parentDocShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
-      // Allow about:addon an exception to this rule so it can load remote
-      // extension options pages.
+      // Allow two exceptions to this rule :
+      // - about:addon so it can load remote extension options pages
+      // - DevTools webext panels if DevTools is loaded in a content frame
       //
       // Note that the new frame's message manager will not be a child of the
       // chrome window message manager, and, the values of window.top and
       // window.parent will be different than they would be for a non-remote
       // frame.
-      nsCOMPtr<nsIWebNavigation> parentWebNav;
-      nsCOMPtr<nsIURI> aboutAddons;
-      nsCOMPtr<nsIURI> parentURI;
-      bool equals;
-      if (!((parentWebNav = do_GetInterface(parentDocShell)) &&
-            NS_SUCCEEDED(
-                parentWebNav->GetCurrentURI(getter_AddRefs(parentURI))) &&
-            ((NS_SUCCEEDED(
-                  NS_NewURI(getter_AddRefs(aboutAddons), "about:addons")) &&
-              NS_SUCCEEDED(parentURI->EqualsExceptRef(aboutAddons, &equals)) &&
-              equals) ||
-             (NS_SUCCEEDED(NS_NewURI(
-                  getter_AddRefs(aboutAddons),
-                  "chrome://mozapps/content/extensions/aboutaddons.html")) &&
-              NS_SUCCEEDED(parentURI->EqualsExceptRef(aboutAddons, &equals)) &&
-              equals)))) {
+      nsIURI* parentURI = parentWin->GetDocumentURI();
+      if (!parentURI) {
+        return false;
+      }
+
+      nsAutoCString specIgnoringRef;
+      if (NS_FAILED(parentURI->GetSpecIgnoringRef(specIgnoringRef))) {
+        return false;
+      }
+
+      if (!(specIgnoringRef.EqualsLiteral("about:addons") ||
+            specIgnoringRef.EqualsLiteral(
+                "chrome://mozapps/content/extensions/aboutaddons.html") ||
+            specIgnoringRef.EqualsLiteral(
+                "chrome://browser/content/webext-panels.xul"))) {
         return false;
       }
     }

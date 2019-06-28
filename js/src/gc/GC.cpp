@@ -343,8 +343,8 @@ static const uint32_t MinEmptyChunkCount = 1;
 /* JSGC_MAX_EMPTY_CHUNK_COUNT */
 static const uint32_t MaxEmptyChunkCount = 30;
 
-/* JSGC_SLICE_TIME_BUDGET */
-static const int64_t DefaultTimeBudget = SliceBudget::UnlimitedTimeBudget;
+/* JSGC_SLICE_TIME_BUDGET_MS */
+static const int64_t DefaultTimeBudgetMS = SliceBudget::UnlimitedTimeBudget;
 
 /* JSGC_MODE */
 static const JSGCMode Mode = JSGC_MODE_ZONE_INCREMENTAL;
@@ -1024,7 +1024,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
 #ifdef JS_GC_ZEAL
       markingValidator(nullptr),
 #endif
-      defaultTimeBudget_(TuningDefaults::DefaultTimeBudget),
+      defaultTimeBudgetMS_(TuningDefaults::DefaultTimeBudgetMS),
       incrementalAllowed(true),
       compactingEnabled(TuningDefaults::CompactingEnabled),
       rootsRemoved(false),
@@ -1437,8 +1437,8 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_MAX_MALLOC_BYTES:
       setMaxMallocBytes(value, lock);
       break;
-    case JSGC_SLICE_TIME_BUDGET:
-      defaultTimeBudget_ = value ? value : SliceBudget::UnlimitedTimeBudget;
+    case JSGC_SLICE_TIME_BUDGET_MS:
+      defaultTimeBudgetMS_ = value ? value : SliceBudget::UnlimitedTimeBudget;
       break;
     case JSGC_MARK_STACK_LIMIT:
       if (value == 0) {
@@ -1705,8 +1705,8 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
     case JSGC_MAX_MALLOC_BYTES:
       setMaxMallocBytes(TuningDefaults::MaxMallocBytes, lock);
       break;
-    case JSGC_SLICE_TIME_BUDGET:
-      defaultTimeBudget_ = TuningDefaults::DefaultTimeBudget;
+    case JSGC_SLICE_TIME_BUDGET_MS:
+      defaultTimeBudgetMS_ = TuningDefaults::DefaultTimeBudgetMS;
       break;
     case JSGC_MARK_STACK_LIMIT:
       setMarkStackLimit(MarkStack::DefaultCapacity, lock);
@@ -1827,13 +1827,13 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
     case JSGC_TOTAL_CHUNKS:
       return uint32_t(fullChunks(lock).count() + availableChunks(lock).count() +
                       emptyChunks(lock).count());
-    case JSGC_SLICE_TIME_BUDGET:
-      if (defaultTimeBudget_.ref() == SliceBudget::UnlimitedTimeBudget) {
+    case JSGC_SLICE_TIME_BUDGET_MS:
+      if (defaultTimeBudgetMS_.ref() == SliceBudget::UnlimitedTimeBudget) {
         return 0;
       } else {
-        MOZ_RELEASE_ASSERT(defaultTimeBudget_ >= 0);
-        MOZ_RELEASE_ASSERT(defaultTimeBudget_ <= UINT32_MAX);
-        return uint32_t(defaultTimeBudget_);
+        MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ >= 0);
+        MOZ_RELEASE_ASSERT(defaultTimeBudgetMS_ <= UINT32_MAX);
+        return uint32_t(defaultTimeBudgetMS_);
       }
     case JSGC_MARK_STACK_LIMIT:
       return marker.maxCapacity();
@@ -7932,12 +7932,12 @@ js::AutoEnqueuePendingParseTasksAfterGC::
 SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
   if (millis == 0) {
     if (reason == JS::GCReason::ALLOC_TRIGGER) {
-      millis = defaultSliceBudget();
+      millis = defaultSliceBudgetMS();
     } else if (schedulingState.inHighFrequencyGCMode() &&
                tunables.isDynamicMarkSliceEnabled()) {
-      millis = defaultSliceBudget() * IGC_MARK_SLICE_MULTIPLIER;
+      millis = defaultSliceBudgetMS() * IGC_MARK_SLICE_MULTIPLIER;
     } else {
-      millis = defaultSliceBudget();
+      millis = defaultSliceBudgetMS();
     }
   }
 

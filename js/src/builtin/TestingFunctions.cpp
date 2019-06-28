@@ -503,7 +503,7 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("mode", JSGC_MODE, true)                                                 \
   _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                               \
   _("totalChunks", JSGC_TOTAL_CHUNKS, false)                                 \
-  _("sliceTimeBudget", JSGC_SLICE_TIME_BUDGET, true)                         \
+  _("sliceTimeBudgetMS", JSGC_SLICE_TIME_BUDGET_MS, true)                    \
   _("markStackLimit", JSGC_MARK_STACK_LIMIT, true)                           \
   _("highFrequencyTimeLimit", JSGC_HIGH_FREQUENCY_TIME_LIMIT, true)          \
   _("highFrequencyLowLimit", JSGC_HIGH_FREQUENCY_LOW_LIMIT, true)            \

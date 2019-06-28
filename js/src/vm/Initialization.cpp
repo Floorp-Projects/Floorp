@@ -127,6 +127,10 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::oom::InitThreadType());
 #endif
 
+#if defined(FUZZING)
+  js::oom::InitLargeAllocLimit();
+#endif
+
   js::gDisablePoisoning = bool(getenv("JSGC_DISABLE_POISONING"));
 
   js::InitMallocAllocator();

@@ -320,6 +320,11 @@ module.exports = {
     "no-regex-spaces": "off",
     // Don't restrict usage of specified node modules (not a node environment).
     "no-restricted-modules": "off",
+    // Prevent using some properties
+    "no-restricted-properties": ["error", {
+      "property": "setupInParent",
+      "message": "avoid child/parent communication with setupInParent"
+    }],
     // Disallow use of assignment in return statement. It is preferable for a
     // single line of code to have only one easily predictable effect.
     "no-return-assign": "error",
