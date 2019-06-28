@@ -60,7 +60,6 @@ module.exports = {
     "todo_check_false": false,
     "todo_check_true": false,
     // Firefox specific function.
-    // eslint-disable-next-line max-len
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
     "uneval": false,
   },
