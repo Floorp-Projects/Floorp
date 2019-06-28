@@ -80,7 +80,8 @@ jsreftest:
         by-test-platform:
             android-hw.*\/debug: 12
             android-hw.*/(opt|pgo)?: 6
-            windows.*: 2
+            windows.*\/opt: 2
+            windows10-64-asan/opt: 3
             windows10-64-ccov/debug: 5
             linux64-ccov/.*: 5
             linux64-qr/opt: 4
