@@ -9,6 +9,8 @@
 # contain pointers to it. This can be useful when investigating leaks
 # caused by unknown references to refcounted objects.
 
+from __future__ import absolute_import, print_function
+
 import json
 import gzip
 import sys

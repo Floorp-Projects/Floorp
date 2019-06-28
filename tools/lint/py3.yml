@@ -19,7 +19,6 @@ py3:
         - layout/style
         - layout/tools/reftest
         - media
-        - memory/replace
         - modules/freetype2
         - python/safety
         - security/manager/ssl
