@@ -31,8 +31,8 @@ function recordEvent(aName) {
       "got events and progress notifications in expected order"
     );
 
-    // eslint-disable-next-line no-shadow
     executeSoon(
+      // eslint-disable-next-line no-shadow
       function(tab) {
         gBrowser.removeTab(tab);
         gBrowser.removeTabsProgressListener(progressListener);

@@ -33,10 +33,10 @@ add_task(async function testServiceWorkers() {
   }
 
   function contentScript() {
+    // eslint-disable-next-line mozilla/balanced-listeners
     window.addEventListener(
       "message",
       msg => {
-        // eslint-disable-line mozilla/balanced-listeners
         if (msg.data == "serviceWorkerRegistered") {
           browser.runtime.sendMessage("serviceWorkerRegistered");
         }

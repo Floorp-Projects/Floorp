@@ -15,6 +15,7 @@ const TAB_SHENTRY = { url: TAB_URL, triggeringPrincipal_base64 };
 const TAB_STATE = { entries: [TAB_SHENTRY], formdata: TAB_FORMDATA };
 
 const FRAME_SCRIPT =
+  // eslint-disable-next-line no-useless-concat
   "data:," + "content.document.getElementById('errorTryAgain').click()";
 
 add_task(async function() {

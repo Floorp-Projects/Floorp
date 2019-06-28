@@ -256,12 +256,10 @@ this.browserAction = class extends ExtensionAPI {
       },
     });
 
-    this.tabContext.on(
-      "tab-select", // eslint-disable-line mozilla/balanced-listeners
-      (evt, tab) => {
-        this.updateWindow(tab.ownerGlobal);
-      }
-    );
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-select", (evt, tab) => {
+      this.updateWindow(tab.ownerGlobal);
+    });
 
     this.widget = widget;
   }

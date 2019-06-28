@@ -46,8 +46,8 @@ async function test_reset_disabled({ disabled }) {
     gBrowser,
     "about:support"
   );
-  // eslint-disable-next-line no-shadow
   await ContentTask.spawn(tab.linkedBrowser, { disabled }, async function({
+    // eslint-disable-next-line no-shadow
     disabled,
   }) {
     let resetBox = content.document.getElementById("reset-box");

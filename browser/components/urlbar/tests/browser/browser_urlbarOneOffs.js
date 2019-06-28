@@ -210,7 +210,7 @@ add_task(async function searchWith() {
   Assert.notEqual(
     engineName,
     (await Services.search.getDefault()).name,
-    "Sanity check: First one-off engine should not be " + "the current engine"
+    "Sanity check: First one-off engine should not be the current engine"
   );
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(

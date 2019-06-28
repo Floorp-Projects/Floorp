@@ -243,8 +243,8 @@ export default class PaymentDialog extends HandleEventMixin(
    *
    * @param {object} state - See `PaymentsStore.setState`
    */
+  // eslint-disable-next-line complexity
   async setStateFromParent(state) {
-    // eslint-disable-line complexity
     let oldAddresses = paymentRequest.getAddresses(
       this.requestStore.getState()
     );
