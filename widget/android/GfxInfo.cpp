@@ -408,6 +408,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         return NS_OK;
       }
 
+      if (mSDKVersion <= 17) {
+        if (mGLStrings->Renderer().Find("Adreno (TM) 3") != -1) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+          aFailureId = "FEATURE_FAILURE_ADRENO_3xx";
+        }
+        return NS_OK;
+      }
+
       if (mHardware.EqualsLiteral("ville")) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_VILLE";
