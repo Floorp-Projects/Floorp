@@ -202,9 +202,6 @@ bool HTMLTableRowElement::ParseAttribute(int32_t aNamespaceID,
    */
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::charoff) {
-      return aResult.ParseIntWithBounds(aValue, 0);
-    }
     if (aAttribute == nsGkAtoms::height) {
       // Per spec should be ParseNonzeroHTMLDimension, but no browsers do that.
       // See https://github.com/whatwg/html/issues/4716
