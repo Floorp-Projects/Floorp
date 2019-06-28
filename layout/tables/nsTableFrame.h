@@ -10,6 +10,7 @@
 #include "imgIContainer.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
+#include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsCellMap.h"
 #include "nsGkAtoms.h"

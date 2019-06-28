@@ -21,7 +21,7 @@
 #include "nsColor.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
-#include "nsStyleConsts.h"
+#include "nsStyleCoord.h"
 #include "nsStyleTransformMatrix.h"
 
 class nsIFrame;

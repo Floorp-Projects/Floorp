@@ -46,6 +46,7 @@
 #include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
+#include "nsStyleCoord.h"
 #include "nsDisplayList.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsStyleTransformMatrix.h"
@@ -1164,6 +1165,30 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
   return val.forget();
 }
 
+static void SetValueToCalc(const nsStyleCoord::CalcValue* aCalc,
+                           nsROCSSPrimitiveValue* aValue) {
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  nsAutoString tmp, result;
+
+  result.AppendLiteral("calc(");
+
+  val->SetAppUnits(aCalc->mLength);
+  val->GetCssText(tmp);
+  result.Append(tmp);
+
+  if (aCalc->mHasPercent) {
+    result.AppendLiteral(" + ");
+
+    val->SetPercent(aCalc->mPercent);
+    val->GetCssText(tmp);
+    result.Append(tmp);
+  }
+
+  result.Append(')');
+
+  aValue->SetString(result);  // not really SetString
+}
+
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetImageLayerPosition(
     const nsStyleImageLayers& aLayers) {
   if (aLayers.mPositionXCount != aLayers.mPositionYCount) {
@@ -1273,48 +1298,16 @@ void nsComputedDOMStyle::AppendGridLineNames(
   aValueList->AppendCSSValue(val.forget());
 }
 
-void nsComputedDOMStyle::SetValueToTrackBreadth(
-    nsROCSSPrimitiveValue* aValue,
-    const StyleTrackBreadth& aBreadth) {
-  using Tag = StyleTrackBreadth::Tag;
-  switch (aBreadth.tag) {
-    case Tag::MinContent:
-      return aValue->SetIdent(eCSSKeyword_min_content);
-    case Tag::MaxContent:
-      return aValue->SetIdent(eCSSKeyword_max_content);
-    case Tag::Auto:
-      return aValue->SetIdent(eCSSKeyword_auto);
-    case Tag::Breadth:
-      return SetValueToLengthPercentage(aValue, aBreadth.AsBreadth(), true);
-    case Tag::Fr: {
-      nsAutoString tmpStr;
-      nsStyleUtil::AppendCSSNumber(aBreadth.AsFr(), tmpStr);
-      tmpStr.AppendLiteral("fr");
-      return aValue->SetString(tmpStr);
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown breadth value");
-      return;
-  }
-}
-
-already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackBreadth(
-    const StyleTrackBreadth& aBreadth) {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToTrackBreadth(val, aBreadth);
-  return val.forget();
-}
-
-already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
-    const StyleTrackSize& aTrackSize) {
-  if (aTrackSize.IsFitContent()) {
+already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTrackSize(
+    const nsStyleCoord& aMinValue, const nsStyleCoord& aMaxValue) {
+  if (aMinValue.GetUnit() == eStyleUnit_None) {
     // A fit-content() function.
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     nsAutoString argumentStr, fitContentStr;
     fitContentStr.AppendLiteral("fit-content(");
-    MOZ_ASSERT(aTrackSize.AsFitContent().IsBreadth(),
+    MOZ_ASSERT(aMaxValue.IsCoordPercentCalcUnit(),
                "unexpected unit for fit-content() argument value");
-    SetValueToLengthPercentage(val, aTrackSize.AsFitContent().AsBreadth(), true);
+    SetValueToCoord(val, aMaxValue, true);
     val->GetCssText(argumentStr);
     fitContentStr.Append(argumentStr);
     fitContentStr.Append(char16_t(')'));
@@ -1322,43 +1315,39 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
     return val.forget();
   }
 
-  if (aTrackSize.IsBreadth()) {
-    return GetGridTrackBreadth(aTrackSize.AsBreadth());
-  }
-
-  MOZ_ASSERT(aTrackSize.IsMinmax());
-  auto& min = aTrackSize.AsMinmax()._0;
-  auto& max = aTrackSize.AsMinmax()._1;
-  if (min == max) {
-    return GetGridTrackBreadth(min);
+  if (aMinValue == aMaxValue) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    SetValueToCoord(val, aMinValue, true, nullptr,
+                    nsCSSProps::kGridTrackBreadthKTable);
+    return val.forget();
   }
 
   // minmax(auto, <flex>) is equivalent to (and is our internal representation
   // of) <flex>, and both compute to <flex>
-  if (min.IsAuto() && max.IsFr()) {
-    return GetGridTrackBreadth(max);
+  if (aMinValue.GetUnit() == eStyleUnit_Auto &&
+      aMaxValue.GetUnit() == eStyleUnit_FlexFraction) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    SetValueToCoord(val, aMaxValue, true);
+    return val.forget();
   }
 
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString argumentStr, minmaxStr;
   minmaxStr.AppendLiteral("minmax(");
 
-  {
-    RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(min);
-    argValue->GetCssText(argumentStr);
-    minmaxStr.Append(argumentStr);
-    argumentStr.Truncate();
-  }
+  SetValueToCoord(val, aMinValue, true, nullptr,
+                  nsCSSProps::kGridTrackBreadthKTable);
+  val->GetCssText(argumentStr);
+  minmaxStr.Append(argumentStr);
 
   minmaxStr.AppendLiteral(", ");
 
-  {
-    RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(max);
-    argValue->GetCssText(argumentStr);
-    minmaxStr.Append(argumentStr);
-  }
+  SetValueToCoord(val, aMaxValue, true, nullptr,
+                  nsCSSProps::kGridTrackBreadthKTable);
+  val->GetCssText(argumentStr);
+  minmaxStr.Append(argumentStr);
 
   minmaxStr.Append(char16_t(')'));
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetString(minmaxStr);
   return val.forget();
 }
@@ -1368,7 +1357,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     const ComputedGridTrackInfo* aTrackInfo) {
   if (aTrackList.mIsSubgrid) {
     // XXX TODO: add support for repeat(auto-fill) for 'subgrid' (bug 1234311)
-    NS_ASSERTION(aTrackList.mTrackSizingFunctions.IsEmpty(),
+    NS_ASSERTION(aTrackList.mMinTrackSizingFunctions.IsEmpty() &&
+                     aTrackList.mMaxTrackSizingFunctions.IsEmpty(),
                  "Unexpected sizing functions with subgrid");
     RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
@@ -1399,7 +1389,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     return valueList.forget();
   }
 
-  uint32_t numSizes = aTrackList.mTrackSizingFunctions.Length();
+  uint32_t numSizes = aTrackList.mMinTrackSizingFunctions.Length();
+  MOZ_ASSERT(aTrackList.mMaxTrackSizingFunctions.Length() == numSizes,
+             "Different number of min and max track sizing functions");
   if (aTrackInfo) {
     DebugOnly<bool> isAutoFill =
         aTrackList.HasRepeatAuto() && aTrackList.mIsAutoFill;
@@ -1570,7 +1562,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
         }
 
         valueList->AppendCSSValue(
-            GetGridTrackSize(aTrackList.mTrackSizingFunctions[i]));
+            GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
+                             aTrackList.mMaxTrackSizingFunctions[i]));
         if (!aTrackList.mRepeatAutoLineNameListAfter.IsEmpty()) {
           AppendGridLineNames(valueList,
                               aTrackList.mRepeatAutoLineNameListAfter);
@@ -1580,7 +1573,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
         valueList->AppendCSSValue(end.forget());
       } else {
         valueList->AppendCSSValue(
-            GetGridTrackSize(aTrackList.mTrackSizingFunctions[i]));
+            GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
+                             aTrackList.mMaxTrackSizingFunctions[i]));
       }
     }
   }
@@ -1589,11 +1583,13 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridAutoColumns() {
-  return GetGridTrackSize(StylePosition()->mGridAutoColumns);
+  return GetGridTrackSize(StylePosition()->mGridAutoColumnsMin,
+                          StylePosition()->mGridAutoColumnsMax);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridAutoRows() {
-  return GetGridTrackSize(StylePosition()->mGridAutoRows);
+  return GetGridTrackSize(StylePosition()->mGridAutoRowsMin,
+                          StylePosition()->mGridAutoRowsMax);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateColumns() {
@@ -1759,6 +1755,32 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationStyle() {
                                      nsCSSProps::kTextDecorationStyleKTable));
 
   return val.forget();
+}
+
+/* Border image properties */
+
+void nsComputedDOMStyle::AppendFourSideCoordValues(
+    nsDOMCSSValueList* aList, const nsStyleSides& aValues) {
+  const nsStyleCoord& top = aValues.Get(eSideTop);
+  const nsStyleCoord& right = aValues.Get(eSideRight);
+  const nsStyleCoord& bottom = aValues.Get(eSideBottom);
+  const nsStyleCoord& left = aValues.Get(eSideLeft);
+
+  auto appendValue = [this, aList](const nsStyleCoord& value) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    SetValueToCoord(val, value, true);
+    aList->AppendCSSValue(val.forget());
+  };
+  appendValue(top);
+  if (top != right || top != bottom || top != left) {
+    appendValue(right);
+    if (top != bottom || right != left) {
+      appendValue(bottom);
+      if (right != left) {
+        appendValue(left);
+      }
+    }
+  }
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
@@ -2217,6 +2239,97 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
   aValue->SetString(result);
 }
 
+void nsComputedDOMStyle::SetValueToCoord(
+    nsROCSSPrimitiveValue* aValue, const nsStyleCoord& aCoord,
+    bool aClampNegativeCalc, PercentageBaseGetter aPercentageBaseGetter,
+    const KTableEntry aTable[]) {
+  MOZ_ASSERT(aValue, "Must have a value to work with");
+
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Normal:
+      aValue->SetIdent(eCSSKeyword_normal);
+      break;
+
+    case eStyleUnit_Auto:
+      aValue->SetIdent(eCSSKeyword_auto);
+      break;
+
+    case eStyleUnit_Percent: {
+      nscoord percentageBase;
+      if (aPercentageBaseGetter &&
+          (this->*aPercentageBaseGetter)(percentageBase)) {
+        nscoord val =
+            NSCoordSaturatingMultiply(percentageBase, aCoord.GetPercentValue());
+        aValue->SetAppUnits(val);
+      } else {
+        aValue->SetPercent(aCoord.GetPercentValue());
+      }
+    } break;
+
+    case eStyleUnit_Factor:
+      aValue->SetNumber(aCoord.GetFactorValue());
+      break;
+
+    case eStyleUnit_Coord: {
+      nscoord val = aCoord.GetCoordValue();
+      aValue->SetAppUnits(val);
+    } break;
+
+    case eStyleUnit_Integer:
+      aValue->SetNumber(aCoord.GetIntValue());
+      break;
+
+    case eStyleUnit_Enumerated:
+      NS_ASSERTION(aTable, "Must have table to handle this case");
+      aValue->SetIdent(
+          nsCSSProps::ValueToKeywordEnum(aCoord.GetIntValue(), aTable));
+      break;
+
+    case eStyleUnit_None:
+      aValue->SetIdent(eCSSKeyword_none);
+      break;
+
+    case eStyleUnit_Calc:
+      nscoord percentageBase;
+      if (!aCoord.CalcHasPercent()) {
+        nscoord val = aCoord.ComputeCoordPercentCalc(0);
+        if (aClampNegativeCalc && val < 0) {
+          MOZ_ASSERT(aCoord.IsCalcUnit(), "parser should have rejected value");
+          val = 0;
+        }
+        aValue->SetAppUnits(val);
+      } else if (aPercentageBaseGetter &&
+                 (this->*aPercentageBaseGetter)(percentageBase)) {
+        nscoord val = aCoord.ComputeCoordPercentCalc(percentageBase);
+        if (aClampNegativeCalc && val < 0) {
+          MOZ_ASSERT(aCoord.IsCalcUnit(), "parser should have rejected value");
+          val = 0;
+        }
+        aValue->SetAppUnits(val);
+      } else {
+        nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
+        SetValueToCalc(calc, aValue);
+      }
+      break;
+
+    case eStyleUnit_Degree:
+      aValue->SetDegree(aCoord.GetAngleValue());
+      break;
+
+    case eStyleUnit_FlexFraction: {
+      nsAutoString tmpStr;
+      nsStyleUtil::AppendCSSNumber(aCoord.GetFlexFractionValue(), tmpStr);
+      tmpStr.AppendLiteral("fr");
+      aValue->SetString(tmpStr);
+      break;
+    }
+
+    default:
+      NS_ERROR("Can't handle this unit");
+      break;
+  }
+}
+
 nscoord nsComputedDOMStyle::StyleCoordToNSCoord(
     const LengthPercentage& aCoord, PercentageBaseGetter aPercentageBaseGetter,
     nscoord aDefaultValue, bool aClampNegativeCalc) {
@@ -2392,6 +2505,14 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetTransformValue(
       aTransform, refBox, float(mozilla::AppUnitsPerCSSPixel()));
 
   return MatrixToCSSValue(matrix);
+}
+
+void nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
+                                           const nsStyleCoord& aCoord,
+                                           bool aClampNegativeCalc) {
+  RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
+  SetValueToCoord(value, aCoord, aClampNegativeCalc);
+  value->GetCssText(aCssText);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
