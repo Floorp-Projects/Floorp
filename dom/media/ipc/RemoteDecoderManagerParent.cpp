@@ -190,7 +190,7 @@ void RemoteDecoderManagerParent::ActorDestroy(
 PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
     const CreateDecoderParams::OptionSet& aOptions,
-    const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
+    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier, bool* aSuccess,
     nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
     nsCString* aErrorDescription) {
   RefPtr<TaskQueue> decodeTaskQueue =
