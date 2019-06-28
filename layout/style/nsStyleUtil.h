@@ -15,6 +15,7 @@
 #include "nsCRT.h"
 
 class nsCSSValue;
+class nsStyleCoord;
 class nsIContent;
 class nsIPrincipal;
 class nsIURI;
@@ -63,6 +64,8 @@ class nsStyleUtil {
   static void AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
                                     int32_t aMaskedValue, int32_t aFirstMask,
                                     int32_t aLastMask, nsAString& aResult);
+
+  static void AppendAngleValue(const nsStyleCoord& aValue, nsAString& aResult);
 
   static void AppendPaintOrderValue(uint8_t aValue, nsAString& aResult);
 

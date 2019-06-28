@@ -9,8 +9,7 @@
 #ifndef mozilla_ColumnUtils_h
 #define mozilla_ColumnUtils_h
 
-#include "nsCoord.h"
-#include "nsStyleConsts.h"
+#include "nsStyleCoord.h"
 
 class nsContainerFrame;
 

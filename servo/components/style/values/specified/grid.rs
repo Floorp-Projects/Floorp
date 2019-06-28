@@ -8,7 +8,7 @@
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{self, Context, ToComputedValue};
 use crate::values::generics::grid::{GridTemplateComponent, RepeatCount, TrackBreadth};
-use crate::values::generics::grid::{LineNameList, TrackRepeat, TrackSize};
+use crate::values::generics::grid::{LineNameList, TrackKeyword, TrackRepeat, TrackSize};
 use crate::values::generics::grid::{TrackList, TrackListType, TrackListValue};
 use crate::values::specified::{Integer, LengthPercentage};
 use crate::values::{CSSFloat, CustomIdent};
@@ -27,34 +27,11 @@ pub fn parse_flex<'i, 't>(input: &mut Parser<'i, 't>) -> Result<CSSFloat, ParseE
     }
 }
 
-impl<L> TrackBreadth<L> {
-    fn parse_keyword<'i, 't>(
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        #[derive(Parse)]
-        enum TrackKeyword {
-            Auto,
-            MaxContent,
-            MinContent,
-        }
-
-        Ok(match TrackKeyword::parse(input)? {
-            TrackKeyword::Auto => TrackBreadth::Auto,
-            TrackKeyword::MaxContent => TrackBreadth::MaxContent,
-            TrackKeyword::MinContent => TrackBreadth::MinContent,
-        })
-    }
-}
-
 impl Parse for TrackBreadth<LengthPercentage> {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        // FIXME: This and other callers in this file should use
-        // NonNegativeLengthPercentage instead.
-        //
-        // Though it seems these cannot be animated so it's ~ok.
         if let Ok(lp) = input.try(|i| LengthPercentage::parse_non_negative(context, i)) {
             return Ok(TrackBreadth::Breadth(lp));
         }
@@ -63,7 +40,7 @@ impl Parse for TrackBreadth<LengthPercentage> {
             return Ok(TrackBreadth::Fr(f));
         }
 
-        Self::parse_keyword(input)
+        TrackKeyword::parse(input).map(TrackBreadth::Keyword)
     }
 }
 
@@ -81,7 +58,10 @@ impl Parse for TrackSize<LengthPercentage> {
                 let inflexible_breadth =
                     match input.try(|i| LengthPercentage::parse_non_negative(context, i)) {
                         Ok(lp) => TrackBreadth::Breadth(lp),
-                        Err(..) => TrackBreadth::parse_keyword(input)?,
+                        Err(..) => {
+                            let keyword = TrackKeyword::parse(input)?;
+                            TrackBreadth::Keyword(keyword)
+                        },
                     };
 
                 input.expect_comma()?;
@@ -94,7 +74,7 @@ impl Parse for TrackSize<LengthPercentage> {
 
         input.expect_function_matching("fit-content")?;
         let lp = input.parse_nested_block(|i| LengthPercentage::parse_non_negative(context, i))?;
-        Ok(TrackSize::FitContent(TrackBreadth::Breadth(lp)))
+        Ok(TrackSize::FitContent(lp))
     }
 }
 

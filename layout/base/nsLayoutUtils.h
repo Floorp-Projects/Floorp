@@ -19,6 +19,7 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "nsThreadUtils.h"
 #include "nsCSSPropertyIDSet.h"
+#include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "mozilla/gfx/2D.h"
@@ -54,6 +55,7 @@ class nsBlockFrame;
 class nsContainerFrame;
 class nsView;
 class nsIFrame;
+class nsStyleCoord;
 class nsPIDOMWindowOuter;
 class imgIRequest;
 struct nsStyleFont;
