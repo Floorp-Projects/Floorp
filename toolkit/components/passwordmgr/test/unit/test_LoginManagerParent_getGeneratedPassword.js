@@ -33,7 +33,7 @@ add_task(async function test_getGeneratedPassword() {
   notEqual(password1, null, "Check password was returned");
   equal(password1.length, 15, "Check password length");
   equal(LMP._generatedPasswordsByPrincipalOrigin.size, 1, "1 added to cache");
-  equal(LMP._generatedPasswordsByPrincipalOrigin.get("https://www.example.com^userContextId=6"),
+  equal(LMP._generatedPasswordsByPrincipalOrigin.get("https://www.example.com^userContextId=6").value,
         password1, "Cache key and value");
   let password2 = LMP.getGeneratedPassword(99);
   equal(password1, password2, "Same password should be returned for the same origin");
