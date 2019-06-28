@@ -28,14 +28,6 @@ class SwipeToDeleteCallback(
         return false
     }
 
-    override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
-        return defaultValue * SWIPE_VELOCITY_MULTIPLIER
-    }
-
-    override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
-        return SWIPE_THRESHOLD
-    }
-
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         when (viewHolder) {
             is TabViewHolder -> actionEmitter.onNext(TabAction.Close(viewHolder.tab?.sessionId!!))
@@ -122,8 +114,6 @@ class SwipeToDeleteCallback(
     }
 
     companion object {
-        const val SWIPE_VELOCITY_MULTIPLIER = 10F
-        const val SWIPE_THRESHOLD = 0.55f
         const val BACKGROUND_CORNER_OFFSET = 40
         const val MARGIN = 32
         const val DENSITY_CONVERSION = 160f
