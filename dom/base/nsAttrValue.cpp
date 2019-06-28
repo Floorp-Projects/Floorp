@@ -1383,7 +1383,6 @@ bool nsAttrValue::ParseIntWithBounds(const nsAString& aString, int32_t aMin,
   val = std::min(val, aMax);
   bool nonStrict =
       (val != originalVal) ||
-      (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
       (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
       (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
 
@@ -1409,8 +1408,7 @@ void nsAttrValue::ParseIntWithFallback(const nsAString& aString,
     nonStrict = true;
   }
 
-  if ((result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
-      (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
+  if ((result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
       (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput)) {
     nonStrict = true;
   }
@@ -1426,7 +1424,6 @@ void nsAttrValue::ParseClampedNonNegativeInt(const nsAString& aString,
   nsContentUtils::ParseHTMLIntegerResultFlags result;
   int32_t val = nsContentUtils::ParseHTMLInteger(aString, &result);
   bool nonStrict =
-      (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
       (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
       (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
 
@@ -1461,7 +1458,6 @@ bool nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString) {
   }
 
   bool nonStrict =
-      (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
       (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
       (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
 
@@ -1480,7 +1476,6 @@ bool nsAttrValue::ParsePositiveIntValue(const nsAString& aString) {
   }
 
   bool nonStrict =
-      (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
       (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
       (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
 

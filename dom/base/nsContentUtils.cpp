@@ -1182,10 +1182,6 @@ int32_t nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
         break;
       }
       foundValue = true;
-    } else if (*iter == char16_t('%')) {
-      ++iter;
-      result |= eParseHTMLInteger_IsPercent;
-      break;
     } else {
       break;
     }
