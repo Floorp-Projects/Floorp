@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace mozilla {
 namespace ipc {
@@ -133,16 +134,13 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
     return false;
   }
 
-  // The FileDescriptor constructor will clone this handle when constructed,
-  // so store it in a UniquePlatformHandle to make sure the original gets
-  // closed.
   FileDescriptor::UniquePlatformHandle handle(
       parseHandleArg(aPrefMapHandleStr));
   if (!aPrefMapHandleStr || aPrefMapHandleStr[0] != '\0') {
     return false;
   }
 
-  mPrefMapHandle.emplace(handle.get());
+  mPrefMapHandle.emplace(std::move(handle));
 #endif
 
   mPrefsLen = Some(parseUIntPtrArg(aPrefsLenStr));
@@ -160,17 +158,12 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
   MOZ_RELEASE_ASSERT(gPrefsFd != -1);
   mPrefsHandle = Some(base::FileDescriptor(gPrefsFd, /* auto_close */ true));
 
-  FileDescriptor::UniquePlatformHandle handle(gPrefMapFd);
-  mPrefMapHandle.emplace(handle.get());
+  mPrefMapHandle.emplace(UniqueFileHandle(gPrefMapFd));
 #elif XP_UNIX
   mPrefsHandle = Some(base::FileDescriptor(kPrefsFileDescriptor,
                                            /* auto_close */ true));
 
-  // The FileDescriptor constructor will clone this handle when constructed,
-  // so store it in a UniquePlatformHandle to make sure the original gets
-  // closed.
-  FileDescriptor::UniquePlatformHandle handle(kPrefMapFileDescriptor);
-  mPrefMapHandle.emplace(handle.get());
+  mPrefMapHandle.emplace(UniqueFileHandle(kPrefMapFileDescriptor));
 #endif
 
   if (mPrefsHandle.isNothing() || mPrefsLen.isNothing() ||

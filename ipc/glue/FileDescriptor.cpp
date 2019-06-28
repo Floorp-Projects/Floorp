@@ -31,6 +31,9 @@ FileDescriptor::FileDescriptor(FileDescriptor&& aOther)
 FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
     : mHandle(Clone(aHandle)) {}
 
+FileDescriptor::FileDescriptor(UniquePlatformHandle&& aHandle)
+    : mHandle(std::move(aHandle)) {}
+
 FileDescriptor::FileDescriptor(const IPDLPrivate&, const PickleType& aPickle) {
 #ifdef XP_WIN
   mHandle.reset(aPickle);
@@ -87,6 +90,10 @@ bool FileDescriptor::IsValid() const { return mHandle != nullptr; }
 FileDescriptor::UniquePlatformHandle FileDescriptor::ClonePlatformHandle()
     const {
   return Clone(mHandle.get());
+}
+
+FileDescriptor::UniquePlatformHandle FileDescriptor::TakePlatformHandle() {
+  return UniquePlatformHandle(mHandle.release());
 }
 
 bool FileDescriptor::operator==(const FileDescriptor& aOther) const {
