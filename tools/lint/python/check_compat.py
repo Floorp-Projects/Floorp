@@ -38,11 +38,16 @@ def check_compat_py2(f):
     futures = set()
     haveprint = False
     future_lineno = 1
+    may_have_relative_imports = False
     for node in ast.walk(root):
         if isinstance(node, ast.ImportFrom):
             if node.module == '__future__':
                 future_lineno = node.lineno
                 futures |= set(n.name for n in node.names)
+            else:
+                may_have_relative_imports = True
+        elif isinstance(node, ast.Import):
+            may_have_relative_imports = True
         elif isinstance(node, ast.Print):
             haveprint = True
 
@@ -52,7 +57,7 @@ def check_compat_py2(f):
         'column': 1,
     }
 
-    if 'absolute_import' not in futures:
+    if 'absolute_import' not in futures and may_have_relative_imports:
         err['rule'] = 'require absolute_import'
         err['message'] = 'Missing from __future__ import absolute_import'
         print(json.dumps(err))

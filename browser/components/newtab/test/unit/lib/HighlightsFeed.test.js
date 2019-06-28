@@ -223,23 +223,22 @@ describe("Highlights Feed", () => {
     });
     it("should chronologically order highlight data types", async () => {
       links = [
-        {url: "https://site0.com", type: "bookmark", bookmarkGuid: "1234", date_added: Date.now() - 80}, // 4th newest
-        {url: "https://site1.com", type: "history", bookmarkGuid: "1234", date_added: Date.now() - 60}, // 3rd newest
+        {url: "https://site0.com", type: "bookmark", bookmarkGuid: "1234", date_added: Date.now() - 80}, // 3rd newest
+        {url: "https://site1.com", type: "history", bookmarkGuid: "1234", date_added: Date.now() - 60}, // append at the end
         {url: "https://site2.com", type: "history", date_added: Date.now() - 160}, // append at the end
         {url: "https://site3.com", type: "history", date_added: Date.now() - 60}, // append at the end
         {url: "https://site4.com", type: "pocket", date_added: Date.now()}, // newest highlight
-        {url: "https://site5.com", type: "pocket", date_added: Date.now() - 100}, // 5th newest
+        {url: "https://site5.com", type: "pocket", date_added: Date.now() - 100}, // 4th newest
         {url: "https://site6.com", type: "bookmark", bookmarkGuid: "1234", date_added: Date.now() - 40}, // 2nd newest
       ];
+      const expectedChronological = [4, 6, 0, 5];
+      const expectedHistory = [1, 2, 3];
 
       let highlights = await fetchHighlights();
-      assert.equal(highlights[0].url, links[4].url);
-      assert.equal(highlights[1].url, links[6].url);
-      assert.equal(highlights[2].url, links[1].url);
-      assert.equal(highlights[3].url, links[0].url);
-      assert.equal(highlights[4].url, links[5].url);
-      assert.equal(highlights[5].url, links[2].url);
-      assert.equal(highlights[6].url, links[3].url);
+
+      [...expectedChronological, ...expectedHistory].forEach((link, index) => {
+        assert.propertyVal(highlights[index], "url", links[link].url, `highlight[${index}] should be link[${link}]`);
+      });
     });
     it("should fetch Highlights if TopSites are not enabled", async () => {
       sandbox.spy(feed.linksCache, "request");

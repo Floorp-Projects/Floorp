@@ -1,5 +1,4 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {FormattedMessage, injectIntl} from "react-intl";
 import {
   MIN_CORNER_FAVICON_SIZE,
   MIN_RICH_FAVICON_SIZE,
@@ -7,6 +6,7 @@ import {
   TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SOURCE,
 } from "./TopSitesConstants";
+import {injectIntl} from "react-intl";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
@@ -281,11 +281,11 @@ export class TopSite extends React.PureComponent {
     const title = link.label || link.hostname;
     return (<TopSiteLink {...props} onClick={this.onLinkClick} onDragEvent={this.props.onDragEvent} className={`${props.className || ""}${isContextMenuOpen ? " active" : ""}`} title={title}>
         <div>
-          <button aria-haspopup="true" className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})} onClick={this.onMenuButtonClick}>
-            <span className="sr-only">
-              <FormattedMessage id="context_menu_button_sr" values={{title}} />
-            </span>
-          </button>
+          <button aria-haspopup="true"
+            className="context-menu-button icon"
+            data-l10n-id="newtab-menu-content-tooltip"
+            data-l10n-args={`{ "title": "${title}" }`}
+            onClick={this.onMenuButtonClick} />
           {isContextMenuOpen &&
             <LinkMenu
               dispatch={props.dispatch}
@@ -319,7 +319,7 @@ export class TopSitePlaceholder extends React.PureComponent {
   render() {
     return (<TopSiteLink {...this.props} className={`placeholder ${this.props.className || ""}`} isDraggable={false}>
       <button aria-haspopup="true" className="context-menu-button edit-button icon"
-       title={this.props.intl.formatMessage({id: "edit_topsites_edit_button"})}
+       data-l10n-id="newtab-menu-topsites-placeholder-tooltip"
        onClick={this.onEditButtonClick} />
     </TopSiteLink>);
   }

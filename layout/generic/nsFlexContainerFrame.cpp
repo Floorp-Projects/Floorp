@@ -2348,6 +2348,10 @@ void nsFlexContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                                 nsIFrame* aPrevInFlow) {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
+  if (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
+    AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+  }
+
   const nsStyleDisplay* styleDisp = Style()->StyleDisplay();
 
   // Figure out if we should set a frame state bit to indicate that this frame

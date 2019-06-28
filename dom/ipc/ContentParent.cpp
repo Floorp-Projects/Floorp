@@ -5945,16 +5945,22 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     return IPC_OK();
   }
 
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(aContext->Canonical()->OwnerProcessId()));
+  RefPtr<ContentParent> cp = aContext->Canonical()->GetContentParent();
+  if (!cp) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to send PostMessage to dead content process"));
+    return IPC_OK();
+  }
+
   StructuredCloneData messageFromChild;
   UnpackClonedMessageDataForParent(aMessage, messageFromChild);
+
   ClonedMessageData message;
   if (!BuildClonedMessageDataForParent(cp, messageFromChild, message)) {
     // FIXME Logging?
     return IPC_OK();
   }
+
   Unused << cp->SendWindowPostMessage(aContext, message, aData);
   return IPC_OK();
 }

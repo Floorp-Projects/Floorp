@@ -1,5 +1,5 @@
+import {A11yLinkButton} from "content-src/components/A11yLinkButton/A11yLinkButton";
 import {ErrorBoundary, ErrorBoundaryFallback} from "content-src/components/ErrorBoundary/ErrorBoundary";
-import {FormattedMessage} from "react-intl";
 import React from "react";
 import {shallow} from "enzyme";
 
@@ -81,23 +81,22 @@ describe("ErrorBoundaryFallback", () => {
     assert.lengthOf(wrapper.find("A11yLinkButton.reload-button"), 1);
   });
 
-  it("should render error_fallback_default_refresh_suggestion FormattedMessage",
+  it("should render newtab-error-fallback-refresh-link node",
     () => {
       const wrapper = shallow(<ErrorBoundaryFallback />);
 
       const msgWrapper =
-        wrapper.find('[id="error_fallback_default_refresh_suggestion"]');
+        wrapper.find('[data-l10n-id="newtab-error-fallback-refresh-link"]');
       assert.lengthOf(msgWrapper, 1);
-      assert.isTrue(msgWrapper.is(FormattedMessage));
+      assert.isTrue(msgWrapper.is(A11yLinkButton));
     });
 
-  it("should render error_fallback_default_info FormattedMessage",
+  it("should render newtab-error-fallback-info node",
     () => {
       const wrapper = shallow(<ErrorBoundaryFallback />);
 
       const msgWrapper =
-        wrapper.find('[id="error_fallback_default_info"]');
+        wrapper.find('[data-l10n-id="newtab-error-fallback-info"]');
       assert.lengthOf(msgWrapper, 1);
-      assert.isTrue(msgWrapper.is(FormattedMessage));
     });
 });

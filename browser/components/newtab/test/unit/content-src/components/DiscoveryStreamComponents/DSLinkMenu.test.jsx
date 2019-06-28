@@ -31,19 +31,41 @@ describe("<DSLinkMenu>", () => {
       assert.isFalse(wrapper.state(["showContextMenu"]));
     });
 
-    it("Should add active on Menu Show", () => {
+    it("Should add active on Menu Show", async () => {
       wrapper.instance().onMenuShow();
+      // Wait for next frame to allow fluent to render strings
+      await new Promise(r => requestAnimationFrame(r));
       wrapper.update();
       assert.equal(parentNode.className, "active");
     });
 
-    it("Should add last-item to support resized window", () => {
+    it("Should add last-item to support resized window", async () => {
       const fakeWindow = {scrollMaxX: "20"};
       wrapper = mountWithIntl(<DSLinkMenu windowObj={fakeWindow} />);
       parentNode = wrapper.getDOMNode().parentNode;
       wrapper.instance().onMenuShow();
+      // Wait for next frame to allow fluent to render strings
+      await new Promise(r => requestAnimationFrame(r));
       wrapper.update();
       assert.equal(parentNode.className, "last-item active");
+    });
+
+    it("should remove .active and .last-item classes from the parent component", () => {
+      const instance = wrapper.instance();
+      const remove = sinon.stub();
+      instance.contextMenuButtonRef = {current: {parentElement: {parentElement: {classList: {remove}}}}};
+      instance.onMenuUpdate();
+      assert.calledOnce(remove);
+    });
+
+    it("should add .active and .last-item classes to the parent component", async () => {
+      const instance = wrapper.instance();
+      const add = sinon.stub();
+      instance.contextMenuButtonRef = {current: {parentElement: {parentElement: {classList: {add}}}}};
+      instance.onMenuShow();
+      // Wait for next frame to allow fluent to render strings
+      await new Promise(r => requestAnimationFrame(r));
+      assert.calledOnce(add);
     });
   });
 

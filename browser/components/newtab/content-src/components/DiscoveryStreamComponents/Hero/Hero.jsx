@@ -92,7 +92,7 @@ export class Hero extends React.PureComponent {
               </div>
             </div>
             <ImpressionStats
-              campaignId={heroRec.campaignId}
+              campaignId={heroRec.campaign_id}
               rows={[{
                 id: heroRec.id,
                 pos: heroRec.pos,

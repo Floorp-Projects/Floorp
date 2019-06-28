@@ -210,7 +210,7 @@ def main():
                                   options.cwd,
                                   symbols_path=options.symbols_path,
                                   utility_path=options.utility_path)
-    except Exception, e:
+    except Exception as e:
         log.error(str(e))
         result = False
     sys.exit(0 if result else 1)
