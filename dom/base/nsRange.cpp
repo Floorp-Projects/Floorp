@@ -43,6 +43,42 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+template already_AddRefed<nsRange> nsRange::Create(
+    const RangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
+    ErrorResult& aRv);
+template already_AddRefed<nsRange> nsRange::Create(
+    const RangeBoundary& aStartBoundary, const RawRangeBoundary& aEndBoundary,
+    ErrorResult& aRv);
+template already_AddRefed<nsRange> nsRange::Create(
+    const RawRangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
+    ErrorResult& aRv);
+template already_AddRefed<nsRange> nsRange::Create(
+    const RawRangeBoundary& aStartBoundary,
+    const RawRangeBoundary& aEndBoundary, ErrorResult& aRv);
+
+template nsresult nsRange::SetStartAndEnd(const RangeBoundary& aStartBoundary,
+                                          const RangeBoundary& aEndBoundary);
+template nsresult nsRange::SetStartAndEnd(const RangeBoundary& aStartBoundary,
+                                          const RawRangeBoundary& aEndBoundary);
+template nsresult nsRange::SetStartAndEnd(
+    const RawRangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary);
+template nsresult nsRange::SetStartAndEnd(
+    const RawRangeBoundary& aStartBoundary,
+    const RawRangeBoundary& aEndBoundary);
+
+template void nsRange::DoSetRange(const RangeBoundary& aStartBoundary,
+                                  const RangeBoundary& aEndBoundary,
+                                  nsINode* aRootNode, bool aNotInsertedYet);
+template void nsRange::DoSetRange(const RangeBoundary& aStartBoundary,
+                                  const RawRangeBoundary& aEndBoundary,
+                                  nsINode* aRootNode, bool aNotInsertedYet);
+template void nsRange::DoSetRange(const RawRangeBoundary& aStartBoundary,
+                                  const RangeBoundary& aEndBoundary,
+                                  nsINode* aRootNode, bool aNotInsertedYet);
+template void nsRange::DoSetRange(const RawRangeBoundary& aStartBoundary,
+                                  const RawRangeBoundary& aEndBoundary,
+                                  nsINode* aRootNode, bool aNotInsertedYet);
+
 JSObject* nsRange::WrapObject(JSContext* aCx,
                               JS::Handle<JSObject*> aGivenProto) {
   return Range_Binding::Wrap(aCx, this, aGivenProto);
@@ -287,32 +323,18 @@ nsRange::nsRange(nsINode* aNode)
 }
 
 /* static */
-nsresult nsRange::CreateRange(nsINode* aStartContainer, uint32_t aStartOffset,
-                              nsINode* aEndParent, uint32_t aEndOffset,
-                              nsRange** aRange) {
-  MOZ_ASSERT(aRange);
-  *aRange = nullptr;
-
-  RefPtr<nsRange> range = new nsRange(aStartContainer);
-  nsresult rv = range->SetStartAndEnd(aStartContainer, aStartOffset, aEndParent,
-                                      aEndOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+already_AddRefed<nsRange> nsRange::Create(
+    const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+    const RangeBoundaryBase<EPT, ERT>& aEndBoundary, ErrorResult& aRv) {
+  // If we fail to initialize the range a lot, nsRange should have a static
+  // initializer since the allocation cost is not cheap in hot path.
+  RefPtr<nsRange> range = new nsRange(aStartBoundary.Container());
+  aRv = range->SetStartAndEnd(aStartBoundary, aEndBoundary);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
-  range.forget(aRange);
-  return NS_OK;
-}
-
-/* static */
-nsresult nsRange::CreateRange(const RawRangeBoundary& aStart,
-                              const RawRangeBoundary& aEnd, nsRange** aRange) {
-  RefPtr<nsRange> range = new nsRange(aStart.Container());
-  nsresult rv = range->SetStartAndEnd(aStart, aEnd);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  range.forget(aRange);
-  return NS_OK;
+  return range.forget();
 }
 
 /******************************************************
@@ -641,7 +663,7 @@ void nsRange::ContentAppended(nsIContent* aFirstNewContent) {
       MOZ_ASSERT(mNextEndRef == aFirstNewContent);
       mNextEndRef = nullptr;
     }
-    DoSetRange(mStart.AsRaw(), mEnd.AsRaw(), mRoot, true);
+    DoSetRange(mStart, mEnd, mRoot, true);
   }
 }
 
@@ -786,7 +808,7 @@ void nsRange::ParentChainChanged(nsIContent* aContent) {
   }
   // This is safe without holding a strong ref to self as long as the change
   // of mRoot is the last thing in DoSetRange.
-  DoSetRange(mStart.AsRaw(), mEnd.AsRaw(), newRoot);
+  DoSetRange(mStart, mEnd, newRoot);
 }
 
 bool nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
@@ -830,11 +852,11 @@ int16_t nsRange::ComparePoint(const RawRangeBoundary& aPoint,
     return 0;
   }
 
-  int32_t cmp = nsContentUtils::ComparePoints(aPoint, mStart.AsRaw());
+  int32_t cmp = nsContentUtils::ComparePoints(aPoint, mStart);
   if (cmp <= 0) {
     return cmp;
   }
-  if (nsContentUtils::ComparePoints(mEnd.AsRaw(), aPoint) == -1) {
+  if (nsContentUtils::ComparePoints(mEnd, aPoint) == -1) {
     return 1;
   }
 
@@ -898,51 +920,58 @@ void nsRange::NotifySelectionListenersAfterRangeSet() {
 // for content notification of range ownership.
 // Calling DoSetRange with either parent argument null will collapse
 // the range to have both endpoints point to the other node
-void nsRange::DoSetRange(const RawRangeBoundary& aStart,
-                         const RawRangeBoundary& aEnd, nsINode* aRoot,
-                         bool aNotInsertedYet) {
-  MOZ_ASSERT((aStart.IsSet() && aEnd.IsSet() && aRoot) ||
-                 (!aStart.IsSet() && !aEnd.IsSet()),
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+                         const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
+                         nsINode* aRootNode,
+                         bool aNotInsertedYet /* = false */) {
+  MOZ_ASSERT((aStartBoundary.IsSet() && aEndBoundary.IsSet() && aRootNode) ||
+                 (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()),
              "Set all or none");
 
-  MOZ_ASSERT(
-      !aRoot || (!aStart.IsSet() && !aEnd.IsSet()) || aNotInsertedYet ||
-          (nsContentUtils::ContentIsDescendantOf(aStart.Container(), aRoot) &&
-           nsContentUtils::ContentIsDescendantOf(aEnd.Container(), aRoot) &&
-           aRoot == IsValidBoundary(aStart.Container()) &&
-           aRoot == IsValidBoundary(aEnd.Container())),
-      "Wrong root");
+  MOZ_ASSERT(!aRootNode || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()) ||
+                 aNotInsertedYet ||
+                 (nsContentUtils::ContentIsDescendantOf(
+                      aStartBoundary.Container(), aRootNode) &&
+                  nsContentUtils::ContentIsDescendantOf(
+                      aEndBoundary.Container(), aRootNode) &&
+                  aRootNode == IsValidBoundary(aStartBoundary.Container()) &&
+                  aRootNode == IsValidBoundary(aEndBoundary.Container())),
+             "Wrong root");
 
   MOZ_ASSERT(
-      !aRoot || (!aStart.IsSet() && !aEnd.IsSet()) ||
-          (aStart.Container()->IsContent() && aEnd.Container()->IsContent() &&
-           aRoot == static_cast<nsIContent*>(aStart.Container())
-                        ->GetBindingParent() &&
-           aRoot == static_cast<nsIContent*>(aEnd.Container())
-                        ->GetBindingParent()) ||
-          (!aRoot->GetParentNode() && (aRoot->IsDocument() || aRoot->IsAttr() ||
-                                       aRoot->IsDocumentFragment() ||
-                                       /*For backward compatibility*/
-                                       aRoot->IsContent())),
+      !aRootNode || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()) ||
+          (aStartBoundary.Container()->IsContent() &&
+           aEndBoundary.Container()->IsContent() &&
+           aRootNode == static_cast<nsIContent*>(aStartBoundary.Container())
+                            ->GetBindingParent() &&
+           aRootNode == static_cast<nsIContent*>(aEndBoundary.Container())
+                            ->GetBindingParent()) ||
+          (!aRootNode->GetParentNode() &&
+           (aRootNode->IsDocument() || aRootNode->IsAttr() ||
+            aRootNode->IsDocumentFragment() ||
+            /*For backward compatibility*/
+            aRootNode->IsContent())),
       "Bad root");
 
-  if (mRoot != aRoot) {
+  if (mRoot != aRootNode) {
     if (mRoot) {
       mRoot->RemoveMutationObserver(this);
     }
-    if (aRoot) {
-      aRoot->AddMutationObserver(this);
+    if (aRootNode) {
+      aRootNode->AddMutationObserver(this);
     }
   }
-  bool checkCommonAncestor = (mStart.Container() != aStart.Container() ||
-                              mEnd.Container() != aEnd.Container()) &&
-                             IsInSelection() && !aNotInsertedYet;
+  bool checkCommonAncestor =
+      (mStart.Container() != aStartBoundary.Container() ||
+       mEnd.Container() != aEndBoundary.Container()) &&
+      IsInSelection() && !aNotInsertedYet;
 
   // GetCommonAncestor is unreliable while we're unlinking (could
   // return null if our start/end have already been unlinked), so make
   // sure to not use it here to determine our "old" current ancestor.
-  mStart = aStart;
-  mEnd = aEnd;
+  mStart = aStartBoundary;
+  mEnd = aEndBoundary;
 
   mIsPositioned = !!mStart.Container();
   if (checkCommonAncestor) {
@@ -970,7 +999,7 @@ void nsRange::DoSetRange(const RawRangeBoundary& aStart,
 
   // This needs to be the last thing this function does, other than notifying
   // selection listeners. See comment in ParentChainChanged.
-  mRoot = aRoot;
+  mRoot = aRootNode;
 
   // Notify any selection listeners. This has to occur last because otherwise
   // the world could be observed by a selection listener while the range was in
@@ -1143,12 +1172,12 @@ void nsRange::SetStart(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new start is after end.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(aPoint, mEnd.AsRaw()) == 1) {
+      nsContentUtils::ComparePoints(aPoint, mEnd) == 1) {
     DoSetRange(aPoint, aPoint, newRoot);
     return;
   }
 
-  DoSetRange(aPoint, mEnd.AsRaw(), mRoot);
+  DoSetRange(aPoint, mEnd, mRoot);
 }
 
 void nsRange::SetStartBeforeJS(nsINode& aNode, ErrorResult& aErr) {
@@ -1223,12 +1252,12 @@ void nsRange::SetEnd(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new end is before start.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(mStart.AsRaw(), aPoint) == 1) {
+      nsContentUtils::ComparePoints(mStart, aPoint) == 1) {
     DoSetRange(aPoint, aPoint, newRoot);
     return;
   }
 
-  DoSetRange(mStart.AsRaw(), aPoint, mRoot);
+  DoSetRange(mStart, aPoint, mRoot);
 }
 
 void nsRange::SelectNodesInContainer(nsINode* aContainer,
@@ -1251,58 +1280,61 @@ void nsRange::SelectNodesInContainer(nsINode* aContainer,
   DoSetRange(start, end, newRoot);
 }
 
-nsresult nsRange::SetStartAndEnd(const RawRangeBoundary& aStart,
-                                 const RawRangeBoundary& aEnd) {
-  if (NS_WARN_IF(!aStart.IsSet()) || NS_WARN_IF(!aEnd.IsSet())) {
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+nsresult nsRange::SetStartAndEnd(
+    const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+    const RangeBoundaryBase<EPT, ERT>& aEndBoundary) {
+  if (NS_WARN_IF(!aStartBoundary.IsSet()) ||
+      NS_WARN_IF(!aEndBoundary.IsSet())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsINode* newStartRoot = IsValidBoundary(aStart.Container());
+  nsINode* newStartRoot = IsValidBoundary(aStartBoundary.Container());
   if (!newStartRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
-  if (!aStart.IsSetAndValid()) {
+  if (!aStartBoundary.IsSetAndValid()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  if (aStart.Container() == aEnd.Container()) {
-    if (!aEnd.IsSetAndValid()) {
+  if (aStartBoundary.Container() == aEndBoundary.Container()) {
+    if (!aEndBoundary.IsSetAndValid()) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
     // XXX: Offsets - handle this more efficiently.
     // If the end offset is less than the start offset, this should be
     // collapsed at the end offset.
-    if (aStart.Offset() > aEnd.Offset()) {
-      DoSetRange(aEnd, aEnd, newStartRoot);
+    if (aStartBoundary.Offset() > aEndBoundary.Offset()) {
+      DoSetRange(aEndBoundary, aEndBoundary, newStartRoot);
     } else {
-      DoSetRange(aStart, aEnd, newStartRoot);
+      DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
     }
     return NS_OK;
   }
 
-  nsINode* newEndRoot = IsValidBoundary(aEnd.Container());
+  nsINode* newEndRoot = IsValidBoundary(aEndBoundary.Container());
   if (!newEndRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
-  if (!aEnd.IsSetAndValid()) {
+  if (!aEndBoundary.IsSetAndValid()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   // If they have different root, this should be collapsed at the end point.
   if (newStartRoot != newEndRoot) {
-    DoSetRange(aEnd, aEnd, newEndRoot);
+    DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
     return NS_OK;
   }
 
   // If the end point is before the start point, this should be collapsed at
   // the end point.
-  if (nsContentUtils::ComparePoints(aStart, aEnd) == 1) {
-    DoSetRange(aEnd, aEnd, newEndRoot);
+  if (nsContentUtils::ComparePoints(aStartBoundary, aEndBoundary) == 1) {
+    DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
     return NS_OK;
   }
 
   // Otherwise, set the range as specified.
-  DoSetRange(aStart, aEnd, newStartRoot);
+  DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
   return NS_OK;
 }
 
@@ -1353,9 +1385,9 @@ void nsRange::Collapse(bool aToStart) {
 
   AutoInvalidateSelection atEndOfBlock(this);
   if (aToStart) {
-    DoSetRange(mStart.AsRaw(), mStart.AsRaw(), mRoot);
+    DoSetRange(mStart, mStart, mRoot);
   } else {
-    DoSetRange(mEnd.AsRaw(), mEnd.AsRaw(), mRoot);
+    DoSetRange(mEnd, mEnd, mRoot);
   }
 }
 
@@ -2338,7 +2370,7 @@ already_AddRefed<DocumentFragment> nsRange::CloneContents(ErrorResult& aRv) {
 already_AddRefed<nsRange> nsRange::CloneRange() const {
   RefPtr<nsRange> range = new nsRange(mOwner);
 
-  range->DoSetRange(mStart.AsRaw(), mEnd.AsRaw(), mRoot);
+  range->DoSetRange(mStart, mEnd, mRoot);
 
   return range.forget();
 }
@@ -3102,9 +3134,9 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
               startContainer = parent;
             }
           }
-          rv = CreateRange(startContainer, startOffset, endContainer, endOffset,
-                           getter_AddRefs(newRange));
-          if (NS_FAILED(rv) || newRange->Collapsed()) {
+          newRange = nsRange::Create(startContainer, startOffset, endContainer,
+                                     endOffset, IgnoreErrors());
+          if (!newRange || newRange->Collapsed()) {
             newRange = nullptr;
           }
           range = newRange;

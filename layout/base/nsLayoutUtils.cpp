@@ -7910,11 +7910,11 @@ static void AddFontsFromTextRun(gfxTextRun* aTextRun, nsTextFrame* aFrame,
       end = std::min(end, contentLimit);
 
       if (end > start) {
-        RefPtr<nsRange> range;
-        if (NS_FAILED(nsRange::CreateRange(content, start, content, end,
-                                           getter_AddRefs(range)))) {
-          NS_WARNING("failed to create range");
-        } else {
+        RefPtr<nsRange> range =
+            nsRange::Create(content, start, content, end, IgnoreErrors());
+        NS_WARNING_ASSERTION(range,
+                             "nsRange::Create() failed to create valid range");
+        if (range) {
           fontFace->AddRange(range);
         }
       }
