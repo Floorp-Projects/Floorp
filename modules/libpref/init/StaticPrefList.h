@@ -7175,14 +7175,19 @@ VARCACHE_PREF(
 // Prefs starting with "slider."
 //---------------------------------------------------------------------------
 
-// scrollbar snapping region
-// 0 - off
-// 1 and higher - slider thickness multiple
+// Scrollbar snapping region.
+// - 0: off
+// - 1 and higher: slider thickness multiple
 VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
   SliderSnapMultiplier,
-  int32_t, 6
+  int32_t,
+#ifdef XP_WIN
+  6
+#else
+  0
+#endif
 )
 
 //---------------------------------------------------------------------------
