@@ -22,6 +22,11 @@ var gProtectionsHandler = {
     return this._protectionsPopupMainViewHeaderLabel =
       document.getElementById("protections-popup-mainView-panel-header-span");
   },
+  get _protectionsPopupTPSwitchBreakageLink() {
+    delete this._protectionsPopupTPSwitchBreakageLink;
+    return this._protectionsPopupTPSwitchBreakageLink =
+      document.getElementById("protections-popup-tp-switch-breakage-link");
+  },
   get _protectionsPopupTPSwitch() {
     delete this._protectionsPopupTPSwitch;
     return this._protectionsPopupTPSwitch =
@@ -108,6 +113,11 @@ var gProtectionsHandler = {
       !this._protectionsPopup.hasAttribute("hasException");
 
     this._protectionsPopupTPSwitch.toggleAttribute("enabled", currentlyEnabled);
+
+    // Display the breakage link according to the current enable state.
+    // The display state of the breakage link will be fixed once the protections
+    // panel opened no matter how the TP switch state is.
+    this._protectionsPopupTPSwitchBreakageLink.hidden = !currentlyEnabled;
 
     // Set the counter of the 'Trackers blocked This Week'.
     // We need to get the statistics of trackers. So far, we haven't implemented
