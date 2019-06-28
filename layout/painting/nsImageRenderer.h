@@ -247,6 +247,7 @@ class nsImageRenderer {
   void SetMaskOp(mozilla::StyleMaskMode aMaskOp) { mMaskOp = aMaskOp; }
   void PurgeCacheForViewportChange(
       const mozilla::Maybe<nsSize>& aSVGViewportSize, const bool aHasRatio);
+  const nsSize& GetSize() const { return mSize; }
   nsStyleImageType GetType() const { return mType; }
   const mozilla::StyleGradient* GetGradientData() const {
     return mGradientData;

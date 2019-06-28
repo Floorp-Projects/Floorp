@@ -193,6 +193,13 @@ struct nsCSSRendering {
       const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aComputedStyle,
       bool* aOutBorderIsEmpty, Sides aSkipSides = Sides());
 
+  static mozilla::Maybe<nsCSSBorderRenderer>
+  CreateNullBorderRendererWithStyleBorder(
+      nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
+      const nsRect& aDirtyRect, const nsRect& aBorderArea,
+      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aComputedStyle,
+      bool* aOutBorderIsEmpty, Sides aSkipSides = Sides());
+
   static mozilla::Maybe<nsCSSBorderRenderer> CreateBorderRendererForOutline(
       nsPresContext* aPresContext, gfxContext* aRenderingContext,
       nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
@@ -205,6 +212,13 @@ struct nsCSSRendering {
       const mozilla::layers::StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder);
+
+  static void CreateWebRenderCommandsForNullBorder(
+      nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const mozilla::layers::StackingContextHelper& aSc,
+      const nsStyleBorder& aStyleBorder);
 
   static ImgDrawResult CreateWebRenderCommandsForBorderWithStyleBorder(
       nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
