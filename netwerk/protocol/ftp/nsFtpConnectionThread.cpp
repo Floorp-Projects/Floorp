@@ -1845,7 +1845,7 @@ nsFtpState::CloseWithStatus(nsresult status) {
 
   // Shutdown the control connection processing if we are being closed with an
   // error.  Note: This method may be called several times.
-  if (!IsClosed() && status != NS_BASE_STREAM_CLOSED && NS_FAILED(status)) {
+  if (!IsClosed() && NS_FAILED(status)) {
     if (NS_SUCCEEDED(mInternalError)) mInternalError = status;
     StopProcessing();
   }
