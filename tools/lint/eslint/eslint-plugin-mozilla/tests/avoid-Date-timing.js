@@ -31,12 +31,12 @@ ruleTester.run("avoid-Date-timing", rule, {
     invalidCode(
       "Date.now();",
       "CallExpression",
-      "use performance.now() instead of Date.now() " + "for timing measurements"
+      "use performance.now() instead of Date.now() for timing measurements"
     ),
     invalidCode(
       "new Date();",
       "NewExpression",
-      "use performance.now() instead of new Date() " + "for timing measurements"
+      "use performance.now() instead of new Date() for timing measurements"
     ),
   ],
 });

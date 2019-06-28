@@ -23,6 +23,7 @@ function run_test() {
       const then = Date.now();
       do {
         let n = 10000;
+        // eslint-disable-next-line no-empty
         while (--n) {} // OSR happens here
         // Spin in the hope of getting a sample.
       } while (Date.now() - then < delayMS);
