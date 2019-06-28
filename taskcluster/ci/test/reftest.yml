@@ -121,7 +121,7 @@ reftest:
         by-test-platform:
             android-em-4.*\/debug: 56
             android-em.4.*\/(?:opt|pgo)?: 28
-            android-em-7.*: 5
+            android-em-7.*: 2
             linux64(-shippable|-devedition|-qr)?/opt: 5
             macosx101.*-64/opt: 2
             macosx101.*-64/debug: 3
