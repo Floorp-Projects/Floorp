@@ -39,7 +39,6 @@ remote.jar:
   content/domains/content/Emulation.jsm (domains/content/Emulation.jsm)
   content/domains/content/Input.jsm (domains/content/Input.jsm)
   content/domains/content/Log.jsm (domains/content/Log.jsm)
-  content/domains/content/Network.jsm (domains/content/Network.jsm)
   content/domains/content/Page.jsm (domains/content/Page.jsm)
   content/domains/content/Performance.jsm (domains/content/Performance.jsm)
   content/domains/content/Runtime.jsm (domains/content/Runtime.jsm)
@@ -47,6 +46,8 @@ remote.jar:
   content/domains/content/Security.jsm (domains/content/Security.jsm)
   content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
   content/domains/parent/Input.jsm (domains/parent/Input.jsm)
+  content/domains/parent/Network.jsm (domains/parent/Network.jsm)
+  content/domains/parent/network/NetworkObserver.jsm (domains/parent/network/NetworkObserver.jsm)
   content/domains/parent/Page.jsm (domains/parent/Page.jsm)
   content/domains/parent/Target.jsm (domains/parent/Target.jsm)
 
