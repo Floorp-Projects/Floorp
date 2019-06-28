@@ -2833,7 +2833,6 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
 
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &pn->as<PropertyAccess>();
-      // TODO(khyperia): Implement private field access.
       MOZ_ASSERT(prop->pn_pos.encloses(prop->expression().pn_pos));
 
       RootedValue expr(cx);

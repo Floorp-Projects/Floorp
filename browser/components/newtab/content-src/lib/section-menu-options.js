@@ -7,7 +7,7 @@ import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 export const SectionMenuOptions = {
   Separator: () => ({type: "separator"}),
   MoveUp: section => ({
-    id: "section_menu_action_move_up",
+    id: "newtab-section-menu-move-up",
     icon: "arrowhead-up",
     action: ac.OnlyToMain({
       type: at.SECTION_MOVE,
@@ -17,7 +17,7 @@ export const SectionMenuOptions = {
     disabled: !!section.isFirst,
   }),
   MoveDown: section => ({
-    id: "section_menu_action_move_down",
+    id: "newtab-section-menu-move-down",
     icon: "arrowhead-down",
     action: ac.OnlyToMain({
       type: at.SECTION_MOVE,
@@ -27,48 +27,48 @@ export const SectionMenuOptions = {
     disabled: !!section.isLast,
   }),
   RemoveSection: section => ({
-    id: "section_menu_action_remove_section",
+    id: "newtab-section-menu-remove-section",
     icon: "dismiss",
     action: ac.SetPref(section.showPrefName, false),
     userEvent: "MENU_REMOVE",
   }),
   CollapseSection: section => ({
-    id: "section_menu_action_collapse_section",
+    id: "newtab-section-menu-collapse-section",
     icon: "minimize",
     action: ac.OnlyToMain({type: at.UPDATE_SECTION_PREFS, data: {id: section.id, value: {collapsed: true}}}),
     userEvent: "MENU_COLLAPSE",
   }),
   ExpandSection: section => ({
-    id: "section_menu_action_expand_section",
+    id: "newtab-section-menu-expand-section",
     icon: "maximize",
     action: ac.OnlyToMain({type: at.UPDATE_SECTION_PREFS, data: {id: section.id, value: {collapsed: false}}}),
     userEvent: "MENU_EXPAND",
   }),
   ManageSection: section => ({
-    id: "section_menu_action_manage_section",
+    id: "newtab-section-menu-manage-section",
     icon: "settings",
     action: ac.OnlyToMain({type: at.SETTINGS_OPEN}),
     userEvent: "MENU_MANAGE",
   }),
   ManageWebExtension: section => ({
-    id: "section_menu_action_manage_webext",
+    id: "newtab-section-menu-manage-webext",
     icon: "settings",
     action: ac.OnlyToMain({type: at.OPEN_WEBEXT_SETTINGS, data: section.id}),
   }),
   AddTopSite: section => ({
-    id: "section_menu_action_add_topsite",
+    id: "newtab-section-menu-add-topsite",
     icon: "add",
     action: {type: at.TOP_SITES_EDIT, data: {index: -1}},
     userEvent: "MENU_ADD_TOPSITE",
   }),
   AddSearchShortcut: section => ({
-    id: "section_menu_action_add_search_engine",
+    id: "newtab-section-menu-add-search-engine",
     icon: "search",
     action: {type: at.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL},
     userEvent: "MENU_ADD_SEARCH",
   }),
   PrivacyNotice: section => ({
-    id: "section_menu_action_privacy_notice",
+    id: "newtab-section-menu-privacy-notice",
     icon: "info",
     action: ac.OnlyToMain({
       type: at.OPEN_LINK,

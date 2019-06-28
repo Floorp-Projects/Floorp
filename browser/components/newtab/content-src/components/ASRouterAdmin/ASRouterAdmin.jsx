@@ -818,9 +818,10 @@ export class CollapseToggle extends React.PureComponent {
     return (<React.Fragment>
       <a href="#devtools"
         title={label}
+        aria-label={label}
         className={`asrouter-toggle ${isCollapsed ? "collapsed" : "expanded"}`}
         onClick={this.renderAdmin ? this.onCollapseToggle : null}>
-        <span className="sr-only">{label}</span><span className="icon icon-devtools" />
+        <span className="icon icon-devtools" />
       </a>
       {renderAdmin ? <ASRouterAdminInner {...props} collapsed={this.state.collapsed} /> : null}
     </React.Fragment>);

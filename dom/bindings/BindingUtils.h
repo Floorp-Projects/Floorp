@@ -887,15 +887,9 @@ bool MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
     return JS_WrapValue(cx, rval);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
-  if (IsDOMObject(obj)) {
-    return TryToOuterize(rval);
-  }
-
-  // It's not a WebIDL object, so it's OK to just leave it as-is: only WebIDL
-  // objects (specifically only windows) require outerization.
-  return true;
+  // We're same-compartment, but we might still need to outerize if we
+  // have a Window.
+  return TryToOuterize(rval);
 }
 
 // Like MaybeWrapObjectValue, but working with a
@@ -906,15 +900,9 @@ bool MaybeWrapObject(JSContext* cx, JS::MutableHandle<JSObject*> obj) {
     return JS_WrapObject(cx, obj);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
-  if (IsDOMObject(obj)) {
-    return TryToOuterize(obj);
-  }
-
-  // It's not a WebIDL object, so it's OK to just leave it as-is: only WebIDL
-  // objects (specifically only windows) require outerization.
-  return true;
+  // We're same-compartment, but we might still need to outerize if we
+  // have a Window.
+  return TryToOuterize(obj);
 }
 
 // Like MaybeWrapObjectValue, but also allows null
@@ -928,14 +916,16 @@ bool MaybeWrapObjectOrNullValue(JSContext* cx,
   return MaybeWrapObjectValue(cx, rval);
 }
 
-// Wrapping for objects that are known to not be DOM or XPConnect objects
+// Wrapping for objects that are known to not be DOM objects
 MOZ_ALWAYS_INLINE
 bool MaybeWrapNonDOMObjectValue(JSContext* cx,
                                 JS::MutableHandle<JS::Value> rval) {
   MOZ_ASSERT(rval.isObject());
+  // Compared to MaybeWrapObjectValue we just skip the TryToOuterize call.  The
+  // only reason it would be needed is if we have a Window object, which would
+  // have a DOM class.  Assert that we don't have any DOM-class objects coming
+  // through here.
   MOZ_ASSERT(!GetDOMClass(&rval.toObject()));
-  MOZ_ASSERT(!(js::GetObjectClass(&rval.toObject())->flags &
-               JSCLASS_PRIVATE_IS_NSISUPPORTS));
 
   JSObject* obj = &rval.toObject();
   if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {

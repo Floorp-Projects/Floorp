@@ -1,6 +1,6 @@
-import {FormattedMessage, injectIntl} from "react-intl";
 import {actionCreators as ac} from "common/Actions.jsm";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
+import {FluentOrText} from "content-src/components/FluentOrText/FluentOrText";
 import React from "react";
 import {SectionMenu} from "content-src/components/SectionMenu/SectionMenu";
 import {SectionMenuOptions} from "content-src/lib/section-menu-options";
@@ -8,11 +8,7 @@ import {SectionMenuOptions} from "content-src/lib/section-menu-options";
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 
-function getFormattedMessage(message) {
-  return typeof message === "string" ? <span>{message}</span> : <FormattedMessage {...message} />;
-}
-
-export class _CollapsibleSection extends React.PureComponent {
+export class CollapsibleSection extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onBodyMount = this.onBodyMount.bind(this);
@@ -164,7 +160,7 @@ export class _CollapsibleSection extends React.PureComponent {
             {/* Click-targets that toggle a collapsible section should have an aria-expanded attribute; see bug 1553234 */}
               <span className="click-target" role="button" tabIndex="0" onKeyPress={this.onKeyPress} onClick={this.onHeaderClick}>
                 {this.renderIcon()}
-                {getFormattedMessage(title)}
+                <FluentOrText message={title} />
               </span>
               <span className="click-target" role="button" tabIndex="0" onKeyPress={this.onKeyPress} onClick={this.onHeaderClick}>
                 {isCollapsible && <span className={`collapsible-arrow icon ${collapsed ? "icon-arrowhead-forward-small" : "icon-arrowhead-down-small"}`} />}
@@ -172,9 +168,9 @@ export class _CollapsibleSection extends React.PureComponent {
               <span className="learn-more-link-wrapper">
                 {learnMore &&
                   <span className="learn-more-link">
-                    <a href={learnMore.link.href}>
-                      <FormattedMessage id={learnMore.link.id} />
-                    </a>
+                    <FluentOrText message={learnMore.link.message}>
+                      <a href={learnMore.link.href} />
+                    </FluentOrText>
                   </span>
                 }
               </span>
@@ -184,13 +180,9 @@ export class _CollapsibleSection extends React.PureComponent {
             <button
               aria-haspopup="true"
               className="context-menu-button icon"
-              title={this.props.intl.formatMessage({id: "context_menu_title"})}
+              data-l10n-id="newtab-menu-section-tooltip"
               onClick={this.onMenuButtonClick}
-              ref={this.setContextMenuButtonRef}>
-              <span className="sr-only">
-                <FormattedMessage id="section_context_menu_button_sr" />
-              </span>
-            </button>
+              ref={this.setContextMenuButtonRef} />
             {showContextMenu &&
               <SectionMenu
                 id={id}
@@ -222,7 +214,7 @@ export class _CollapsibleSection extends React.PureComponent {
   }
 }
 
-_CollapsibleSection.defaultProps = {
+CollapsibleSection.defaultProps = {
   document: global.document || {
     addEventListener: () => {},
     removeEventListener: () => {},
@@ -230,5 +222,3 @@ _CollapsibleSection.defaultProps = {
   },
   Prefs: {values: {}},
 };
-
-export const CollapsibleSection = injectIntl(_CollapsibleSection);

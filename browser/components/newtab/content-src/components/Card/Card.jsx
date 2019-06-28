@@ -1,8 +1,7 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {FormattedMessage, injectIntl} from "react-intl";
 import {cardContextTypes} from "./types";
 import {connect} from "react-redux";
-import {GetPlatformString} from "content-src/lib/link-menu-options";
+import {injectIntl} from "react-intl";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
@@ -200,9 +199,10 @@ export class _Card extends React.PureComponent {
   render() {
     const {index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats} = this.props;
     const {props} = this;
+    const title = link.title || link.hostname;
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
     // Display "now" as "trending" until we have new strings #3402
-    const {icon, intlID} = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
+    const {icon, fluentID} = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
     const hasImage = this.state.cardImage || link.hasImage;
     const imageStyle = {backgroundImage: this.state.cardImage ? `url(${this.state.cardImage.url})` : "none"};
     const outerClassName = [
@@ -221,7 +221,7 @@ export class _Card extends React.PureComponent {
             }
           </div>
           <div className="card-details">
-            {link.type === "download" && <div className="card-host-name alternate"><FormattedMessage id={GetPlatformString(this.props.platform)} /></div>}
+          {link.type === "download" && <div className="card-host-name alternate" data-l10n-id="newtab-menu-show-file" />}
             {link.hostname &&
               <div className="card-host-name">
                 {link.hostname.slice(0, 100)}{link.type === "download" && `  \u2014 ${link.description}`}
@@ -239,16 +239,17 @@ export class _Card extends React.PureComponent {
             <div className="card-context">
               {icon && !link.context && <span aria-haspopup="true" className={`card-context-icon icon icon-${icon}`} />}
               {link.icon && link.context && <span aria-haspopup="true" className="card-context-icon icon" style={{backgroundImage: `url('${link.icon}')`}} />}
-              {intlID && !link.context && <div className="card-context-label"><FormattedMessage id={intlID} defaultMessage="Visited" /></div>}
+              {fluentID && !link.context && <div className="card-context-label" data-l10n-id={fluentID} />}
               {link.context && <div className="card-context-label">{link.context}</div>}
             </div>
           </div>
         </div>
       </a>
-      {!props.placeholder && <button aria-haspopup="true" className="context-menu-button icon" title={this.props.intl.formatMessage({id: "context_menu_title"})}
-        onClick={this.onMenuButtonClick}>
-        <span aria-haspopup="true" className="sr-only">{`Open context menu for ${link.title}`}</span>
-      </button>}
+      {!props.placeholder && <button aria-haspopup="true"
+        data-l10n-id="newtab-menu-content-tooltip"
+        data-l10n-args={`{ "title": "${title}" }`}
+        className="context-menu-button icon"
+        onClick={this.onMenuButtonClick} />}
       {isContextMenuOpen &&
         <LinkMenu
           dispatch={dispatch}

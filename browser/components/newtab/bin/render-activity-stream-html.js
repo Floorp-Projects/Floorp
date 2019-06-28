@@ -86,8 +86,10 @@ function templateHTML(options) {
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
-    <title>${options.strings.newtab_page_title}</title>
+    <title data-l10n-id="newtab-page-title"></title>
     <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
+    <link rel="localization" href="browser/branding/brandings.ftl" />
+    <link rel="localization" href="browser/newtab/newtab.ftl" />
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
     <link rel="stylesheet" href="${options.baseUrl}css/activity-stream.css" />
   </head>
