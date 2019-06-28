@@ -30,6 +30,15 @@ void VideoBridgeChild::StartupForGPUProcess() {
                           &VideoBridgeParent::Open, std::move(parentPipe)));
 }
 
+void VideoBridgeChild::OpenToParentProcess(
+    Endpoint<PVideoBridgeChild>&& aEndpoint) {
+  sVideoBridgeToParentProcess = new VideoBridgeChild();
+
+  if (!aEndpoint.Bind(sVideoBridgeToParentProcess)) {
+    // We can't recover from this.
+    MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
+  }
+}
 
 void VideoBridgeChild::OpenToGPUProcess(
     Endpoint<PVideoBridgeChild>&& aEndpoint) {
