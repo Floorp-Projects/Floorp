@@ -60,6 +60,11 @@ function elementForTarget(aTarget) {
   return aTarget;
 }
 
+// Given an event target which may be a window or an element, get the associatd nsIDOMWindowUtils.
+function utilsForTarget(aTarget) {
+  return SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
+}
+
 // Given a pixel scrolling delta, converts it to the platform's native units.
 function nativeScrollUnits(aTarget, aDimen) {
   switch (getPlatform()) {
@@ -169,7 +174,7 @@ function synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver) {
   aDeltaX = nativeScrollUnits(aTarget, aDeltaX);
   aDeltaY = nativeScrollUnits(aTarget, aDeltaY);
   var msg = aDeltaX ? nativeHorizontalWheelEventMsg() : nativeVerticalWheelEventMsg();
-  var utils = SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
+  var utils = utilsForTarget(aTarget);
   var element = elementForTarget(aTarget);
   utils.sendNativeMouseScrollEvent(pt.x, pt.y, msg, aDeltaX, aDeltaY, 0, 0, 0, element, aObserver);
   return true;
@@ -220,7 +225,7 @@ function synthesizeNativeWheelAndWaitForScrollEvent(aTarget, aX, aY, aDeltaX, aD
 // aX and aY are relative to the top-left of |aTarget|'s bounding rect.
 function synthesizeNativeMouseMove(aTarget, aX, aY) {
   var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
-  var utils = SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
+  var utils = utilsForTarget(aTarget);
   var element = elementForTarget(aTarget);
   utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, element);
   return true;
@@ -243,7 +248,7 @@ function synthesizeNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY, aCallback
 // relative to the top-left of |aTarget|'s bounding rect.
 function synthesizeNativeTouch(aTarget, aX, aY, aType, aObserver = null, aTouchId = 0) {
   var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
-  var utils = SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
+  var utils = utilsForTarget(aTarget);
   utils.sendNativeTouchPoint(aTouchId, aType, pt.x, pt.y, 1, 90, aObserver);
   return true;
 }
@@ -365,10 +370,11 @@ function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
-function synthesizeNativeMouseEvent(aElement, aX, aY, aType, aObserver = null) {
-  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
-  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
-  utils.sendNativeMouseEvent(pt.x, pt.y, aType, 0, aElement, aObserver);
+function synthesizeNativeMouseEvent(aTarget, aX, aY, aType, aObserver = null) {
+  var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
+  var utils = utilsForTarget(aTarget);
+  var element = elementForTarget(aTarget);
+  utils.sendNativeMouseEvent(pt.x, pt.y, aType, 0, element, aObserver);
   return true;
 }
 
@@ -408,7 +414,7 @@ function promiseMoveMouseAndScrollWheelOver(target, dx, dy, waitForScroll = true
   });
 }
 
-// Synthesizes events to drag |element|'s vertical scrollbar by the distance
+// Synthesizes events to drag |target|'s vertical scrollbar by the distance
 // specified, synthesizing a mousemove for each increment as specified.
 // Returns false if the element doesn't have a vertical scrollbar. Otherwise,
 // returns a generator that should be invoked after the mousemoves have been
@@ -418,32 +424,35 @@ function promiseMoveMouseAndScrollWheelOver(target, dx, dy, waitForScroll = true
 // mousemove, such as the scroll event resulting from the scrollbar drag.
 // Note: helper_scrollbar_snap_bug1501062.html contains a copy of this code
 // with modifications. Fixes here should be copied there if appropriate.
-function* dragVerticalScrollbar(element, testDriver, distance = 20, increment = 5) {
-  var boundingClientRect = element.getBoundingClientRect();
-  var verticalScrollbarWidth = boundingClientRect.width - element.clientWidth;
+// |target| can be an element (for subframes) or a window (for root frames).
+function* dragVerticalScrollbar(target, testDriver, distance = 20, increment = 5) {
+  var targetElement = elementForTarget(target);
+  var w = {}, h = {};
+  utilsForTarget(target).getScrollbarSizes(targetElement, w, h);
+  var verticalScrollbarWidth = w.value;
   if (verticalScrollbarWidth == 0) {
     return false;
   }
 
   var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
-  var mouseX = element.clientWidth + (verticalScrollbarWidth / 2);
+  var mouseX = targetElement.clientWidth + (verticalScrollbarWidth / 2);
   var mouseY = upArrowHeight + 5; // start dragging somewhere in the thumb
 
-  dump("Starting drag at " + mouseX + ", " + mouseY + " from top-left of #" + element.id + "\n");
+  dump("Starting drag at " + mouseX + ", " + mouseY + " from top-left of #" + targetElement.id + "\n");
 
   // Move the mouse to the scrollbar thumb and drag it down
-  yield synthesizeNativeMouseEvent(element, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
+  yield synthesizeNativeMouseEvent(target, mouseX, mouseY, nativeMouseMoveEventMsg(), testDriver);
   // mouse down
-  yield synthesizeNativeMouseEvent(element, mouseX, mouseY, nativeMouseDownEventMsg(), testDriver);
+  yield synthesizeNativeMouseEvent(target, mouseX, mouseY, nativeMouseDownEventMsg(), testDriver);
   // drag vertically by |increment| until we reach the specified distance
   for (var y = increment; y < distance; y += increment) {
-    yield synthesizeNativeMouseEvent(element, mouseX, mouseY + y, nativeMouseMoveEventMsg(), testDriver);
+    yield synthesizeNativeMouseEvent(target, mouseX, mouseY + y, nativeMouseMoveEventMsg(), testDriver);
   }
-  yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseMoveEventMsg(), testDriver);
+  yield synthesizeNativeMouseEvent(target, mouseX, mouseY + distance, nativeMouseMoveEventMsg(), testDriver);
 
   // and return a generator to call afterwards to finish up the drag
   return function* () {
-    dump("Finishing drag of #" + element.id + "\n");
-    yield synthesizeNativeMouseEvent(element, mouseX, mouseY + distance, nativeMouseUpEventMsg(), testDriver);
+    dump("Finishing drag of #" + targetElement.id + "\n");
+    yield synthesizeNativeMouseEvent(target, mouseX, mouseY + distance, nativeMouseUpEventMsg(), testDriver);
   };
 }
