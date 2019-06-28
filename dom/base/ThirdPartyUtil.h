@@ -7,11 +7,13 @@
 #ifndef ThirdPartyUtil_h__
 #define ThirdPartyUtil_h__
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
 #include "mozIThirdPartyUtil.h"
-#include "nsEffectiveTLDService.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Document.h"
+#include "nsCOMPtr.h"
+#include "nsEffectiveTLDService.h"
+#include "nsString.h"
+#include "nsPIDOMWindow.h"
 
 class nsIURI;
 class nsPIDOMWindowOuter;

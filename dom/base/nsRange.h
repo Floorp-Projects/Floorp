@@ -164,7 +164,10 @@ class nsRange final : public mozilla::dom::AbstractRange,
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   nsresult SetStartAndEnd(
       const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
-      const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary);
+      const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary) {
+    return AbstractRange::SetStartAndEndInternal(aStartBoundary, aEndBoundary,
+                                                 this);
+  }
 
   /**
    * Adds all nodes between |aStartContent| and |aEndContent| to the range.
@@ -349,10 +352,22 @@ class nsRange final : public mozilla::dom::AbstractRange,
   void RegisterCommonAncestor(nsINode* aNode);
   void UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking);
 
-  // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
-  // and suppress re-registering a range common ancestor node since
-  // the new text node of a splitText hasn't been inserted yet.
-  // CharacterDataChanged does the re-registering when needed.
+  /**
+   * DoSetRange() is called when `AbstractRange::SetStartAndEndInternal()` sets
+   * mStart and mEnd, or some other internal methods modify `mStart` and/or
+   * `mEnd`.  Therefore, this shouldn't be a virtual method.
+   *
+   * @param aStartBoundary      Computed start point.  This must equals or be
+   *                            before aEndBoundary in the DOM tree order.
+   * @param aEndBoundary        Computed end point.
+   * @param aRootNode           The root node.
+   * @param aNotInsertedYet     true if this is called by CharacterDataChanged()
+   *                            to disable assertion and suppress re-registering
+   *                            a range common ancestor node since the new text
+   *                            node of a splitText hasn't been inserted yet.
+   *                            CharacterDataChanged() does the re-registering
+   *                            when needed.  Otherwise, false.
+   */
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetRange(
       const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
@@ -422,6 +437,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
   // notifications while holding a strong reference to the new child.
   nsIContent* MOZ_NON_OWNING_REF mNextStartRef;
   nsIContent* MOZ_NON_OWNING_REF mNextEndRef;
+
+  friend class mozilla::dom::AbstractRange;
 };
 
 #endif /* nsRange_h___ */

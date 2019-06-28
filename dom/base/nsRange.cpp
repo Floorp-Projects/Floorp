@@ -1144,65 +1144,6 @@ void nsRange::SelectNodesInContainer(nsINode* aContainer,
   DoSetRange(start, end, newRoot);
 }
 
-template <typename SPT, typename SRT, typename EPT, typename ERT>
-nsresult nsRange::SetStartAndEnd(
-    const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
-    const RangeBoundaryBase<EPT, ERT>& aEndBoundary) {
-  if (NS_WARN_IF(!aStartBoundary.IsSet()) ||
-      NS_WARN_IF(!aEndBoundary.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsINode* newStartRoot =
-      RangeUtils::ComputeRootNode(aStartBoundary.Container());
-  if (!newStartRoot) {
-    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
-  }
-  if (!aStartBoundary.IsSetAndValid()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  if (aStartBoundary.Container() == aEndBoundary.Container()) {
-    if (!aEndBoundary.IsSetAndValid()) {
-      return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
-    // XXX: Offsets - handle this more efficiently.
-    // If the end offset is less than the start offset, this should be
-    // collapsed at the end offset.
-    if (aStartBoundary.Offset() > aEndBoundary.Offset()) {
-      DoSetRange(aEndBoundary, aEndBoundary, newStartRoot);
-    } else {
-      DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
-    }
-    return NS_OK;
-  }
-
-  nsINode* newEndRoot = RangeUtils::ComputeRootNode(aEndBoundary.Container());
-  if (!newEndRoot) {
-    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
-  }
-  if (!aEndBoundary.IsSetAndValid()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  // If they have different root, this should be collapsed at the end point.
-  if (newStartRoot != newEndRoot) {
-    DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
-    return NS_OK;
-  }
-
-  // If the end point is before the start point, this should be collapsed at
-  // the end point.
-  if (nsContentUtils::ComparePoints(aStartBoundary, aEndBoundary) == 1) {
-    DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
-    return NS_OK;
-  }
-
-  // Otherwise, set the range as specified.
-  DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
-  return NS_OK;
-}
-
 void nsRange::SetEndBeforeJS(nsINode& aNode, ErrorResult& aErr) {
   AutoCalledByJSRestore calledByJSRestorer(*this);
   mCalledByJS = true;

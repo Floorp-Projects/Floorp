@@ -68,6 +68,12 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
+  template <typename SPT, typename SRT, typename EPT, typename ERT,
+            typename RangeType>
+  static nsresult SetStartAndEndInternal(
+      const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+      const RangeBoundaryBase<EPT, ERT>& aEndBoundary, RangeType* aRange);
+
   RefPtr<Document> mOwner;
   RangeBoundary mStart;
   RangeBoundary mEnd;
