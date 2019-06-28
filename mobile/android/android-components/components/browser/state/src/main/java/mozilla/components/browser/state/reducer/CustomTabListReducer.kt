@@ -20,6 +20,10 @@ internal object CustomTabListReducer {
                 val tab = state.findCustomTab(action.tabId) ?: return state
                 state.copy(customTabs = state.customTabs - tab)
             }
+
+            is CustomTabListAction.RemoveAllCustomTabsAction -> {
+                state.copy(customTabs = emptyList())
+            }
         }
     }
 }

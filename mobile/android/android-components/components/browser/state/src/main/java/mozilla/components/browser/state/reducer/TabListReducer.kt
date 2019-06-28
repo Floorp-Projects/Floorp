@@ -6,6 +6,7 @@ package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import kotlin.math.max
@@ -63,6 +64,42 @@ internal object TabListReducer {
                         // switch to a restored tab even though the user is already looking at an existing tab (e.g.
                         // a tab that came from an intent).
                         action.selectedTabId
+                    } else {
+                        state.selectedTabId
+                    }
+                )
+            }
+
+            is TabListAction.RemoveAllTabsAction -> {
+                state.copy(
+                    tabs = emptyList(),
+                    selectedTabId = null
+                )
+            }
+
+            is TabListAction.RemoveAllPrivateTabsAction -> {
+                val selectionAffected = state.selectedTab?.content?.private == true
+                val updatedTabs = state.tabs.filterNot { it.content.private }
+                state.copy(
+                    tabs = updatedTabs,
+                    selectedTabId = if (selectionAffected && updatedTabs.isNotEmpty()) {
+                        // If the selection is affected, select the last normal tab, if available.
+                        updatedTabs.last().id
+                    } else {
+                        state.selectedTabId
+                    }
+                )
+            }
+
+            is TabListAction.RemoveAllNormalTabsAction -> {
+                val selectionAffected = state.selectedTab?.content?.private == false
+                val updatedTabs = state.tabs.filter { it.content.private }
+                state.copy(
+                    tabs = updatedTabs,
+                    selectedTabId = if (selectionAffected) {
+                        // If the selection is affected, we'll set it to null as there's no
+                        // normal tab left and NO private tab should get selected instead.
+                        null
                     } else {
                         state.selectedTabId
                     }

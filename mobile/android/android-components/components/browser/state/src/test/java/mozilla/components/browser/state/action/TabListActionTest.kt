@@ -11,6 +11,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TabListActionTest {
@@ -340,22 +341,26 @@ class TabListActionTest {
 
     @Test
     fun `RestoreAction - Does not update selection if none was provided`() {
-        val store = BrowserStore(BrowserState(
-            tabs = listOf(
-                createTab(id = "a", url = "https://www.mozilla.org", private = false),
-                createTab(id = "b", url = "https://www.firefox.com", private = true)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                    createTab(id = "b", url = "https://www.firefox.com", private = true)
+                )
             )
-        ))
+        )
 
         assertEquals(2, store.state.tabs.size)
 
-        store.dispatch(TabListAction.RestoreAction(
-            tabs = listOf(
-                createTab(id = "c", url = "https://www.example.org", private = true),
-                createTab(id = "d", url = "https://getpocket.com", private = false)
-            ),
-            selectedTabId = null
-        )).joinBlocking()
+        store.dispatch(
+            TabListAction.RestoreAction(
+                tabs = listOf(
+                    createTab(id = "c", url = "https://www.example.org", private = true),
+                    createTab(id = "d", url = "https://getpocket.com", private = false)
+                ),
+                selectedTabId = null
+            )
+        ).joinBlocking()
 
         assertEquals(4, store.state.tabs.size)
         assertEquals("c", store.state.tabs[0].id)
@@ -363,5 +368,124 @@ class TabListActionTest {
         assertEquals("a", store.state.tabs[2].id)
         assertEquals("b", store.state.tabs[3].id)
         assertNull(store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RemoveAllTabsAction - Removes both private and non-private tabs (but not custom tabs)`() {
+        val state = BrowserState(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                        createTab(id = "b", url = "https://www.firefox.com", private = true)
+                ),
+                customTabs = listOf(
+                        createCustomTab(id = "a1", url = "https://www.firefox.com")
+                ),
+                selectedTabId = "a"
+        )
+
+        val store = BrowserStore(state)
+        store.dispatch(TabListAction.RemoveAllTabsAction).joinBlocking()
+
+        assertTrue(store.state.tabs.isEmpty())
+        assertNull(store.state.selectedTabId)
+        assertEquals(1, store.state.customTabs.size)
+        assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `RemoveAllPrivateTabsAction - Removes only private tabs`() {
+        val state = BrowserState(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                        createTab(id = "b", url = "https://www.firefox.com", private = true)
+                ),
+                customTabs = listOf(
+                        createCustomTab(id = "a1", url = "https://www.firefox.com")
+                ),
+                selectedTabId = "a"
+        )
+
+        val store = BrowserStore(state)
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("a", store.state.selectedTabId)
+
+        assertEquals(1, store.state.customTabs.size)
+        assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `RemoveAllPrivateTabsAction - Updates selection if affected`() {
+        val state = BrowserState(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                        createTab(id = "b", url = "https://www.firefox.com", private = true)
+                ),
+                customTabs = listOf(
+                        createCustomTab(id = "a1", url = "https://www.firefox.com")
+                ),
+                selectedTabId = "b"
+        )
+
+        val store = BrowserStore(state)
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("a", store.state.tabs[0].id)
+        assertEquals("a", store.state.selectedTabId)
+
+        assertEquals(1, store.state.customTabs.size)
+        assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `RemoveAllNormalTabsAction - Removes only normal (non-private) tabs`() {
+        val state = BrowserState(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                        createTab(id = "b", url = "https://www.firefox.com", private = true)
+                ),
+                customTabs = listOf(
+                        createCustomTab(id = "a1", url = "https://www.firefox.com")
+                ),
+                selectedTabId = "b"
+        )
+
+        val store = BrowserStore(state)
+        store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("b", store.state.tabs[0].id)
+        assertEquals("b", store.state.selectedTabId)
+
+        assertEquals(1, store.state.customTabs.size)
+        assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `RemoveAllNormalTabsAction - Updates selection if affected`() {
+        val state = BrowserState(
+                tabs = listOf(
+                        createTab(id = "a", url = "https://www.mozilla.org", private = false),
+                        createTab(id = "b", url = "https://www.firefox.com", private = true)
+                ),
+                customTabs = listOf(
+                        createCustomTab(id = "a1", url = "https://www.firefox.com")
+                ),
+                selectedTabId = "a"
+        )
+
+        val store = BrowserStore(state)
+        store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("b", store.state.tabs[0].id)
+        // After removing the last normal tab NO private tab should get selected
+        assertNull(store.state.selectedTabId)
+
+        assertEquals(1, store.state.customTabs.size)
+        assertEquals("a1", store.state.customTabs.last().id)
     }
 }

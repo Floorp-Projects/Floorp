@@ -58,6 +58,49 @@ class SessionManagerMigrationTest {
     }
 
     @Test
+    fun `Remove all regular sessions`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        sessionManager.add(Session("https://www.mozilla.org"))
+        sessionManager.add(Session("https://www.firefox.com"))
+        sessionManager.add(Session("https://www.getpocket.com").apply { customTabConfig = mock() })
+
+        assertEquals(2, sessionManager.sessions.size)
+        assertEquals(3, sessionManager.all.size)
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+
+        sessionManager.removeSessions()
+
+        assertEquals(0, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+    }
+
+    @Test
+    fun `Remove all custom tab and regular sessions`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        sessionManager.add(Session("https://www.mozilla.org"))
+        sessionManager.add(Session("https://www.firefox.com").apply {
+            customTabConfig = mock()
+        })
+
+        assertEquals(2, sessionManager.all.size)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+
+        sessionManager.removeAll()
+
+        assertTrue(sessionManager.sessions.isEmpty())
+        assertTrue(store.state.tabs.isEmpty())
+        assertTrue(store.state.customTabs.isEmpty())
+    }
+
+    @Test
     fun `Selecting session`() {
         val store = BrowserStore()
 

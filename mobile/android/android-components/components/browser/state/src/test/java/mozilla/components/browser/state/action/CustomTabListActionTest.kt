@@ -6,6 +6,7 @@ package mozilla.components.browser.state.action
 
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
@@ -59,5 +60,22 @@ class CustomTabListActionTest {
         assertEquals(2, store.state.customTabs.size)
         assertEquals(customTab1, store.state.customTabs[0])
         assertEquals(customTab2, store.state.customTabs[1])
+    }
+
+    @Test
+    fun `RemoveAllCustomTabsAction - Removes all custom tabs (but not regular tabs)`() {
+        val customTab1 = createCustomTab("https://www.mozilla.org")
+        val customTab2 = createCustomTab("https://www.firefox.com")
+        val regularTab = createTab(url = "https://www.mozilla.org")
+
+        val state = BrowserState(customTabs = listOf(customTab1, customTab2), tabs = listOf(regularTab))
+        val store = BrowserStore(state)
+
+        assertEquals(2, store.state.customTabs.size)
+        assertEquals(1, store.state.tabs.size)
+
+        store.dispatch(CustomTabListAction.RemoveAllCustomTabsAction).joinBlocking()
+        assertEquals(0, store.state.customTabs.size)
+        assertEquals(1, store.state.tabs.size)
     }
 }

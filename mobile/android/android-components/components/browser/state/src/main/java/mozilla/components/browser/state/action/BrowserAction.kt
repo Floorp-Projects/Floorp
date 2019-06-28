@@ -39,6 +39,21 @@ sealed class TabListAction : BrowserAction() {
      * Restores state from a (partial) previous state.
      */
     data class RestoreAction(val tabs: List<TabSessionState>, val selectedTabId: String? = null) : TabListAction()
+
+    /**
+     * Removes both private and normal [TabSessionState]s.
+     */
+    object RemoveAllTabsAction : TabListAction()
+
+    /**
+     * Removes all private [TabSessionState]s.
+     */
+    object RemoveAllPrivateTabsAction : TabListAction()
+
+    /**
+     * Removes all non-private [TabSessionState]s.
+     */
+    object RemoveAllNormalTabsAction : TabListAction()
 }
 
 /**
@@ -54,6 +69,11 @@ sealed class CustomTabListAction : BrowserAction() {
      * Removes an existing [CustomTabSessionState] to [BrowserState.customTabs].
      */
     data class RemoveCustomTabAction(val tabId: String) : CustomTabListAction()
+
+    /**
+     * Removes all custom tabs [TabSessionState]s.
+     */
+    object RemoveAllCustomTabsAction : CustomTabListAction()
 }
 
 /**

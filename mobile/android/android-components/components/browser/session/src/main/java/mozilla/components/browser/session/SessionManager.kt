@@ -187,6 +187,9 @@ class SessionManager(
      */
     fun removeSessions() {
         delegate.removeSessions()
+        store?.syncDispatch(
+            TabListAction.RemoveAllTabsAction
+        )
     }
 
     /**
@@ -194,6 +197,12 @@ class SessionManager(
      */
     fun removeAll() {
         delegate.removeAll()
+        store?.syncDispatch(
+            TabListAction.RemoveAllTabsAction
+        )
+        store?.syncDispatch(
+            CustomTabListAction.RemoveAllCustomTabsAction
+        )
     }
 
     /**
