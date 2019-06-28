@@ -7,7 +7,6 @@
 EXPORTS += [
     'external_api/moz_external_vr.h',
     'gfxVR.h',
-    'gfxVRExternal.h',
     'ipc/VRChild.h',
     'ipc/VRGPUChild.h',
     'ipc/VRGPUParent.h',
@@ -21,9 +20,9 @@ EXPORTS += [
     'ipc/VRProcessParent.h',
     'service/VRService.h',
     'VRDisplayClient.h',
-    'VRDisplayHost.h',
     'VRDisplayPresentation.h',
     'VRManager.h',
+    'VRPuppetCommandBuffer.h',
     'VRThread.h',
 ]
 
@@ -48,18 +47,12 @@ UNIFIED_SOURCES += [
     'ipc/VRProcessParent.cpp',
     'VRDisplayClient.cpp',
     'VRDisplayPresentation.cpp',
-    'VRManager.cpp',
     'VRThread.cpp',
 ]
 
-# VRDisplayHost includes MacIOSurface.h which includes Mac headers
-# which define Size and Points types in the root namespace that
-# often conflict with our own types.
 SOURCES += [
-    'gfxVRExternal.cpp',
-    'gfxVRPuppet.cpp',
-    'VRDisplayHost.cpp',
-    'VRDisplayLocal.cpp',
+    'VRManager.cpp',
+    'VRPuppetCommandBuffer.cpp',
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
@@ -67,6 +60,9 @@ if CONFIG['OS_TARGET'] == 'Android':
 else:
     DIRS += [
         'service',
+    ]
+    UNIFIED_SOURCES += [
+        'VRServiceHost.cpp',
     ]
 
 # Only target x64 for vrhost since WebVR is only supported on 64bit.

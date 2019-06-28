@@ -17,6 +17,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
+#include <type_traits>
 
 namespace mozilla {
 namespace layers {
@@ -25,12 +26,10 @@ class PTextureParent;
 namespace dom {
 enum class GamepadMappingType : uint8_t;
 enum class GamepadHand : uint8_t;
-struct GamepadPoseState;
 }  // namespace dom
 namespace gfx {
 class VRLayerParent;
 class VRDisplayHost;
-class VRControllerHost;
 class VRManagerPromise;
 
 // The maximum number of frames of latency that we would expect before we
@@ -42,16 +41,6 @@ class VRManagerPromise;
 // conservative value.
 static const int kVRMaxLatencyFrames = 100;
 
-enum class VRDeviceType : uint16_t {
-  Oculus,
-  OpenVR,
-  OSVR,
-  GVR,
-  Puppet,
-  External,
-  NumVRDeviceTypes
-};
-
 enum class OpenVRControllerType : uint16_t {
   Vive,
   WMR,
@@ -62,7 +51,6 @@ enum class OpenVRControllerType : uint16_t {
 
 struct VRDisplayInfo {
   uint32_t mDisplayID;
-  VRDeviceType mType;
   uint32_t mPresentingGroups;
   uint32_t mGroupMask;
   uint64_t mFrameId;
@@ -70,11 +58,11 @@ struct VRDisplayInfo {
   VRControllerState mControllerState[kVRControllerMaxCount];
 
   VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
+  void Clear() { memset(this, 0, sizeof(VRDisplayInfo)); }
   const VRHMDSensorState& GetSensorState() const {
     return mLastSensorState[mFrameId % kVRMaxLatencyFrames];
   }
 
-  VRDeviceType GetType() const { return mType; }
   uint32_t GetDisplayID() const { return mDisplayID; }
   const char* GetDisplayName() const { return mDisplayState.displayName; }
   VRDisplayCapabilityFlags GetCapabilities() const {
@@ -102,7 +90,7 @@ struct VRDisplayInfo {
     }
     // Note that mDisplayState and mControllerState are asserted to be POD
     // types, so memcmp is safe
-    return mType == other.mType && mDisplayID == other.mDisplayID &&
+    return mDisplayID == other.mDisplayID &&
            memcmp(&mDisplayState, &other.mDisplayState,
                   sizeof(VRDisplayState)) == 0 &&
            memcmp(mControllerState, other.mControllerState,
@@ -116,6 +104,9 @@ struct VRDisplayInfo {
   }
 };
 
+static_assert(std::is_pod<VRDisplayInfo>::value,
+              "VRDisplayInfo must be a POD type.");
+
 struct VRSubmitFrameResultInfo {
   VRSubmitFrameResultInfo()
       : mFormat(SurfaceFormat::UNKNOWN), mFrameNum(0), mWidth(0), mHeight(0) {}
@@ -128,7 +119,6 @@ struct VRSubmitFrameResultInfo {
 };
 
 struct VRControllerInfo {
-  VRDeviceType GetType() const { return mType; }
   uint32_t GetControllerID() const { return mControllerID; }
   const char* GetControllerName() const {
     return mControllerState.controllerName;
@@ -141,14 +131,13 @@ struct VRControllerInfo {
   uint32_t GetNumHaptics() const { return mControllerState.numHaptics; }
 
   uint32_t mControllerID;
-  VRDeviceType mType;
   dom::GamepadMappingType mMappingType;
   uint32_t mDisplayID;
   VRControllerState mControllerState;
   bool operator==(const VRControllerInfo& other) const {
     // Note that mControllerState is asserted to be a POD type, so memcmp is
     // safe
-    return mType == other.mType && mControllerID == other.mControllerID &&
+    return mControllerID == other.mControllerID &&
            memcmp(&mControllerState, &other.mControllerState,
                   sizeof(VRControllerState)) == 0 &&
            mMappingType == other.mMappingType && mDisplayID == other.mDisplayID;
@@ -171,52 +160,6 @@ struct VRTelemetry {
 
   TimeStamp mPresentationStart;
   int32_t mLastDroppedFrameCount;
-};
-
-class VRSystemManager {
- public:
-  static uint32_t AllocateDisplayID();
-  static uint32_t AllocateControllerID();
-
- protected:
-  static Atomic<uint32_t> sDisplayBase;
-  static Atomic<uint32_t> sControllerBase;
-
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRSystemManager)
-
-  virtual void Destroy() = 0;
-  virtual void Shutdown() = 0;
-  virtual void Enumerate() = 0;
-  virtual void NotifyVSync();
-  virtual void Run1msTasks(double aDeltaTime);
-  virtual void Run10msTasks();
-  virtual void Run100msTasks();
-  virtual bool ShouldInhibitEnumeration();
-  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) = 0;
-  virtual bool GetIsPresenting() = 0;
-  virtual void HandleInput() = 0;
-  virtual void GetControllers(
-      nsTArray<RefPtr<VRControllerHost>>& aControllerResult) = 0;
-  virtual void ScanForControllers() = 0;
-  virtual void RemoveControllers() = 0;
-  virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             double aIntensity, double aDuration,
-                             const VRManagerPromise& aPromise) = 0;
-  virtual void StopVibrateHaptic(uint32_t aControllerIdx) = 0;
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
-                      bool aTouched, double aValue);
-  void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
-  void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
-  void NewHandChangeEvent(uint32_t aIndex, const dom::GamepadHand aHand);
-  void AddGamepad(const VRControllerInfo& controllerInfo);
-  void RemoveGamepad(uint32_t aIndex);
-
- protected:
-  VRSystemManager() : mControllerCount(0) {}
-  virtual ~VRSystemManager() = default;
-
-  uint32_t mControllerCount;
 };
 
 }  // namespace gfx

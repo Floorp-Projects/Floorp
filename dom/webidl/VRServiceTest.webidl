@@ -5,35 +5,77 @@
  * This WebIDL is just for WebVR testing.
  */
 
-[Pref="dom.vr.test.enabled",
+[Pref="dom.vr.puppet.enabled",
  HeaderFile="mozilla/dom/VRServiceTest.h"]
 interface VRMockDisplay {
-  void setEyeResolution(unsigned long aRenderWidth, unsigned long aRenderHeight);
-  void setEyeParameter(VREye eye, double offsetX, double offsetY, double offsetZ,
-                       double upDegree, double rightDegree,
-                       double downDegree, double leftDegree);
-  void setPose(Float32Array? position, Float32Array? linearVelocity,
-               Float32Array? linearAcceleration, Float32Array? orientation,
-               Float32Array? angularVelocity, Float32Array? angularAcceleration);
-  void setMountState(boolean isMounted);
-  void update();
+  void create();
+  attribute boolean capPosition;
+  attribute boolean capOrientation;
+  attribute boolean capPresent;
+  attribute boolean capExternal;
+  attribute boolean capAngularAcceleration;
+  attribute boolean capLinearAcceleration;
+  attribute boolean capStageParameters;
+  attribute boolean capMountDetection;
+  attribute boolean capPositionEmulated;
+  void setEyeFOV(VREye eye,
+                 double upDegree, double rightDegree,
+                 double downDegree, double leftDegree);
+  void setEyeOffset(VREye eye, double offsetX,
+                    double offsetY, double offsetZ);
+  void setEyeResolution(unsigned long renderWidth,
+                        unsigned long renderHeight);
+  void setConnected(boolean connected);
+  void setMounted(boolean mounted);
+  void setStageSize(double width, double height);
+  [Throws] void setSittingToStandingTransform(Float32Array sittingToStandingTransform);
+  [Throws] void setPose(Float32Array? position, Float32Array? linearVelocity,
+                        Float32Array? linearAcceleration, Float32Array? orientation,
+                        Float32Array? angularVelocity, Float32Array? angularAcceleration);
 };
 
-[Pref="dom.vr.test.enabled",
+[Pref="dom.vr.puppet.enabled",
  HeaderFile="mozilla/dom/VRServiceTest.h"]
 interface VRMockController {
-  void newButtonEvent(unsigned long button, boolean pressed);
-  void newAxisMoveEvent(unsigned long axis, double value);
-  void newPoseMove(Float32Array? position, Float32Array? linearVelocity,
-                   Float32Array? linearAcceleration, Float32Array? orientation,
-                   Float32Array? angularVelocity, Float32Array? angularAcceleration);
+  void create();
+  void clear();
+  attribute GamepadHand hand;
+  attribute boolean capPosition;
+  attribute boolean capOrientation;
+  attribute boolean capAngularAcceleration;
+  attribute boolean capLinearAcceleration;
+  attribute unsigned long axisCount;
+  attribute unsigned long buttonCount;
+  attribute unsigned long hapticCount;
+  [Throws] void setPose(Float32Array? position, Float32Array? linearVelocity,
+                        Float32Array? linearAcceleration, Float32Array? orientation,
+                        Float32Array? angularVelocity, Float32Array? angularAcceleration);
+  void setButtonPressed(unsigned long buttonIdx, boolean pressed);
+  void setButtonTouched(unsigned long buttonIdx, boolean touched);
+  void setButtonTrigger(unsigned long buttonIdx, double trigger);
+  void setAxisValue(unsigned long axisIdx, double value);
 };
 
-[Pref="dom.vr.test.enabled",
+[Pref="dom.vr.puppet.enabled",
  HeaderFile="mozilla/dom/VRServiceTest.h"]
 interface VRServiceTest {
-  [Throws, NewObject]
-  Promise<VRMockDisplay> attachVRDisplay(DOMString id);
-  [Throws, NewObject]
-  Promise<VRMockController> attachVRController(DOMString id);
+  VRMockDisplay getVRDisplay();
+  [Throws] VRMockController getVRController(unsigned long controllerIdx);
+  [Throws] Promise<void> run();
+  [Throws] Promise<void> reset();
+  void commit();
+  void end();
+  void clearAll();
+  void timeout(unsigned long duration);
+  void wait(unsigned long duration);
+  void waitSubmit();
+  void waitPresentationStart();
+  void waitPresentationEnd();
+  [Throws]
+  void waitHapticIntensity(unsigned long controllerIdx, unsigned long hapticIdx, double intensity);
+  void captureFrame();
+  void acknowledgeFrame();
+  void rejectFrame();
+  void startTimer();
+  void stopTimer();
 };

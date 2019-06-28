@@ -59,11 +59,6 @@ already_AddRefed<VRDisplayPresentation> VRDisplayClient::BeginPresentation(
 
 void VRDisplayClient::PresentationDestroyed() { --mPresentationCount; }
 
-void VRDisplayClient::ZeroSensor() {
-  VRManagerChild* vm = VRManagerChild::Get();
-  vm->SendResetSensor(mDisplayInfo.mDisplayID);
-}
-
 void VRDisplayClient::SetGroupMask(uint32_t aGroupMask) {
   VRManagerChild* vm = VRManagerChild::Get();
   vm->SendSetGroupMask(mDisplayInfo.mDisplayID, aGroupMask);

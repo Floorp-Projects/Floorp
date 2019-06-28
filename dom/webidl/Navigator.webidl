@@ -224,7 +224,7 @@ partial interface Navigator {
   void requestVRPresentation(VRDisplay display);
 };
 partial interface Navigator {
-  [Pref="dom.vr.test.enabled"]
+  [Pref="dom.vr.puppet.enabled"]
   VRServiceTest requestVRServiceTest();
 };
 

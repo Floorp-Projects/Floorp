@@ -21,11 +21,6 @@ namespace gfx {
 
 class VRManager;
 
-namespace impl {
-class VRDisplayPuppet;
-class VRControllerPuppet;
-}  // namespace impl
-
 class VRManagerParent final : public PVRManagerParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerParent);
 
@@ -42,7 +37,6 @@ class VRManagerParent final : public PVRManagerParent {
   bool HaveEventListener();
   bool HaveControllerListener();
   bool GetVRActiveStatus();
-  bool SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent);
   bool SendReplyGamepadVibrateHaptic(const uint32_t& aPromiseID);
 
  protected:
@@ -56,7 +50,6 @@ class VRManagerParent final : public PVRManagerParent {
   void OnChannelConnected(int32_t pid) override;
 
   mozilla::ipc::IPCResult RecvRefreshDisplays();
-  mozilla::ipc::IPCResult RecvResetSensor(const uint32_t& aDisplayID);
   mozilla::ipc::IPCResult RecvSetGroupMask(const uint32_t& aDisplayID,
                                            const uint32_t& aGroupMask);
   mozilla::ipc::IPCResult RecvSetHaveEventListener(
@@ -69,26 +62,15 @@ class VRManagerParent final : public PVRManagerParent {
                                             const double& aDuration,
                                             const uint32_t& aPromiseID);
   mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aControllerIdx);
-  mozilla::ipc::IPCResult RecvCreateVRTestSystem();
-  mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(
-      const nsCString& aID, const uint32_t& aPromiseID);
-  mozilla::ipc::IPCResult RecvCreateVRServiceTestController(
-      const nsCString& aID, const uint32_t& aPromiseID);
-  mozilla::ipc::IPCResult RecvSetDisplayInfoToMockDisplay(
-      const uint32_t& aDeviceID, const VRDisplayInfo& aDisplayInfo);
-  mozilla::ipc::IPCResult RecvSetSensorStateToMockDisplay(
-      const uint32_t& aDeviceID, const VRHMDSensorState& aSensorState);
-  mozilla::ipc::IPCResult RecvNewButtonEventToMockController(
-      const uint32_t& aDeviceID, const long& aButton, const bool& aPressed);
-  mozilla::ipc::IPCResult RecvNewAxisMoveEventToMockController(
-      const uint32_t& aDeviceID, const long& aAxis, const double& aValue);
-  mozilla::ipc::IPCResult RecvNewPoseMoveToMockController(
-      const uint32_t& aDeviceID, const GamepadPoseState& pose);
   mozilla::ipc::IPCResult RecvStartVRNavigation(const uint32_t& aDeviceID);
   mozilla::ipc::IPCResult RecvStopVRNavigation(const uint32_t& aDeviceID,
                                                const TimeDuration& aTimeout);
   mozilla::ipc::IPCResult RecvStartActivity();
   mozilla::ipc::IPCResult RecvStopActivity();
+
+  mozilla::ipc::IPCResult RecvRunPuppet(
+      const InfallibleTArray<uint64_t>& aBuffer);
+  mozilla::ipc::IPCResult RecvResetPuppet();
 
  private:
   void RegisterWithManager();
@@ -99,8 +81,6 @@ class VRManagerParent final : public PVRManagerParent {
   static void RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager);
 
   void DeferredDestroy();
-  already_AddRefed<impl::VRControllerPuppet> GetControllerPuppet(
-      uint32_t aDeviceID);
 
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
@@ -110,9 +90,6 @@ class VRManagerParent final : public PVRManagerParent {
 
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;
-  nsRefPtrHashtable<nsUint32HashKey, impl::VRControllerPuppet>
-      mVRControllerTests;
-  uint32_t mControllerTestID;
   bool mHaveEventListener;
   bool mHaveControllerListener;
   bool mIsContentChild;

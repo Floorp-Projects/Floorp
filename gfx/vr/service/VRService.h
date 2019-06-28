@@ -24,15 +24,15 @@ static const int kVRFrameTimingHistoryDepth = 100;
 class VRService {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRService)
-  static already_AddRefed<VRService> Create();
+  static already_AddRefed<VRService> Create(
+      volatile VRExternalShmem* aShmem = nullptr);
 
   void Refresh();
   void Start();
   void Stop();
-  VRExternalShmem* GetAPIShmem();
 
  private:
-  VRService();
+  explicit VRService(volatile VRExternalShmem* aShmem);
   ~VRService();
 
   bool InitShmem();
@@ -59,15 +59,13 @@ class VRService {
   base::Thread* mServiceThread;
   bool mShutdownRequested;
 
-  VRExternalShmem* MOZ_OWNING_REF mAPIShmem;
+  volatile VRExternalShmem* MOZ_OWNING_REF mAPIShmem;
   base::ProcessHandle mTargetShmemFile;
   VRHapticState mLastHapticState[kVRHapticsMaxCount];
   TimeStamp mFrameStartTime[kVRFrameTimingHistoryDepth];
 #if defined(XP_WIN)
   HANDLE mMutex;
 #endif
-  // We store the value of StaticPrefs::dom_vr_process_enabled() in
-  // mVRProcessEnabled.
   bool mVRProcessEnabled;
 
   bool IsInServiceThread();

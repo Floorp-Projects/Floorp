@@ -33,8 +33,6 @@ class VRDisplayClient {
   virtual const VRHMDSensorState& GetSensorState() const;
   void GetSubmitFrameResult(VRSubmitFrameResultInfo& aResult);
 
-  virtual void ZeroSensor();
-
   already_AddRefed<VRDisplayPresentation> BeginPresentation(
       const nsTArray<dom::VRLayer>& aLayers, uint32_t aGroup);
   void PresentationDestroyed();
