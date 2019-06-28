@@ -1339,7 +1339,7 @@ pref("javascript.options.mem.nursery.max_kb", 16384);
 pref("javascript.options.mem.gc_per_zone", true);
 pref("javascript.options.mem.gc_incremental", true);
 
-// JSGC_SLICE_TIME_BUDGET
+// JSGC_SLICE_TIME_BUDGET_MS
 // Override the shell's default of unlimited slice time.
 pref("javascript.options.mem.gc_incremental_slice_ms", 5);
 

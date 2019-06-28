@@ -1,2 +1,2 @@
 // |jit-test| error: Error
-gcparam("sliceTimeBudget", -1);
+gcparam("sliceTimeBudgetMS", -1);

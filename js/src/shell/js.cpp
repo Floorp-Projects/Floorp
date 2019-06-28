@@ -11354,7 +11354,7 @@ int main(int argc, char** argv, char** envp) {
   if (!op.getBoolOption("no-incremental-gc")) {
     JS_SetGCParameter(cx, JSGC_DYNAMIC_HEAP_GROWTH, 1);
     JS_SetGCParameter(cx, JSGC_DYNAMIC_MARK_SLICE, 1);
-    JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET, 10);
+    JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 10);
   }
 #endif
 

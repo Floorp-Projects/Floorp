@@ -430,7 +430,7 @@ class GCRuntime {
   uint64_t majorGCCount() const { return majorGCNumber; }
   void incMajorGcNumber() { ++majorGCNumber; }
 
-  int64_t defaultSliceBudget() const { return defaultTimeBudget_; }
+  int64_t defaultSliceBudgetMS() const { return defaultTimeBudgetMS_; }
 
   bool isIncrementalGc() const { return isIncremental; }
   bool isFullGc() const { return isFull; }
@@ -934,10 +934,10 @@ class GCRuntime {
   /*
    * Default budget for incremental GC slice. See js/SliceBudget.h.
    *
-   * JSGC_SLICE_TIME_BUDGET
+   * JSGC_SLICE_TIME_BUDGET_MS
    * pref: javascript.options.mem.gc_incremental_slice_ms,
    */
-  MainThreadData<int64_t> defaultTimeBudget_;
+  MainThreadData<int64_t> defaultTimeBudgetMS_;
 
   /*
    * We disable incremental GC if we encounter a Class with a trace hook
