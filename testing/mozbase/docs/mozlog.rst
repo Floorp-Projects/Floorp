@@ -113,6 +113,10 @@ emitted:
     Expected result of the test. Omitted if the expected result is the
     same as the actual result (string enum, same as ``status``).
 
+  ``known_intermittent``
+    A list of known intermittent statuses for that test. Omitted if there are 
+    no intermittent statuses expected. (items in the list are string enum, same as ``status``)
+
 ``test_end``
   Emitted to give the result of a test with no subtests, or the status
   of the overall file when there are subtests.
@@ -130,6 +134,10 @@ emitted:
   ``expected``
     The expected status, or omitted if the expected status matches the
     actual status (string enum, same as ``status``).
+
+  ``known_intermittent``
+    A list of known intermittent statuses for that test. Omitted if there are 
+    no intermittent statuses expected. (items in the list are string enum, same as ``status``)
 
 ``process_output``
   Output from a managed subprocess.
@@ -463,7 +471,9 @@ structured log messages are sent to stdout::
   {"status": "FAIL", "thread": "MainThread", "pid": 18456, "source": "structured-example", "test": "test_expected_fail", "time": 1401446682788, "action": "test_end", "message": "4 not equal to 5"}
   {"source": "structured-example", "test": "test_that_passes", "thread": "MainThread", "time": 1401446682788, "action": "test_start", "pid": 18456}
   {"status": "PASS", "source": "structured-example", "test": "test_that_passes", "thread": "MainThread", "time": 1401446682789, "action": "test_end", "pid": 18456}
-  {"action": "suite_end", "source": "structured-example", "pid": 18456, "thread": "MainThread", "time": 1401446682789}
+  {"source": "structured-example", "test": "test_with_known_intermittent", "thread": "MainThread", "time": 1401446682789, "action": "test_start", "pid": 18456}
+  {"status": "FAIL", thread": "MainThread", "pid": 18456, "source": "structured-example", "test": "test_with_known_intermittent", "time": 1401446682790, "action": "test_end", "expected": "PASS", "known_intermittent": ["FAIL", "TIMEOUT"]}
+  {"action": "suite_end", "source": "structured-example", "pid": 18456, "thread": "MainThread", "time": 1401446682790}
 
 The structured logging module provides a number of command line
 options::
