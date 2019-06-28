@@ -140,7 +140,9 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
   void SetDeclare(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::declare, aValue, aRv);
   }
-  uint32_t Hspace() { return GetUnsignedIntAttr(nsGkAtoms::hspace, 0); }
+  uint32_t Hspace() {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::hspace, 0);
+  }
   void SetHspace(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, 0, aRv);
   }
@@ -150,7 +152,9 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
   void SetStandby(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::standby, aValue, aRv);
   }
-  uint32_t Vspace() { return GetUnsignedIntAttr(nsGkAtoms::vspace, 0); }
+  uint32_t Vspace() {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::vspace, 0);
+  }
   void SetVspace(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aRv);
   }

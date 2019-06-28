@@ -97,9 +97,8 @@ bool HTMLMarqueeElement::ParseAttribute(int32_t aNamespaceID,
       return aResult.ParseEnumValue(aValue, kDirectionTable, false,
                                     kDefaultDirection);
     }
-    if ((aAttribute == nsGkAtoms::hspace) ||
-        (aAttribute == nsGkAtoms::vspace)) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+    if (aAttribute == nsGkAtoms::hspace || aAttribute == nsGkAtoms::vspace) {
+      return aResult.ParseHTMLDimension(aValue);
     }
 
     if (aAttribute == nsGkAtoms::loop) {

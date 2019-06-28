@@ -134,6 +134,26 @@ const tests = [
   // https://github.com/whatwg/html/issues/4717 tracks the fact that for the
   // <col width> case that "0 is valid" boolean should probably be true.
   [ newElem("col"), "width", "width", false ],
+  [ newElem("embed"), "hspace", "marginLeft", true ],
+  [ newElem("embed"), "hspace", "marginRight", true ],
+  [ newElem("embed"), "vspace", "marginTop", true ],
+  [ newElem("embed"), "vspace", "marginBottom", true ],
+  [ newElem("img"), "hspace", "marginLeft", true ],
+  [ newElem("img"), "hspace", "marginRight", true ],
+  [ newElem("img"), "vspace", "marginTop", true ],
+  [ newElem("img"), "vspace", "marginBottom", true ],
+  [ newElem("object"), "hspace", "marginLeft", true ],
+  [ newElem("object"), "hspace", "marginRight", true ],
+  [ newElem("object"), "vspace", "marginTop", true ],
+  [ newElem("object"), "vspace", "marginBottom", true ],
+  [ newImageInput(), "hspace", "marginLeft", true ],
+  [ newImageInput(), "hspace", "marginRight", true ],
+  [ newImageInput(), "vspace", "marginTop", true ],
+  [ newImageInput(), "vspace", "marginBottom", true ],
+  [ newElem("marquee"), "hspace", "marginLeft", true ],
+  [ newElem("marquee"), "hspace", "marginRight", true ],
+  [ newElem("marquee"), "vspace", "marginTop", true ],
+  [ newElem("marquee"), "vspace", "marginBottom", true ],
 ];
 
 

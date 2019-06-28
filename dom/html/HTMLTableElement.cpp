@@ -832,9 +832,6 @@ bool HTMLTableElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
         aAttribute == nsGkAtoms::bordercolor) {
       return aResult.ParseColor(aValue);
     }
-    if (aAttribute == nsGkAtoms::hspace || aAttribute == nsGkAtoms::vspace) {
-      return aResult.ParseIntWithBounds(aValue, 0);
-    }
   }
 
   return nsGenericHTMLElement::ParseBackgroundAttribute(
@@ -855,8 +852,6 @@ void HTMLTableElement::MapAttributesIntoRule(
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 
-  nsCompatibility mode = aDecls.Document()->GetCompatibilityMode();
-
   // cellspacing
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellspacing);
   if (value && value->Type() == nsAttrValue::eInteger &&
@@ -875,28 +870,6 @@ void HTMLTableElement::MapAttributesIntoRule(
     }
   }
 
-  // hspace is mapped into left and right margin,
-  // vspace is mapped into top and bottom margins
-  // - *** Quirks Mode only ***
-  if (eCompatibility_NavQuirks == mode) {
-    value = aAttributes->GetAttr(nsGkAtoms::hspace);
-
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left,
-                                  (float)value->GetIntegerValue());
-      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right,
-                                  (float)value->GetIntegerValue());
-    }
-
-    value = aAttributes->GetAttr(nsGkAtoms::vspace);
-
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top,
-                                  (float)value->GetIntegerValue());
-      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
-                                  (float)value->GetIntegerValue());
-    }
-  }
   // bordercolor
   value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
   nscolor color;
@@ -937,8 +910,7 @@ HTMLTableElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   static const MappedAttributeEntry attributes[] = {
       {nsGkAtoms::cellpadding}, {nsGkAtoms::cellspacing},
       {nsGkAtoms::border},      {nsGkAtoms::width},
-      {nsGkAtoms::height},      {nsGkAtoms::hspace},
-      {nsGkAtoms::vspace},
+      {nsGkAtoms::height},
 
       {nsGkAtoms::bordercolor},
 
