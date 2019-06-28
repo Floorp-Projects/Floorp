@@ -60,6 +60,7 @@ async function check_some_enterprise_roots_imported(nssComponent, certDB) {
 add_task(async function run_test() {
   let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
   let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+  nssComponent.getEnterpriseRoots(); // blocks until roots are loaded
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
   await check_no_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);
