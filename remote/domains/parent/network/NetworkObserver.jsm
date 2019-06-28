@@ -5,14 +5,12 @@
 "use strict";
 
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {Helper} = ChromeUtils.import("chrome://juggler/content/Helper.js");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 
 const Cm = Components.manager;
 const CC = Components.Constructor;
-const helper = new Helper();
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream", "setInputStream");
 const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1", "nsIBinaryOutputStream", "setOutputStream");
@@ -35,17 +33,6 @@ const SINK_CONTRACT_ID = "@mozilla.org/network/monitor/channeleventsink;1";
 const SINK_CATEGORY_NAME = "net-channel-event-sinks";
 
 class NetworkObserver {
-  static instance() {
-    return NetworkObserver._instance || null;
-  }
-
-  static initialize() {
-    if (NetworkObserver._instance) {
-      return;
-    }
-    NetworkObserver._instance = new NetworkObserver();
-  }
-
   constructor() {
     EventEmitter.decorate(this);
     this._browserSessionCount = new Map();
@@ -74,12 +61,13 @@ class NetworkObserver {
     this._extraHTTPHeaders = new Map();
     this._browserResponseStorages = new Map();
 
-    this._eventListeners = [
-      helper.addObserver(this._onRequest.bind(this), "http-on-modify-request"),
-      helper.addObserver(this._onResponse.bind(this, false /* fromCache */), "http-on-examine-response"),
-      helper.addObserver(this._onResponse.bind(this, true /* fromCache */), "http-on-examine-cached-response"),
-      helper.addObserver(this._onResponse.bind(this, true /* fromCache */), "http-on-examine-merged-response"),
-    ];
+    this._onRequest = this._onRequest.bind(this);
+    this._onExamineResponse = this._onResponse.bind(this, false /* fromCache */);
+    this._onCachedResponse = this._onResponse.bind(this, true /* fromCache */);
+    Services.obs.addObserver(this._onRequest, "http-on-modify-request");
+    Services.obs.addObserver(this._onExamineResponse, "http-on-examine-response");
+    Services.obs.addObserver(this._onCachedResponse, "http-on-examine-cached-response");
+    Services.obs.addObserver(this._onCachedResponse, "http-on-examine-merged-response");
   }
 
   setExtraHTTPHeaders(browser, headers) {
@@ -152,7 +140,7 @@ class NetworkObserver {
     httpChannel.resume();
     this.emit("requestfailed", httpChannel, {
       requestId: requestId(httpChannel),
-      errorCode: helper.getNetworkErrorStatusText(httpChannel.status),
+      errorCode: getNetworkErrorStatusText(httpChannel.status),
     });
   }
 
@@ -294,7 +282,10 @@ class NetworkObserver {
     const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(SINK_CLASS_ID, this._channelSinkFactory);
     Services.catMan.deleteCategoryEntry(SINK_CATEGORY_NAME, SINK_CONTRACT_ID, false);
-    helper.removeListeners(this._eventListeners);
+    Services.obs.removeObserver(this._onRequest, "http-on-modify-request");
+    Services.obs.removeObserver(this._onExamineResponse, "http-on-examine-response");
+    Services.obs.removeObserver(this._onCachedResponse, "http-on-examine-cached-response");
+    Services.obs.removeObserver(this._onCachedResponse, "http-on-examine-merged-response");
   }
 }
 
@@ -459,7 +450,7 @@ class ResponseBodyListener {
     this.originalListener = httpChannel.setNewListener(this);
   }
 
-  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
     const iStream = new BinaryInputStream(aInputStream);
     const sStream = new StorageStream(8192, aCount, null);
     const oStream = new BinaryOutputStream(sStream.getOutputStream(0));
@@ -469,19 +460,74 @@ class ResponseBodyListener {
     this._chunks.push(data);
 
     oStream.writeBytes(data, aCount);
-    this.originalListener.onDataAvailable(aRequest, aContext, sStream.newInputStream(0), aOffset, aCount);
+    this.originalListener.onDataAvailable(aRequest, sStream.newInputStream(0), aOffset, aCount);
   }
 
-  onStartRequest(aRequest, aContext) {
-    this.originalListener.onStartRequest(aRequest, aContext);
+  onStartRequest(aRequest) {
+    this.originalListener.onStartRequest(aRequest);
   }
 
-  onStopRequest(aRequest, aContext, aStatusCode) {
-    this.originalListener.onStopRequest(aRequest, aContext, aStatusCode);
+  onStopRequest(aRequest, aStatusCode) {
+    this.originalListener.onStopRequest(aRequest, aStatusCode);
     const body = this._chunks.join("");
     delete this._chunks;
     this._networkObserver._onResponseFinished(this._browser, this._httpChannel, body);
   }
+}
+
+function getNetworkErrorStatusText(status) {
+  if (!status)
+    return null;
+  for (const key of Object.keys(Cr)) {
+    if (Cr[key] === status)
+      return key;
+  }
+  // Security module. The following is taken from
+  // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/How_to_check_the_secruity_state_of_an_XMLHTTPRequest_over_SSL
+  if ((status & 0xff0000) === 0x5a0000) {
+    // NSS_SEC errors (happen below the base value because of negative vals)
+    if ((status & 0xffff) < Math.abs(Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE)) {
+      // The bases are actually negative, so in our positive numeric space, we
+      // need to subtract the base off our value.
+      const nssErr = Math.abs(Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE) - (status & 0xffff);
+      switch (nssErr) {
+        case 11:
+          return "SEC_ERROR_EXPIRED_CERTIFICATE";
+        case 12:
+          return "SEC_ERROR_REVOKED_CERTIFICATE";
+        case 13:
+          return "SEC_ERROR_UNKNOWN_ISSUER";
+        case 20:
+          return "SEC_ERROR_UNTRUSTED_ISSUER";
+        case 21:
+          return "SEC_ERROR_UNTRUSTED_CERT";
+        case 36:
+          return "SEC_ERROR_CA_CERT_INVALID";
+        case 90:
+          return "SEC_ERROR_INADEQUATE_KEY_USAGE";
+        case 176:
+          return "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED";
+        default:
+          return "SEC_ERROR_UNKNOWN";
+      }
+    }
+    const sslErr = Math.abs(Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE) - (status & 0xffff);
+    switch (sslErr) {
+      case 3:
+        return "SSL_ERROR_NO_CERTIFICATE";
+      case 4:
+        return "SSL_ERROR_BAD_CERTIFICATE";
+      case 8:
+        return "SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE";
+      case 9:
+        return "SSL_ERROR_UNSUPPORTED_VERSION";
+      case 12:
+        return "SSL_ERROR_BAD_CERT_DOMAIN";
+      default:
+        return "SSL_ERROR_UNKNOWN";
+    }
+  }
+  return "<unknown error>";
 }
 
 var EXPORTED_SYMBOLS = ["NetworkObserver"];
