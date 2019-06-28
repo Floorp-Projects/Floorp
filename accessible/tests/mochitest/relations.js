@@ -98,6 +98,7 @@ function testRelation(aIdentifier, aRelType, aRelatedIdentifiers) {
   // Check if all obtained targets are given related accessibles.
   for (let relatedAcc of actualTargets.enumerate(Ci.nsIAccessible)) {
     let idx;
+    // eslint-disable-next-line no-empty
     for (idx = 0; idx < targets.length && relatedAcc != targets[idx]; idx++) {}
 
     if (idx == targets.length) {

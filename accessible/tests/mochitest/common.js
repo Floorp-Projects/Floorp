@@ -352,6 +352,7 @@ function getContainerAccessible(aAccOrElmOrID) {
     return null;
   }
 
+  // eslint-disable-next-line no-empty
   while ((node = node.parentNode) && !isAccessible(node)) {}
   return node ? getAccessible(node) : null;
 }
