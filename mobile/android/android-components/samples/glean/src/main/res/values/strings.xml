@@ -18,4 +18,8 @@
     <string name="send_ping_info">
         Clicking the SEND PING button simulates an event that causes pings to be sent.
     </string>
+    <string name="experiment_not_active">Experiment not active</string>
+    <string name="experiment_active_branch">Experiment active, branch: %1$s</string>
+    <string name="check_experiments">Check experiments</string>
+    <string name="check_experiments_btn_description">The CHECK EXPERIMENTS button checks the experiments status of the test-colorexperiment and sets the color accordingly.</string>
 </resources>

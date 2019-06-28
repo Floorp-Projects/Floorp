@@ -12,18 +12,18 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assert.assertNotNull
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
@@ -40,6 +40,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class ExperimentsTest {
     private var context: Context = ApplicationProvider.getApplicationContext()
+    private var mockContext: Context = getDefaultMockedContext()
     private lateinit var configuration: Configuration
     private lateinit var experiments: ExperimentsInternalAPI
     private lateinit var experimentStorage: FlatFileExperimentStorage
@@ -47,6 +48,47 @@ class ExperimentsTest {
     private lateinit var experimentsUpdater: ExperimentsUpdater
 
     private val EXAMPLE_CLIENT_ID = "c641eacf-c30c-4171-b403-f077724e848a"
+
+    private val experimentsList = listOf(
+        createDefaultExperiment(
+            id = "first-id",
+            match = createDefaultMatcher(
+                deviceManufacturer = "manufacturer-1"
+            )
+        ),
+        createDefaultExperiment(
+            id = "second-id",
+            match = createDefaultMatcher(
+                appId = "test.appId"
+            )
+        ),
+        createDefaultExperiment(
+            id = "third-id",
+            match = createDefaultMatcher(
+                deviceManufacturer = "unknown",
+                appDisplayVersion = "version.name"
+            )
+        )
+    )
+
+    private fun getDefaultMockedContext(): Context {
+        val context: Context = mock()
+        `when`(context.packageName).thenReturn("test.appId")
+        val sharedPrefs: SharedPreferences = mock()
+        val prefsEditor: SharedPreferences.Editor = mock()
+        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
+        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
+        `when`(sharedPrefs.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
+        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
+
+        val packageInfo: PackageInfo = mock()
+        packageInfo.versionName = "version.name"
+        val packageManager: PackageManager = mock()
+        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
+        `when`(context.packageManager).thenReturn(packageManager)
+
+        return context
+    }
 
     private fun getDefaultExperimentStorageMock(): FlatFileExperimentStorage {
         val storage: FlatFileExperimentStorage = mock()
@@ -65,8 +107,8 @@ class ExperimentsTest {
         storage: FlatFileExperimentStorage = getDefaultExperimentStorageMock(),
         valuesProvider: ValuesProvider = object : ValuesProvider() {
             override fun getClientId(context: Context): String = EXAMPLE_CLIENT_ID
-        },
-        updateAsync: Boolean = false
+            override fun getVersion(context: Context): String = "1.0"
+        }
     ) {
         // Initialize WorkManager (early) for instrumentation tests.
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
@@ -80,6 +122,9 @@ class ExperimentsTest {
         `when`(experiments.isGleanInitialized()).thenReturn(true)
         experimentStorage = storage
         `when`(experiments.getExperimentsStorage(context)).thenReturn(storage)
+        `when`(experimentStorage.save(any())).then {
+            // Do nothing
+        }
 
         experimentsUpdater = spy(ExperimentsUpdater(context, experiments))
         `when`(experiments.getExperimentsUpdater(context)).thenReturn(experimentsUpdater)
@@ -91,22 +136,22 @@ class ExperimentsTest {
         // we also need to support running from a separate thread, so we use runBlocking and a
         // coroutine to attempt to await the background thread.
         `when`(experimentsUpdater.scheduleUpdates()).then {
-            if (updateAsync) {
-                runBlocking {
-                    GlobalScope.launch(Dispatchers.IO) {
-                        experimentsUpdater.updateExperiments()
-                    }.join()
-                }
-            } else {
-                experimentsUpdater.updateExperiments()
-            }
+            experimentsUpdater.updateExperiments()
         }
+    }
+
+    @After
+    fun cleanup() {
+        // Make sure there isn't a persisted file.  When using the mockContext, a .json file is
+        // written to the current directory when the flat file persisted storage is written and
+        // can show up as a new file in Git.
+        experiments.getExperimentsStorage(mockContext).delete()
     }
 
     @Test
     fun `initialize experiments`() {
         // Run this test with experiment updates as async to help validate async library operations
-        resetExperiments(updateAsync = true)
+        resetExperiments()
 
         experiments.initialize(context, configuration)
 
@@ -135,7 +180,7 @@ class ExperimentsTest {
     @Test
     fun `updating of experiments on library init`() {
         // Run this test with experiment updates as async to help validate async library operations
-        resetExperiments(updateAsync = true)
+        resetExperiments()
 
         // Set up the Kinto-side experiments.
         val experimentsList = listOf(createDefaultExperiment())
@@ -268,153 +313,57 @@ class ExperimentsTest {
 
     @Test
     fun getActiveExperiments() {
-        // Run this test with experiment updates as async to help validate async library operations
-        resetExperiments(updateAsync = true)
-
-        val experimentsList = listOf(
-            createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    deviceManufacturer = "manufacturer-1"
-                )
-            ),
-            createDefaultExperiment(
-                id = "second-id",
-                match = createDefaultMatcher(
-                    deviceManufacturer = "unknown",
-                    appId = "test.appId"
-                )
-            ),
-            createDefaultExperiment(
-                id = "third-id",
-                match = createDefaultMatcher(
-                    deviceManufacturer = "unknown",
-                    appDisplayVersion = "version.name"
-                )
-            )
-        )
-        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
-        experiments.initialize(context, configuration)
-
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
-        val prefsEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
-        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(sharedPrefs.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
-
-        val packageInfo = mock(PackageInfo::class.java)
-        packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
-
-        val activeExperiments = experiments.getActiveExperiments(context)
-        assertEquals(2, activeExperiments.size)
-        assertTrue(activeExperiments.any { it.id == "second-id" })
-        assertTrue(activeExperiments.any { it.id == "third-id" })
-    }
-
-    @Test
-    fun getExperimentsMap() {
         resetExperiments()
+        experiments.initialize(mockContext, configuration)
+        experiments.experimentsResult = ExperimentsSnapshot(experimentsList, null)
+        experiments.findAndStartActiveExperiment()
 
-        val experimentsList = listOf(
-                createDefaultExperiment(
-                    id = "first-id",
-                    match = createDefaultMatcher(
-                        deviceManufacturer = "manufacturer-1"
-                    )
-                ),
-                createDefaultExperiment(
-                    id = "second-id",
-                    match = createDefaultMatcher(
-                        deviceManufacturer = "unknown",
-                        appId = "test.appId"
-                    )
-                ),
-                createDefaultExperiment(
-                    id = "third-id",
-                    match = createDefaultMatcher(
-                        deviceManufacturer = "unknown",
-                        appDisplayVersion = "version.name"
-                    )
-                )
-        )
-        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
-        experiments.initialize(context, configuration)
-
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
-        val prefsEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
-        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(sharedPrefs.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
-
-        val packageInfo = mock(PackageInfo::class.java)
-        packageInfo.versionName = "version.name"
-        val packageManager = mock(PackageManager::class.java)
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
-
-        val experimentsMap = experiments.getExperimentsMap(context)
-        assertEquals(3, experimentsMap.size)
-        println(experimentsMap.toString())
-        assertTrue(experimentsMap["first-id"] == false)
-        assertTrue(experimentsMap["second-id"] == true)
-        assertTrue(experimentsMap["third-id"] == true)
+        assertNotNull(experiments.activeExperiment)
+        assertEquals("second-id", experiments.activeExperiment!!.experiment.id)
     }
 
     @Test
     fun isInExperiment() {
-        resetExperiments()
 
-        var experimentsList = listOf(
-            createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    appId = "test.appId"
+        run {
+            resetExperiments()
+
+            val experimentsList = listOf(
+                createDefaultExperiment(
+                    id = "first-id",
+                    match = createDefaultMatcher(
+                        appId = "test.appId"
+                    )
                 )
             )
-        )
-        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
-        experiments.initialize(context, configuration)
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPrefs = mock(SharedPreferences::class.java)
-        val prefsEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
-        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(sharedPrefs.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
+            experiments.initialize(mockContext, configuration)
+            experiments.experimentsResult = ExperimentsSnapshot(experimentsList, null)
+            experiments.findAndStartActiveExperiment()
 
-        val packageInfo = mock(PackageInfo::class.java)
-        packageInfo.versionName = "version.id"
-        val packageManager = mock(PackageManager::class.java)
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+            assertTrue(experiments.isInExperiment("first-id", "only-branch"))
+        }
 
-        assertTrue(experiments.isInExperiment(context, "first-id"))
+        run {
+            resetExperiments()
 
-        // Update experiments with the experiment "first-id" not being active anymore.
-        experimentsList = listOf(
-            createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    appId = "other.appId"
+            // Update experiments with the experiment "first-id" not being active anymore.
+            val experimentsList = listOf(
+                createDefaultExperiment(
+                    id = "first-id",
+                    match = createDefaultMatcher(
+                        appId = "other.appId"
+                    )
                 )
             )
-        )
-        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
-        experimentsUpdater.updateExperiments()
 
-        assertFalse(experiments.isInExperiment(context, "first-id"))
-        assertFalse(experiments.isInExperiment(context, "other-id"))
+            experiments.initialize(mockContext, configuration)
+            experiments.experimentsResult = ExperimentsSnapshot(experimentsList, null)
+            experiments.findAndStartActiveExperiment()
+
+            assertFalse(experiments.isInExperiment("first-id", "only-branch"))
+            assertFalse(experiments.isInExperiment("other-id", "only-branch"))
+        }
     }
 
     @Test
@@ -429,51 +378,31 @@ class ExperimentsTest {
         }
         resetExperiments(valuesProvider = valuesProvider)
 
-        val experimentsList = listOf(
-            createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    appId = "test.appId"
-                )
-            )
-        )
-        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
+        val sharedPrefs = mock(SharedPreferences::class.java)
+        val prefsEditor = mock(SharedPreferences.Editor::class.java)
 
-        // Set up a mocked environment.
-        val mockContext: Context = mock()
-        `when`(mockContext.packageName).thenReturn("test.appId")
-        val sharedPrefs: SharedPreferences = mock()
-        val prefsEditor: SharedPreferences.Editor = mock()
-        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(sharedPrefs.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
+        `when`(prefsEditor.putBoolean(anyString(), anyBoolean())).thenReturn(prefsEditor)
+        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
+        `when`(prefsEditor.clear()).thenReturn(prefsEditor)
         `when`(mockContext.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
-
-        val packageInfo: PackageInfo = mock()
-        packageInfo.versionName = "version.name"
-        val packageManager: PackageManager = mock()
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(mockContext.packageManager).thenReturn(packageManager)
-
-        // A helper to conveniently update the server-side experiments.
-        val setServerExperiments = { experiments: List<Experiment> ->
-            `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experiments, null))
-        }
+        `when`(sharedPrefs.getString(eq("id"), isNull())).thenReturn("first-id")
+        `when`(sharedPrefs.getString(eq("branch"), isNull())).thenReturn("branch2")
+        `when`(mockContext.packageName).thenReturn("test.appId")
 
         // First no experiment should be active.
         branchDiceRoll = 0
-        setServerExperiments(emptyList())
-        experiments.initialize(context, configuration)
+        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(emptyList(), null))
+        experiments.initialize(mockContext, configuration)
 
         val invocations: MutableList<String> = java.util.ArrayList()
-        experiments.withExperiment(mockContext, "first-id") {
+        experiments.withExperiment("first-id") {
             invocations.add(it)
         }
-        assertTrue(invocations.isEmpty())
         assertNull(experiments.activeExperiment)
 
         // Get an initial experiments list from the servers.
-        setServerExperiments(listOf(
+        var experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
                 match = createDefaultMatcher(
@@ -485,48 +414,50 @@ class ExperimentsTest {
                     Experiment.Branch("branch3", 1)
                 )
             )
-        ))
-
+        )
         // This should force choosing branch 2 of the experiment on update.
         branchDiceRoll = 1
-        experimentsUpdater.updateExperiments()
+        experiments.onExperimentsUpdated(ExperimentsSnapshot(experimentsList, null))
 
         // Test active experiment.
         invocations.clear()
-        experiments.withExperiment(mockContext, "first-id") {
+        experiments.withExperiment("first-id") {
             invocations.add(it)
         }
+        assertNotNull(experiments.activeExperiment)
         assertEquals(listOf("branch2"), invocations)
 
         // Restart the library and disable updates. The same experiment and branch should still be
         // active from the cache.
+        invocations.clear()
         resetExperiments(valuesProvider = valuesProvider)
         branchDiceRoll = 0
+        experiments.updater = experimentsUpdater
+        experiments.updater.source = experimentSource
         doAnswer {
             throw ExperimentDownloadException("test")
         }.`when`(experimentSource).getExperiments(any())
-        experiments.initialize(context, configuration)
+        experiments.initialize(mockContext, configuration)
 
-        experiments.withExperiment(mockContext, "first-id") {
+        experiments.withExperiment("first-id") {
             invocations.add(it)
         }
         assertEquals(listOf("branch2"), invocations)
 
         // Use an experiments list without the active experiment and trigger an update.
         // The experiments should deactivate.
-        resetExperiments(valuesProvider = valuesProvider)
-        setServerExperiments(listOf(
+        experimentsList = listOf(
             createDefaultExperiment(
                 id = "other-id",
                 match = createDefaultMatcher(
                     appId = "other.appId"
                 )
             )
-        ))
-        experiments.initialize(context, configuration)
+        )
+        experiments.onExperimentsUpdated(ExperimentsSnapshot(experimentsList, null))
 
         invocations.clear()
-        experiments.withExperiment(mockContext, "first-id") {
+        experiments.withExperiment("first-id") {
             invocations.add(it)
         }
         assertTrue(invocations.isEmpty())
@@ -534,25 +465,25 @@ class ExperimentsTest {
 
         // Change experiments list and trigger an update. The matcher now contains a non-matching
         // app id, so no experiments should activate.
-        setServerExperiments(listOf(
+        experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
                 match = createDefaultMatcher(
                     appId = "other.appId"
                 )
             )
-        ))
-        experimentsUpdater.updateExperiments()
+        )
+        experiments.onExperimentsUpdated(ExperimentsSnapshot(experimentsList, null))
         assertNull(experiments.activeExperiment)
 
         invocations.clear()
-        experiments.withExperiment(mockContext, "first-id") {
+        experiments.withExperiment("first-id") {
             invocations.add(it)
         }
         assertTrue(invocations.isEmpty())
 
         invocations.clear()
-        experiments.withExperiment(mockContext, "other-id") {
+        experiments.withExperiment("other-id") {
             invocations.add(it)
         }
         assertTrue(invocations.isEmpty())
@@ -615,10 +546,7 @@ class ExperimentsTest {
 
         val experimentsList = listOf(
             createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    appId = "test.appId"
-                )
+                id = "first-id"
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
@@ -630,7 +558,7 @@ class ExperimentsTest {
             prefsEditorBranch: SharedPreferences.Editor
         ) = mockOverridePreferences()
 
-        assertTrue(experiments.isInExperiment(context, "first-id"))
+        assertTrue(experiments.isInExperiment("first-id", "only-branch"))
         experiments.setOverride(context, "first-id", false, "branch-1")
         verify(prefsEditorEnabled).putBoolean("first-id", false)
         verify(prefsEditorBranch).putString("first-id", "branch-1")
@@ -639,7 +567,7 @@ class ExperimentsTest {
         verify(prefsEditorBranch, times(2)).putString("first-id", "branch-1")
 
         runBlocking(Dispatchers.Default) {
-            assertTrue(experiments.isInExperiment(context, "first-id"))
+            assertTrue(experiments.isInExperiment("first-id", "only-branch"))
             experiments.setOverrideNow(context, "first-id", false, "branch-2")
             verify(prefsEditorEnabled, times(2)).putBoolean("first-id", false)
             verify(prefsEditorBranch, times(1)).putString("first-id", "branch-2")
@@ -655,10 +583,7 @@ class ExperimentsTest {
 
         val experimentsList = listOf(
             createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    appId = "test.appId"
-                )
+                id = "first-id"
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
@@ -670,7 +595,7 @@ class ExperimentsTest {
             prefsEditorBranch: SharedPreferences.Editor
         ) = mockOverridePreferences()
 
-        assertTrue(experiments.isInExperiment(context, "first-id"))
+        assertTrue(experiments.isInExperiment("first-id", "only-branch"))
         experiments.setOverride(context, "first-id", false, "branch-1")
         verify(prefsEditorEnabled).putBoolean("first-id", false)
         verify(prefsEditorBranch).putString("first-id", "branch-1")
@@ -692,10 +617,7 @@ class ExperimentsTest {
 
         val experimentsList = listOf(
             createDefaultExperiment(
-                id = "first-id",
-                match = createDefaultMatcher(
-                    appId = "test.appId"
-                )
+                id = "first-id"
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
@@ -713,7 +635,7 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        assertTrue(experiments.isInExperiment(context, "first-id"))
+        assertTrue(experiments.isInExperiment("first-id", "only-branch"))
         experiments.setOverride(context, "first-id", false, "branch-2")
         experiments.clearAllOverrides(context)
         verify(prefsEditorEnabled).clear()

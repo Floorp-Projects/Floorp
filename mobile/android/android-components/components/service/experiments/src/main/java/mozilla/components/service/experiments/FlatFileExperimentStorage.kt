@@ -5,6 +5,7 @@
 package mozilla.components.service.experiments
 
 import android.util.AtomicFile
+import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
 import java.io.FileNotFoundException
 import java.io.File
@@ -17,16 +18,19 @@ import java.io.IOException
  */
 internal class FlatFileExperimentStorage(file: File) {
     private val atomicFile: AtomicFile = AtomicFile(file)
+    private val logger: Logger = Logger(LOG_TAG)
 
     fun retrieve(): ExperimentsSnapshot {
         return try {
             val experimentsJson = String(atomicFile.readFully())
             ExperimentsSerializer().fromJson(experimentsJson)
         } catch (e: FileNotFoundException) {
+            logger.error("Caught error trying to retrieve experiments from storage: $e")
             ExperimentsSnapshot(listOf(), null)
         } catch (e: JSONException) {
             // The JSON we read from disk is corrupt. There's nothing we can do here and therefore
             // we just continue as if the file wouldn't exist.
+            logger.error("Caught error trying to retrieve experiments from storage: $e")
             ExperimentsSnapshot(listOf(), null)
         }
     }
@@ -44,5 +48,13 @@ internal class FlatFileExperimentStorage(file: File) {
         } catch (e: IOException) {
             atomicFile.failWrite(stream)
         }
+    }
+
+    fun delete() {
+        atomicFile.delete()
+    }
+
+    companion object {
+        private const val LOG_TAG = "experiments"
     }
 }

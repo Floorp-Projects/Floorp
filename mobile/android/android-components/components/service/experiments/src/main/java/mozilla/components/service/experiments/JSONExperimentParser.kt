@@ -9,6 +9,7 @@ import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.android.org.json.tryGetLong
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -34,6 +35,9 @@ internal class JSONExperimentParser {
                 it.getString(BRANCHES_NAME_KEY),
                 it.getInt(BRANCHES_RATIO_KEY)
             )
+        }
+        if (branches.isEmpty()) {
+            throw JSONException("Branches array should not be empty")
         }
 
         val matchObject: JSONObject = jsonObject.getJSONObject(MATCH_KEY)

@@ -880,6 +880,10 @@ class SignatureVerifierTest {
                     "count": "50"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -895,6 +899,10 @@ class SignatureVerifierTest {
                     "count": "100"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -908,6 +916,10 @@ class SignatureVerifierTest {
                     "count": "50"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -921,6 +933,10 @@ class SignatureVerifierTest {
                     "count": "100"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -933,6 +949,10 @@ class SignatureVerifierTest {
                     "count": "100"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -945,6 +965,10 @@ class SignatureVerifierTest {
                     "count": "0"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -957,6 +981,10 @@ class SignatureVerifierTest {
                     "count": "0"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -969,6 +997,10 @@ class SignatureVerifierTest {
                     "count": "0"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 },
                 {
@@ -981,6 +1013,10 @@ class SignatureVerifierTest {
                     "count": "0"
                   },
                   "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
                   ]
                 }
               ],

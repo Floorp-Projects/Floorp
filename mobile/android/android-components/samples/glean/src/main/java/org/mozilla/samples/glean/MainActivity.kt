@@ -4,9 +4,11 @@
 
 package org.mozilla.samples.glean
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.glean.Glean
 import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
@@ -54,5 +56,22 @@ open class MainActivity : AppCompatActivity() {
         // Update some metrics from a third-party library
         SamplesGleanLibrary.recordMetric()
         SamplesGleanLibrary.recordExperiment()
+
+        // Handle logic for the "test-color" experiment on click.
+        buttonCheckExperiments.setOnClickListener {
+            textViewExperimentStatus.setBackgroundColor(Color.WHITE)
+            textViewExperimentStatus.text = getString(R.string.experiment_not_active)
+
+            Experiments.withExperiment("test-color") {
+                val color = when (it) {
+                    "blue" -> Color.BLUE
+                    "red" -> Color.RED
+                    "control" -> Color.DKGRAY
+                    else -> Color.WHITE
+                }
+                textViewExperimentStatus.setBackgroundColor(color)
+                textViewExperimentStatus.text = getString(R.string.experiment_active_branch, it)
+            }
+        }
     }
 }

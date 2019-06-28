@@ -64,4 +64,24 @@
         android:layout_marginTop="5dp"
         android:text="@string/send_ping_info" />
 
+    <Button
+        android:id="@+id/buttonCheckExperiments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_experiments" />
+
+    <TextView
+        android:id="@+id/textViewExperimentStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:text="@string/experiment_not_active"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_experiments_btn_description" />
+
 </LinearLayout>

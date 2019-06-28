@@ -252,4 +252,24 @@ class JSONExperimentParserTest {
         experiment = createDefaultExperiment(id = "sample-id")
         assertEquals(experiment, JSONExperimentParser().fromJson(JSONObject(emptyObjects)))
     }
+
+    @Test(expected = JSONException::class)
+    fun `fromJson with empty branches list`() {
+        val json = """
+            {
+              "id": "some-id",
+              "match": {
+              },
+              "buckets": {
+                "start": 0,
+                "count": 0
+              },
+              "branches": [
+              ],
+              "description": "",
+              "last_modified": 1234
+            }
+        """.trimIndent()
+        JSONExperimentParser().fromJson(JSONObject(json))
+    }
 }

@@ -52,7 +52,7 @@ internal open class ValuesProvider {
      *
      * @return app version name
      */
-    open fun getVersion(context: Context): String {
+    open fun getVersion(context: Context): String? {
         return context.packageManager.getPackageInfo(context.packageName, 0).versionName
     }
 

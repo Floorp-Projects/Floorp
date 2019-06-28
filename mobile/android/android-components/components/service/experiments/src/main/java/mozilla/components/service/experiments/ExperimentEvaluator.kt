@@ -24,6 +24,16 @@ internal class ExperimentEvaluator(
 ) {
     private val logger: Logger = Logger(LOG_TAG)
 
+    internal fun findActiveExperiment(context: Context, experiments: List<Experiment>): ActiveExperiment? {
+        for (experiment in experiments) {
+            evaluate(context, ExperimentDescriptor(experiment.id), experiments)?.let {
+                return it
+            }
+        }
+
+        return null
+    }
+
     /**
      * Determines if a specific experiment should be enabled or not for the device
      *
@@ -93,10 +103,10 @@ internal class ExperimentEvaluator(
             matchesExperiment(match.deviceModel, valuesProvider.getDevice(context))
     }
 
-    private fun matchesExperiment(experimentValue: String?, deviceValue: String): Boolean {
+    private fun matchesExperiment(experimentValue: String?, deviceValue: String?): Boolean {
         return !(experimentValue != null &&
             !TextUtils.isEmpty(experimentValue) &&
-            !deviceValue.matches(experimentValue.toRegex()))
+            !(deviceValue?.matches(experimentValue.toRegex()) ?: false))
     }
 
     private fun isInBucket(userBucket: Int, experiment: Experiment): Boolean {

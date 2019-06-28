@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.service.glean.Glean
@@ -39,13 +40,17 @@ open class ExperimentsInternalAPI internal constructor() {
 
     internal lateinit var configuration: Configuration
 
+    private lateinit var context: Context
+
     /**
      * Initialize the experiments library.
      *
      * This should only be initialized once by the application.
      *
      * @param applicationContext [Context] to access application features, such
-     * as shared preferences.
+     * as shared preferences.  As we cannot enforce through the compiler that the context pass to
+     * the initialize function is a applicationContext, there could potentially be a memory leak
+     * if the initializing application doesn't comply.
      */
     fun initialize(
         applicationContext: Context,
@@ -66,17 +71,22 @@ open class ExperimentsInternalAPI internal constructor() {
 
         experimentsResult = ExperimentsSnapshot(listOf(), null)
         experimentsLoaded = false
-
+        context = applicationContext
         storage = getExperimentsStorage(applicationContext)
 
         isInitialized = true
 
-        // Load cached experiments from storage. After this, experiments status
-        // is available.
+        // Load cached experiments from storage. After this, experiments status is available.
         loadExperiments()
 
-        // Load active experiment from cache, if any.
+        // Load the active experiment from cache, if any.
         activeExperiment = loadActiveExperiment(applicationContext, experiments)
+
+        // If no active experiment was loaded from cache, check the cached experiments list for any
+        // that should be launched now.
+        if (activeExperiment == null) {
+            findAndStartActiveExperiment()
+        }
 
         // We now have the last known experiment state loaded for product code
         // that needs to check it early in startup.
@@ -122,20 +132,6 @@ open class ExperimentsInternalAPI internal constructor() {
         experimentsLoaded = true
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun loadActiveExperiment(
-        context: Context,
-        experiments: List<Experiment>
-    ): ActiveExperiment? {
-        val activeExperiment = ActiveExperiment.load(context, experiments)
-        logger.info(activeExperiment?.let
-            { """Loaded active experiment - id="${it.experiment.id}", branch="${it.branch}"""" }
-            ?: "No active experiment"
-        )
-
-        return activeExperiment
-    }
-
     /**
      * Requests new experiments from the server and
      * saves them to local storage
@@ -146,35 +142,100 @@ open class ExperimentsInternalAPI internal constructor() {
 
         experimentsResult = serverState
         storage.save(serverState)
+
+        // TODO
+        // Choices here:
+        // 1) There currently is an active experiment.
+        // 1a) Should it stop? E.g. because it was deleted. If so, continue with 2.
+        // 1b) Should it continue? Then nothing else happens here.
+        // 2) There is no currently active experiment. Find one in the list, if any.
+        // 2a) If there is one...
+        // 2b) If there is none, nothing else happens.
+
+        activeExperiment?.let { active ->
+            if (experimentsResult.experiments.any { it.id == active.experiment.id }) {
+                // This covers 1b) - the active experiment should continue, no action needed.
+                logger.info("onExperimentsUpdated - currently active experiment will stay active")
+                return
+            } else {
+                // This covers 1a) - the experiment was removed.
+                // Afterwards, fall through to 2) below, which possibly starts a new experiment.
+                logger.info("onExperimentsUpdated - currently active experiment will be stopped")
+                stopActiveExperiment()
+            }
+        }
+
+        // This covers 2) - no experiment is currently active, so activate one if any match.
+        if (activeExperiment == null) {
+            logger.info("onExperimentsUpdated - no experiment currently active, looking for match")
+            findAndStartActiveExperiment()
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun findAndStartActiveExperiment() {
+        assert(activeExperiment == null) { "Should not have an active experiment" }
+
+        evaluator.findActiveExperiment(context, experimentsResult.experiments)?.let {
+            logger.info("""Activating experiment - id="${it.experiment.id}", branch="${it.branch}"""")
+            activeExperiment = it
+            it.save(context)
+            Glean.setExperimentActive(it.experiment.id, it.branch)
+        }
+    }
+
+    private fun stopActiveExperiment() {
+        assert(activeExperiment != null) { "Should have an active experiment" }
+
+        ActiveExperiment.clear(context)
+        activeExperiment = null
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun loadActiveExperiment(
+        context: Context,
+        experiments: List<Experiment>
+    ): ActiveExperiment? {
+        assert(activeExperiment == null) { "Should not have an active experiment" }
+
+        val activeExperiment = ActiveExperiment.load(context, experiments)
+        logger.info(activeExperiment?.let
+        { """Loaded active experiment from cache - id="${it.experiment.id}", branch="${it.branch}"""" }
+            ?: "No active experiment in cache"
+        )
+
+        return activeExperiment
     }
 
     /**
      * Checks if the user is part of
      * the specified experiment
      *
-     * @param context context
      * @param experimentId the id of the experiment
+     * @param branchName the name of the branch for the experiment
      *
      * @return true if the user is part of the specified experiment, false otherwise
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    internal fun isInExperiment(context: Context, experimentId: String): Boolean {
-        return evaluator.evaluate(context, ExperimentDescriptor(experimentId), experimentsResult.experiments) != null
+    internal fun isInExperiment(experimentId: String, branchName: String): Boolean {
+        return activeExperiment?.let {
+            (it.experiment.id == experimentId) &&
+            (it.branch == branchName)
+        } ?: false
     }
 
     /**
      * Performs an action if the user is part of the specified experiment
      *
-     * @param context context
      * @param experimentId the id of the experiment
      * @param block block of code to be executed if the user is part of the experiment
      */
-    fun withExperiment(context: Context, experimentId: String, block: (branch: String) -> Unit) {
-        val activeExperiment = evaluator.evaluate(
-            context,
-            ExperimentDescriptor(experimentId), experimentsResult.experiments
-        )
-        activeExperiment?.let { block(it.branch) }
+    fun withExperiment(experimentId: String, block: (branch: String) -> Unit) {
+        activeExperiment?.let {
+            if (it.experiment.id == experimentId) {
+                block(it.branch)
+            }
+        }
     }
 
     /**
@@ -189,30 +250,11 @@ open class ExperimentsInternalAPI internal constructor() {
         return evaluator.getExperiment(ExperimentDescriptor(experimentId), experimentsResult.experiments)
     }
 
-    /**
-     * Provides the list of active experiments
-     *
-     * @param context context
-     *
-     * @return active experiments
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getActiveExperiments(context: Context): List<Experiment> {
-        return experiments.filter { isInExperiment(context, it.id) }
-    }
-
-    /**
-     * Provides a map of active/inactive experiments
-     *
-     * @param context context
-     *
-     * @return map of experiments to A/B state
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getExperimentsMap(context: Context): Map<String, Boolean> {
-        return experiments.associate {
-            it.id to
-                    isInExperiment(context, it.id)
+    private fun overrideActiveExperiment() {
+        evaluator.findActiveExperiment(context, experimentsResult.experiments)?.let {
+            logger.info("""Setting override experiment - id="${it.experiment.id}", branch="${it.branch}"""")
+            activeExperiment = it
+            Glean.setExperimentActive(it.experiment.id, it.branch)
         }
     }
 
@@ -231,6 +273,7 @@ open class ExperimentsInternalAPI internal constructor() {
         branchName: String
     ) {
         evaluator.setOverride(context, ExperimentDescriptor(experimentId), active, branchName)
+        overrideActiveExperiment()
     }
 
     /**
@@ -249,6 +292,7 @@ open class ExperimentsInternalAPI internal constructor() {
         branchName: String
     ) {
         evaluator.setOverrideNow(context, ExperimentDescriptor(experimentId), active, branchName)
+        overrideActiveExperiment()
     }
 
     /**
@@ -260,6 +304,8 @@ open class ExperimentsInternalAPI internal constructor() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clearOverride(context: Context, experimentId: String) {
         evaluator.clearOverride(context, ExperimentDescriptor(experimentId))
+        activeExperiment = null
+        findAndStartActiveExperiment()
     }
 
     /**
@@ -273,6 +319,8 @@ open class ExperimentsInternalAPI internal constructor() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clearOverrideNow(context: Context, experimentId: String) {
         evaluator.clearOverrideNow(context, ExperimentDescriptor(experimentId))
+        activeExperiment = null
+        findAndStartActiveExperiment()
     }
 
     /**
@@ -283,6 +331,8 @@ open class ExperimentsInternalAPI internal constructor() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clearAllOverrides(context: Context) {
         evaluator.clearAllOverrides(context)
+        activeExperiment = null
+        findAndStartActiveExperiment()
     }
 
     /**
@@ -293,6 +343,8 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     internal fun clearAllOverridesNow(context: Context) {
         evaluator.clearAllOverridesNow(context)
+        activeExperiment = null
+        findAndStartActiveExperiment()
     }
 
     /**
@@ -314,6 +366,7 @@ open class ExperimentsInternalAPI internal constructor() {
     }
 }
 
+@SuppressLint("StaticFieldLeak")
 object Experiments : ExperimentsInternalAPI() {
     internal const val SCHEMA_VERSION = 1
 }
