@@ -310,14 +310,14 @@ marionette-media-tests:
 # macosx1014-64-tests:
 #    - cppunit
 #    - crashtest
-    # - firefox-ui-functional-local
-    # - firefox-ui-functional-remote
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
 #    - gtest
 #    - jittest
 #    - jsreftest
-    # - marionette
+    - marionette
 #    - mochitest
-    # - mochitest-a11y
+    - mochitest-a11y
 #    - mochitest-browser-chrome
 #    - mochitest-chrome
 #    - mochitest-devtools-chrome
@@ -330,12 +330,12 @@ marionette-media-tests:
 #     - mochitest-webgl2-ext test  # timeouts
     # - reftest
 #    - telemetry-tests-client
-    # - test-verify
-    # - test-verify-gpu
-    # - test-verify-wpt
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
-    # - web-platform-tests-wdspec
+    - web-platform-tests-wdspec
 #    - xpcshell
 
 # macosx1014-64-qr-tests:
@@ -345,14 +345,10 @@ marionette-media-tests:
 macosx64-tests:
     - cppunit
     - crashtest
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
     - gtest
     - jittest
     - jsreftest
-    - marionette
     - mochitest
-    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
@@ -365,10 +361,6 @@ macosx64-tests:
     # - mochitest-webgl2-ext test timeouts
     - reftest
     - telemetry-tests-client
-    - test-verify
-    - test-verify-gpu
-    - test-verify-wpt
-    - web-platform-tests-wdspec
     - xpcshell
 
 macosx64-talos:
