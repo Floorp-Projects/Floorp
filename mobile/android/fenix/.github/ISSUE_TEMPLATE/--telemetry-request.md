@@ -9,7 +9,7 @@ assignees: ''
 
 Owner: Product Manager
 
-#### Description & Product Manager / Data Scienties User Story
+#### Description & Product Manager / Data Scientist User Story
 - As a product owner, I want to know if people type use feature X so I can...
 
 #### Hypothesis

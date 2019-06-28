@@ -620,14 +620,14 @@
     <string name="onboarding_fxa_section_header">アカウントをお持ちですか？</string>
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">％s を知ろう</string>
+    <string name="onboarding_feature_section_header">%s を知ろう</string>
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">テーマを選んでください</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description">バッテリーと目に優しいダークテーマを試しましょう。</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">％s を最大限に活用しよう。</string>
+    <string name="onboarding_firefox_account_header">%s を最大限に活用しよう。</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated -->
     <string name="onboarding_firefox_account_auto_signin_header">この端末の別の Firefox ブラウザーにログインしています。</string>

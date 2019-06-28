@@ -563,16 +563,16 @@
     <string name="full_screen_notification">Entering full screen mode</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copied</string>
-    <!-- Sample text for accessiblity font size -->
+    <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
-    <!-- Summary for Accessiblity Text Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Make text on websites larger or smaller</string>
-    <!-- Title for Accessiblity Text Size Scaling Preference -->
+    <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Font Size</string>
 
-    <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Automatic Font Sizing</string>
-    <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Font size will match your Android settings. Disable to manage font size here.</string>
 
     <!-- Title for the Delete browsing data preference -->
