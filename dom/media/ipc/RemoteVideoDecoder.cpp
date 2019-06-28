@@ -36,13 +36,31 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorVideo, override)
 
   layers::TextureForwarder* GetTextureForwarder() override {
-    return VideoBridgeChild::GetSingleton();
+    return mTextureFactoryIdentifier.mParentProcessType == GeckoProcessType_GPU
+               ? VideoBridgeChild::GetSingletonToGPUProcess()
+               : VideoBridgeChild::GetSingletonToParentProcess();
   }
   layers::LayersIPCActor* GetLayersIPCActor() override {
-    return VideoBridgeChild::GetSingleton();
+    return GetTextureForwarder();
+  }
+
+  static already_AddRefed<KnowsCompositorVideo> TryCreateForIdentifier(
+      const layers::TextureFactoryIdentifier& aIdentifier) {
+    VideoBridgeChild* child =
+        (aIdentifier.mParentProcessType == GeckoProcessType_GPU)
+            ? VideoBridgeChild::GetSingletonToGPUProcess()
+            : VideoBridgeChild::GetSingletonToParentProcess();
+    if (!child) {
+      return nullptr;
+    }
+
+    RefPtr<KnowsCompositorVideo> knowsCompositor = new KnowsCompositorVideo();
+    knowsCompositor->IdentifyTextureHost(aIdentifier);
+    return knowsCompositor.forget();
   }
 
  private:
+  KnowsCompositorVideo() = default;
   virtual ~KnowsCompositorVideo() = default;
 };
 
@@ -260,9 +278,14 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     nsCString* aErrorDescription)
     : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
       mVideoInfo(aVideoInfo) {
-  if (XRE_IsGPUProcess() && aIdentifier) {
-    mKnowsCompositor = new KnowsCompositorVideo();
-    mKnowsCompositor->IdentifyTextureHost(aIdentifier.value());
+  if (aIdentifier) {
+    // Check to see if we have a direct PVideoBridge connection to the destination
+    // process specified in aIdentifier, and create a KnowsCompositor representing
+    // that connection if so.
+    // If this fails, then we fall back to returning the decoded frames directly
+    // via Output().
+    mKnowsCompositor =
+        KnowsCompositorVideo::TryCreateForIdentifier(*aIdentifier);
   }
 
   CreateDecoderParams params(mVideoInfo);
