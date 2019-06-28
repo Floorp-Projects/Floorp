@@ -178,8 +178,8 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   virtual nsresult Init(nsRange* aRange) override;
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset) override;
-  virtual nsresult Init(const RawRangeBoundary& aStart,
-                        const RawRangeBoundary& aEnd) override;
+  virtual nsresult Init(const RawRangeBoundary& aStartBoundary,
+                        const RawRangeBoundary& aEndBoundary) override;
 
   virtual void Next() override;
   virtual void Prev() override;

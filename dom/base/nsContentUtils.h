@@ -512,9 +512,11 @@ class nsContentUtils {
                                nsINode* aParent2, int32_t aOffset2,
                                bool* aDisconnected = nullptr,
                                ComparePointsCache* aParent1Cache = nullptr);
-  static int32_t ComparePoints(const mozilla::RawRangeBoundary& aFirst,
-                               const mozilla::RawRangeBoundary& aSecond,
-                               bool* aDisconnected = nullptr);
+  template <typename FPT, typename FRT, typename SPT, typename SRT>
+  static int32_t ComparePoints(
+      const mozilla::RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
+      const mozilla::RangeBoundaryBase<SPT, SRT>& aSecondBoundary,
+      bool* aDisconnected = nullptr);
 
   /**
    * Brute-force search of the element subtree rooted at aContent for

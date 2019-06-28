@@ -3466,18 +3466,19 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   // const (and some other cost in nsRange::DoSetRange()).
   RefPtr<nsRange> newRange = std::move(mCachedRange);
 
-  nsresult rv = NS_OK;
-  if (newRange) {
-    rv = newRange->SetStartAndEnd(aStartRef, aEndRef);
-  } else {
-    rv = nsRange::CreateRange(aStartRef, aEndRef, getter_AddRefs(newRange));
-  }
-
-  // nsRange::SetStartAndEnd() and nsRange::CreateRange() returns
+  // nsRange::SetStartAndEnd() and nsRange::Create() returns
   // IndexSizeError if any offset is out of bounds.
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
+  if (newRange) {
+    nsresult rv = newRange->SetStartAndEnd(aStartRef, aEndRef);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
+  } else {
+    newRange = nsRange::Create(aStartRef, aEndRef, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   RemoveAllRanges(aRv);
