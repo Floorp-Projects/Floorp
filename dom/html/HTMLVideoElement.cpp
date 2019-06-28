@@ -151,7 +151,7 @@ bool HTMLVideoElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
                                       nsAttrValue& aResult) {
   if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
-    return aResult.ParseSpecialIntValue(aValue);
+    return aResult.ParseHTMLDimension(aValue);
   }
 
   return HTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

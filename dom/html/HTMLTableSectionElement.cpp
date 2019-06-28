@@ -125,7 +125,11 @@ bool HTMLTableSectionElement::ParseAttribute(
       return aResult.ParseIntWithBounds(aValue, 0);
     }
     if (aAttribute == nsGkAtoms::height) {
-      return aResult.ParseSpecialIntValue(aValue);
+      // Per HTML spec there should be nothing special here, but all browsers
+      // implement height mapping to style.  See
+      // <https://github.com/whatwg/html/issues/4718>.  All browsers allow 0, so
+      // keep doing that.
+      return aResult.ParseHTMLDimension(aValue);
     }
     if (aAttribute == nsGkAtoms::align) {
       return ParseTableCellHAlignValue(aValue, aResult);
