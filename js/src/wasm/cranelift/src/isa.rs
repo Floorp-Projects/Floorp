@@ -21,6 +21,8 @@
 //! The main entry point is the `make_isa()` function which allocates a configured `TargetISA`
 //! object.
 
+use std::env;
+
 use cranelift_codegen::isa;
 use cranelift_codegen::settings::{self, Configurable};
 
@@ -39,10 +41,60 @@ impl From<settings::SetError> for BasicError {
     }
 }
 
+struct EnvVariableFlags<'env> {
+    opt_level: Option<&'env str>,
+    jump_tables: Option<bool>,
+}
+
+#[inline]
+fn str_to_bool(value: &str) -> bool {
+    value == "true" || value == "on" || value == "yes" || value == "1"
+}
+
+impl<'env> EnvVariableFlags<'env> {
+    fn parse(input: &'env Result<String, env::VarError>) -> Option<Self> {
+        let input = match input {
+            Ok(input) => input.as_str(),
+            Err(_) => return None,
+        };
+
+        let mut flags = EnvVariableFlags {
+            opt_level: None,
+            jump_tables: None,
+        };
+
+        for entry in input.split(",") {
+            if let Some(equals_index) = entry.find("=") {
+                let (key, value) = entry.split_at(equals_index);
+
+                // value starts with the =, remove it.
+                let value = &value[1..];
+
+                match key {
+                    "opt_level" => {
+                        // Invalid values will be reported by Cranelift.
+                        flags.opt_level = Some(value);
+                    }
+                    "jump_tables" => {
+                        flags.jump_tables = Some(str_to_bool(value));
+                    }
+                    _ => {
+                        warn!("Unknown setting with key {}", key);
+                    }
+                }
+            } else {
+                warn!("Missing = in pair: {}", entry);
+            }
+        }
+
+        Some(flags)
+    }
+}
+
 /// Create a `Flags` object for the shared settings.
 ///
 /// This only fails if one of Cranelift's settings has been removed or renamed.
-fn make_shared_flags() -> settings::SetResult<settings::Flags> {
+fn make_shared_flags(env_flags: &Option<EnvVariableFlags>) -> settings::SetResult<settings::Flags> {
     let mut sb = settings::builder();
 
     // We don't install SIGFPE handlers, but depend on explicit traps around divisions.
@@ -70,11 +122,24 @@ fn make_shared_flags() -> settings::SetResult<settings::Flags> {
     // Baldrdash does its own stack overflow checks, so we don't need Cranelift doing any for us.
     sb.set("probestack_enabled", "false")?;
 
-    // Let's optimize for speed.
-    sb.set("opt_level", "best")?;
+    // Let's optimize for speed by default.
+    let opt_level = match env_flags {
+        Some(env_flags) => env_flags.opt_level,
+        None => None,
+    }
+    .unwrap_or("best");
+    sb.set("opt_level", opt_level)?;
 
-    // Enable jump tables.
-    sb.set("jump_tables_enabled", "true")?;
+    // Enable jump tables by default.
+    let jump_tables_enabled = match env_flags {
+        Some(env_flags) => env_flags.jump_tables,
+        None => None,
+    }
+    .unwrap_or(true);
+    sb.set(
+        "jump_tables_enabled",
+        if jump_tables_enabled { "true" } else { "false" },
+    )?;
 
     Ok(settings::Flags::new(sb))
 }
@@ -125,8 +190,12 @@ fn make_isa_specific(_env: &StaticEnvironment) -> DashResult<isa::Builder> {
 
 /// Allocate a `TargetISA` object that can be used to generate code for the CPU we're running on.
 pub fn make_isa(env: &StaticEnvironment) -> DashResult<Box<dyn isa::TargetIsa>> {
+    // Parse flags defined by the environment variable.
+    let env_flags_str = std::env::var("CRANELIFT_FLAGS");
+    let env_flags = EnvVariableFlags::parse(&env_flags_str);
+
     // Start with the ISA-independent settings.
-    let shared_flags = make_shared_flags().map_err(BasicError::from)?;
+    let shared_flags = make_shared_flags(&env_flags).map_err(BasicError::from)?;
     let ib = make_isa_specific(env)?;
     Ok(ib.finish(shared_flags))
 }
