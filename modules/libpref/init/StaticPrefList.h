@@ -4708,7 +4708,7 @@ VARCACHE_PREF(
   Live,
   "layout.css.cached-scrollbar-styles.enabled",
   layout_css_cached_scrollbar_styles_enabled,
-  bool, true
+  bool, false
 )
 
 // Is path() supported in clip-path?
