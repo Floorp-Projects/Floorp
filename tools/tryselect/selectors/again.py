@@ -31,6 +31,14 @@ class AgainParser(BaseTryParser):
           'dest': 'list_configs',
           'help': "Display history and exit",
           }],
+        [['--list-tasks'],
+         {'default': 0,
+          'action': 'count',
+          'dest': 'list_tasks',
+          'help': "Like --list, but display selected tasks  "
+                  "for each history entry, up to 10. Repeat "
+                  "to display all selected tasks.",
+          }],
         [['--purge'],
          {'default': False,
           'action': 'store_true',
@@ -65,7 +73,7 @@ def migrate_old_history():
         shutil.rmtree(old_history_dir)
 
 
-def run(index=0, purge=False, list_configs=False, message='{msg}', **pushargs):
+def run(index=0, purge=False, list_configs=False, list_tasks=0, message='{msg}', **pushargs):
     # TODO: Remove after January 1st, 2020.
     migrate_old_history()
 
@@ -80,10 +88,24 @@ def run(index=0, purge=False, list_configs=False, message='{msg}', **pushargs):
     with open(history_path, 'r') as fh:
         history = fh.readlines()
 
-    if list_configs:
+    if list_configs or list_tasks > 0:
         for i, data in enumerate(history):
             msg, config = json.loads(data)
             print('{}. {}'.format(i, msg))
+
+            if list_tasks > 0:
+                indent = ' ' * 4
+                all_tasks = config['tasks']
+                if list_tasks > 1:
+                    shown_tasks = all_tasks
+                else:
+                    shown_tasks = all_tasks[:10]
+                print(indent + ('\n' + indent).join(shown_tasks))
+
+                num_hidden_tasks = len(all_tasks) - len(shown_tasks)
+                if num_hidden_tasks > 0:
+                    print('{}... and {} more'.format(indent, num_hidden_tasks))
+
         return
 
     msg, try_task_config = json.loads(history[index])
