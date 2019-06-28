@@ -7244,7 +7244,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.1.allow-core-profiles",
-  WebGL1AllowCoreProfile,
+   webgl_1_allow_core_profiles,
   RelaxedAtomicBool, false
 )
 
@@ -7252,35 +7252,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.all-angle-options",
-  WebGLAllANGLEOptions,
+   webgl_all_angle_options,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.angle.force-d3d11",
-  WebGLANGLEForceD3D11,
+   webgl_angle_force_d3d11,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.angle.try-d3d11",
-  WebGLANGLETryD3D11,
+   webgl_angle_try_d3d11,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.angle.force-warp",
-  WebGLANGLEForceWARP,
+   webgl_angle_force_warp,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.can-lose-context-in-foreground",
-  WebGLCanLoseContextInForeground,
+   webgl_can_lose_context_in_foreground,
   RelaxedAtomicBool, true
 )
 
@@ -7292,7 +7292,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.default-antialias",
-  WebGLDefaultAntialias,
+   webgl_default_antialias,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -7300,49 +7300,49 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.default-low-power",
-  WebGLDefaultLowPower,
+   webgl_default_low_power,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.default-no-alpha",
-  WebGLDefaultNoAlpha,
+   webgl_default_no_alpha,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.disable-angle",
-  WebGLDisableANGLE,
+   webgl_disable_angle,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.disable-wgl",
-  WebGLDisableWGL,
+   webgl_disable_wgl,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.disable-extensions",
-  WebGLDisableExtensions,
+   webgl_disable_extensions,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.dxgl.enabled",
-  WebGLDXGLEnabled,
+   webgl_dxgl_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.dxgl.needs-finish",
-  WebGLDXGLNeedsFinish,
+   webgl_dxgl_needs_finish,
   RelaxedAtomicBool, false
 )
 
@@ -7350,42 +7350,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.disable-fail-if-major-performance-caveat",
-  WebGLDisableFailIfMajorPerformanceCaveat,
+   webgl_disable_fail_if_major_performance_caveat,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.disable-DOM-blit-uploads",
-  WebGLDisableDOMBlitUploads,
+   webgl_disable_DOM_blit_uploads,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.disabled",
-  WebGLDisabled,
+   webgl_disabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.enable-draft-extensions",
-  WebGLDraftExtensionsEnabled,
+   webgl_enable_draft_extensions,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.enable-privileged-extensions",
-  WebGLPrivilegedExtensionsEnabled,
+   webgl_enable_privileged_extensions,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.enable-surface-texture",
-  WebGLSurfaceTextureEnabled,
+   webgl_enable_surface_texture,
   RelaxedAtomicBool, false
 )
 
@@ -7399,91 +7399,86 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.force-enabled",
-  WebGLForceEnabled,
+   webgl_force_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.force-layers-readback",
-  WebGLForceLayersReadback,
+   webgl_force_layers_readback,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.force-index-validation",
-  WebGLForceIndexValidation,
+   webgl_force_index_validation,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.lose-context-on-memory-pressure",
-  WebGLLoseContextOnMemoryPressure,
+   webgl_lose_context_on_memory_pressure,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.max-contexts",
-  WebGLMaxContexts,
+   webgl_max_contexts,
   RelaxedAtomicUint32, 32
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.max-contexts-per-principal",
-  WebGLMaxContextsPerPrincipal,
+   webgl_max_contexts_per_principal,
   RelaxedAtomicUint32, 16
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.max-warnings-per-context",
-  WebGLMaxWarningsPerContext,
+   webgl_max_warnings_per_context,
   RelaxedAtomicUint32, 32
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.min_capability_mode",
-  WebGLMinCapabilityMode,
+   webgl_min_capability_mode,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.msaa-force",
-  WebGLForceMSAA,
+   webgl_msaa_force,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.msaa-samples",
-  WebGLMsaaSamples,
+   webgl_msaa_samples,
   RelaxedAtomicUint32, 4
 )
 
-VARCACHE_PREF(
-  Live,
-  "webgl.prefer-16bpp",
-  WebGLPrefer16bpp,
-  RelaxedAtomicBool, false
-)
+PREF("webgl.prefer-16bpp", bool, false)
 
 VARCACHE_PREF(
   Live,
   "webgl.allow-immediate-queries",
-  WebGLImmediateQueries,
+   webgl_allow_immediate_queries,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.allow-fb-invalidation",
-  WebGLFBInvalidation,
+   webgl_allow_fb_invalidation,
   RelaxedAtomicBool, false
 )
 
@@ -7491,21 +7486,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.perf.max-warnings",
-  WebGLMaxPerfWarnings,
+   webgl_perf_max_warnings,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.perf.max-acceptable-fb-status-invals",
-  WebGLMaxAcceptableFBStatusInvals,
+   webgl_perf_max_acceptable_fb_status_invals,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "webgl.perf.spew-frame-allocs",
-  WebGLSpewFrameAllocs,
+   webgl_perf_spew_frame_allocs,
   RelaxedAtomicBool, true
 )
 
