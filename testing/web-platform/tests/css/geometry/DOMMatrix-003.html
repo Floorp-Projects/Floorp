@@ -140,6 +140,13 @@
         },"test scale() with offsets");
 
         test(function() {
+          var result = new DOMMatrixReadOnly([1, 2, 3, 4, 5, 6])
+                          .scale(1, 1, 1, 1, 1, 1);
+          var expected = new DOMMatrixReadOnly([1, 2, 0, 0, 3, 4, 0, 0, 0, 0, 1, 0, 5, 6, 0, 1]);
+          checkDOMMatrix(result, expected);
+        },"test scale() with identity scale and nonzero originZ");
+
+        test(function() {
           var result = initialDOMMatrix().scaleNonUniform();
           var expected = initialDOMMatrix()
                           .scale(1, 1, 1, 0, 0, 0);

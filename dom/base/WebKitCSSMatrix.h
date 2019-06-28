@@ -42,9 +42,6 @@ class WebKitCSSMatrix final : public DOMMatrix {
   already_AddRefed<WebKitCSSMatrix> Inverse(ErrorResult& aRv) const;
   already_AddRefed<WebKitCSSMatrix> Translate(double aTx, double aTy,
                                               double aTz) const;
-  already_AddRefed<WebKitCSSMatrix> Scale(double aScaleX,
-                                          const Optional<double>& aScaleY,
-                                          double aScaleZ) const;
   already_AddRefed<WebKitCSSMatrix> Rotate(double aRotX,
                                            const Optional<double>& aRotY,
                                            const Optional<double>& aRotZ) const;
