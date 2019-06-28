@@ -1,19 +1,13 @@
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+do_get_profile();
+
 const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 const { RemoteSecuritySettings } = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 const { OneCRLBlocklistClient } = RemoteSecuritySettings.init();
 
 const global = this;
-
-function run_test() {
-  // Initialize app, user profile etc.
-  AddonTestUtils.init(global);
-  AddonTestUtils.createAppInfo("XPCShell", "xpcshell@tests.mozilla.org", "1", "");
-  AddonTestUtils.promiseStartupManager().then(run_next_test);
-}
 
 add_task(async function test_uses_a_custom_signer() {
   Assert.notEqual(OneCRLBlocklistClient.signerName, RemoteSettings("not-specified").signerName);
