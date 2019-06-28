@@ -1270,8 +1270,12 @@ void Gecko_SetStyleGridTemplate(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
 nsStyleGridTemplate* Gecko_CreateStyleGridTemplate(uint32_t aTrackSizes,
                                                    uint32_t aNameSize) {
   nsStyleGridTemplate* result = new nsStyleGridTemplate;
-  result->mMinTrackSizingFunctions.SetLength(aTrackSizes);
-  result->mMaxTrackSizingFunctions.SetLength(aTrackSizes);
+  result->mTrackSizingFunctions.SetCapacity(aTrackSizes);
+  auto auto_ = StyleTrackSize::Breadth(StyleTrackBreadth::Auto());
+  for (auto i : IntegerRange(aTrackSizes)) {
+    Unused << i;
+    result->mTrackSizingFunctions.AppendElement(auto_);
+  }
   result->mLineNameLists.SetLength(aNameSize);
   return result;
 }
