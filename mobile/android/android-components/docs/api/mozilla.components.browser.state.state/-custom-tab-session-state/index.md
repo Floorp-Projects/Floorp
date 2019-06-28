@@ -2,7 +2,7 @@
 
 # CustomTabSessionState
 
-`data class CustomTabSessionState : `[`SessionState`](../-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L12)
+`data class CustomTabSessionState : `[`SessionState`](../-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L15)
 
 Value type that represents the state of a Custom Tab.
 
@@ -16,5 +16,5 @@ Value type that represents the state of a Custom Tab.
 
 | Name | Summary |
 |---|---|
-| [content](content.md) | `val content: `[`ContentState`](../-content-state/index.md) |
-| [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [content](content.md) | `val content: `[`ContentState`](../-content-state/index.md)<br>the [ContentState](../-content-state/index.md) of this custom tab. |
+| [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the ID of this custom tab and session. |

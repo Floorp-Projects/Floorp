@@ -2,4 +2,10 @@
 
 # selectedTabId
 
-`val selectedTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L14)
+`val selectedTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L18)
+
+the ID of the currently selected (active) tab.
+
+### Property
+
+`selectedTabId` - the ID of the currently selected (active) tab.

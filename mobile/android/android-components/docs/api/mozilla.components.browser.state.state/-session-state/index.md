@@ -2,7 +2,7 @@
 
 # SessionState
 
-`interface SessionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L6)
+`interface SessionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L9)
 
 Interface for states that contain a [ContentState](../-content-state/index.md) and can be accessed via an [id](id.md).
 
@@ -10,8 +10,8 @@ Interface for states that contain a [ContentState](../-content-state/index.md) a
 
 | Name | Summary |
 |---|---|
-| [content](content.md) | `abstract val content: `[`ContentState`](../-content-state/index.md) |
-| [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [content](content.md) | `abstract val content: `[`ContentState`](../-content-state/index.md)<br>the [ContentState](../-content-state/index.md) of this session. |
+| [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the unique id of the session. |
 
 ### Inheritors
 

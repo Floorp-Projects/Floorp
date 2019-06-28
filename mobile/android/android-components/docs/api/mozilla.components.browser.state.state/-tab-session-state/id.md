@@ -2,7 +2,12 @@
 
 # id
 
-`val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/TabSessionState.kt#L13)
+`val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/TabSessionState.kt#L16)
 
 Overrides [SessionState.id](../-session-state/id.md)
 
+the ID of this tab and session.
+
+### Property
+
+`id` - the ID of this tab and session.

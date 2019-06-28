@@ -2,7 +2,7 @@
 
 # BrowserState
 
-`data class BrowserState : `[`State`](../../mozilla.components.lib.state/-state.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L12)
+`data class BrowserState : `[`State`](../../mozilla.components.lib.state/-state.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L16)
 
 Value type that represents the complete state of the browser/engine.
 
@@ -16,9 +16,9 @@ Value type that represents the complete state of the browser/engine.
 
 | Name | Summary |
 |---|---|
-| [customTabs](custom-tabs.md) | `val customTabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CustomTabSessionState`](../-custom-tab-session-state/index.md)`>` |
-| [selectedTabId](selected-tab-id.md) | `val selectedTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
-| [tabs](tabs.md) | `val tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabSessionState`](../-tab-session-state/index.md)`>` |
+| [customTabs](custom-tabs.md) | `val customTabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CustomTabSessionState`](../-custom-tab-session-state/index.md)`>`<br>the list of custom tabs, defaults to an empty list. |
+| [selectedTabId](selected-tab-id.md) | `val selectedTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>the ID of the currently selected (active) tab. |
+| [tabs](tabs.md) | `val tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabSessionState`](../-tab-session-state/index.md)`>`<br>the list of open tabs, defaults to an empty list. |
 
 ### Extension Properties
 
