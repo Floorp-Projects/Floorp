@@ -44,7 +44,10 @@ bool HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
       return true;
     }
     if (aAttribute == nsGkAtoms::width) {
-      return aResult.ParseSpecialIntValue(aValue);
+      // Spec says to use ParseNonzeroHTMLDimension, but Chrome and Safari both
+      // allow 0, and we did all along too, so keep that behavior.  See
+      // https://github.com/whatwg/html/issues/4717
+      return aResult.ParseHTMLDimension(aValue);
     }
     if (aAttribute == nsGkAtoms::align) {
       return ParseTableCellHAlignValue(aValue, aResult);

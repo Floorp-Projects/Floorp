@@ -816,18 +816,13 @@ bool HTMLTableElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       return aResult.ParseNonNegativeIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::height) {
-      return aResult.ParseSpecialIntValue(aValue);
+      // Purposeful spec violation (spec says to use ParseNonzeroHTMLDimension)
+      // to stay compatible with our old behavior and other browsers.  See
+      // https://github.com/whatwg/html/issues/4715
+      return aResult.ParseHTMLDimension(aValue);
     }
     if (aAttribute == nsGkAtoms::width) {
-      if (aResult.ParseSpecialIntValue(aValue)) {
-        // treat 0 width as auto
-        nsAttrValue::ValueType type = aResult.Type();
-        return !(
-            (type == nsAttrValue::eInteger && aResult.GetIntegerValue() == 0) ||
-            (type == nsAttrValue::ePercent &&
-             aResult.GetPercentValue() == 0.0f));
-      }
-      return false;
+      return aResult.ParseNonzeroHTMLDimension(aValue);
     }
 
     if (aAttribute == nsGkAtoms::align) {
