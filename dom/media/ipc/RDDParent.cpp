@@ -208,6 +208,8 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 #endif
 
+  RemoteDecoderManagerParent::ShutdownVideoBridge();
+
   CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }
