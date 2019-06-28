@@ -12321,4 +12321,97 @@ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
 #  endif
 // End Display Reflow
 
+// Validation of SideIsVertical.
+#define CASE(side, result) \
+  static_assert(SideIsVertical(side) == result, "SideIsVertical is wrong")
+CASE(eSideTop, false);
+CASE(eSideRight, true);
+CASE(eSideBottom, false);
+CASE(eSideLeft, true);
+#undef CASE
+
+// Validation of HalfCornerIsX.
+#define CASE(corner, result) \
+  static_assert(HalfCornerIsX(corner) == result, "HalfCornerIsX is wrong")
+CASE(eCornerTopLeftX, true);
+CASE(eCornerTopLeftY, false);
+CASE(eCornerTopRightX, true);
+CASE(eCornerTopRightY, false);
+CASE(eCornerBottomRightX, true);
+CASE(eCornerBottomRightY, false);
+CASE(eCornerBottomLeftX, true);
+CASE(eCornerBottomLeftY, false);
+#undef CASE
+
+// Validation of HalfToFullCorner.
+#define CASE(corner, result)                        \
+  static_assert(HalfToFullCorner(corner) == result, \
+                "HalfToFullCorner is "              \
+                "wrong")
+CASE(eCornerTopLeftX, eCornerTopLeft);
+CASE(eCornerTopLeftY, eCornerTopLeft);
+CASE(eCornerTopRightX, eCornerTopRight);
+CASE(eCornerTopRightY, eCornerTopRight);
+CASE(eCornerBottomRightX, eCornerBottomRight);
+CASE(eCornerBottomRightY, eCornerBottomRight);
+CASE(eCornerBottomLeftX, eCornerBottomLeft);
+CASE(eCornerBottomLeftY, eCornerBottomLeft);
+#undef CASE
+
+// Validation of FullToHalfCorner.
+#define CASE(corner, vert, result)                        \
+  static_assert(FullToHalfCorner(corner, vert) == result, \
+                "FullToHalfCorner is wrong")
+CASE(eCornerTopLeft, false, eCornerTopLeftX);
+CASE(eCornerTopLeft, true, eCornerTopLeftY);
+CASE(eCornerTopRight, false, eCornerTopRightX);
+CASE(eCornerTopRight, true, eCornerTopRightY);
+CASE(eCornerBottomRight, false, eCornerBottomRightX);
+CASE(eCornerBottomRight, true, eCornerBottomRightY);
+CASE(eCornerBottomLeft, false, eCornerBottomLeftX);
+CASE(eCornerBottomLeft, true, eCornerBottomLeftY);
+#undef CASE
+
+// Validation of SideToFullCorner.
+#define CASE(side, second, result)                        \
+  static_assert(SideToFullCorner(side, second) == result, \
+                "SideToFullCorner is wrong")
+CASE(eSideTop, false, eCornerTopLeft);
+CASE(eSideTop, true, eCornerTopRight);
+
+CASE(eSideRight, false, eCornerTopRight);
+CASE(eSideRight, true, eCornerBottomRight);
+
+CASE(eSideBottom, false, eCornerBottomRight);
+CASE(eSideBottom, true, eCornerBottomLeft);
+
+CASE(eSideLeft, false, eCornerBottomLeft);
+CASE(eSideLeft, true, eCornerTopLeft);
+#undef CASE
+
+// Validation of SideToHalfCorner.
+#define CASE(side, second, parallel, result)                        \
+  static_assert(SideToHalfCorner(side, second, parallel) == result, \
+                "SideToHalfCorner is wrong")
+CASE(eSideTop, false, true, eCornerTopLeftX);
+CASE(eSideTop, false, false, eCornerTopLeftY);
+CASE(eSideTop, true, true, eCornerTopRightX);
+CASE(eSideTop, true, false, eCornerTopRightY);
+
+CASE(eSideRight, false, false, eCornerTopRightX);
+CASE(eSideRight, false, true, eCornerTopRightY);
+CASE(eSideRight, true, false, eCornerBottomRightX);
+CASE(eSideRight, true, true, eCornerBottomRightY);
+
+CASE(eSideBottom, false, true, eCornerBottomRightX);
+CASE(eSideBottom, false, false, eCornerBottomRightY);
+CASE(eSideBottom, true, true, eCornerBottomLeftX);
+CASE(eSideBottom, true, false, eCornerBottomLeftY);
+
+CASE(eSideLeft, false, false, eCornerBottomLeftX);
+CASE(eSideLeft, false, true, eCornerBottomLeftY);
+CASE(eSideLeft, true, false, eCornerTopLeftX);
+CASE(eSideLeft, true, true, eCornerTopLeftY);
+#undef CASE
+
 #endif
