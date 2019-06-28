@@ -35,9 +35,6 @@ bool HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
                                          nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     /* ignore these attributes, stored simply as strings ch */
-    if (aAttribute == nsGkAtoms::charoff) {
-      return aResult.ParseSpecialIntValue(aValue);
-    }
     if (aAttribute == nsGkAtoms::span) {
       /* protection from unrealistic large colspan values */
       aResult.ParseClampedNonNegativeInt(aValue, 1, 1, MAX_COLSPAN);
