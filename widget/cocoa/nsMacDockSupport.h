@@ -9,7 +9,8 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsNativeThemeCocoa.h"
+
+@class MOZProgressDockOverlayView;
 
 class nsMacDockSupport : public nsIMacDockSupport, public nsITaskbarProgress {
  public:
@@ -25,16 +26,11 @@ class nsMacDockSupport : public nsIMacDockSupport, public nsITaskbarProgress {
   nsCOMPtr<nsIStandaloneNativeMenu> mDockMenu;
   nsString mBadgeText;
 
-  NSImage *mAppIcon, *mProgressBackground;
+  NSView* mDockTileWrapperView;
+  MOZProgressDockOverlayView* mProgressDockOverlayView;
 
-  HIRect mProgressBounds;
   nsTaskbarProgressState mProgressState;
   double mProgressFraction;
-  nsCOMPtr<nsITimer> mProgressTimer;
-  RefPtr<nsNativeThemeCocoa> mTheme;
 
-  static void RedrawIconCallback(nsITimer* aTimer, void* aClosure);
-
-  bool InitProgress();
-  nsresult RedrawIcon();
+  nsresult UpdateDockTile();
 };
