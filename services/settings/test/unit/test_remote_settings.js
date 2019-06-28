@@ -96,7 +96,17 @@ add_task(async function test_records_from_dump_are_listed_as_created_in_event() 
 
   const list = await clientWithDump.get();
   ok(list.length > 20, "The dump was loaded");
-  equal(received.created[received.created.length - 1].id, "xx", "Last record comes from the sync.");
+  equal(received.created[0].id, "xx", "Record from the sync come first.");
+
+  const createdById = received.created.reduce((acc, r) => {
+    acc[r.id] = r;
+    return acc;
+  }, {});
+
+  ok(!(received.deleted[0].id in createdById), "Deleted records are not listed as created");
+  equal(createdById[received.updated[0].new.id], received.updated[0].new,
+        "The records that were updated should appear as created in their newest form.");
+
   equal(received.created.length, list.length, "The list of created records contains the dump");
   equal(received.current.length, received.created.length);
 });
@@ -877,7 +887,15 @@ wNuvFqc=
           "id": "xx",
           "last_modified": 5000000000000,
           "dictionaries": ["xx-XX@dictionaries.addons.mozilla.org"],
-        }],
+        }, {
+          "id": "fr",
+          "last_modified": 5000000000000 - 1,
+          "deleted": true,
+        }, {
+          "id": "pt-BR",
+          "last_modified": 5000000000000 - 2,
+          "dictionaries": ["pt-BR@for-tests"],
+         }],
       },
     },
     "GET:/v1/buckets/main/collections/with-local-fields": {

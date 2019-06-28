@@ -23,6 +23,14 @@ Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this)
 /* import-globals-from ../general/head.js */
 Services.scriptloader.loadSubScript(head_base + "head.js", this);
 
+function getThisFrameSubMenu(base_menu) {
+  if (AppConstants.NIGHTLY_BUILD) {
+    let osPidItem = ["context-frameOsPid", false];
+    base_menu = base_menu.concat(osPidItem);
+  }
+  return base_menu;
+}
+
 add_task(async function init() {
   // Ensure screenshots is really disabled (bug 1498738)
   const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
@@ -413,7 +421,8 @@ add_task(async function test_iframe() {
      "context-viewbgimage",  false,
      "context-selectall",    true,
      "frame",                null,
-         ["context-showonlythisframe", true,
+        getThisFrameSubMenu(
+          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
           "context-openframe",         true,
           "---",                       null,
@@ -425,7 +434,8 @@ add_task(async function test_iframe() {
           "context-printframe",        true,
           "---",                       null,
           "context-viewframesource",   true,
-          "context-viewframeinfo",     true], null,
+          "context-viewframeinfo",     true]
+        ), null,
      "---",                  null,
      "context-viewsource",   true,
      "context-viewinfo",     true,
@@ -459,7 +469,8 @@ add_task(async function test_video_in_iframe() {
      "context-video-saveimage",    true,
      "context-sendvideo",          true,
      "frame",                null,
-         ["context-showonlythisframe", true,
+        getThisFrameSubMenu(
+          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
           "context-openframe",         true,
           "---",                       null,
@@ -470,7 +481,8 @@ add_task(async function test_video_in_iframe() {
           "---",                       null,
           "context-printframe",        true,
           "---",                       null,
-          "context-viewframeinfo",     true], null]
+          "context-viewframeinfo",     true]
+        ), null]
   );
 
   await SpecialPowers.popPrefEnv();
@@ -499,7 +511,8 @@ add_task(async function test_video_in_iframe() {
      "context-video-saveimage",    true,
      "context-sendvideo",          true,
      "frame",                null,
-         ["context-showonlythisframe", true,
+        getThisFrameSubMenu(
+          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
           "context-openframe",         true,
           "---",                       null,
@@ -510,7 +523,8 @@ add_task(async function test_video_in_iframe() {
           "---",                       null,
           "context-printframe",        true,
           "---",                       null,
-          "context-viewframeinfo",     true], null]
+          "context-viewframeinfo",     true]
+        ), null]
   );
 
   await SpecialPowers.popPrefEnv();
@@ -533,7 +547,8 @@ add_task(async function test_audio_in_iframe() {
      "context-saveaudio",          true,
      "context-sendaudio",          true,
      "frame",                null,
-         ["context-showonlythisframe", true,
+        getThisFrameSubMenu(
+          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
           "context-openframe",         true,
           "---",                       null,
@@ -544,7 +559,8 @@ add_task(async function test_audio_in_iframe() {
           "---",                       null,
           "context-printframe",        true,
           "---",                       null,
-          "context-viewframeinfo",     true], null]
+          "context-viewframeinfo",     true]
+        ), null]
   );
 });
 
@@ -559,7 +575,8 @@ add_task(async function test_image_in_iframe() {
      "context-setDesktopBackground", true,
      "context-viewimageinfo",        true,
      "frame",                null,
-         ["context-showonlythisframe", true,
+        getThisFrameSubMenu(
+          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
           "context-openframe",         true,
           "---",                       null,
@@ -570,7 +587,8 @@ add_task(async function test_image_in_iframe() {
           "---",                       null,
           "context-printframe",        true,
           "---",                       null,
-          "context-viewframeinfo",     true], null]
+          "context-viewframeinfo",     true]
+        ), null]
   );
 });
 
@@ -1078,14 +1096,16 @@ add_task(async function test_srcdoc() {
      "context-viewbgimage",  false,
      "context-selectall",    true,
      "frame",                null,
-         ["context-reloadframe",       true,
+        getThisFrameSubMenu(
+          ["context-reloadframe",       true,
           "---",                       null,
           "context-saveframe",         true,
           "---",                       null,
           "context-printframe",        true,
           "---",                       null,
           "context-viewframesource",   true,
-          "context-viewframeinfo",     true], null,
+          "context-viewframeinfo",     true]
+        ), null,
      "---",                  null,
      "context-viewsource",   true,
      "context-viewinfo",     true,

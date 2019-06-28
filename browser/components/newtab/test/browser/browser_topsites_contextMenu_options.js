@@ -12,14 +12,15 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(() => content.document.querySelector(siteSelector),
       "Topsite tippytop icon not found");
 
-    const contextMenuItems = content.openContextMenuAndGetOptions(siteSelector).map(v => v.textContent);
+    const contextMenuItems = await content.openContextMenuAndGetOptions(siteSelector);
+    const contextMenuItemsText = contextMenuItems.map(v => v.textContent);
 
-    Assert.equal(contextMenuItems.length, 5, "Number of options is correct");
+    Assert.equal(contextMenuItemsText.length, 5, "Number of options is correct");
 
     const expectedItemsText = ["Pin", "Edit", "Open in a New Window", "Open in a New Private Window", "Dismiss"];
 
-    for (let i = 0; i < contextMenuItems.length; i++) {
-      Assert.equal(contextMenuItems[i], expectedItemsText[i], "Name option is correct");
+    for (let i = 0; i < contextMenuItemsText.length; i++) {
+      Assert.equal(contextMenuItemsText[i], expectedItemsText[i], "Name option is correct");
     }
   },
 });
@@ -39,7 +40,7 @@ test_newtab({
     // Skip the search topsites select the second default topsite
     const secondTopSite = content.document.querySelectorAll(siteSelector)[1].getAttribute("href");
 
-    const contextMenuItems = content.openContextMenuAndGetOptions(siteSelector);
+    const contextMenuItems = await content.openContextMenuAndGetOptions(siteSelector);
     Assert.equal(contextMenuItems[4].textContent, "Dismiss", "'Dismiss' is the 5th item in the context menu list");
 
     contextMenuItems[4].querySelector("button").click();
@@ -62,7 +63,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(() => content.document.querySelectorAll(siteSelector).length === 1,
       "1 search topsites is loaded by default");
 
-    const contextMenuItems = content.openContextMenuAndGetOptions(siteSelector);
+    const contextMenuItems = await content.openContextMenuAndGetOptions(siteSelector);
     is(contextMenuItems.length, 2, "Search TopSites should only have Unpin and Dismiss");
 
     // Unpin

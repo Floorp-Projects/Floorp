@@ -86,10 +86,12 @@ function addContentHelpers() {
      * @param selector {String} Selector to get an item (e.g., top site, card)
      * @return {Array} The nodes for the options.
      */
-    openContextMenuAndGetOptions(selector) {
+    async openContextMenuAndGetOptions(selector) {
       const item = document.querySelector(selector);
       const contextButton = item.querySelector(".context-menu-button");
       contextButton.click();
+      // Gives fluent-dom the time to render strings
+      await new Promise(r => content.requestAnimationFrame(r));
 
       const contextMenu = item.querySelector(".context-menu");
       const contextMenuList = contextMenu.querySelector(".context-menu-list");

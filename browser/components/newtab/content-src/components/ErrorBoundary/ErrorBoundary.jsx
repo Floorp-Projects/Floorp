@@ -1,5 +1,4 @@
 import {A11yLinkButton} from "content-src/components/A11yLinkButton/A11yLinkButton";
-import {FormattedMessage} from "react-intl";
 import React from "react";
 
 export class ErrorBoundaryFallback extends React.PureComponent {
@@ -29,17 +28,9 @@ export class ErrorBoundaryFallback extends React.PureComponent {
     // "A11yLinkButton" to force normal link styling stuff (eg cursor on hover)
     return (
       <div className={className}>
-        <div>
-          <FormattedMessage
-            defaultMessage="Oops, something went wrong loading this content."
-            id="error_fallback_default_info" />
-        </div>
+        <div data-l10n-id="newtab-error-fallback-info" />
         <span>
-          <A11yLinkButton className="reload-button" onClick={this.onClick}>
-            <FormattedMessage
-              defaultMessage="Refresh page to try again."
-              id="error_fallback_default_refresh_suggestion" />
-          </A11yLinkButton>
+          <A11yLinkButton className="reload-button" onClick={this.onClick} data-l10n-id="newtab-error-fallback-refresh-link" />
         </span>
       </div>
     );

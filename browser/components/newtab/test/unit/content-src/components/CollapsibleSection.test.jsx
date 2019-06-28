@@ -1,7 +1,7 @@
 import {actionTypes as at} from "common/Actions.jsm";
-import {_CollapsibleSection as CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
+import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
-import {mountWithIntl} from "test/unit/utils";
+import {mount} from "enzyme";
 import React from "react";
 
 const DEFAULT_PROPS = {
@@ -9,7 +9,6 @@ const DEFAULT_PROPS = {
   className: "cool-section",
   title: "Cool Section",
   prefName: "collapseSection",
-  disclaimer: {text: {id: "section_disclaimer_topstories_linktext"}, link: {id: "menu_action_remove_bookmark"}, button: {id: "search_button"}},
   collapsed: false,
   document: {
     addEventListener: () => {},
@@ -24,7 +23,7 @@ describe("CollapsibleSection", () => {
 
   function setup(props = {}) {
     const customProps = Object.assign({}, DEFAULT_PROPS, props);
-    wrapper = mountWithIntl(<CollapsibleSection {...customProps}>foo</CollapsibleSection>);
+    wrapper = mount(<CollapsibleSection {...customProps}>foo</CollapsibleSection>);
   }
 
   beforeEach(() => setup());

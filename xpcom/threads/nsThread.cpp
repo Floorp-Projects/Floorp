@@ -600,7 +600,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
-      mIsMainThread(uint8_t(aMainThread)),
+      mIsMainThread(aMainThread == MAIN_THREAD),
       mCanInvokeJS(false),
       mCurrentEvent(nullptr),
       mCurrentEventStart(TimeStamp::Now()),
@@ -623,7 +623,7 @@ nsThread::nsThread()
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
-      mIsMainThread(NOT_MAIN_THREAD),
+      mIsMainThread(false),
       mCanInvokeJS(false),
       mCurrentEvent(nullptr),
       mCurrentEventStart(TimeStamp::Now()),
@@ -1090,7 +1090,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     return NS_OK;
   }
 
-  if (IsMainThread()) {
+  if (mIsMainThread) {
     DoMainThreadSpecificProcessing(reallyWait);
   }
 
@@ -1149,7 +1149,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
                                  ? mNameForWakeupTelemetry.get()
                                  : PR_GetThreadName(mThread);
           if (!name) {
-            name = IsMainThread() ? "MainThread" : "(nameless thread)";
+            name = mIsMainThread ? "MainThread" : "(nameless thread)";
           }
           nsDependentCString key(name);
           Telemetry::Accumulate(Telemetry::THREAD_WAKEUP, key,
@@ -1166,7 +1166,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       // to run.
       DelayForChaosMode(ChaosFeature::TaskRunning, 1000);
 
-      if (IsMainThread()) {
+      if (mIsMainThread) {
         BackgroundHangMonitor().NotifyActivity();
       }
 
@@ -1185,12 +1185,12 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       Array<char, kRunnableNameBufSize> restoreRunnableName;
       restoreRunnableName[0] = '\0';
       auto clear = MakeScopeExit([&] {
-        if (IsMainThread()) {
+        if (mIsMainThread) {
           MOZ_ASSERT(NS_IsMainThread());
           sMainThreadRunnableName = restoreRunnableName;
         }
       });
-      if (IsMainThread()) {
+      if (mIsMainThread) {
         nsAutoCString name;
         GetLabeledRunnableName(event, name, priority);
 
@@ -1213,7 +1213,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       // The event starts to run, storing the timestamp.
       bool recursiveEvent = mNestedEventLoopDepth > mCurrentEventLoopDepth;
       mCurrentEventLoopDepth = mNestedEventLoopDepth;
-      if (IsMainThread() && !recursiveEvent) {
+      if (mIsMainThread && !recursiveEvent) {
         mCurrentEventStart = mozilla::TimeStamp::Now();
       }
       RefPtr<mozilla::PerformanceCounter> currentPerformanceCounter;
@@ -1226,7 +1226,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       mozilla::TimeDuration duration;
       // Remember the last 50ms+ task on mainthread for Long Task.
-      if (IsMainThread() && !recursiveEvent) {
+      if (mIsMainThread && !recursiveEvent) {
         TimeStamp now = TimeStamp::Now();
         duration = now - mCurrentEventStart;
         if (duration.ToMilliseconds() > LONGTASK_BUSY_WINDOW_MS) {
@@ -1411,7 +1411,7 @@ void nsThread::SetScriptObserver(
 }
 
 void nsThread::DoMainThreadSpecificProcessing(bool aReallyWait) {
-  MOZ_ASSERT(IsMainThread());
+  MOZ_ASSERT(mIsMainThread);
 
   ipc::CancelCPOWs();
 
