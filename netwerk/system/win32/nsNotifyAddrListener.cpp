@@ -212,11 +212,11 @@ bool nsNotifyAddrListener::findMac(char* gateway) {
           LOG(("networkid: id %s\n", output.get()));
           if (mNetworkId != output) {
             // new id
-            Telemetry::Accumulate(Telemetry::NETWORK_ID, 1);
+            Telemetry::Accumulate(Telemetry::NETWORK_ID2, 1);
             mNetworkId = output;
           } else {
             // same id
-            Telemetry::Accumulate(Telemetry::NETWORK_ID, 2);
+            Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
           }
           found = true;
           break;
@@ -281,7 +281,7 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
   }
   if (!found) {
     // no id
-    Telemetry::Accumulate(Telemetry::NETWORK_ID, 0);
+    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
   }
 }
 
