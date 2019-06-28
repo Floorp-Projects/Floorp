@@ -45,20 +45,14 @@ add_test(function test_cancel1() {
 
   Assert.ok(
     didFail == 1,
-    "Prefetching the same request with the same " + "node fails."
+    "Prefetching the same request with the same node fails."
   );
 
-  Assert.ok(
-    prefetch.hasMoreElements(),
-    "There is still request in " + "the queue"
-  );
+  Assert.ok(prefetch.hasMoreElements(), "There is still request in the queue");
 
   prefetch.cancelPrefetchPreloadURI(uri, node1);
 
-  Assert.ok(
-    !prefetch.hasMoreElements(),
-    "There is no request in the " + "queue"
-  );
+  Assert.ok(!prefetch.hasMoreElements(), "There is no request in the queue");
   run_next_test();
 });
 
@@ -76,7 +70,7 @@ add_test(function test_cancel2() {
 
   Assert.ok(
     prefetch.hasMoreElements(),
-    "There is still one more request " + "in the queue"
+    "There is still one more request in the queue"
   );
 
   prefetch.cancelPrefetchPreloadURI(uri, node2);
@@ -104,7 +98,7 @@ add_test(function test_cancel3() {
 
   Assert.ok(
     prefetch.hasMoreElements(),
-    "There is still a request " + "in the queue"
+    "There is still a request in the queue"
   );
 
   prefetch.cancelPrefetchPreloadURI(uri, node1);
@@ -132,7 +126,7 @@ add_test(function test_cancel4() {
 
   Assert.ok(
     prefetch.hasMoreElements(),
-    "There is still a request " + "in the queue"
+    "There is still a request in the queue"
   );
 
   prefetch.cancelPrefetchPreloadURI(uri1, node1);

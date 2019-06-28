@@ -399,9 +399,7 @@ AndroidCastDeviceProvider.prototype = {
     aPresentationId,
     aControlChannel
   ) {
-    log(
-      "AndroidCastDeviceProvider - onSessionRequest" + " aDeviceId=" + aDeviceId
-    );
+    log("AndroidCastDeviceProvider - onSessionRequest aDeviceId=" + aDeviceId);
     let device = this._deviceList.get(aDeviceId);
     let receiverDevice = new ChromecastRemoteDisplayDevice(
       this,

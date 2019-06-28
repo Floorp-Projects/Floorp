@@ -44,6 +44,7 @@ addMessageListener("chrome-message", function(m) {
 });
 
 addMessageListener("speed-test-start", function(m) {
+  // eslint-disable-next-line no-empty
   while (sendSyncMessage("speed-test")[0].message != "done") {}
 });
 
