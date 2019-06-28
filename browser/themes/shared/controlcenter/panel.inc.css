@@ -837,6 +837,9 @@ description#identity-popup-content-verifier,
   padding: 4px 1em;
   min-height: 40px;
   -moz-box-pack: center;
+  /* This is needed in order to make 'position' working for the badge alongside
+     the TP switch toggle.*/
+  position: relative;
 }
 
 #protections-popup-tp-switch-on-header,
@@ -919,4 +922,23 @@ description#identity-popup-content-verifier,
   /* This padding is added to align the counter text with the beginning of texts
      in other sections. */
   padding-inline-start: 6px;
+}
+
+#protections-popup-tp-switch[showdotindicator]::after {
+  background: #00B3F4;
+  border: 1px rgba(0,144,237,0.5) solid;
+  content: " ";
+  border-radius: 6px;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 12px;
+  left: calc(1em + 20px);
+  height: 10px;
+  width: 10px;
+}
+
+#protections-popup-tp-switch[showdotindicator]:-moz-locale-dir(rtl)::after {
+  left: unset;
+  right: calc(1em + 20px);
 }
