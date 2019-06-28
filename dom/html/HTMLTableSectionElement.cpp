@@ -121,9 +121,6 @@ bool HTMLTableSectionElement::ParseAttribute(
     /* ignore these attributes, stored simply as strings
        ch
     */
-    if (aAttribute == nsGkAtoms::charoff) {
-      return aResult.ParseIntWithBounds(aValue, 0);
-    }
     if (aAttribute == nsGkAtoms::height) {
       // Per HTML spec there should be nothing special here, but all browsers
       // implement height mapping to style.  See
