@@ -15,7 +15,6 @@
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Mutex.h"
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
@@ -72,8 +71,6 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   // Figure out the current network identification
   void calculateNetworkId(void);
   bool findMac(char* gateway);
-
-  mozilla::Mutex mMutex;
   nsCString mNetworkId;
 
   HANDLE mCheckEvent;
