@@ -53,7 +53,7 @@ bool HTMLBodyElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
         aAttribute == nsGkAtoms::bottommargin ||
         aAttribute == nsGkAtoms::leftmargin ||
         aAttribute == nsGkAtoms::rightmargin) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+      return aResult.ParseNonNegativeIntValue(aValue);
     }
   }
 

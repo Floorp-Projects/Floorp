@@ -5199,9 +5199,6 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (aAttribute == nsGkAtoms::size) {
       return aResult.ParsePositiveIntValue(aValue);
     }
-    if (aAttribute == nsGkAtoms::border) {
-      return aResult.ParseIntWithBounds(aValue, 0);
-    }
     if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
     }
