@@ -329,7 +329,7 @@ marionette-media-tests:
 #    - mochitest-webgl2-core
 #     - mochitest-webgl2-ext test  # timeouts
     # - reftest
-#    - telemetry-tests-client
+    - telemetry-tests-client
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
@@ -355,7 +355,6 @@ macosx64-tests:
     - mochitest-webgl2-core
     # - mochitest-webgl2-ext test timeouts
     - reftest
-    - telemetry-tests-client
     - xpcshell
 
 macosx64-talos:
