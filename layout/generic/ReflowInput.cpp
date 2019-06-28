@@ -837,8 +837,8 @@ void ReflowInput::InitDynamicReflowRoot() {
   // Subgrids are never reflow roots, but 'contain:layout/paint' prevents
   // creating a subgrid in the first place.
   if (canBeDynamicReflowRoot &&
-      (mStylePosition->GridTemplateColumns().mIsSubgrid ||
-       mStylePosition->GridTemplateRows().mIsSubgrid) &&
+      (mStylePosition->mGridTemplateColumns.IsSubgrid() ||
+       mStylePosition->mGridTemplateRows.IsSubgrid()) &&
       !(mStyleDisplay->IsContainLayout() || mStyleDisplay->IsContainPaint())) {
     // NOTE: we could check that 'display' of our content's primary frame is
     // '[inline-]grid' here but that's probably not worth it in practice.

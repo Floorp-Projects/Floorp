@@ -1262,34 +1262,6 @@ void Gecko_ResizeAtomArray(nsTArray<RefPtr<nsAtom>>* aArray, uint32_t aLength) {
   aArray->SetLength(aLength);
 }
 
-void Gecko_SetStyleGridTemplate(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
-                                nsStyleGridTemplate* aValue) {
-  aGridTemplate->reset(aValue);
-}
-
-nsStyleGridTemplate* Gecko_CreateStyleGridTemplate(uint32_t aTrackSizes,
-                                                   uint32_t aNameSize) {
-  nsStyleGridTemplate* result = new nsStyleGridTemplate;
-  result->mTrackSizingFunctions.SetCapacity(aTrackSizes);
-  auto auto_ = StyleTrackSize::Breadth(StyleTrackBreadth::Auto());
-  for (auto i : IntegerRange(aTrackSizes)) {
-    Unused << i;
-    result->mTrackSizingFunctions.AppendElement(auto_);
-  }
-  result->mLineNameLists.SetLength(aNameSize);
-  return result;
-}
-
-void Gecko_CopyStyleGridTemplateValues(
-    UniquePtr<nsStyleGridTemplate>* aGridTemplate,
-    const nsStyleGridTemplate* aOther) {
-  if (aOther) {
-    *aGridTemplate = MakeUnique<nsStyleGridTemplate>(*aOther);
-  } else {
-    *aGridTemplate = nullptr;
-  }
-}
-
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent,
                                        uint32_t aHowMany) {
   aContent->AllocateContents(aHowMany);

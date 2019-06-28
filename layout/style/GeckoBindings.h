@@ -418,17 +418,6 @@ void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* array, uint32_t length);
 void Gecko_ResizeAtomArray(nsTArray<RefPtr<nsAtom>>* array, uint32_t length);
 
-void Gecko_SetStyleGridTemplate(
-    mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,
-    nsStyleGridTemplate* value);
-
-nsStyleGridTemplate* Gecko_CreateStyleGridTemplate(uint32_t track_sizes,
-                                                   uint32_t name_size);
-
-void Gecko_CopyStyleGridTemplateValues(
-    mozilla::UniquePtr<nsStyleGridTemplate>* grid_template,
-    const nsStyleGridTemplate* other);
-
 // Clear the mContents, mCounterIncrements, mCounterResets, or mCounterSets
 // field in nsStyleContent. This is needed to run the destructors, otherwise
 // we'd leak the images, strings, and whatnot.
