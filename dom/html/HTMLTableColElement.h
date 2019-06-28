@@ -20,7 +20,7 @@ class HTMLTableColElement final : public nsGenericHTMLElement {
     SetHasWeirdParserInsertionMode();
   }
 
-  uint32_t Span() const { return GetIntAttr(nsGkAtoms::span, 1); }
+  uint32_t Span() const { return GetUnsignedIntAttr(nsGkAtoms::span, 1); }
   void SetSpan(uint32_t aSpan, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::span, aSpan, 1, aError);
   }

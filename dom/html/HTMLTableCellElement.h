@@ -26,11 +26,11 @@ class HTMLTableCellElement final : public nsGenericHTMLElement {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableCellElement,
                                        nsGenericHTMLElement)
 
-  uint32_t ColSpan() const { return GetIntAttr(nsGkAtoms::colspan, 1); }
+  uint32_t ColSpan() const { return GetUnsignedIntAttr(nsGkAtoms::colspan, 1); }
   void SetColSpan(uint32_t aColSpan, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::colspan, aColSpan, 1, aError);
   }
-  uint32_t RowSpan() const { return GetIntAttr(nsGkAtoms::rowspan, 1); }
+  uint32_t RowSpan() const { return GetUnsignedIntAttr(nsGkAtoms::rowspan, 1); }
   void SetRowSpan(uint32_t aRowSpan, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::rowspan, aRowSpan, 1, aError);
   }
