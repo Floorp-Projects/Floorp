@@ -930,7 +930,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 
   // nsIFormControl
   virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() override;
-  virtual mozilla::dom::HTMLFormElement* GetFormElement() override;
+  virtual mozilla::dom::Element* GetFormElement() override;
   mozilla::dom::HTMLFormElement* GetForm() const { return mForm; }
   virtual void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   virtual void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
@@ -1083,8 +1083,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
  public:
   nsGenericHTMLFormElementWithState(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-      mozilla::dom::FromParser aFromParser, uint8_t aType);
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, uint8_t aType);
 
   /**
    * Get the presentation state for a piece of content, or create it if it does
@@ -1102,40 +1101,28 @@ class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
   already_AddRefed<nsILayoutHistoryState> GetLayoutHistory(bool aRead);
 
   /**
-   * Called when we have been cloned and adopted, and the information of the
-   * node has been changed.
-   */
-  virtual void NodeInfoChanged(Document* aOldDoc) override;
-
- protected:
-  /**
-   * Restore the state for a form control in response to the element being
-   * inserted into the document by the parser.  Ends up calling
+   * Restore the state for a form control.  Ends up calling
    * nsIFormControl::RestoreState().
-   *
-   * GenerateStateKey() must already have been called.
    *
    * @return false if RestoreState() was not called, the return
    *         value of RestoreState() otherwise.
    */
   bool RestoreFormControlState();
 
-  /* Generates the state key for saving the form state in the session if not
-     computed already. The result is stored in mStateKey. */
-  void GenerateStateKey();
+  /**
+   * Called when we have been cloned and adopted, and the information of the
+   * node has been changed.
+   */
+  virtual void NodeInfoChanged(Document* aOldDoc) override;
 
-  int32_t GetParserInsertedControlNumberForStateKey() const override {
-    return mControlNumber;
-  }
+ protected:
+  /* Generates the state key for saving the form state in the session if not
+     computed already. The result is stored in mStateKey on success */
+  nsresult GenerateStateKey();
 
   /* Used to store the key to that element in the session. Is void until
      GenerateStateKey has been used */
   nsCString mStateKey;
-
-  // A number for this form control that is unique within its owner document.
-  // This is only set to a number for elements inserted into the document by
-  // the parser from the network.  Otherwise, it is -1.
-  int32_t mControlNumber;
 };
 
 #define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag) \

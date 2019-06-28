@@ -38,7 +38,6 @@
 #include "nsPIDOMWindow.h"
 
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/HTMLFormElement.h"
 #include "nsIContent.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -1731,7 +1730,8 @@ Relation Accessible::RelationByType(RelationType aType) const {
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(mContent));
         if (control) {
-          if (dom::HTMLFormElement* form = control->GetFormElement()) {
+          nsCOMPtr<nsIForm> form(do_QueryInterface(control->GetFormElement()));
+          if (form) {
             nsCOMPtr<nsIContent> formContent =
                 do_QueryInterface(form->GetDefaultSubmitElement());
             return Relation(mDoc, formContent);

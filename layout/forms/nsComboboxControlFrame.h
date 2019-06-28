@@ -209,8 +209,9 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   mozilla::UniquePtr<mozilla::PresState> SaveState() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD RestoreState(mozilla::PresState* aState) override;
-  void GenerateStateKey(nsIContent* aContent, mozilla::dom::Document* aDocument,
-                        nsACString& aKey) override;
+  NS_IMETHOD GenerateStateKey(nsIContent* aContent,
+                              mozilla::dom::Document* aDocument,
+                              nsACString& aKey) override;
 
   static bool ToolkitHasNativePopup();
 
