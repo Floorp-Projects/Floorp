@@ -84,6 +84,15 @@ class App extends Component {
       dispatch(actions.reverseSearchInputToggle({initialValue}));
       event.stopPropagation();
     }
+
+    if (event.key.toLowerCase() === "b" && (
+      isMacOS && event.metaKey ||
+      !isMacOS && event.ctrlKey
+    )) {
+      event.stopPropagation();
+      event.preventDefault();
+      dispatch(actions.editorToggle());
+    }
   }
 
   onClick(event) {
