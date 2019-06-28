@@ -18,7 +18,6 @@
 #include "VRChild.h"
 #include "VRManager.h"
 #include "VRThread.h"
-#include "gfxVRPuppet.h"
 
 #include "nsAppRunner.h"  // for IToplevelProtocol
 #include "mozilla/ipc/ProtocolUtils.h"

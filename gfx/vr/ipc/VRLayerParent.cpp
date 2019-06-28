@@ -6,7 +6,6 @@
 
 #include "VRLayerParent.h"
 #include "mozilla/Unused.h"
-#include "VRDisplayHost.h"
 #include "mozilla/layers/CompositorThread.h"
 
 namespace mozilla {
@@ -28,10 +27,7 @@ void VRLayerParent::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }
 void VRLayerParent::Destroy() {
   if (mVRDisplayID) {
     VRManager* vm = VRManager::Get();
-    RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(mVRDisplayID);
-    if (display) {
-      display->RemoveLayer(this);
-    }
+    vm->RemoveLayer(this);
     // 0 will never be a valid VRDisplayID; we can use it to indicate that
     // we are destroyed and no longer associated with a display.
     mVRDisplayID = 0;
@@ -47,11 +43,7 @@ mozilla::ipc::IPCResult VRLayerParent::RecvSubmitFrame(
     const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) {
   if (mVRDisplayID) {
     VRManager* vm = VRManager::Get();
-    RefPtr<VRDisplayHost> display = vm->GetDisplay(mVRDisplayID);
-    if (display) {
-      display->SubmitFrame(this, aTexture, aFrameId, aLeftEyeRect,
-                           aRightEyeRect);
-    }
+    vm->SubmitFrame(this, aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
   }
 
   return IPC_OK();

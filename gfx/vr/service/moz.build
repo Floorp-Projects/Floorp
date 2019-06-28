@@ -15,7 +15,6 @@ if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'OSVRSession.cpp',
         'VRService.cpp',
-        'VRServiceManager.cpp',
         'VRSession.cpp',
     ]
     include('/ipc/chromium/chromium-config.mozbuild')
@@ -34,7 +33,8 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     # which define Size and Points types in the root namespace that
     # often conflict with our own types.
     SOURCES += [
-        'OpenVRSession.cpp'
+        'OpenVRSession.cpp',
+        'PuppetSession.cpp',
     ]
 
 FINAL_LIBRARY = 'xul'

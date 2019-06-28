@@ -255,33 +255,6 @@ class VREyeParameters final : public nsWrapperCache {
   RefPtr<VRFieldOfView> mFOV;
 };
 
-class VRSubmitFrameResult final : public nsWrapperCache {
- public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(VRSubmitFrameResult)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(VRSubmitFrameResult)
-
-  explicit VRSubmitFrameResult(nsISupports* aParent);
-  static already_AddRefed<VRSubmitFrameResult> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& aRv);
-
-  void Update(uint64_t aFrameNum, const nsACString& aBase64Image);
-  // WebIDL Members
-  double FrameNum() const;
-  void GetBase64Image(nsAString& aImage) const;
-
-  // WebIDL Boilerplate
-  nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
- protected:
-  ~VRSubmitFrameResult();
-
-  nsCOMPtr<nsISupports> mParent;
-  nsString mBase64Image;
-  uint64_t mFrameNum;
-};
-
 class VRDisplay final : public DOMEventTargetHelper, public nsIObserver {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -315,7 +288,6 @@ class VRDisplay final : public DOMEventTargetHelper, public nsIObserver {
   virtual already_AddRefed<VREyeParameters> GetEyeParameters(VREye aEye);
 
   bool GetFrameData(VRFrameData& aFrameData);
-  bool GetSubmitFrameResult(VRSubmitFrameResult& aResult);
   already_AddRefed<VRPose> GetPose();
   void ResetPose();
 
