@@ -311,8 +311,38 @@ class nsAttrValue {
    * @return whether the value could be parsed
    *
    * @see http://www.whatwg.org/html/#rules-for-parsing-dimension-values
+   *
+   * But note that this function implements something totally different!
    */
   bool ParseSpecialIntValue(const nsAString& aString);
+
+  /**
+   * Parse a string into a dimension value.  This is similar to
+   * https://html.spec.whatwg.org/multipage/#rules-for-parsing-dimension-values
+   * but drops the fractional part of the value for now, until we figure out how
+   * to store that in our nsAttrValue.
+   *
+   * The resulting value (if the parse succeeds) is either eInteger or
+   * ePercent, depending on whether we found a '%' at the end of the value.
+   *
+   * @param aInput the string to parse
+   * @return whether the value could be parsed
+   */
+  bool ParseHTMLDimension(const nsAString& aInput) {
+    return DoParseHTMLDimension(aInput, false);
+  }
+
+  /**
+   * Parse a string into a nonzero dimension value.  This implements
+   * https://html.spec.whatwg.org/multipage/#rules-for-parsing-non-zero-dimension-values
+   * subject to the same constraints as ParseHTMLDimension above.
+   *
+   * @param aInput the string to parse
+   * @return whether the value could be parsed
+   */
+  bool ParseNonzeroHTMLDimension(const nsAString& aInput) {
+    return DoParseHTMLDimension(aInput, true);
+  }
 
   /**
    * Parse a string value into an integer.
@@ -486,6 +516,15 @@ class nsAttrValue {
 
   static nsTArray<const EnumTable*>* sEnumTableArray;
   static MiscContainer* sMiscContainerCache;
+
+  /**
+   * Helper for ParseHTMLDimension and ParseNonzeroHTMLDimension.
+   *
+   * @param aInput the string to parse
+   * @param aEnsureNonzero whether to fail the parse if the value is 0
+   * @return whether the value could be parsed
+   */
+  bool DoParseHTMLDimension(const nsAString& aInput, bool aEnsureNonzero);
 
   uintptr_t mBits;
 };
