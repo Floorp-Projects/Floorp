@@ -937,6 +937,7 @@ public class GeckoApplication extends Application
         if (GeckoPreferences.PREFS_SYSTEM_FONT_SIZE.equals(key)) {
             final boolean enabled = prefs.getBoolean(GeckoPreferences.PREFS_SYSTEM_FONT_SIZE, false);
             getRuntime().getSettings().setAutomaticFontSizeAdjustment(enabled);
+            getRuntime().getSettings().setFontInflationEnabled(enabled);
         }
     }
 }

@@ -4728,6 +4728,14 @@ VARCACHE_PREF(
   bool, false
 )
 
+// text decoration skip ink
+VARCACHE_PREF(
+  Live,
+  "layout.css.text-decoration-skip-ink.enabled",
+  layout_css_text_decoration_skip_ink_enabled,
+  bool, false
+)
+
 // Is support for CSS column-span enabled?
 VARCACHE_PREF(
   Live,
@@ -7155,14 +7163,19 @@ VARCACHE_PREF(
 // Prefs starting with "slider."
 //---------------------------------------------------------------------------
 
-// scrollbar snapping region
-// 0 - off
-// 1 and higher - slider thickness multiple
+// Scrollbar snapping region.
+// - 0: off
+// - 1 and higher: slider thickness multiple
 VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
-   slider_snapMultiplier,
-  int32_t, 6
+  SliderSnapMultiplier,
+  int32_t,
+#ifdef XP_WIN
+  6
+#else
+  0
+#endif
 )
 
 //---------------------------------------------------------------------------

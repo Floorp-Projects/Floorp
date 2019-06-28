@@ -103,95 +103,16 @@ MOZ_END_EXTERN_C
 
 #ifdef __cplusplus
 
-/*
- * We implement the default operators new/delete as part of
- * libmozalloc, replacing their definitions in libstdc++.  The
- * operator new* definitions in libmozalloc will never return a NULL
- * pointer.
- *
- * Each operator new immediately below returns a pointer to memory
- * that can be delete'd by any of
- *
- *   (1) the matching infallible operator delete immediately below
- *   (2) the matching system |operator delete(void*, std::nothrow)|
- *   (3) the matching system |operator delete(void*) noexcept(false)|
- *
- * NB: these are declared |noexcept(false)|, though they will never
- * throw that exception.  This declaration is consistent with the rule
- * that |::operator new() noexcept(false)| will never return NULL.
- *
- * NB: mozilla::fallible can be used instead of std::nothrow.
- */
-
 /* NB: This is defined just to silence vacuous warnings about symbol
  * visibility on OS X/gcc. These symbols are force-inline and not
  * exported. */
 #  if defined(XP_MACOSX)
-#    define MOZALLOC_EXPORT_NEW MFBT_API
+#    define MOZALLOC_EXPORT_NEW MFBT_API MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #  else
-#    define MOZALLOC_EXPORT_NEW
+#    define MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG
 #  endif
 
-MOZALLOC_EXPORT_NEW
-#  if defined(__GNUC__) && !defined(__clang__) && defined(__SANITIZE_ADDRESS__)
-/* gcc's asan somehow doesn't like always_inline on this function. */
-__attribute__((gnu_inline)) inline
-#  else
-MOZ_ALWAYS_INLINE_EVEN_DEBUG
-#  endif
-    void*
-    operator new(size_t size) noexcept(false) {
-  return moz_xmalloc(size);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void* operator new(
-    size_t size, const std::nothrow_t&) noexcept(true) {
-  return malloc_impl(size);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void* operator new[](
-    size_t size) noexcept(false) {
-  return moz_xmalloc(size);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void* operator new[](
-    size_t size, const std::nothrow_t&) noexcept(true) {
-  return malloc_impl(size);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void operator delete(
-    void* ptr) noexcept(true) {
-  return free_impl(ptr);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void operator delete(
-    void* ptr, const std::nothrow_t&)noexcept(true) {
-  return free_impl(ptr);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void operator delete[](
-    void* ptr) noexcept(true) {
-  return free_impl(ptr);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void operator delete[](
-    void* ptr, const std::nothrow_t&) noexcept(true) {
-  return free_impl(ptr);
-}
-
-#  if defined(XP_WIN)
-// We provide the global sized delete overloads unconditionally because the
-// MSVC runtime headers do, despite compiling with /Zc:sizedDealloc-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void operator delete(
-    void* ptr, size_t /*size*/) noexcept(true) {
-  return free_impl(ptr);
-}
-
-MOZALLOC_EXPORT_NEW MOZ_ALWAYS_INLINE_EVEN_DEBUG void operator delete[](
-    void* ptr, size_t /*size*/) noexcept(true) {
-  return free_impl(ptr);
-}
-#  endif
+#  include "mozilla/cxxalloc.h"
 
 /*
  * This policy is identical to MallocAllocPolicy, except it uses

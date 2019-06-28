@@ -752,8 +752,10 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     return U2FRegisterPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  nsTArray<WebAuthnExtensionResult> extensions;
   WebAuthnMakeCredentialResult result(aInfo.ClientDataJSON(), attObj,
-                                      keyHandleBuf, registrationBuf);
+                                      keyHandleBuf, registrationBuf,
+                                      extensions);
   return U2FRegisterPromise::CreateAndResolve(std::move(result), __func__);
 }
 

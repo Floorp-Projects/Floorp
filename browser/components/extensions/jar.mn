@@ -26,6 +26,7 @@ browser.jar:
     content/browser/parent/ext-find.js (parent/ext-find.js)
     content/browser/parent/ext-history.js (parent/ext-history.js)
     content/browser/parent/ext-menus.js (parent/ext-menus.js)
+    content/browser/parent/ext-normandyAddonStudy.js (parent/ext-normandyAddonStudy.js)
     content/browser/parent/ext-omnibox.js (parent/ext-omnibox.js)
     content/browser/parent/ext-pageAction.js (parent/ext-pageAction.js)
     content/browser/parent/ext-pkcs11.js (parent/ext-pkcs11.js)

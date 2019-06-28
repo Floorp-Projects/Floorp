@@ -41,7 +41,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat("Gecko font scale should match system font scale",
                 settings.fontSizeFactor.toDouble(), closeTo(expectedFontSizeFactor.toDouble(), 0.05))
         assertThat("font inflation enabled",
-                settings.fontInflationEnabled, `is`(true))
+                settings.fontInflationEnabled, `is`(initialFontInflation))
 
         settings.automaticFontSizeAdjustment = false
         assertThat("Gecko font scale restored to previous value",
@@ -65,7 +65,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         assertThat("Gecko font scale should match system font scale",
                 settings.fontSizeFactor.toDouble(), closeTo(expectedFontSizeFactor.toDouble(), 0.05))
         assertThat("font inflation enabled",
-                settings.fontInflationEnabled, `is`(true))
+                settings.fontInflationEnabled, `is`(initialFontInflation))
 
         settings.automaticFontSizeAdjustment = false
         assertThat("Gecko font scale restored to previous value",

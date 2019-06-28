@@ -16,6 +16,8 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
+class nsIGlobalObject;
+
 namespace mozilla {
 namespace dom {
 
@@ -46,12 +48,19 @@ class DOMPointReadOnly : public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
 
-  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
+  static already_AddRefed<DOMPointReadOnly> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
  protected:
   virtual ~DOMPointReadOnly() {}
+
+  // Shared implementation of ReadStructuredClone for DOMPoint and
+  // DOMPointReadOnly.
+  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
   nsCOMPtr<nsISupports> mParent;
   double mX, mY, mZ, mW;
@@ -71,6 +80,11 @@ class DOMPoint final : public DOMPointReadOnly {
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<DOMPoint> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
+  using DOMPointReadOnly::ReadStructuredClone;
 
   void SetX(double aX) { mX = aX; }
   void SetY(double aY) { mY = aY; }

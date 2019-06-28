@@ -18,6 +18,8 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/gfx/Matrix.h"  // for Matrix4x4Double
 
+class nsIGlobalObject;
+
 namespace mozilla {
 namespace dom {
 
@@ -59,10 +61,8 @@ class DOMMatrixReadOnly : public nsWrapperCache {
       ErrorResult& aRv);
 
   static already_AddRefed<DOMMatrixReadOnly> ReadStructuredClone(
-      nsISupports* aParent, JSStructuredCloneReader* aReader);
-
-  static bool ReadStructuredCloneElements(JSStructuredCloneReader* aReader,
-                                          DOMMatrixReadOnly* matrix);
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
   // clang-format off
 #define GetMatrixMember(entry2D, entry3D, default) \
@@ -186,7 +186,8 @@ class DOMMatrixReadOnly : public nsWrapperCache {
                       ErrorResult& aRv) const;
   void Stringify(nsAString& aResult);
 
-  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
 
  protected:
   nsCOMPtr<nsISupports> mParent;
@@ -206,6 +207,9 @@ class DOMMatrixReadOnly : public nsWrapperCache {
       mMatrix3D = new gfx::Matrix4x4Double();
     }
   }
+
+  static bool ReadStructuredCloneElements(JSStructuredCloneReader* aReader,
+                                          DOMMatrixReadOnly* matrix);
 
  private:
   DOMMatrixReadOnly() = delete;
@@ -242,7 +246,8 @@ class DOMMatrix : public DOMMatrixReadOnly {
       ErrorResult& aRv);
 
   static already_AddRefed<DOMMatrix> ReadStructuredClone(
-      nsISupports* aParent, JSStructuredCloneReader* aReader);
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

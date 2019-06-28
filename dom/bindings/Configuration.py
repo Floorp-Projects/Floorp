@@ -252,6 +252,8 @@ class Configuration(DescriptorProvider):
                 getter = lambda x: x.interface.isExposedInAnyWorklet()
             elif key == 'isExposedInWindow':
                 getter = lambda x: x.interface.isExposedInWindow()
+            elif key == 'isSerializable':
+                getter = lambda x: x.interface.isSerializable()
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value

@@ -152,6 +152,7 @@ dictionary JsonWebKey {
 
 /***** The Main API *****/
 
+[Serializable]
 interface CryptoKey {
   readonly attribute KeyType type;
   readonly attribute boolean extractable;

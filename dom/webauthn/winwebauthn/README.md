@@ -8,7 +8,7 @@ For more details about the standards, please follow these links:
 
 
 # Having Issues?
-If you have any issues in adopting these APIs or need some clarification, please contact [FIDO OS Security Group](FIDOSEC@microsoft.com)
+If you have any issues in adopting these APIs or need some clarification, please contact [fido-dev](fido-dev@microsoft.com)
 
 
 # Contributing

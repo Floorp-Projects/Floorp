@@ -6,6 +6,9 @@ ChromeUtils.import("resource://normandy/actions/BranchedAddonStudyAction.jsm", t
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 
+const {NormandyTestUtils} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
+const {branchedAddonStudyFactory} = NormandyTestUtils.factories;
+
 function branchedAddonStudyRecipeFactory(overrides = {}) {
   let args = {
     slug: "fake-slug",

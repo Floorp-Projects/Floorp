@@ -173,6 +173,10 @@ void WinWebAuthnManager::Register(
 
   BYTE U2FUserId = 0x01;
 
+  WEBAUTHN_EXTENSION rgExtension[1] = {};
+  DWORD cExtensions = 0;
+  BOOL HmacCreateSecret = FALSE;
+
   // RP Information
   WEBAUTHN_RP_ENTITY_INFORMATION rpInfo = {
       WEBAUTHN_RP_ENTITY_INFORMATION_CURRENT_VERSION, aInfo.RpId().get(),
@@ -283,6 +287,23 @@ void WinWebAuthnManager::Register(
         winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
         break;
     }
+
+    for (const WebAuthnExtension& ext : extra.Extensions()) {
+      MOZ_ASSERT(cExtensions <
+                 (int)(sizeof(rgExtension) / sizeof(rgExtension[0])));
+
+      if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
+        HmacCreateSecret =
+            ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret() == true;
+        if (HmacCreateSecret) {
+          rgExtension[cExtensions].pwszExtensionIdentifier =
+              WEBAUTHN_EXTENSIONS_IDENTIFIER_HMAC_SECRET;
+          rgExtension[cExtensions].cbExtension = sizeof(BOOL);
+          rgExtension[cExtensions].pvExtension = &HmacCreateSecret;
+          cExtensions++;
+        }
+      }
+    }
   } else {
     userInfo.cbId = sizeof(BYTE);
     userInfo.pbId = &U2FUserId;
@@ -359,6 +380,11 @@ void WinWebAuthnManager::Register(
     mCancellationIds.emplace(aTransactionId, &cancellationId);
   }
 
+  if (cExtensions != 0) {
+    WebAuthNCredentialOptions.Extensions.cExtensions = cExtensions;
+    WebAuthNCredentialOptions.Extensions.pExtensions = rgExtension;
+  }
+
   WEBAUTHN_CREDENTIAL_ATTESTATION* pWebAuthNCredentialAttestation = nullptr;
 
   // Bug 1518876: Get Window Handle from Content process for Windows WebAuthN
@@ -428,8 +454,35 @@ void WinWebAuthnManager::Register(
                                        attestation->cbSignature);
     }
 
+    nsTArray<WebAuthnExtensionResult> extensions;
+
+    if (pWebAuthNCredentialAttestation->dwVersion >=
+        WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_2) {
+      PCWEBAUTHN_EXTENSIONS pExtensionList =
+          &pWebAuthNCredentialAttestation->Extensions;
+      if (pExtensionList->cExtensions != 0 &&
+          pExtensionList->pExtensions != NULL) {
+        for (DWORD dwIndex = 0; dwIndex < pExtensionList->cExtensions;
+             dwIndex++) {
+          PWEBAUTHN_EXTENSION pExtension =
+              &pExtensionList->pExtensions[dwIndex];
+          if (pExtension->pwszExtensionIdentifier &&
+              (0 == _wcsicmp(pExtension->pwszExtensionIdentifier,
+                             WEBAUTHN_EXTENSIONS_IDENTIFIER_HMAC_SECRET)) &&
+              pExtension->cbExtension == sizeof(BOOL)) {
+            BOOL* pCredentialCreatedWithHmacSecret =
+                (BOOL*)pExtension->pvExtension;
+            if (*pCredentialCreatedWithHmacSecret) {
+              extensions.AppendElement(WebAuthnExtensionResultHmacSecret(true));
+            }
+          }
+        }
+      }
+    }
+
     WebAuthnMakeCredentialResult result(aInfo.ClientDataJSON(), attObject,
-                                        credentialId, authenticatorData);
+                                        credentialId, authenticatorData,
+                                        extensions);
 
     Unused << mTransactionParent->SendConfirmRegister(aTransactionId, result);
     ClearTransaction();
