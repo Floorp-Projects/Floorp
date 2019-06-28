@@ -52,3 +52,9 @@ nsAndroidNetworkLinkService::GetLinkType(uint32_t* aLinkType) {
   *aLinkType = java::GeckoAppShell::GetNetworkLinkType();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsAndroidNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
+  aNetworkID.Truncate();
+  return NS_OK;
+}
