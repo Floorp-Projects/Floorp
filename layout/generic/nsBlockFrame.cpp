@@ -1839,7 +1839,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
            NS_UNCONSTRAINEDSIZE)) {
     ComputeFinalBSize(aReflowInput, &aState.mReflowStatus,
                       aState.mBCoord + nonCarriedOutBDirMargin, borderPadding,
-                      finalSize, aState.mConsumedBSize);
+                      finalSize, aState.ConsumedBSize());
 
     // Don't carry out a block-end margin when our BSize is fixed.
     aMetrics.mCarriedOutBEndMargin.Zero();
@@ -7415,7 +7415,7 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   WritingMode wm = aReflowInput.GetWritingMode();
   // Figure out how much of the computed height should be
   // applied to this frame.
-  nscoord computedBSizeLeftOver =
+  const nscoord computedBSizeLeftOver =
       GetEffectiveComputedBSize(aReflowInput, aConsumed);
   NS_ASSERTION(!(IS_TRUE_OVERFLOW_CONTAINER(this) && computedBSizeLeftOver),
                "overflow container must not have computedBSizeLeftOver");
@@ -7459,11 +7459,9 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
     aFinalSize.BSize(wm) =
         std::max(aReflowInput.AvailableBSize(), aContentBSize);
     // ... but don't take up more block size than is available
-    nscoord effectiveComputedBSize =
-        GetEffectiveComputedBSize(aReflowInput, aState.ConsumedBSize());
     aFinalSize.BSize(wm) =
         std::min(aFinalSize.BSize(wm),
-                 aBorderPadding.BStart(wm) + effectiveComputedBSize);
+                 aBorderPadding.BStart(wm) + computedBSizeLeftOver);
     // XXX It's pretty wrong that our bottom border still gets drawn on
     // on its own on the last-in-flow, even if we ran out of height
     // here. We need GetSkipSides to check whether we ran out of content
