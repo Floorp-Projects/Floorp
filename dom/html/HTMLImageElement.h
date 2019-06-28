@@ -100,11 +100,15 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   uint32_t NaturalWidth();
   uint32_t NaturalHeight();
   bool Complete();
-  uint32_t Hspace() { return GetUnsignedIntAttr(nsGkAtoms::hspace, 0); }
+  uint32_t Hspace() {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::hspace, 0);
+  }
   void SetHspace(uint32_t aHspace, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::hspace, aHspace, 0, aError);
   }
-  uint32_t Vspace() { return GetUnsignedIntAttr(nsGkAtoms::vspace, 0); }
+  uint32_t Vspace() {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::vspace, 0);
+  }
   void SetVspace(uint32_t aVspace, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::vspace, aVspace, 0, aError);
   }
