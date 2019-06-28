@@ -16,6 +16,12 @@ var subtests = [
   {"file": "helper_click.html?dtc=true"},
   // Sanity test for click but with some mouse movement between the down and up
   {"file": "helper_drag_click.html"},
+  // Test for dragging on the scrollbar of the root scrollable element works.
+  // This takes different codepaths with async zooming support enabled and
+  // disabled, and so needs to be tested separately for both.
+  // TODO(bug 1556556): Once we get this working with zooming enabled,
+  // add an entry to run this with apz.allow_zooming=true as well.
+  {"file": "helper_drag_root_scrollbar.html", "prefs": [["apz.allow_zooming", false]]},
   // Test for dragging on a fake-scrollbar element that scrolls the page
   {"file": "helper_drag_scroll.html"},
   // Test for dragging the scrollbar with a fixed-pos element overlaying it
