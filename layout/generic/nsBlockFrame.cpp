@@ -7439,23 +7439,22 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
         aStatus->SetInlineLineBreakBeforeAndReset();
         return;
       }
-      // We don't fit and we consumed some of the computed height,
-      // so we should consume all the available height and then
-      // break.  If our bottom border/padding straddles the break
-      // point, then this will increase our height and push the
-      // border/padding to the next page/column.
-      aFinalSize.BSize(wm) =
-          std::max(aReflowInput.AvailableBSize(), aContentBSize);
+
+      // Our leftover block-size does not fit into the available block-size.
+      // Change aStatus to incomplete to let the logic at the end of this method
+      // calculate the correct block-size.
       aStatus->SetIncomplete();
-      if (!GetNextInFlow()) aStatus->SetNextInFlowNeedsReflow();
+      if (!GetNextInFlow()) {
+        aStatus->SetNextInFlowNeedsReflow();
+      }
     }
   }
 
   if (aStatus->IsIncomplete()) {
-    // Use the current height; continuations will take up the rest.
-    // Do extend the height to at least consume the available
-    // height, otherwise our left/right borders (for example) won't
-    // extend all the way to the break.
+    // Use the current block-size; continuations will take up the rest.
+    // Do extend the block-size to at least consume the available block-size,
+    // otherwise our left/right borders (for example) won't extend all the way
+    // to the break.
     aFinalSize.BSize(wm) =
         std::max(aReflowInput.AvailableBSize(), aContentBSize);
     // ... but don't take up more block size than is available
