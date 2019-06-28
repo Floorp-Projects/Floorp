@@ -5,6 +5,7 @@
 "use strict";
 
 const TEST_URI =
+  // eslint-disable-next-line no-useless-concat
   "https://example.com/" + "browser/dom/tests/browser/position.html";
 
 add_task(async function testDismissHanger() {

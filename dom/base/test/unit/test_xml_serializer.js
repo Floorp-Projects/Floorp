@@ -353,6 +353,7 @@ function test9() {
   // Test behavior of serializing between given charsets, using
   // windows-1252-representable text.
   var contents =
+    // eslint-disable-next-line no-useless-concat
     "<root>" + "\u00BD + \u00BE == \u00BD\u00B2 + \u00BC + \u00BE" + "</root>";
   var str1 = '<?xml version="1.0" encoding="windows-1252"?>' + LB + contents;
   var str2 = '<?xml version="1.0" encoding="UTF-8"?>' + LB + contents;
