@@ -68,11 +68,16 @@
   border: none;
 }
 
+#editBookmarkPanelRecommendation > div h1 {
+  max-width: 215px;
+}
+
 #editBookmarkPanelRecommendationTitle {
   font-size: 16px;
   font-weight: 400;
   line-height: 1.25;
-  margin: 0;
+  margin-bottom: 6px;
+  padding-top: 2px;
 }
 
 #editBookmarkPanelRecommendationContent {
@@ -98,17 +103,11 @@
   text-decoration: underline;
 }
 
-#editBookmarkPanelRecommendation .cfrMessageHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 6px;
-  margin-top: 10px;
-  padding-top: 2px;
-}
-
 #editBookmarkPanelRecommendation #cfrClose {
+  position: absolute;
   padding: 10px;
+  inset-inline-end: 8px;
+  top: 15px;
   width: 12px;
   height: 12px;
   border: none;
