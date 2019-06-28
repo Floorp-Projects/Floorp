@@ -13,7 +13,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "સાઇટ્સની પસંદગી કે જે તમે સાચવી અથવા મુલાકાત લીધી છે",
   "prefs_highlights_options_visited_label": "મુલાકાત લીધેલા પૃષ્ઠો",
   "prefs_highlights_options_download_label": "સૌથી તાજેતરની ડાઉનલોડ",
-  "prefs_highlights_options_pocket_label": "પોકેટ પર સાચવેલ પૃષ્ઠો",
+  "prefs_highlights_options_pocket_label": "Pocket પર સાચવેલ પૃષ્ઠો",
   "prefs_snippets_description": "Mozilla અને Firefox તરફથી અપડેટ્સ",
   "settings_pane_topsites_header": "ટોચની સાઇટ્સ",
   "settings_pane_highlights_header": "વીતી ગયેલું",

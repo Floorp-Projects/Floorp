@@ -21,7 +21,7 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_header": "פתקיות",
   "pocket_how_it_works": "איך זה עובד",
   "firstrun_title": "Firefox אתך בדרכים",
-  "firstrun_content": "לקחת את המועדפים, ההיסטוריה, הססמאות והגדרות נוספות בכל ההתקנים שלך.",
+  "firstrun_content": "קבלת המועדפים, ההיסטוריה, הססמאות והגדרות נוספות בכל המכשירים שלך.",
   "firstrun_learn_more_link": "מידע נוסף על חשבונות Firefox",
   "firstrun_form_header": "נא להקליד את כתובת הדוא״ל שלך",
   "firstrun_form_sub_header": "כדי להמשיך אל Firefox Sync.",

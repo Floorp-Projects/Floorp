@@ -225,7 +225,11 @@ const PREFS_CONFIG = new Map([
         "US": ["en-CA", "en-GB", "en-US", "en-ZA"],
         "CA": ["en-CA", "en-GB", "en-US", "en-ZA"],
       })[geo];
-      const isEnabled = IS_NIGHTLY_OR_UNBRANDED_BUILD && locales && locales.includes(locale);
+
+      // Enable for US/en-US in all channels.
+      // Enable for specific geos and locales for Nightly.
+      const isEnabled = (geo === `US` && locale === `en-US`) || (IS_NIGHTLY_OR_UNBRANDED_BUILD && locales && locales.includes(locale));
+
       return JSON.stringify({
         api_key_pref: "extensions.pocket.oAuthConsumerKey",
         collapsible: true,
@@ -240,7 +244,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["discoverystream.endpoints", {
     title: "Endpoint prefixes (comma-separated) that are allowed to be requested",
-    value: "https://getpocket.cdn.mozilla.net/",
+    value: "https://getpocket.cdn.mozilla.net/,https://spocs.getpocket.com/",
   }],
   ["discoverystream.spoc.impressions", {
     title: "Track spoc impressions",
@@ -249,7 +253,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["discoverystream.endpointSpocsClear", {
     title: "Endpoint for when a user opts-out of sponsored content to delete the user's data from the ad server.",
-    value: "",
+    value: "https://spocs.getpocket.com/user",
   }],
   ["discoverystream.rec.impressions", {
     title: "Track rec impressions",

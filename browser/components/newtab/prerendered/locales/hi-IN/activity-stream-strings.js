@@ -13,7 +13,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "आपके द्वारा सहेजी गई या विज़िट की गई साइटों का चयन",
   "prefs_highlights_options_visited_label": "देखे गए पृष्ठ",
   "prefs_highlights_options_download_label": "सबसे हालिया डाउनलोड",
-  "prefs_highlights_options_pocket_label": "पॉकेट में सहेजे गए पृष्ठ",
+  "prefs_highlights_options_pocket_label": "पृष्ठ Pocket में सहेजे गए",
   "prefs_snippets_description": "Mozilla और Firefox से अद्यतन",
   "settings_pane_topsites_header": "सर्वोच्च साइटें",
   "settings_pane_highlights_header": "प्रमुखताएँ",

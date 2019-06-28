@@ -1076,7 +1076,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 // Hardcoded version of layout_variant `3-col-7-row-octr`
 defaultLayoutResp = {
   "spocs": {
-    "url": "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs",
+    "url": "https://spocs.getpocket.com/spocs",
     "spocs_per_domain": 1
   },
   "layout": [

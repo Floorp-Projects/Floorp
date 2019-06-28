@@ -334,6 +334,19 @@ describe("MessageLoaderUtils", () => {
       // method (See Bug 1496167 for a rationale).
       assert.calledWithExactly(getInstallStub, "foo.com", {telemetryInfo: {source: "amo"}});
     });
+    it("should optionally pass a custom telemetrySource to the Addons API if specified", async () => {
+      getInstallStub.resolves(null);
+      installAddonStub.resolves(null);
+
+      await MessageLoaderUtils.installAddonFromURL({}, "foo.com", "foo");
+
+      assert.calledOnce(getInstallStub);
+      assert.calledOnce(installAddonStub);
+
+      // Verify that a custom installation source can be passed to the getInstallForURL
+      // method (See Bug 1549770 for a rationale).
+      assert.calledWithExactly(getInstallStub, "foo.com", {telemetryInfo: {source: "foo"}});
+    });
     it("should not call the Addons API on invalid URLs", async () => {
       sandbox.stub(global.Services.scriptSecurityManager, "getSystemPrincipal").throws();
 
