@@ -13,7 +13,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "A selection of sites that you’ve saved or visited",
   "prefs_highlights_options_visited_label": "பார்வையிட்டத் தளம்",
   "prefs_highlights_options_download_label": "அண்மைய பதிவிறக்கம்",
-  "prefs_highlights_options_pocket_label": "பக்கங்கள் பாக்கெட்டில் சேமிக்கப்பட்டது",
+  "prefs_highlights_options_pocket_label": "Pages Saved to Pocket",
   "prefs_snippets_description": "மொசில்லா மற்றும் பயர்பாக்சிலிருந்து புதுப்பிப்புகள்",
   "settings_pane_topsites_header": "சிறந்த தளங்கள்",
   "settings_pane_highlights_header": "மிளிர்ப்புகள்",

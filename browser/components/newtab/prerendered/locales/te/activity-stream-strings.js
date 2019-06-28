@@ -13,7 +13,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "మీరు భద్రపరచిన లేదా సందర్శించిన సైట్ల నుండి ఎంపికచేసినవి",
   "prefs_highlights_options_visited_label": "చూసిన పేజీలు",
   "prefs_highlights_options_download_label": "ఇటీవలి దింపుకోలు",
-  "prefs_highlights_options_pocket_label": "పాకెట్‌కు భద్రపరచిన పేజీలు",
+  "prefs_highlights_options_pocket_label": "Pocketలో భద్రపరచిన పేజీలు",
   "prefs_snippets_description": "మొజిల్లా, ఫైర్‌ఫాక్స్ నుండి విశేషాలు",
   "settings_pane_topsites_header": "మేటి సైట్లు",
   "settings_pane_highlights_header": "విశేషాలు",

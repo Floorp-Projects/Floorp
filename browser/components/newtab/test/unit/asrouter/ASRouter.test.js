@@ -1048,13 +1048,14 @@ describe("ASRouter", () => {
     describe("#onMessage: INSTALL_ADDON_FROM_URL", () => {
       it("should call installAddonFromURL with correct arguments", async () => {
         sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
-        const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com"}});
+        const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com", telemetrySource: "foo"}});
 
         await Router.onMessage(msg);
 
         assert.calledOnce(MessageLoaderUtils.installAddonFromURL);
-        assert.calledWithExactly(MessageLoaderUtils.installAddonFromURL, msg.target.browser, "foo.com");
+        assert.calledWithExactly(MessageLoaderUtils.installAddonFromURL, msg.target.browser, "foo.com", "foo");
       });
+
       it("should add/remove observers for `webextension-install-notify`", async () => {
         sandbox.spy(global.Services.obs, "addObserver");
         sandbox.spy(global.Services.obs, "removeObserver");

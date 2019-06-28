@@ -8194,7 +8194,7 @@ const selectLayoutRender = (state, prefs, rickRollCache) => {
     } // Ensure we have recs available for this feed.
 
 
-    const hasRecs = data && data.recommendations && data.recommendations.length; // Do we ever expect to possibly have a spoc.
+    const hasRecs = data && data.recommendations; // Do we ever expect to possibly have a spoc.
 
     if (hasRecs && component.spocs && component.spocs.positions && component.spocs.positions.length) {
       // We expect a spoc, spocs are loaded, and the server returned spocs.
