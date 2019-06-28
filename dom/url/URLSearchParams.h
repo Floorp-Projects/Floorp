@@ -15,6 +15,8 @@
 #include "nsISupports.h"
 #include "nsIInputStream.h"
 
+class nsIGlobalObject;
+
 namespace mozilla {
 namespace dom {
 
@@ -143,9 +145,12 @@ class URLSearchParams final : public nsISupports, public nsWrapperCache {
 
   void Stringify(nsString& aRetval) const { Serialize(aRetval); }
 
-  bool ReadStructuredClone(JSStructuredCloneReader* aReader);
+  static already_AddRefed<URLSearchParams> ReadStructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal,
+      JSStructuredCloneReader* aReader);
 
-  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter) const;
 
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentTypeWithCharset,

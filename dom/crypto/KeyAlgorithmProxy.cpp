@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/KeyAlgorithmProxy.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 
 namespace mozilla {
@@ -12,7 +13,7 @@ namespace dom {
 
 bool KeyAlgorithmProxy::WriteStructuredClone(
     JSStructuredCloneWriter* aWriter) const {
-  if (!WriteString(aWriter, mName) ||
+  if (!StructuredCloneHolder::WriteString(aWriter, mName) ||
       !JS_WriteUint32Pair(aWriter, mType, KEY_ALGORITHM_SC_VERSION)) {
     return false;
   }
@@ -22,14 +23,14 @@ bool KeyAlgorithmProxy::WriteStructuredClone(
       return JS_WriteUint32Pair(aWriter, mAes.mLength, 0);
     case HMAC:
       return JS_WriteUint32Pair(aWriter, mHmac.mLength, 0) &&
-             WriteString(aWriter, mHmac.mHash.mName);
+             StructuredCloneHolder::WriteString(aWriter, mHmac.mHash.mName);
     case RSA: {
       return JS_WriteUint32Pair(aWriter, mRsa.mModulusLength, 0) &&
              WriteBuffer(aWriter, mRsa.mPublicExponent) &&
-             WriteString(aWriter, mRsa.mHash.mName);
+             StructuredCloneHolder::WriteString(aWriter, mRsa.mHash.mName);
     }
     case EC:
-      return WriteString(aWriter, mEc.mNamedCurve);
+      return StructuredCloneHolder::WriteString(aWriter, mEc.mNamedCurve);
     case DH: {
       return WriteBuffer(aWriter, mDh.mPrime) &&
              WriteBuffer(aWriter, mDh.mGenerator);
@@ -41,7 +42,7 @@ bool KeyAlgorithmProxy::WriteStructuredClone(
 
 bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
   uint32_t type, version, dummy;
-  if (!ReadString(aReader, mName) ||
+  if (!StructuredCloneHolder::ReadString(aReader, mName) ||
       !JS_ReadUint32Pair(aReader, &type, &version)) {
     return false;
   }
@@ -64,7 +65,7 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
     }
     case HMAC: {
       if (!JS_ReadUint32Pair(aReader, &mHmac.mLength, &dummy) ||
-          !ReadString(aReader, mHmac.mHash.mName)) {
+          !StructuredCloneHolder::ReadString(aReader, mHmac.mHash.mName)) {
         return false;
       }
 
@@ -76,7 +77,7 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       nsString hashName;
       if (!JS_ReadUint32Pair(aReader, &modulusLength, &dummy) ||
           !ReadBuffer(aReader, mRsa.mPublicExponent) ||
-          !ReadString(aReader, mRsa.mHash.mName)) {
+          !StructuredCloneHolder::ReadString(aReader, mRsa.mHash.mName)) {
         return false;
       }
 
@@ -86,7 +87,7 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
     }
     case EC: {
       nsString namedCurve;
-      if (!ReadString(aReader, mEc.mNamedCurve)) {
+      if (!StructuredCloneHolder::ReadString(aReader, mEc.mNamedCurve)) {
         return false;
       }
 

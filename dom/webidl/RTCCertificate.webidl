@@ -11,7 +11,7 @@ dictionary RTCCertificateExpiration {
   DOMTimeStamp expires;
 };
 
-[Pref="media.peerconnection.enabled"]
+[Pref="media.peerconnection.enabled", Serializable]
 interface RTCCertificate {
   readonly attribute DOMTimeStamp expires;
 };

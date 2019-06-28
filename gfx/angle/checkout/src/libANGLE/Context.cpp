@@ -3704,10 +3704,11 @@ void Context::copyTexSubImage2D(TextureTarget target,
     Offset destOffset(xoffset, yoffset, 0);
     Rectangle sourceArea(x, y, width, height);
 
+    ImageIndex index = ImageIndex::MakeFromTarget(target, level);
+
     Framebuffer *framebuffer = mState.getReadFramebuffer();
     Texture *texture         = getTargetTexture(TextureTargetToType(target));
-    ANGLE_CONTEXT_TRY(
-        texture->copySubImage(this, target, level, destOffset, sourceArea, framebuffer));
+    ANGLE_CONTEXT_TRY(texture->copySubImage(this, index, destOffset, sourceArea, framebuffer));
 }
 
 void Context::copyTexSubImage3D(TextureType target,
@@ -3731,10 +3732,11 @@ void Context::copyTexSubImage3D(TextureType target,
     Offset destOffset(xoffset, yoffset, zoffset);
     Rectangle sourceArea(x, y, width, height);
 
+    ImageIndex index = ImageIndex::MakeFromType(target, level, zoffset);
+
     Framebuffer *framebuffer = mState.getReadFramebuffer();
     Texture *texture         = getTargetTexture(target);
-    ANGLE_CONTEXT_TRY(texture->copySubImage(this, NonCubeTextureTypeToTarget(target), level,
-                                            destOffset, sourceArea, framebuffer));
+    ANGLE_CONTEXT_TRY(texture->copySubImage(this, index, destOffset, sourceArea, framebuffer));
 }
 
 void Context::framebufferTexture2D(GLenum target,

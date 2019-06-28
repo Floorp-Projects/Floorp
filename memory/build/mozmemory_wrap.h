@@ -60,13 +60,11 @@
 //   unprefixed, as well as duplication functions.
 //   Jemalloc-specific functions are also left unprefixed.
 //
-// - On Android all functions are left unprefixed. Additionally,
-//   C++ allocation functions (operator new/delete) are also exported and
-//   unprefixed.
+// - On Android all functions are left unprefixed.
 //
 // - On other systems (mostly Linux), all functions are left unprefixed.
 //
-// Only Android adds C++ allocation functions.
+// On all platforms, C++ allocation functions are also exported.
 //
 // Proper exporting of the various functions is done with the MOZ_MEMORY_API
 // and MOZ_JEMALLOC_API macros. MOZ_MEMORY_API is meant to be used for malloc
@@ -111,9 +109,6 @@
 #    define mozmem_malloc_impl(a) je_##a
 #  else
 #    define MOZ_MEMORY_API MOZ_EXTERN_C MFBT_API
-#    if defined(MOZ_WIDGET_ANDROID)
-#      define MOZ_WRAP_NEW_DELETE
-#    endif
 #  endif
 #endif
 #ifdef XP_WIN

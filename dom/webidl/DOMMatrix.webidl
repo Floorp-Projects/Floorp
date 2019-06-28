@@ -12,7 +12,8 @@
 
 [Pref="layout.css.DOMMatrix.enabled",
  Constructor(optional (DOMString or sequence<unrestricted double>) init),
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker),
+ Serializable]
 interface DOMMatrixReadOnly {
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     readonly attribute unrestricted double a;
@@ -89,7 +90,8 @@ interface DOMMatrixReadOnly {
  Constructor(Float32Array array32),
  Constructor(Float64Array array64),
  Constructor(sequence<unrestricted double> numberSequence),
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker),
+ Serializable]
 interface DOMMatrix : DOMMatrixReadOnly {
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     inherit attribute unrestricted double a;

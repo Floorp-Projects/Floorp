@@ -743,10 +743,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
     /**
      * Set whether or not font sizes in web content should be automatically scaled according to
-     * the device's current system font scale setting.
-     * Disabling this setting will restore the previously used values for
-     * {@link GeckoRuntimeSettings#getFontSizeFactor()} and
-     * {@link GeckoRuntimeSettings#getFontInflationEnabled()}.
+     * the device's current system font scale setting. Enabling this will prevent modification of
+     * the {@link GeckoRuntimeSettings#setFontSizeFactor font size factor}.
+     * Disabling this setting will restore the previously used value for the
+     * {@link GeckoRuntimeSettings#getFontSizeFactor font size factor}.
      *
      * @param enabled A flag determining whether or not font sizes should be scaled automatically
      *                to match the device's system font scale.
@@ -835,7 +835,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         final int fontSizePercentage = Math.round(fontSizeFactor * 100);
-        mFontSizeFactor.commit(Math.round(fontSizePercentage));
+        mFontSizeFactor.commit(fontSizePercentage);
         if (getFontInflationEnabled()) {
             final int scaledFontInflation = Math.round(FONT_INFLATION_BASE_VALUE * fontSizeFactor);
             mFontInflationMinTwips.commit(scaledFontInflation);
@@ -866,21 +866,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      *
      * <p>Currently, any changes only take effect after a reload of the session.
      *
-     * <p>This setting cannot be modified while
-     * {@link GeckoRuntimeSettings#setAutomaticFontSizeAdjustment automatic font size adjustment}
-     * is enabled.
-     *
      * @param enabled A flag determining whether or not font inflation should be enabled.
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setFontInflationEnabled(final boolean enabled) {
-        if (getAutomaticFontSizeAdjustment()) {
-            throw new IllegalStateException("Not allowed when automatic font size adjustment is enabled");
-        }
-        return setFontInflationEnabledInternal(enabled);
-    }
-
-    /* package */ @NonNull GeckoRuntimeSettings setFontInflationEnabledInternal(final boolean enabled) {
         final int minTwips =
                 enabled ? Math.round(FONT_INFLATION_BASE_VALUE * getFontSizeFactor()) : 0;
         mFontInflationMinTwips.commit(minTwips);
