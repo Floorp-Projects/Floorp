@@ -8,11 +8,11 @@ import android.view.Gravity.TOP
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
+import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.PromptsStyling
-import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
@@ -44,7 +44,7 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertTrue("Checkbox should be displayed", checkBox.isVisible())
+        assertTrue("Checkbox should be displayed", checkBox.isVisible)
         assertFalse("Checkbox shouldn't be checked", checkBox.isChecked)
         assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
     }
@@ -68,7 +68,7 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertTrue("Checkbox should be displayed", checkBox.isVisible())
+        assertTrue("Checkbox should be displayed", checkBox.isVisible)
         assertFalse("Checkbox shouldn't be checked", checkBox.isChecked)
         assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
     }
@@ -92,7 +92,7 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertTrue("Checkbox should be displayed", checkBox.isVisible())
+        assertTrue("Checkbox should be displayed", checkBox.isVisible)
         assertTrue("Checkbox should be checked", checkBox.isChecked)
         assertTrue("User selection property should be true", fragment.userSelectionCheckBox)
     }
@@ -116,7 +116,7 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible())
+        assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible)
         assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
     }
 
@@ -281,7 +281,7 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible())
+        assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible)
         assertTrue("User selection property should be true", fragment.userSelectionCheckBox)
     }
 

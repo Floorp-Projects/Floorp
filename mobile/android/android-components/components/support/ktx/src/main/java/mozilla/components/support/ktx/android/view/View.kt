@@ -30,6 +30,7 @@ val View.isLTR: Boolean
 
 /**
  * Returns true if this view's visibility is set to View.VISIBLE.
+ * @deprecated Use Android KTX instead.
  */
 fun View.isVisible(): Boolean {
     return visibility == View.VISIBLE

@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP
@@ -24,7 +25,6 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.view.isGone
-import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -292,11 +292,11 @@ class BrowserToolbarTest {
         toolbar.editMode()
 
         assertTrue(toolbar.displayToolbar.isGone())
-        assertTrue(toolbar.editToolbar.isVisible())
+        assertTrue(toolbar.editToolbar.isVisible)
 
         toolbar.onUrlEntered("https://www.mozilla.org")
 
-        assertTrue(toolbar.displayToolbar.isVisible())
+        assertTrue(toolbar.displayToolbar.isVisible)
         assertTrue(toolbar.editToolbar.isGone())
     }
 
@@ -307,12 +307,12 @@ class BrowserToolbarTest {
         toolbar.editMode()
 
         assertTrue(toolbar.displayToolbar.isGone())
-        assertTrue(toolbar.editToolbar.isVisible())
+        assertTrue(toolbar.editToolbar.isVisible)
 
         toolbar.onUrlEntered("https://www.mozilla.org")
 
         assertTrue(toolbar.displayToolbar.isGone())
-        assertTrue(toolbar.editToolbar.isVisible())
+        assertTrue(toolbar.editToolbar.isVisible)
     }
 
     @Test
@@ -822,7 +822,7 @@ class BrowserToolbarTest {
     @Test
     fun `displaySiteSecurityIcon getter and setter`() {
         val toolbar = BrowserToolbar(testContext)
-        assertEquals(toolbar.displayToolbar.siteSecurityIconView.isVisible(), toolbar.displaySiteSecurityIcon)
+        assertEquals(toolbar.displayToolbar.siteSecurityIconView.isVisible, toolbar.displaySiteSecurityIcon)
 
         toolbar.displaySiteSecurityIcon = false
         assertEquals(View.GONE, toolbar.displayToolbar.siteSecurityIconView.visibility)

@@ -6,9 +6,9 @@
 
 package mozilla.components.feature.readerview.internal
 
+import androidx.core.view.isVisible
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
-import mozilla.components.support.ktx.android.view.isVisible
 
 /**
  * Presenter implementation that will update the view whenever the feature is started.
@@ -33,7 +33,7 @@ internal class ReaderViewControlsPresenter(
      * Checks whether or not the ReaderView controls are visible.
      */
     fun areControlsVisible(): Boolean {
-        return view.asView().isVisible()
+        return view.asView().isVisible
     }
 
     /**

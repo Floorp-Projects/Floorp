@@ -8,11 +8,11 @@ import android.content.DialogInterface.BUTTON_POSITIVE
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.R.id
-import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -53,7 +53,7 @@ class TextPromptDialogFragmentTest {
         assertEquals(fragment.title, "title")
         assertEquals(inputLabel.text, "label")
         assertEquals(inputValue.text.toString(), "defaultValue")
-        assertTrue(checkBox.isVisible())
+        assertTrue(checkBox.isVisible)
 
         checkBox.isChecked = true
         assertTrue(fragment.userSelectionNoMoreDialogs)
@@ -77,7 +77,7 @@ class TextPromptDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)
 
-        assertFalse(checkBox.isVisible())
+        assertFalse(checkBox.isVisible)
     }
 
     @Test

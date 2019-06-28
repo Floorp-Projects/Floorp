@@ -15,6 +15,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -86,7 +87,7 @@ internal class EditToolbar(
         }
 
     internal fun updateClearViewVisibility(text: String) {
-        clearView.visibility = if (text.isBlank()) View.GONE else View.VISIBLE
+        clearView.isVisible = text.isNotBlank()
     }
 
     private val clearView = ImageView(context).apply {

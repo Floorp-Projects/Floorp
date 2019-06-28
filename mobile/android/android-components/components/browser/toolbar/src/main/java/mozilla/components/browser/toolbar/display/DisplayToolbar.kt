@@ -15,6 +15,7 @@ import android.widget.ProgressBar
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -25,7 +26,6 @@ import mozilla.components.browser.toolbar.internal.measureActions
 import mozilla.components.browser.toolbar.internal.wrapAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
-import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.icons.R.drawable.mozac_ic_globe
 import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
 
@@ -189,7 +189,7 @@ internal class DisplayToolbar(
      */
     fun updateTitle(title: String) {
         titleView.text = title
-        titleView.visibility = if (title.isEmpty()) View.GONE else View.VISIBLE
+        titleView.isVisible = title.isNotEmpty()
     }
 
     /**
@@ -224,7 +224,7 @@ internal class DisplayToolbar(
      *
      */
     fun updateProgress(progress: Int) {
-        if (!progressView.isVisible() && progress > 0) {
+        if (!progressView.isVisible && progress > 0) {
             // Loading has just started, make visible and announce "loading" for accessibility.
             progressView.visibility = View.VISIBLE
             progressView.announceForAccessibility(context.getString(R.string.mozac_browser_toolbar_progress_loading))
@@ -315,12 +315,12 @@ internal class DisplayToolbar(
         val pageActionsWidth = measureActions(pageActions, size = height)
 
         // The url uses whatever space is left. Subtract the icon and (optionally) the menu
-        val menuWidth = if (menuView.isVisible()) height else 0
+        val menuWidth = if (menuView.isVisible) height else 0
         val urlWidth = (width - iconSize - browserActionsWidth - pageActionsWidth -
             menuWidth - navigationActionsWidth - 2 * urlBoxMargin)
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
 
-        if (titleView.isVisible()) {
+        if (titleView.isVisible) {
             /* With a title view, the url and title split the rest of the space vertically. The
             title view and url should be centered as a singular unit in the middle third. */
             titleView.measure(urlWidthSpec, thirdFixedHeightSpec)
@@ -385,7 +385,7 @@ internal class DisplayToolbar(
         //   |   actions   |      |                                  |      |
         //   +-------------+------+----------------------------------+------+
 
-        val menuWidth = if (menuView.isVisible()) height else 0
+        val menuWidth = if (menuView.isVisible) height else 0
         menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
 
         // Now we add browser actions from the left side of the menu to the right (in reversed order):
@@ -431,7 +431,7 @@ internal class DisplayToolbar(
         //   | navigation  | icon | url       [ page    ] | browser  | menu |
         //   |   actions   |      |           [ actions ] | actions  |      |
         //   +-------------+------+-----------------------+----------+------+
-        val iconWidth = if (siteSecurityIconView.isVisible()) siteSecurityIconView.measuredWidth else 0
+        val iconWidth = if (siteSecurityIconView.isVisible) siteSecurityIconView.measuredWidth else 0
         val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
 
         // If the titleView is visible, it will appear above the URL:
@@ -439,7 +439,7 @@ internal class DisplayToolbar(
         //   | navigation  | icon |  title       [ page    ] | browser  | menu |
         //   |   actions   |      |  url         [ actions ] | actions  |      |
         //   +-------------+------+-----------------------+----------+------+
-        if (titleView.isVisible()) {
+        if (titleView.isVisible) {
             val totalTextHeights = urlView.measuredHeight + titleView.measuredHeight
             val totalAvailablePadding = height - totalTextHeights
             val padding = totalAvailablePadding / MEASURED_HEIGHT_DENOMINATOR

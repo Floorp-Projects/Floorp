@@ -17,6 +17,7 @@ import android.widget.ImageButton
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.isVisible
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +36,6 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.view.forEach
-import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.autocomplete.AutocompleteView
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.OnFilterListener
@@ -105,9 +105,9 @@ class BrowserToolbar @JvmOverloads constructor(
      * Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL.
      */
     var displaySiteSecurityIcon: Boolean
-        get() = displayToolbar.siteSecurityIconView.isVisible()
+        get() = displayToolbar.siteSecurityIconView.isVisible
         set(value) {
-            displayToolbar.siteSecurityIconView.visibility = if (value) View.VISIBLE else View.GONE
+            displayToolbar.siteSecurityIconView.isVisible = value
         }
 
     /**
