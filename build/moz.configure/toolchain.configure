@@ -2484,15 +2484,9 @@ set_config('AR_FLAGS', ar_config.flags)
 
 # Frame pointers
 # ==============================================================
-@depends(c_compiler, target)
-def frame_pointer_flags(compiler, target):
+@depends(c_compiler)
+def frame_pointer_flags(compiler):
     if compiler.type == 'clang-cl':
-        if target.cpu == 'aarch64':
-            # Some version of clang-cl don't support -Oy-; accomodate them.
-            return namespace(
-                enable=['-Xclang', '-mdisable-fp-elim'],
-                disable=['-Xclang', '-mdisable-fp-elim'],
-            )
         return namespace(
             enable=['-Oy-'],
             disable=['-Oy'],
