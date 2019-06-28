@@ -138,14 +138,6 @@ bool FindAnimationsForCompositor(
     }
   }
 
-  // If the property will be added to the animations level of the cascade but
-  // there is an !important rule for that property in the cascade then the
-  // animation will not be applied since the !important rule overrides it.
-  if (effects->PropertiesWithImportantRules().Intersects(aPropertySet) &&
-      effects->PropertiesForAnimationsLevel().Intersects(aPropertySet)) {
-    return false;
-  }
-
   AnimationPerformanceWarning::Type warning =
       AnimationPerformanceWarning::Type::None;
   if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {

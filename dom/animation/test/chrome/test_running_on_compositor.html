@@ -1130,8 +1130,8 @@ promise_test(async t => {
   await waitForPaints();
 
   assert_animation_is_not_running_on_compositor(animation,
-     'Animation overridden by an !important rule reports that it is ' +
-     'NOT running on the compositor');
+    'Animation overridden by an !important rule reports that it is ' +
+    'NOT running on the compositor');
 
   const properties = animation.effect.getProperties();
   properties.forEach(property => {
@@ -1141,6 +1141,64 @@ promise_test(async t => {
 }, 'Multiple transform-like properties animation does not runs on the ' +
    'compositor because one of the transform-like property is overridden ' +
    'by an !important rule');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ rotate: ['0deg', '45deg'],
+                                  transform: ['translate(20px)',
+                                              'translate(30px)'] },
+                                100 * MS_PER_SEC);
+
+  div.style.setProperty('translate', '50px', 'important');
+  getComputedStyle(div).translate;
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'Animation is still running on the compositor');
+
+  const properties = animation.effect.getProperties();
+  properties.forEach(property => {
+    assert_true(property.runningOnCompositor,
+                property.property + ' is running on the compositor');
+  });
+}, 'Multiple transform-like properties animation still runs on the ' +
+   'compositor because the overridden-by-!important property does not have ' +
+   'animation');
+
+promise_test(async t => {
+  // We should run the animations on the compositor for this case:
+  // 1. A transition of 'translate'
+  // 2. An !important rule on 'translate'
+  // 3. An animation of 'scale'
+  const div = addDiv(t, { style: 'translate: 100px !important;' });
+  const animation = div.animate({ rotate: ['0deg', '45deg'] },
+                                100 * MS_PER_SEC);
+  div.style.transition = 'translate 100s';
+  getComputedStyle(div).transition;
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'rotate animation should be running on the compositor');
+
+  div.style.setProperty('translate', '200px', 'important');
+  getComputedStyle(div).translate;
+
+  const anims = div.getAnimations();
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(anims[0],
+    `${anims[0].effect.getProperties()[0].property} animation should be ` +
+    `running on the compositor`);
+  assert_animation_is_running_on_compositor(anims[1],
+    `${anims[1].effect.getProperties()[0].property} animation should be ` +
+    `running on the compositor`);
+}, 'Transform-like animations and transitions still runs on the compositor ' +
+   'because the !important rule is overridden by a transition, and the ' +
+   'transition property does not have animations');
 
 </script>
 </body>

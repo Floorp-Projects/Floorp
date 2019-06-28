@@ -964,7 +964,7 @@ bool Animation::ShouldBeSynchronizedWithMainThread(
   }
 
   return keyframeEffect->ShouldBlockAsyncTransformAnimations(
-      aFrame, aPerformanceWarning);
+      aFrame, aPropertySet, aPerformanceWarning);
 }
 
 void Animation::UpdateRelevance() {
