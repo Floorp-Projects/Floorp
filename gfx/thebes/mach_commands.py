@@ -22,7 +22,6 @@ from mozbuild.base import MachCommandBase
 import mozpack.path as mozpath
 
 import json
-import requests
 
 
 GITHUB_ROOT = 'https://github.com/'
@@ -51,6 +50,7 @@ class PullRequestImporter(MachCommandBase):
                      help='URL to the pull request to import (e.g. '
                           'https://github.com/servo/webrender/pull/3665).')
     def import_pr(self, pull_request, bug_number=None, bugzilla_token=None, reviewer=None):
+        import requests
         pr_number = None
         repository = None
         for r in PR_REPOSITORIES.values():
@@ -109,6 +109,7 @@ class PullRequestImporter(MachCommandBase):
                      'Committed successfully.')
 
     def _file_bug(self, token, repo, pr_number):
+        import requests
         bug = requests.post('https://bugzilla.mozilla.org/rest/bug?api_key=%s' % token,
                             json={
                                 'product': repo['bugzilla_product'],
