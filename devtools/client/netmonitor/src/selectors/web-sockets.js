@@ -4,10 +4,32 @@
 
 "use strict";
 
+const { createSelector } = require("devtools/client/shared/vendor/reselect");
+
 function getFramesByChannelId(state, channelId) {
   return state.webSockets.frames.get(channelId);
 }
 
+/**
+ * Checks if the selected frame is visible.
+ * If the selected frame is not visible, the SplitBox component
+ * should not show the FramePayload component.
+ */
+function isSelectedFrameVisible(state, channelId, targetFrame) {
+  const displayedFrames = getFramesByChannelId(state, channelId);
+  if (displayedFrames && targetFrame) {
+    return displayedFrames.some(frame => frame === targetFrame);
+  }
+  return false;
+}
+
+const getSelectedFrame = createSelector(
+  state => state.webSockets,
+  ({ selectedFrame }) => (selectedFrame ? selectedFrame : undefined)
+);
+
 module.exports = {
   getFramesByChannelId,
+  getSelectedFrame,
+  isSelectedFrameVisible,
 };

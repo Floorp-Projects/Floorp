@@ -11,14 +11,14 @@ const { sortReducer } = require("./sort");
 const { filters } = require("./filters");
 const { timingMarkers } = require("./timing-markers");
 const { ui } = require("./ui");
-const { webSocketsReducer } = require("./web-sockets");
+const { webSockets } = require("./web-sockets");
 const networkThrottling = require("devtools/client/shared/components/throttling/reducer");
 
 module.exports = batchingReducer(
   combineReducers({
     requests: requestsReducer,
     sort: sortReducer,
-    webSockets: webSocketsReducer,
+    webSockets,
     filters,
     timingMarkers,
     ui,

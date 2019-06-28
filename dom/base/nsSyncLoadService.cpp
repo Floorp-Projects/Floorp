@@ -28,6 +28,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 using mozilla::net::ReferrerPolicy;
 

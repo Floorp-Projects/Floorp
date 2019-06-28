@@ -75,17 +75,16 @@ nsresult FilteredContentIterator::Init(nsINode* aStartContainer,
               RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
-nsresult FilteredContentIterator::Init(const RawRangeBoundary& aStart,
-                                       const RawRangeBoundary& aEnd) {
-  RefPtr<nsRange> range;
-  nsresult rv = nsRange::CreateRange(aStart, aEnd, getter_AddRefs(range));
-  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
-      NS_WARN_IF(!range->IsPositioned())) {
+nsresult FilteredContentIterator::Init(const RawRangeBoundary& aStartBoundary,
+                                       const RawRangeBoundary& aEndBoundary) {
+  RefPtr<nsRange> range =
+      nsRange::Create(aStartBoundary, aEndBoundary, IgnoreErrors());
+  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  MOZ_ASSERT(range->StartRef() == aStart);
-  MOZ_ASSERT(range->EndRef() == aEnd);
+  MOZ_ASSERT(range->StartRef() == aStartBoundary);
+  MOZ_ASSERT(range->EndRef() == aEndBoundary);
 
   mRange = std::move(range);
 

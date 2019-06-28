@@ -13,16 +13,7 @@
  */
 
 [Constructor]
-interface Range {
-  [Throws]
-  readonly attribute Node startContainer;
-  [Throws]
-  readonly attribute unsigned long startOffset;
-  [Throws]
-  readonly attribute Node endContainer;
-  [Throws]
-  readonly attribute unsigned long endOffset;
-  readonly attribute boolean collapsed;
+interface Range : AbstractRange {
   [Throws]
   readonly attribute Node commonAncestorContainer;
 

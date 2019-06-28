@@ -8,7 +8,7 @@
 
 /* General utilities used throughout devtools. */
 
-var { Ci, Cu, components } = require("chrome");
+var { Ci, Cc, Cu, components } = require("chrome");
 var Services = require("Services");
 var flags = require("./flags");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
@@ -737,6 +737,58 @@ exports.openFileStream = function(filePath) {
         resolve(stream);
       }
     );
+  });
+};
+
+/**
+ * Open the file at the given path for writing.
+ *
+ * @param {String} filePath
+ */
+exports.saveFileStream = function(filePath, istream) {
+  return new Promise((resolve, reject) => {
+    const ostream = FileUtils.openSafeFileOutputStream(filePath);
+    NetUtil.asyncCopy(istream, ostream, (status) => {
+      if (!components.isSuccessCode(status)) {
+        reject(new Error(`Could not save "${filePath}"`));
+        return;
+      }
+      FileUtils.closeSafeFileOutputStream(ostream);
+      resolve();
+    });
+  });
+};
+
+/**
+ * Show file picker and return the file user selected.
+ *
+ * @param nsIWindow parentWindow
+ *        Optional parent window. If null the parent window of the file picker
+ *        will be the window of the attached input element.
+ * @param AString suggestedFilename
+ *        The suggested filename when toSave is true.
+ *
+ * @return Promise
+ *         A promise that is resolved after the file is selected by the file picker
+ */
+exports.showSaveFileDialog = function(parentWindow, suggestedFilename) {
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+
+  if (suggestedFilename) {
+    fp.defaultString = suggestedFilename;
+  }
+
+  fp.init(parentWindow, null, fp.modeSave);
+  fp.appendFilters(fp.filterAll);
+
+  return new Promise((resolve, reject) => {
+    fp.open((result) => {
+      if (result == Ci.nsIFilePicker.returnCancel) {
+        reject();
+      } else {
+        resolve(fp.file);
+      }
+    });
   });
 };
 

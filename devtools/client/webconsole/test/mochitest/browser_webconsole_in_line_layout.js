@@ -32,7 +32,7 @@ async function performTests() {
     outputNode,
     ,
     inputNode,
-  ] = appNode.querySelector(".webconsole-flex-wrapper").childNodes;
+  ] = appNode.querySelector(".webconsole-wrapper").childNodes;
 
   testLayout(appNode);
 

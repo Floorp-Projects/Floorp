@@ -46,6 +46,7 @@ async function performTests() {
     "#console-menu-copy-object (o) [disabled]",
     "#console-menu-select (A)",
     "#console-menu-export-clipboard ()",
+    "#console-menu-export-file ()",
   ]);
   is(getSimplifiedContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the expected entries for a network message");
@@ -66,6 +67,7 @@ async function performTests() {
     "#console-menu-copy-object (o) [disabled]",
     "#console-menu-select (A)",
     "#console-menu-export-clipboard ()",
+    "#console-menu-export-file ()",
   ]);
   is(getSimplifiedContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the expected entries for a simple log message");

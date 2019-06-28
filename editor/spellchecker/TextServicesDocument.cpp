@@ -1469,12 +1469,10 @@ TextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(
     endOffset = endNode ? endNode->GetChildCount() : 0;
   }
 
-  RefPtr<nsRange> range;
-  nsresult rv = nsRange::CreateRange(startNode, startOffset, endNode, endOffset,
-                                     getter_AddRefs(range));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  RefPtr<nsRange> range = nsRange::Create(startNode, startOffset, endNode,
+                                          endOffset, IgnoreErrors());
+  NS_WARNING_ASSERTION(range,
+                       "nsRange::Create() failed to create new valid range");
   return range.forget();
 }
 
@@ -1912,12 +1910,15 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   // child of this non-text node. Then look for the closest text
   // node.
 
-  nsresult rv = nsRange::CreateRange(eStart->mNode, eStartOffset, eEnd->mNode,
-                                     eEndOffset, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
+  range = nsRange::Create(eStart->mNode, eStartOffset, eEnd->mNode, eEndOffset,
+                          IgnoreErrors());
+  if (NS_WARN_IF(!range)) {
+    return NS_ERROR_FAILURE;
+  }
 
   RefPtr<FilteredContentIterator> filteredIter;
-  rv = CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+  nsresult rv =
+      CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIContent* saveNode;
@@ -2145,15 +2146,17 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
     o2 = endOffset;
   }
 
-  nsresult rv = nsRange::CreateRange(p1, o1, p2, o2, getter_AddRefs(range));
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  range = nsRange::Create(p1, o1, p2, o2, IgnoreErrors());
+  if (NS_WARN_IF(!range)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Now iterate over this range to figure out the selection's
   // block offset and length.
 
   RefPtr<FilteredContentIterator> filteredIter;
-  rv = CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
+  nsresult rv =
+      CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
 
   NS_ENSURE_SUCCESS(rv, rv);
 

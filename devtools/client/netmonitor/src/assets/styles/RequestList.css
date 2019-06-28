@@ -10,6 +10,10 @@
   overflow-x: hidden;
 }
 
+.ws-frame-list-empty-notice {
+  width: 100%;
+}
+
 .empty-notice-element {
   padding-top: 12px;
   padding-left: 12px;
@@ -56,7 +60,8 @@
   overflow-y: auto;
 }
 
-.requests-list-table {
+.requests-list-table,
+.ws-frames-list-table {
   /* Reset default browser style of <table> */
   border-spacing: 0;
   width: 100%;
@@ -66,7 +71,8 @@
   table-layout: fixed;
 }
 
-.requests-list-column {
+.requests-list-column,
+.ws-frames-list-column {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -82,7 +88,8 @@
 
 /* Requests list headers */
 
-.requests-list-headers-group {
+.requests-list-headers-group,
+.ws-frames-list-headers-group {
   /* Avoid .devtools-toolbar to override <thead> display type */
   display: table-header-group;
 
@@ -93,16 +100,19 @@
   z-index: 1;
 }
 
-.requests-list-headers {
+.requests-list-headers,
+.ws-frames-list-headers {
   height: 24px;
   padding: 0;
 }
 
-.requests-list-headers .requests-list-column:first-child .requests-list-header-button {
+.requests-list-headers .requests-list-column:first-child .requests-list-header-button,
+.ws-frames-list-headers .ws-frames-list-column:first-child .ws-frames-list-header-button {
   border-width: 0;
 }
 
-.requests-list-header-button {
+.requests-list-header-button,
+.ws-frames-list-header-button {
   background-color: transparent;
   border-image: linear-gradient(transparent 15%,
                                 var(--theme-splitter-color) 15%,
@@ -126,7 +136,8 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.requests-list-header-button > .button-text {
+.requests-list-header-button > .button-text,
+.ws-frames-list-header-button > .button-text {
   display: inline-block;
   vertical-align: middle;
   width: 100%;
@@ -134,7 +145,8 @@
   text-overflow: ellipsis;
 }
 
-.requests-list-header-button > .button-icon {
+.requests-list-header-button > .button-icon,
+.ws-frames-list-header-button > .button-icon {
   /* display icon only when column sorted otherwise display:none */
   display: none;
   width: 7px;
@@ -309,7 +321,8 @@
   filter: brightness(500%);
 }
 
-.request-list-item .requests-list-column {
+.request-list-item .requests-list-column,
+.ws-frame-list-item .ws-frames-list-column {
   padding-inline-start: 4px;
 }
 
@@ -464,16 +477,19 @@
 
 /* Request list item */
 
-.request-list-item {
+.request-list-item,
+.ws-frame-list-item {
   height: 24px;
   line-height: 24px;
 }
 
-.request-list-item:not(.selected).odd {
+.request-list-item:not(.selected).odd,
+.ws-frame-list-item:not(.selected).odd {
   background-color: var(--table-zebra-background);
 }
 
-.request-list-item:not(.selected):hover {
+.request-list-item:not(.selected):hover,
+.ws-frame-list-item:not(.selected):hover {
   background-color: var(--table-selection-background-hover);
 }
 
@@ -489,7 +505,8 @@
  * Put ahead of .request-list-item.blocked to avoid specificity conflict.
  * Bug 1530914 - Highlighted Security Value is difficult to read.
  */
-.request-list-item.selected {
+.request-list-item.selected,
+.ws-frame-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
 }

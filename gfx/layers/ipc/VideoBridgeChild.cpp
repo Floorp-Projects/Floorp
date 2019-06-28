@@ -11,36 +11,70 @@
 namespace mozilla {
 namespace layers {
 
-StaticRefPtr<VideoBridgeChild> sVideoBridgeChildSingleton;
+StaticRefPtr<VideoBridgeChild> sVideoBridgeToParentProcess;
+StaticRefPtr<VideoBridgeChild> sVideoBridgeToGPUProcess;
 
 /* static */
-void VideoBridgeChild::Startup() {
-  sVideoBridgeChildSingleton = new VideoBridgeChild();
-  RefPtr<VideoBridgeParent> parent = new VideoBridgeParent();
+void VideoBridgeChild::StartupForGPUProcess() {
+  ipc::Endpoint<PVideoBridgeParent> parentPipe;
+  ipc::Endpoint<PVideoBridgeChild> childPipe;
 
-  MessageLoop* loop = CompositorThreadHolder::Loop();
+  PVideoBridge::CreateEndpoints(base::GetCurrentProcId(),
+                                base::GetCurrentProcId(), &parentPipe,
+                                &childPipe);
 
-  sVideoBridgeChildSingleton->Open(parent->GetIPCChannel(), loop,
-                                   ipc::ChildSide);
-  sVideoBridgeChildSingleton->mIPDLSelfRef = sVideoBridgeChildSingleton;
-  parent->SetOtherProcessId(base::GetCurrentProcId());
+  VideoBridgeChild::OpenToGPUProcess(std::move(childPipe));
+
+  CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableFunction("gfx::VideoBridgeParent::Open",
+                          &VideoBridgeParent::Open, std::move(parentPipe)));
+}
+
+void VideoBridgeChild::OpenToParentProcess(
+    Endpoint<PVideoBridgeChild>&& aEndpoint) {
+  sVideoBridgeToParentProcess = new VideoBridgeChild();
+
+  if (!aEndpoint.Bind(sVideoBridgeToParentProcess)) {
+    // We can't recover from this.
+    MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
+  }
+}
+
+void VideoBridgeChild::OpenToGPUProcess(
+    Endpoint<PVideoBridgeChild>&& aEndpoint) {
+  sVideoBridgeToGPUProcess = new VideoBridgeChild();
+
+  if (!aEndpoint.Bind(sVideoBridgeToGPUProcess)) {
+    // We can't recover from this.
+    MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
+  }
 }
 
 /* static */
 void VideoBridgeChild::Shutdown() {
-  if (sVideoBridgeChildSingleton) {
-    sVideoBridgeChildSingleton->Close();
-    sVideoBridgeChildSingleton = nullptr;
+  if (sVideoBridgeToParentProcess) {
+    sVideoBridgeToParentProcess->Close();
+    sVideoBridgeToParentProcess = nullptr;
+  }
+  if (sVideoBridgeToGPUProcess) {
+    sVideoBridgeToGPUProcess->Close();
+    sVideoBridgeToGPUProcess = nullptr;
   }
 }
 
 VideoBridgeChild::VideoBridgeChild()
-    : mMessageLoop(MessageLoop::current()), mCanSend(true) {}
+    : mIPDLSelfRef(this),
+      mMessageLoop(MessageLoop::current()),
+      mCanSend(true) {}
 
 VideoBridgeChild::~VideoBridgeChild() {}
 
-VideoBridgeChild* VideoBridgeChild::GetSingleton() {
-  return sVideoBridgeChildSingleton;
+VideoBridgeChild* VideoBridgeChild::GetSingletonToParentProcess() {
+  return sVideoBridgeToParentProcess;
+}
+
+VideoBridgeChild* VideoBridgeChild::GetSingletonToGPUProcess() {
+  return sVideoBridgeToGPUProcess;
 }
 
 bool VideoBridgeChild::AllocUnsafeShmem(
