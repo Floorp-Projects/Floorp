@@ -13,6 +13,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
+#include "nsIWebProgressListener.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsWindowSizes.h"
