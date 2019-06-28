@@ -702,17 +702,23 @@ uint32_t ContentParent::GetPoolSize(const nsAString& aContentProcessType) {
   return *sBrowserContentParents->LookupOrAdd(aContentProcessType);
 }
 
-/*static*/
-uint32_t ContentParent::GetMaxProcessCount(
+const nsDependentSubstring RemoteTypePrefix(
     const nsAString& aContentProcessType) {
   // The suffix after a `=` in a remoteType is dynamic, and used to control the
-  // process pool to use. Max process count is based only on the prefix.
+  // process pool to use.
   int32_t equalIdx = aContentProcessType.FindChar(L'=');
   if (equalIdx == kNotFound) {
     equalIdx = aContentProcessType.Length();
   }
+  return StringHead(aContentProcessType, equalIdx);
+}
+
+/*static*/
+uint32_t ContentParent::GetMaxProcessCount(
+    const nsAString& aContentProcessType) {
+  // Max process count is based only on the prefix.
   const nsDependentSubstring processTypePrefix =
-      StringHead(aContentProcessType, equalIdx);
+    RemoteTypePrefix(aContentProcessType);
 
   // Check for the default remote type of "web", as it uses different prefs.
   if (processTypePrefix.EqualsLiteral("web")) {

@@ -98,7 +98,9 @@ interface nsIXULRuntime : nsISupports
 
   /**
    * The type of remote content process we're running in.
-   * null if we're in the parent/chrome process.
+   * null if we're in the parent/chrome process. This can contain
+   * a URI if Fission is enabled, so don't use it for any kind of
+   * telemetry.
    */
   readonly attribute AString remoteType;
 

@@ -1752,8 +1752,10 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
       CrashReporter::Annotation::ContentSandboxCapabilities,
       static_cast<int>(SandboxInfo::Get().AsInteger()));
 #  endif /* XP_LINUX && !OS_ANDROID */
+  // Use the prefix to avoid URIs from Fission isolated processes.
+  auto remoteTypePrefix = RemoteTypePrefix(GetRemoteType());
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
-                                     NS_ConvertUTF16toUTF8(GetRemoteType()));
+                                     NS_ConvertUTF16toUTF8(remoteTypePrefix));
 #endif /* MOZ_SANDBOX */
 
   return IPC_OK();
@@ -2772,6 +2774,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
   return IPC_OK();
 }
 
+// Call RemoteTypePrefix() on the result to remove URIs if you want to use this
+// for telemetry.
 const nsAString& ContentChild::GetRemoteType() const { return mRemoteType; }
 
 mozilla::ipc::IPCResult ContentChild::RecvInitServiceWorkers(
