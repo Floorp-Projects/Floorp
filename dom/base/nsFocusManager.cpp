@@ -362,6 +362,8 @@ InputContextAction::Cause nsFocusManager::GetFocusMoveActionCause(
     return InputContextAction::CAUSE_MOUSE;
   } else if (aFlags & nsIFocusManager::FLAG_BYKEY) {
     return InputContextAction::CAUSE_KEY;
+  } else if (aFlags & nsIFocusManager::FLAG_BYLONGPRESS) {
+    return InputContextAction::CAUSE_LONGPRESS;
   }
   return InputContextAction::CAUSE_UNKNOWN;
 }
