@@ -100,9 +100,8 @@ nsresult SharedDIBWin::SetupSurface(HDC aHdc, BITMAPV4HEADER* aHdr) {
 
   if (!mSharedHdc) return NS_ERROR_FAILURE;
 
-  mSharedBmp =
-      ::CreateDIBSection(mSharedHdc, (BITMAPINFO*)aHdr, DIB_RGB_COLORS,
-                         &mBitmapBits, mShMem->GetHandle(), kHeaderBytes);
+  mSharedBmp = ::CreateDIBSection(mSharedHdc, (BITMAPINFO*)aHdr, DIB_RGB_COLORS,
+                                  &mBitmapBits, mShMem->handle(), kHeaderBytes);
   if (!mSharedBmp) return NS_ERROR_FAILURE;
 
   mOldObj = SelectObject(mSharedHdc, mSharedBmp);
