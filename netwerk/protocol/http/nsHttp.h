@@ -330,6 +330,8 @@ class ParsedHeaderValueListList {
   nsCString mFull;
 };
 
+void LogHeaders(const char* lineStart);
+
 }  // namespace net
 }  // namespace mozilla
 
