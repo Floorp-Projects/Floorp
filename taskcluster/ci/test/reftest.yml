@@ -83,7 +83,8 @@ jsreftest:
             android-em.4.*\/(?:opt|pgo)?: 40
             android-em-7.*\/debug: 8
             android-em.7.*\/(?:opt|pgo)?: 4
-            windows.*: 2
+            windows.*\/opt: 2
+            windows10-64-asan/opt: 3
             windows10-64-ccov/debug: 5
             linux64-ccov/.*: 5
             linux64-qr/opt: 4
