@@ -1298,16 +1298,48 @@ void nsComputedDOMStyle::AppendGridLineNames(
   aValueList->AppendCSSValue(val.forget());
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTrackSize(
-    const nsStyleCoord& aMinValue, const nsStyleCoord& aMaxValue) {
-  if (aMinValue.GetUnit() == eStyleUnit_None) {
+void nsComputedDOMStyle::SetValueToTrackBreadth(
+    nsROCSSPrimitiveValue* aValue,
+    const StyleTrackBreadth& aBreadth) {
+  using Tag = StyleTrackBreadth::Tag;
+  switch (aBreadth.tag) {
+    case Tag::MinContent:
+      return aValue->SetIdent(eCSSKeyword_min_content);
+    case Tag::MaxContent:
+      return aValue->SetIdent(eCSSKeyword_max_content);
+    case Tag::Auto:
+      return aValue->SetIdent(eCSSKeyword_auto);
+    case Tag::Breadth:
+      return SetValueToLengthPercentage(aValue, aBreadth.AsBreadth(), true);
+    case Tag::Fr: {
+      nsAutoString tmpStr;
+      nsStyleUtil::AppendCSSNumber(aBreadth.AsFr(), tmpStr);
+      tmpStr.AppendLiteral("fr");
+      return aValue->SetString(tmpStr);
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown breadth value");
+      return;
+  }
+}
+
+already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackBreadth(
+    const StyleTrackBreadth& aBreadth) {
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetValueToTrackBreadth(val, aBreadth);
+  return val.forget();
+}
+
+already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
+    const StyleTrackSize& aTrackSize) {
+  if (aTrackSize.IsFitContent()) {
     // A fit-content() function.
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     nsAutoString argumentStr, fitContentStr;
     fitContentStr.AppendLiteral("fit-content(");
-    MOZ_ASSERT(aMaxValue.IsCoordPercentCalcUnit(),
+    MOZ_ASSERT(aTrackSize.AsFitContent().IsBreadth(),
                "unexpected unit for fit-content() argument value");
-    SetValueToCoord(val, aMaxValue, true);
+    SetValueToLengthPercentage(val, aTrackSize.AsFitContent().AsBreadth(), true);
     val->GetCssText(argumentStr);
     fitContentStr.Append(argumentStr);
     fitContentStr.Append(char16_t(')'));
@@ -1315,39 +1347,43 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTrackSize(
     return val.forget();
   }
 
-  if (aMinValue == aMaxValue) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, aMinValue, true, nullptr,
-                    nsCSSProps::kGridTrackBreadthKTable);
-    return val.forget();
+  if (aTrackSize.IsBreadth()) {
+    return GetGridTrackBreadth(aTrackSize.AsBreadth());
+  }
+
+  MOZ_ASSERT(aTrackSize.IsMinmax());
+  auto& min = aTrackSize.AsMinmax()._0;
+  auto& max = aTrackSize.AsMinmax()._1;
+  if (min == max) {
+    return GetGridTrackBreadth(min);
   }
 
   // minmax(auto, <flex>) is equivalent to (and is our internal representation
   // of) <flex>, and both compute to <flex>
-  if (aMinValue.GetUnit() == eStyleUnit_Auto &&
-      aMaxValue.GetUnit() == eStyleUnit_FlexFraction) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, aMaxValue, true);
-    return val.forget();
+  if (min.IsAuto() && max.IsFr()) {
+    return GetGridTrackBreadth(max);
   }
 
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString argumentStr, minmaxStr;
   minmaxStr.AppendLiteral("minmax(");
 
-  SetValueToCoord(val, aMinValue, true, nullptr,
-                  nsCSSProps::kGridTrackBreadthKTable);
-  val->GetCssText(argumentStr);
-  minmaxStr.Append(argumentStr);
+  {
+    RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(min);
+    argValue->GetCssText(argumentStr);
+    minmaxStr.Append(argumentStr);
+    argumentStr.Truncate();
+  }
 
   minmaxStr.AppendLiteral(", ");
 
-  SetValueToCoord(val, aMaxValue, true, nullptr,
-                  nsCSSProps::kGridTrackBreadthKTable);
-  val->GetCssText(argumentStr);
-  minmaxStr.Append(argumentStr);
+  {
+    RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(max);
+    argValue->GetCssText(argumentStr);
+    minmaxStr.Append(argumentStr);
+  }
 
   minmaxStr.Append(char16_t(')'));
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetString(minmaxStr);
   return val.forget();
 }
@@ -1357,8 +1393,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     const ComputedGridTrackInfo* aTrackInfo) {
   if (aTrackList.mIsSubgrid) {
     // XXX TODO: add support for repeat(auto-fill) for 'subgrid' (bug 1234311)
-    NS_ASSERTION(aTrackList.mMinTrackSizingFunctions.IsEmpty() &&
-                     aTrackList.mMaxTrackSizingFunctions.IsEmpty(),
+    NS_ASSERTION(aTrackList.mTrackSizingFunctions.IsEmpty(),
                  "Unexpected sizing functions with subgrid");
     RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
@@ -1389,9 +1424,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     return valueList.forget();
   }
 
-  uint32_t numSizes = aTrackList.mMinTrackSizingFunctions.Length();
-  MOZ_ASSERT(aTrackList.mMaxTrackSizingFunctions.Length() == numSizes,
-             "Different number of min and max track sizing functions");
+  uint32_t numSizes = aTrackList.mTrackSizingFunctions.Length();
   if (aTrackInfo) {
     DebugOnly<bool> isAutoFill =
         aTrackList.HasRepeatAuto() && aTrackList.mIsAutoFill;
@@ -1562,8 +1595,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
         }
 
         valueList->AppendCSSValue(
-            GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
-                             aTrackList.mMaxTrackSizingFunctions[i]));
+            GetGridTrackSize(aTrackList.mTrackSizingFunctions[i]));
         if (!aTrackList.mRepeatAutoLineNameListAfter.IsEmpty()) {
           AppendGridLineNames(valueList,
                               aTrackList.mRepeatAutoLineNameListAfter);
@@ -1573,8 +1605,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
         valueList->AppendCSSValue(end.forget());
       } else {
         valueList->AppendCSSValue(
-            GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
-                             aTrackList.mMaxTrackSizingFunctions[i]));
+            GetGridTrackSize(aTrackList.mTrackSizingFunctions[i]));
       }
     }
   }
@@ -1583,13 +1614,11 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridAutoColumns() {
-  return GetGridTrackSize(StylePosition()->mGridAutoColumnsMin,
-                          StylePosition()->mGridAutoColumnsMax);
+  return GetGridTrackSize(StylePosition()->mGridAutoColumns);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridAutoRows() {
-  return GetGridTrackSize(StylePosition()->mGridAutoRowsMin,
-                          StylePosition()->mGridAutoRowsMax);
+  return GetGridTrackSize(StylePosition()->mGridAutoRows);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateColumns() {
@@ -2315,14 +2344,6 @@ void nsComputedDOMStyle::SetValueToCoord(
     case eStyleUnit_Degree:
       aValue->SetDegree(aCoord.GetAngleValue());
       break;
-
-    case eStyleUnit_FlexFraction: {
-      nsAutoString tmpStr;
-      nsStyleUtil::AppendCSSNumber(aCoord.GetFlexFractionValue(), tmpStr);
-      tmpStr.AppendLiteral("fr");
-      aValue->SetString(tmpStr);
-      break;
-    }
 
     default:
       NS_ERROR("Can't handle this unit");
