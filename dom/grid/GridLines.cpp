@@ -294,15 +294,6 @@ uint32_t GridLines::AppendRemovedAutoFits(
     const ComputedGridLineInfo* aLineInfo, nscoord aLastTrackEdge,
     uint32_t& aRepeatIndex, uint32_t aNumRepeatTracks,
     uint32_t aNumLeadingTracks, nsTArray<RefPtr<nsAtom>>& aLineNames) {
-  // Check to see if lineNames contains ALL of the before line names.
-  bool alreadyHasBeforeLineNames = true;
-  for (const auto& beforeName : aLineInfo->mNamesBefore) {
-    if (!aLineNames.Contains(beforeName)) {
-      alreadyHasBeforeLineNames = false;
-      break;
-    }
-  }
-
   bool extractedExplicitLineNames = false;
   nsTArray<RefPtr<nsAtom>> explicitLineNames;
   uint32_t linesAdded = 0;
@@ -327,11 +318,7 @@ uint32_t GridLines::AppendRemovedAutoFits(
       extractedExplicitLineNames = true;
     }
 
-    // If this is the second or later time through, or didn't already
-    // have before names, add them.
-    if (linesAdded > 0 || !alreadyHasBeforeLineNames) {
-      AddLineNamesIfNotPresent(aLineNames, aLineInfo->mNamesBefore);
-    }
+    AddLineNamesIfNotPresent(aLineNames, aLineInfo->mNamesBefore);
 
     RefPtr<GridLine> line = new GridLine(this);
     mLines.AppendElement(line);
@@ -365,6 +352,7 @@ uint32_t GridLines::AppendRemovedAutoFits(
 
     linesAdded++;
   }
+
   aRepeatIndex++;
 
   if (extractedExplicitLineNames) {
@@ -372,11 +360,12 @@ uint32_t GridLines::AppendRemovedAutoFits(
     AddLineNamesIfNotPresent(aLineNames, explicitLineNames);
   }
 
-  if (alreadyHasBeforeLineNames && linesAdded > 0) {
-    // If we started with before names, pass them on to the next explicit
-    // line.
+  // If we haven't finished adding auto-repeated tracks, then we need to put
+  // back the before names, in case we cleared them above.
+  if (aRepeatIndex < aNumRepeatTracks) {
     AddLineNamesIfNotPresent(aLineNames, aLineInfo->mNamesBefore);
   }
+
   return linesAdded;
 }
 

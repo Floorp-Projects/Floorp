@@ -163,6 +163,7 @@ include = [
   "TrackBreadth",
   "SVGPaint",
   "SVGPaintKind",
+  "GridTemplateComponent",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -643,6 +644,7 @@ renaming_overrides_prefixing = true
   // initializing the fields properly.
   StyleGenericTrackSize() {}
  public:
+  // Implemented in nsGridContainerFrame.cpp
   inline const StyleGenericTrackBreadth<L>& GetMin() const;
   inline const StyleGenericTrackBreadth<L>& GetMax() const;
 """
@@ -663,4 +665,14 @@ renaming_overrides_prefixing = true
   // initializing the fields properly.
   StyleGenericSVGPaintFallback() {}
  public:
+"""
+
+"GenericGridTemplateComponent" = """
+  StyleGenericGridTemplateComponent() {}
+ public:
+  inline Maybe<size_t> RepeatAutoIndex() const;
+  inline const StyleGenericTrackRepeat<L, I>* GetRepeatAutoValue() const;
+  inline bool HasRepeatAuto() const;
+  inline Span<const StyleOwnedSlice<StyleCustomIdent>> LineNameLists(bool aIsSubgrid) const;
+  inline Span<const StyleGenericTrackListValue<L, I>> TrackListValues() const;
 """
