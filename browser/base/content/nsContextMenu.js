@@ -764,8 +764,13 @@ nsContextMenu.prototype = {
     let fragment = LoginManagerContextMenu.addLoginsToMenu(this.targetIdentifier,
                                                            this.browser,
                                                            documentURI);
+    let isGeneratedPasswordEnabled = LoginHelper.generationAvailable &&
+                                     LoginHelper.generationEnabled;
+    let canFillGeneratedPassword = this.onPassword && isGeneratedPasswordEnabled;
 
     this.showItem("fill-login-no-logins", !fragment);
+    this.showItem("fill-login-generated-password", canFillGeneratedPassword);
+    this.showItem("generated-password-separator", canFillGeneratedPassword);
 
     if (!fragment) {
       return;
@@ -784,6 +789,12 @@ nsContextMenu.prototype = {
       filterString: gContextMenuContentData.documentURIObject.host,
       entryPoint: "contextmenu",
     });
+  },
+
+  fillGeneratedPassword() {
+    LoginManagerContextMenu.fillGeneratedPassword(this.targetIdentifier,
+                                                  gContextMenuContentData.documentURIObject,
+                                                  this.browser);
   },
 
   inspectNode() {

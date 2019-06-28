@@ -165,3 +165,41 @@ async function waitForPasswordManagerDialog() {
 
   return win;
 }
+
+// Contextmenu functions //
+
+/**
+ * Synthesize mouse clicks to open the password manager context menu popup
+ * for a target password input element.
+ *
+ * assertCallback should return true if we should continue or else false.
+ */
+async function openPasswordContextMenu(browser, passwordInput, assertCallback = null) {
+  const CONTEXT_MENU = document.getElementById("contentAreaContextMenu");
+  const POPUP_HEADER = document.getElementById("fill-login");
+
+  let contextMenuShownPromise = BrowserTestUtils.waitForEvent(CONTEXT_MENU, "popupshown");
+
+  // Synthesize a right mouse click over the password input element, we have to trigger
+  // both events because formfill code relies on this event happening before the contextmenu
+  // (which it does for real user input) in order to not show the password autocomplete.
+  let eventDetails = {type: "mousedown", button: 2};
+  await BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+  // Synthesize a contextmenu event to actually open the context menu.
+  eventDetails = {type: "contextmenu", button: 2};
+  await BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+
+  await contextMenuShownPromise;
+
+  if (assertCallback) {
+    let shouldContinue = await assertCallback();
+    if (!shouldContinue) {
+      return;
+    }
+  }
+
+  // Synthesize a mouse click over the fill login menu header.
+  let popupShownPromise = BrowserTestUtils.waitForCondition(() => POPUP_HEADER.open);
+  EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {});
+  await popupShownPromise;
+}

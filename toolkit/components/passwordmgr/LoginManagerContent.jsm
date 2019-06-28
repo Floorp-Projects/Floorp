@@ -335,6 +335,24 @@ this.LoginManagerContent = {
         break;
       }
 
+      case "PasswordManager:fillGeneratedPassword": {
+        // make a login for the password
+        let generatedLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+        generatedLogin.init(msg.data.origin,
+                            "", // empty formActionOrigin
+                            null, // no realm
+                            "", // empty username
+                            msg.data.password);
+        this.fillForm({
+          topDocument: topWindow.document,
+          loginFormOrigin: msg.data.origin,
+          loginsFound: [generatedLogin],
+          recipes: msg.data.recipes,
+          inputElementIdentifier: msg.data.inputElementIdentifier,
+        });
+        break;
+      }
+
       case "FormAutoComplete:PopupOpened": {
         let {chromeEventHandler} = msg.target.docShell;
         chromeEventHandler.addEventListener("keydown", this._onKeyDown,

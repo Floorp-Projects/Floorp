@@ -32,6 +32,10 @@ addMessageListener("PasswordManager:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
   LoginManagerContent.receiveMessage(message, content);
 });
+addMessageListener("PasswordManager:fillGeneratedPassword", function(message) {
+  // forward message to LMC
+  LoginManagerContent.receiveMessage(message, content);
+});
 
 function shouldIgnoreLoginManagerEvent(event) {
   // If we have a null principal then prevent any more password manager code from running and
