@@ -167,8 +167,8 @@ if __name__ == "__main__":
     elif command == 'raptor':
         ordered_groups_of_tasks = raptor(result.staging)
     elif command == 'nightly':
-        formatted_date = datetime.datetime.now().strftime('%y%V')
-        ordered_groups_of_tasks = release('nightly', result.staging, '1.0.{}'.format(formatted_date))
+        nightly_version = datetime.datetime.now().strftime('Nightly %y%m%d %H:%M')
+        ordered_groups_of_tasks = release('nightly', result.staging, nightly_version)
     elif command == 'github-release':
         version = result.tag[1:]  # remove prefixed "v"
         beta_semver = re.compile(r'^v\d+\.\d+\.\d+-beta\.\d+$')
