@@ -690,14 +690,19 @@ static nsIFrame* GetScrollFrameFromContent(nsIContent* aContent) {
   return frame;
 }
 
+nsIScrollableFrame* nsLayoutUtils::FindScrollableFrameFor(
+    nsIContent* aContent) {
+  nsIFrame* scrollFrame = GetScrollFrameFromContent(aContent);
+  return scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
+}
+
 nsIScrollableFrame* nsLayoutUtils::FindScrollableFrameFor(ViewID aId) {
   nsIContent* content = FindContentFor(aId);
   if (!content) {
     return nullptr;
   }
 
-  nsIFrame* scrollFrame = GetScrollFrameFromContent(content);
-  return scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
+  return FindScrollableFrameFor(content);
 }
 
 ViewID nsLayoutUtils::FindIDForScrollableFrame(
@@ -1164,10 +1169,8 @@ static bool GetDisplayPortImpl(
 static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
                                                  nsRect* aRect) {
   MOZ_ASSERT(aRect);
-  nsIFrame* frame = GetScrollFrameFromContent(aContent);
-  nsIScrollableFrame* scrollableFrame =
-      frame ? frame->GetScrollTargetFrame() : nullptr;
-  if (scrollableFrame) {
+  if (nsIScrollableFrame* scrollableFrame =
+          nsLayoutUtils::FindScrollableFrameFor(aContent)) {
     *aRect += scrollableFrame->GetScrollPortRect().TopLeft();
   }
 }
@@ -1306,9 +1309,7 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
   InvalidateForDisplayPortChange(aContent, hadDisplayPort, oldDisplayPort,
                                  newDisplayPort, aRepaintMode);
 
-  nsIFrame* frame = GetScrollFrameFromContent(aContent);
-  nsIScrollableFrame* scrollableFrame =
-      frame ? frame->GetScrollTargetFrame() : nullptr;
+  nsIScrollableFrame* scrollableFrame = FindScrollableFrameFor(aContent);
   if (!scrollableFrame) {
     return true;
   }

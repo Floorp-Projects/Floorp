@@ -204,6 +204,11 @@ class nsLayoutUtils {
   static nsIContent* FindContentFor(ViewID aId);
 
   /**
+   * Find the scrollable frame for a given content element.
+   */
+  static nsIScrollableFrame* FindScrollableFrameFor(nsIContent* aContent);
+
+  /**
    * Find the scrollable frame for a given ID.
    */
   static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
