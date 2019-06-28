@@ -21,6 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RangeUtils.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -6733,7 +6734,7 @@ nsresult HTMLEditRules::ExpandSelectionForDeletion() {
 
     // Check if block is entirely inside range
     if (brBlock) {
-      nsRange::CompareNodeToRange(brBlock, range, &nodeBefore, &nodeAfter);
+      RangeUtils::CompareNodeToRange(brBlock, range, &nodeBefore, &nodeAfter);
     }
 
     // If block isn't contained, forgo grabbing the <br> in expanded selection.
@@ -9284,7 +9285,7 @@ nsresult HTMLEditRules::PinSelectionToNewBlock() {
     return NS_ERROR_FAILURE;
   }
 
-  // Use ranges and nsRange::CompareNodeToRange() to compare selection start
+  // Use ranges and RangeUtils::CompareNodeToRange() to compare selection start
   // to new block.
   // XXX It's too expensive to use nsRange and set it only for comparing a
   //     DOM point with a node.
@@ -9295,7 +9296,8 @@ nsresult HTMLEditRules::PinSelectionToNewBlock() {
   }
 
   bool nodeBefore, nodeAfter;
-  rv = nsRange::CompareNodeToRange(mNewBlock, range, &nodeBefore, &nodeAfter);
+  rv =
+      RangeUtils::CompareNodeToRange(mNewBlock, range, &nodeBefore, &nodeAfter);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

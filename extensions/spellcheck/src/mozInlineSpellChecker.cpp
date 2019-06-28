@@ -37,6 +37,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Event.h"
@@ -1009,9 +1010,8 @@ nsresult mozInlineSpellChecker::MakeSpellCheckRange(nsINode* aStartNode,
       return rv;
     }
   } else {
-    uint32_t endOffset;
-    aEndNode = nsRange::GetContainerAndOffsetAfter(aEndNode, &endOffset);
-    rv = range->SetStartAndEnd(aStartNode, aStartOffset, aEndNode, endOffset);
+    rv = range->SetStartAndEnd(RawRangeBoundary(aStartNode, aStartOffset),
+                               RangeUtils::GetRawRangeBoundaryAfter(aEndNode));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
