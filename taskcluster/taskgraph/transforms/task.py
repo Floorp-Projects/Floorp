@@ -16,6 +16,8 @@ import re
 import time
 from copy import deepcopy
 
+import attr
+
 from mozbuild.util import memoize
 from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
@@ -229,7 +231,7 @@ task_description_schema = Schema({
     Optional('release-artifacts'): [basestring],
 
     # information specific to the worker implementation that will run this task
-    'worker': {
+    Optional('worker'): {
         Required('implementation'): basestring,
         Extra: object,
     }
@@ -327,12 +329,17 @@ def get_default_priority(graph_config, project):
 payload_builders = {}
 
 
+@attr.s(frozen=True)
+class PayloadBuilder(object):
+    schema = attr.ib(type=Schema)
+    builder = attr.ib()
+
+
 def payload_builder(name, schema):
     schema = Schema({Required('implementation'): name}).extend(schema)
 
     def wrap(func):
-        payload_builders[name] = func
-        func.schema = Schema(schema)
+        payload_builders[name] = PayloadBuilder(schema, func)
         return func
     return wrap
 
@@ -1794,7 +1801,7 @@ def build_task(config, tasks):
                 th_push_link)
 
         # add the payload and adjust anything else as required (e.g., scopes)
-        payload_builders[task['worker']['implementation']](config, task, task_def)
+        payload_builders[task['worker']['implementation']].builder(config, task, task_def)
 
         # Resolve run-on-projects
         build_platform = attributes.get('build_platform')
@@ -1864,11 +1871,11 @@ def check_task_identifiers(config, tasks):
     """
     e = re.compile("^[a-zA-Z0-9_-]{1,38}$")
     for task in tasks:
-        for attr in ('workerType', 'provisionerId'):
-            if not e.match(task['task'][attr]):
+        for attrib in ('workerType', 'provisionerId'):
+            if not e.match(task['task'][attrib]):
                 raise Exception(
                     'task {}.{} is not a valid identifier: {}'.format(
-                        task['label'], attr, task['task'][attr]))
+                        task['label'], attrib, task['task'][attrib]))
         yield task
 
 
