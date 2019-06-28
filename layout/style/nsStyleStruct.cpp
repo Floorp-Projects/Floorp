@@ -1906,9 +1906,9 @@ void nsStyleImage::DoCopy(const nsStyleImage& aOther) {
     SetElementId(do_AddRef(aOther.mElementId));
   }
 
-  UniquePtr<nsStyleSides> cropRectCopy;
+  UniquePtr<CropRect> cropRectCopy;
   if (aOther.mCropRect) {
-    cropRectCopy = MakeUnique<nsStyleSides>(*aOther.mCropRect.get());
+    cropRectCopy = MakeUnique<CropRect>(*aOther.mCropRect.get());
   }
   SetCropRect(std::move(cropRectCopy));
 }
@@ -1966,23 +1966,18 @@ void nsStyleImage::SetElementId(already_AddRefed<nsAtom> aElementId) {
   }
 }
 
-void nsStyleImage::SetCropRect(UniquePtr<nsStyleSides> aCropRect) {
+void nsStyleImage::SetCropRect(UniquePtr<CropRect> aCropRect) {
   mCropRect = std::move(aCropRect);
 }
 
-static int32_t ConvertToPixelCoord(const nsStyleCoord& aCoord,
+static int32_t ConvertToPixelCoord(const StyleNumberOrPercentage& aCoord,
                                    int32_t aPercentScale) {
   double pixelValue;
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Percent:
-      pixelValue = aCoord.GetPercentValue() * aPercentScale;
-      break;
-    case eStyleUnit_Factor:
-      pixelValue = aCoord.GetFactorValue();
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected unit for image crop rect");
-      return 0;
+  if (aCoord.IsNumber()) {
+    pixelValue = aCoord.AsNumber();
+  } else {
+    MOZ_ASSERT(aCoord.IsPercentage());
+    pixelValue = aCoord.AsPercentage()._0 * aPercentScale;
   }
   MOZ_ASSERT(pixelValue >= 0, "we ensured non-negative while parsing");
   pixelValue = std::min(pixelValue, double(INT32_MAX));  // avoid overflow
@@ -2029,11 +2024,13 @@ bool nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
     return false;
   }
 
-  int32_t left = ConvertToPixelCoord(mCropRect->GetLeft(), imageSize.width);
-  int32_t top = ConvertToPixelCoord(mCropRect->GetTop(), imageSize.height);
-  int32_t right = ConvertToPixelCoord(mCropRect->GetRight(), imageSize.width);
+  int32_t left =
+      ConvertToPixelCoord(mCropRect->Get(eSideLeft), imageSize.width);
+  int32_t top = ConvertToPixelCoord(mCropRect->Get(eSideTop), imageSize.height);
+  int32_t right =
+      ConvertToPixelCoord(mCropRect->Get(eSideRight), imageSize.width);
   int32_t bottom =
-      ConvertToPixelCoord(mCropRect->GetBottom(), imageSize.height);
+      ConvertToPixelCoord(mCropRect->Get(eSideBottom), imageSize.height);
 
   // IntersectRect() returns an empty rect if we get negative width or height
   nsIntRect cropRect(left, top, right - left, bottom - top);
@@ -2143,8 +2140,8 @@ bool nsStyleImage::IsLoaded() const {
   }
 }
 
-static inline bool EqualRects(const UniquePtr<nsStyleSides>& aRect1,
-                              const UniquePtr<nsStyleSides>& aRect2) {
+static inline bool EqualRects(const nsStyleImage::CropRect* aRect1,
+                              const nsStyleImage::CropRect* aRect2) {
   return aRect1 == aRect2 || /* handles null== null, and optimize */
          (aRect1 && aRect2 && *aRect1 == *aRect2);
 }
@@ -2154,7 +2151,7 @@ bool nsStyleImage::operator==(const nsStyleImage& aOther) const {
     return false;
   }
 
-  if (!EqualRects(mCropRect, aOther.mCropRect)) {
+  if (!EqualRects(mCropRect.get(), aOther.mCropRect.get())) {
     return false;
   }
 
