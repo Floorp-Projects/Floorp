@@ -25,6 +25,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/RangeUtils.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
@@ -4657,7 +4658,7 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
         // if the node is within the range, append it to the temporary list
         bool before, after;
         nsresult rv =
-            nsRange::CompareNodeToRange(content, aRange, &before, &after);
+            RangeUtils::CompareNodeToRange(content, aRange, &before, &after);
         if (NS_SUCCEEDED(rv) && !before && !after) {
           itemToInsert = i;
           bool snap;

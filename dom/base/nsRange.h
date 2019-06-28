@@ -189,43 +189,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
     return SetStartAndEnd(aPoint, aPoint);
   }
 
-  /**
-   * Retrieves node and offset for setting start or end of a range to
-   * before or after aNode.
-   */
-  static nsINode* GetContainerAndOffsetAfter(nsINode* aNode,
-                                             uint32_t* aOffset) {
-    MOZ_ASSERT(aNode);
-    MOZ_ASSERT(aOffset);
-    *aOffset = 0;
-    nsINode* parentNode = aNode->GetParentNode();
-    if (!parentNode) {
-      return nullptr;
-    }
-    int32_t indexInParent = parentNode->ComputeIndexOf(aNode);
-    if (NS_WARN_IF(indexInParent < 0)) {
-      return nullptr;
-    }
-    *aOffset = static_cast<uint32_t>(indexInParent) + 1;
-    return parentNode;
-  }
-  static nsINode* GetContainerAndOffsetBefore(nsINode* aNode,
-                                              uint32_t* aOffset) {
-    MOZ_ASSERT(aNode);
-    MOZ_ASSERT(aOffset);
-    *aOffset = 0;
-    nsINode* parentNode = aNode->GetParentNode();
-    if (!parentNode) {
-      return nullptr;
-    }
-    int32_t indexInParent = parentNode->ComputeIndexOf(aNode);
-    if (NS_WARN_IF(indexInParent < 0)) {
-      return nullptr;
-    }
-    *aOffset = static_cast<uint32_t>(indexInParent);
-    return parentNode;
-  }
-
   // aMaxRanges is the maximum number of text ranges to record for each face
   // (pass 0 to just get the list of faces, without recording exact ranges
   // where each face was used).
@@ -342,32 +305,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
 
  public:
   /**
-   * Compute the root node of aNode for initializing range classes.
-   * When aNode is in an anonymous subtree, this returns the shadow root or
-   * binding parent.  Otherwise, the root node of the document or document
-   * fragment.  If this returns nullptr, that means aNode can be neither the
-   * start container nor end container of any range.
-   */
-  static nsINode* ComputeRootNode(nsINode* aNode);
-
-  /**
-   * Return true if aStartContainer/aStartOffset and aEndContainer/aEndOffset
-   * are valid start and end points for a range.  Otherwise, return false.
-   */
-  static bool IsValidPoints(nsINode* aStartContainer, uint32_t aStartOffset,
-                            nsINode* aEndContainer, uint32_t aEndOffset);
-
-  /******************************************************************************
-   *  Utility routine to detect if a content node starts before a range and/or
-   *  ends after a range.  If neither it is contained inside the range.
-   *
-   *  XXX - callers responsibility to ensure node in same doc as range!
-   *
-   *****************************************************************************/
-  static nsresult CompareNodeToRange(nsINode* aNode, nsRange* aRange,
-                                     bool* outNodeBefore, bool* outNodeAfter);
-
-  /**
    * Return true if any part of (aNode, aStartOffset) .. (aNode, aEndOffset)
    * overlaps any nsRange in aNode's GetNextRangeCommonAncestor ranges (i.e.
    * where aNode is a descendant of a range's common ancestor node).
@@ -411,18 +348,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
  protected:
   void RegisterCommonAncestor(nsINode* aNode);
   void UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking);
-  nsINode* IsValidBoundary(nsINode* aNode) const {
-    return ComputeRootNode(aNode);
-  }
-
-  /**
-   * XXX nsRange should accept 0 - UINT32_MAX as offset.  However, users of
-   *     nsRange treat offset as int32_t.  Additionally, some other internal
-   *     APIs like nsINode::ComputeIndexOf() use int32_t.  Therefore,
-   *     nsRange should accept only 0 - INT32_MAX as valid offset for now.
-   */
-  static bool IsValidOffset(uint32_t aOffset) { return aOffset <= INT32_MAX; }
-  static bool IsValidOffset(nsINode* aNode, uint32_t aOffset);
 
   // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
   // and suppress re-registering a range common ancestor node since
