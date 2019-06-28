@@ -8,6 +8,8 @@
 #ifndef js_Equality_h
 #define js_Equality_h
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/RootingAPI.h"  // JS::Handle
@@ -49,6 +51,15 @@ extern JS_PUBLIC_API bool LooselyEqual(JSContext* cx, JS::Handle<JS::Value> v1,
  */
 extern JS_PUBLIC_API bool SameValue(JSContext* cx, JS::Handle<JS::Value> v1,
                                     JS::Handle<JS::Value> v2, bool* same);
+
+/**
+ * Implements |SameValueZero(v1, v2)| for Number values |v1| and |v2|.
+ * SameValueZero equates NaNs, equal nonzero values, and zeroes without respect
+ * to their signs.
+ */
+static inline bool SameValueZero(double v1, double v2) {
+  return mozilla::EqualOrBothNaN(v1, v2);
+}
 
 }  // namespace JS
 
