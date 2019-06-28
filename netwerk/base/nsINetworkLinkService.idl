@@ -45,6 +45,12 @@ interface nsINetworkLinkService : nsISupports
    * The type of network connection.
    */
   readonly attribute unsigned long linkType;
+
+  /**
+   * A string uniquely identifying the current active network interfaces.
+   * Empty when there are no active network interfaces.
+   */
+  readonly attribute ACString networkID;
 };
 
 %{C++

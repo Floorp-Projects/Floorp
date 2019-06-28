@@ -106,10 +106,10 @@ NS_IMPL_ISUPPORTS(nsNotifyAddrListener, nsINetworkLinkService, nsIRunnable,
                   nsIObserver)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
-    : mLinkUp(true)  // assume true by default
-      ,
+    : mLinkUp(true),  // assume true by default
       mStatusKnown(false),
       mCheckAttempted(false),
+      mMutex("nsNotifyAddrListener::mMutex"),
       mCheckEvent(nullptr),
       mShutdown(false),
       mIPInterfaceChecksum(0),
@@ -147,6 +147,13 @@ nsNotifyAddrListener::GetLinkType(uint32_t* aLinkType) {
 
   // XXX This function has not yet been implemented for this platform
   *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotifyAddrListener::GetNetworkID(nsACString& aNetworkID) {
+  MutexAutoLock lock(mMutex);
+  aNetworkID = mNetworkId;
   return NS_OK;
 }
 
@@ -210,6 +217,7 @@ bool nsNotifyAddrListener::findMac(char* gateway) {
             break;
           }
           LOG(("networkid: id %s\n", output.get()));
+          MutexAutoLock lock(mMutex);
           if (mNetworkId != output) {
             // new id
             Telemetry::Accumulate(Telemetry::NETWORK_ID2, 1);
