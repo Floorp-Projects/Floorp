@@ -31,7 +31,8 @@ class FilteredContentIterator final {
   nsresult Init(nsRange* aRange);
   nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                 nsINode* aEndContainer, uint32_t aEndOffset);
-  nsresult Init(const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd);
+  nsresult Init(const RawRangeBoundary& aStartBoundary,
+                const RawRangeBoundary& aEndBoundary);
   void First();
   void Last();
   void Next();

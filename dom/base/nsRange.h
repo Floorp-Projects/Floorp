@@ -21,6 +21,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/RangeBoundary.h"
 
 namespace mozilla {
 namespace dom {
@@ -39,6 +40,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
                       // For linking together selection-associated ranges.
                       public mozilla::LinkedListElement<nsRange> {
   typedef mozilla::ErrorResult ErrorResult;
+  typedef mozilla::dom::AbstractRange AbstractRange;
   typedef mozilla::dom::DocGroup DocGroup;
   typedef mozilla::dom::DOMRect DOMRect;
   typedef mozilla::dom::DOMRectList DOMRectList;
@@ -50,16 +52,35 @@ class nsRange final : public mozilla::dom::AbstractRange,
  public:
   explicit nsRange(nsINode* aNode);
 
-  static nsresult CreateRange(nsINode* aStartContainer, uint32_t aStartOffset,
-                              nsINode* aEndContainer, uint32_t aEndOffset,
-                              nsRange** aRange);
-  static nsresult CreateRange(const RawRangeBoundary& aStart,
-                              const RawRangeBoundary& aEnd, nsRange** aRange);
+  /**
+   * Create() may return `nsRange` instance which is initialized with
+   * given range or points.  If it fails initializing new range with the
+   * arguments, returns `nullptr`.  `ErrorResult` is set to an error only
+   * when this returns `nullptr`.  The error code indicates the reason why
+   * it couldn't initialize the instance.
+   */
+  static already_AddRefed<nsRange> Create(const AbstractRange* aAbstractRange,
+                                          ErrorResult& aRv) {
+    return nsRange::Create(aAbstractRange->StartRef(), aAbstractRange->EndRef(),
+                           aRv);
+  }
+  static already_AddRefed<nsRange> Create(nsINode* aStartContainer,
+                                          uint32_t aStartOffset,
+                                          nsINode* aEndContainer,
+                                          uint32_t aEndOffset,
+                                          ErrorResult& aRv) {
+    return nsRange::Create(RawRangeBoundary(aStartContainer, aStartOffset),
+                           RawRangeBoundary(aEndContainer, aEndOffset), aRv);
+  }
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  static already_AddRefed<nsRange> Create(
+      const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+      const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary,
+      ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHODIMP_(void) DeleteCycleCollectable(void) override;
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-      nsRange, mozilla::dom::AbstractRange)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsRange, AbstractRange)
 
   nsrefcnt GetRefCount() const { return mRefCnt; }
 
@@ -140,8 +161,10 @@ class nsRange final : public mozilla::dom::AbstractRange,
     return SetStartAndEnd(RawRangeBoundary(aStartContainer, aStartOffset),
                           RawRangeBoundary(aEndContainer, aEndOffset));
   }
-  nsresult SetStartAndEnd(const RawRangeBoundary& aStart,
-                          const RawRangeBoundary& aEnd);
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  nsresult SetStartAndEnd(
+      const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+      const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary);
 
   /**
    * Adds all nodes between |aStartContent| and |aEndContent| to the range.
@@ -405,10 +428,11 @@ class nsRange final : public mozilla::dom::AbstractRange,
   // and suppress re-registering a range common ancestor node since
   // the new text node of a splitText hasn't been inserted yet.
   // CharacterDataChanged does the re-registering when needed.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void DoSetRange(const RawRangeBoundary& lowerBound,
-                  const RawRangeBoundary& upperBound, nsINode* aRoot,
-                  bool aNotInsertedYet = false);
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetRange(
+      const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+      const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary,
+      nsINode* aRootNode, bool aNotInsertedYet = false);
 
   /**
    * For a range for which IsInSelection() is true, return the common ancestor

@@ -1419,8 +1419,9 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
     if (!mDocChangeRange) {
       mDocChangeRange = new nsRange(compositionStartPoint.GetContainer());
     }
-    rv = mDocChangeRange->SetStartAndEnd(compositionStartPoint,
-                                         compositionEndPoint);
+    rv = mDocChangeRange->SetStartAndEnd(
+        compositionStartPoint.ToRawRangeBoundary(),
+        compositionEndPoint.ToRawRangeBoundary());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1628,7 +1629,8 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   }
 
   if (currentPoint.IsSet()) {
-    rv = mDocChangeRange->SetStartAndEnd(pointToInsert, currentPoint);
+    rv = mDocChangeRange->SetStartAndEnd(pointToInsert.ToRawRangeBoundary(),
+                                         currentPoint.ToRawRangeBoundary());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6865,11 +6867,13 @@ nsresult HTMLEditRules::NormalizeSelection() {
   // start, or new start after old end.  If so then just leave things alone.
 
   int16_t comp;
-  comp = nsContentUtils::ComparePoints(startPoint, newEndPoint);
+  comp = nsContentUtils::ComparePoints(startPoint.ToRawRangeBoundary(),
+                                       newEndPoint.ToRawRangeBoundary());
   if (comp == 1) {
     return NS_OK;  // New end before old start.
   }
-  comp = nsContentUtils::ComparePoints(newStartPoint, endPoint);
+  comp = nsContentUtils::ComparePoints(newStartPoint.ToRawRangeBoundary(),
+                                       endPoint.ToRawRangeBoundary());
   if (comp == 1) {
     return NS_OK;  // New start after old end.
   }
@@ -7172,7 +7176,8 @@ void HTMLEditRules::PromoteRange(nsRange& aRange,
     return;
   }
 
-  DebugOnly<nsresult> rv = aRange.SetStartAndEnd(startPoint, endPoint);
+  DebugOnly<nsresult> rv = aRange.SetStartAndEnd(
+      startPoint.ToRawRangeBoundary(), endPoint.ToRawRangeBoundary());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -10346,7 +10351,8 @@ void HTMLEditRules::WillDeleteSelection() {
   if (NS_WARN_IF(!endPoint.IsSet())) {
     return;
   }
-  nsresult rv = mUtilRange->SetStartAndEnd(startPoint, endPoint);
+  nsresult rv = mUtilRange->SetStartAndEnd(startPoint.ToRawRangeBoundary(),
+                                           endPoint.ToRawRangeBoundary());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

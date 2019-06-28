@@ -643,19 +643,18 @@ nsresult ContentSubtreeIterator::Init(nsINode* aStartContainer,
               RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
-nsresult ContentSubtreeIterator::Init(const RawRangeBoundary& aStart,
-                                      const RawRangeBoundary& aEnd) {
+nsresult ContentSubtreeIterator::Init(const RawRangeBoundary& aStartBoundary,
+                                      const RawRangeBoundary& aEndBoundary) {
   mIsDone = false;
 
-  RefPtr<nsRange> range;
-  nsresult rv = nsRange::CreateRange(aStart, aEnd, getter_AddRefs(range));
-  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
-      NS_WARN_IF(!range->IsPositioned())) {
+  RefPtr<nsRange> range =
+      nsRange::Create(aStartBoundary, aEndBoundary, IgnoreErrors());
+  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(range->StartRef() != aStart) ||
-      NS_WARN_IF(range->EndRef() != aEnd)) {
+  if (NS_WARN_IF(range->StartRef() != aStartBoundary) ||
+      NS_WARN_IF(range->EndRef() != aEndBoundary)) {
     return NS_ERROR_UNEXPECTED;
   }
 
