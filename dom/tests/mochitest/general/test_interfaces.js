@@ -922,6 +922,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SpecialPowers", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "StaticRange", insecureContext: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "StereoPannerNode", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Storage", insecureContext: true},
