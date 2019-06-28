@@ -39,7 +39,9 @@ codespell:
         - toolkit/components/normandy/docs/
         - toolkit/components/telemetry/docs/
         - toolkit/crashreporter/docs/
+        - toolkit/docs/
         - toolkit/locales/en-US/
+        - toolkit/components/search/docs/
         - tools/lint/
         - tools/tryselect/
     # List of extensions coming from:

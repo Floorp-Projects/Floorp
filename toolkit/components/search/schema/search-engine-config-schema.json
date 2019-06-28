@@ -1,0 +1,291 @@
+{
+  "type": "object",
+  "required": [
+    "engineName"
+  ],
+  "properties": {
+    "engineName": {
+      "type": "string",
+      "title": "Engine Name",
+      "description": "General short name for this engine, only used as an identifier",
+      "pattern": "^[a-zA-Z-]+$"
+    },
+    "default": {
+      "$ref": "#/definitions/default"
+    },
+    "application": {
+      "$ref": "#/definitions/application"
+    },
+    "orderHint": {
+      "$ref": "#/definitions/orderHint"
+    },
+    "appliesTo": {
+      "type": "array",
+      "title": "Applies To",
+      "description": "This section defines the region/locales/application information for where a search engine is available, and any specifics for that region/locale/application. If there are no entries in the list, it is considered to be included everywhere",
+      "items": {
+        "$ref": "#/definitions/appliesToSection"
+      }
+    },
+    "telemetryId": {
+      "type": "string",
+      "title": "Telemetry Id",
+      "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
+    },
+    "webExtension": {
+      "$ref": "#/definitions/webExtension"
+    },
+    "codes": {
+      "$ref": "#/definitions/codes"
+    }
+  },
+  "definitions": {
+    "application": {
+      "type": "object",
+      "title": "Application Details",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "The application this applies to (default/not specified is everywhere)",
+          "enum": [
+            "",
+            "desktop",
+            "android"
+          ]
+        },
+        "branches": {
+          "type": "array",
+          "title": "Branches",
+          "description": "Which branches this belongs to (not set = everywhere)",
+          "items": {
+            "type": "string",
+            "enum": [
+              "default",
+              "nightly",
+              "aurora",
+              "beta",
+              "release",
+              "esr"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "minversion": {
+          "type": "string",
+          "title": "Minimum Version",
+          "description": "The minimum version this applies to"
+        },
+        "maxversion": {
+          "type": "string",
+          "title": "Maxium Version",
+          "description": "The maximum version this applies to"
+        }
+      }
+    },
+    "default": {
+      "type": "string",
+      "title": "Default Status",
+      "description": "Whether or not this engine should be default.",
+      "enum": [
+        "yes",
+        "yes-if-no-other",
+        "no"
+      ]
+    },
+    "orderHint": {
+      "type": "number",
+      "title": "Order Hint",
+      "description": "A hint to the display order (higher is a higer rank)"
+    },
+    "sapCodes": {
+      "type": "object",
+      "title": "Search Access Point Codes",
+      "description": "Codes for the search access points.",
+      "properties": {
+        "any": {
+          "type": "string",
+          "title": "Any",
+          "description": "SAP code that is used for all access points (overrides the others)."
+        },
+        "contextMenu": {
+          "type": "string",
+          "title": "Context Menu",
+          "description": "SAP code for searches from the context menu."
+        },
+        "homePage": {
+          "type": "string",
+          "title": "Home page",
+          "description": "SAP code for searches from the home page."
+        },
+        "keyword": {
+          "type": "string",
+          "title": "Keyword",
+          "description": "SAP code for searches via keywords."
+        },
+        "newTab": {
+          "type": "string",
+          "title": "New Tab",
+          "description": "SAP code for searches from the new tab page."
+        },
+        "searchBar": {
+          "type": "string",
+          "title": "Search Bar",
+          "description": "SAP code for searches from the search bar."
+        }
+      }
+    },
+    "codes": {
+      "type": "object",
+      "title": "Codes",
+      "description": "Various codes for the search engines",
+      "properties": {
+        "searchUrlGetExtraCodes": {
+          "type": "string",
+          "title": "Search URL Get Extra codes",
+          "description": "Extra params (for SAP codes) for the search URL (e.g. 'pc=foo')."
+        },
+        "searchFormExtraCodes": {
+          "type": "string",
+          "title": "Search Form Extra codes",
+          "description": "Extra params (for SAP codes) for the search form URL (e.g. 'pc=foo')."
+        },
+        "sapCodes": {
+          "$ref": "#/definitions/sapCodes"
+        }
+      }
+    },
+    "telemetryId": {
+      "type": "string",
+      "title": "Telemetry Id",
+      "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
+    },
+    "webExtension": {
+      "type": "object",
+      "title": "WebExtension",
+      "dependencies": {
+        "webExtensionId": [
+          "webExtensionVersion"
+        ],
+        "webExtensionVersion": [
+          "webExtensionId"
+        ]
+      },
+      "properties": {
+        "webExtensionId": {
+          "type": "string",
+          "title": "WebExtension Id",
+          "description": "The identifier (local part) of the associated WebExtension"
+        },
+        "webExtensionVersion": {
+          "type": "string",
+          "title": "WebExtension Version",
+          "description": "The version of the WebExtension to use"
+        },
+        "webExtensionLocale": {
+          "type": "string",
+          "title": "WebExtension Locale",
+          "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated."
+        }
+      }
+    },
+    "regionDetails": {
+      "type": "array",
+      "title": "Regions",
+      "description": "Two-letter region codes.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z]$",
+        "minLength": 2,
+        "maxLength": 2
+      }
+    },
+    "localeDetails": {
+      "type": "object",
+      "title": "Locales",
+      "description": "Locale codes.",
+      "properties": {
+        "matches": {
+          "type": "array",
+          "title": "Matches exactly the codes",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z](\\-[A-Z][A-Z])?$",
+            "minLength": 2,
+            "maxLength": 5
+          }
+        },
+        "startsWith": {
+          "type": "array",
+          "title": "Matches any code starting with",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z]$",
+            "minLength": 2,
+            "maxLength": 2
+          }
+        }
+      }
+    },
+    "included": {
+      "type": "object",
+      "title": "Included Locations",
+      "description": "The locations to which this section applies. Note: Regions and Locales are 'and'ed together.",
+      "properties": {
+        "everywhere": {
+          "type": "boolean",
+          "title": "Everywhere",
+          "description": "Set to true to signify that this is included everywhere."
+        },
+        "regions": {
+          "$ref" : "#/definitions/regionDetails"
+        },
+        "locales": {
+          "$ref": "#/definitions/localeDetails"
+        }
+      }
+    },
+    "excluded": {
+      "type": "object",
+      "title": "Excluded Locations",
+      "description": "The locations to which this section applies. Note: Regions and Locales are 'and'ed together.",
+      "properties": {
+        "regions": {
+          "$ref" : "#/definitions/regionDetails"
+        },
+        "locales": {
+          "$ref": "#/definitions/localeDetails"
+        }
+      }
+    },
+    "appliesToSection": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/default"
+        },
+        "orderHint": {
+          "$ref": "#/definitions/orderHint"
+        },
+        "included": {
+          "$ref": "#/definitions/included"
+        },
+        "excluded": {
+          "$ref": "#/definitions/excluded"
+        },
+        "application": {
+          "$ref": "#/definitions/application"
+        },
+        "webextension": {
+          "$ref": "#/definitions/webExtension"
+        },
+        "telemetryId": {
+          "$ref": "#/definitions/telemetryId"
+        },
+        "codes": {
+          "$ref": "#/definitions/codes"
+        }
+      }
+    }
+  }
+}
