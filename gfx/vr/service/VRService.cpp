@@ -10,6 +10,8 @@
 #include "base/thread.h"  // for Thread
 #include <cstring>        // for memcmp
 
+#include "PuppetSession.h"
+
 #if defined(XP_WIN)
 #  include "OculusSession.h"
 #endif
@@ -49,48 +51,36 @@ bool IsImmersiveContentActive(const mozilla::gfx::VRBrowserState& aState) {
 }  // anonymous namespace
 
 /*static*/
-already_AddRefed<VRService> VRService::Create() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::dom_vr_service_enabled()) {
-    return nullptr;
-  }
-
-  RefPtr<VRService> service = new VRService();
+already_AddRefed<VRService> VRService::Create(
+    volatile VRExternalShmem* aShmem) {
+  RefPtr<VRService> service = new VRService(aShmem);
   return service.forget();
 }
 
-VRService::VRService()
+VRService::VRService(volatile VRExternalShmem* aShmem)
     : mSystemState{},
       mBrowserState{},
       mBrowserGeneration(0),
       mServiceThread(nullptr),
       mShutdownRequested(false),
-      mAPIShmem(nullptr),
+      mAPIShmem(aShmem),
       mTargetShmemFile(0),
       mLastHapticState{},
       mFrameStartTime{},
 #if defined(XP_WIN)
       mMutex(NULL),
 #endif
-      mVRProcessEnabled(StaticPrefs::dom_vr_process_enabled()) {
+      mVRProcessEnabled(aShmem == nullptr) {
   // When we have the VR process, we map the memory
-  // of mAPIShmem from GPU process.
+  // of mAPIShmem from GPU process and pass it to the CTOR.
   // If we don't have the VR process, we will instantiate
   // mAPIShmem in VRService.
-  if (!mVRProcessEnabled) {
-    mAPIShmem = new VRExternalShmem();
-    memset(mAPIShmem, 0, sizeof(VRExternalShmem));
-  }
 }
 
 VRService::~VRService() {
+  // PSA: We must store the value of any staticPrefs preferences as this
+  // destructor will be called after staticPrefs has been shut down.
   Stop();
-
-  if (!mVRProcessEnabled && mAPIShmem) {
-    delete mAPIShmem;
-    mAPIShmem = nullptr;
-  }
 }
 
 void VRService::Refresh() {
@@ -241,36 +231,48 @@ void VRService::ServiceInitialize() {
   // Try to start a VRSession
   UniquePtr<VRSession> session;
 
-  // We try Oculus first to ensure we use Oculus
-  // devices trough the most native interface
-  // when possible.
+  if (StaticPrefs::dom_vr_puppet_enabled()) {
+    // When the VR Puppet is enabled, we don't want
+    // to enumerate any real devices
+    session = MakeUnique<PuppetSession>();
+    if (!session->Initialize(mSystemState)) {
+      session = nullptr;
+    }
+  } else {
+    // We try Oculus first to ensure we use Oculus
+    // devices trough the most native interface
+    // when possible.
 #if defined(XP_WIN)
-  // Try Oculus
-  session = MakeUnique<OculusSession>();
-  if (!session->Initialize(mSystemState)) {
-    session = nullptr;
-  }
+    // Try Oculus
+    if (!session) {
+      session = MakeUnique<OculusSession>();
+      if (!session->Initialize(mSystemState)) {
+        session = nullptr;
+      }
+    }
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || \
     (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-  // Try OpenVR
-  if (!session) {
-    session = MakeUnique<OpenVRSession>();
-    if (!session->Initialize(mSystemState)) {
-      session = nullptr;
+    // Try OpenVR
+    if (!session) {
+      session = MakeUnique<OpenVRSession>();
+      if (!session->Initialize(mSystemState)) {
+        session = nullptr;
+      }
     }
-  }
 #endif
 #if !defined(MOZ_WIDGET_ANDROID)
-  // Try OSVR
-  if (!session) {
-    session = MakeUnique<OSVRSession>();
-    if (!session->Initialize(mSystemState)) {
-      session = nullptr;
+    // Try OSVR
+    if (!session) {
+      session = MakeUnique<OSVRSession>();
+      if (!session->Initialize(mSystemState)) {
+        session = nullptr;
+      }
     }
-  }
 #endif
+
+  }  // if (staticPrefs:VRPuppetEnabled())
 
   if (session) {
     mSession = std::move(session);
@@ -456,6 +458,10 @@ void VRService::PushState(const mozilla::gfx::VRSystemState& aState) {
 #if defined(MOZ_WIDGET_ANDROID)
   if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->systemMutex)) ==
       0) {
+    // We are casting away the volatile keyword, which is not accepted by
+    // memcpy.  It is possible (although very unlikely) that the compiler
+    // may optimize out the memcpy here as memcpy isn't explicitly safe for
+    // volatile memory in the C++ standard.
     memcpy((void*)&mAPIShmem->state, &aState, sizeof(VRSystemState));
     pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->systemMutex));
   }
@@ -505,9 +511,13 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
   if (status) {
     VRExternalShmem tmp;
     if (mAPIShmem->geckoGenerationA != mBrowserGeneration) {
-      memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));
+      // TODO - (void *) cast removes volatile semantics.
+      // The memcpy is not likely to be optimized out, but is theoretically
+      // possible.  Suggest refactoring to either explicitly enforce memory
+      // order or to use locks.
+      memcpy(&tmp, (void*)mAPIShmem, sizeof(VRExternalShmem));
       if (tmp.geckoGenerationA == tmp.geckoGenerationB &&
-          tmp.geckoGenerationA != 0 && tmp.geckoGenerationA != -1) {
+          tmp.geckoGenerationA != 0) {
         memcpy(&aState, &tmp.geckoState, sizeof(VRBrowserState));
         mBrowserGeneration = tmp.geckoGenerationA;
       }
@@ -515,5 +525,3 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
   }
 #endif    // defined(MOZ_WIDGET_ANDROID)
 }
-
-VRExternalShmem* VRService::GetAPIShmem() { return mAPIShmem; }

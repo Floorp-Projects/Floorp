@@ -23,7 +23,6 @@ class GamepadManager;
 class Navigator;
 class VRDisplay;
 class VREventObserver;
-class VRMockDisplay;
 }  // namespace dom
 namespace layers {
 class SyncObjectClient;
@@ -50,10 +49,6 @@ class VRManagerChild : public PVRManagerChild {
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient>>& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
-
-  void CreateVRServiceTestDisplay(const nsCString& aID, dom::Promise* aPromise);
-  void CreateVRServiceTestController(const nsCString& aID,
-                                     dom::Promise* aPromise);
 
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
@@ -89,6 +84,10 @@ class VRManagerChild : public PVRManagerChild {
 
   virtual void HandleFatalError(const char* aMsg) const override;
 
+  void RunPuppet(const InfallibleTArray<uint64_t>& aBuffer,
+                 dom::Promise* aPromise, ErrorResult& aRv);
+  void ResetPuppet(dom::Promise* aPromise, ErrorResult& aRv);
+
  protected:
   explicit VRManagerChild();
   ~VRManagerChild();
@@ -104,20 +103,14 @@ class VRManagerChild : public PVRManagerChild {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvUpdateDisplayInfo(
       nsTArray<VRDisplayInfo>&& aDisplayUpdates);
-
-  mozilla::ipc::IPCResult RecvDispatchSubmitFrameResult(
-      const uint32_t& aDisplayID, const VRSubmitFrameResultInfo& aResult);
-  mozilla::ipc::IPCResult RecvGamepadUpdate(
-      const GamepadChangeEvent& aGamepadEvent);
   mozilla::ipc::IPCResult RecvReplyGamepadVibrateHaptic(
       const uint32_t& aPromiseID);
 
-  mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestDisplay(
-      const nsCString& aID, const uint32_t& aPromiseID,
-      const uint32_t& aDeviceID);
-  mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestController(
-      const nsCString& aID, const uint32_t& aPromiseID,
-      const uint32_t& aDeviceID);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  mozilla::ipc::IPCResult RecvNotifyPuppetCommandBufferCompleted(bool aSuccess);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  mozilla::ipc::IPCResult RecvNotifyPuppetResetComplete();
+
   bool IsSameProcess() const { return OtherPid() == base::GetCurrentProcId(); }
 
  private:
@@ -150,10 +143,8 @@ class VRManagerChild : public PVRManagerChild {
   layers::LayersBackend mBackend;
   RefPtr<layers::SyncObjectClient> mSyncObject;
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mGamepadPromiseList;
-  uint32_t mPromiseID;
-  nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
-  RefPtr<dom::VRMockDisplay> mVRMockDisplay;
-  VRControllerState mLastControllerState[kVRControllerMaxCount];
+  RefPtr<dom::Promise> mRunPuppetPromise;
+  nsTArray<RefPtr<dom::Promise>> mResetPuppetPromises;
 
   DISALLOW_COPY_AND_ASSIGN(VRManagerChild);
 };

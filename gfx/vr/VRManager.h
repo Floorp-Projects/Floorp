@@ -7,28 +7,26 @@
 #ifndef GFX_VR_MANAGER_H
 #define GFX_VR_MANAGER_H
 
-#include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
-#include "nsTHashtable.h"
-#include "nsDataHashtable.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/TimeStamp.h"
 #include "gfxVR.h"
 
 class nsITimer;
 namespace mozilla {
-namespace layers {
-class TextureHost;
-}
 namespace gfx {
-
 class VRLayerParent;
 class VRManagerParent;
-class VRDisplayHost;
-#if !defined(MOZ_WIDGET_ANDROID)
-class VRService;
-#endif
-class VRSystemManagerPuppet;
-class VRSystemManagerExternal;
+class VRServiceHost;
+class VRThread;
+
+enum class VRManagerState : uint32_t {
+  Disabled,  // All VRManager activity is stopped
+  Idle,  // No VR hardware has been activated, but background tasks are running
+  Enumeration,  // Waiting for enumeration and startup of VR hardware
+  Active        // VR hardware is active
+};
 
 class VRManager {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::gfx::VRManager)
@@ -41,42 +39,37 @@ class VRManager {
   void RemoveVRManagerParent(VRManagerParent* aVRManagerParent);
 
   void NotifyVsync(const TimeStamp& aVsyncTimestamp);
-  void NotifyVRVsync(const uint32_t& aDisplayID);
+
   void RefreshVRDisplays(bool aMustDispatch = false);
-  void RefreshVRControllers();
-  void ScanForControllers();
-  void RemoveControllers();
-  template <class T>
-  void NotifyGamepadChange(uint32_t aIndex, const T& aInfo);
-  RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
-  void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);
-  RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
-  void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
-  void CreateVRTestSystem();
-  VRSystemManagerPuppet* GetPuppetManager();
-  VRSystemManagerExternal* GetExternalManager();
+  void StopAllHaptics();
 
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                      double aIntensity, double aDuration,
                      const VRManagerPromise& aPromise);
   void StopVibrateHaptic(uint32_t aControllerIdx);
   void NotifyVibrateHapticCompleted(const VRManagerPromise& aPromise);
-  void DispatchSubmitFrameResult(uint32_t aDisplayID,
-                                 const VRSubmitFrameResultInfo& aResult);
   void StartVRNavigation(const uint32_t& aDisplayID);
   void StopVRNavigation(const uint32_t& aDisplayID,
                         const TimeDuration& aTimeout);
-
   void Shutdown();
+#if !defined(MOZ_WIDGET_ANDROID)
+  bool RunPuppet(const InfallibleTArray<uint64_t>& aBuffer,
+                 VRManagerParent* aManagerParent);
+  void ResetPuppet(VRManagerParent* aManagerParent);
+#endif
+  void AddLayer(VRLayerParent* aLayer);
+  void RemoveLayer(VRLayerParent* aLayer);
+  void SetGroupMask(uint32_t aGroupMask);
+  void SubmitFrame(VRLayerParent* aLayer,
+                   const layers::SurfaceDescriptor& aTexture, uint64_t aFrameId,
+                   const gfx::Rect& aLeftEyeRect,
+                   const gfx::Rect& aRightEyeRect);
   bool IsPresenting();
 
- protected:
+ private:
   VRManager();
   ~VRManager();
-
- private:
   void Destroy();
-  void Init();
   void StartTasks();
   void StopTasks();
   static void TaskTimerCallback(nsITimer* aTimer, void* aClosure);
@@ -85,35 +78,89 @@ class VRManager {
   void Run10msTasks();
   void Run100msTasks();
   uint32_t GetOptimalTaskInterval();
+  void PullState(const std::function<bool()>& aWaitCondition = nullptr);
+  void PushState(const bool aNotifyCond = false);
+  static uint32_t AllocateDisplayID();
 
   void DispatchVRDisplayInfoUpdate();
   void UpdateRequestedDevices();
   void EnumerateVRDisplays();
   void CheckForInactiveTimeout();
+#if !defined(MOZ_WIDGET_ANDROID)
+  void CheckForPuppetCompletion();
+#endif
+  void CheckForShutdown();
+  void CheckWatchDog();
+  void ExpireNavigationTransition();
+  void OpenShmem();
+  void CloseShmem();
+  void UpdateHaptics(double aDeltaTime);
+  void ClearHapticSlot(size_t aSlot);
+  void StartFrame();
+  void ShutdownSubmitThread();
+  void StartPresentation();
+  void StopPresentation();
+  void CancelCurrentSubmitTask();
 
+  void SubmitFrameInternal(const layers::SurfaceDescriptor& aTexture,
+                           uint64_t aFrameId, const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect);
+  bool SubmitFrame(const layers::SurfaceDescriptor& aTexture, uint64_t aFrameId,
+                   const gfx::Rect& aLeftEyeRect,
+                   const gfx::Rect& aRightEyeRect);
+
+  Atomic<VRManagerState> mState;
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
+#if !defined(MOZ_WIDGET_ANDROID)
+  VRManagerParentSet mManagerParentsWaitingForPuppetReset;
+  RefPtr<VRManagerParent> mManagerParentRunningPuppet;
+#endif
+  // Weak reference to mLayers entries are cleared in
+  // VRLayerParent destructor
+  nsTArray<VRLayerParent*> mLayers;
 
-  typedef nsTArray<RefPtr<VRSystemManager>> VRSystemManagerArray;
-  VRSystemManagerArray mManagers;
-  nsTArray<uint32_t> mVRDisplayIDs;
-  nsTArray<uint32_t> mVRControllerIDs;
-
-  Atomic<bool> mInitialized;
-
-  TimeStamp mLastControllerEnumerationTime;
   TimeStamp mLastDisplayEnumerationTime;
   TimeStamp mLastActiveTime;
   TimeStamp mLastTickTime;
+  TimeStamp mEarliestRestartTime;
+  TimeStamp mVRNavigationTransitionEnd;
+  TimeStamp mLastFrameStart[kVRMaxLatencyFrames];
   double mAccumulator100ms;
-  RefPtr<VRSystemManagerPuppet> mPuppetManager;
-  RefPtr<VRSystemManagerExternal> mExternalManager;
   bool mVRDisplaysRequested;
   bool mVRDisplaysRequestedNonFocus;
   bool mVRControllersRequested;
-  bool mVRServiceStarted;
+  bool mFrameStarted;
+  volatile VRExternalShmem* mExternalShmem;
   uint32_t mTaskInterval;
   RefPtr<nsITimer> mTaskTimer;
+  mozilla::Monitor mCurrentSubmitTaskMonitor;
+  RefPtr<CancelableRunnable> mCurrentSubmitTask;
+  uint64_t mLastSubmittedFrameId;
+  uint64_t mLastStartedFrame;
+  bool mEnumerationCompleted;
+#if defined(XP_MACOSX)
+  int mShmemFD;
+#elif defined(XP_WIN)
+  base::ProcessHandle mShmemFile;
+  HANDLE mMutex;
+#endif
+#if !defined(MOZ_WIDGET_ANDROID)
+  bool mVRProcessEnabled;
+  RefPtr<VRServiceHost> mServiceHost;
+#endif
+
+  static Atomic<uint32_t> sDisplayBase;
+  RefPtr<VRThread> mSubmitThread;
+  VRTelemetry mTelemetry;
+  nsTArray<UniquePtr<VRManagerPromise>> mHapticPromises;
+  // Duration of haptic pulse time remaining (milliseconds)
+  double mHapticPulseRemaining[kVRHapticsMaxCount];
+
+  VRDisplayInfo mDisplayInfo;
+  VRDisplayInfo mLastUpdateDisplayInfo;
+  VRBrowserState mBrowserState;
+  VRHMDSensorState mLastSensorState;
 };
 
 }  // namespace gfx
