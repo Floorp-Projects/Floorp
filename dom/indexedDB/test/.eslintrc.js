@@ -10,7 +10,6 @@ module.exports = {
     "mozilla"
   ],
   "rules": {
-    "brace-style": "off",
     "no-shadow": "off",
   }
 };

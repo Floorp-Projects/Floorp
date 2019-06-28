@@ -28,14 +28,4 @@ module.exports = {
     "Windows": false,
     "WipeServer": false,
   },
-  // TPS test files are also hackily parsed by python's JSON parser,
-  // so trailing commas aren't valid.
-  "overrides": [{
-    "files": [
-      "test_*.js",
-    ],
-    "rules": {
-      "comma-dangle": "off",
-    }
-  }]
 };

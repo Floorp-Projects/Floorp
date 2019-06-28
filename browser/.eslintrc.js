@@ -19,7 +19,6 @@ module.exports = {
     // Disallow adding to native types
     "no-extend-native": "error",
 
-    "no-mixed-spaces-and-tabs": "error",
     "no-shadow": "error",
 
     "mozilla/no-task": "error",
