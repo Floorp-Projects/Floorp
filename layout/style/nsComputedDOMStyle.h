@@ -201,8 +201,9 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void AppendGridLineNames(nsDOMCSSValueList* aValueList,
                            const nsTArray<RefPtr<nsAtom>>& aLineNames1,
                            const nsTArray<RefPtr<nsAtom>>& aLineNames2);
-  already_AddRefed<CSSValue> GetGridTrackSize(const nsStyleCoord& aMinSize,
-                                              const nsStyleCoord& aMaxSize);
+  already_AddRefed<nsROCSSPrimitiveValue> GetGridTrackSize(const mozilla::StyleTrackSize&);
+  already_AddRefed<nsROCSSPrimitiveValue> GetGridTrackBreadth(const mozilla::StyleTrackBreadth&);
+  void SetValueToTrackBreadth(nsROCSSPrimitiveValue*, const mozilla::StyleTrackBreadth&);
   already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
       const nsStyleGridTemplate& aTrackList,
       const mozilla::ComputedGridTrackInfo* aTrackInfo);
