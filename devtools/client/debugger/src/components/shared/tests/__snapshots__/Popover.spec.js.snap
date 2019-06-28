@@ -7,9 +7,14 @@ exports[`Popover mount popover 1`] = `
       "getBoundingClientRect": [Function],
     }
   }
+  mouseout={[Function]}
   onKeyDown={[MockFunction]}
   onMouseLeave={[MockFunction]}
-  onPopoverCoords={[Function]}
+  target={
+    Object {
+      "getBoundingClientRect": [Function],
+    }
+  }
   targetPosition={
     Object {
       "bottom": 0,
@@ -29,14 +34,14 @@ exports[`Popover mount popover 1`] = `
     style={
       Object {
         "left": 500,
-        "top": 250,
+        "top": -50,
       }
     }
   >
     <BracketArrow
       left={-4}
       orientation="left"
-      top={-202}
+      top={98}
     >
       <div
         className="bracket-arrow left"
@@ -44,7 +49,7 @@ exports[`Popover mount popover 1`] = `
           Object {
             "bottom": undefined,
             "left": -4,
-            "top": -202,
+            "top": 98,
           }
         }
       />
@@ -52,7 +57,91 @@ exports[`Popover mount popover 1`] = `
     <div
       className="gap"
       key="gap"
-    />
+    >
+      <SmartGap
+        coords={
+          Object {
+            "left": 500,
+            "orientation": "right",
+            "targetMid": Object {
+              "x": -14,
+              "y": 98,
+            },
+            "top": -50,
+          }
+        }
+        gapHeight={0}
+        offset={0}
+        preview={
+          <div
+            class="popover orientation-right"
+            style="top: -50px; left: 500px;"
+          >
+            <div
+              class="bracket-arrow left"
+              style="left: -4px; top: 98px;"
+            />
+            <div
+              class="gap"
+            >
+              <svg
+                style="height: 0px; width: 480px; position: absolute; margin-left: -100px;"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polygon
+                  fill="transparent"
+                  points="0,300,100,0,100,0,0,400,100,400,100,300"
+                />
+              </svg>
+            </div>
+            <h1>
+              Poppy!
+            </h1>
+          </div>
+        }
+        token={
+          Object {
+            "getBoundingClientRect": [Function],
+          }
+        }
+        type="popover"
+      >
+        <svg
+          style={
+            Object {
+              "height": 0,
+              "marginLeft": -100,
+              "marginTop": undefined,
+              "position": "absolute",
+              "width": 480,
+            }
+          }
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <polygon
+            fill="transparent"
+            points={
+              Array [
+                0,
+                300,
+                100,
+                0,
+                100,
+                0,
+                0,
+                400,
+                100,
+                400,
+                100,
+                300,
+              ]
+            }
+          />
+        </svg>
+      </SmartGap>
+    </div>
     <h1>
       Poppy!
     </h1>
@@ -67,9 +156,14 @@ exports[`Popover mount tooltip 1`] = `
       "getBoundingClientRect": [Function],
     }
   }
+  mouseout={[Function]}
   onKeyDown={[MockFunction]}
   onMouseLeave={[MockFunction]}
-  onPopoverCoords={[Function]}
+  target={
+    Object {
+      "getBoundingClientRect": [Function],
+    }
+  }
   targetPosition={
     Object {
       "bottom": 0,
@@ -85,7 +179,7 @@ exports[`Popover mount tooltip 1`] = `
   type="tooltip"
 >
   <div
-    className="tooltip"
+    className="tooltip orientation-down"
     style={
       Object {
         "left": -8,
@@ -96,7 +190,83 @@ exports[`Popover mount tooltip 1`] = `
     <div
       className="gap"
       key="gap"
-    />
+    >
+      <SmartGap
+        coords={
+          Object {
+            "left": -8,
+            "orientation": "down",
+            "targetMid": Object {
+              "x": 0,
+              "y": 0,
+            },
+            "top": 0,
+          }
+        }
+        gapHeight={0}
+        offset={0}
+        preview={
+          <div
+            class="tooltip orientation-down"
+            style="top: 0px; left: -8px;"
+          >
+            <div
+              class="gap"
+            >
+              <svg
+                style="height: -250px; width: 100px; position: absolute; margin-top: -100px;"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polygon
+                  fill="transparent"
+                  points="0,-250,0,-250,28,100,128,100"
+                />
+              </svg>
+            </div>
+            <h1>
+              Toolie!
+            </h1>
+          </div>
+        }
+        token={
+          Object {
+            "getBoundingClientRect": [Function],
+          }
+        }
+        type="tooltip"
+      >
+        <svg
+          style={
+            Object {
+              "height": -250,
+              "marginLeft": undefined,
+              "marginTop": -100,
+              "position": "absolute",
+              "width": 100,
+            }
+          }
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <polygon
+            fill="transparent"
+            points={
+              Array [
+                0,
+                -250,
+                0,
+                -250,
+                28,
+                100,
+                128,
+                100,
+              ]
+            }
+          />
+        </svg>
+      </SmartGap>
+    </div>
     <h1>
       Toolie!
     </h1>
@@ -105,23 +275,128 @@ exports[`Popover mount tooltip 1`] = `
 `;
 
 exports[`Popover render (tooltip) 1`] = `
-<div
-  className="tooltip"
-  style={
+<Popover
+  editorRef={
     Object {
-      "left": 0,
-      "top": 0,
+      "getBoundingClientRect": [Function],
     }
   }
+  mouseout={[Function]}
+  onKeyDown={[MockFunction]}
+  onMouseLeave={[MockFunction]}
+  target={
+    Object {
+      "getBoundingClientRect": [Function],
+    }
+  }
+  targetPosition={
+    Object {
+      "bottom": 0,
+      "height": 300,
+      "left": 200,
+      "right": 0,
+      "top": 50,
+      "width": 300,
+      "x": 100,
+      "y": 200,
+    }
+  }
+  type="tooltip"
 >
   <div
-    className="gap"
-    key="gap"
-  />
-  <h1>
-    Toolie!
-  </h1>
-</div>
+    className="tooltip orientation-down"
+    style={
+      Object {
+        "left": -8,
+        "top": 0,
+      }
+    }
+  >
+    <div
+      className="gap"
+      key="gap"
+    >
+      <SmartGap
+        coords={
+          Object {
+            "left": -8,
+            "orientation": "down",
+            "targetMid": Object {
+              "x": 0,
+              "y": 0,
+            },
+            "top": 0,
+          }
+        }
+        gapHeight={0}
+        offset={0}
+        preview={
+          <div
+            class="tooltip orientation-down"
+            style="top: 0px; left: -8px;"
+          >
+            <div
+              class="gap"
+            >
+              <svg
+                style="height: -250px; width: 100px; position: absolute; margin-top: -100px;"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polygon
+                  fill="transparent"
+                  points="0,-250,0,-250,28,100,128,100"
+                />
+              </svg>
+            </div>
+            <h1>
+              Toolie!
+            </h1>
+          </div>
+        }
+        token={
+          Object {
+            "getBoundingClientRect": [Function],
+          }
+        }
+        type="tooltip"
+      >
+        <svg
+          style={
+            Object {
+              "height": -250,
+              "marginLeft": undefined,
+              "marginTop": -100,
+              "position": "absolute",
+              "width": 100,
+            }
+          }
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <polygon
+            fill="transparent"
+            points={
+              Array [
+                0,
+                -250,
+                0,
+                -250,
+                28,
+                100,
+                128,
+                100,
+              ]
+            }
+          />
+        </svg>
+      </SmartGap>
+    </div>
+    <h1>
+      Toolie!
+    </h1>
+  </div>
+</Popover>
 `;
 
 exports[`Popover render 1`] = `
@@ -131,9 +406,14 @@ exports[`Popover render 1`] = `
       "getBoundingClientRect": [Function],
     }
   }
+  mouseout={[Function]}
   onKeyDown={[MockFunction]}
   onMouseLeave={[MockFunction]}
-  onPopoverCoords={[Function]}
+  target={
+    Object {
+      "getBoundingClientRect": [Function],
+    }
+  }
   targetPosition={
     Object {
       "bottom": 0,
@@ -153,14 +433,14 @@ exports[`Popover render 1`] = `
     style={
       Object {
         "left": 500,
-        "top": 250,
+        "top": -50,
       }
     }
   >
     <BracketArrow
       left={-4}
       orientation="left"
-      top={-202}
+      top={98}
     >
       <div
         className="bracket-arrow left"
@@ -168,7 +448,7 @@ exports[`Popover render 1`] = `
           Object {
             "bottom": undefined,
             "left": -4,
-            "top": -202,
+            "top": 98,
           }
         }
       />
@@ -176,7 +456,91 @@ exports[`Popover render 1`] = `
     <div
       className="gap"
       key="gap"
-    />
+    >
+      <SmartGap
+        coords={
+          Object {
+            "left": 500,
+            "orientation": "right",
+            "targetMid": Object {
+              "x": -14,
+              "y": 98,
+            },
+            "top": -50,
+          }
+        }
+        gapHeight={0}
+        offset={0}
+        preview={
+          <div
+            class="popover orientation-right"
+            style="top: -50px; left: 500px;"
+          >
+            <div
+              class="bracket-arrow left"
+              style="left: -4px; top: 98px;"
+            />
+            <div
+              class="gap"
+            >
+              <svg
+                style="height: 0px; width: 480px; position: absolute; margin-left: -100px;"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polygon
+                  fill="transparent"
+                  points="0,300,100,0,100,0,0,400,100,400,100,300"
+                />
+              </svg>
+            </div>
+            <h1>
+              Poppy!
+            </h1>
+          </div>
+        }
+        token={
+          Object {
+            "getBoundingClientRect": [Function],
+          }
+        }
+        type="popover"
+      >
+        <svg
+          style={
+            Object {
+              "height": 0,
+              "marginLeft": -100,
+              "marginTop": undefined,
+              "position": "absolute",
+              "width": 480,
+            }
+          }
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <polygon
+            fill="transparent"
+            points={
+              Array [
+                0,
+                300,
+                100,
+                0,
+                100,
+                0,
+                0,
+                400,
+                100,
+                400,
+                100,
+                300,
+              ]
+            }
+          />
+        </svg>
+      </SmartGap>
+    </div>
     <h1>
       Poppy!
     </h1>

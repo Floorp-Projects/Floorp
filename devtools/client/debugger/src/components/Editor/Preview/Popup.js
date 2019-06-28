@@ -6,7 +6,6 @@
 
 import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
-import { isTesting } from "devtools-environment";
 
 import Reps from "devtools-reps";
 const {
@@ -30,7 +29,6 @@ import { createObjectClient } from "../../../client/firefox";
 
 import "./Popup.css";
 
-import type { Coords } from "../../shared/Popover";
 import type { ThreadContext } from "../../../types";
 import type { Preview } from "../../../reducers/types";
 
@@ -48,32 +46,20 @@ type Props = {
   clearPreview: typeof actions.clearPreview,
 };
 
-type State = {
-  top: number,
-};
-
-export class Popup extends Component<Props, State> {
+export class Popup extends Component<Props> {
   marker: any;
   pos: any;
   popover: ?React$ElementRef<typeof Popover>;
-  timerId: ?IntervalID;
 
   constructor(props: Props) {
     super(props);
-    this.state = {
-      top: 0,
-    };
   }
 
   componentDidMount() {
-    this.startTimer();
     this.addHighlightToToken();
   }
 
   componentWillUnmount() {
-    if (this.timerId) {
-      clearInterval(this.timerId);
-    }
     this.removeHighlightFromToken();
   }
 
@@ -93,39 +79,15 @@ export class Popup extends Component<Props, State> {
     }
   }
 
-  startTimer() {
-    this.timerId = setInterval(this.onInterval, 300);
-  }
-
-  onInterval = () => {
-    const { preview, clearPreview, cx } = this.props;
-
-    // Don't clear the current preview if mouse is hovered on
-    // the current preview's element (target) or the popup element
-    // Note, we disregard while testing because it is impossible to hover
-    const currentTarget = preview.target;
-    if (
-      isTesting() ||
-      currentTarget.matches(":hover") ||
-      !this.popover ||
-      (this.popover.$popover && this.popover.$popover.matches(":hover")) ||
-      (this.popover.$tooltip && this.popover.$tooltip.matches(":hover"))
-    ) {
-      return;
-    }
-
-    // Clear the interval and the preview if it is not hovered
-    // on the current preview's element or the popup element
-    clearInterval(this.timerId);
-    return clearPreview(cx);
-  };
-
   calculateMaxHeight = () => {
     const { editorRef } = this.props;
     if (!editorRef) {
       return "auto";
     }
-    return editorRef.getBoundingClientRect().height - this.state.top;
+    return (
+      editorRef.getBoundingClientRect().height +
+      editorRef.getBoundingClientRect().top
+    );
   };
 
   renderFunctionPreview() {
@@ -226,8 +188,9 @@ export class Popup extends Component<Props, State> {
     return "popover";
   }
 
-  onPopoverCoords = (coords: Coords) => {
-    this.setState({ top: coords.top });
+  onMouseOut = () => {
+    const { clearPreview, cx } = this.props;
+    clearPreview(cx);
   };
 
   render() {
@@ -245,9 +208,9 @@ export class Popup extends Component<Props, State> {
       <Popover
         targetPosition={cursorPos}
         type={type}
-        onPopoverCoords={this.onPopoverCoords}
         editorRef={editorRef}
-        ref={a => (this.popover = a)}
+        target={this.props.preview.target}
+        mouseout={this.onMouseOut}
       >
         {this.renderPreview()}
       </Popover>

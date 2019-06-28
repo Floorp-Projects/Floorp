@@ -9,23 +9,17 @@
   --left-offset: -55px;
 }
 
-.popover {
-  position: fixed;
-  z-index: 100;
-}
-
 .popover.orientation-right {
   display: flex;
   flex-direction: row;
 }
 
 .popover.orientation-right .gap {
-  padding-left: var(--gap-size);
+  width: var(--gap-size);
 }
 
 .popover:not(.orientation-right) .gap {
   height: var(--gap-size);
-  padding-top: var(--gap-size);
   margin-left: var(--left-offset);
 }
 
