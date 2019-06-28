@@ -17,7 +17,6 @@ ChromeUtils.defineModuleGetter(this, "Blocklist",
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
-const FLASH_MIME_TYPE        = "application/x-shockwave-flash";
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.plugins";
@@ -36,7 +35,6 @@ var PluginProvider = {
 
   startup() {
     Services.obs.addObserver(this, LIST_UPDATED_TOPIC);
-    Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
   },
 
   /**
@@ -45,33 +43,11 @@ var PluginProvider = {
    */
   shutdown() {
     this.plugins = null;
-    Services.obs.removeObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
     Services.obs.removeObserver(this, LIST_UPDATED_TOPIC);
   },
 
   async observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-    case AddonManager.OPTIONS_NOTIFICATION_DISPLAYED:
-      let plugin = await this.getAddonByID(aData);
-      if (!plugin)
-        return;
-
-      let document = aSubject.getElementById("addon-options").contentDocument;
-
-      let libLabel = document.getElementById("pluginLibraries");
-      libLabel.textContent = plugin.pluginLibraries.join(", ");
-
-      let typeLabel = document.getElementById("pluginMimeTypes"), types = [];
-      for (let type of plugin.pluginMimeTypes) {
-        let extras = [type.description.trim(), type.suffixes].
-                     filter(x => x).join(": ");
-        types.push(type.type + (extras ? " (" + extras + ")" : ""));
-      }
-      typeLabel.textContent = types.join(",\n");
-      let showProtectedModePref = canDisableFlashProtectedMode(plugin);
-      document.getElementById("pluginEnableProtectedMode")
-        .setAttribute("collapsed", showProtectedModePref ? "" : "true");
-      break;
     case LIST_UPDATED_TOPIC:
       if (this.plugins)
         this.updatePluginList();
@@ -232,19 +208,6 @@ var PluginProvider = {
       AddonManagerPrivate.callAddonListeners("onUninstalled", plugin);
   },
 };
-
-function isFlashPlugin(aPlugin) {
-  for (let type of aPlugin.pluginMimeTypes) {
-    if (type.type == FLASH_MIME_TYPE) {
-      return true;
-    }
-  }
-  return false;
-}
-// Protected mode is win32-only, not win64
-function canDisableFlashProtectedMode(aPlugin) {
-  return isFlashPlugin(aPlugin) && Services.appinfo.XPCOMABI == "x86-msvc";
-}
 
 const wrapperMap = new WeakMap();
 let pluginFor = wrapper => wrapperMap.get(wrapper);
@@ -480,7 +443,7 @@ PluginWrapper.prototype = {
   },
 
   get optionsURL() {
-    return "chrome://mozapps/content/extensions/pluginPrefs.xul";
+    return "chrome://mozapps/content/extensions/pluginPrefs.xul#id=" + encodeURIComponent(this.id);
   },
 
   get updateDate() {
