@@ -2993,12 +2993,10 @@ void EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
       }
     }
 
-    RefPtr<nsRange> newRange;
-    nsresult rv = nsRange::CreateRange(
-        range.mStartContainer, range.mStartOffset, range.mEndContainer,
-        range.mEndOffset, getter_AddRefs(newRange));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aError.Throw(rv);
+    RefPtr<nsRange> newRange =
+        nsRange::Create(range.mStartContainer, range.mStartOffset,
+                        range.mEndContainer, range.mEndOffset, aError);
+    if (NS_WARN_IF(aError.Failed())) {
       return;
     }
     range.mSelection->AddRange(*newRange, aError);
@@ -3159,11 +3157,13 @@ nsresult EditorBase::DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
       range.mEndOffset += firstNodeLength;
     }
 
-    RefPtr<nsRange> newRange;
-    nsresult rv = nsRange::CreateRange(
-        range.mStartContainer, range.mStartOffset, range.mEndContainer,
-        range.mEndOffset, getter_AddRefs(newRange));
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<nsRange> newRange =
+        nsRange::Create(range.mStartContainer, range.mStartOffset,
+                        range.mEndContainer, range.mEndOffset, IgnoreErrors());
+    if (NS_WARN_IF(!newRange)) {
+      return NS_ERROR_FAILURE;
+    }
+
     ErrorResult err;
     range.mSelection->AddRange(*newRange, err);
     if (NS_WARN_IF(err.Failed())) {
@@ -4185,8 +4185,13 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
 nsresult EditorBase::CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
                                  nsINode* aEndContainer, int32_t aEndOffset,
                                  nsRange** aRange) {
-  return nsRange::CreateRange(aStartContainer, aStartOffset, aEndContainer,
-                              aEndOffset, aRange);
+  RefPtr<nsRange> range = nsRange::Create(
+      aStartContainer, aStartOffset, aEndContainer, aEndOffset, IgnoreErrors());
+  if (NS_WARN_IF(!range)) {
+    return NS_ERROR_FAILURE;
+  }
+  range.forget(aRange);
+  return NS_OK;
 }
 
 nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {

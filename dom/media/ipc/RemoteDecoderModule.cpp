@@ -146,8 +146,11 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
   // thread during this single dispatch.
   RefPtr<Runnable> task =
       NS_NewRunnableFunction("RemoteDecoderModule::CreateVideoDecoder", [&]() {
-        result = child->InitIPDL(aParams.VideoConfig(), aParams.mRate.mValue,
-                                 aParams.mOptions);
+        result = child->InitIPDL(
+            aParams.VideoConfig(), aParams.mRate.mValue, aParams.mOptions,
+            aParams.mKnowsCompositor
+                ? &aParams.mKnowsCompositor->GetTextureFactoryIdentifier()
+                : nullptr);
         if (NS_FAILED(result)) {
           // Release RemoteVideoDecoderChild here, while we're on
           // manager thread.  Don't just let the RefPtr go out of scope.

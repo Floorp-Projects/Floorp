@@ -1170,7 +1170,7 @@ void Gecko_CopyImageValueFrom(nsStyleImage* aImage,
 
 void Gecko_InitializeImageCropRect(nsStyleImage* aImage) {
   MOZ_ASSERT(aImage);
-  aImage->SetCropRect(MakeUnique<nsStyleSides>());
+  aImage->SetCropRect(MakeUnique<nsStyleImage::CropRect>());
 }
 
 void Gecko_SetCursorArrayLength(nsStyleUI* aStyleUI, size_t aLen) {
@@ -1270,8 +1270,12 @@ void Gecko_SetStyleGridTemplate(UniquePtr<nsStyleGridTemplate>* aGridTemplate,
 nsStyleGridTemplate* Gecko_CreateStyleGridTemplate(uint32_t aTrackSizes,
                                                    uint32_t aNameSize) {
   nsStyleGridTemplate* result = new nsStyleGridTemplate;
-  result->mMinTrackSizingFunctions.SetLength(aTrackSizes);
-  result->mMaxTrackSizingFunctions.SetLength(aTrackSizes);
+  result->mTrackSizingFunctions.SetCapacity(aTrackSizes);
+  auto auto_ = StyleTrackSize::Breadth(StyleTrackBreadth::Auto());
+  for (auto i : IntegerRange(aTrackSizes)) {
+    Unused << i;
+    result->mTrackSizingFunctions.AppendElement(auto_);
+  }
   result->mLineNameLists.SetLength(aNameSize);
   return result;
 }
@@ -1469,23 +1473,6 @@ PropertyValuePair* Gecko_AppendPropertyValuePair(
   return aProperties->AppendElement(PropertyValuePair{aProperty});
 }
 
-void Gecko_ResetStyleCoord(nsStyleUnit* aUnit, nsStyleUnion* aValue) {
-  nsStyleCoord::Reset(*aUnit, *aValue);
-}
-
-void Gecko_SetStyleCoordCalcValue(nsStyleUnit* aUnit, nsStyleUnion* aValue,
-                                  nsStyleCoord::CalcValue aCalc) {
-  // Calc units should be cleaned up first
-  MOZ_ASSERT(*aUnit != nsStyleUnit::eStyleUnit_Calc);
-  nsStyleCoord::Calc* calcRef = new nsStyleCoord::Calc();
-  calcRef->mLength = aCalc.mLength;
-  calcRef->mPercent = aCalc.mPercent;
-  calcRef->mHasPercent = aCalc.mHasPercent;
-  *aUnit = nsStyleUnit::eStyleUnit_Calc;
-  aValue->mPointer = calcRef;
-  calcRef->AddRef();
-}
-
 void Gecko_CopyShapeSourceFrom(StyleShapeSource* aDst,
                                const StyleShapeSource* aSrc) {
   MOZ_ASSERT(aDst);
@@ -1604,8 +1591,6 @@ void Gecko_Snapshot_DebugListAttributes(const ServoElementSnapshot* aSnapshot,
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* aFont, nsAtom* aAtom) {
   aFont->mLanguage = dont_AddRef(aAtom);

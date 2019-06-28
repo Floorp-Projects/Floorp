@@ -23,6 +23,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/RangeUtils.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 
@@ -2813,9 +2814,9 @@ bool Selection::ContainsNode(nsINode& aNode, bool aAllowPartial,
   // so we have to check all intersecting ranges.
   for (uint32_t i = 0; i < overlappingRanges.Length(); i++) {
     bool nodeStartsBeforeRange, nodeEndsAfterRange;
-    if (NS_SUCCEEDED(nsRange::CompareNodeToRange(&aNode, overlappingRanges[i],
-                                                 &nodeStartsBeforeRange,
-                                                 &nodeEndsAfterRange))) {
+    if (NS_SUCCEEDED(RangeUtils::CompareNodeToRange(
+            &aNode, overlappingRanges[i], &nodeStartsBeforeRange,
+            &nodeEndsAfterRange))) {
       if (!nodeStartsBeforeRange && !nodeEndsAfterRange) {
         return true;
       }
@@ -3466,18 +3467,19 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   // const (and some other cost in nsRange::DoSetRange()).
   RefPtr<nsRange> newRange = std::move(mCachedRange);
 
-  nsresult rv = NS_OK;
-  if (newRange) {
-    rv = newRange->SetStartAndEnd(aStartRef, aEndRef);
-  } else {
-    rv = nsRange::CreateRange(aStartRef, aEndRef, getter_AddRefs(newRange));
-  }
-
-  // nsRange::SetStartAndEnd() and nsRange::CreateRange() returns
+  // nsRange::SetStartAndEnd() and nsRange::Create() returns
   // IndexSizeError if any offset is out of bounds.
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
+  if (newRange) {
+    nsresult rv = newRange->SetStartAndEnd(aStartRef, aEndRef);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
+  } else {
+    newRange = nsRange::Create(aStartRef, aEndRef, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   RemoveAllRanges(aRv);

@@ -660,7 +660,8 @@ class EditorDOMPointBase final {
    * This operator should be used if API of other modules take RawRangeBoundary,
    * e.g., methods of Selection and nsRange.
    */
-  operator const RawRangeBoundary() const {
+  operator const RawRangeBoundary() const { return ToRawRangeBoundary(); }
+  const RawRangeBoundary ToRawRangeBoundary() const {
     if (!IsSet() || NS_WARN_IF(!mIsChildInitialized && !mOffset.isSome())) {
       return RawRangeBoundary();
     }

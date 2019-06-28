@@ -27,9 +27,9 @@ mozilla::ipc::IPCResult ProfilerChild::RecvStart(
     filterArray.AppendElement(params.filters()[i].get());
   }
 
-  profiler_start(params.entries(), params.interval(), params.features(),
-                 filterArray.Elements(), filterArray.Length(),
-                 params.duration());
+  profiler_start(PowerOfTwo32(params.entries()), params.interval(),
+                 params.features(), filterArray.Elements(),
+                 filterArray.Length(), params.duration());
 
   return IPC_OK();
 }
@@ -41,7 +41,7 @@ mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
     filterArray.AppendElement(params.filters()[i].get());
   }
 
-  profiler_ensure_started(params.entries(), params.interval(),
+  profiler_ensure_started(PowerOfTwo32(params.entries()), params.interval(),
                           params.features(), filterArray.Elements(),
                           filterArray.Length(), params.duration());
 

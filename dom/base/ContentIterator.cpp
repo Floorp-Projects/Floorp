@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/RangeUtils.h"
 
 #include "nsContentUtils.h"
 #include "nsElementTable.h"
@@ -117,8 +118,8 @@ nsresult ContentIteratorBase::Init(nsINode* aStartContainer,
                                    uint32_t aEndOffset) {
   mIsDone = false;
 
-  if (NS_WARN_IF(!nsRange::IsValidPoints(aStartContainer, aStartOffset,
-                                         aEndContainer, aEndOffset))) {
+  if (NS_WARN_IF(!RangeUtils::IsValidPoints(aStartContainer, aStartOffset,
+                                            aEndContainer, aEndOffset))) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -130,8 +131,7 @@ nsresult ContentIteratorBase::Init(const RawRangeBoundary& aStart,
                                    const RawRangeBoundary& aEnd) {
   mIsDone = false;
 
-  if (NS_WARN_IF(!nsRange::IsValidPoints(aStart.Container(), aStart.Offset(),
-                                         aEnd.Container(), aEnd.Offset()))) {
+  if (NS_WARN_IF(!RangeUtils::IsValidPoints(aStart, aEnd))) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -643,19 +643,18 @@ nsresult ContentSubtreeIterator::Init(nsINode* aStartContainer,
               RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
-nsresult ContentSubtreeIterator::Init(const RawRangeBoundary& aStart,
-                                      const RawRangeBoundary& aEnd) {
+nsresult ContentSubtreeIterator::Init(const RawRangeBoundary& aStartBoundary,
+                                      const RawRangeBoundary& aEndBoundary) {
   mIsDone = false;
 
-  RefPtr<nsRange> range;
-  nsresult rv = nsRange::CreateRange(aStart, aEnd, getter_AddRefs(range));
-  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
-      NS_WARN_IF(!range->IsPositioned())) {
+  RefPtr<nsRange> range =
+      nsRange::Create(aStartBoundary, aEndBoundary, IgnoreErrors());
+  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(range->StartRef() != aStart) ||
-      NS_WARN_IF(range->EndRef() != aEnd)) {
+  if (NS_WARN_IF(range->StartRef() != aStartBoundary) ||
+      NS_WARN_IF(range->EndRef() != aEndBoundary)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -736,8 +735,8 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   // we have a range that does not fully contain any node.
 
   bool nodeBefore, nodeAfter;
-  MOZ_ALWAYS_SUCCEEDS(nsRange::CompareNodeToRange(firstCandidate, mRange,
-                                                  &nodeBefore, &nodeAfter));
+  MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(firstCandidate, mRange,
+                                                     &nodeBefore, &nodeAfter));
 
   if (nodeBefore || nodeAfter) {
     MakeEmpty();
@@ -781,8 +780,8 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   // confirm that this last possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
 
-  MOZ_ALWAYS_SUCCEEDS(nsRange::CompareNodeToRange(lastCandidate, mRange,
-                                                  &nodeBefore, &nodeAfter));
+  MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(lastCandidate, mRange,
+                                                     &nodeBefore, &nodeAfter));
 
   if (nodeBefore || nodeAfter) {
     MakeEmpty();
@@ -901,7 +900,7 @@ nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(nsINode* aNode) {
   // sanity check: aNode is itself in the range
   bool nodeBefore, nodeAfter;
   nsresult res =
-      nsRange::CompareNodeToRange(aNode, mRange, &nodeBefore, &nodeAfter);
+      RangeUtils::CompareNodeToRange(aNode, mRange, &nodeBefore, &nodeAfter);
   NS_ASSERTION(NS_SUCCEEDED(res) && !nodeBefore && !nodeAfter,
                "aNode isn't in mRange, or something else weird happened");
   if (NS_FAILED(res) || nodeBefore || nodeAfter) {
@@ -919,8 +918,8 @@ nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(nsINode* aNode) {
     if (!parent || !parent->GetParentNode()) {
       return content;
     }
-    MOZ_ALWAYS_SUCCEEDS(
-        nsRange::CompareNodeToRange(parent, mRange, &nodeBefore, &nodeAfter));
+    MOZ_ALWAYS_SUCCEEDS(RangeUtils::CompareNodeToRange(
+        parent, mRange, &nodeBefore, &nodeAfter));
 
     if (nodeBefore || nodeAfter) {
       return content;

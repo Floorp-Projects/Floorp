@@ -16,15 +16,6 @@ html {
 
 body {
   margin: 0;
-  /**
-   * We had to use `max-width` instead of `width` here because of a bug on Firefox
-   * that causes a horizontal scrollbar when there is a vertical scrollbar on Linux.
-   * This is not a problem on platforms that have a floating scrollbar that doesn't
-   * take additional space, but on platforms that we don't have floating scrollbar,
-   * it takes some space from the body element and causes horizontal scrollbar to appear.
-   * See: https://bugzilla.mozilla.org/show_bug.cgi?id=1400279
-   */
-  max-width: 32em;
 }
 
 .status-display {
