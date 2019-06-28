@@ -52,6 +52,7 @@ let tv = {
         "6d6e6f6d6e6f706e6f7071"
     ),
     result: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "248D6A61D20638B8E5C026930C3E6039A33CE45964F" + "F2167F6ECEDD419DB06C1"
     ),
   },
@@ -77,6 +78,7 @@ let tv = {
     key: util.hex2abv("04952c3fcf497a4d449c41e8730c5d9a"),
     iv: util.hex2abv("53549bf7d5553b727458c1abaf0ba167"),
     data: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "7fa290322ca7a1a04b61a1147ff20fe6" + "6fde58510a1d0289d11c0ddf6f4decfd"
     ),
     result: util.hex2abv("c9a44f6f75e98ddbca7332167f5c45e3"),
@@ -88,9 +90,11 @@ let tv = {
     key: util.hex2abv("7E24067817FAE0D743D6CE1F32539163"),
     iv: util.hex2abv("006CB6DBC0543B59DA48D90B00000001"),
     data: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "000102030405060708090A0B0C0D0E0F" + "101112131415161718191A1B1C1D1E1F"
     ),
     result: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "5104A106168A72D9790D41EE8EDAD3" + "88EB2E1EFC46DA57C8FCE630DF9141BE28"
     ),
   },
@@ -114,6 +118,7 @@ let tv = {
   // <http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf>
   aes_gcm_enc: {
     key: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "feffe9928665731c6d6a8f9467308308" + "feffe9928665731c6d6a8f9467308308"
     ),
     key_jwk: {
@@ -146,6 +151,7 @@ let tv = {
   // <http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf>
   aes_gcm_dec: {
     key: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "feffe9928665731c6d6a8f9467308308" + "feffe9928665731c6d6a8f9467308308"
     ),
     iv: util.hex2abv("cafebabefacedbad"),
@@ -170,6 +176,7 @@ let tv = {
   // <http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-revised-spec.pdf>
   aes_gcm_dec_fail: {
     key: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "feffe9928665731c6d6a8f9467308308" + "feffe9928665731c6d6a8f9467308308"
     ),
     iv: util.hex2abv("cafebabefacedbad"),
@@ -215,6 +222,7 @@ let tv = {
         "676f726974686d2e"
     ),
     result: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "9b09ffa71b942fcb27635fbcd5b0e944" + "bfdc63644f0713938a7f51535c3a35e2"
     ),
   },
@@ -239,9 +247,11 @@ let tv = {
         "204669727374"
     ),
     sig: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "60e431591ee0b67f0d8a26aacbf5b77f" + "8e0bc6213728c5140546040f0ee37f54"
     ),
     sig_fail: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "000000001ee0b67f0d8a26aacbf5b77f" + "8e0bc6213728c5140546040f0ee37f54"
     ),
   },
@@ -659,6 +669,7 @@ let tv = {
     wrapping_key: util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),
     wrapping_iv: util.hex2abv("0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c"),
     wrapped_key: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "9ed0283a9a2b7e4292ebc5135e6342cc" + "8a7f65802a1f6fd41bd3251c4da0c138"
     ),
   },
@@ -677,6 +688,7 @@ let tv = {
       k: "ABEiM0RVZneImaq7zN3u_w",
     },
     wrapped_key: util.hex2abv(
+      // eslint-disable-next-line no-useless-concat
       "64e8c3f9ce0f5ba263e9777905818a2a" + "93c8191e7d6e8ae7"
     ),
   },
