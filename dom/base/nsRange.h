@@ -12,19 +12,17 @@
 #define nsRange_h___
 
 #include "nsCOMPtr.h"
-#include "nsINode.h"
-#include "mozilla/dom/Document.h"
+#include "mozilla/dom/AbstractRange.h"
 #include "nsLayoutUtils.h"
 #include "prmon.h"
 #include "nsStubMutationObserver.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/RangeBoundary.h"
 
 namespace mozilla {
-class ErrorResult;
 namespace dom {
 struct ClientRectsAndTexts;
 class DocGroup;
@@ -36,8 +34,8 @@ class Selection;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsRange final : public nsStubMutationObserver,
-                      public nsWrapperCache,
+class nsRange final : public mozilla::dom::AbstractRange,
+                      public nsStubMutationObserver,
                       // For linking together selection-associated ranges.
                       public mozilla::LinkedListElement<nsRange> {
   typedef mozilla::ErrorResult ErrorResult;
@@ -58,34 +56,14 @@ class nsRange final : public nsStubMutationObserver,
   static nsresult CreateRange(const RawRangeBoundary& aStart,
                               const RawRangeBoundary& aEnd, nsRange** aRange);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsRange)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_IMETHODIMP_(void) DeleteCycleCollectable(void) override;
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+      nsRange, mozilla::dom::AbstractRange)
 
   nsrefcnt GetRefCount() const { return mRefCnt; }
 
   nsINode* GetRoot() const { return mRoot; }
-
-  const RangeBoundary& StartRef() const { return mStart; }
-
-  nsINode* GetStartContainer() const { return mStart.Container(); }
-
-  const RangeBoundary& EndRef() const { return mEnd; }
-
-  nsINode* GetEndContainer() const { return mEnd.Container(); }
-
-  uint32_t StartOffset() const {
-    return static_cast<uint32_t>(mStart.Offset());
-  }
-
-  uint32_t EndOffset() const { return static_cast<uint32_t>(mEnd.Offset()); }
-
-  nsIContent* GetChildAtStartOffset() const {
-    return mStart.GetChildAtOffset();
-  }
-
-  nsIContent* GetChildAtEndOffset() const { return mEnd.GetChildAtOffset(); }
-
-  bool IsPositioned() const { return mIsPositioned; }
 
   /**
    * Return true iff this range is part of a Selection object
@@ -118,7 +96,6 @@ class nsRange final : public nsStubMutationObserver,
    */
   void SetIsGenerated(bool aIsGenerated) { mIsGenerated = aIsGenerated; }
 
-  nsINode* GetCommonAncestor() const;
   void Reset();
 
   /**
@@ -244,10 +221,6 @@ class nsRange final : public nsStubMutationObserver,
   static already_AddRefed<nsRange> Constructor(
       const mozilla::dom::GlobalObject& global, mozilla::ErrorResult& aRv);
 
-  bool Collapsed() const {
-    return mIsPositioned && mStart.Container() == mEnd.Container() &&
-           mStart.Offset() == mEnd.Offset();
-  }
   already_AddRefed<mozilla::dom::DocumentFragment> CreateContextualFragment(
       const nsAString& aString, ErrorResult& aError);
   already_AddRefed<mozilla::dom::DocumentFragment> CloneContents(
@@ -262,11 +235,13 @@ class nsRange final : public nsStubMutationObserver,
   void DeleteContents(ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment> ExtractContents(
       ErrorResult& aErr);
-  nsINode* GetCommonAncestorContainer(ErrorResult& aRv) const;
-  nsINode* GetStartContainer(ErrorResult& aRv) const;
-  uint32_t GetStartOffset(ErrorResult& aRv) const;
-  nsINode* GetEndContainer(ErrorResult& aRv) const;
-  uint32_t GetEndOffset(ErrorResult& aRv) const;
+  nsINode* GetCommonAncestorContainer(ErrorResult& aRv) const {
+    if (!mIsPositioned) {
+      aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+      return nullptr;
+    }
+    return GetCommonAncestor();
+  }
   void InsertNode(nsINode& aNode, ErrorResult& aErr);
   bool IntersectsNode(nsINode& aNode, ErrorResult& aRv);
   bool IsPointInRange(nsINode& aContainer, uint32_t aOffset,
@@ -315,8 +290,8 @@ class nsRange final : public nsStubMutationObserver,
                                   mozilla::ErrorResult& aError,
                                   nsIContent* aContainer);
 
-  nsINode* GetParentObject() const { return mOwner; }
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) final;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) final;
   DocGroup* GetDocGroup() const;
 
  private:
@@ -484,7 +459,6 @@ class nsRange final : public nsStubMutationObserver,
     static bool sIsNested;
   };
 
-  RefPtr<mozilla::dom::Document> mOwner;
   nsCOMPtr<nsINode> mRoot;
   // mRegisteredCommonAncestor is only non-null when the range
   // IsInSelection().  It's kept alive via mStartContainer/mEndContainer,
@@ -499,13 +473,6 @@ class nsRange final : public nsStubMutationObserver,
   // notifications while holding a strong reference to the new child.
   nsIContent* MOZ_NON_OWNING_REF mNextStartRef;
   nsIContent* MOZ_NON_OWNING_REF mNextEndRef;
-
-  RangeBoundary mStart;
-  RangeBoundary mEnd;
-
-  bool mIsPositioned : 1;
-  bool mIsGenerated : 1;
-  bool mCalledByJS : 1;
 };
 
 #endif /* nsRange_h___ */

@@ -332,13 +332,13 @@ nsresult mozInlineSpellStatus::FinishNavigationEvent(
 
   NS_ASSERTION(mAnchorRange, "No anchor for navigation!");
 
-  // get the DOM position of the old caret, the range should be collapsed
-  ErrorResult err;
-  nsCOMPtr<nsINode> oldAnchorNode =
-      mOldNavigationAnchorRange->GetStartContainer(err);
-  if (NS_WARN_IF(err.Failed())) {
-    return err.StealNSResult();
+  if (!mOldNavigationAnchorRange->IsPositioned()) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
+  // get the DOM position of the old caret, the range should be collapsed
+  nsCOMPtr<nsINode> oldAnchorNode =
+      mOldNavigationAnchorRange->GetStartContainer();
   uint32_t oldAnchorOffset = mOldNavigationAnchorRange->StartOffset();
 
   // find the word on the old caret position, this is the one that we MAY need
@@ -356,15 +356,13 @@ nsresult mozInlineSpellStatus::FinishNavigationEvent(
   }
 
   // get the DOM position of the new caret, the range should be collapsed
-  nsCOMPtr<nsINode> newAnchorNode = mAnchorRange->GetStartContainer(err);
-  if (NS_WARN_IF(err.Failed())) {
-    return err.StealNSResult();
-  }
+  nsCOMPtr<nsINode> newAnchorNode = mAnchorRange->GetStartContainer();
   uint32_t newAnchorOffset = mAnchorRange->StartOffset();
 
   // see if the new cursor position is in the word of the old cursor position
   bool isInRange = false;
   if (!mForceNavigationWordCheck) {
+    ErrorResult err;
     isInRange = oldWord->IsPointInRange(
         *newAnchorNode, newAnchorOffset + mNewNavigationPositionOffset, err);
     if (NS_WARN_IF(err.Failed())) {
@@ -395,12 +393,10 @@ nsresult mozInlineSpellStatus::FinishNavigationEvent(
 
 nsresult mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
     mozInlineSpellWordUtil& aWordUtil) {
-  ErrorResult err;
-  nsCOMPtr<nsINode> anchorNode = mAnchorRange->GetStartContainer(err);
-  if (NS_WARN_IF(err.Failed())) {
-    return err.StealNSResult();
+  if (!mAnchorRange->IsPositioned()) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-
+  nsCOMPtr<nsINode> anchorNode = mAnchorRange->GetStartContainer();
   uint32_t anchorOffset = mAnchorRange->StartOffset();
   return aWordUtil.GetRangeForWord(anchorNode,
                                    static_cast<int32_t>(anchorOffset),
