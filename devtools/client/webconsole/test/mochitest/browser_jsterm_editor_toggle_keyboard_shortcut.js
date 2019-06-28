@@ -48,14 +48,3 @@ async function performTest() {
 
   Services.prefs.clearUserPref(EDITOR_PREF);
 }
-
-function toggleLayout(hud) {
-  const isMacOS = Services.appinfo.OS === "Darwin";
-
-  const enabled = isEditorModeEnabled(hud);
-
-  EventUtils.synthesizeKey("b", {
-    [isMacOS ? "metaKey" : "ctrlKey"]: true,
-  });
-  return waitFor(() => isEditorModeEnabled(hud) === !enabled);
-}
