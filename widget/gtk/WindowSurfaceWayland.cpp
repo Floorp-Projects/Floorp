@@ -377,7 +377,7 @@ void WindowBackBuffer::Attach(wl_surface* aSurface) {
 
   wl_surface_attach(aSurface, GetWlBuffer(), 0, 0);
   wl_surface_commit(aSurface);
-  wl_display_flush(GetWaylandDisplay()->GetDisplay());
+  wl_display_flush(WaylandDisplayGetWLDisplay());
   SetAttached();
 }
 
