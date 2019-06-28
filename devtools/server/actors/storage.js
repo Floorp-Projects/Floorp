@@ -751,6 +751,7 @@ StorageActors.createActor({
 
     const mm = this.conn.parentMessageManager;
 
+    // eslint-disable-next-line no-restricted-properties
     this.conn.setupInParent({
       module: "devtools/server/actors/storage",
       setupParent: "setupParentProcessForCookies",
@@ -1877,6 +1878,7 @@ StorageActors.createActor({
 
     const mm = this.conn.parentMessageManager;
 
+    // eslint-disable-next-line no-restricted-properties
     this.conn.setupInParent({
       module: "devtools/server/actors/storage",
       setupParent: "setupParentProcessForIndexedDB",
