@@ -1425,8 +1425,8 @@ fuzzy-if(Android,0-5,0-1656) fuzzy-if(skiaContent,0-1,0-1200) == 512410.html 512
 == 512631-1.html 512631-1-ref.html
 == 513153-1a.html 513153-1-ref.html
 == 513153-1b.html 513153-1-ref.html
-fuzzy-if(webrender&&winWidget,82-82,76-76) fuzzy-if(webrender&&OSX,34-34,138-138) == 513153-2a.html 513153-2-ref.html
-fuzzy-if(webrender&&OSX,34-34,138-138) == 513153-2b.html 513153-2-ref.html
+fuzzy-if(webrender&&winWidget,82-82,76-76) == 513153-2a.html 513153-2-ref.html
+fuzzy-if(webrender&&cocoaWidget,34-34,103-103) == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
 fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul
 == 514917-1.html 514917-1-ref.html
