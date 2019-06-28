@@ -531,8 +531,8 @@ class ContentParent final : public PContentParent,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
-      const IPC::Principal& aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo);
+      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+      nsIReferrerInfo* aReferrerInfo);
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
