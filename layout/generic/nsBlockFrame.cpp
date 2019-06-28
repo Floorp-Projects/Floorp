@@ -7413,7 +7413,7 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
                                      LogicalSize& aFinalSize,
                                      nscoord aConsumed) {
   WritingMode wm = aReflowInput.GetWritingMode();
-  // Figure out how much of the computed height should be
+  // Figure out how much of the computed block-size should be
   // applied to this frame.
   const nscoord computedBSizeLeftOver =
       GetEffectiveComputedBSize(aReflowInput, aConsumed);
@@ -7426,9 +7426,11 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
 
   if (aStatus->IsIncomplete() &&
       aFinalSize.BSize(wm) <= aReflowInput.AvailableBSize()) {
-    // We ran out of height on this page but we're incomplete.
-    // Set status to complete except for overflow.
+    // We used up all of our element's remaining computed block-size on this
+    // page/column, but we're incomplete. Set status to complete except for
+    // overflow.
     aStatus->SetOverflowIncomplete();
+    return;
   }
 
   if (aStatus->IsComplete()) {
@@ -7451,6 +7453,10 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
   }
 
   if (aStatus->IsIncomplete()) {
+    MOZ_ASSERT(aFinalSize.BSize(wm) > aReflowInput.AvailableBSize(),
+               "We should be overflow incomplete and should've returned "
+               "in early if-branch!");
+
     // Use the current block-size; continuations will take up the rest.
     // Do extend the block-size to at least consume the available block-size,
     // otherwise our left/right borders (for example) won't extend all the way
@@ -7465,6 +7471,9 @@ void nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
     // on its own on the last-in-flow, even if we ran out of height
     // here. We need GetSkipSides to check whether we ran out of content
     // height in the current frame, not whether it's last-in-flow.
+    //
+    // XXX aBorderPadding.BEnd(wm) is not considered here, so
+    // "box-decoration-break: clone" may not render correctly.
   }
 }
 
