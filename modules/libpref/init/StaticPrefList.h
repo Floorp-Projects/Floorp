@@ -7169,7 +7169,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
-  SliderSnapMultiplier,
+   slider_snapMultiplier,
   int32_t,
 #ifdef XP_WIN
   6
