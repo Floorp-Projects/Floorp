@@ -71,12 +71,15 @@ class nsWindowWatcher : public nsIWindowWatcher,
   already_AddRefed<nsIDocShellTreeItem> GetCallerTreeItem(
       nsIDocShellTreeItem* aParentItem);
 
-  // Unlike GetWindowByName this will look for a caller on the JS
-  // stack, and then fall back on aCurrentWindow if it can't find one.
+  mozilla::dom::BrowsingContext* GetCallerBrowsingContext(
+      mozilla::dom::BrowsingContext* aParent);
+
+  // Will first look for a caller on the JS stack, and then fall back on
+  // aCurrentContext if it can't find one.
   // It also knows to not look for things if aForceNoOpener is set.
-  nsPIDOMWindowOuter* SafeGetWindowByName(const nsAString& aName,
-                                          bool aForceNoOpener,
-                                          mozIDOMWindowProxy* aCurrentWindow);
+  already_AddRefed<mozilla::dom::BrowsingContext> GetBrowsingContextByName(
+      const nsAString& aName, bool aForceNoOpener,
+      mozilla::dom::BrowsingContext* aCurrentContext);
 
   // Just like OpenWindowJS, but knows whether it got called via OpenWindowJS
   // (which means called from script) or called via OpenWindow.
