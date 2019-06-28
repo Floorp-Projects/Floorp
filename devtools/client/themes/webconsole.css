@@ -152,15 +152,11 @@ a {
 
 /*
  * By default, prevent any element in message to overflow.
+ * We exclude network messages as it may cause issues in the network detail panel.
  * This makes console reflows faster (See Bug 1487457).
  */
-.message * {
+.message:not(.network) * {
   overflow: hidden;
-}
-
-/* Reset the overflow for the network info panel (when a network message is expanded) */
-.message .network-info * {
-  overflow: unset;
 }
 
 .message.error {
@@ -833,6 +829,7 @@ a.learn-more-link.webconsole-learn-more-link {
 .network .message-flex-body > .message-body {
   display: flex;
   flex-wrap: wrap;
+  align-items: baseline;
 }
 
 /*
