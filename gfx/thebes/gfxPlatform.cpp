@@ -2427,7 +2427,7 @@ void gfxPlatform::InitAcceleration() {
           gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                     discardFailureId, &status))) {
     if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
-        StaticPrefs::HardwareVideoDecodingForceEnabled()) {
+        StaticPrefs::media_hardware_video_decoding_force_enabled()) {
       sLayersSupportsHardwareVideoDecoding = true;
     }
   }

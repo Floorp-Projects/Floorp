@@ -5474,29 +5474,15 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.autoplay.enabled.user-gestures-needed",
-  MediaAutoplayUserGesturesNeeded,
+   media_autoplay_enabled_user_gestures_needed,
   bool, false
-)
-
-VARCACHE_PREF(
-  Live,
-  "media.autoplay.allow-muted",
-  MediaAutoplayAllowMuted,
-  RelaxedAtomicBool, true
-)
-
-VARCACHE_PREF(
-  Live,
-  "media.autoplay.blackList-override-default",
-  MediaAutoplayBlackListOverrideDefault,
-  RelaxedAtomicBool, true
 )
 
 // File-backed MediaCache size.
 VARCACHE_PREF(
   Live,
   "media.cache_size",
-  MediaCacheSize,
+   media_cache_size,
   RelaxedAtomicUint32, 512000 // Measured in KiB
 )
 
@@ -5505,7 +5491,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_size.cellular",
-  MediaCacheCellularSize,
+   media_cache_size_cellular,
   RelaxedAtomicUint32, 32768 // Measured in KiB
 )
 
@@ -5515,7 +5501,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.memory_cache_max_size",
-  MediaMemoryCacheMaxSize,
+   media_memory_cache_max_size,
   uint32_t, 8192      // Measured in KiB
 )
 
@@ -5524,7 +5510,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.memory_caches_combined_limit_kb",
-  MediaMemoryCachesCombinedLimitKb,
+   media_memory_caches_combined_limit_kb,
   uint32_t, 524288
 )
 
@@ -5533,7 +5519,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.memory_caches_combined_limit_pc_sysmem",
-  MediaMemoryCachesCombinedLimitPcSysmem,
+   media_memory_caches_combined_limit_pc_sysmem,
   uint32_t, 5         // A percentage
 )
 
@@ -5542,13 +5528,13 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_resume_threshold",
-  MediaCacheResumeThreshold,
+   media_cache_resume_threshold,
   RelaxedAtomicUint32, 30
 )
 VARCACHE_PREF(
   Live,
   "media.cache_resume_threshold.cellular",
-  MediaCacheCellularResumeThreshold,
+   media_cache_resume_threshold_cellular,
   RelaxedAtomicUint32, 10
 )
 
@@ -5558,13 +5544,13 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_readahead_limit",
-  MediaCacheReadaheadLimit,
+   media_cache_readahead_limit,
   RelaxedAtomicUint32, 60
 )
 VARCACHE_PREF(
   Live,
   "media.cache_readahead_limit.cellular",
-  MediaCacheCellularReadaheadLimit,
+   media_cache_readahead_limit_cellular,
   RelaxedAtomicUint32, 30
 )
 
@@ -5572,7 +5558,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.resampling.enabled",
-  MediaResamplingEnabled,
+   media_resampling_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -5585,7 +5571,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.forcestereo.enabled",
-  MediaForcestereoEnabled,
+   media_forcestereo_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5594,7 +5580,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ruin-av-sync.enabled",
-  MediaRuinAvSyncEnabled,
+   media_ruin_av_sync_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -5620,7 +5606,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.eme.enabled",
-  MediaEmeEnabled,
+   media_eme_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5641,7 +5627,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.clearkey.persistent-license.enabled",
-  MediaClearkeyPersistentLicenseEnabled,
+   media_clearkey_persistent_license_enabled,
   bool, false
 )
 
@@ -5652,7 +5638,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.gmp.insecure.allow",
-  MediaGmpInsecureAllow,
+   media_gmp_insecure_allow,
   RelaxedAtomicBool, false
 )
 #endif
@@ -5663,7 +5649,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.use-blank-decoder",
-  MediaUseBlankDecoder,
+   media_use_blank_decoder,
   RelaxedAtomicBool, false
 )
 
@@ -5675,7 +5661,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.gpu-process-decoder",
-  MediaGpuProcessDecoder,
+   media_gpu_process_decoder,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5696,7 +5682,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.rdd-process.enabled",
-  MediaRddProcessEnabled,
+   media_rdd_process_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5704,7 +5690,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.rdd-process.startup_timeout_ms",
-  MediaRddProcessStartupTimeoutMs,
+   media_rdd_process_startup_timeout_ms,
   RelaxedAtomicInt32, 5000
 )
 
@@ -5720,7 +5706,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.rdd-vorbis.enabled",
-  MediaRddVorbisEnabled,
+   media_rdd_vorbis_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5731,14 +5717,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.android-media-codec.enabled",
-  MediaAndroidMediaCodecEnabled,
+   media_android_media_codec_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.android-media-codec.preferred",
-  MediaAndroidMediaCodecPreferred,
+   media_android_media_codec_preferred,
   RelaxedAtomicBool, true
 )
 
@@ -5748,7 +5734,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.omx.enabled",
-  MediaOmxEnabled,
+   media_omx_enabled,
   bool, false
 )
 #endif
@@ -5763,7 +5749,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ffmpeg.enabled",
-  MediaFfmpegEnabled,
+   media_ffmpeg_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5771,7 +5757,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.libavcodec.allow-obsolete",
-  MediaLibavcodecAllowObsolete,
+   media_libavcodec_allow_obsolete,
   bool, false
 )
 
@@ -5781,7 +5767,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ffvpx.enabled",
-  MediaFfvpxEnabled,
+   media_ffvpx_enabled,
   RelaxedAtomicBool, true
 )
 #endif
@@ -5790,7 +5776,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ffmpeg.low-latency.enabled",
-  MediaFfmpegLowLatencyEnabled,
+   media_ffmpeg_low_latency_enabled,
   RelaxedAtomicBool, false
 )
 #endif
@@ -5800,7 +5786,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.wmf.enabled",
-  MediaWmfEnabled,
+   media_wmf_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -5808,91 +5794,91 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.decoder-doctor.wmf-disabled-is-failure",
-  MediaDecoderDoctorWmfDisabledIsFailure,
+   media_decoder_doctor_wmf_disabled_is_failure,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.dxva.d3d11.enabled",
-  PDMWMFAllowD3D11,
+   media_wmf_dxva_d3d11_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.dxva.max-videos",
-  PDMWMFMaxDXVAVideos,
+   media_wmf_dxva_max_videos,
   RelaxedAtomicUint32, 8
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.use-nv12-format",
-  PDMWMFUseNV12Format,
+   media_wmf_use_nv12_format,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.force.allow-p010-format",
-  PDMWMFForceAllowP010Format,
+   media_wmf_force_allow_p010_format,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "media.wmf.use-sync-texture",
-  PDMWMFUseSyncTexture,
+   media_wmf_use_sync_texture,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.low-latency.enabled",
-  PDMWMFLowLatencyEnabled,
+   media_wmf_low_latency_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.low-latency.force-disabled",
-  PDMWMFLowLatencyForceDisabled,
+   media_mwf_low_latency_force_disabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.skip-blacklist",
-  PDMWMFSkipBlacklist,
+   media_wmf_skip_blacklist,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.deblacklisting-for-telemetry-in-gpu-process",
-  PDMWMFDeblacklistingForTelemetryInGPUProcess,
+   media_wmf_deblacklisting_for_telemetry_in_gpu_process,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.amd.highres.enabled",
-  PDMWMFAMDHighResEnabled,
+   media_wmf_amd_highres_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.wmf.allow-unsupported-resolutions",
-  PDMWMFAllowUnsupportedResolutions,
+   media_wmf_allow_unsupported_resolutions,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "media.wmf.vp9.enabled",
-  MediaWmfVp9Enabled,
+   media_wmf_vp9_enabled,
   bool, true
 )
 #endif // MOZ_WMF
@@ -5900,7 +5886,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "media.hardware-video-decoding.force-enabled",
-  HardwareVideoDecodingForceEnabled,
+   media_hardware_video_decoding_force_enabled,
   bool, false
 )
 
@@ -5913,7 +5899,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.decoder.recycle.enabled",
-  MediaDecoderRecycleEnabled,
+   media_decoder_recycle_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -5922,34 +5908,34 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.decoder.skip-to-next-key-frame.enabled",
-  MediaDecoderSkipToNextKeyFrameEnabled,
+   media_decoder_skip_to_next_key_frame_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.gmp.decoder.enabled",
-  MediaGmpDecoderEnabled,
+   media_gmp_decoder_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.eme.audio.blank",
-  MediaEmeAudioBlank,
+   media_eme_audio_blank,
   RelaxedAtomicBool, false
 )
 VARCACHE_PREF(
   Live,
   "media.eme.video.blank",
-  MediaEmeVideoBlank,
+   media_eme_video_blank,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.eme.chromium-api.video-shmems",
-  MediaEmeChromiumApiVideoShmems,
+   media_eme_chromium_api_video_shmems,
   RelaxedAtomicUint32, 6
 )
 
@@ -5957,7 +5943,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.suspend-bkgnd-video.enabled",
-  MediaSuspendBkgndVideoEnabled,
+   media_suspend_bkgnd_video_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -5966,14 +5952,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.suspend-bkgnd-video.delay-ms",
-  MediaSuspendBkgndVideoDelayMs,
+   media_suspend_bkgnd_video_delay_ms,
   RelaxedAtomicUint32, 10000
 )
 
 VARCACHE_PREF(
   Live,
   "media.dormant-on-pause-timeout-ms",
-  MediaDormantOnPauseTimeoutMs,
+   media_dormant_on_pause_timeout_ms,
   RelaxedAtomicInt32, 5000
 )
 
@@ -5996,28 +5982,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webspeech.synth.force_global_queue",
-  MediaWebspeechSynthForceGlobalQueue,
+   media_webspeech_synth_force_global_queue,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.test.enable",
-  MediaWebspeechTestEnable,
+   media_webspeech_test_enable,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.test.fake_fsm_events",
-  MediaWebspeechTextFakeFsmEvents,
+   media_webspeech_test_fake_fsm_events,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.test.fake_recognition_service",
-  MediaWebspeechTextFakeRecognitionService,
+   media_webspeech_test_fake_recognition_service,
   bool, false
 )
 
@@ -6033,7 +6019,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webspeech.recognition.force_enable",
-  MediaWebspeechRecognitionForceEnable,
+   media_webspeech_recognition_force_enable,
   bool, false
 )
 
@@ -6054,7 +6040,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.encoder.webm.enabled",
-  MediaEncoderWebMEnabled,
+   media_encoder_webm_enabled,
   RelaxedAtomicBool, true
 )
 #undef PREF_VALUE
@@ -6068,7 +6054,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.audio-max-decode-error",
-  MediaAudioMaxDecodeError,
+   media_audio_max_decode_error,
   uint32_t, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -6082,7 +6068,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.video-max-decode-error",
-  MediaVideoMaxDecodeError,
+   media_video_max_decode_error,
   uint32_t, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -6091,7 +6077,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.opus.enabled",
-  MediaOpusEnabled,
+   media_opus_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -6099,7 +6085,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.wave.enabled",
-  MediaWaveEnabled,
+   media_wave_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -6107,7 +6093,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ogg.enabled",
-  MediaOggEnabled,
+   media_ogg_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -6115,7 +6101,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webm.enabled",
-  MediaWebMEnabled,
+   media_webm_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -6132,7 +6118,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.av1.enabled",
-  MediaAv1Enabled,
+   media_av1_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -6140,7 +6126,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.av1.use-dav1d",
-  MediaAv1UseDav1d,
+   media_av1_use_dav1d,
 #if defined(XP_WIN) && !defined(_ARM64_)
   RelaxedAtomicBool, true
 #elif defined(XP_MACOSX)
@@ -6155,7 +6141,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.flac.enabled",
-  MediaFlacEnabled,
+   media_flac_enabled,
   bool, true
 )
 
@@ -6168,7 +6154,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.hls.enabled",
-  MediaHlsEnabled,
+   media_hls_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -6179,7 +6165,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.hls.max-allocations",
-  MediaHlsMaxAllocations,
+   media_hls_max_allocations,
   uint32_t, 20
 )
 #endif
@@ -6192,7 +6178,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.mp4.enabled",
-  MediaMp4Enabled,
+   media_mp4_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -6203,7 +6189,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.playback.warnings-as-errors",
-  MediaPlaybackWarningsAsErrors,
+   media_playback_warnings_as_errors,
   RelaxedAtomicBool, false
 )
 
@@ -6212,7 +6198,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.resume-bkgnd-video-on-tabhover",
-  MediaResumeBkgndVideoOnTabhover,
+   media_resume_bkgnd_video_on_tabhover,
   bool, true
 )
 
@@ -6233,63 +6219,63 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.seamless-looping",
-  MediaSeamlessLooping,
+   media_seamless_looping,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.autoplay.block-event.enabled",
-  MediaBlockEventEnabled,
+   media_autoplay_block_event_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.media-capabilities.enabled",
-  MediaCapabilitiesEnabled,
+   media_media_capabilities_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.media-capabilities.screen.enabled",
-  MediaCapabilitiesScreenEnabled,
+   media_media_capabilities_screen_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.vp9.fps",
-  MediaBenchmarkVp9Fps,
+   media_benchmark_vp9_fps,
   RelaxedAtomicUint32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.vp9.threshold",
-  MediaBenchmarkVp9Threshold,
+   media_benchmark_vp9_threshold,
   RelaxedAtomicUint32, 150
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.vp9.versioncheck",
-  MediaBenchmarkVp9Versioncheck,
+   media_benchmark_vp9_versioncheck,
   RelaxedAtomicUint32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.frames",
-  MediaBenchmarkFrames,
+   media_benchmark_frames,
   RelaxedAtomicUint32, 300
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.timeout",
-  MediaBenchmarkTimeout,
+   media_benchmark_timeout,
   RelaxedAtomicUint32, 1000
 )
 
@@ -6368,7 +6354,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.navigator.hardware.vp8_encode.acceleration_remote_enabled",
-  MediaNavigatorHardwareVp8encodeAccelerationRemoteEnabled,
+   media_navigator_hardware_vp8_encode_acceleration_remote_enabled,
   bool, true
 )
 
@@ -6389,7 +6375,7 @@ PREF("media.navigator.hardware.vp8_decode.acceleration_enabled", bool, false)
 VARCACHE_PREF(
   Live,
   "media.navigator.mediadatadecoder_vpx_enabled",
-  MediaNavigatorMediadatadecoderVPXEnabled,
+   media_navigator_mediadatadecoder_vpx_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -6405,7 +6391,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.navigator.mediadatadecoder_h264_enabled",
-  MediaNavigatorMediadatadecoderH264Enabled,
+   media_navigator_mediadatadecoder_h264_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
