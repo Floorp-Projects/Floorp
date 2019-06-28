@@ -415,6 +415,8 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvRemoteType(const nsString& aRemoteType);
 
+  // Call RemoteTypePrefix() on the result to remove URIs if you want to use
+  // this for telemetry.
   const nsAString& GetRemoteType() const;
 
   mozilla::ipc::IPCResult RecvInitServiceWorkers(
