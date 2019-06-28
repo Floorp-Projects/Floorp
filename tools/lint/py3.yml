@@ -19,7 +19,6 @@ py3:
         - layout/style
         - layout/tools/reftest
         - media
-        - memory/replace
         - modules/freetype2
         - python/safety
         - security/manager/ssl
@@ -27,7 +26,6 @@ py3:
         - testing/awsy
         - testing/mochitest
         - testing/mozharness
-        - testing/raptor
         - testing/tools/iceserver
         - testing/tps
         - testing/web-platform

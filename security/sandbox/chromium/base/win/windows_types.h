@@ -8,16 +8,7 @@
 #ifndef BASE_WIN_WINDOWS_TYPES_H
 #define BASE_WIN_WINDOWS_TYPES_H
 
-// Needed for function prototypes.
-#if defined(__MINGW32__)
-// MinGW doesn't have this file yet, but we only need this define.
-// Bug 1552706 tracks removing this and the one below.
-#define _Releases_exclusive_lock_(lock)
-// MinGW doesn't appear to have this in specstrings.h either.
-#define _Post_equals_last_error_
-#else
 #include <concurrencysal.h>
-#endif
 #include <sal.h>
 #include <specstrings.h>
 

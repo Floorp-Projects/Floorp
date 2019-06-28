@@ -533,7 +533,7 @@ class Output(object):
             subtests.append(_subtests[name])
             vals.append([_subtests[name]['value'], name])
 
-        print subtests
+        print(subtests)
         return subtests, vals
 
     def parseMotionmarkOutput(self, test):

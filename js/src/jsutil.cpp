@@ -79,6 +79,20 @@ void FailureSimulator::reset() {
 }  // namespace js
 #endif  // defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
+#if defined(FUZZING)
+namespace js {
+namespace oom {
+JS_PUBLIC_DATA size_t largeAllocLimit = 0;
+void InitLargeAllocLimit() {
+  char* limitStr = getenv("MOZ_FUZZ_LARGE_ALLOC_LIMIT");
+  if (limitStr) {
+    largeAllocLimit = atoll(limitStr);
+  }
+}
+}  // namespace oom
+}  // namespace js
+#endif
+
 bool js::gDisablePoisoning = false;
 
 JS_PUBLIC_DATA arena_id_t js::MallocArena;

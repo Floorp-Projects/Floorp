@@ -19,7 +19,6 @@ py2:
         - js/xpconnect
         - layout
         - media
-        - memory
         - mobile
         - modules
         - mozglue
@@ -39,8 +38,6 @@ py2:
         - testing/mochitest
         - testing/mozharness
         - testing/raptor
-        - testing/remotecppunittests.py
-        - testing/runcppunittests.py
         - testing/runtimes
         - testing/tools
         - testing/tps

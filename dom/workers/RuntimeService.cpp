@@ -504,7 +504,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       int32_t prefValue = GetWorkerPref(matchName, -1);
       uint32_t value =
           (prefValue <= 0 || prefValue >= 100000) ? 0 : uint32_t(prefValue);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_SLICE_TIME_BUDGET, value);
+      UpdateOtherJSGCMemoryOption(rts, JSGC_SLICE_TIME_BUDGET_MS, value);
       continue;
     }
 

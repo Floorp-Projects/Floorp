@@ -74,8 +74,8 @@ def create_args():
 
     def inner(**kwargs):
         for next_arg in kwargs:
-            print next_arg
-            print kwargs[next_arg]
+            print(next_arg)
+            print(kwargs[next_arg])
             setattr(args, next_arg, kwargs[next_arg])
         return args
 

@@ -825,6 +825,7 @@ class ConfigureSandbox(dict):
         This decorator imports the given _import from the given _from module
         optionally under a different _as name.
         The options correspond to the various forms for the import builtin.
+
             @imports('sys')
             @imports(_from='mozpack', _import='path', _as='mozpath')
         '''
@@ -981,29 +982,37 @@ class ConfigureSandbox(dict):
         The `value` argument indicates the value to pass to the option.
         It can be:
         - True. In this case `imply_option` injects the positive option
+
           (--enable-foo/--with-foo).
               imply_option('--enable-foo', True)
               imply_option('--disable-foo', True)
+
           are both equivalent to `--enable-foo` on the command line.
 
         - False. In this case `imply_option` injects the negative option
+
           (--disable-foo/--without-foo).
               imply_option('--enable-foo', False)
               imply_option('--disable-foo', False)
+
           are both equivalent to `--disable-foo` on the command line.
 
         - None. In this case `imply_option` does nothing.
               imply_option('--enable-foo', None)
               imply_option('--disable-foo', None)
-          are both equivalent to not passing any flag on the command line.
+
+        are both equivalent to not passing any flag on the command line.
 
         - a string or a tuple. In this case `imply_option` injects the positive
           option with the given value(s).
+
               imply_option('--enable-foo', 'a')
               imply_option('--disable-foo', 'a')
+
           are both equivalent to `--enable-foo=a` on the command line.
               imply_option('--enable-foo', ('a', 'b'))
               imply_option('--disable-foo', ('a', 'b'))
+
           are both equivalent to `--enable-foo=a,b` on the command line.
 
         Because imply_option('--disable-foo', ...) can be misleading, it is

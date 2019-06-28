@@ -1,11 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                             Ci.nsILoginInfo, "init");
-let TEST_LOGIN1 = new nsLoginInfo("https://example.com/", "https://example.com/", null, "user1", "pass1", "username", "password");
-let TEST_LOGIN2 = new nsLoginInfo("https://example2.com/", "https://example2.com/", null, "user2", "pass2", "username", "password");
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set": [["signon.management.overrideURI", "about:logins?filter=%DOMAIN%"]] });
 

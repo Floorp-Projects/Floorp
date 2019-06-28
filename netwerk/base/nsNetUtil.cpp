@@ -1861,6 +1861,10 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
         .Finalize(aURI);
   }
 
+  if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat")) {
+    return NewStandardURI(aSpec, aCharset, aBaseURI, -1, aURI);
+  }
+
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
   rv = NS_NewMailnewsURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
   if (rv != NS_ERROR_UNKNOWN_PROTOCOL) {

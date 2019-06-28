@@ -2417,9 +2417,9 @@ static void SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName,
   // handle overflow and negative pref values
   if (pref > 0 && pref < 100000) {
     sActiveIntersliceGCBudget = pref;
-    SetGCParameter(JSGC_SLICE_TIME_BUDGET, pref);
+    SetGCParameter(JSGC_SLICE_TIME_BUDGET_MS, pref);
   } else {
-    ResetGCParameter(JSGC_SLICE_TIME_BUDGET);
+    ResetGCParameter(JSGC_SLICE_TIME_BUDGET_MS);
   }
 }
 

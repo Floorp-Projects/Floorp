@@ -1588,14 +1588,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
   return valueList.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridAutoColumns() {
-  return GetGridTrackSize(StylePosition()->mGridAutoColumns);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridAutoRows() {
-  return GetGridTrackSize(StylePosition()->mGridAutoRows);
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetGridTemplateColumns() {
   const ComputedGridTrackInfo* info = nullptr;
 
