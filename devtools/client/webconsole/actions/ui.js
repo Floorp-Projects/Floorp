@@ -22,6 +22,7 @@ const {
   TIMESTAMPS_TOGGLE,
   WARNING_GROUPS_TOGGLE,
   FILTERBAR_DISPLAY_MODE_SET,
+  EDITOR_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 function persistToggle() {
@@ -71,7 +72,7 @@ function initialize() {
   };
 }
 
-function sidebarClose(show) {
+function sidebarClose() {
   return {
     type: SIDEBAR_CLOSE,
   };
@@ -81,6 +82,16 @@ function splitConsoleCloseButtonToggle(shouldDisplayButton) {
   return {
     type: SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
     shouldDisplayButton,
+  };
+}
+
+function editorToggle() {
+  return ({dispatch, getState, prefsService}) => {
+    dispatch({
+      type: EDITOR_TOGGLE,
+    });
+    const uiState = getAllUi(getState());
+    prefsService.setBoolPref(PREFS.UI.EDITOR, uiState.editor);
   };
 }
 
@@ -128,6 +139,7 @@ function filterBarDisplayModeSet(displayMode) {
 
 module.exports = {
   contentMessagesToggle,
+  editorToggle,
   filterBarDisplayModeSet,
   initialize,
   persistToggle,

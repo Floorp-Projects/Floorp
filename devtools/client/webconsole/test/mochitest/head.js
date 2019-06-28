@@ -1391,7 +1391,6 @@ function reloadPage() {
   return onLoad;
 }
 
-         
 /**
   * Check if the editor mode is enabled (i.e. .webconsole-app has the expected class).
   *
