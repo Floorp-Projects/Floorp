@@ -200,6 +200,20 @@ interface nsIDOMWindowUtils : nsISupports {
                                     in Element aElement);
 
   /**
+   * If |aElement| is a scroll container, returns the amount of layout
+   * space taken up by its scrollbars (that is, the width of the vertical
+   * scrollbar and the height of the horizontal scrollbar) in CSS pixels;
+   * otherwise returns zero.
+   *
+   * Note that on some platforms, scrollbars don't take up layout space
+   * ("overlay scrollbars"). On such platforms, the returned sizes are
+   * always zero.
+   */
+  void getScrollbarSizes(in Element aElement,
+                         out uint32_t aVerticalScrollbarWidth,
+                         out uint32_t aHorizontalScrollbarHeight);
+
+  /**
    * Get/set the resolution at which rescalable web content is drawn.
    *
    * Setting a new resolution does *not* trigger reflow.  This API is
