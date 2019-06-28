@@ -27,6 +27,7 @@ struct AnimationPerformanceWarning {
     TransformWithGeometricProperties,
     TransformWithSyncGeometricAnimations,
     TransformFrameInactive,
+    TransformIsBlockedByImportantRules,
     OpacityFrameInactive,
     HasRenderingObserver,
   };

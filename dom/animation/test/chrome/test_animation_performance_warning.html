@@ -1602,6 +1602,48 @@ function testTransformSVG() {
   });
 }
 
+function testImportantRuleOverride() {
+  promise_test(async t => {
+    const elem = addDiv(t, { class: 'compositable' });
+    const anim = elem.animate({ translate: [ '0px', '100px' ],
+                                rotate: ['0deg', '90deg'] },
+                                100 * MS_PER_SEC);
+
+    await waitForAnimationReadyToRestyle(anim);
+    await waitForPaints();
+
+    assert_animation_property_state_equals(
+      anim.effect.getProperties(),
+      [ { property: 'translate', runningOnCompositor: true },
+        { property: 'rotate', runningOnCompositor: true } ]
+    );
+
+    elem.style.setProperty('rotate', '45deg', 'important');
+    getComputedStyle(elem).rotate;
+
+    await waitForFrame();
+
+    assert_animation_property_state_equals(
+      anim.effect.getProperties(),
+      [
+        {
+          property: 'translate',
+          runningOnCompositor: false,
+          warning:
+            'CompositorAnimationWarningTransformIsBlockedByImportantRules'
+        },
+        {
+          property: 'rotate',
+          runningOnCompositor: false,
+          warning:
+            'CompositorAnimationWarningTransformIsBlockedByImportantRules'
+        },
+      ]
+    );
+  }, 'The animations of transform-like properties are not running on the ' +
+     'compositor because any of the properties has important rules');
+}
+
 function start() {
   var bundleService = SpecialPowers.Cc['@mozilla.org/intl/stringbundle;1']
     .getService(SpecialPowers.Ci.nsIStringBundleService);
@@ -1620,6 +1662,7 @@ function start() {
   testSynchronizedAnimations();
   testTooLargeFrame();
   testTransformSVG();
+  testImportantRuleOverride();
 
   promise_test(async t => {
     var div = addDiv(t, { class: 'compositable',

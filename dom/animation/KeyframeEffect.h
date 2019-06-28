@@ -202,9 +202,10 @@ class KeyframeEffect : public AnimationEffect {
   // this function is typically called for all KeyframeEffects on an element
   // so that we can avoid multiple calls of EffectSet::GetEffect().
   //
-  // NOTE: Unlike HasEffectiveAnimationOfPropertySet below, this function does
-  // not check for the effect of !important rules on animations of related
-  // transform properties.
+  // Note that does not consider the interaction between related transform
+  // properties where an !important rule on another transform property may
+  // cause all transform properties to be run on the main thread. That check is
+  // performed by GetPropertiesForCompositor.
   bool HasEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
                                        const EffectSet& aEffect) const {
     return GetEffectiveAnimationOfProperty(aProperty, aEffect) != nullptr;
@@ -217,16 +218,10 @@ class KeyframeEffect : public AnimationEffect {
   // one property in |aPropertySet| that is not overridden by an !important
   // rule.
   //
-  // Unlike HasEffectiveAnimationOfProperty, however, when |aPropertySet|
-  // includes transform-like properties (transform, rotate etc.) this function
-  // returns true if and only if all the transform-like properties that are
-  // present are effective.
-  //
-  // That is because the transform-like properties, unlike other properties, are
-  // combined on the compositor and if !important rules affect any of the
-  // individual properties we will not be able to correctly compose the result
-  // on the compositor so we should run the animations on the main thread
-  // instead.
+  // Note that does not consider the interaction between related transform
+  // properties where an !important rule on another transform property may
+  // cause all transform properties to be run on the main thread. That check is
+  // performed by GetPropertiesForCompositor.
   bool HasEffectiveAnimationOfPropertySet(
       const nsCSSPropertyIDSet& aPropertySet,
       const EffectSet& aEffectSet) const;
@@ -282,7 +277,7 @@ class KeyframeEffect : public AnimationEffect {
   // When returning true, |aPerformanceWarning| stores the reason why
   // we shouldn't run the transform animations.
   bool ShouldBlockAsyncTransformAnimations(
-      const nsIFrame* aFrame,
+      const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
       AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const;
   bool HasGeometricProperties() const;
   bool AffectsGeometry() const override {
