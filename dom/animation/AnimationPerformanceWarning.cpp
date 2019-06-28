@@ -59,6 +59,9 @@ bool AnimationPerformanceWarning::ToLocalizedString(
     case Type::TransformFrameInactive:
       key = "CompositorAnimationWarningTransformFrameInactive";
       break;
+    case Type::TransformIsBlockedByImportantRules:
+      key = "CompositorAnimationWarningTransformIsBlockedByImportantRules";
+      break;
     case Type::OpacityFrameInactive:
       key = "CompositorAnimationWarningOpacityFrameInactive";
       break;
