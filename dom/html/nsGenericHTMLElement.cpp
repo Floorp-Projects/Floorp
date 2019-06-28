@@ -1043,7 +1043,7 @@ bool nsGenericHTMLElement::ParseImageAttribute(nsAtom* aAttribute,
     return aResult.ParseHTMLDimension(aString);
   }
   if (aAttribute == nsGkAtoms::border) {
-    return aResult.ParseIntWithBounds(aString, 0);
+    return aResult.ParseNonNegativeIntValue(aString);
   }
   return false;
 }

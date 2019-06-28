@@ -187,8 +187,9 @@ bool HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
     }
-    if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-      return true;
+    if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
+        aAttribute == nsGkAtoms::hspace || aAttribute == nsGkAtoms::vspace) {
+      return aResult.ParseHTMLDimension(aValue);
     }
   }
 
@@ -198,7 +199,6 @@ bool HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 
 static void MapAttributesIntoRuleBase(const nsMappedAttributes* aAttributes,
                                       MappedDeclarations& aDecls) {
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aDecls);
