@@ -257,6 +257,11 @@ inline const LengthPercentage& BorderRadius::Get(HalfCorner aCorner) const {
   return self[aCorner];
 }
 
+template <>
+inline bool StyleTrackBreadth::HasPercent() const {
+  return IsBreadth() && AsBreadth().HasPercent();
+}
+
 }  // namespace mozilla
 
 enum nsStyleUnit : uint8_t {
