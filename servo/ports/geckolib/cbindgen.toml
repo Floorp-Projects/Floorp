@@ -158,6 +158,8 @@ include = [
   "Gradient",
   "GridTemplateAreas",
   "GridLine",
+  "TrackSize",
+  "TrackBreadth",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -606,4 +608,25 @@ renaming_overrides_prefixing = true
   inline bool IsAuto() const;
   // The line name, or nsGkAtoms::_empty if not present.
   inline nsAtom* LineName() const;
+"""
+
+"GenericTrackBreadth" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleGenericTrackBreadth() {}
+ public:
+  inline bool HasPercent() const;
+"""
+
+"GenericTrackSize" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleGenericTrackSize() {}
+ public:
+  inline const StyleGenericTrackBreadth<L>& GetMin() const;
+  inline const StyleGenericTrackBreadth<L>& GetMax() const;
 """
