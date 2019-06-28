@@ -13,6 +13,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/OwningNonNull.h"
+#include "mozilla/RangeUtils.h"
 #include "mozilla/SelectionState.h"
 
 #include "nsAString.h"
@@ -1393,7 +1394,7 @@ nsresult WSRunObject::DeleteRange(const EditorDOMPoint& aStartPoint,
       }
       bool nodeBefore, nodeAfter;
       nsresult rv =
-          nsRange::CompareNodeToRange(node, range, &nodeBefore, &nodeAfter);
+          RangeUtils::CompareNodeToRange(node, range, &nodeBefore, &nodeAfter);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

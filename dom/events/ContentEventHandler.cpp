@@ -9,6 +9,7 @@
 #include "mozilla/ContentIterator.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/RangeUtils.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
@@ -51,7 +52,7 @@ void ContentEventHandler::RawRange::AssertStartIsBeforeOrEqualToEnd() {
 
 nsresult ContentEventHandler::RawRange::SetStart(
     const RawRangeBoundary& aStart) {
-  nsINode* newRoot = nsRange::ComputeRootNode(aStart.Container());
+  nsINode* newRoot = RangeUtils::ComputeRootNode(aStart.Container());
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
@@ -73,7 +74,7 @@ nsresult ContentEventHandler::RawRange::SetStart(
 }
 
 nsresult ContentEventHandler::RawRange::SetEnd(const RawRangeBoundary& aEnd) {
-  nsINode* newRoot = nsRange::ComputeRootNode(aEnd.Container());
+  nsINode* newRoot = RangeUtils::ComputeRootNode(aEnd.Container());
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
@@ -95,10 +96,7 @@ nsresult ContentEventHandler::RawRange::SetEnd(const RawRangeBoundary& aEnd) {
 }
 
 nsresult ContentEventHandler::RawRange::SetEndAfter(nsINode* aEndContainer) {
-  uint32_t offset = 0;
-  nsINode* container =
-      nsRange::GetContainerAndOffsetAfter(aEndContainer, &offset);
-  return SetEnd(container, offset);
+  return SetEnd(RangeUtils::GetRawRangeBoundaryAfter(aEndContainer));
 }
 
 void ContentEventHandler::RawRange::SetStartAndEnd(const nsRange* aRange) {
@@ -109,7 +107,7 @@ void ContentEventHandler::RawRange::SetStartAndEnd(const nsRange* aRange) {
 
 nsresult ContentEventHandler::RawRange::SetStartAndEnd(
     const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd) {
-  nsINode* newStartRoot = nsRange::ComputeRootNode(aStart.Container());
+  nsINode* newStartRoot = RangeUtils::ComputeRootNode(aStart.Container());
   if (!newStartRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
@@ -128,7 +126,7 @@ nsresult ContentEventHandler::RawRange::SetStartAndEnd(
     return NS_OK;
   }
 
-  nsINode* newEndRoot = nsRange::ComputeRootNode(aEnd.Container());
+  nsINode* newEndRoot = RangeUtils::ComputeRootNode(aEnd.Container());
   if (!newEndRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
@@ -153,7 +151,7 @@ nsresult ContentEventHandler::RawRange::SetStartAndEnd(
 
 nsresult ContentEventHandler::RawRange::SelectNodeContents(
     nsINode* aNodeToSelectContents) {
-  nsINode* newRoot = nsRange::ComputeRootNode(aNodeToSelectContents);
+  nsINode* newRoot = RangeUtils::ComputeRootNode(aNodeToSelectContents);
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
