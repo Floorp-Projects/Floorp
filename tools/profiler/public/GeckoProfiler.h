@@ -77,6 +77,7 @@
 #  include "mozilla/Attributes.h"
 #  include "mozilla/GuardObjects.h"
 #  include "mozilla/Maybe.h"
+#  include "mozilla/PowerOfTwo.h"
 #  include "mozilla/Sprintf.h"
 #  include "mozilla/ThreadLocal.h"
 #  include "mozilla/TimeStamp.h"
@@ -237,20 +238,20 @@ bool IsThreadBeingProfiled();
 // Start and stop the profiler
 //---------------------------------------------------------------------------
 
-static constexpr uint32_t PROFILER_DEFAULT_ENTRIES =
+static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
 #  if !defined(ARCH_ARMV6)
-    1u << 20;  // 1'048'576
+    mozilla::MakePowerOfTwo32<1u << 20>();  // 1'048'576
 #  else
-    1u << 17;  // 131'072
+    mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
 // systems.
-static constexpr uint32_t PROFILER_DEFAULT_STARTUP_ENTRIES =
+static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
 #  if !defined(ARCH_ARMV6)
-    1u << 22;  // 4'194'304
+    mozilla::MakePowerOfTwo32<1u << 22>();  // 4'194'304
 #  else
-    1u << 17;  // 131'072
+    mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072
 #  endif
 
 #  define PROFILER_DEFAULT_DURATION 20
@@ -286,7 +287,7 @@ void profiler_shutdown();
 //                  id of the process that the thread is running in.
 //   "aDuration" is the duration of entries in the profiler's circular buffer.
 void profiler_start(
-    uint32_t aCapacity, double aInterval, uint32_t aFeatures,
+    mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
     const char** aFilters, uint32_t aFilterCount,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 
@@ -300,7 +301,7 @@ void profiler_stop();
 // The only difference to profiler_start is that the current buffer contents are
 // not discarded if the profiler is already running with the requested settings.
 void profiler_ensure_started(
-    uint32_t aCapacity, double aInterval, uint32_t aFeatures,
+    mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
     const char** aFilters, uint32_t aFilterCount,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 

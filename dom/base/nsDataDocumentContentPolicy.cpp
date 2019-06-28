@@ -10,6 +10,7 @@
  * via XMLHttpRequest).
  */
 
+#include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDataDocumentContentPolicy.h"
@@ -21,6 +22,8 @@
 #include "nsINode.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsDataDocumentContentPolicy, nsIContentPolicy)
 

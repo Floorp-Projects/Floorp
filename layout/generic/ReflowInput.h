@@ -10,7 +10,7 @@
 #define mozilla_ReflowInput_h
 
 #include "nsMargin.h"
-#include "nsStyleCoord.h"
+#include "nsStyleConsts.h"
 #include "nsIFrame.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
@@ -334,10 +334,10 @@ struct SizeComputationInput {
                    const nsStyleDisplay* aDisplay = nullptr);
 
   /*
-   * Convert nsStyleCoord to nscoord when percentages depend on the
-   * inline size of the containing block, and enumerated values are for
-   * inline size, min-inline-size, or max-inline-size.  Does not handle
-   * auto inline sizes.
+   * Convert StyleSize or StyleMaxSize to nscoord when percentages depend on the
+   * inline size of the containing block, and enumerated values are for inline
+   * size, min-inline-size, or max-inline-size.  Does not handle auto inline
+   * sizes.
    */
   template <typename SizeOrMaxSize>
   inline nscoord ComputeISizeValue(nscoord aContainingBlockISize,

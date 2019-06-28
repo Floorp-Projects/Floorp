@@ -121,6 +121,7 @@ void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
 
 void ServoStyleSet::ShellDetachedFromDocument() {
   ClearNonInheritingComputedStyles();
+  mCachedAnonymousContentStyles.Clear();
   mStyleRuleMap = nullptr;
 
   // Remove all our stylesheets...

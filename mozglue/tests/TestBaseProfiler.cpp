@@ -8,6 +8,8 @@
 
 #ifdef MOZ_BASE_PROFILER
 
+#  include "mozilla/PowerOfTwo.h"
+
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Vector.h"
 
@@ -15,14 +17,138 @@
 #    include <windows.h>
 #    include <mmsystem.h>
 #    include <process.h>
-#  elif defined(__linux__) || (defined(__APPLE__) && defined(__x86_64__))
+#  else
 #    include <time.h>
 #    include <unistd.h>
-#  else
-#    error
 #  endif
 
 using namespace mozilla;
+
+MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
+#  if defined(_MSC_VER)
+  Sleep(aMilliseconds);
+#  else
+  struct timespec ts;
+  ts.tv_sec = aMilliseconds / 1000;
+  ts.tv_nsec = long(aMilliseconds % 1000) * 1000000;
+  struct timespec tr;
+  while (nanosleep(&ts, &tr)) {
+    if (errno == EINTR) {
+      ts = tr;
+    } else {
+      printf("nanosleep() -> %s\n", strerror(errno));
+      exit(1);
+    }
+  }
+#  endif
+}
+
+void TestPowerOfTwoMask() {
+  printf("TestPowerOfTwoMask...\n");
+
+  static_assert(MakePowerOfTwoMask<uint32_t, 0>().MaskValue() == 0, "");
+  constexpr PowerOfTwoMask<uint32_t> c0 = MakePowerOfTwoMask<uint32_t, 0>();
+  MOZ_RELEASE_ASSERT(c0.MaskValue() == 0);
+
+  static_assert(MakePowerOfTwoMask<uint32_t, 0xFFu>().MaskValue() == 0xFFu, "");
+  constexpr PowerOfTwoMask<uint32_t> cFF =
+      MakePowerOfTwoMask<uint32_t, 0xFFu>();
+  MOZ_RELEASE_ASSERT(cFF.MaskValue() == 0xFFu);
+
+  static_assert(
+      MakePowerOfTwoMask<uint32_t, 0xFFFFFFFFu>().MaskValue() == 0xFFFFFFFFu,
+      "");
+  constexpr PowerOfTwoMask<uint32_t> cFFFFFFFF =
+      MakePowerOfTwoMask<uint32_t, 0xFFFFFFFFu>();
+  MOZ_RELEASE_ASSERT(cFFFFFFFF.MaskValue() == 0xFFFFFFFFu);
+
+  struct TestDataU32 {
+    uint32_t mInput;
+    uint32_t mMask;
+  };
+  // clang-format off
+  TestDataU32 tests[] = {
+    { 0, 0 },
+    { 1, 1 },
+    { 2, 3 },
+    { 3, 3 },
+    { 4, 7 },
+    { 5, 7 },
+    { (1u << 31) - 1, (1u << 31) - 1 },
+    { (1u << 31), uint32_t(-1) },
+    { (1u << 31) + 1, uint32_t(-1) },
+    { uint32_t(-1), uint32_t(-1) }
+  };
+  // clang-format on
+  for (const TestDataU32& test : tests) {
+    PowerOfTwoMask<uint32_t> p2m(test.mInput);
+    MOZ_RELEASE_ASSERT(p2m.MaskValue() == test.mMask);
+    for (const TestDataU32& inner : tests) {
+      if (p2m.MaskValue() != uint32_t(-1)) {
+        MOZ_RELEASE_ASSERT((inner.mInput % p2m) ==
+                           (inner.mInput % (p2m.MaskValue() + 1)));
+      }
+      MOZ_RELEASE_ASSERT((inner.mInput & p2m) == (inner.mInput % p2m));
+      MOZ_RELEASE_ASSERT((p2m & inner.mInput) == (inner.mInput & p2m));
+    }
+  }
+
+  printf("TestPowerOfTwoMask done\n");
+}
+
+void TestPowerOfTwo() {
+  printf("TestPowerOfTwo...\n");
+
+  static_assert(MakePowerOfTwo<uint32_t, 1>().Value() == 1, "");
+  constexpr PowerOfTwo<uint32_t> c1 = MakePowerOfTwo<uint32_t, 1>();
+  MOZ_RELEASE_ASSERT(c1.Value() == 1);
+  static_assert(MakePowerOfTwo<uint32_t, 1>().Mask().MaskValue() == 0, "");
+
+  static_assert(MakePowerOfTwo<uint32_t, 128>().Value() == 128, "");
+  constexpr PowerOfTwo<uint32_t> c128 = MakePowerOfTwo<uint32_t, 128>();
+  MOZ_RELEASE_ASSERT(c128.Value() == 128);
+  static_assert(MakePowerOfTwo<uint32_t, 128>().Mask().MaskValue() == 127, "");
+
+  static_assert(MakePowerOfTwo<uint32_t, 0x80000000u>().Value() == 0x80000000u,
+                "");
+  constexpr PowerOfTwo<uint32_t> cMax = MakePowerOfTwo<uint32_t, 0x80000000u>();
+  MOZ_RELEASE_ASSERT(cMax.Value() == 0x80000000u);
+  static_assert(
+      MakePowerOfTwo<uint32_t, 0x80000000u>().Mask().MaskValue() == 0x7FFFFFFFu,
+      "");
+
+  struct TestDataU32 {
+    uint32_t mInput;
+    uint32_t mValue;
+    uint32_t mMask;
+  };
+  // clang-format off
+  TestDataU32 tests[] = {
+    { 0, 1, 0 },
+    { 1, 1, 0 },
+    { 2, 2, 1 },
+    { 3, 4, 3 },
+    { 4, 4, 3 },
+    { 5, 8, 7 },
+    { (1u << 31) - 1, (1u << 31), (1u << 31) - 1 },
+    { (1u << 31), (1u << 31), (1u << 31) - 1 },
+    { (1u << 31) + 1, (1u << 31), (1u << 31) - 1 },
+    { uint32_t(-1), (1u << 31), (1u << 31) - 1 }
+  };
+  // clang-format on
+  for (const TestDataU32& test : tests) {
+    PowerOfTwo<uint32_t> p2(test.mInput);
+    MOZ_RELEASE_ASSERT(p2.Value() == test.mValue);
+    MOZ_RELEASE_ASSERT(p2.MaskValue() == test.mMask);
+    PowerOfTwoMask<uint32_t> p2m = p2.Mask();
+    MOZ_RELEASE_ASSERT(p2m.MaskValue() == test.mMask);
+    for (const TestDataU32& inner : tests) {
+      MOZ_RELEASE_ASSERT((inner.mInput % p2) == (inner.mInput % p2.Value()));
+    }
+  }
+
+  printf("TestPowerOfTwo done\n");
+}
 
 // Increase the depth, to a maximum (to avoid too-deep recursion).
 static constexpr size_t NextDepth(size_t aDepth) {
@@ -50,30 +176,15 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
   return f2 + f1;
 }
 
-static void SleepMilli(unsigned aMilliseconds) {
-#  if defined(_MSC_VER)
-  Sleep(aMilliseconds);
-#  else
-  struct timespec ts;
-  ts.tv_sec = aMilliseconds / 1000;
-  ts.tv_nsec = long(aMilliseconds % 1000) * 1000000;
-  struct timespec tr;
-  while (nanosleep(&ts, &tr)) {
-    if (errno == EINTR) {
-      ts = tr;
-    } else {
-      printf("nanosleep() -> %s\n", strerror(errno));
-      exit(1);
-    }
-  }
-#  endif
-}
-
 void TestProfiler() {
   printf("TestProfiler starting -- pid: %d, tid: %d\n",
          baseprofiler::profiler_current_process_id(),
          baseprofiler::profiler_current_thread_id());
-  // ::Sleep(10000);
+  // ::SleepMilli(10000);
+
+  // Test dependencies.
+  TestPowerOfTwoMask();
+  TestPowerOfTwo();
 
   {
     printf("profiler_init()...\n");
@@ -84,7 +195,7 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
 
     printf("profiler_start()...\n");
-    mozilla::Vector<const char*> filters;
+    Vector<const char*> filters;
     // Profile all registered threads.
     MOZ_RELEASE_ASSERT(filters.append(""));
     const uint32_t features = baseprofiler::ProfilerFeature::Leaf |

@@ -521,6 +521,15 @@ async function updateFormDataSections(props) {
 }
 
 /**
+ * This helper function helps to resolve the full payload of a WebSocket frame
+ * that is wrapped in a LongStringActor object.
+ */
+async function getFramePayload(payload, getLongString) {
+  const result = await getLongString(payload);
+  return result;
+}
+
+/**
  * This helper function is used for additional processing of
  * incoming network update packets. It's used by Network and
  * Console panel reducers.
@@ -561,6 +570,7 @@ module.exports = {
   getFileName,
   getEndTime,
   getFormattedProtocol,
+  getFramePayload,
   getResponseHeader,
   getResponseTime,
   getStartTime,

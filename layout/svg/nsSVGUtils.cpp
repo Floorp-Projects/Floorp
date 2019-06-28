@@ -26,7 +26,6 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsStyleTransformMatrix.h"
 #include "SVGAnimatedLength.h"

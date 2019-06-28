@@ -13,7 +13,7 @@
 #include "mozilla/gfx/2D.h"  // for StrokeOptions
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/RangedPtr.h"
-#include "nsStyleCoord.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "nsError.h"
 #include "nsStringFwd.h"
 #include "gfx2DGlue.h"
@@ -318,7 +318,7 @@ class SVGContentUtils {
   static bool ParseInteger(const nsAString& aString, int32_t& aValue);
 
   /**
-   * Converts an nsStyleCoord into a userspace value, resolving percentage
+   * Converts a LengthPercentage into a userspace value, resolving percentage
    * values relative to aContent's SVG viewport.
    */
   static float CoordToFloat(dom::SVGElement* aContent, const LengthPercentage&);

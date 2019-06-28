@@ -186,24 +186,6 @@ void nsStyleUtil::AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
 }
 
 /* static */
-void nsStyleUtil::AppendAngleValue(const nsStyleCoord& aAngle,
-                                   nsAString& aResult) {
-  MOZ_ASSERT(aAngle.IsAngleValue(), "Should have angle value");
-
-  // Append number.
-  AppendCSSNumber(aAngle.GetAngleValue(), aResult);
-
-  // Append unit.
-  switch (aAngle.GetUnit()) {
-    case eStyleUnit_Degree:
-      aResult.AppendLiteral("deg");
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unrecognized angle unit");
-  }
-}
-
-/* static */
 void nsStyleUtil::AppendPaintOrderValue(uint8_t aValue, nsAString& aResult) {
   static_assert(
       NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
@@ -428,7 +410,8 @@ void nsStyleUtil::AppendFontSlantStyle(const FontSlantStyle& aStyle,
     auto angle = aStyle.ObliqueAngle();
     if (angle != FontSlantStyle::kDefaultAngle) {
       aOut.AppendLiteral(" ");
-      AppendAngleValue(nsStyleCoord(angle, eStyleUnit_Degree), aOut);
+      AppendCSSNumber(angle, aOut);
+      aOut.AppendLiteral("deg");
     }
   }
 }

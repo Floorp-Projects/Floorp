@@ -18,7 +18,7 @@ const Tabbar = createFactory(require("devtools/client/shared/components/tabs/Tab
 const TabPanel = createFactory(require("devtools/client/shared/components/tabs/Tabs").TabPanel);
 const CookiesPanel = createFactory(require("./CookiesPanel"));
 const HeadersPanel = createFactory(require("./HeadersPanel"));
-const WebSocketsPanel = createFactory(require("./WebSocketsPanel"));
+const WebSocketsPanel = createFactory(require("./websockets/WebSocketsPanel"));
 const ParamsPanel = createFactory(require("./ParamsPanel"));
 const CachePanel = createFactory(require("./CachePanel"));
 const ResponsePanel = createFactory(require("./ResponsePanel"));
@@ -131,6 +131,7 @@ class TabboxPanel extends Component {
         },
           WebSocketsPanel({
             channelId,
+            connector,
           }),
         ),
         TabPanel({

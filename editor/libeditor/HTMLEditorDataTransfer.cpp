@@ -2464,18 +2464,19 @@ void HTMLEditor::CreateListOfNodesToPaste(
     aEndOffset = aFragment.Length();
   }
 
-  RefPtr<nsRange> docFragRange;
-  nsresult rv =
-      nsRange::CreateRange(aStartContainer, aStartOffset, aEndContainer,
-                           aEndOffset, getter_AddRefs(docFragRange));
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  NS_ENSURE_SUCCESS(rv, );
+  RefPtr<nsRange> docFragRange = nsRange::Create(
+      aStartContainer, aStartOffset, aEndContainer, aEndOffset, IgnoreErrors());
+  if (NS_WARN_IF(!docFragRange)) {
+    MOZ_ASSERT(docFragRange);
+    return;
+  }
 
   // Now use a subtree iterator over the range to create a list of nodes
   TrivialFunctor functor;
   DOMSubtreeIterator iter;
-  rv = iter.Init(*docFragRange);
-  NS_ENSURE_SUCCESS(rv, );
+  if (NS_WARN_IF(NS_FAILED(iter.Init(*docFragRange)))) {
+    return;
+  }
   iter.AppendList(functor, outNodeList);
 }
 

@@ -40,7 +40,7 @@ parent:
   // we have collected enough data, we add these two return values here for convenience.
   sync PRemoteDecoder(RemoteDecoderInfoIPDL info,
                       OptionSet options,
-                      TextureFactoryIdentifier identifier)
+                      TextureFactoryIdentifier? identifier)
          returns (bool success,
                   nsCString aBlacklistedD3D11Driver,
                   nsCString aBlacklistedD3D9Driver,

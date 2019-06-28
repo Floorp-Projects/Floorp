@@ -504,13 +504,6 @@ mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
 mozilla::PropertyValuePair* Gecko_AppendPropertyValuePair(
     nsTArray<mozilla::PropertyValuePair>*, nsCSSPropertyID aProperty);
 
-// Clean up pointer-based coordinates
-void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
-
-// Set an nsStyleCoord to a computed `calc()` value
-void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value,
-                                  nsStyleCoord::CalcValue calc);
-
 void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst,
                                const mozilla::StyleShapeSource* src);
 
@@ -555,8 +548,6 @@ void Gecko_nsIURI_Debug(nsIURI*, nsCString* spec);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::URLExtraData, URLExtraData);
 
 void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch);
 
