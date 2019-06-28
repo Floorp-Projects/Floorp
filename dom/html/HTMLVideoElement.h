@@ -66,13 +66,17 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   // WebIDL
 
-  uint32_t Width() const { return GetUnsignedIntAttr(nsGkAtoms::width, 0); }
+  uint32_t Width() const {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::width, 0);
+  }
 
   void SetWidth(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::width, aValue, 0, aRv);
   }
 
-  uint32_t Height() const { return GetUnsignedIntAttr(nsGkAtoms::height, 0); }
+  uint32_t Height() const {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::height, 0);
+  }
 
   void SetHeight(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::height, aValue, 0, aRv);

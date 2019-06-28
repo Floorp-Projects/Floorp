@@ -1398,6 +1398,29 @@ uint32_t nsGenericHTMLElement::GetUnsignedIntAttr(nsAtom* aAttr,
   return attrVal->GetIntegerValue();
 }
 
+uint32_t nsGenericHTMLElement::GetDimensionAttrAsUnsignedInt(
+    nsAtom* aAttr, uint32_t aDefault) const {
+  const nsAttrValue* attrVal = mAttrs.GetAttr(aAttr);
+  if (!attrVal) {
+    return aDefault;
+  }
+
+  if (attrVal->Type() == nsAttrValue::eInteger) {
+    return attrVal->GetIntegerValue();
+  }
+
+  if (attrVal->Type() == nsAttrValue::ePercent) {
+    // This is a nasty hack.  When we parsed the value, we stored it as an
+    // ePercent, not eInteger, because there was a '%' after it in the string.
+    // But the spec says to basically re-parse the string as an integer.
+    // Luckily, we can just return the value we have stored.  But
+    // GetPercentValue() divides it by 100, so we need to multiply it back.
+    return uint32_t(attrVal->GetPercentValue() * 100.0f);
+  }
+
+  return aDefault;
+}
+
 void nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
                                       nsAString& aResult) const {
   nsCOMPtr<nsIURI> uri;
