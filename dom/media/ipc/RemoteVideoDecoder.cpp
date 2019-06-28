@@ -119,17 +119,33 @@ mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvOutput(
     const DecodedOutputIPDL& aDecodedData) {
   AssertOnManagerThread();
   MOZ_ASSERT(aDecodedData.type() == DecodedOutputIPDL::TRemoteVideoDataIPDL);
+
   const RemoteVideoDataIPDL& aData = aDecodedData.get_RemoteVideoDataIPDL();
 
-  RefPtr<Image> image = DeserializeImage(
-      aData.sd().get_SurfaceDescriptorBuffer(), aData.frameSize());
+  if (aData.sd().type() == SurfaceDescriptor::TSurfaceDescriptorBuffer) {
+    RefPtr<Image> image = DeserializeImage(
+        aData.sd().get_SurfaceDescriptorBuffer(), aData.frameSize());
 
-  RefPtr<VideoData> video = VideoData::CreateFromImage(
-      aData.display(), aData.base().offset(), aData.base().time(),
-      aData.base().duration(), image, aData.base().keyframe(),
-      aData.base().timecode());
+    RefPtr<VideoData> video = VideoData::CreateFromImage(
+        aData.display(), aData.base().offset(), aData.base().time(),
+        aData.base().duration(), image, aData.base().keyframe(),
+        aData.base().timecode());
 
-  mDecodedData.AppendElement(std::move(video));
+    mDecodedData.AppendElement(std::move(video));
+  } else {
+    // The Image here creates a TextureData object that takes ownership
+    // of the SurfaceDescriptor, and is responsible for making sure that
+    // it gets deallocated.
+    RefPtr<Image> image =
+        new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
+
+    RefPtr<VideoData> video = VideoData::CreateFromImage(
+        aData.display(), aData.base().offset(), aData.base().time(),
+        aData.base().duration(), image, aData.base().keyframe(),
+        aData.base().timecode());
+
+    mDecodedData.AppendElement(std::move(video));
+  }
   return IPC_OK();
 }
 
@@ -187,27 +203,6 @@ static void ReportUnblacklistingTelemetry(
 
 GpuRemoteVideoDecoderChild::GpuRemoteVideoDecoderChild()
     : RemoteVideoDecoderChild(true) {}
-
-mozilla::ipc::IPCResult GpuRemoteVideoDecoderChild::RecvOutput(
-    const DecodedOutputIPDL& aDecodedData) {
-  AssertOnManagerThread();
-  MOZ_ASSERT(aDecodedData.type() == DecodedOutputIPDL::TRemoteVideoDataIPDL);
-  const RemoteVideoDataIPDL& aData = aDecodedData.get_RemoteVideoDataIPDL();
-
-  // The Image here creates a TextureData object that takes ownership
-  // of the SurfaceDescriptor, and is responsible for making sure that
-  // it gets deallocated.
-  RefPtr<Image> image =
-      new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
-
-  RefPtr<VideoData> video = VideoData::CreateFromImage(
-      aData.display(), aData.base().offset(), aData.base().time(),
-      aData.base().duration(), image, aData.base().keyframe(),
-      aData.base().timecode());
-
-  mDecodedData.AppendElement(std::move(video));
-  return IPC_OK();
-}
 
 void GpuRemoteVideoDecoderChild::RecordShutdownTelemetry(
     bool aAbnormalShutdown) {

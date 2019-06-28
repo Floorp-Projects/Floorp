@@ -45,8 +45,6 @@ class GpuRemoteVideoDecoderChild final : public RemoteVideoDecoderChild {
                        const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier& aIdentifier);
 
-  IPCResult RecvOutput(const DecodedOutputIPDL& aDecodedData) override;
-
   void RecordShutdownTelemetry(bool aAbnormalShutdown) override;
 
  private:
