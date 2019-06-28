@@ -26,6 +26,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/OwningNonNull.h"
@@ -6725,16 +6726,16 @@ nsresult HTMLEditRules::ExpandSelectionForDeletion() {
     bool nodeBefore = false, nodeAfter = false;
 
     // Create a range that represents expanded selection
-    RefPtr<nsRange> range = new nsRange(selStartNode);
-    nsresult rv = range->SetStartAndEnd(selStartNode, selStartOffset,
-                                        selEndNode, selEndOffset);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    RefPtr<StaticRange> staticRange = StaticRange::Create(
+        selStartNode, selStartOffset, selEndNode, selEndOffset, IgnoreErrors());
+    if (NS_WARN_IF(!staticRange)) {
+      return NS_ERROR_FAILURE;
     }
 
     // Check if block is entirely inside range
     if (brBlock) {
-      RangeUtils::CompareNodeToRange(brBlock, range, &nodeBefore, &nodeAfter);
+      RangeUtils::CompareNodeToRange(brBlock, staticRange, &nodeBefore,
+                                     &nodeAfter);
     }
 
     // If block isn't contained, forgo grabbing the <br> in expanded selection.
