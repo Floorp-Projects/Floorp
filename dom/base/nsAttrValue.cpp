@@ -1277,6 +1277,124 @@ bool nsAttrValue::ParseSpecialIntValue(const nsAString& aString) {
   return true;
 }
 
+bool nsAttrValue::DoParseHTMLDimension(const nsAString& aInput,
+                                       bool aEnsureNonzero) {
+  ResetIfSet();
+
+  // We don't use nsContentUtils::ParseHTMLInteger here because we
+  // need a bunch of behavioral differences from it.  We _could_ try to
+  // use it, but it would not be a great fit.
+
+  // https://html.spec.whatwg.org/multipage/#rules-for-parsing-dimension-values
+
+  // Step 1 and 2.
+  const char16_t* position = aInput.BeginReading();
+  const char16_t* end = aInput.EndReading();
+
+  // We will need to keep track of whether this was a canonical representation
+  // or not.  It's non-canonical if it has leading whitespace, leading '+',
+  // leading '0' characters, or trailing garbage.
+  bool canonical = true;
+
+  // Step 3
+  while (position != end && nsContentUtils::IsHTMLWhitespace(*position)) {
+    canonical = false;  // Leading whitespace
+    ++position;
+  }
+
+  // Step 4
+  if (position == end) {
+    return false;
+  }
+
+  // Step 5
+  if (*position == char16_t('+')) {
+    canonical = false;  // Leading '+'
+    ++position;
+
+    // Step 6.  The spec has this happening regardless of whether we found '+',
+    // but there's no point repeating the step 4 test if we didn't advance
+    // position.
+    if (position == end) {
+      return false;
+    }
+  }
+
+  // Step 7.
+  if (*position < char16_t('0') || *position > char16_t('9')) {
+    return false;
+  }
+
+  // Step 8.
+  CheckedInt32 value = 0;
+
+  // Collect up leading '0' first to avoid extra branching in the main
+  // loop to set 'canonical' properly.
+  while (position != end && *position == char16_t('0')) {
+    canonical = false;  // Leading '0'
+    ++position;
+  }
+
+  // Now collect up other digits.
+  while (position != end && *position >= char16_t('0') &&
+         *position <= char16_t('9')) {
+    value = value * 10 + (*position - char16_t('0'));
+    if (!value.isValid()) {
+      // The spec assumes we can deal with arbitrary-size integers here, but we
+      // really can't.  If someone sets something too big, just bail out and
+      // ignore it.
+      return false;
+    }
+    ++position;
+  }
+
+  // Step 9 is implemented implicitly via the various "position != end" guards
+  // from this point on.
+
+  // Variant of step 10: just skip over possible decimals.  See bug 1561440 for
+  // fixing this.
+  if (position != end && *position == char16_t('.')) {
+    canonical = false;  // We're only going to store the integer part.
+    ++position;
+    // Per spec we should now return a number if there is no next char or if the
+    // next char is not a digit, but no one does that.  See
+    // https://github.com/whatwg/html/issues/4736
+    while (position != end && *position >= char16_t('0') &&
+           *position <= char16_t('9')) {
+      // Just do nothing
+      ++position;
+    }
+  }
+
+  if (aEnsureNonzero && value.value() == 0) {
+    // Not valid.  Just drop it.
+    return false;
+  }
+
+  // Steps 11-13.
+  ValueType type;
+  if (position != end && *position == char16_t('%')) {
+    type = ePercent;
+    ++position;
+  } else {
+    type = eInteger;
+  }
+
+  if (position != end) {
+    canonical = false;
+  }
+
+  SetIntValueAndType(value.value(), type, canonical ? nullptr : &aInput);
+
+#ifdef DEBUG
+  nsAutoString str;
+  ToString(str);
+  MOZ_ASSERT(str == aInput, "We messed up our 'canonical' boolean!");
+#endif
+
+  return true;
+}
+
 bool nsAttrValue::ParseIntWithBounds(const nsAString& aString, int32_t aMin,
                                      int32_t aMax) {
   MOZ_ASSERT(aMin < aMax, "bad boundaries");
