@@ -286,7 +286,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ffe22547100c"
+        "revision": "4bd3e4ec1c09"
     },
     "dsb": {
         "platforms": [
