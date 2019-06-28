@@ -19,7 +19,6 @@ py2:
         - js/xpconnect
         - layout
         - media
-        - memory
         - mobile
         - modules
         - mozglue

@@ -6,7 +6,7 @@
 
 '''This script analyzes a JSON file emitted by DMD.'''
 
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 
 import argparse
 import collections
@@ -592,11 +592,8 @@ def printDigest(args, digest):
                        number(record.reqSize),
                        number(record.slopSize)))
 
-            def abscmp((usableSize1, _1), (usableSize2, _2)): return \
-                cmp(abs(usableSize1), abs(usableSize2))
-            usableSizes = sorted(record.usableSizes.items(), cmp=abscmp,
-                                 reverse=True)
-
+            usableSizes = sorted(record.usableSizes.items(),
+                                 key=lambda x: abs(x[0]), reverse=True)
             hasSingleBlock = len(usableSizes) == 1 and usableSizes[0][1] == 1
 
             if not hasSingleBlock:
