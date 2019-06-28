@@ -432,7 +432,7 @@ const ONBOARDING_MESSAGES = async () => ([
         label: {string_id: "return-to-amo-extension-button"},
         action: {
           type: "INSTALL_ADDON_FROM_URL",
-          data: {url: null},
+          data: {url: null, telemetrySource: "rtamo"},
         },
       },
       secondary_button: {

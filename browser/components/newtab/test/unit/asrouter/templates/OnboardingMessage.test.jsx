@@ -81,6 +81,7 @@ describe("OnboardingMessage", () => {
     assert.propertyVal(translatedMessage.content.text.args, "addon-name", "foo@bar.org");
     assert.propertyVal(translatedMessage.content, "addon_icon", "icon");
     assert.propertyVal(translatedMessage.content.primary_button.action.data, "url", "foo");
+    assert.propertyVal(translatedMessage.content.primary_button.action.data, "telemetrySource", "rtamo");
   });
   it("should skip return_to_amo_overlay if any addon fields are missing", async () => {
     const fakeContent = "foo%bar.org";

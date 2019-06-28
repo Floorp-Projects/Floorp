@@ -331,14 +331,15 @@ const MessageLoaderUtils = {
     }
   },
 
-  async installAddonFromURL(browser, url) {
+  async installAddonFromURL(browser, url, telemetrySource = "amo") {
     try {
       MessageLoaderUtils._loadAddonIconInURLBar(browser);
       const aUri = Services.io.newURI(url);
       const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
       // AddonManager installation source associated to the addons installed from activitystream's CFR
-      const telemetryInfo = {source: "amo"};
+      // and RTAMO (source is going to be "amo" if not configured explicitly in the message provider).
+      const telemetryInfo = {source: telemetrySource};
       const install = await AddonManager.getInstallForURL(aUri.spec, {telemetryInfo});
       await AddonManager.installAddonFromWebpage("application/x-xpinstall", browser,
         systemPrincipal, install);
@@ -1338,7 +1339,7 @@ class _ASRouter {
         break;
       case ra.INSTALL_ADDON_FROM_URL:
         this._updateOnboardingState();
-        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
+        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url, action.data.telemetrySource);
         break;
       case ra.PIN_CURRENT_TAB:
         let tab = target.browser.ownerGlobal.gBrowser.selectedTab;
