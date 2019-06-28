@@ -795,18 +795,23 @@ description#identity-popup-content-verifier,
   opacity: 0.8;
 }
 
-#protections-popup-tp-switch-label-box > label {
-  display: none;
-}
-
 #protections-popup:not([hasException]) #protections-popup-tp-switch-on-header,
-#protections-popup:not([hasException]) #protections-popup-tp-switch-breakage-link,
 #protections-popup[hasException] #protections-popup-tp-switch-off-header {
   display: unset;
 }
 
 #protections-popup-tp-switch-section {
   padding: 4px;
+}
+
+#protections-popup[hasException] #protections-popup-tp-switch-section {
+  background: repeating-linear-gradient(
+    -56deg,
+    var(--arrowpanel-dimmed),
+    var(--arrowpanel-dimmed) 10px,
+    transparent 10px,
+    transparent 20px
+  );
 }
 
 #protections-popup-tp-switch-label-box,
