@@ -20,6 +20,10 @@ class nsRange;
 
 namespace mozilla {
 
+namespace dom {
+class AbstractRange;
+}
+
 class FilteredContentIterator final {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FilteredContentIterator)
@@ -28,7 +32,7 @@ class FilteredContentIterator final {
   explicit FilteredContentIterator(UniquePtr<nsComposeTxtSrvFilter> aFilter);
 
   nsresult Init(nsINode* aRoot);
-  nsresult Init(nsRange* aRange);
+  nsresult Init(const dom::AbstractRange* aAbstractRange);
   nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                 nsINode* aEndContainer, uint32_t aEndOffset);
   nsresult Init(const RawRangeBoundary& aStartBoundary,

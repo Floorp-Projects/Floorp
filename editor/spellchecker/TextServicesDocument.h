@@ -27,8 +27,10 @@ class OffsetEntry;
 class TextEditor;
 
 namespace dom {
+class AbstractRange;
 class Document;
 class Element;
+class StaticRange;
 };  // namespace dom
 
 /**
@@ -89,18 +91,18 @@ class TextServicesDocument final : public nsIEditActionListener {
    * method.  If this method is never called, the text services defaults to
    * iterating over the entire document.
    *
-   * @param aDOMRange           The range to use. aDOMRange must point to a
+   * @param aAbstractRange      The range to use. aAbstractRange must point to a
    *                            valid range object.
    */
-  nsresult SetExtent(nsRange* aRange);
+  nsresult SetExtent(const dom::AbstractRange* aAbstractRange);
 
   /**
    * Expands the end points of the range so that it spans complete words.  This
    * call does not change any internal state of the text services document.
    *
-   * @param aDOMRange           The range to be expanded/adjusted.
+   * @param aStaticRange        [in/out] The range to be expanded/adjusted.
    */
-  nsresult ExpandRangeToWordBoundaries(nsRange* aRange);
+  nsresult ExpandRangeToWordBoundaries(dom::StaticRange* aStaticRange);
 
   /**
    * Sets the filter type to be used while iterating over content.
@@ -229,14 +231,18 @@ class TextServicesDocument final : public nsIEditActionListener {
   void DidDeleteNode(nsINode* aChild);
   void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
 
-  static nsresult GetRangeEndPoints(nsRange* aRange, nsINode** aStartContainer,
+  // TODO: We should get rid of this method since `aAbstractRange` has
+  //       enough simple API to get them.
+  static nsresult GetRangeEndPoints(const dom::AbstractRange* aAbstractRange,
+                                    nsINode** aStartContainer,
                                     int32_t* aStartOffset,
                                     nsINode** aEndContainer,
                                     int32_t* aEndOffset);
 
  private:
   nsresult CreateFilteredContentIterator(
-      nsRange* aRange, FilteredContentIterator** aFilteredIter);
+      const dom::AbstractRange* aAbstractRange,
+      FilteredContentIterator** aFilteredIter);
 
   dom::Element* GetDocumentContentRootNode() const;
   already_AddRefed<nsRange> CreateDocumentContentRange();

@@ -8,6 +8,7 @@
 #include "mozilla/ContentIterator.h"
 #include "mozilla/Move.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/AbstractRange.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsComposeTxtSrvFilter.h"
@@ -22,6 +23,8 @@
 #include "nsRange.h"
 
 namespace mozilla {
+
+using namespace dom;
 
 FilteredContentIterator::FilteredContentIterator(
     UniquePtr<nsComposeTxtSrvFilter> aFilter)
@@ -53,17 +56,19 @@ nsresult FilteredContentIterator::Init(nsINode* aRoot) {
   return mPostIterator.Init(mRange);
 }
 
-nsresult FilteredContentIterator::Init(nsRange* aRange) {
-  if (NS_WARN_IF(!aRange)) {
+nsresult FilteredContentIterator::Init(const AbstractRange* aAbstractRange) {
+  if (NS_WARN_IF(!aAbstractRange)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(!aRange->IsPositioned())) {
+  if (NS_WARN_IF(!aAbstractRange->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  mRange = aRange->CloneRange();
-
+  mRange = nsRange::Create(aAbstractRange, IgnoreErrors());
+  if (NS_WARN_IF(!mRange)) {
+    return NS_ERROR_FAILURE;
+  }
   return InitWithRange();
 }
 
