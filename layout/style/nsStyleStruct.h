@@ -22,7 +22,6 @@
 #include "nsMargin.h"
 #include "nsFont.h"
 #include "nsStyleAutoArray.h"
-#include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
 #include "nsTimingFunction.h"
@@ -969,11 +968,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 //   A 'fit-content(size)' <track-size> is represented as eStyleUnit_None
 //   in the min sizing function and 'size' in the max sizing function.
 //
-//   The units for nsStyleCoord are:
-//   * eStyleUnit_Percent represents a <percentage>
-//   * eStyleUnit_FlexFraction represents a <flex> flexible fraction
-//   * eStyleUnit_Coord represents a <length>
-//   * eStyleUnit_Enumerated represents min-content or max-content
 // * subgrid <line-name-list>?:
 //   mIsSubgrid is true,
 //   mLineNameLists may or may not be empty,

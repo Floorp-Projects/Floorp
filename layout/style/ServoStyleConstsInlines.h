@@ -400,6 +400,248 @@ inline bool StyleGridLine::IsAuto() const {
   return LineName()->IsEmpty() && line_num == 0 && !is_span;
 }
 
+class WritingMode;
+
+// Logical axis, edge, side and corner constants for use in various places.
+enum LogicalAxis { eLogicalAxisBlock = 0x0, eLogicalAxisInline = 0x1 };
+enum LogicalEdge { eLogicalEdgeStart = 0x0, eLogicalEdgeEnd = 0x1 };
+enum LogicalSide : uint8_t {
+  eLogicalSideBStart = (eLogicalAxisBlock << 1) | eLogicalEdgeStart,   // 0x0
+  eLogicalSideBEnd = (eLogicalAxisBlock << 1) | eLogicalEdgeEnd,       // 0x1
+  eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
+  eLogicalSideIEnd = (eLogicalAxisInline << 1) | eLogicalEdgeEnd       // 0x3
+};
+
+enum LogicalCorner {
+  eLogicalCornerBStartIStart = 0,
+  eLogicalCornerBStartIEnd = 1,
+  eLogicalCornerBEndIEnd = 2,
+  eLogicalCornerBEndIStart = 3
+};
+
+using LengthPercentage = StyleLengthPercentage;
+using LengthPercentageOrAuto = StyleLengthPercentageOrAuto;
+using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
+using NonNegativeLengthPercentageOrAuto =
+    StyleNonNegativeLengthPercentageOrAuto;
+using NonNegativeLengthPercentageOrNormal =
+    StyleNonNegativeLengthPercentageOrNormal;
+using Length = StyleLength;
+using LengthOrAuto = StyleLengthOrAuto;
+using NonNegativeLength = StyleNonNegativeLength;
+using NonNegativeLengthOrAuto = StyleNonNegativeLengthOrAuto;
+using BorderRadius = StyleBorderRadius;
+
+bool StyleCSSPixelLength::IsZero() const { return _0 == 0.0f; }
+
+nscoord StyleCSSPixelLength::ToAppUnits() const {
+  // We want to resolve the length part of the calc() expression rounding 0.5
+  // away from zero, instead of the default behavior of
+  // NSToCoordRound{,WithClamp} which do floor(x + 0.5).
+  //
+  // This is what the rust code in the app_units crate does, and not doing this
+  // would regress bug 1323735, for example.
+  //
+  // FIXME(emilio, bug 1528114): Probably we should do something smarter.
+  float length = _0 * float(mozilla::AppUnitsPerCSSPixel());
+  if (length >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (length <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+  return NSToIntRound(length);
+}
+
+constexpr LengthPercentage LengthPercentage::Zero() {
+  return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
+}
+
+LengthPercentage LengthPercentage::FromPixels(CSSCoord aCoord) {
+  return {{aCoord}, {0.}, StyleAllowedNumericType::All, false, false};
+}
+
+LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
+  return LengthPercentage::FromPixels(CSSPixel::FromAppUnits(aCoord));
+}
+
+LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
+  return {{0.}, {aPercentage}, StyleAllowedNumericType::All, true, false};
+}
+
+CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
+
+float LengthPercentage::Percentage() const { return percentage._0; }
+
+bool LengthPercentage::HasPercent() const { return has_percentage; }
+
+bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
+
+nscoord LengthPercentage::ToLength() const {
+  MOZ_ASSERT(ConvertsToLength());
+  return length.ToAppUnits();
+}
+
+bool LengthPercentage::ConvertsToPercentage() const {
+  return has_percentage && length.IsZero();
+}
+
+float LengthPercentage::ToPercentage() const {
+  MOZ_ASSERT(ConvertsToPercentage());
+  return Percentage();
+}
+
+bool LengthPercentage::HasLengthAndPercentage() const {
+  return !ConvertsToLength() && !ConvertsToPercentage();
+}
+
+bool LengthPercentage::IsDefinitelyZero() const {
+  return length.IsZero() && Percentage() == 0.0f;
+}
+
+CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
+  return LengthInCSSPixels() + Percentage() * aPercentageBasis;
+}
+
+template <typename T>
+CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), CSSCoord>::value,
+                "Should return CSS pixels");
+  if (ConvertsToLength()) {
+    return LengthInCSSPixels();
+  }
+  return ResolveToCSSPixels(aPercentageGetter());
+}
+
+template <typename T, typename U>
+nscoord LengthPercentage::Resolve(T aPercentageGetter,
+                                  U aPercentageRounder) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
+                "Should return app units");
+  static_assert(
+      std::is_same<decltype(aPercentageRounder(1.0f)), nscoord>::value,
+      "Should return app units");
+  if (ConvertsToLength()) {
+    return ToLength();
+  }
+  nscoord basis = aPercentageGetter();
+  return length.ToAppUnits() + aPercentageRounder(basis * Percentage());
+}
+
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
+  return Resolve([=] { return aPercentageBasis; }, NSToCoordFloorClamped);
+}
+
+template <typename T>
+nscoord LengthPercentage::Resolve(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
+                "Should return app units");
+  return Resolve(aPercentageGetter, NSToCoordFloorClamped);
+}
+
+template <typename T>
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
+                                  T aPercentageRounder) const {
+  return Resolve([=] { return aPercentageBasis; }, aPercentageRounder);
+}
+
+#define IMPL_LENGTHPERCENTAGE_FORWARDS(ty_)                                 \
+  template <>                                                               \
+  inline bool ty_::HasPercent() const {                                     \
+    return IsLengthPercentage() && AsLengthPercentage().HasPercent();       \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::ConvertsToLength() const {                               \
+    return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength(); \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::HasLengthAndPercentage() const {                         \
+    return IsLengthPercentage() &&                                          \
+           AsLengthPercentage().HasLengthAndPercentage();                   \
+  }                                                                         \
+  template <>                                                               \
+  inline nscoord ty_::ToLength() const {                                    \
+    MOZ_ASSERT(ConvertsToLength());                                         \
+    return AsLengthPercentage().ToLength();                                 \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::ConvertsToPercentage() const {                           \
+    return IsLengthPercentage() &&                                          \
+           AsLengthPercentage().ConvertsToPercentage();                     \
+  }                                                                         \
+  template <>                                                               \
+  inline float ty_::ToPercentage() const {                                  \
+    MOZ_ASSERT(ConvertsToPercentage());                                     \
+    return AsLengthPercentage().ToPercentage();                             \
+  }
+
+IMPL_LENGTHPERCENTAGE_FORWARDS(LengthPercentageOrAuto)
+IMPL_LENGTHPERCENTAGE_FORWARDS(StyleSize)
+IMPL_LENGTHPERCENTAGE_FORWARDS(StyleMaxSize)
+
+template <>
+inline bool LengthOrAuto::IsLength() const {
+  return IsLengthPercentage();
+}
+
+template <>
+inline const Length& LengthOrAuto::AsLength() const {
+  return AsLengthPercentage();
+}
+
+template <>
+inline bool StyleFlexBasis::IsAuto() const {
+  return IsSize() && AsSize().IsAuto();
+}
+
+template <>
+inline bool StyleSize::BehavesLikeInitialValueOnBlockAxis() const {
+  return IsAuto() || IsExtremumLength();
+}
+
+template <>
+inline bool StyleMaxSize::BehavesLikeInitialValueOnBlockAxis() const {
+  return IsNone() || IsExtremumLength();
+}
+
+template <>
+inline bool StyleBackgroundSize::IsInitialValue() const {
+  return IsExplicitSize() && explicit_size.width.IsAuto() &&
+         explicit_size.height.IsAuto();
+}
+
+template <typename T>
+const T& StyleRect<T>::Get(mozilla::Side aSide) const {
+  static_assert(sizeof(StyleRect<T>) == sizeof(T) * 4, "");
+  static_assert(alignof(StyleRect<T>) == alignof(T), "");
+  return reinterpret_cast<const T*>(this)[aSide];
+}
+
+template <typename T>
+template <typename Predicate>
+bool StyleRect<T>::All(Predicate aPredicate) const {
+  return aPredicate(_0) && aPredicate(_1) && aPredicate(_2) && aPredicate(_3);
+}
+
+template <typename T>
+template <typename Predicate>
+bool StyleRect<T>::Any(Predicate aPredicate) const {
+  return aPredicate(_0) || aPredicate(_1) || aPredicate(_2) || aPredicate(_3);
+}
+
+template <>
+inline const LengthPercentage& BorderRadius::Get(HalfCorner aCorner) const {
+  static_assert(sizeof(BorderRadius) == sizeof(LengthPercentage) * 8, "");
+  static_assert(alignof(BorderRadius) == alignof(LengthPercentage), "");
+  auto* self = reinterpret_cast<const LengthPercentage*>(this);
+  return self[aCorner];
+}
+
+template <>
+inline bool StyleTrackBreadth::HasPercent() const {
+  return IsBreadth() && AsBreadth().HasPercent();
+}
+
 }  // namespace mozilla
 
 #endif
