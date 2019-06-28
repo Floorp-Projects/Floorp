@@ -330,6 +330,15 @@ LoginManager.prototype = {
     return this._storage.getAllLogins();
   },
 
+  /**
+   * Get a dump of all stored logins asynchronously. Used by the login manager UI.
+   *
+   * @return {nsILoginInfo[]} - If there are no logins, the array is empty.
+   */
+  async getAllLoginsAsync() {
+    log.debug("Getting a list of all logins asynchronously");
+    return this._storage.getAllLoginsAsync();
+  },
 
   /**
    * Remove all stored logins.

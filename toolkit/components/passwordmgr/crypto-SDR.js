@@ -216,6 +216,9 @@ LoginManagerCrypto_SDR.prototype = {
     } catch (e) {
       this.log("Failed to decrypt strings. (" + e.name + ")");
       // If the user clicks Cancel, we get NS_ERROR_NOT_AVAILABLE.
+      // If the cipherText is bad / wrong key, we get NS_ERROR_FAILURE
+      // Wrong passwords are handled by the decoderRing reprompting;
+      // we get no notification.
       if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
         canceledMP = true;
         throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
