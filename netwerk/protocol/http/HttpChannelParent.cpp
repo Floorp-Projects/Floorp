@@ -1249,9 +1249,25 @@ static void FinishCrossProcessRedirect(nsHttpChannel* channel,
 }
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
-    const nsresult& aResult) {
+    const nsresult& aResult,
+    const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs) {
   RefPtr<nsHttpChannel> chan = do_QueryObject(mChannel);
+  nsresult rv = NS_OK;
+  auto sendReply =
+      MakeScopeExit([&]() { FinishCrossProcessRedirect(chan, rv); });
+
+  nsCOMPtr<nsILoadInfo> newLoadInfo;
+  rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(newLoadInfo));
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  if (newLoadInfo) {
+    chan->SetLoadInfo(newLoadInfo);
+  }
+
   if (!mBgParent) {
+    sendReply.release();
     RefPtr<HttpChannelParent> self = this;
     WaitForBgParent()->Then(
         GetMainThreadSerialEventTarget(), __func__,
@@ -1260,8 +1276,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
           MOZ_ASSERT(NS_FAILED(aRejectionRv), "This should be an error code");
           FinishCrossProcessRedirect(chan, aRejectionRv);
         });
-  } else {
-    FinishCrossProcessRedirect(chan, aResult);
   }
 
   return IPC_OK();
