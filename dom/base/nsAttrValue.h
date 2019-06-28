@@ -308,8 +308,9 @@ class nsAttrValue {
    * but drops the fractional part of the value for now, until we figure out how
    * to store that in our nsAttrValue.
    *
-   * The resulting value (if the parse succeeds) is either eInteger or
-   * ePercent, depending on whether we found a '%' at the end of the value.
+   * The resulting value (if the parse succeeds) is one of eInteger,
+   * eDoubleValue, or ePercent, depending on whether we found a fractional part
+   * and whether we found '%' at the end of the value.
    *
    * @param aInput the string to parse
    * @return whether the value could be parsed

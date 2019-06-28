@@ -1336,22 +1336,30 @@ bool nsAttrValue::DoParseHTMLDimension(const nsAString& aInput,
   // Step 9 is implemented implicitly via the various "position != end" guards
   // from this point on.
 
-  // Variant of step 10: just skip over possible decimals.  See bug 1561440 for
-  // fixing this.
+  Maybe<double> doubleValue;
+  // Step 10.
   if (position != end && *position == char16_t('.')) {
-    canonical = false;  // We're only going to store the integer part.
+    canonical = false;  // Let's not rely on double serialization reproducing
+                        // the string we started with.
     ++position;
+    // If we have a '.' _not_ followed by digits, this is not as efficient as it
+    // could be, because we will store as a double while we could have stored as
+    // an int.  But that seems like a pretty rare case.
+    doubleValue.emplace(value.value());
+    double divisor = 1.0f;
     // Per spec we should now return a number if there is no next char or if the
     // next char is not a digit, but no one does that.  See
     // https://github.com/whatwg/html/issues/4736
     while (position != end && *position >= char16_t('0') &&
            *position <= char16_t('9')) {
-      // Just do nothing
+      divisor = divisor * 10.0f;
+      doubleValue.ref() += (*position - char16_t('0')) / divisor;
       ++position;
     }
   }
 
-  if (aEnsureNonzero && value.value() == 0) {
+  if (aEnsureNonzero && value.value() == 0 &&
+      (!doubleValue || *doubleValue == 0.0f)) {
     // Not valid.  Just drop it.
     return false;
   }
@@ -1361,6 +1369,8 @@ bool nsAttrValue::DoParseHTMLDimension(const nsAString& aInput,
   if (position != end && *position == char16_t('%')) {
     type = ePercent;
     ++position;
+  } else if (doubleValue) {
+    type = eDoubleValue;
   } else {
     type = eInteger;
   }
@@ -1369,7 +1379,12 @@ bool nsAttrValue::DoParseHTMLDimension(const nsAString& aInput,
     canonical = false;
   }
 
-  SetIntValueAndType(value.value(), type, canonical ? nullptr : &aInput);
+  if (doubleValue) {
+    MOZ_ASSERT(!canonical, "We set it false above!");
+    SetDoubleValueAndType(*doubleValue, type, &aInput);
+  } else {
+    SetIntValueAndType(value.value(), type, canonical ? nullptr : &aInput);
+  }
 
 #ifdef DEBUG
   nsAutoString str;
