@@ -69,6 +69,14 @@ const tests = [
   [ createFrame, "marginwidth", "marginRight", document.body ],
   [ createFrame, "marginheight", "marginTop", document.body ],
   [ createFrame, "marginheight", "marginBottom", document.body ],
+  [ createBody, "marginwidth", "marginLeft", document.body ],
+  [ createBody, "marginwidth", "marginRight", document.body ],
+  [ createBody, "leftmargin", "marginLeft", document.body ],
+  [ createBody, "rightmargin", "marginRight", document.body ],
+  [ createBody, "marginheight", "marginTop", document.body ],
+  [ createBody, "marginheight", "marginBottom", document.body ],
+  [ createBody, "topmargin", "marginTop", document.body ],
+  [ createBody, "bottommargin", "marginBottom", document.body ],
 ];
 
 
@@ -76,6 +84,12 @@ function createIframe() {
   let ifr = document.createElement("iframe");
   document.body.appendChild(ifr);
   return [ ifr, ifr.contentDocument.body, () => ifr.remove() ];
+ }
+
+function createBody() {
+  let ifr = document.createElement("iframe");
+  document.body.appendChild(ifr);
+  return [ ifr.contentDocument.body, ifr.contentDocument.body, () => ifr.remove() ];
 }
 
 function createFrame() {
