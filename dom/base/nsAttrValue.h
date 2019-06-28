@@ -303,20 +303,6 @@ class nsAttrValue {
                       const EnumTable* aDefaultValue = nullptr);
 
   /**
-   * Parse a string into an integer. Can optionally parse percent (n%).
-   * This method explicitly sets a lower bound of zero on the element,
-   * whether it be percent or raw integer.
-   *
-   * @param aString the string to parse
-   * @return whether the value could be parsed
-   *
-   * @see http://www.whatwg.org/html/#rules-for-parsing-dimension-values
-   *
-   * But note that this function implements something totally different!
-   */
-  bool ParseSpecialIntValue(const nsAString& aString);
-
-  /**
    * Parse a string into a dimension value.  This is similar to
    * https://html.spec.whatwg.org/multipage/#rules-for-parsing-dimension-values
    * but drops the fractional part of the value for now, until we figure out how
