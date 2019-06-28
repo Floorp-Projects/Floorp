@@ -39,7 +39,6 @@ struct MiscContainer final {
         int32_t mInteger;
         nscolor mColor;
         uint32_t mEnumValue;
-        int32_t mPercent;
         mozilla::DeclarationBlock* mCSSDeclaration;
         nsIURI* mURL;
         mozilla::AtomArray* mAtomArray;
@@ -135,11 +134,12 @@ inline int16_t nsAttrValue::GetEnumValue() const {
                               NS_ATTRVALUE_ENUMTABLEINDEX_BITS);
 }
 
-inline float nsAttrValue::GetPercentValue() const {
+inline double nsAttrValue::GetPercentValue() const {
   MOZ_ASSERT(Type() == ePercent, "wrong type");
-  return ((BaseType() == eIntegerBase) ? GetIntInternal()
-                                       : GetMiscContainer()->mValue.mPercent) /
-         100.0f;
+  if (BaseType() == eIntegerBase) {
+    return GetIntInternal() / 100.0f;
+  }
+  return GetMiscContainer()->mDoubleValue / 100.0f;
 }
 
 inline mozilla::AtomArray* nsAttrValue::GetAtomArrayValue() const {

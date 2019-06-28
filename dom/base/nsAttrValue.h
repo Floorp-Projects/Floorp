@@ -202,7 +202,7 @@ class nsAttrValue {
   inline int32_t GetIntegerValue() const;
   bool GetColorValue(nscolor& aColor) const;
   inline int16_t GetEnumValue() const;
-  inline float GetPercentValue() const;
+  inline double GetPercentValue() const;
   inline mozilla::AtomArray* GetAtomArrayValue() const;
   inline mozilla::DeclarationBlock* GetCSSDeclarationValue() const;
   inline nsIURI* GetURLValue() const;
@@ -472,6 +472,9 @@ class nsAttrValue {
   inline void SetPtrValueAndType(void* aValue, ValueBaseType aType);
   void SetIntValueAndType(int32_t aValue, ValueType aType,
                           const nsAString* aStringValue);
+  // aType can be ePercent or eDoubleValue.
+  void SetDoubleValueAndType(double aValue, ValueType aType,
+                             const nsAString* aStringValue);
   void SetColorValue(nscolor aColor, const nsAString& aString);
   void SetMiscAtomOrString(const nsAString* aValue);
   void ResetMiscAtomOrString();

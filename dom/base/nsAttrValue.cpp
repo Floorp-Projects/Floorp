@@ -273,7 +273,7 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       break;
     }
     case ePercent: {
-      cont->mValue.mPercent = otherCont->mValue.mPercent;
+      cont->mDoubleValue = otherCont->mDoubleValue;
       break;
     }
     case eColor: {
@@ -541,9 +541,13 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       break;
     }
     case ePercent: {
-      nsAutoString intStr;
-      intStr.AppendInt(cont ? cont->mValue.mPercent : GetIntInternal());
-      aResult = intStr + NS_LITERAL_STRING("%");
+      nsAutoString str;
+      if (cont) {
+        str.AppendFloat(cont->mDoubleValue);
+      } else {
+        str.AppendInt(GetIntInternal());
+      }
+      aResult = str + NS_LITERAL_STRING("%");
 
       break;
     }
@@ -757,7 +761,7 @@ uint32_t nsAttrValue::HashValue() const {
       return cont->mValue.mEnumValue;
     }
     case ePercent: {
-      return cont->mValue.mPercent;
+      return cont->mDoubleValue;
     }
     case eColor: {
       return cont->mValue.mColor;
@@ -842,7 +846,7 @@ bool nsAttrValue::Equals(const nsAttrValue& aOther) const {
       break;
     }
     case ePercent: {
-      if (thisCont->mValue.mPercent == otherCont->mValue.mPercent) {
+      if (thisCont->mDoubleValue == otherCont->mDoubleValue) {
         needsStringComparison = true;
       }
       break;
@@ -1169,7 +1173,7 @@ void nsAttrValue::SetIntValueAndType(int32_t aValue, ValueType aType,
         break;
       }
       case ePercent: {
-        cont->mValue.mPercent = aValue;
+        cont->mDoubleValue = aValue;
         break;
       }
       case eEnum: {
@@ -1187,6 +1191,15 @@ void nsAttrValue::SetIntValueAndType(int32_t aValue, ValueType aType,
     NS_ASSERTION(!mBits, "Reset before calling SetIntValueAndType!");
     mBits = (aValue * NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER) | aType;
   }
+}
+
+void nsAttrValue::SetDoubleValueAndType(double aValue, ValueType aType,
+                                        const nsAString* aStringValue) {
+  MOZ_ASSERT(aType == eDoubleValue || aType == ePercent, "Unexpected type");
+  MiscContainer* cont = EnsureEmptyMiscContainer();
+  cont->mDoubleValue = aValue;
+  cont->mType = aType;
+  SetMiscAtomOrString(aStringValue);
 }
 
 int16_t nsAttrValue::GetEnumTableIndex(const EnumTable* aTable) {
