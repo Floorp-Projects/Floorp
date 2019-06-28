@@ -1249,34 +1249,6 @@ bool nsAttrValue::ParseEnumValue(const nsAString& aValue,
   return false;
 }
 
-bool nsAttrValue::ParseSpecialIntValue(const nsAString& aString) {
-  ResetIfSet();
-
-  nsAutoString tmp(aString);
-  nsContentUtils::ParseHTMLIntegerResultFlags result;
-  int32_t originalVal = nsContentUtils::ParseHTMLInteger(aString, &result);
-
-  if (result & nsContentUtils::eParseHTMLInteger_Error) {
-    return false;
-  }
-
-  bool isPercent = result & nsContentUtils::eParseHTMLInteger_IsPercent;
-  int32_t val = std::max(originalVal, 0);
-  bool nonStrict =
-      val != originalVal ||
-      (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
-      (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
-
-  // % (percent)
-  if (isPercent || tmp.RFindChar('%') >= 0) {
-    isPercent = true;
-  }
-
-  SetIntValueAndType(val, isPercent ? ePercent : eInteger,
-                     nonStrict ? &aString : nullptr);
-  return true;
-}
-
 bool nsAttrValue::DoParseHTMLDimension(const nsAString& aInput,
                                        bool aEnsureNonzero) {
   ResetIfSet();
