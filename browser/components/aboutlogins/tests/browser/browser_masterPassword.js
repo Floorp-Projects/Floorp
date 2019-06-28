@@ -24,22 +24,18 @@ function waitForMPDialog(action) {
   });
 }
 
-function getNumberOfLoginsDisplayed(browser) {
-  return ContentTask.spawn(browser, null, async () => {
+function waitForLoginCountToReach(browser, loginCount) {
+  return ContentTask.spawn(browser, loginCount, async (expectedLoginCount) => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    await ContentTaskUtils.waitForCondition(() => {
+        return loginList._logins.length == expectedLoginCount;
+    });
     return loginList._logins.length;
   });
 }
 
 add_task(async function test() {
-  let login = LoginTestUtils.testData.formLogin({
-    origin: "https://example.com",
-    formActionOrigin: "https://example.com",
-    username: "username",
-    password: "password",
-  });
-
-  Services.logins.addLogin(login);
+  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   LoginTestUtils.masterPassword.enable();
 
   let mpDialogShown = waitForMPDialog("cancel");
@@ -53,7 +49,7 @@ add_task(async function test() {
   });
 
   let browser = gBrowser.selectedBrowser;
-  let logins = await getNumberOfLoginsDisplayed(browser);
+  let logins = await waitForLoginCountToReach(browser, 0);
   is(logins, 0, "No logins should be displayed when MP is set and unauthenticated");
 
   let notification;
@@ -76,6 +72,6 @@ add_task(async function test() {
   await mpDialogShown;
   info("Master Password dialog shown and authenticated");
 
-  logins = await getNumberOfLoginsDisplayed(browser);
+  logins = await waitForLoginCountToReach(browser, 1);
   is(logins, 1, "Logins should be displayed when MP is set and authenticated");
 });

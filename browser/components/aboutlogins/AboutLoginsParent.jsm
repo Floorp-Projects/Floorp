@@ -72,7 +72,7 @@ var AboutLoginsParent = {
   _subscribers: new WeakSet(),
 
   // Listeners are added in BrowserGlue.jsm
-  receiveMessage(message) {
+  async receiveMessage(message) {
     // Only respond to messages sent from about:logins.
     if (message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
         message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
@@ -139,7 +139,7 @@ var AboutLoginsParent = {
         this._subscribers.add(message.target);
 
         let messageManager = message.target.messageManager;
-        messageManager.sendAsyncMessage("AboutLogins:AllLogins", this.getAllLogins());
+        messageManager.sendAsyncMessage("AboutLogins:AllLogins", await this.getAllLogins());
         break;
       }
       case "AboutLogins:UpdateLogin": {
@@ -164,7 +164,7 @@ var AboutLoginsParent = {
     }
   },
 
-  observe(subject, topic, type) {
+  async observe(subject, topic, type) {
     if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
       Services.obs.removeObserver(this, "passwordmgr-crypto-login");
       Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
@@ -174,7 +174,7 @@ var AboutLoginsParent = {
 
     if (topic == "passwordmgr-crypto-login") {
       this.removeMasterPasswordLoginNotifications();
-      this.messageSubscribers("AboutLogins:AllLogins", this.getAllLogins());
+      this.messageSubscribers("AboutLogins:AllLogins", await this.getAllLogins());
       return;
     }
 
@@ -282,11 +282,18 @@ var AboutLoginsParent = {
     }
   },
 
-  getAllLogins() {
-    return Services.logins
-                   .getAllLogins()
-                   .filter(isValidLogin)
+  async getAllLogins() {
+    try {
+      let logins = await Services.logins.getAllLoginsAsync();
+      return logins.filter(isValidLogin)
                    .map(LoginHelper.loginToVanillaObject)
                    .map(augmentVanillaLoginObject);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_ABORT) {
+        // If the user cancels the MP prompt then return no logins.
+        return [];
+      }
+      throw e;
+    }
   },
 };

@@ -259,6 +259,31 @@ this.LoginManagerStorage_json.prototype = {
   },
 
   /**
+   * Returns an array of nsILoginInfo.
+   *
+   * @resolve {nsILoginInfo[]}
+   */
+  async getAllLoginsAsync() {
+    let [logins, ids] = this._searchLogins({});
+    if (!logins.length) {
+      return [];
+    }
+    let ciphertexts = logins.map(l => l.username).concat(logins.map(l => l.password));
+    let plaintexts = await this._crypto.decryptMany(ciphertexts);
+    let usernames = plaintexts.slice(0, logins.length);
+    let passwords = plaintexts.slice(logins.length);
+
+    let result = [];
+    for (let i = 0; i < logins.length; i++) {
+      logins[i].username = usernames[i];
+      logins[i].password = passwords[i];
+      result.push(logins[i]);
+    }
+
+    return result;
+  },
+
+  /**
    * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
    * JavaScript object and decrypt the results.
    *

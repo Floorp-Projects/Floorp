@@ -100,6 +100,13 @@ interface nsILoginManager : nsISupports {
    */
   Array<nsILoginInfo> getAllLogins();
 
+  /**
+   * Like getAllLogins, but asynchronous. This method is faster when large
+   * amounts of logins are present since it will handle decryption in one batch.
+   *
+   * @return A promise which resolves with a JS Array of nsILoginInfo objects.
+   */
+  jsval getAllLoginsAsync();
 
   /**
    * Obtain a list of all origins for which password saving is disabled.
