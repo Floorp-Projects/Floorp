@@ -36,6 +36,8 @@ app-basics-name = Name
 app-basics-version = Version
 app-basics-build-id = Build ID
 app-basics-update-channel = Update Channel
+# This message refers to the folder used to store updates on the device,
+# as in "Folder for updates". "Update" is a noun, not a verb.
 app-basics-update-dir =
     { PLATFORM() ->
         [linux] Update Directory

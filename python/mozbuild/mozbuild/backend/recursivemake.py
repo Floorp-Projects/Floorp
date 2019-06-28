@@ -300,6 +300,7 @@ class RecursiveMakeTraversal(object):
         SubDirectories members.
 
         The default filter corresponds to a default recursive traversal.
+
         """
         filter = filter or self.default_filter
 

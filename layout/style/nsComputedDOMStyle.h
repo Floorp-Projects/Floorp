@@ -232,8 +232,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetOsxFontSmoothing();
 
   /* Grid properties */
-  already_AddRefed<CSSValue> DoGetGridAutoColumns();
-  already_AddRefed<CSSValue> DoGetGridAutoRows();
   already_AddRefed<CSSValue> DoGetGridTemplateColumns();
   already_AddRefed<CSSValue> DoGetGridTemplateRows();
 

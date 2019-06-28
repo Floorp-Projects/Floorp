@@ -211,6 +211,11 @@ def write_test_settings_json(args, test_details, oskey):
 
     if test_details['type'] == "scenario":
         test_settings['raptor-options']['scenario_time'] = test_details['scenario_time']
+        if 'background_test' in test_details:
+            test_settings['raptor-options']['background_test'] = \
+                bool(test_details['background_test'])
+        else:
+            test_settings['raptor-options']['background_test'] = False
 
     jsons_dir = os.path.join(tests_dir, 'json')
 

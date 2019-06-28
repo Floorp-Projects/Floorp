@@ -1811,6 +1811,16 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
     mSpdySession = nullptr;
   }
 
+  if (!mTransaction && mTLSFilter) {
+    // In case of a race when the transaction is being closed before the tunnel
+    // is established we need to carry closing status on the proxied
+    // transaction.
+    // Not doing this leads to use of this closed connection to activate the
+    // not closed transaction what will likely lead to a use of a closed ssl
+    // socket and may cause a crash because of an unexpected use.
+    mTLSFilter->Close(reason);
+  }
+
   if (mTransaction) {
     mHttp1xTransactionCount += mTransaction->Http1xTransactionCount();
 
@@ -2168,6 +2178,7 @@ void nsHttpConnection::SetInSpdyTunnel(bool arg) {
   mProxyConnectInProgress = false;
 }
 
+// static
 nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
                                              nsHttpRequestHead* request,
                                              nsACString& result, bool h2ws) {
@@ -2232,6 +2243,14 @@ nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
 
   result.Truncate();
   request->Flatten(result, false);
+
+  if (LOG1_ENABLED()) {
+    LOG(("nsHttpConnection::MakeConnectString for transaction=%p [",
+         trans->QueryHttpTransaction()));
+    LogHeaders(result.BeginReading());
+    LOG(("]"));
+  }
+
   result.AppendLiteral("\r\n");
   return NS_OK;
 }

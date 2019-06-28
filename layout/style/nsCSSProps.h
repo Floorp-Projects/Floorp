@@ -287,28 +287,13 @@ class nsCSSProps {
     if (nsCSSProps::IsEnabled(*it_, (mozilla::CSSEnabledState)es_))
 
   // Keyword/Enum value tables
-  // Not const because we modify its entries when the pref
-  // "layout.css.background-clip.text" changes:
-  static const KTableEntry kShapeRadiusKTable[];
-  static const KTableEntry kBoxShadowTypeKTable[];
   static const KTableEntry kCursorKTable[];
   // Not const because we modify its entries when various
   // "layout.css.*.enabled" prefs changes:
   static KTableEntry kDisplayKTable[];
-  // clang-format off
-  // -- tables for auto-completion of the {align,justify}-{content,items,self} properties --
-  static const KTableEntry kAutoCompletionAlignJustifySelf[];
-  static const KTableEntry kAutoCompletionAlignItems[];
-  static const KTableEntry kAutoCompletionAlignJustifyContent[];
-  // ------------------------------------------------------------------
-  // clang-format on
   static const KTableEntry kFontSmoothingKTable[];
-  static const KTableEntry kGridAutoFlowKTable[];
-  static const KTableEntry kGridTrackBreadthKTable[];
-  static const KTableEntry kLineHeightKTable[];
   static const KTableEntry kTextAlignKTable[];
   static const KTableEntry kTextDecorationStyleKTable[];
-  static const KTableEntry kTextEmphasisStyleShapeKTable[];
 };
 
 // MOZ_DBG support for nsCSSPropertyID

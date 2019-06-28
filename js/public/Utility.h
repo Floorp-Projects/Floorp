@@ -306,6 +306,30 @@ static inline bool ShouldFailWithOOM() { return false; }
 
 #  endif /* DEBUG || JS_OOM_BREAKPOINT */
 
+#  ifdef FUZZING
+namespace js {
+namespace oom {
+extern JS_PUBLIC_DATA size_t largeAllocLimit;
+extern void InitLargeAllocLimit();
+} /* namespace oom */
+} /* namespace js */
+
+#    define JS_CHECK_LARGE_ALLOC(x)                                     \
+      do {                                                              \
+        if (js::oom::largeAllocLimit && x > js::oom::largeAllocLimit) { \
+          if (getenv("MOZ_FUZZ_CRASH_ON_LARGE_ALLOC")) {                \
+            MOZ_CRASH("Large allocation");                              \
+          } else {                                                      \
+            return nullptr;                                             \
+          }                                                             \
+        }                                                               \
+      } while (0)
+#  else
+#    define JS_CHECK_LARGE_ALLOC(x) \
+      do {                          \
+      } while (0)
+#  endif
+
 namespace js {
 
 /* Disable OOM testing in sections which are not OOM safe. */
@@ -365,6 +389,7 @@ extern void AssertJSStringBufferInCorrectArena(const void* ptr);
 
 static inline void* js_arena_malloc(arena_id_t arena, size_t bytes) {
   JS_OOM_POSSIBLY_FAIL();
+  JS_CHECK_LARGE_ALLOC(bytes);
   return moz_arena_malloc(arena, bytes);
 }
 
@@ -374,12 +399,14 @@ static inline void* js_malloc(size_t bytes) {
 
 static inline void* js_arena_calloc(arena_id_t arena, size_t bytes) {
   JS_OOM_POSSIBLY_FAIL();
+  JS_CHECK_LARGE_ALLOC(bytes);
   return moz_arena_calloc(arena, bytes, 1);
 }
 
 static inline void* js_arena_calloc(arena_id_t arena, size_t nmemb,
                                     size_t size) {
   JS_OOM_POSSIBLY_FAIL();
+  JS_CHECK_LARGE_ALLOC(nmemb * size);
   return moz_arena_calloc(arena, nmemb, size);
 }
 
@@ -398,6 +425,7 @@ static inline void* js_arena_realloc(arena_id_t arena, void* p, size_t bytes) {
   MOZ_ASSERT(bytes != 0);
 
   JS_OOM_POSSIBLY_FAIL();
+  JS_CHECK_LARGE_ALLOC(bytes);
   return moz_arena_realloc(arena, p, bytes);
 }
 

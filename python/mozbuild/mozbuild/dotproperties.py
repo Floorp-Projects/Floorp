@@ -66,7 +66,7 @@ class DotProperties:
     def get_dict(self, prefix, required_keys=[]):
         '''Turns {'foo.title':'title', ...} into {'title':'title', ...}.
 
-        If |required_keys| is present, it must be an iterable of required key
+        If ``|required_keys|`` is present, it must be an iterable of required key
         names.  If a required key is not present, ValueError is thrown.
 
         Returns {} to indicate an empty or missing dict.'''

@@ -640,8 +640,8 @@ class Nursery {
   void sweep(JSTracer* trc);
 
   /*
-   * Frees all non-live nursery-allocated things at the end of a minor
-   * collection.
+   * Reset the current chunk and position after a minor collection. Also poison
+   * the nursery on debug & nightly builds.
    */
   void clear();
 

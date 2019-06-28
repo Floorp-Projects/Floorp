@@ -21,6 +21,7 @@
 #include <tcpmib.h>
 #include <iphlpapi.h>
 #include <netioapi.h>
+#include <netlistmgr.h>
 #include <iprtrmib.h>
 #include "plstr.h"
 #include "mozilla/Logging.h"
@@ -29,14 +30,15 @@
 #include "nsServiceManagerUtils.h"
 #include "nsNotifyAddrListener.h"
 #include "nsString.h"
+#include "nsPrintfCString.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Services.h"
 #include "nsCRT.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
-
 #include <iptypes.h>
 #include <iphlpapi.h>
 
@@ -106,10 +108,10 @@ NS_IMPL_ISUPPORTS(nsNotifyAddrListener, nsINetworkLinkService, nsIRunnable,
                   nsIObserver)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
-    : mLinkUp(true)  // assume true by default
-      ,
+    : mLinkUp(true),  // assume true by default
       mStatusKnown(false),
       mCheckAttempted(false),
+      mMutex("nsNotifyAddrListener::mMutex"),
       mCheckEvent(nullptr),
       mShutdown(false),
       mIPInterfaceChecksum(0),
@@ -150,138 +152,96 @@ nsNotifyAddrListener::GetLinkType(uint32_t* aLinkType) {
   return NS_OK;
 }
 
-static bool macAddr(BYTE addr[], DWORD len, char* buf, size_t buflen) {
-  buf[0] = '\0';
-  if (!addr || !len || (len * 3 > buflen)) {
-    return false;
-  }
-
-  for (DWORD i = 0; i < len; ++i) {
-    sprintf_s(buf + (i * 3), sizeof(buf + (i * 3)), "%02x%s", addr[i],
-              (i == len - 1) ? "" : ":");
-  }
-  return true;
-}
-
-bool nsNotifyAddrListener::findMac(char* gateway) {
-  // query for buffer size needed
-  DWORD dwActualSize = 0;
-  bool found = FALSE;
-
-  // GetIpNetTable gets the IPv4 to physical address mapping table
-  DWORD status = GetIpNetTable(NULL, &dwActualSize, FALSE);
-  if (status == ERROR_INSUFFICIENT_BUFFER) {
-    // the expected route, now with a known buffer size
-    UniquePtr<char[]> buf(new char[dwActualSize]);
-    PMIB_IPNETTABLE pIpNetTable = reinterpret_cast<PMIB_IPNETTABLE>(&buf[0]);
-
-    status = GetIpNetTable(pIpNetTable, &dwActualSize, FALSE);
-
-    if (status == NO_ERROR) {
-      for (DWORD i = 0; i < pIpNetTable->dwNumEntries; ++i) {
-        char hw[256];
-
-        if (!macAddr(pIpNetTable->table[i].bPhysAddr,
-                     pIpNetTable->table[i].dwPhysAddrLen, hw, sizeof(hw))) {
-          // failed to get the MAC
-          continue;
-        }
-
-        struct in_addr addr;
-        addr.s_addr = pIpNetTable->table[i].dwAddr;
-
-        if (!strcmp(gateway, inet_ntoa(addr))) {
-          LOG(("networkid: MAC %s\n", hw));
-          nsAutoCString mac(hw);
-          // This 'addition' could potentially be a
-          // fixed number from the profile or something.
-          nsAutoCString addition("local-rubbish");
-          nsAutoCString output;
-          SHA1Sum sha1;
-          nsCString combined(mac + addition);
-          sha1.update(combined.get(), combined.Length());
-          uint8_t digest[SHA1Sum::kHashSize];
-          sha1.finish(digest);
-          nsCString newString(reinterpret_cast<char*>(digest),
-                              SHA1Sum::kHashSize);
-          nsresult rv = Base64Encode(newString, output);
-          if (NS_FAILED(rv)) {
-            found = false;
-            break;
-          }
-          LOG(("networkid: id %s\n", output.get()));
-          if (mNetworkId != output) {
-            // new id
-            Telemetry::Accumulate(Telemetry::NETWORK_ID, 1);
-            mNetworkId = output;
-          } else {
-            // same id
-            Telemetry::Accumulate(Telemetry::NETWORK_ID, 2);
-          }
-          found = true;
-          break;
-        }
-      }
-    }
-  }
-  return found;
-}
-
-// returns 'true' when the gw is found and stored
-static bool defaultgw(char* aGateway, size_t aGatewayLen) {
-  PMIB_IPFORWARDTABLE pIpForwardTable = NULL;
-
-  DWORD dwSize = 0;
-  if (GetIpForwardTable(NULL, &dwSize, 0) != ERROR_INSUFFICIENT_BUFFER) {
-    return false;
-  }
-
-  UniquePtr<char[]> buf(new char[dwSize]);
-  pIpForwardTable = reinterpret_cast<PMIB_IPFORWARDTABLE>(&buf[0]);
-
-  // Note that the IPv4 addresses returned in GetIpForwardTable entries are
-  // in network byte order
-
-  DWORD retVal = GetIpForwardTable(pIpForwardTable, &dwSize, 0);
-  if (retVal == NO_ERROR) {
-    for (unsigned int i = 0; i < pIpForwardTable->dwNumEntries; ++i) {
-      // Convert IPv4 addresses to strings
-      struct in_addr IpAddr;
-      IpAddr.S_un.S_addr =
-          static_cast<u_long>(pIpForwardTable->table[i].dwForwardDest);
-      char* ipStr = inet_ntoa(IpAddr);
-      if (ipStr && !strcmp("0.0.0.0", ipStr)) {
-        // Default gateway!
-        IpAddr.S_un.S_addr =
-            static_cast<u_long>(pIpForwardTable->table[i].dwForwardNextHop);
-        ipStr = inet_ntoa(IpAddr);
-        if (ipStr) {
-          strcpy_s(aGateway, aGatewayLen, ipStr);
-          return true;
-        }
-      }
-    }  // for loop
-  }
-
-  return false;
+NS_IMETHODIMP
+nsNotifyAddrListener::GetNetworkID(nsACString& aNetworkID) {
+  MutexAutoLock lock(mMutex);
+  aNetworkID = mNetworkId;
+  return NS_OK;
 }
 
 //
 // Figure out the current "network identification" string.
 //
-// It detects the IP of the default gateway in the routing table, then the MAC
-// address of that IP in the ARP table before it hashes that string (to avoid
-// information leakage).
-//
 void nsNotifyAddrListener::calculateNetworkId(void) {
-  bool found = FALSE;
-  char gateway[128];
-  if (defaultgw(gateway, sizeof(gateway))) {
-    found = findMac(gateway);
+  MOZ_ASSERT(!NS_IsMainThread(), "Must not be called on the main thread");
+
+  if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
+    return;
   }
-  if (!found) {
-    // no id
-    Telemetry::Accumulate(Telemetry::NETWORK_ID, 0);
+
+  auto unitialize = MakeScopeExit([]() { CoUninitialize(); });
+
+  RefPtr<INetworkListManager> nlm;
+  HRESULT hr = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL,
+                                IID_INetworkListManager, getter_AddRefs(nlm));
+  if (NS_WARN_IF(FAILED(hr))) {
+    LOG(("CoCreateInstance error: %X", hr));
+    return;
+  }
+  RefPtr<IEnumNetworks> enumNetworks;
+  hr = nlm->GetNetworks(NLM_ENUM_NETWORK_CONNECTED,
+                        getter_AddRefs(enumNetworks));
+  if (NS_WARN_IF(FAILED(hr))) {
+    LOG(("GetNetworks error: %X", hr));
+    return;
+  }
+
+  SHA1Sum sha1;
+  uint32_t networkCount = 0;
+  while (true) {
+    RefPtr<INetwork> network;
+    hr = enumNetworks->Next(1, getter_AddRefs(network), nullptr);
+    if (hr != S_OK) {
+      break;
+    }
+
+    GUID nwGUID;
+    hr = network->GetNetworkId(&nwGUID);
+    if (hr != S_OK) {
+      continue;
+    }
+    networkCount++;
+    sha1.update(&nwGUID, sizeof(nwGUID));
+
+    nsPrintfCString guid("%08lX%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%lX",
+                         nwGUID.Data1, nwGUID.Data2, nwGUID.Data3,
+                         nwGUID.Data4[0], nwGUID.Data4[1], nwGUID.Data4[2],
+                         nwGUID.Data4[3], nwGUID.Data4[4], nwGUID.Data4[5],
+                         nwGUID.Data4[6], nwGUID.Data4[7]);
+    LOG(("calculateNetworkId: interface networkID: %s\n", guid.get()));
+  }
+
+  if (networkCount == 0) {
+    MutexAutoLock lock(mMutex);
+    mNetworkId.Truncate();
+    LOG(("calculateNetworkId: no network ID - no active networks"));
+    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
+    return;
+  }
+
+  nsAutoCString output;
+  SHA1Sum::Hash digest;
+  sha1.finish(digest);
+  nsCString newString(reinterpret_cast<char*>(digest), SHA1Sum::kHashSize);
+  nsresult rv = Base64Encode(newString, output);
+  if (NS_FAILED(rv)) {
+    {
+      MutexAutoLock lock(mMutex);
+      mNetworkId.Truncate();
+    }
+    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
+    LOG(("calculateNetworkId: no network ID Base64Encode error %X", rv));
+    return;
+  }
+
+  MutexAutoLock lock(mMutex);
+  if (output != mNetworkId) {
+    mNetworkId = output;
+    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 1);
+    LOG(("calculateNetworkId: new NetworkID: %s", output.get()));
+  } else {
+    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
+    LOG(("calculateNetworkId: same NetworkID: %s", output.get()));
   }
 }
 
@@ -299,7 +259,6 @@ nsNotifyAddrListener::nextCoalesceWaitTime() {
   // check if coalescing period should continue
   double period = (TimeStamp::Now() - mChangeTime).ToMilliseconds();
   if (period >= kNetworkChangeCoalescingPeriod) {
-    calculateNetworkId();
     SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
     mCoalescingActive = false;
     return INFINITE;  // return default
@@ -455,6 +414,13 @@ nsresult nsNotifyAddrListener::SendEvent(const char* aEventID) {
   if (!aEventID) return NS_ERROR_NULL_POINTER;
 
   LOG(("SendEvent: network is '%s'\n", aEventID));
+
+  // The event was caused by a call to GetIsLinkUp on the main thread.
+  // We only need to recalculate for events caused by NotifyAddrChange or
+  // OnInterfaceChange
+  if (!NS_IsMainThread()) {
+    calculateNetworkId();
+  }
 
   nsresult rv;
   nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);

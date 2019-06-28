@@ -40,7 +40,9 @@ def resolve_task_references(label, task_def, dependencies):
       {'task-reference': '..<..>..'}
     and
       {'artifact-reference`: '..<dependency/artifact/path>..'}
-    in the given task definition, using the given dependencies"""
+    in the given task definition, using the given dependencies
+
+    """
 
     def task_reference(val):
         def repl(match):

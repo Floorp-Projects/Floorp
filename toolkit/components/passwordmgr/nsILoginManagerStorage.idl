@@ -112,6 +112,13 @@ interface nsILoginManagerStorage : nsISupports {
    */
   Array<nsILoginInfo> getAllLogins();
 
+  /**
+   * Fetch all logins in the login manager. An array is always returned;
+   * if there are no logins the array is empty.
+   *
+   * @return An array of nsILoginInfo objects.
+   */
+  jsval getAllLoginsAsync();
 
   /**
    * Search for logins in the login manager. An array is always returned;

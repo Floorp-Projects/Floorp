@@ -34,7 +34,6 @@ def android_version_code_v0(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
 
 def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     '''Generate a v1 android:versionCode.
-
     The important consideration is that version codes be monotonically
     increasing (per Android package name) for all published builds.  The input
     build IDs are based on timestamps and hence are always monotonically
@@ -54,6 +53,7 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     The bit labelled 'x' is 1 if the build is for an x86 or x86-64 architecture,
     and 0 otherwise, which means the build is for an ARM or ARM64 architecture.
     (Fennec no longer supports ARMv6, so ARM is equivalent to ARMv7.
+
      ARM64 is also known as AArch64; it is logically ARMv8.)
 
     For the same release, x86 and x86_64 builds have higher version codes and
