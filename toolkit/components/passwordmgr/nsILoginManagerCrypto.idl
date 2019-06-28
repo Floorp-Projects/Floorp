@@ -53,6 +53,18 @@ interface nsILoginManagerCrypto : nsISupports {
   AString decrypt(in AString cipherText);
 
   /**
+   * @param cipherTexts
+   *        The strings to be decrypted.
+   *
+   * Decrypts the specified strings, returning the plaintext values.
+   *
+   * Can throw if the user cancels entry of their master password, or if the
+   * cipherText value can not be successfully decrypted (eg, if it was
+   * encrypted with some other key).
+   */
+  jsval decryptMany(in jsval cipherTexts);
+
+  /**
    * uiBusy
    *
    * True when a master password prompt is being displayed.
