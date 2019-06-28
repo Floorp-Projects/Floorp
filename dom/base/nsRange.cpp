@@ -277,15 +277,13 @@ nsRange::~nsRange() {
 }
 
 nsRange::nsRange(nsINode* aNode)
-    : mRoot(nullptr),
+    : AbstractRange(aNode),
       mRegisteredCommonAncestor(nullptr),
       mNextStartRef(nullptr),
-      mNextEndRef(nullptr),
-      mIsPositioned(false),
-      mIsGenerated(false),
-      mCalledByJS(false) {
-  MOZ_ASSERT(aNode, "range isn't in a document!");
-  mOwner = aNode->OwnerDoc();
+      mNextEndRef(nullptr) {
+  // printf("Size of nsRange: %zu\n", sizeof(nsRange));
+  static_assert(sizeof(nsRange) <= 192,
+                "nsRange size shouldn't be increased as far as possible");
 }
 
 /* static */
@@ -327,17 +325,12 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
 
 // QueryInterface implementation for nsRange
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsRange)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(AbstractRange)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsRange)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsRange)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner);
-
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsRange, AbstractRange)
   // We _could_ just rely on Reset() to UnregisterCommonAncestor(),
   // but it wouldn't know we're calling it from Unlink and so would do
   // more work than it really needs to.
@@ -351,15 +344,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsRange)
                         "Shouldn't be registered now that we're unlinking");
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsRange)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStart)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEnd)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsRange, AbstractRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsRange)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsRange, AbstractRange)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 static void MarkDescendants(nsINode* aNode) {
@@ -1034,12 +1023,6 @@ void nsRange::SetSelection(mozilla::dom::Selection* aSelection) {
   }
 }
 
-nsINode* nsRange::GetCommonAncestor() const {
-  return mIsPositioned ? nsContentUtils::GetCommonAncestor(mStart.Container(),
-                                                           mEnd.Container())
-                       : nullptr;
-}
-
 void nsRange::Reset() {
   DoSetRange(RawRangeBoundary(), RawRangeBoundary(), nullptr);
 }
@@ -1047,52 +1030,6 @@ void nsRange::Reset() {
 /******************************************************
  * public functionality
  ******************************************************/
-
-nsINode* nsRange::GetStartContainer(ErrorResult& aRv) const {
-  if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return nullptr;
-  }
-
-  return mStart.Container();
-}
-
-uint32_t nsRange::GetStartOffset(ErrorResult& aRv) const {
-  if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return 0;
-  }
-
-  return mStart.Offset();
-}
-
-nsINode* nsRange::GetEndContainer(ErrorResult& aRv) const {
-  if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return nullptr;
-  }
-
-  return mEnd.Container();
-}
-
-uint32_t nsRange::GetEndOffset(ErrorResult& aRv) const {
-  if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return 0;
-  }
-
-  return mEnd.Offset();
-}
-
-nsINode* nsRange::GetCommonAncestorContainer(ErrorResult& aRv) const {
-  if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return nullptr;
-  }
-
-  return nsContentUtils::GetCommonAncestor(mStart.Container(),
-                                           mEnd.Container());
-}
 
 /* static */
 bool nsRange::IsValidOffset(nsINode* aNode, uint32_t aOffset) {
@@ -1533,13 +1470,18 @@ nsresult RangeSubtreeIterator::Init(nsRange* aRange) {
   // a CharacterData pointer. If it is CharacterData store
   // a pointer to the node.
 
-  ErrorResult rv;
-  nsCOMPtr<nsINode> node = aRange->GetStartContainer(rv);
-  if (!node) return NS_ERROR_FAILURE;
+  if (!aRange->IsPositioned()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsINode* node = aRange->GetStartContainer();
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (node->IsCharacterData() ||
       (node->IsElement() &&
-       node->AsElement()->GetChildCount() == aRange->GetStartOffset(rv))) {
+       node->AsElement()->GetChildCount() == aRange->StartOffset())) {
     mStart = node;
   }
 
@@ -1547,11 +1489,13 @@ nsresult RangeSubtreeIterator::Init(nsRange* aRange) {
   // a CharacterData pointer. If it is CharacterData store
   // a pointer to the node.
 
-  node = aRange->GetEndContainer(rv);
-  if (!node) return NS_ERROR_FAILURE;
+  node = aRange->GetEndContainer();
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (node->IsCharacterData() ||
-      (node->IsElement() && aRange->GetEndOffset(rv) == 0)) {
+      (node->IsElement() && aRange->EndOffset() == 0)) {
     mEnd = node;
   }
 
@@ -1706,14 +1650,14 @@ static nsresult CollapseRangeAfterDelete(nsRange* aRange) {
   // aRange isn't collapsed so figure out the appropriate place to collapse!
   // First get both end points and their common ancestor.
 
-  ErrorResult rv;
-  nsCOMPtr<nsINode> commonAncestor = aRange->GetCommonAncestorContainer(rv);
-  if (rv.Failed()) return rv.StealNSResult();
+  if (!aRange->IsPositioned()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer(rv);
-  if (rv.Failed()) return rv.StealNSResult();
-  nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer(rv);
-  if (rv.Failed()) return rv.StealNSResult();
+  nsCOMPtr<nsINode> commonAncestor = aRange->GetCommonAncestor();
+
+  nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer();
+  nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer();
 
   // Collapse to one of the end points if they are already in the
   // commonAncestor. This should work ok since this method is called
@@ -1744,8 +1688,11 @@ static nsresult CollapseRangeAfterDelete(nsRange* aRange) {
 
   if (!nodeToSelect) return NS_ERROR_FAILURE;  // This should never happen!
 
-  aRange->SelectNode(*nodeToSelect, rv);
-  if (rv.Failed()) return rv.StealNSResult();
+  ErrorResult error;
+  aRange->SelectNode(*nodeToSelect, error);
+  if (error.Failed()) {
+    return error.StealNSResult();
+  }
 
   aRange->Collapse(false);
   return NS_OK;
@@ -2402,12 +2349,14 @@ void nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv) {
     return;
   }
 
-  uint32_t tStartOffset = StartOffset();
-
-  nsCOMPtr<nsINode> tStartContainer = GetStartContainer(aRv);
-  if (aRv.Failed()) {
+  if (!IsPositioned()) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
   }
+
+  uint32_t tStartOffset = StartOffset();
+
+  nsCOMPtr<nsINode> tStartContainer = GetStartContainer();
 
   if (!CanAccess(*tStartContainer)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -2921,7 +2870,8 @@ already_AddRefed<DOMRectList> nsRange::GetClientRects(bool aClampToEdge,
     return nullptr;
   }
 
-  RefPtr<DOMRectList> rectList = new DOMRectList(this);
+  RefPtr<DOMRectList> rectList =
+      new DOMRectList(static_cast<AbstractRange*>(this));
 
   nsLayoutUtils::RectListBuilder builder(rectList);
 
@@ -2937,7 +2887,7 @@ void nsRange::GetClientRectsAndTexts(mozilla::dom::ClientRectsAndTexts& aResult,
     return;
   }
 
-  aResult.mRectList = new DOMRectList(this);
+  aResult.mRectList = new DOMRectList(static_cast<AbstractRange*>(this));
 
   nsLayoutUtils::RectListBuilder builder(aResult.mRectList);
 
