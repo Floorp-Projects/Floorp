@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -100,6 +101,18 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `AddNewTabUseCase forwards load flags to engine`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val useCases = TabsUseCases(sessionManager)
+
+        useCases.addTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(engineSession).loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+    }
+
+    @Test
     fun `AddNewPrivateTabUseCase will not load URL if flag is set to false`() {
         val sessionManager = spy(SessionManager(mock()))
         val engineSession: EngineSession = mock()
@@ -110,6 +123,18 @@ class TabsUseCasesTest {
         useCases.addPrivateTab("https://www.mozilla.org", startLoading = false)
 
         verify(engineSession, never()).loadUrl("https://www.mozilla.org")
+    }
+
+    @Test
+    fun `AddNewPrivateTabUseCase forwards load flags to engine`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val useCases = TabsUseCases(sessionManager)
+
+        useCases.addPrivateTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(engineSession).loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
     }
 
     @Test

@@ -74,7 +74,7 @@ class ServoEngineSession(
         }
     }
 
-    override fun loadUrl(url: String) {
+    override fun loadUrl(url: String, flags: LoadUrlFlags) {
         val view = view
         if (view != null) {
             view.loadUri(Uri.parse(url))

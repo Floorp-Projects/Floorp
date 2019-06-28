@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 
 /**
@@ -49,9 +50,10 @@ class TabsUseCases(
          * Adds a new tab and loads the provided URL.
          *
          * @param url The URL to be loaded in the new tab.
+         * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
-        override fun invoke(url: String) {
-            this.invoke(url, true, true, null)
+        override fun invoke(url: String, flags: LoadUrlFlags) {
+            this.invoke(url, true, true, null, flags)
         }
 
         /**
@@ -61,18 +63,20 @@ class TabsUseCases(
          * @param selectTab True (default) if the new tab should be selected immediately.
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parent the parent session to use for the newly created session.
+         * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
         operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
-            parent: Session? = null
+            parent: Session? = null,
+            flags: LoadUrlFlags = LoadUrlFlags.none()
         ): Session {
             val session = Session(url, false, Source.NEW_TAB)
             sessionManager.add(session, selected = selectTab, parent = parent)
 
             if (startLoading) {
-                sessionManager.getOrCreateEngineSession(session).loadUrl(url)
+                sessionManager.getOrCreateEngineSession(session).loadUrl(url, flags)
             }
 
             return session
@@ -87,9 +91,10 @@ class TabsUseCases(
          * Adds a new private tab and loads the provided URL.
          *
          * @param url The URL to be loaded in the new private tab.
+         * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
-        override fun invoke(url: String) {
-            this.invoke(url, true, true, null)
+        override fun invoke(url: String, flags: LoadUrlFlags) {
+            this.invoke(url, true, true, null, flags)
         }
 
         /**
@@ -99,18 +104,20 @@ class TabsUseCases(
          * @param selectTab True (default) if the new tab should be selected immediately.
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parent the parent session to use for the newly created session.
+         * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
         operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
-            parent: Session? = null
+            parent: Session? = null,
+            flags: LoadUrlFlags = LoadUrlFlags.none()
         ): Session {
             val session = Session(url, true, Source.NEW_TAB)
             sessionManager.add(session, selected = selectTab, parent = parent)
 
             if (startLoading) {
-                sessionManager.getOrCreateEngineSession(session).loadUrl(url)
+                sessionManager.getOrCreateEngineSession(session).loadUrl(url, flags)
             }
 
             return session

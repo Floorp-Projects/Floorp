@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
@@ -62,9 +63,10 @@ class SystemEngineSession(
     }
 
     /**
-     * See [EngineSession.loadUrl]
+     * See [EngineSession.loadUrl]. Note that [LoadUrlFlags] are ignored in this engine
+     * implementation.
      */
-    override fun loadUrl(url: String) {
+    override fun loadUrl(url: String, flags: LoadUrlFlags) {
         if (!url.isEmpty()) {
             currentUrl = url
             webView.loadUrl(url, additionalHeaders)

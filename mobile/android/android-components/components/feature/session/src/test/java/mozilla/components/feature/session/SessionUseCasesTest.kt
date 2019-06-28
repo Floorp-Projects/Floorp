@@ -9,6 +9,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -41,8 +42,16 @@ class SessionUseCasesTest {
         useCases.loadUrl("http://mozilla.org")
         verify(selectedEngineSession).loadUrl("http://mozilla.org")
 
+        useCases.loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(selectedEngineSession).loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+
         useCases.loadUrl("http://getpocket.com", selectedSession)
         verify(selectedEngineSession).loadUrl("http://getpocket.com")
+
+        useCases.loadUrl.invoke("http://www.getpocket.com", selectedSession,
+                LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
+        verify(selectedEngineSession).loadUrl("http://www.getpocket.com",
+                LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
     }
 
     @Test

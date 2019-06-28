@@ -29,6 +29,17 @@ permalink: /changelog/
 * **browser-icons**
   * The component now ships with the [tippy-top-sites](https://github.com/mozilla/tippy-top-sites) top 200 list for looking up icon resources.
 
+* **concept-engine**, **browser-engine-gecko(-beta/nightly)**, **feature-session**, **feature-tabs**
+  * Added to support for specifying additional flags when loading URLs. This can be done using the engine session directly, as well as via use cases:
+  ```kotlin
+  // Bypass cache
+  sessionManager.getEngineSession().loadUrl(url, LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE))
+
+  // Bypass cache and proxy
+  sessionUseCases.loadUrl.invoke(url, LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE, LoadUrlFlags.BYPASS_PROXY))
+  
+  ```
+
 # 1.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.56.0...v1.0.0)

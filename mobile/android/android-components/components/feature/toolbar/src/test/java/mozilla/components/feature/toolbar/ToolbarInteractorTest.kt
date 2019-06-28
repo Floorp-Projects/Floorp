@@ -7,6 +7,7 @@
 package mozilla.components.feature.toolbar
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
@@ -79,7 +80,7 @@ class ToolbarInteractorTest {
     fun `provide custom use case for loading url`() {
         var useCaseInvokedWithUrl = ""
         val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
-            override fun invoke(url: String) {
+            override fun invoke(url: String, flags: EngineSession.LoadUrlFlags) {
                 useCaseInvokedWithUrl = url
             }
         }

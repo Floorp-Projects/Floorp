@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
@@ -306,8 +307,10 @@ class GeckoEngineSessionTest {
                 geckoSessionProvider = geckoSessionProvider)
 
         engineSession.loadUrl("http://mozilla.org")
+        verify(geckoSession).loadUri("http://mozilla.org", GeckoSession.LOAD_FLAGS_NONE)
 
-        verify(geckoSession).loadUri("http://mozilla.org")
+        engineSession.loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(geckoSession).loadUri("http://www.mozilla.org", GeckoSession.LOAD_FLAGS_EXTERNAL)
     }
 
     @Test
@@ -1000,7 +1003,7 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLoadRequest(geckoSession, mockLoadRequest("sample:about"))
 
         assertEquals("sample:about", interceptorCalledWithUri)
-        verify(geckoSession).loadUri("https://mozilla.org")
+        verify(geckoSession).loadUri("https://mozilla.org", GeckoSession.LOAD_FLAGS_NONE)
     }
 
     @Test
@@ -1575,6 +1578,15 @@ class GeckoEngineSessionTest {
         assertFalse(engineSession.recoverFromCrash())
 
         verify(engineSession.geckoSession, never()).restoreState(any())
+    }
+
+    @Test
+    fun loadFlagsAreAligned() {
+        assertEquals(LoadUrlFlags.BYPASS_CACHE, GeckoSession.LOAD_FLAGS_BYPASS_CACHE)
+        assertEquals(LoadUrlFlags.BYPASS_PROXY, GeckoSession.LOAD_FLAGS_BYPASS_PROXY)
+        assertEquals(LoadUrlFlags.EXTERNAL, GeckoSession.LOAD_FLAGS_EXTERNAL)
+        assertEquals(LoadUrlFlags.ALLOW_POPUPS, GeckoSession.LOAD_FLAGS_ALLOW_POPUPS)
+        assertEquals(LoadUrlFlags.BYPASS_CLASSIFIER, GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
     }
 
     private fun mockGeckoSession(): GeckoSession {

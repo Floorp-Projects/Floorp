@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -583,6 +584,25 @@ class EngineSessionTest {
     }
 
     @Test
+    fun `load flags can be selected`() {
+        assertEquals(LoadUrlFlags.NONE, LoadUrlFlags.none().value)
+        assertEquals(LoadUrlFlags.ALL, LoadUrlFlags.all().value)
+
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.EXTERNAL).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.ALLOW_POPUPS).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_CLASSIFIER).value))
+
+        val flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
+        assertTrue(flags.contains(LoadUrlFlags.EXTERNAL))
+        assertFalse(flags.contains(LoadUrlFlags.ALLOW_POPUPS))
+        assertFalse(flags.contains(LoadUrlFlags.BYPASS_CACHE))
+        assertFalse(flags.contains(LoadUrlFlags.BYPASS_CLASSIFIER))
+        assertFalse(flags.contains(LoadUrlFlags.BYPASS_PROXY))
+    }
+
+    @Test
     fun `engine observer has default methods`() {
         val defaultObserver = object : EngineSession.Observer {}
 
@@ -632,7 +652,7 @@ open class DummyEngineSession : EngineSession() {
 
     override fun saveState(): EngineSessionState { return mock() }
 
-    override fun loadUrl(url: String) {}
+    override fun loadUrl(url: String, flags: LoadUrlFlags) {}
 
     override fun loadData(data: String, mimeType: String, encoding: String) {}
 

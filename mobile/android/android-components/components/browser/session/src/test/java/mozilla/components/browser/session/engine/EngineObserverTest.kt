@@ -61,7 +61,7 @@ class EngineObserverTest {
                 notifyObservers { onLoadingStateChange(true) }
                 notifyObservers { onNavigationStateChange(true, true) }
             }
-            override fun loadUrl(url: String) {
+            override fun loadUrl(url: String, flags: LoadUrlFlags) {
                 notifyObservers { onLocationChange(url) }
                 notifyObservers { onProgress(100) }
                 notifyObservers { onLoadingStateChange(true) }
@@ -103,7 +103,7 @@ class EngineObserverTest {
             override fun saveState(): EngineSessionState = mock()
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun recoverFromCrash(): Boolean { return false }
-            override fun loadUrl(url: String) {
+            override fun loadUrl(url: String, flags: LoadUrlFlags) {
                 if (url.startsWith("https://")) {
                     notifyObservers { onSecurityChange(true, "host", "issuer") }
                 } else {
@@ -141,7 +141,7 @@ class EngineObserverTest {
 
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun saveState(): EngineSessionState = mock()
-            override fun loadUrl(url: String) {}
+            override fun loadUrl(url: String, flags: LoadUrlFlags) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}

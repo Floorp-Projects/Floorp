@@ -143,9 +143,9 @@ abstract class EngineSession(
             const val SAFE_BROWSING_ALL =
                 SAFE_BROWSING_MALWARE + SAFE_BROWSING_UNWANTED + SAFE_BROWSING_HARMFUL + SAFE_BROWSING_PHISHING
 
-            internal const val RECOMMENDED: Int = AD + ANALYTICS + SOCIAL + TEST + SAFE_BROWSING_ALL
+            internal const val RECOMMENDED = AD + ANALYTICS + SOCIAL + TEST + SAFE_BROWSING_ALL
 
-            internal const val ALL: Int = RECOMMENDED + CRYPTOMINING + FINGERPRINTING + CONTENT
+            internal const val ALL = RECOMMENDED + CRYPTOMINING + FINGERPRINTING + CONTENT
 
             fun none() = TrackingProtectionPolicy(NONE)
 
@@ -207,9 +207,42 @@ abstract class EngineSession(
     }
 
     /**
-     * Loads the given URL.
+     * Describes a combination of flags provided to the engine when loading a URL.
      */
-    abstract fun loadUrl(url: String)
+    class LoadUrlFlags internal constructor(val value: Int) {
+        companion object {
+            const val NONE: Int = 0
+            const val BYPASS_CACHE: Int = 1 shl 0
+            const val BYPASS_PROXY: Int = 1 shl 1
+            const val EXTERNAL: Int = 1 shl 2
+            const val ALLOW_POPUPS: Int = 1 shl 3
+            const val BYPASS_CLASSIFIER: Int = 1 shl 4
+            internal const val ALL = BYPASS_CACHE + BYPASS_PROXY + EXTERNAL + ALLOW_POPUPS + BYPASS_CLASSIFIER
+
+            fun all() = LoadUrlFlags(ALL)
+            fun none() = LoadUrlFlags(NONE)
+            fun select(vararg types: Int) = LoadUrlFlags(types.sum())
+        }
+
+        fun contains(flag: Int) = (value and flag) != 0
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is LoadUrlFlags) return false
+            if (value != other.value) return false
+            return true
+        }
+
+        override fun hashCode() = value
+    }
+
+    /**
+     * Loads the given URL.
+     *
+     * @param url the url to load.
+     * @param flags the [LoadUrlFlags] to use when loading the provider url.
+     */
+    abstract fun loadUrl(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())
 
     /**
      * Loads the data with the given mimeType.

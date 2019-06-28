@@ -7,6 +7,7 @@ package mozilla.components.feature.session
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine.BrowsingData
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 
 /**
  * Contains use cases related to the session feature.
@@ -27,7 +28,7 @@ class SessionUseCases(
      * Contract for use cases that load a provided URL.
      */
     interface LoadUrlUseCase {
-        fun invoke(url: String)
+        fun invoke(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())
     }
 
     class DefaultLoadUrlUseCase internal constructor(
@@ -41,9 +42,10 @@ class SessionUseCases(
          * [onNoSession].
          *
          * @param url The URL to be loaded using the selected session.
+         * @param flags The [LoadUrlFlags] to use when loading the provided url.
          */
-        override fun invoke(url: String) {
-            invoke(url, sessionManager.selectedSession)
+        override operator fun invoke(url: String, flags: LoadUrlFlags) {
+            this.invoke(url, sessionManager.selectedSession, flags)
         }
 
         /**
@@ -53,10 +55,15 @@ class SessionUseCases(
          *
          * @param url The URL to be loaded using the provided session.
          * @param session the session for which the URL should be loaded.
+         * @param flags The [LoadUrlFlags] to use when loading the provided url.
          */
-        operator fun invoke(url: String, session: Session? = sessionManager.selectedSession) {
+        operator fun invoke(
+            url: String,
+            session: Session? = sessionManager.selectedSession,
+            flags: LoadUrlFlags = LoadUrlFlags.none()
+        ) {
             val loadSession = session ?: onNoSession.invoke(url)
-            sessionManager.getOrCreateEngineSession(loadSession).loadUrl(url)
+            sessionManager.getOrCreateEngineSession(loadSession).loadUrl(url, flags)
         }
     }
 
