@@ -15,11 +15,13 @@
                   mainViewId="protections-popup-mainView">
     <panelview id="protections-popup-mainView"
                descriptionheightworkaround="true">
-      <vbox id="protections-popup-mainView-panel-header">
-        <label>
+      <hbox id="protections-popup-mainView-panel-header">
+        <label id="protections-popup-main-header-label">
           <html:span id="protections-popup-mainView-panel-header-span"/>
         </label>
-      </vbox>
+        <description id="protections-popup-toast-panel-tp-on-desc">Enhanced Tracking Protection is ON for this site</description>
+        <description id="protections-popup-toast-panel-tp-off-desc">Enhanced Tracking Protection is OFF for this site</description>
+      </hbox>
 
       <hbox id="protections-popup-tp-switch-section" class="identity-popup-section">
         <vbox id="protections-popup-tp-switch-label-box" flex="1">
