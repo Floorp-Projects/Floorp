@@ -11,6 +11,7 @@
 #include "mozilla/HTMLEditor.h"   // for HTMLEditor
 #include "mozilla/dom/Element.h"  // for Element
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/intl/LocaleService.h"    // for retrieving app locale
 #include "mozilla/mozalloc.h"              // for operator delete, etc
 #include "mozilla/mozSpellChecker.h"       // for mozSpellChecker
@@ -369,19 +370,24 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
       if (!range->Collapsed()) {
         // We don't want to touch the range in the selection,
         // so create a new copy of it.
-
-        RefPtr<nsRange> rangeBounds = range->CloneRange();
+        RefPtr<StaticRange> staticRange =
+            StaticRange::Create(range, IgnoreErrors());
+        if (NS_WARN_IF(!staticRange)) {
+          return NS_ERROR_FAILURE;
+        }
 
         // Make sure the new range spans complete words.
-
-        rv = textServicesDocument->ExpandRangeToWordBoundaries(rangeBounds);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = textServicesDocument->ExpandRangeToWordBoundaries(staticRange);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
         // Now tell the text services that you only want
         // to iterate over the text in this range.
-
-        rv = textServicesDocument->SetExtent(rangeBounds);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = textServicesDocument->SetExtent(staticRange);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
