@@ -48,6 +48,7 @@ android {
             debuggable true
         }
         nightly releaseTemplate >> {
+            applicationIdSuffix ".nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
         beta releaseTemplate >> {
