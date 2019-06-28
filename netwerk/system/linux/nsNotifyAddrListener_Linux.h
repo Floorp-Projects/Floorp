@@ -21,7 +21,6 @@
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsITimer.h"
 #include "nsClassHashtable.h"
@@ -65,8 +64,6 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
 
   // Figure out the current "network identification"
   void calculateNetworkId(void);
-
-  mozilla::Mutex mMutex;
   nsCString mNetworkId;
 
   // Checks if there's a network "link"
