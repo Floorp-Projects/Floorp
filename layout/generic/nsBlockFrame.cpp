@@ -1861,11 +1861,20 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
 
     // Don't carry out a block-end margin when our BSize is fixed.
     aMetrics.mCarriedOutBEndMargin.Zero();
-  } else if (aReflowInput.mStyleDisplay->IsContainSize()) {
+  } else if (!IsComboboxControlFrame() &&
+             aReflowInput.mStyleDisplay->IsContainSize()) {
     // If we're size-containing and we don't have a specified size, then our
     // final size should actually be computed from only our border and padding,
     // as though we were empty.
     // Hence this case is a simplified version of the case below.
+    //
+    // NOTE: We exempt the nsComboboxControlFrame subclass from taking this
+    // special case, because comboboxes implicitly honors the size-containment
+    // behavior on its nsComboboxDisplayFrame child (which it shrinkwraps)
+    // rather than on the nsComboboxControlFrame. (Moreover, the DisplayFrame
+    // child doesn't even need any special content-size-ignoring behavior in
+    // its reflow method, because that method just resolves "auto" BSize values
+    // to one line-height rather than by measuring its contents' BSize.)
     nscoord contentBSize = 0;
     nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(contentBSize);
     aMetrics.mCarriedOutBEndMargin.Zero();

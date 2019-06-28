@@ -716,8 +716,9 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(
         presContext, aRenderingContext, GetWritingMode());
   }
 
+  const bool isContainSize = StyleDisplay()->IsContainSize();
   nscoord displayISize = 0;
-  if (MOZ_LIKELY(mDisplayFrame)) {
+  if (MOZ_LIKELY(mDisplayFrame) && !isContainSize) {
     displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                         mDisplayFrame, aType);
   }
@@ -727,13 +728,15 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(
     bool isUsingOverlayScrollbars =
         LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0;
     if (aType == nsLayoutUtils::MIN_ISIZE) {
-      dropdownContentISize = mDropdownFrame->GetMinISize(aRenderingContext);
+      dropdownContentISize =
+          isContainSize ? 0 : mDropdownFrame->GetMinISize(aRenderingContext);
       if (isUsingOverlayScrollbars) {
         dropdownContentISize += scrollbarWidth;
       }
     } else {
       NS_ASSERTION(aType == nsLayoutUtils::PREF_ISIZE, "Unexpected type");
-      dropdownContentISize = mDropdownFrame->GetPrefISize(aRenderingContext);
+      dropdownContentISize =
+          isContainSize ? 0 : mDropdownFrame->GetPrefISize(aRenderingContext);
       if (isUsingOverlayScrollbars) {
         dropdownContentISize += scrollbarWidth;
       }
