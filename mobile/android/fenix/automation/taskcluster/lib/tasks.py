@@ -423,19 +423,18 @@ class TaskBuilder(object):
         )
 
     def craft_release_signing_task(
-        self, build_task_id, apk_paths, channel, is_staging, index_channel=None
+        self, build_task_id, apk_paths, channel, is_staging
     ):
-        index_channel = index_channel or channel
         staging_prefix = '.staging' if is_staging else ''
 
         routes = [
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.latest".format(
-                staging_prefix, index_channel, self.date.year, self.date.month, self.date.day
+                staging_prefix, channel, self.date.year, self.date.month, self.date.day
             ),
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.revision.{}".format(
-                staging_prefix, index_channel, self.date.year, self.date.month, self.date.day, self.commit
+                staging_prefix, channel, self.date.year, self.date.month, self.date.day, self.commit
             ),
-            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, index_channel),
+            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, channel),
         ]
 
         capitalized_channel = upper_case_first_letter(channel)
