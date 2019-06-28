@@ -560,7 +560,7 @@ static inline HalfCorner operator++(HalfCorner& aHalfCorner) {
 }
 
 // The result of these conversion functions are exhaustively checked in
-// nsStyleCoord.cpp, which also serves as usage examples.
+// nsFrame.cpp, which also serves as usage examples.
 
 constexpr bool HalfCornerIsX(HalfCorner aHalfCorner) {
   return !(aHalfCorner % 2);

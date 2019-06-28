@@ -221,7 +221,6 @@ renaming_overrides_prefixing = true
 """
 
 "LengthPercentage" = """
-  // Defined in nsStyleCoord.h
   static constexpr inline StyleLengthPercentage Zero();
   static inline StyleLengthPercentage FromAppUnits(nscoord);
   static inline StyleLengthPercentage FromPixels(CSSCoord);
@@ -292,7 +291,6 @@ renaming_overrides_prefixing = true
 """
 
 "Rect" = """
-  // Defined in nsStyleCoord.h
   template<typename Predicate> inline bool All(Predicate) const;
   template<typename Predicate> inline bool Any(Predicate) const;
 
