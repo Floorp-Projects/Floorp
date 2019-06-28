@@ -389,7 +389,7 @@ add_task(async function test_cannot_clear_history() {
     );
     ok(
       cb.length == 1 && !cb[0].disabled,
-      "There is formdata, checkbox to " + "clear formdata should be enabled."
+      "There is formdata, checkbox to clear formdata should be enabled."
     );
 
     cb = this.win.document.querySelectorAll(
@@ -397,7 +397,7 @@ add_task(async function test_cannot_clear_history() {
     );
     ok(
       cb.length == 1 && !cb[0].disabled,
-      "There is history, checkbox to " + "clear history should be enabled."
+      "There is history, checkbox to clear history should be enabled."
     );
 
     this.checkAllCheckboxes();

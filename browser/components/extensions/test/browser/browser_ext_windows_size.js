@@ -40,7 +40,7 @@ add_task(async function testWindowCreate() {
           browser.test.log(
             `Got mismatched size (${JSON.stringify(
               expected
-            )} != ${JSON.stringify(geom)}). ` + `Retrying after a short delay.`
+            )} != ${JSON.stringify(geom)}). Retrying after a short delay.`
           );
 
           await new Promise(resolve => setTimeout(resolve, 200));

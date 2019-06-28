@@ -129,12 +129,10 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   build() {
-    this.tabContext.on(
-      "tab-select", // eslint-disable-line mozilla/balanced-listeners
-      (evt, tab) => {
-        this.updateWindow(tab.ownerGlobal);
-      }
-    );
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-select", (evt, tab) => {
+      this.updateWindow(tab.ownerGlobal);
+    });
 
     let install = this.extension.startupReason === "ADDON_INSTALL";
     for (let window of windowTracker.browserWindows()) {

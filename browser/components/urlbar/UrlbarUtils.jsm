@@ -140,9 +140,9 @@ var UrlbarUtils = {
       !PrivateBrowsingUtils.isWindowPrivate(window) &&
       url &&
       !url.includes(" ") &&
+      // eslint-disable-next-line no-control-regex
       !/[\x00-\x1F]/.test(url)
     ) {
-      // eslint-disable-line no-control-regex
       PlacesUIUtils.markPageAsTyped(url);
     }
   },
@@ -274,6 +274,7 @@ var UrlbarUtils = {
     let ranges = [];
     for (let index = hits.indexOf(1); index >= 0 && index < hits.length; ) {
       let len = 0;
+      // eslint-disable-next-line no-empty
       for (let j = index; j < hits.length && hits[j]; ++j, ++len) {}
       ranges.push([index, len]);
       // Move to the next 1.
