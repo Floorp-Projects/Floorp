@@ -169,7 +169,7 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   void SetAutofocus(bool aAutoFocus, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::autofocus, aAutoFocus, aError);
   }
-  uint32_t Cols() { return GetIntAttr(nsGkAtoms::cols, DEFAULT_COLS); }
+  uint32_t Cols() { return GetUnsignedIntAttr(nsGkAtoms::cols, DEFAULT_COLS); }
   void SetCols(uint32_t aCols, ErrorResult& aError) {
     uint32_t cols = aCols ? aCols : DEFAULT_COLS;
     SetUnsignedIntAttr(nsGkAtoms::cols, cols, DEFAULT_COLS, aError);
@@ -222,7 +222,9 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   void SetRequired(bool aRequired, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::required, aRequired, aError);
   }
-  uint32_t Rows() { return GetIntAttr(nsGkAtoms::rows, DEFAULT_ROWS_TEXTAREA); }
+  uint32_t Rows() {
+    return GetUnsignedIntAttr(nsGkAtoms::rows, DEFAULT_ROWS_TEXTAREA);
+  }
   void SetRows(uint32_t aRows, ErrorResult& aError) {
     uint32_t rows = aRows ? aRows : DEFAULT_ROWS_TEXTAREA;
     SetUnsignedIntAttr(nsGkAtoms::rows, rows, DEFAULT_ROWS_TEXTAREA, aError);
