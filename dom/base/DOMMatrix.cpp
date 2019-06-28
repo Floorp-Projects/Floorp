@@ -219,11 +219,11 @@ already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Translate(double aTx, double aTy,
   return retval.forget();
 }
 
-already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Scale(double aScale,
-                                                     double aOriginX,
-                                                     double aOriginY) const {
+already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Scale(
+    double aScaleX, const Optional<double>& aScaleY, double aScaleZ,
+    double aOriginX, double aOriginY, double aOriginZ) const {
   RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
-  retval->ScaleSelf(aScale, aOriginX, aOriginY);
+  retval->ScaleSelf(aScaleX, aScaleY, aScaleZ, aOriginX, aOriginY, aOriginZ);
 
   return retval.forget();
 }
@@ -239,11 +239,9 @@ already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Scale3d(double aScale,
 }
 
 already_AddRefed<DOMMatrix> DOMMatrixReadOnly::ScaleNonUniform(
-    double aScaleX, double aScaleY, double aScaleZ, double aOriginX,
-    double aOriginY, double aOriginZ) const {
+    double aScaleX, double aScaleY) const {
   RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
-  retval->ScaleNonUniformSelf(aScaleX, aScaleY, aScaleZ, aOriginX, aOriginY,
-                              aOriginZ);
+  retval->ScaleSelf(aScaleX, Optional<double>(aScaleY), 1, 0, 0, 0);
 
   return retval.forget();
 }
@@ -775,16 +773,36 @@ DOMMatrix* DOMMatrix::TranslateSelf(double aTx, double aTy, double aTz) {
   return this;
 }
 
-DOMMatrix* DOMMatrix::ScaleSelf(double aScale, double aOriginX,
-                                double aOriginY) {
-  ScaleNonUniformSelf(aScale, aScale, 1.0, aOriginX, aOriginY, 0);
+DOMMatrix* DOMMatrix::ScaleSelf(double aScaleX, const Optional<double>& aScaleY,
+                                double aScaleZ, double aOriginX,
+                                double aOriginY, double aOriginZ) {
+  const double scaleY = aScaleY.WasPassed() ? aScaleY.Value() : aScaleX;
+
+  TranslateSelf(aOriginX, aOriginY, aOriginZ);
+
+  if (mMatrix3D || aScaleZ != 1.0) {
+    Ensure3DMatrix();
+    gfx::Matrix4x4Double m;
+    m._11 = aScaleX;
+    m._22 = scaleY;
+    m._33 = aScaleZ;
+    *mMatrix3D = m * *mMatrix3D;
+  } else {
+    gfx::MatrixDouble m;
+    m._11 = aScaleX;
+    m._22 = scaleY;
+    *mMatrix2D = m * *mMatrix2D;
+  }
+
+  TranslateSelf(-aOriginX, -aOriginY, -aOriginZ);
 
   return this;
 }
 
 DOMMatrix* DOMMatrix::Scale3dSelf(double aScale, double aOriginX,
                                   double aOriginY, double aOriginZ) {
-  ScaleNonUniformSelf(aScale, aScale, aScale, aOriginX, aOriginY, aOriginZ);
+  ScaleSelf(aScale, Optional<double>(aScale), aScale, aOriginX, aOriginY,
+            aOriginZ);
 
   return this;
 }
@@ -792,27 +810,8 @@ DOMMatrix* DOMMatrix::Scale3dSelf(double aScale, double aOriginX,
 DOMMatrix* DOMMatrix::ScaleNonUniformSelf(double aScaleX, double aScaleY,
                                           double aScaleZ, double aOriginX,
                                           double aOriginY, double aOriginZ) {
-  if (aScaleX == 1.0 && aScaleY == 1.0 && aScaleZ == 1.0) {
-    return this;
-  }
-
-  TranslateSelf(aOriginX, aOriginY, aOriginZ);
-
-  if (mMatrix3D || aScaleZ != 1.0 || aOriginZ != 0) {
-    Ensure3DMatrix();
-    gfx::Matrix4x4Double m;
-    m._11 = aScaleX;
-    m._22 = aScaleY;
-    m._33 = aScaleZ;
-    *mMatrix3D = m * *mMatrix3D;
-  } else {
-    gfx::MatrixDouble m;
-    m._11 = aScaleX;
-    m._22 = aScaleY;
-    *mMatrix2D = m * *mMatrix2D;
-  }
-
-  TranslateSelf(-aOriginX, -aOriginY, -aOriginZ);
+  ScaleSelf(aScaleX, Optional<double>(aScaleY), aScaleZ, aOriginX, aOriginY,
+            aOriginZ);
 
   return this;
 }

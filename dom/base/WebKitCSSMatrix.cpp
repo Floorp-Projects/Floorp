@@ -96,18 +96,6 @@ already_AddRefed<WebKitCSSMatrix> WebKitCSSMatrix::Translate(double aTx,
   return retval.forget();
 }
 
-already_AddRefed<WebKitCSSMatrix> WebKitCSSMatrix::Scale(
-    double aScaleX, const Optional<double>& aScaleY, double aScaleZ) const {
-  double scaleX = aScaleX;
-  double scaleY = aScaleY.WasPassed() ? aScaleY.Value() : scaleX;
-  double scaleZ = aScaleZ;
-
-  RefPtr<WebKitCSSMatrix> retval = new WebKitCSSMatrix(mParent, *this);
-  retval->ScaleNonUniformSelf(scaleX, scaleY, scaleZ);
-
-  return retval.forget();
-}
-
 already_AddRefed<WebKitCSSMatrix> WebKitCSSMatrix::Rotate(
     double aRotX, const Optional<double>& aRotY,
     const Optional<double>& aRotZ) const {

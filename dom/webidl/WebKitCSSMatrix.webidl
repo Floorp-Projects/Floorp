@@ -25,9 +25,6 @@ interface WebKitCSSMatrix : DOMMatrix {
     WebKitCSSMatrix translate(optional unrestricted double tx = 0,
                               optional unrestricted double ty = 0,
                               optional unrestricted double tz = 0);
-    WebKitCSSMatrix scale(optional unrestricted double scaleX = 1,
-                          optional unrestricted double scaleY,
-                          optional unrestricted double scaleZ = 1);
     WebKitCSSMatrix rotate(optional unrestricted double rotX = 0,
                            optional unrestricted double rotY,
                            optional unrestricted double rotZ);
