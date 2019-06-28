@@ -30,6 +30,9 @@ var pageCycleDelay = 1000;
 var newTabDelay = 1000;
 var reuseTab = false;
 
+// delay (ms) for foregrounding app
+var foregroundDelay = 5000;
+
 var browserName;
 var ext;
 var testName = null;
@@ -60,6 +63,7 @@ var isTTFIPending = false;
 var isLoadTimePending = false;
 var isScenarioPending = false;
 var isBenchmarkPending = false;
+var isBackgroundTest = false;
 var pageTimeout = 10000; // default pageload timeout
 var geckoProfiling = false;
 var geckoInterval = 1;
@@ -94,6 +98,7 @@ function getTestSettings() {
         pageCycles = settings.page_cycles;
         testURL = settings.test_url;
         scenarioTestTime = settings.scenario_time;
+        isBackgroundTest = settings.background_test;
 
         // for pageload type tests, the testURL is fine as is - we don't have
         // to add a port as it's accessed via proxy and the playback tool
@@ -224,9 +229,9 @@ function getBrowserInfo() {
 
 function scenarioTimer() {
   postToControlServer("status", `started scenario test timer`);
-    setTimeout(function() {
-      isScenarioPending = false;
-      results.measurements.scenario = [1];
+  setTimeout(function() {
+    isScenarioPending = false;
+    results.measurements.scenario = [1];
   }, scenarioTestTime);
 }
 
@@ -372,6 +377,15 @@ async function getGeckoProfile() {
 
 async function nextCycle() {
   pageCycle++;
+  if (isBackgroundTest) {
+    postToControlServer(
+      "end_background",
+      `bringing app to foreground, pausing for ${foregroundDelay / 1000} seconds`
+    );
+    // wait a bit to be sure the app is in foreground before starting
+    // new test, or finishing test
+    await new Promise(resolve => setTimeout(resolve, foregroundDelay));
+  }
   if (pageCycle == 1) {
     let text = `running ${pageCycles} pagecycles of ${testURL}`;
     postToControlServer("status", text);
@@ -381,6 +395,9 @@ async function nextCycle() {
     }
   }
   if (pageCycle <= pageCycles) {
+    if (isBackgroundTest) {
+      postToControlServer("start_background", `bringing app to background`);
+    }
     setTimeout(function() {
       let text = "begin pagecycle " + pageCycle;
       postToControlServer("status", text);
@@ -642,6 +659,10 @@ function raptorRunner() {
   browserCycle = config.browser_cycle;
 
   postToControlServer("status", "raptor runner.js is loaded!");
+
+  if (isBackgroundTest) {
+    postToControlServer("status", "raptor test will be backgrounding the app");
+  }
 
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {

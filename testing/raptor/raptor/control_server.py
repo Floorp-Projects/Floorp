@@ -21,7 +21,11 @@ LOG = RaptorLogger(component='raptor-control-server')
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_profile):
+def MakeCustomHandlerClass(results_handler,
+                           shutdown_browser,
+                           write_raw_gecko_profile,
+                           background_app,
+                           foreground_app):
 
     class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
         """
@@ -104,6 +108,8 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
             self.results_handler = results_handler
             self.shutdown_browser = shutdown_browser
             self.write_raw_gecko_profile = write_raw_gecko_profile
+            self.background_app = background_app
+            self.foreground_app = foreground_app
             super(MyHandler, self).__init__(*args, **kwargs)
 
         def log_request(self, code='-', size='-'):
@@ -190,6 +196,12 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
             elif data['type'] == "webext_shutdownBrowser":
                 LOG.info("received request to shutdown the browser")
                 self.shutdown_browser()
+            elif data['type'] == 'webext_start_background':
+                LOG.info("received request to background app")
+                self.background_app()
+            elif data['type'] == 'webext_end_background':
+                LOG.info("received request to foreground app")
+                self.foreground_app()
             elif data['type'] == 'webext_screenshot':
                 LOG.info("received " + data['type'])
                 self.results_handler.add_image(str(data['data'][0]),
@@ -285,7 +297,9 @@ class RaptorControlServer():
         server_class = ThreadedHTTPServer
         handler_class = MakeCustomHandlerClass(self.results_handler,
                                                self.shutdown_browser,
-                                               self.write_raw_gecko_profile)
+                                               self.write_raw_gecko_profile,
+                                               self.background_app,
+                                               self.foreground_app)
 
         httpd = server_class(server_address, handler_class)
 
@@ -322,6 +336,32 @@ class RaptorControlServer():
                 profile_file.close()
         except Exception:
             LOG.critical("Encountered an exception whie writing raw gecko profile to disk")
+
+    def is_app_in_background(self):
+        # Get the app view state: foreground->False, background->True
+        current_focus = self.device.shell_output(
+            "dumpsys window windows | grep mCurrentFocus"
+        ).strip()
+        return self.app_name not in current_focus
+
+    def background_app(self):
+        # Disable Doze, background the app, then disable App Standby
+        self.device.shell_output("dumpsys deviceidle whitelist +%s" % self.app_name)
+        self.device.shell_output("input keyevent 3")
+        if not self.is_app_in_background():
+            LOG.critical("%s is still in foreground after background request" % self.app_name)
+        else:
+            LOG.info("%s was successfully backgrounded" % self.app_name)
+
+    def foreground_app(self):
+        self.device.shell_output(
+            "am start --activity-single-top %s" % self.app_name
+        )
+        self.device.shell_output("dumpsys deviceidle enable")
+        if self.is_app_in_background():
+            LOG.critical("%s is still in background after foreground request" % self.app_name)
+        else:
+            LOG.info("%s was successfully foregrounded" % self.app_name)
 
     def wait_for_quit(self, timeout=15):
         """Wait timeout seconds for the process to exit. If it hasn't
