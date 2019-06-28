@@ -5,7 +5,7 @@
 // @flow
 
 import React from "react";
-import { mount, shallow } from "enzyme";
+import { mount } from "enzyme";
 
 import Popover from "../Popover";
 
@@ -13,6 +13,21 @@ describe("Popover", () => {
   const onMouseLeave = jest.fn();
   const onKeyDown = jest.fn();
   const editorRef: any = {
+    getBoundingClientRect() {
+      return {
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        top: 250,
+        right: 0,
+        bottom: 0,
+        left: 20,
+      };
+    },
+  };
+
+  const targetRef: any = {
     getBoundingClientRect() {
       return {
         x: 0,
@@ -42,18 +57,22 @@ describe("Popover", () => {
       onKeyDown={onKeyDown}
       editorRef={editorRef}
       targetPosition={targetPosition}
+      mouseout={() => {}}
+      target={targetRef}
     >
       <h1>Poppy!</h1>
     </Popover>
   );
 
-  const tooltip = shallow(
+  const tooltip = mount(
     <Popover
       type="tooltip"
       onMouseLeave={onMouseLeave}
       onKeyDown={onKeyDown}
       editorRef={editorRef}
       targetPosition={targetPosition}
+      mouseout={() => {}}
+      target={targetRef}
     >
       <h1>Toolie!</h1>
     </Popover>
@@ -75,6 +94,8 @@ describe("Popover", () => {
         onKeyDown={onKeyDown}
         editorRef={editorRef}
         targetPosition={targetPosition}
+        mouseout={() => {}}
+        target={targetRef}
       >
         <h1>Poppy!</h1>
       </Popover>
@@ -90,6 +111,8 @@ describe("Popover", () => {
         onKeyDown={onKeyDown}
         editorRef={editorRef}
         targetPosition={targetPosition}
+        mouseout={() => {}}
+        target={targetRef}
       >
         <h1>Toolie!</h1>
       </Popover>
@@ -126,6 +149,8 @@ describe("Popover", () => {
         onKeyDown={onKeyDown}
         editorRef={editor}
         targetPosition={target}
+        mouseout={() => {}}
+        target={targetRef}
       >
         <h1>Toolie!</h1>
       </Popover>
@@ -164,6 +189,8 @@ describe("Popover", () => {
         onKeyDown={onKeyDown}
         editorRef={editor}
         targetPosition={target}
+        mouseout={() => {}}
+        target={targetRef}
       >
         <h1>Toolie!</h1>
       </Popover>
