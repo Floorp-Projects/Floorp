@@ -48,7 +48,7 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   void SetHeight(const nsAString& aHeight, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::height, aHeight, aError);
   }
-  uint32_t Hspace() { return GetIntAttr(nsGkAtoms::hspace, 0); }
+  uint32_t Hspace() { return GetUnsignedIntAttr(nsGkAtoms::hspace, 0); }
   void SetHspace(uint32_t aValue, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, 0, aError);
   }
@@ -87,7 +87,7 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   void SetWidth(const nsAString& aWidth, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
   }
-  uint32_t Vspace() { return GetIntAttr(nsGkAtoms::vspace, 0); }
+  uint32_t Vspace() { return GetUnsignedIntAttr(nsGkAtoms::vspace, 0); }
   void SetVspace(uint32_t aValue, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aError);
   }
