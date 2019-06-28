@@ -192,11 +192,13 @@ function testTableStruct(
         // table getRowExtentAt
         var rowExtent = table.getRowExtentAt(rowIdx, colIdx);
         let idx;
+        /* eslint-disable no-empty */
         for (
           idx = rowIdx + 1;
           idx < rowCount && aCellsArray[idx][colIdx] & kRowSpanned;
           idx++
         ) {}
+        /* eslint-enable no-empty */
 
         var expectedRowExtent = idx - rowIdx;
         is(
@@ -212,11 +214,13 @@ function testTableStruct(
 
         // table getColumnExtentAt
         var colExtent = table.getColumnExtentAt(rowIdx, colIdx);
+        /* eslint-disable no-empty */
         for (
           idx = colIdx + 1;
           idx < colsCount && aCellsArray[rowIdx][idx] & kColSpanned;
           idx++
         ) {}
+        /* eslint-enable no-empty */
 
         var expectedColExtent = idx - colIdx;
         is(
