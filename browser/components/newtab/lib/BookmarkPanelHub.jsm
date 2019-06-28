@@ -115,8 +115,6 @@ class _BookmarkPanelHub {
 
     if (!target.container.querySelector("#cfrMessageContainer")) {
       const recommendation = createElement("div");
-      const headerContainer = createElement("div");
-      headerContainer.classList.add("cfrMessageHeader");
       recommendation.setAttribute("id", "cfrMessageContainer");
       recommendation.addEventListener("click", async e => {
         target.hidePopup();
@@ -159,9 +157,8 @@ class _BookmarkPanelHub {
         cta.textContent = message.cta;
       }
 
-      headerContainer.appendChild(title);
-      headerContainer.appendChild(close);
-      recommendation.appendChild(headerContainer);
+      recommendation.appendChild(close);
+      recommendation.appendChild(title);
       recommendation.appendChild(content);
       recommendation.appendChild(cta);
       target.container.appendChild(recommendation);
