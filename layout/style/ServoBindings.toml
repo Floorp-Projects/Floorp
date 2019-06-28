@@ -518,6 +518,7 @@ cbindgen-types = [
     { gecko = "StyleGenericGridLine", servo = "values::generics::grid::GridLine" },
     { gecko = "StyleGenericTrackSize", servo = "values::generics::grid::TrackSize" },
     { gecko = "StyleGenericTrackBreadth", servo = "values::generics::grid::TrackBreadth" },
+    { gecko = "StyleNumberOrPercentage", servo = "values::computed::NumberOrPercentage" },
 ]
 
 mapped-generic-types = [
