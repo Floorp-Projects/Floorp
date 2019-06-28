@@ -18,6 +18,7 @@ const {
   TIMESTAMPS_TOGGLE,
   FILTERBAR_DISPLAY_MODE_SET,
   FILTERBAR_DISPLAY_MODES,
+  EDITOR_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 const {
@@ -76,6 +77,11 @@ function ui(state = UiState(), action) {
       return {
         ...state,
         filterBarDisplayMode: action.displayMode,
+      };
+    case EDITOR_TOGGLE:
+      return {
+        ...state,
+        editor: !state.editor,
       };
   }
 
