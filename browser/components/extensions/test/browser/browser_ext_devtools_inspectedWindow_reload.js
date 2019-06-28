@@ -11,7 +11,7 @@ loadTestSubscript("head_devtools.js");
 // Small helper which provides the common steps to the following reload test cases.
 async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
-  const TEST_TARGET_URL = `${BASE}file_inspectedwindow_reload_target.sjs?${urlParams}`;
+  const TEST_TARGET_URL = `${BASE}/test-oop-extensions/file_inspectedwindow_reload_target.sjs?${urlParams}`;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
 
   let extension = ExtensionTestUtils.loadExtension({
