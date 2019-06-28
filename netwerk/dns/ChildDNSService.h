@@ -32,8 +32,6 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
 
   void NotifyRequestDone(DNSRequestChild* aDnsRequest);
 
-  bool GetOffline() const;
-
  private:
   virtual ~ChildDNSService() = default;
 
