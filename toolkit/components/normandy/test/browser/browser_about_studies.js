@@ -5,6 +5,9 @@ ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://normandy-content/AboutPages.jsm", this);
 
+const {NormandyTestUtils} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
+const {addonStudyFactory, preferenceStudyFactory} = NormandyTestUtils.factories;
+
 function withAboutStudies(testFunc) {
   return async (...args) => (
     BrowserTestUtils.withNewTab("about:studies", async browser => (

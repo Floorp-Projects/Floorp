@@ -19,8 +19,7 @@ fuzzy-if(Android,0-45,0-27) skip-if(!Android) pref(apz.allow_zooming,true) == as
 # won't make the thumb exactly twice as short, which is what the test expects. That's fine, as the purpose of the test is
 # to catch more fundamental scrollbar rendering bugs such as the entire track being mispositioned or the thumb being
 # clipped away.
-# Fails on WebRender - seems related to the viewport_rect in scroll frames not being scaled correctly.
-fuzzy-if(Android,0-54,0-14) fuzzy-if(!Android,0-128,0-137) fails-if(webrender) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
+fuzzy-if(Android,0-54,0-14) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
 fuzzy-if(Android,0-51,0-22) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
 
 # Meta-viewport tag support

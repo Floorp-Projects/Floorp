@@ -46,12 +46,12 @@ enum StructuredCloneTags {
   SCTAG_DOM_IMAGEDATA,
 
   SCTAG_DOM_DOMPOINT,
-  SCTAG_DOM_DOMPOINT_READONLY,
+  SCTAG_DOM_DOMPOINTREADONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
   // This tag is for WebCrypto keys
-  SCTAG_DOM_WEBCRYPTO_KEY,
+  SCTAG_DOM_CRYPTOKEY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
@@ -69,14 +69,14 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  SCTAG_DOM_RTC_CERTIFICATE,
+  SCTAG_DOM_RTCCERTIFICATE,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
   SCTAG_DOM_DOMRECT,
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  SCTAG_DOM_DOMRECT_READONLY,
+  SCTAG_DOM_DOMRECTREADONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
@@ -92,7 +92,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  SCTAG_DOM_DOMMATRIX_READONLY,
+  SCTAG_DOM_DOMMATRIXREADONLY,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.

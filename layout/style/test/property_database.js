@@ -4839,6 +4839,14 @@ var gCSSProperties = {
     other_values: [ "double", "dotted", "dashed", "wavy", "-moz-none" ],
     invalid_values: [ "none", "groove", "ridge", "inset", "outset", "solid dashed", "wave" ]
   },
+  "text-decoration-skip-ink": {
+      domProp: "textDecorationSkipInk",
+      inherited: true,
+      type: CSS_TYPE_LONGHAND,
+      initial_values: [ "auto" ],
+      other_values: ["none"],
+      invalid_values: ["13", "15%", "-1", "0", "otto", "trash", "non", "nada", "!@#$%^", "none auto", "auto none"]
+  },
   "text-underline-offset": {
     domProp: "textUnderlineOffset",
     inherited: true,

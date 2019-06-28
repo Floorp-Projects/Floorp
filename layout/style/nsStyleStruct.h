@@ -1230,6 +1230,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::LengthPercentage mTextIndent;
 
   mozilla::StyleLengthOrAuto mTextUnderlineOffset;
+  mozilla::StyleTextDecorationSkipInk mTextDecorationSkipInk;
 
   nscoord mWebkitTextStrokeWidth;  // coord
 

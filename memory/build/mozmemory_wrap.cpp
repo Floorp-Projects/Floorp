@@ -15,35 +15,6 @@
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
-#ifdef MOZ_WRAP_NEW_DELETE
-#  include <new>
-
-MFBT_API void* operator new(size_t size) { return malloc_impl(size); }
-
-MFBT_API void* operator new[](size_t size) { return malloc_impl(size); }
-
-MFBT_API void operator delete(void* ptr) noexcept(true) { free_impl(ptr); }
-
-MFBT_API void operator delete[](void* ptr) noexcept(true) { free_impl(ptr); }
-
-MFBT_API void* operator new(size_t size, std::nothrow_t const&) {
-  return malloc_impl(size);
-}
-
-MFBT_API void* operator new[](size_t size, std::nothrow_t const&) {
-  return malloc_impl(size);
-}
-
-MFBT_API void operator delete(void* ptr, std::nothrow_t const&)noexcept(true) {
-  free_impl(ptr);
-}
-
-MFBT_API void operator delete[](void* ptr,
-                                std::nothrow_t const&) noexcept(true) {
-  free_impl(ptr);
-}
-#endif
-
 // strndup and strdup may be defined as macros in string.h, which would
 // clash with the definitions below.
 #undef strndup

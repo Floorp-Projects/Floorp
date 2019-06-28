@@ -122,35 +122,6 @@ const SECItem SEC_OID_DATA_DH_KEY_AGREEMENT = {
 namespace mozilla {
 namespace dom {
 
-// Helper functions for structured cloning
-inline bool ReadString(JSStructuredCloneReader* aReader, nsString& aString) {
-  bool read;
-  uint32_t nameLength, zero;
-  read = JS_ReadUint32Pair(aReader, &nameLength, &zero);
-  if (!read) {
-    return false;
-  }
-
-  if (NS_WARN_IF(!aString.SetLength(nameLength, fallible))) {
-    return false;
-  }
-  size_t charSize = sizeof(nsString::char_type);
-  read = JS_ReadBytes(aReader, (void*)aString.BeginWriting(),
-                      nameLength * charSize);
-  if (!read) {
-    return false;
-  }
-
-  return true;
-}
-
-inline bool WriteString(JSStructuredCloneWriter* aWriter,
-                        const nsString& aString) {
-  size_t charSize = sizeof(nsString::char_type);
-  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
-         JS_WriteBytes(aWriter, aString.get(), aString.Length() * charSize);
-}
-
 inline bool ReadBuffer(JSStructuredCloneReader* aReader,
                        CryptoBuffer& aBuffer) {
   uint32_t length, zero;

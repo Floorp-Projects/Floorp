@@ -52,6 +52,8 @@ class PublicKeyCredential final : public Credential {
 
   void SetClientExtensionResultAppId(bool aResult);
 
+  void SetClientExtensionResultHmacSecret(bool aHmacCreateSecret);
+
  private:
   CryptoBuffer mRawId;
   JS::Heap<JSObject*> mRawIdCachedObj;

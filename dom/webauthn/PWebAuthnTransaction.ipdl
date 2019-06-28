@@ -39,16 +39,26 @@ struct WebAuthnExtensionAppId {
   nsString appIdentifier;
 };
 
+struct WebAuthnExtensionHmacSecret {
+  bool hmacCreateSecret;
+};
+
 union WebAuthnExtension {
   WebAuthnExtensionAppId;
+  WebAuthnExtensionHmacSecret;
 };
 
 struct WebAuthnExtensionResultAppId {
   bool AppId;
 };
 
+struct WebAuthnExtensionResultHmacSecret {
+  bool hmacCreateSecret;
+};
+
 union WebAuthnExtensionResult {
   WebAuthnExtensionResultAppId;
+  WebAuthnExtensionResultHmacSecret;
 };
 
 struct WebAuthnMakeCredentialRpInfo {
@@ -92,6 +102,7 @@ struct WebAuthnMakeCredentialResult {
   uint8_t[] KeyHandle;
   /* Might be empty if the token implementation doesn't support CTAP1. */
   uint8_t[] RegistrationData;
+  WebAuthnExtensionResult[] Extensions;
 };
 
 struct WebAuthnGetAssertionExtraInfo {

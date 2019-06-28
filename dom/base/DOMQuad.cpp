@@ -114,21 +114,26 @@ void DOMQuad::ToJSON(DOMQuadJSON& aInit) {
 }
 
 // https://drafts.fxtf.org/geometry/#structured-serialization
-bool DOMQuad::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const {
+bool DOMQuad::WriteStructuredClone(JSContext* aCx,
+                                   JSStructuredCloneWriter* aWriter) const {
   for (const auto& point : mPoints) {
-    if (!point->WriteStructuredClone(aWriter)) {
+    if (!point->WriteStructuredClone(aCx, aWriter)) {
       return false;
     }
   }
   return true;
 }
 
-bool DOMQuad::ReadStructuredClone(JSStructuredCloneReader* aReader) {
-  for (auto& point : mPoints) {
-    point = new DOMPoint(mParent);
-    if (!point->ReadStructuredClone(aReader)) {
-      return false;
+// static
+already_AddRefed<DOMQuad> DOMQuad::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  RefPtr<DOMQuad> quad = new DOMQuad(aGlobal);
+  for (auto& point : quad->mPoints) {
+    point = DOMPoint::ReadStructuredClone(aCx, aGlobal, aReader);
+    if (!point) {
+      return nullptr;
     }
   }
-  return true;
+  return quad.forget();
 }
