@@ -46,7 +46,6 @@
 #include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
-#include "nsStyleCoord.h"
 #include "nsDisplayList.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsStyleTransformMatrix.h"
@@ -1165,30 +1164,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
   return val.forget();
 }
 
-static void SetValueToCalc(const nsStyleCoord::CalcValue* aCalc,
-                           nsROCSSPrimitiveValue* aValue) {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  nsAutoString tmp, result;
-
-  result.AppendLiteral("calc(");
-
-  val->SetAppUnits(aCalc->mLength);
-  val->GetCssText(tmp);
-  result.Append(tmp);
-
-  if (aCalc->mHasPercent) {
-    result.AppendLiteral(" + ");
-
-    val->SetPercent(aCalc->mPercent);
-    val->GetCssText(tmp);
-    result.Append(tmp);
-  }
-
-  result.Append(')');
-
-  aValue->SetString(result);  // not really SetString
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetImageLayerPosition(
     const nsStyleImageLayers& aLayers) {
   if (aLayers.mPositionXCount != aLayers.mPositionYCount) {
@@ -1786,32 +1761,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationStyle() {
   return val.forget();
 }
 
-/* Border image properties */
-
-void nsComputedDOMStyle::AppendFourSideCoordValues(
-    nsDOMCSSValueList* aList, const nsStyleSides& aValues) {
-  const nsStyleCoord& top = aValues.Get(eSideTop);
-  const nsStyleCoord& right = aValues.Get(eSideRight);
-  const nsStyleCoord& bottom = aValues.Get(eSideBottom);
-  const nsStyleCoord& left = aValues.Get(eSideLeft);
-
-  auto appendValue = [this, aList](const nsStyleCoord& value) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, value, true);
-    aList->AppendCSSValue(val.forget());
-  };
-  appendValue(top);
-  if (top != right || top != bottom || top != left) {
-    appendValue(right);
-    if (top != bottom || right != left) {
-      appendValue(bottom);
-      if (right != left) {
-        appendValue(left);
-      }
-    }
-  }
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
@@ -2268,89 +2217,6 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
   aValue->SetString(result);
 }
 
-void nsComputedDOMStyle::SetValueToCoord(
-    nsROCSSPrimitiveValue* aValue, const nsStyleCoord& aCoord,
-    bool aClampNegativeCalc, PercentageBaseGetter aPercentageBaseGetter,
-    const KTableEntry aTable[]) {
-  MOZ_ASSERT(aValue, "Must have a value to work with");
-
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Normal:
-      aValue->SetIdent(eCSSKeyword_normal);
-      break;
-
-    case eStyleUnit_Auto:
-      aValue->SetIdent(eCSSKeyword_auto);
-      break;
-
-    case eStyleUnit_Percent: {
-      nscoord percentageBase;
-      if (aPercentageBaseGetter &&
-          (this->*aPercentageBaseGetter)(percentageBase)) {
-        nscoord val =
-            NSCoordSaturatingMultiply(percentageBase, aCoord.GetPercentValue());
-        aValue->SetAppUnits(val);
-      } else {
-        aValue->SetPercent(aCoord.GetPercentValue());
-      }
-    } break;
-
-    case eStyleUnit_Factor:
-      aValue->SetNumber(aCoord.GetFactorValue());
-      break;
-
-    case eStyleUnit_Coord: {
-      nscoord val = aCoord.GetCoordValue();
-      aValue->SetAppUnits(val);
-    } break;
-
-    case eStyleUnit_Integer:
-      aValue->SetNumber(aCoord.GetIntValue());
-      break;
-
-    case eStyleUnit_Enumerated:
-      NS_ASSERTION(aTable, "Must have table to handle this case");
-      aValue->SetIdent(
-          nsCSSProps::ValueToKeywordEnum(aCoord.GetIntValue(), aTable));
-      break;
-
-    case eStyleUnit_None:
-      aValue->SetIdent(eCSSKeyword_none);
-      break;
-
-    case eStyleUnit_Calc:
-      nscoord percentageBase;
-      if (!aCoord.CalcHasPercent()) {
-        nscoord val = aCoord.ComputeCoordPercentCalc(0);
-        if (aClampNegativeCalc && val < 0) {
-          MOZ_ASSERT(aCoord.IsCalcUnit(), "parser should have rejected value");
-          val = 0;
-        }
-        aValue->SetAppUnits(val);
-      } else if (aPercentageBaseGetter &&
-                 (this->*aPercentageBaseGetter)(percentageBase)) {
-        nscoord val = aCoord.ComputeCoordPercentCalc(percentageBase);
-        if (aClampNegativeCalc && val < 0) {
-          MOZ_ASSERT(aCoord.IsCalcUnit(), "parser should have rejected value");
-          val = 0;
-        }
-        aValue->SetAppUnits(val);
-      } else {
-        nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
-        SetValueToCalc(calc, aValue);
-      }
-      break;
-
-    case eStyleUnit_Degree:
-      aValue->SetDegree(aCoord.GetAngleValue());
-      break;
-
-    default:
-      NS_ERROR("Can't handle this unit");
-      break;
-  }
-}
-
 nscoord nsComputedDOMStyle::StyleCoordToNSCoord(
     const LengthPercentage& aCoord, PercentageBaseGetter aPercentageBaseGetter,
     nscoord aDefaultValue, bool aClampNegativeCalc) {
@@ -2526,14 +2392,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetTransformValue(
       aTransform, refBox, float(mozilla::AppUnitsPerCSSPixel()));
 
   return MatrixToCSSValue(matrix);
-}
-
-void nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
-                                           const nsStyleCoord& aCoord,
-                                           bool aClampNegativeCalc) {
-  RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-  SetValueToCoord(value, aCoord, aClampNegativeCalc);
-  value->GetCssText(aCssText);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {

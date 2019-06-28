@@ -43,7 +43,6 @@
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleConsts.h"
-#include "nsStyleCoord.h"
 #include "nsStyleUtil.h"
 #include "nsTransform2D.h"
 #include "nsImageMap.h"
