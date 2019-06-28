@@ -650,10 +650,6 @@ function setUp(aNoEngine) {
 }
 
 function msg(type, data = null) {
-  gMsgMan.sendAsyncMessage(TEST_MSG, {
-    type,
-    data,
-  });
   return new Promise(resolve => {
     gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
       if (msgObj.data.type != type) {
@@ -661,6 +657,10 @@ function msg(type, data = null) {
       }
       gMsgMan.removeMessageListener(TEST_MSG, onMsg);
       resolve(msgObj.data.data);
+    });
+    gMsgMan.sendAsyncMessage(TEST_MSG, {
+      type,
+      data,
     });
   });
 }
