@@ -193,6 +193,46 @@ LoginManagerCrypto_SDR.prototype = {
     return plainText;
   },
 
+  /*
+   * Decrypts the specified strings, using the SecretDecoderRing.
+   *
+   * Returns a promise which resolves with the the decrypted strings,
+   * or throws/rejects with an error if there was a problem.
+   */
+  async decryptMany(cipherTexts) {
+    if (!Array.isArray(cipherTexts) || !cipherTexts.length) {
+      throw Components.Exception("Need at least one ciphertext to decrypt",
+                                 Cr.NS_ERROR_INVALID_ARG);
+    }
+
+    let plainTexts = [];
+
+    let wasLoggedIn = this.isLoggedIn;
+    let canceledMP = false;
+
+    this._uiBusy = true;
+    try {
+      plainTexts = await this._decoderRing.asyncDecryptStrings(cipherTexts);
+    } catch (e) {
+      this.log("Failed to decrypt strings. (" + e.name + ")");
+      // If the user clicks Cancel, we get NS_ERROR_NOT_AVAILABLE.
+      if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+        canceledMP = true;
+        throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
+      } else {
+        throw Components.Exception("Couldn't decrypt strings: " + e.result, Cr.NS_ERROR_FAILURE);
+      }
+    } finally {
+      this._uiBusy = false;
+      // If we triggered a master password prompt, notify observers.
+      if (!wasLoggedIn && this.isLoggedIn) {
+        this._notifyObservers("passwordmgr-crypto-login");
+      } else if (canceledMP) {
+        this._notifyObservers("passwordmgr-crypto-loginCanceled");
+      }
+    }
+    return plainTexts;
+  },
 
   /*
    * uiBusy
