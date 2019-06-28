@@ -257,6 +257,8 @@ struct CachedBorderImageData {
  * image of type (1)).
  */
 struct nsStyleImage {
+  using CropRect = mozilla::StyleRect<mozilla::StyleNumberOrPercentage>;
+
   nsStyleImage();
   ~nsStyleImage();
   nsStyleImage(const nsStyleImage& aOther);
@@ -266,7 +268,7 @@ struct nsStyleImage {
   void SetImageRequest(already_AddRefed<nsStyleImageRequest> aImage);
   void SetGradientData(mozilla::UniquePtr<mozilla::StyleGradient>);
   void SetElementId(already_AddRefed<nsAtom> aElementId);
-  void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
+  void SetCropRect(mozilla::UniquePtr<CropRect> aCropRect);
 
   void ResolveImage(mozilla::dom::Document& aDocument,
                     const nsStyleImage* aOldImage) {
@@ -298,10 +300,10 @@ struct nsStyleImage {
     NS_ASSERTION(mType == eStyleImageType_Element, "Data is not an element!");
     return mElementId;
   }
-  const mozilla::UniquePtr<nsStyleSides>& GetCropRect() const {
+  const CropRect* GetCropRect() const {
     NS_ASSERTION(mType == eStyleImageType_Image,
                  "Only image data can have a crop rect");
-    return mCropRect;
+    return mCropRect.get();
   }
 
   already_AddRefed<nsIURI> GetImageURI() const;
@@ -394,7 +396,7 @@ struct nsStyleImage {
   };
 
   // This is _currently_ used only in conjunction with eStyleImageType_Image.
-  mozilla::UniquePtr<nsStyleSides> mCropRect;
+  mozilla::UniquePtr<CropRect> mCropRect;
 };
 
 struct nsStyleImageLayers {

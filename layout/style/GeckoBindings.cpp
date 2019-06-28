@@ -1170,7 +1170,7 @@ void Gecko_CopyImageValueFrom(nsStyleImage* aImage,
 
 void Gecko_InitializeImageCropRect(nsStyleImage* aImage) {
   MOZ_ASSERT(aImage);
-  aImage->SetCropRect(MakeUnique<nsStyleSides>());
+  aImage->SetCropRect(MakeUnique<nsStyleImage::CropRect>());
 }
 
 void Gecko_SetCursorArrayLength(nsStyleUI* aStyleUI, size_t aLen) {
