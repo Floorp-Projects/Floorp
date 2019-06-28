@@ -6,12 +6,42 @@
 
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/AbstractRangeBinding.h"
+
+#include "mozilla/RangeUtils.h"
+#include "mozilla/dom/StaticRange.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGkAtoms.h"
 #include "nsINode.h"
+#include "nsRange.h"
 
 namespace mozilla {
 namespace dom {
+
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
+    nsRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RangeBoundary& aStartBoundary, const RawRangeBoundary& aEndBoundary,
+    nsRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RawRangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
+    nsRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RawRangeBoundary& aStartBoundary,
+    const RawRangeBoundary& aEndBoundary, nsRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
+    StaticRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RangeBoundary& aStartBoundary, const RawRangeBoundary& aEndBoundary,
+    StaticRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RawRangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
+    StaticRange* aRange);
+template nsresult AbstractRange::SetStartAndEndInternal(
+    const RawRangeBoundary& aStartBoundary,
+    const RawRangeBoundary& aEndBoundary, StaticRange* aRange);
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbstractRange)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbstractRange)
@@ -48,6 +78,67 @@ nsINode* AbstractRange::GetCommonAncestor() const {
   return mIsPositioned ? nsContentUtils::GetCommonAncestor(mStart.Container(),
                                                            mEnd.Container())
                        : nullptr;
+}
+
+// static
+template <typename SPT, typename SRT, typename EPT, typename ERT,
+          typename RangeType>
+nsresult AbstractRange::SetStartAndEndInternal(
+    const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+    const RangeBoundaryBase<EPT, ERT>& aEndBoundary, RangeType* aRange) {
+  if (NS_WARN_IF(!aStartBoundary.IsSet()) ||
+      NS_WARN_IF(!aEndBoundary.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsINode* newStartRoot =
+      RangeUtils::ComputeRootNode(aStartBoundary.Container());
+  if (!newStartRoot) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
+  if (!aStartBoundary.IsSetAndValid()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  if (aStartBoundary.Container() == aEndBoundary.Container()) {
+    if (!aEndBoundary.IsSetAndValid()) {
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+    // XXX: Offsets - handle this more efficiently.
+    // If the end offset is less than the start offset, this should be
+    // collapsed at the end offset.
+    if (aStartBoundary.Offset() > aEndBoundary.Offset()) {
+      aRange->DoSetRange(aEndBoundary, aEndBoundary, newStartRoot);
+    } else {
+      aRange->DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
+    }
+    return NS_OK;
+  }
+
+  nsINode* newEndRoot = RangeUtils::ComputeRootNode(aEndBoundary.Container());
+  if (!newEndRoot) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
+  if (!aEndBoundary.IsSetAndValid()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // If they have different root, this should be collapsed at the end point.
+  if (newStartRoot != newEndRoot) {
+    aRange->DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
+    return NS_OK;
+  }
+
+  // If the end point is before the start point, this should be collapsed at
+  // the end point.
+  if (nsContentUtils::ComparePoints(aStartBoundary, aEndBoundary) == 1) {
+    aRange->DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
+    return NS_OK;
+  }
+
+  // Otherwise, set the range as specified.
+  aRange->DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
+  return NS_OK;
 }
 
 JSObject* AbstractRange::WrapObject(JSContext* aCx,

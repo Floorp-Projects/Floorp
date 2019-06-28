@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ThirdPartyUtil.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
@@ -23,7 +24,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowOuter.h"
-#include "nsPIDOMWindow.h"
 
 NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 
