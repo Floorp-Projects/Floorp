@@ -16,6 +16,17 @@ namespace widget {
 bool nsWaylandDisplay::mIsDMABufEnabled;
 bool nsWaylandDisplay::mIsDMABufPrefLoaded;
 
+wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
+  if (!aGdkDisplay) {
+    aGdkDisplay = gdk_display_get_default();
+  }
+
+  // Available as of GTK 3.8+
+  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
+      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+  return sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
+}
+
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
 #define MAX_DISPLAY_CONNECTIONS 3
@@ -63,10 +74,7 @@ void WaylandDispatchDisplays() {
 // Get WaylandDisplay for given wl_display and actual calling thread.
 static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
                                                  const StaticMutexAutoLock&) {
-  // Available as of GTK 3.8+
-  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-  wl_display* waylandDisplay = sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
+  wl_display* waylandDisplay = WaylandDisplayGetWLDisplay(aGdkDisplay);
 
   // Search existing display connections for wl_display:thread combination.
   for (auto& display : gWaylandDisplays) {
