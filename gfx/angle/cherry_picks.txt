@@ -1,3 +1,19 @@
+commit 8a050090f92694f7bc926f3b1d3c6478f94e2845
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Mon Apr 8 16:26:50 2019 -0400
+
+    Fix glCopyTexSubImage3D.
+    
+    Two bugs were present in our implementation. We were using the y offset
+    for z in ensureSubImageInitialized. And for our D3D back-end we were
+    potentially reading from the wrong image index.
+    
+    Bug: chromium:947342
+    Change-Id: If39671a911e08fcc641b9ba6f5910e3a2c16eb5d
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1558671
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Jonah Ryan-Davis <jonahr@google.com>
+
 commit 4321c80e2aee864d1cb0efb36ef505a1f885a3af
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Wed Jun 5 17:32:32 2019 -0700
