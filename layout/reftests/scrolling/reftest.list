@@ -31,7 +31,7 @@ fuzzy-if(d2d,0-1,0-4) fuzzy-if(webrender,0-1,0-42) HTTP == transformed-1.html tr
 fuzzy-if(webrender,0-1,0-43) HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,0-5,0-20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,0-5,0-20000) == uncovering-2.html uncovering-2-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,0-149,0-4520) fuzzy-if(geckoview,1-1,86-86) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,0-149,0-4520) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html
 == huge-horizontal-overflow.html huge-horizontal-overflow-ref.html
 == huge-vertical-overflow.html huge-vertical-overflow-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-6818) == iframe-scrolling-attr-1.html iframe-scrolling-attr-ref.html
