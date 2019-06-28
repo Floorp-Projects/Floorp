@@ -8,6 +8,7 @@ include PrefsTypes;
 
 include protocol PProfiler;
 include protocol PRemoteDecoderManager;
+include protocol PVideoBridge;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 
@@ -34,6 +35,8 @@ parent:
                             FileDescriptor? DMDFile);
 
   async PreferenceUpdate(Pref pref);
+
+  async CreateVideoBridgeToParentProcess(Endpoint<PVideoBridgeChild> endpoint);
 
 child:
   // args TBD, sent when init complete. Occurs once, after Init().

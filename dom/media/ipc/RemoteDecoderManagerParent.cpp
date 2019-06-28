@@ -173,6 +173,25 @@ bool RemoteDecoderManagerParent::CreateForContent(
   return true;
 }
 
+bool RemoteDecoderManagerParent::CreateVideoBridgeToParentProcess(
+    Endpoint<PVideoBridgeChild>&& aEndpoint) {
+  // We never want to decode in the GPU process, but output
+  // frames to the parent process.
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!StartupThreads()) {
+    return false;
+  }
+
+  RefPtr<Runnable> task = NewRunnableFunction(
+      "gfx::VideoBridgeChild::Open", &VideoBridgeChild::OpenToParentProcess,
+      std::move(aEndpoint));
+  sRemoteDecoderManagerParentThread->Dispatch(task.forget(),
+                                              NS_DISPATCH_NORMAL);
+  return true;
+}
+
 RemoteDecoderManagerParent::RemoteDecoderManagerParent(
     RemoteDecoderManagerThreadHolder* aHolder)
     : mThreadHolder(aHolder) {

@@ -159,6 +159,15 @@ mozilla::ipc::IPCResult RDDParent::RecvNewContentRemoteDecoderManager(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RDDParent::RecvCreateVideoBridgeToParentProcess(
+    Endpoint<PVideoBridgeChild>&& aEndpoint) {
+  if (!RemoteDecoderManagerParent::CreateVideoBridgeToParentProcess(
+          std::move(aEndpoint))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult RDDParent::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage, const Maybe<FileDescriptor>& aDMDFile) {
