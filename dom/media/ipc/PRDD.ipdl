@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include GraphicsMessages;
 include MemoryReportTypes;
 include PrefsTypes;
 
@@ -22,7 +23,9 @@ protocol PRDD
 {
 parent:
 
-  async Init(FileDescriptor? sandboxBroker, bool startMacSandbox);
+  async Init(GfxVarUpdate[] vars,
+             FileDescriptor? sandboxBroker,
+             bool startMacSandbox);
 
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
@@ -35,6 +38,8 @@ parent:
                             FileDescriptor? DMDFile);
 
   async PreferenceUpdate(Pref pref);
+
+  async UpdateVar(GfxVarUpdate var);
 
   async CreateVideoBridgeToParentProcess(Endpoint<PVideoBridgeChild> endpoint);
 
