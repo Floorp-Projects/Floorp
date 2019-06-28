@@ -13,8 +13,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FlexBinding.h"
 
-class nsStyleCoord;
-
 namespace mozilla {
 template <class T>
 class LinkedList;

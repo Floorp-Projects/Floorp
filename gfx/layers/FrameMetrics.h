@@ -22,7 +22,7 @@
 #include "mozilla/StaticPtr.h"                   // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"                   // for TimeStamp
 #include "nsString.h"
-#include "nsStyleCoord.h"  // for nsStyleCoord
+#include "mozilla/ServoStyleConsts.h"
 #include "PLDHashTable.h"  // for PLDHashNumber
 
 struct nsStyleDisplay;
@@ -759,7 +759,7 @@ struct ScrollSnapInfo {
   Maybe<nscoord> mScrollSnapIntervalY;
 
   // The scroll frame's scroll-snap-destination, in cooked form (to avoid
-  // shipping the raw nsStyleCoord::CalcValue over IPC).
+  // shipping the raw style value over IPC).
   nsPoint mScrollSnapDestination;
 
   // The scroll-snap-coordinates of any descendant frames of the scroll frame,
