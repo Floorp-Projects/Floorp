@@ -28,6 +28,8 @@ class JSONExperimentParserTest {
                 appId = "sample-appId",
                 regions = listOf("US"),
                 appDisplayVersion = "1.0",
+                appMinVersion = "0.1.0",
+                appMaxVersion = "1.1.0",
                 deviceManufacturer = "manufacturer",
                 deviceModel = "device",
                 localeCountry = "country",
@@ -67,6 +69,8 @@ class JSONExperimentParserTest {
         assertEquals("sample-appId", match.getString("app_id"))
         assertEquals("es|en", match.getString("locale_language"))
         assertEquals("1.0", match.getString("app_display_version"))
+        assertEquals("0.1.0", match.getString("app_min_version"))
+        assertEquals("1.1.0", match.getString("app_max_version"))
         assertEquals("manufacturer", match.getString("device_manufacturer"))
         assertEquals("device", match.getString("device_model"))
         assertEquals("country", match.getString("locale_country"))
@@ -82,6 +86,8 @@ class JSONExperimentParserTest {
             buckets = Experiment.Buckets(0, 0),
             branches = emptyList(),
             match = Experiment.Matcher(
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -131,7 +137,9 @@ class JSONExperimentParserTest {
                   "US"
                 ],
                 "app_id": "sample-appId",
-                "locale_language": "es|en"
+                "locale_language": "es|en",
+                "app_min_version": "1.0.0",
+                "app_max_version": "1.1.0"
               },
               "last_modified": $currentTime
             }
@@ -143,7 +151,9 @@ class JSONExperimentParserTest {
             match = createDefaultMatcher(
                 localeLanguage = "es|en",
                 appId = "sample-appId",
-                regions = listOf("US")
+                regions = listOf("US"),
+                appMinVersion = "1.0.0",
+                appMaxVersion = "1.1.0"
             ),
             buckets = Experiment.Buckets(0, 20),
             lastModified = currentTime

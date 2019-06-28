@@ -81,6 +81,14 @@ internal data class Experiment(
          */
         val appDisplayVersion: String?,
         /**
+         * App minimum version, expected dotted numeric version E.g. 1.0.2, or 67.0.1
+         */
+        val appMinVersion: String?,
+        /**
+         * App maximum version, expected dotted numeric version E.g. 1.0.2, or 67.0.1
+         */
+        val appMaxVersion: String?,
+        /**
          * Locale language, as a regex.
          */
         val localeLanguage: String?,

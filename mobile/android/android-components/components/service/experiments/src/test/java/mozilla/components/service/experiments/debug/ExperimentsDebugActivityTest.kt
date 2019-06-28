@@ -188,6 +188,8 @@ class ExperimentsDebugActivityTest {
             match = Experiment.Matcher(
                 appId = null,
                 appDisplayVersion = null,
+                appMinVersion = null,
+                appMaxVersion = null,
                 debugTags = null,
                 deviceManufacturer = null,
                 deviceModel = null,
@@ -208,6 +210,8 @@ class ExperimentsDebugActivityTest {
             match = Experiment.Matcher(
                 appId = null,
                 appDisplayVersion = null,
+                appMinVersion = null,
+                appMaxVersion = null,
                 debugTags = null,
                 deviceManufacturer = null,
                 deviceModel = null,

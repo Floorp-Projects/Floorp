@@ -64,6 +64,8 @@ internal fun getWorkInfoByTag(tag: String): WorkInfo? {
 internal fun createDefaultMatcher(
     appId: String? = null,
     appDisplayVersion: String? = null,
+    appMinVersion: String? = null,
+    appMaxVersion: String? = null,
     localeLanguage: String? = null,
     localeCountry: String? = null,
     deviceManufacturer: String? = null,
@@ -74,6 +76,8 @@ internal fun createDefaultMatcher(
     return Experiment.Matcher(
         appId,
         appDisplayVersion,
+        appMinVersion,
+        appMaxVersion,
         localeLanguage,
         localeCountry,
         deviceManufacturer,

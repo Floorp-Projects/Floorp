@@ -9,6 +9,7 @@ import android.content.Context
 import android.os.Looper
 import androidx.annotation.VisibleForTesting
 import android.text.TextUtils
+import mozilla.components.service.experiments.util.VersionString
 import mozilla.components.support.base.log.logger.Logger
 import java.util.zip.CRC32
 
@@ -86,6 +87,7 @@ internal class ExperimentEvaluator(
     private fun matches(context: Context, experiment: Experiment): Boolean {
         val match = experiment.match
         val region = valuesProvider.getRegion(context)
+        val version = valuesProvider.getVersion(context) ?: ""
         val matchesRegion = (region == null) ||
             match.regions.isNullOrEmpty() ||
             match.regions.any { it == region }
@@ -93,10 +95,14 @@ internal class ExperimentEvaluator(
         val matchesTag = (tag == null) ||
             match.debugTags.isNullOrEmpty() ||
             match.debugTags.any { it == tag }
+        val matchesMinVersion = match.appMinVersion.isNullOrEmpty() ||
+            VersionString(match.appMinVersion) <= VersionString(version)
+        val matchesMaxVersion = match.appMaxVersion.isNullOrEmpty() ||
+            VersionString(match.appMaxVersion) >= VersionString(version)
 
-        return matchesRegion && matchesTag &&
+        return matchesRegion && matchesTag && matchesMinVersion && matchesMaxVersion &&
             matchesExperiment(match.appId, valuesProvider.getAppId(context)) &&
-            matchesExperiment(match.appDisplayVersion, valuesProvider.getVersion(context)) &&
+            matchesExperiment(match.appDisplayVersion, version) &&
             matchesExperiment(match.localeLanguage, valuesProvider.getLanguage(context)) &&
             matchesExperiment(match.localeCountry, valuesProvider.getCountry(context)) &&
             matchesExperiment(match.deviceManufacturer, valuesProvider.getManufacturer(context)) &&
