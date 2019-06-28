@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/gfxVarReceiver.h"
 
 namespace mozilla {
 
@@ -25,7 +26,7 @@ class MemoryReportRequestHost;
 
 class RDDProcessHost;
 
-class RDDChild final : public PRDDChild {
+class RDDChild final : public PRDDChild, public gfx::gfxVarReceiver {
   typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
 
  public:
@@ -35,6 +36,8 @@ class RDDChild final : public PRDDChild {
   bool Init(bool aStartMacSandbox);
 
   bool EnsureRDDReady();
+
+  void OnVarChanged(const GfxVarUpdate& aVar) override;
 
   // PRDDChild overrides.
   mozilla::ipc::IPCResult RecvInitComplete();
