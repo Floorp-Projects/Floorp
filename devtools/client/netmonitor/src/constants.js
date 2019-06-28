@@ -35,6 +35,8 @@ const actionTypes = {
   WATERFALL_RESIZE: "WATERFALL_RESIZE",
   SET_COLUMNS_WIDTH: "SET_COLUMNS_WIDTH",
   WS_ADD_FRAME: "WS_ADD_FRAME",
+  WS_SELECT_FRAME: "WS_SELECT_FRAME",
+  WS_OPEN_FRAME_DETAILS: "WS_OPEN_FRAME_DETAILS",
 };
 
 // Descriptions for what this frontend is currently doing.
@@ -316,6 +318,30 @@ const FILTER_TAGS = [
   "other",
 ];
 
+const WS_FRAMES_HEADERS = [
+  {
+    name: "frameType",
+  },
+  {
+    name: "size",
+  },
+  {
+    name: "payload",
+  },
+  {
+    name: "opCode",
+  },
+  {
+    name: "maskBit",
+  },
+  {
+    name: "finBit",
+  },
+  {
+    name: "time",
+  },
+];
+
 const REQUESTS_WATERFALL = {
   BACKGROUND_TICKS_MULTIPLE: 5, // ms
   BACKGROUND_TICKS_SCALES: 3,
@@ -444,6 +470,7 @@ const general = {
   FILTER_SEARCH_DELAY: 200,
   UPDATE_PROPS,
   HEADERS,
+  WS_FRAMES_HEADERS,
   RESPONSE_HEADERS,
   FILTER_FLAGS,
   FILTER_TAGS,
