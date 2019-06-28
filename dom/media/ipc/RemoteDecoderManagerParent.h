@@ -35,9 +35,9 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
   PRemoteDecoderParent* AllocPRemoteDecoderParent(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
-      const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
-      nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
-      nsCString* aErrorDescription);
+      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
+      bool* aSuccess, nsCString* aBlacklistedD3D11Driver,
+      nsCString* aBlacklistedD3D9Driver, nsCString* aErrorDescription);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,
