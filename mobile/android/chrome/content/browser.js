@@ -524,7 +524,6 @@ var BrowserApp = {
     // However, we never allow suitably restricted profiles from listening to
     // fxa-content-server messages.
     if (ParentalControls.isAllowed(ParentalControls.MODIFY_ACCOUNTS)) {
-      console.log("browser.js: loading Firefox Accounts WebChannel");
       var {EnsureFxAccountsWebChannel} = ChromeUtils.import("resource://gre/modules/FxAccountsWebChannel.jsm");
       EnsureFxAccountsWebChannel();
     } else {
@@ -587,7 +586,6 @@ var BrowserApp = {
    * Pass this a locale string, such as "fr" or "es_ES".
    */
   setLocale: function(locale) {
-    console.log("browser.js: requesting locale set: " + locale);
     WindowEventDispatcher.sendRequest({ type: "Locale:Set", locale: locale });
   },
 
@@ -1775,13 +1773,10 @@ var BrowserApp = {
       case "Locale:OS": {
         // We know the system locale. We use this for generating Accept-Language headers.
         let languageTag = data.languageTag;
-        console.log("Locale:OS: " + languageTag);
         let currentOSLocale = this.getOSLocalePref();
         if (currentOSLocale == languageTag) {
           break;
         }
-
-        console.log("New OS locale.");
 
         // Ensure that this choice is immediately persisted, because
         // Gecko won't be told again if it forgets.
@@ -1801,8 +1796,6 @@ var BrowserApp = {
         } else {
           Services.locale.requestedLocales = [];
         }
-
-        console.log("Gecko display locale: " + this.getUALocalePref());
 
         // Rebuild strings to reflect the new locale.
         Strings.flush();
@@ -2156,7 +2149,6 @@ var BrowserApp = {
   computeAcceptLanguages(osLocale) {
     let defaultBranch = Services.prefs.getDefaultBranch(null);
     let defaultAccept = defaultBranch.getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString).data;
-    console.log("Default intl.accept_languages = " + defaultAccept);
 
     // A guard for potential breakage. Bug 438031.
     // This should not be necessary, because we're reading from the default branch,
@@ -2202,7 +2194,6 @@ var BrowserApp = {
     }
 
     let result = chosen.join(",");
-    console.log("Setting intl.accept_languages to " + result);
     this.setLocalizedPref("intl.accept_languages", result);
   },
 
@@ -2415,7 +2406,7 @@ var NativeWindow = {
       }
 
       if (aButtons.length > 2) {
-        console.log("Doorhanger can have a maximum of two buttons!");
+        console.warn("Doorhanger can have a maximum of two buttons!");
         aButtons.length = 2;
       }
 
