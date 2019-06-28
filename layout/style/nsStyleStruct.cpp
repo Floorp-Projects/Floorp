@@ -53,20 +53,20 @@ static const nscoord kMediumBorderWidth = nsPresContext::CSSPixelsToAppUnits(3);
 // 512 bytes, which minimizes allocator slop.
 static constexpr size_t kStyleStructSizeLimit = 504;
 
-template <typename Struct, size_t Actual, size_t Limit>
-struct AssertSizeIsLessThan {
-  static_assert(Actual == sizeof(Struct), "Bogus invocation");
-  static_assert(Actual <= Limit,
-                "Style struct became larger than the size limit");
-  static constexpr bool instantiate = true;
-};
-
-#define STYLE_STRUCT(name_)                                                  \
-  static_assert(AssertSizeIsLessThan<nsStyle##name_, sizeof(nsStyle##name_), \
-                                     kStyleStructSizeLimit>::instantiate,    \
-                "");
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+// template <typename Struct, size_t Actual, size_t Limit>
+// struct AssertSizeIsLessThan {
+//   static_assert(Actual == sizeof(Struct), "Bogus invocation");
+//   static_assert(Actual <= Limit,
+//                 "Style struct became larger than the size limit");
+//   static constexpr bool instantiate = true;
+// };
+//
+// #define STYLE_STRUCT(name_)                                                  \
+//   static_assert(AssertSizeIsLessThan<nsStyle##name_, sizeof(nsStyle##name_), \
+//                                      kStyleStructSizeLimit>::instantiate,    \
+//                 "");
+// #include "nsStyleStructList.h"
+// #undef STYLE_STRUCT
 
 static bool DefinitelyEqualImages(const nsStyleImageRequest* aRequest1,
                                   const nsStyleImageRequest* aRequest2) {
@@ -1182,6 +1182,8 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mFlexGrow(0.0f),
       mFlexShrink(1.0f),
       mZIndex(StyleZIndex::Auto()),
+      mGridTemplateColumns(StyleGridTemplateComponent::None()),
+      mGridTemplateRows(StyleGridTemplateComponent::None()),
       mGridTemplateAreas(StyleGridTemplateAreas::None()),
       mColumnGap(NonNegativeLengthPercentageOrNormal::Normal()),
       mRowGap(NonNegativeLengthPercentageOrNormal::Normal()) {
@@ -1227,6 +1229,8 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mFlexGrow(aSource.mFlexGrow),
       mFlexShrink(aSource.mFlexShrink),
       mZIndex(aSource.mZIndex),
+      mGridTemplateColumns(aSource.mGridTemplateColumns),
+      mGridTemplateRows(aSource.mGridTemplateRows),
       mGridTemplateAreas(aSource.mGridTemplateAreas),
       mGridColumnStart(aSource.mGridColumnStart),
       mGridColumnEnd(aSource.mGridColumnEnd),
@@ -1235,15 +1239,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
       mColumnGap(aSource.mColumnGap),
       mRowGap(aSource.mRowGap) {
   MOZ_COUNT_CTOR(nsStylePosition);
-
-  if (aSource.mGridTemplateColumns) {
-    mGridTemplateColumns =
-        MakeUnique<nsStyleGridTemplate>(*aSource.mGridTemplateColumns);
-  }
-  if (aSource.mGridTemplateRows) {
-    mGridTemplateRows =
-        MakeUnique<nsStyleGridTemplate>(*aSource.mGridTemplateRows);
-  }
 }
 
 static bool IsAutonessEqual(const StyleRect<LengthPercentageOrAuto>& aSides1,
@@ -1254,18 +1249,6 @@ static bool IsAutonessEqual(const StyleRect<LengthPercentageOrAuto>& aSides1,
     }
   }
   return true;
-}
-
-static bool IsGridTemplateEqual(
-    const UniquePtr<nsStyleGridTemplate>& aOldData,
-    const UniquePtr<nsStyleGridTemplate>& aNewData) {
-  if (aOldData == aNewData) {
-    return true;
-  }
-  if (!aOldData || !aNewData) {
-    return false;
-  }
-  return *aOldData == *aNewData;
 }
 
 nsChangeHint nsStylePosition::CalcDifference(
@@ -1323,9 +1306,8 @@ nsChangeHint nsStylePosition::CalcDifference(
   // Properties that apply to grid containers:
   // FIXME: only for grid containers
   // (ie. 'display: grid' or 'display: inline-grid')
-  if (!IsGridTemplateEqual(mGridTemplateColumns,
-                           aNewData.mGridTemplateColumns) ||
-      !IsGridTemplateEqual(mGridTemplateRows, aNewData.mGridTemplateRows) ||
+  if (mGridTemplateColumns != aNewData.mGridTemplateColumns ||
+      mGridTemplateRows != aNewData.mGridTemplateRows ||
       mGridTemplateAreas != aNewData.mGridTemplateAreas ||
       mGridAutoColumns != aNewData.mGridAutoColumns ||
       mGridAutoRows != aNewData.mGridAutoRows ||
@@ -1429,24 +1411,6 @@ uint8_t nsStylePosition::UsedJustifySelf(ComputedStyle* aParent) const {
     return inheritedJustifyItems & ~NS_STYLE_JUSTIFY_LEGACY;
   }
   return NS_STYLE_JUSTIFY_NORMAL;
-}
-
-static StaticAutoPtr<nsStyleGridTemplate> sDefaultGridTemplate;
-
-static const nsStyleGridTemplate& DefaultGridTemplate() {
-  if (!sDefaultGridTemplate) {
-    sDefaultGridTemplate = new nsStyleGridTemplate;
-    ClearOnShutdown(&sDefaultGridTemplate);
-  }
-  return *sDefaultGridTemplate;
-}
-
-const nsStyleGridTemplate& nsStylePosition::GridTemplateColumns() const {
-  return mGridTemplateColumns ? *mGridTemplateColumns : DefaultGridTemplate();
-}
-
-const nsStyleGridTemplate& nsStylePosition::GridTemplateRows() const {
-  return mGridTemplateRows ? *mGridTemplateRows : DefaultGridTemplate();
 }
 
 // --------------------

@@ -59,57 +59,57 @@ var grid_template_test_cases = [
     {
         specified: "40px/repeat(1, 20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "20px",
+        gridTemplateColumns: "repeat(1, 20px)",
     },
     {
         specified: "40px/[a]repeat(1, 20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a] 20px",
+        gridTemplateColumns: "[a] repeat(1, 20px)",
     },
     {
         specified: "40px/repeat(1, [a] 20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a] 20px",
+        gridTemplateColumns: "repeat(1, [a] 20px)",
     },
     {
         specified: "40px/[a]repeat(2, [b]20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a b] 20px [b] 20px",
+        gridTemplateColumns: "[a] repeat(2, [b] 20px)",
     },
     {
         specified: "40px/[a]repeat(2, 20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a] 20px 20px",
+        gridTemplateColumns: "[a] repeat(2, 20px)",
     },
     {
         specified: "40px/repeat(2, [a] 20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a] 20px [a] 20px",
+        gridTemplateColumns: "repeat(2, [a] 20px)",
     },
     {
         specified: "40px/[a]repeat(2, [b]20px)",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a b] 20px [b] 20px",
+        gridTemplateColumns: "[a] repeat(2, [b] 20px)",
     },
     {
         specified: "40px/repeat(2, 20px[a])",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "20px [a] 20px [a]",
+        gridTemplateColumns: "repeat(2, 20px [a])",
     },
     {
         specified: "40px/repeat(2, 20px[a]) [b]",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "20px [a] 20px [a b]",
+        gridTemplateColumns: "repeat(2, 20px [a]) [b]",
     },
     {
         specified: "40px/repeat(2, [a] 20px[b]) [c]",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a] 20px [b a] 20px [b c]",
+        gridTemplateColumns: "repeat(2, [a] 20px [b]) [c]",
     },
     {
         specified: "40px/[a] repeat(3, [b c] 20px [d] 100px [e f]) [g]",
         gridTemplateRows: "40px",
-        gridTemplateColumns: "[a b c] 20px [d] 100px [e f b c] 20px [d] 100px [e f b c] 20px [d] 100px [e f g]",
+        gridTemplateColumns: "[a] repeat(3, [b c] 20px [d] 100px [e f]) [g]",
     },
     {
         specified: "'fizz'",
