@@ -100,7 +100,7 @@ add_task(async function shareURLAddressBar() {
     // Click "Add to Address Bar"
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     let ctxMenuButton = document.querySelector(
-      "#pageActionContextMenu " + ".pageActionContextMenuItem"
+      "#pageActionContextMenu .pageActionContextMenuItem"
     );
     EventUtils.synthesizeMouseAtCenter(ctxMenuButton, {});
     await contextMenuPromise;
@@ -134,7 +134,7 @@ add_task(async function shareURLAddressBar() {
 
     contextMenuPromise = promisePanelHidden("pageActionContextMenu");
     ctxMenuButton = document.querySelector(
-      "#pageActionContextMenu " + ".pageActionContextMenuItem"
+      "#pageActionContextMenu .pageActionContextMenuItem"
     );
     EventUtils.synthesizeMouseAtCenter(ctxMenuButton, {});
     await contextMenuPromise;

@@ -478,8 +478,8 @@ var gMenuBuilder = {
       { once: true }
     );
 
+    // eslint-disable-next-line mozilla/balanced-listeners
     element.addEventListener("click", event => {
-      // eslint-disable-line mozilla/balanced-listeners
       if (
         event.target !== event.currentTarget ||
         // Ignore menu items that are usually not clickeable,

@@ -611,6 +611,7 @@ var gIdentityHandler = {
   _hasCustomRoot() {
     let issuerCert = null;
     // Walk the whole chain to get the last cert.
+    // eslint-disable-next-line no-empty
     for (issuerCert of this._secInfo.succeededCertChain.getEnumerator()) {
     }
 

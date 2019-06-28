@@ -77,8 +77,7 @@ const BCH_TESTS = [
     actions: "silent",
   },
   {
-    description:
-      "update with 'silent showURL extra' " + "for actions and openURL",
+    description: "update with 'silent showURL extra' for actions and openURL",
     actions: "silent showURL extra",
   },
 ];

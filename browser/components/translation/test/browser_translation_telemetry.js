@@ -246,8 +246,8 @@ add_task(async function test_show_original() {
 
 add_task(async function test_language_change() {
   // This is run 4 times, the total additions are checked afterwards.
+  // eslint-disable-next-line no-unused-vars
   for (let i of Array(4)) {
-    // eslint-disable-line no-unused-vars
     let tab = await offerTranslationFor("<h1>Hallo Welt!</h1>", "fr");
     let browser = tab.linkedBrowser;
     // In the offer state, translation is executed by the Translate button,

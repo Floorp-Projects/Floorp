@@ -19,8 +19,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["NetworkManager"];
 
+// eslint-disable-next-line no-unused-vars
 function log(aMsg) {
-  // eslint-disable-line no-unused-vars
   var msg = "PdfJsNetwork.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
   Services.console.logStringMessage(msg);
 }

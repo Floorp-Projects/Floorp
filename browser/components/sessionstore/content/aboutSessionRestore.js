@@ -393,11 +393,13 @@ var treeView = {
     if (item.open) {
       // remove this window's tab rows from the view
       var thisLevel = this.getLevel(idx);
+      /* eslint-disable no-empty */
       for (
         var t = idx + 1;
         t < gTreeData.length && this.getLevel(t) > thisLevel;
         t++
       ) {}
+      /* eslint-disable no-empty */
       var deletecount = t - idx - 1;
       gTreeData.splice(idx + 1, deletecount);
       this.treeBox.rowCountChanged(idx + 1, -deletecount);

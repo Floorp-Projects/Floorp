@@ -81,7 +81,7 @@ function getIntPref(aPref, aDefaultValue) {
 function isDefaultHandler() {
   if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
     throw new Error(
-      "isDefaultHandler should only get called in the parent " + "process."
+      "isDefaultHandler should only get called in the parent process."
     );
   }
   return PdfjsChromeUtils.isDefaultHandlerApp();
@@ -115,7 +115,7 @@ var PdfJs = {
       Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT
     ) {
       throw new Error(
-        "PdfJs.init should only get called " + "in the parent process."
+        "PdfJs.init should only get called in the parent process."
       );
     }
     PdfjsChromeUtils.init();
@@ -280,7 +280,7 @@ var PdfJs = {
       Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT
     ) {
       throw new Error(
-        "Only the parent process should be observing PDF " + "handler changes."
+        "Only the parent process should be observing PDF handler changes."
       );
     }
 

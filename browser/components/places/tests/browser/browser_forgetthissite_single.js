@@ -76,7 +76,7 @@ var testForgetThisSiteVisibility = async function(selectionCount) {
     hideForgetThisSite,
     `The Forget this site menu item should ${
       hideForgetThisSite ? "" : "not "
-    }` + ` be hidden with ${selectionCount} items selected`
+    } be hidden with ${selectionCount} items selected`
   );
 
   // Close the context menu.

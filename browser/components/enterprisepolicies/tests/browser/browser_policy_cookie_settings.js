@@ -125,10 +125,10 @@ async function test_cookie_settings({
     "about:preferences"
   );
   await tab.linkedBrowser.contentWindow.gotoPref("panePrivacy");
-  // eslint-disable-next-line no-shadow
   await ContentTask.spawn(
     tab.linkedBrowser,
     { cookiesEnabled, cookieSettingsLocked },
+    // eslint-disable-next-line no-shadow
     async function({ cookiesEnabled, cookieSettingsLocked }) {
       let deleteOnCloseCheckbox = content.document.getElementById(
         "deleteOnClose"

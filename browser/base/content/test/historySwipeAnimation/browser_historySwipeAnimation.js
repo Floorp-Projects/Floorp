@@ -42,7 +42,7 @@ function test() {
     is(
       gHistorySwipeAnimation.active,
       false,
-      "History swipe animation support " + "was successfully uninitialized"
+      "History swipe animation support was successfully uninitialized"
     );
     finish();
   }

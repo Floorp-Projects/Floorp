@@ -230,7 +230,7 @@ var PdfjsChromeUtils = {
     let browser = aEvent.currentTarget.browser;
     if (!this._browsers.has(browser)) {
       throw new Error(
-        "FindEventManager was not bound " + "for the current browser."
+        "FindEventManager was not bound for the current browser."
       );
     }
     // Only forward the events if the current browser is a registered browser.
@@ -251,7 +251,7 @@ var PdfjsChromeUtils = {
     let browser = aMsg.target;
     if (this._browsers.has(browser)) {
       throw new Error(
-        "FindEventManager was bound 2nd time " + "without unbinding it first."
+        "FindEventManager was bound 2nd time without unbinding it first."
       );
     }
 
