@@ -1611,7 +1611,7 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
   AfterClearForm(aUnbindOrDelete);
 }
 
-HTMLFormElement* nsGenericHTMLFormElement::GetFormElement() { return mForm; }
+Element* nsGenericHTMLFormElement::GetFormElement() { return mForm; }
 
 HTMLFieldSetElement* nsGenericHTMLFormElement::GetFieldSet() {
   return mFieldSet;
@@ -2520,29 +2520,29 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    FromParser aFromParser, uint8_t aType)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), aType),
-      mControlNumber(!!(aFromParser & FROM_PARSER_NETWORK)
-                         ? OwnerDoc()->GetNextControlNumber()
-                         : -1) {
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, uint8_t aType)
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), aType) {
   mStateKey.SetIsVoid(true);
 }
 
-void nsGenericHTMLFormElementWithState::GenerateStateKey() {
+nsresult nsGenericHTMLFormElementWithState::GenerateStateKey() {
   // Keep the key if already computed
   if (!mStateKey.IsVoid()) {
-    return;
+    return NS_OK;
   }
 
   Document* doc = GetUncomposedDoc();
   if (!doc) {
-    mStateKey.Truncate();
-    return;
+    return NS_OK;
   }
 
   // Generate the state key
-  nsContentUtils::GenerateStateKey(this, doc, mStateKey);
+  nsresult rv = nsContentUtils::GenerateStateKey(this, doc, mStateKey);
+
+  if (NS_FAILED(rv)) {
+    mStateKey.SetIsVoid(true);
+    return rv;
+  }
 
   // If the state key is blank, this is anonymous content or for whatever
   // reason we are not supposed to save/restore state: keep it as such.
@@ -2550,6 +2550,7 @@ void nsGenericHTMLFormElementWithState::GenerateStateKey() {
     // Add something unique to content so layout doesn't muck us up.
     mStateKey += "-C";
   }
+  return NS_OK;
 }
 
 PresState* nsGenericHTMLFormElementWithState::GetPrimaryPresState() {
@@ -2597,9 +2598,6 @@ nsGenericHTMLFormElementWithState::GetLayoutHistory(bool aRead) {
 }
 
 bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
-  MOZ_ASSERT(!mStateKey.IsVoid(),
-             "GenerateStateKey must already have been called");
-
   if (mStateKey.IsEmpty()) {
     return false;
   }
@@ -2622,12 +2620,6 @@ bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
 
 void nsGenericHTMLFormElementWithState::NodeInfoChanged(Document* aOldDoc) {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
-
-  // We need to regenerate the state key now we're in a new document.  Clearing
-  // mControlNumber means we stop considering this control to be parser
-  // inserted, and we'll generate a state key based on its position in the
-  // document rather than the order it was inserted into the document.
-  mControlNumber = -1;
   mStateKey.SetIsVoid(true);
 }
 
