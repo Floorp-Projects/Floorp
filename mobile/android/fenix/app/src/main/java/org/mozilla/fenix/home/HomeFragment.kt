@@ -118,6 +118,17 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
+    private val preDrawListener = object : ViewTreeObserver.OnPreDrawListener {
+        override fun onPreDraw(): Boolean {
+            viewLifecycleOwner.lifecycleScope.launch {
+                delay(ANIM_SCROLL_DELAY)
+                restoreLayoutState()
+//                startPostponedEnterTransition()
+            }.invokeOnCompletion { sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this) }
+            return true
+        }
+    }
+
     private var homeMenu: HomeMenu? = null
 
     private val sessionManager: SessionManager
@@ -185,23 +196,13 @@ class HomeFragment : Fragment(), AccountObserver {
             }
         }
 
-        postponeEnterTransition()
+//        postponeEnterTransition()
 
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
 
-        val listener = object : ViewTreeObserver.OnPreDrawListener {
-            override fun onPreDraw(): Boolean {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(ANIM_SCROLL_DELAY)
-                    restoreLayoutState()
-                    startPostponedEnterTransition()
-                }.invokeOnCompletion { sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this) }
-                return true
-            }
-        }
-        sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(listener)
+        sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(preDrawListener)
 
         return view
     }
@@ -290,6 +291,7 @@ class HomeFragment : Fragment(), AccountObserver {
 
     override fun onDestroyView() {
         homeMenu = null
+        sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(preDrawListener)
         super.onDestroyView()
     }
 
@@ -499,19 +501,19 @@ class HomeFragment : Fragment(), AccountObserver {
                     restoreSessionId = false
                 )
                 if (tabSnapshot.isEmpty()) {
-                        // We were unable to create a snapshot, so just load the tab instead
-                        (activity as HomeActivity).openToBrowserAndLoad(
-                            searchTermOrURL = action.tab.url,
-                            newTab = true,
-                            from = BrowserDirection.FromHome
-                        )
-                    } else {
-                        requireComponents.core.sessionManager.restore(
-                            tabSnapshot,
-                            true
-                        )
-                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
-                    }
+                    // We were unable to create a snapshot, so just load the tab instead
+                    (activity as HomeActivity).openToBrowserAndLoad(
+                        searchTermOrURL = action.tab.url,
+                        newTab = true,
+                        from = BrowserDirection.FromHome
+                    )
+                } else {
+                    requireComponents.core.sessionManager.restore(
+                        tabSnapshot,
+                        true
+                    )
+                    (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
+                }
             }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
