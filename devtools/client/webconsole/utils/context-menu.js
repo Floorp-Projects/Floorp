@@ -14,6 +14,8 @@ const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
+loader.lazyRequireGetter(this, "showSaveFileDialog", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(this, "saveFileStream", "devtools/shared/DevToolsUtils", true);
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/utils/clipboard", true);
 
@@ -184,15 +186,46 @@ function createContextMenu(webConsoleUI, parentNode, {
     },
   }));
 
+  const exportSubmenu = new Menu({
+    id: "export-submenu",
+  });
+
   // Export to clipboard
-  menu.append(new MenuItem({
+  exportSubmenu.append(new MenuItem({
     id: "console-menu-export-clipboard",
-    label: l10n.getStr("webconsole.menu.exportClipboard.label"),
+    label: l10n.getStr("webconsole.menu.exportSubmenu.exportCliboard.label"),
     disabled: false,
     click: () => {
       const webconsoleOutput = parentNode.querySelector(".webconsole-output");
       clipboardHelper.copyString(getElementText(webconsoleOutput));
     },
+  }));
+
+  // Export to file
+  exportSubmenu.append(new MenuItem({
+    id: "console-menu-export-file",
+    label: l10n.getStr("webconsole.menu.exportSubmenu.exportFile.label"),
+    disabled: false,
+    click: async () => {
+      const date = new Date();
+      const suggestedName = `console-export-${date.getFullYear()}-` +
+        `${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-` +
+        `${date.getMinutes()}-${date.getSeconds()}.txt`;
+      const returnFile = await showSaveFileDialog(win, suggestedName);
+      const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                        .createInstance(Ci.nsIScriptableUnicodeConverter);
+      converter.charset = "UTF-8";
+      const webconsoleOutput = parentNode.querySelector(".webconsole-output");
+      const istream = converter.convertToInputStream(getElementText(webconsoleOutput));
+      return saveFileStream(returnFile, istream);
+    },
+  }));
+
+  menu.append(new MenuItem({
+    id: "console-menu-export",
+    label: l10n.getStr("webconsole.menu.exportSubmenu.label"),
+    disabled: false,
+    submenu: exportSubmenu,
   }));
 
   // Open object in sidebar.
