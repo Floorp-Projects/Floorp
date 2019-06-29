@@ -51,6 +51,7 @@
 #ifdef XP_WIN
 #  include <windows.h>
 #  include <shlobj.h>
+#  include "WinUtils.h"
 #endif
 #ifdef XP_MACOSX
 #  include "nsILocalFileMac.h"
@@ -71,7 +72,6 @@
 #  include "mozilla/Unused.h"
 #  if defined(XP_WIN)
 #    include "sandboxBroker.h"
-#    include "WinUtils.h"
 #  endif
 #endif
 
