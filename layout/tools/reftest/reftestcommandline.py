@@ -254,6 +254,12 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=3600,
                           help="Maximum time, in seconds, to run in --verify mode..")
 
+        self.add_argument("--enable-webrender",
+                          action="store_true",
+                          dest="enable_webrender",
+                          default=False,
+                          help="Enable the WebRender compositor in Gecko.")
+
         mozlog.commandline.add_logging_group(self)
 
     def get_ip(self):
