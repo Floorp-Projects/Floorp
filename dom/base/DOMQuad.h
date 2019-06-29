@@ -24,7 +24,6 @@ namespace dom {
 
 class DOMRectReadOnly;
 class DOMPoint;
-struct DOMQuadJSON;
 struct DOMPointInit;
 
 class DOMQuad final : public nsWrapperCache {
@@ -51,7 +50,6 @@ class DOMQuad final : public nsWrapperCache {
                                                const DOMRectReadOnly& aRect,
                                                ErrorResult& aRV);
 
-  DOMRectReadOnly* Bounds();
   already_AddRefed<DOMRectReadOnly> GetBounds() const;
   DOMPoint* P1() const { return mPoints[0]; }
   DOMPoint* P2() const { return mPoints[1]; }
@@ -59,8 +57,6 @@ class DOMQuad final : public nsWrapperCache {
   DOMPoint* P4() const { return mPoints[3]; }
 
   DOMPoint* Point(uint32_t aIndex) const { return mPoints[aIndex]; }
-
-  void ToJSON(DOMQuadJSON& aInit);
 
   bool WriteStructuredClone(JSContext* aCx,
                             JSStructuredCloneWriter* aWriter) const;
@@ -75,7 +71,6 @@ class DOMQuad final : public nsWrapperCache {
 
   nsCOMPtr<nsISupports> mParent;
   RefPtr<DOMPoint> mPoints[4];
-  RefPtr<DOMRectReadOnly> mBounds;
 };
 
 }  // namespace dom
