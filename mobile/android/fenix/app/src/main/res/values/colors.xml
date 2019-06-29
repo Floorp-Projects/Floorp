@@ -8,7 +8,7 @@
     <color name="secondary_text_light_theme">@color/photonGrey50</color>
     <color name="contrast_text_light_theme">@color/primary_text_dark_theme</color>
     <color name="foundation_light_theme">#F9F9FB</color>
-    <color name="inset_light_theme">#F2F2F5</color>
+    <color name="inset_light_theme">#E6E8E8</color>
     <color name="above_light_theme">#FFF</color>
     <color name="accent_light_theme">#312A65</color>
     <color name="accent_bright_light_theme">#592ACB</color>
