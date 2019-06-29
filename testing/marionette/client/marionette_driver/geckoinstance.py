@@ -147,7 +147,7 @@ class GeckoInstance(object):
 
     def __init__(self, host=None, port=None, bin=None, profile=None, addons=None,
                  app_args=None, symbols_path=None, gecko_log=None, prefs=None,
-                 workspace=None, verbose=0, headless=False):
+                 workspace=None, verbose=0, headless=False, enable_webrender=False):
         self.runner_class = Runner
         self.app_args = app_args or []
         self.runner = None
@@ -166,6 +166,7 @@ class GeckoInstance(object):
         self._gecko_log = None
         self.verbose = verbose
         self.headless = headless
+        self.enable_webrender = enable_webrender
 
         # keep track of errors to decide whether instance is unresponsive
         self.unresponsive_count = 0
@@ -331,6 +332,12 @@ class GeckoInstance(object):
             env["MOZ_HEADLESS"] = "1"
             env["DISPLAY"] = "77"  # Set a fake display.
 
+        if self.enable_webrender:
+            env["MOZ_WEBRENDER"] = "1"
+            env["MOZ_ACCELERATED"] = "1"
+        else:
+            env["MOZ_WEBRENDER"] = "0"
+
         # environment variables needed for crashreporting
         # https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
         env.update({"MOZ_CRASHREPORTER": "1",
@@ -462,12 +469,18 @@ class FennecInstance(GeckoInstance):
             "processOutputLine": [NullOutput()],
         }
 
+        env = {} if self.env is None else self.env.copy()
+        if self.enable_webrender:
+            env["MOZ_WEBRENDER"] = "1"
+        else:
+            env["MOZ_WEBRENDER"] = "0"
+
         runner_args = {
             "app": self.package_name,
             "avd_home": self.avd_home,
             "adb_path": self.adb_path,
             "binary": self.emulator_binary,
-            "env": self.env,
+            "env": env,
             "profile": self.profile,
             "cmdargs": ["-marionette"] + self.app_args,
             "symbols_path": self.symbols_path,

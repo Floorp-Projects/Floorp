@@ -123,7 +123,7 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
        {"action": "store_true",
         "dest": "enable_webrender",
         "default": False,
-        "help": "Tries to enable the WebRender compositor."
+        "help": "Enable the WebRender compositor in Gecko."
         }
      ]] + copy.deepcopy(testing_config_options) \
         + copy.deepcopy(code_coverage_config_options)
@@ -306,6 +306,9 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
         if not self.config['e10s']:
             cmd.append('--disable-e10s')
 
+        if self.config['enable_webrender']:
+            cmd.append('--enable-webrender')
+
         cmd.append('--gecko-log=-')
 
         if self.config.get("structured_output"):
@@ -340,9 +343,6 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
-        if self.config['enable_webrender']:
-            env['MOZ_WEBRENDER'] = '1'
-            env['MOZ_ACCELERATED'] = '1'
 
         if self.config['headless']:
             env['MOZ_HEADLESS'] = '1'
