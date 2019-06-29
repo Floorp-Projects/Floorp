@@ -182,6 +182,8 @@ def create_parser(mach_interface=False):
             help='Remove any existing ccov gcda output files after browser'
                  ' initialization but before starting the tests. NOTE:'
                  ' Currently only supported in production.')
+    add_arg('--enable-webrender', action="store_true", default=False,
+            help="Enable the WebRender compositor in Gecko.")
 
     add_logging_group(parser)
     return parser
