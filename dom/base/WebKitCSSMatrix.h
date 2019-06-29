@@ -37,8 +37,8 @@ class WebKitCSSMatrix final : public DOMMatrix {
   WebKitCSSMatrix* SetMatrixValue(const nsAString& aTransformList,
                                   ErrorResult& aRv);
 
-  already_AddRefed<WebKitCSSMatrix> Multiply(
-      const WebKitCSSMatrix& aOther) const;
+  already_AddRefed<WebKitCSSMatrix> Multiply(const DOMMatrixInit& aOtherInit,
+                                             ErrorResult& aRv) const;
   already_AddRefed<WebKitCSSMatrix> Inverse(ErrorResult& aRv) const;
   already_AddRefed<WebKitCSSMatrix> Translate(double aTx, double aTy,
                                               double aTz) const;
