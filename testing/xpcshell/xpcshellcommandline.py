@@ -140,6 +140,10 @@ def add_common_arguments(parser):
                         dest="verifyMaxTime",
                         type=int, default=3600,
                         help="Maximum time, in seconds, to run in --verify mode.")
+    parser.add_argument("--enable-webrender",
+                        action="store_true", default=False,
+                        dest="enable_webrender",
+                        help="Enable the WebRender compositor in Gecko.")
 
 
 def add_remote_arguments(parser):

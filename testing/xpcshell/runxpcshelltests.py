@@ -1021,6 +1021,12 @@ class XPCShellTests(object):
         # compatible with the sandbox.
         self.env["MOZ_DISABLE_CONTENT_SANDBOX"] = "1"
 
+        if self.enable_webrender:
+            self.env["MOZ_WEBRENDER"] = "1"
+            self.env["MOZ_ACCELERATED"] = "1"
+        else:
+            self.env["MOZ_WEBRENDER"] = "0"
+
     def buildEnvironment(self):
         """
           Create and returns a dictionary of self.env to include all the appropriate env
@@ -1298,6 +1304,7 @@ class XPCShellTests(object):
         self.failure_manifest = options.get('failure_manifest')
         self.threadCount = options.get('threadCount') or NUM_THREADS
         self.jscovdir = options.get('jscovdir')
+        self.enable_webrender = options.get('enable_webrender')
 
         self.testCount = 0
         self.passCount = 0
