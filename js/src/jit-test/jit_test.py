@@ -66,7 +66,7 @@ def choose_item(jobs, max_items, display):
 def main(argv):
     # The [TESTS] optional arguments are paths of test files relative
     # to the jit-test/tests directory.
-    from optparse import OptionParser
+    from optparse import OptionParser, SUPPRESS_HELP
     op = OptionParser(usage='%prog [options] JS_SHELL [TESTS]')
     op.add_option('-s', '--show-cmd', dest='show_cmd', action='store_true',
                   help='show js shell command run')
@@ -184,6 +184,11 @@ def main(argv):
                   help="By default BinAST testcases encoded from JS "
                   "testcases are skipped. If specified, BinAST testcases "
                   "are also executed.")
+    # --enable-webrender is ignored as it is not relevant for JIT
+    # tests, but is required for harness compatibility.
+    op.add_option('--enable-webrender', action='store_true',
+                  dest="enable_webrender", default=False,
+                  help=SUPPRESS_HELP)
 
     options, args = op.parse_args(argv)
     if len(args) < 1:
