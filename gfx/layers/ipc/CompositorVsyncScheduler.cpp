@@ -78,9 +78,10 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(
 
   // mAsapScheduling is set on the main thread during init,
   // but is only accessed after on the compositor thread.
-  mAsapScheduling = StaticPrefs::LayersCompositionFrameRate() == 0 ||
-                    gfxPlatform::IsInLayoutAsapMode() ||
-                    recordreplay::IsRecordingOrReplaying();
+  mAsapScheduling =
+      StaticPrefs::layers_offmainthreadcomposition_frame_rate() == 0 ||
+      gfxPlatform::IsInLayoutAsapMode() ||
+      recordreplay::IsRecordingOrReplaying();
 }
 
 CompositorVsyncScheduler::~CompositorVsyncScheduler() {
