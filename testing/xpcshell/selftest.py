@@ -319,8 +319,9 @@ function run_test(
 
 # A test for failure to load a test due to an error other than a syntax error
 LOAD_ERROR_OTHER_ERROR = '''
-"use strict";
-no_such_var = "foo"; // assignment to undeclared variable
+function run_test() {
+    1 = "foo"; // invalid assignment left-hand side
+};
 '''
 
 # A test that crashes outright.
@@ -1218,7 +1219,7 @@ add_test({
 
         self.assertTestResult(False)
         self.assertInLog(TEST_FAIL_STRING)
-        self.assertInLog("ReferenceError: assignment to undeclared variable")
+        self.assertInLog("ReferenceError: invalid assignment left-hand side at")
         self.assertInLog("test_error.js:3")
         self.assertNotInLog(TEST_PASS_STRING)
 
