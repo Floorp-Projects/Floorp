@@ -1461,10 +1461,10 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
 
 /* static */
 bool gfxUtils::DumpDisplayList() {
-  return StaticPrefs::LayoutDumpDisplayList() ||
-         (StaticPrefs::LayoutDumpDisplayListParent() &&
+  return StaticPrefs::layout_display_list_dump() ||
+         (StaticPrefs::layout_display_list_dump_parent() &&
           XRE_IsParentProcess()) ||
-         (StaticPrefs::LayoutDumpDisplayListContent() &&
+         (StaticPrefs::layout_display_list_dump_content() &&
           XRE_IsContentProcess());
 }
 
@@ -1499,12 +1499,13 @@ Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForElement(
       !StaticPrefs::gfx_webrender_split_render_roots()) {
     return Nothing();
   }
-  if (!aElement->IsXULElement()) {
-    return Nothing();
-  }
   if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
                             NS_LITERAL_STRING("content"), eCaseMatters)) {
     return Some(wr::RenderRoot::Content);
+  }
+  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
+                            NS_LITERAL_STRING("popover"), eCaseMatters)) {
+    return Some(wr::RenderRoot::Popover);
   }
   return Nothing();
 }

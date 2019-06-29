@@ -23,8 +23,9 @@ MultiTiledContentClient::MultiTiledContentClient(
       mLowPrecisionTiledBuffer(aPaintedLayer, *this, aManager,
                                &mSharedFrameMetricsHelper) {
   MOZ_COUNT_CTOR(MultiTiledContentClient);
-  mLowPrecisionTiledBuffer.SetResolution(StaticPrefs::LowPrecisionResolution());
-  mHasLowPrecision = StaticPrefs::UseLowPrecisionBuffer();
+  mLowPrecisionTiledBuffer.SetResolution(
+      StaticPrefs::layers_low_precision_resolution());
+  mHasLowPrecision = StaticPrefs::layers_low_precision_buffer();
 }
 
 void MultiTiledContentClient::ClearCachedResources() {
@@ -265,7 +266,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       ctx = nullptr;
 
       // Edge padding allows us to avoid resampling artifacts
-      if (StaticPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
+      if (StaticPrefs::layers_tiles_edge_padding() && mResolution == 1) {
         drawTarget->PadEdges(newValidRegion.MovedBy(-mTilingOrigin));
       }
 

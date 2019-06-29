@@ -323,7 +323,7 @@ RefPtr<MLGRenderTarget> MLGSwapChainD3D11::AcquireBackBuffer() {
 
   if (!mRT) {
     MLGRenderTargetFlags flags = MLGRenderTargetFlags::Default;
-    if (StaticPrefs::AdvancedLayersEnableDepthBuffer()) {
+    if (StaticPrefs::layers_mlgpu_enable_depth_buffer()) {
       flags |= MLGRenderTargetFlags::ZBuffer;
     }
 

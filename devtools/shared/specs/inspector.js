@@ -350,6 +350,15 @@ const walkerSpec = generateActorSpec({
         value: RetVal("boolean"),
       },
     },
+    setMutationBreakpoints: {
+      request: {
+        node: Arg(0, "nullable:domnode"),
+        subtree: Option(1, "nullable:boolean"),
+        removal: Option(1, "nullable:boolean"),
+        attribute: Option(1, "nullable:boolean"),
+      },
+      response: {},
+    },
   },
 });
 

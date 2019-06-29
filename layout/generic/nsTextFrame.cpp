@@ -6739,7 +6739,7 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
         return;
       }
       params.drawMode |= DrawMode::GLYPH_STROKE;
-      if (StaticPrefs::PaintOrderEnabled()) {
+      if (StaticPrefs::layout_css_paint_order_enabled()) {
         // Check the paint-order property; if we find stroke before fill,
         // then change mode to GLYPH_STROKE_UNDERNEATH.
         uint32_t paintOrder = aFrame->StyleSVG()->mPaintOrder;

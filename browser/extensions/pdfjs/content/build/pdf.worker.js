@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.207';
-const pdfjsBuild = '73482750';
+const pdfjsVersion = '2.2.213';
+const pdfjsBuild = '2cc0bfd1';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -151,6 +151,8 @@ var _pdf_manager = __w_pdfjs_require__(8);
 var _is_node = _interopRequireDefault(__w_pdfjs_require__(47));
 
 var _message_handler = __w_pdfjs_require__(48);
+
+var _worker_stream = __w_pdfjs_require__(49);
 
 var _core_utils = __w_pdfjs_require__(10);
 
@@ -187,146 +189,6 @@ var WorkerTask = function WorkerTaskClosure() {
 }();
 
 exports.WorkerTask = WorkerTask;
-
-var PDFWorkerStream = function PDFWorkerStreamClosure() {
-  function PDFWorkerStream(msgHandler) {
-    this._msgHandler = msgHandler;
-    this._contentLength = null;
-    this._fullRequestReader = null;
-    this._rangeRequestReaders = [];
-  }
-
-  PDFWorkerStream.prototype = {
-    getFullReader() {
-      (0, _util.assert)(!this._fullRequestReader);
-      this._fullRequestReader = new PDFWorkerStreamReader(this._msgHandler);
-      return this._fullRequestReader;
-    },
-
-    getRangeReader(begin, end) {
-      let reader = new PDFWorkerStreamRangeReader(begin, end, this._msgHandler);
-
-      this._rangeRequestReaders.push(reader);
-
-      return reader;
-    },
-
-    cancelAllRequests(reason) {
-      if (this._fullRequestReader) {
-        this._fullRequestReader.cancel(reason);
-      }
-
-      let readers = this._rangeRequestReaders.slice(0);
-
-      readers.forEach(function (reader) {
-        reader.cancel(reason);
-      });
-    }
-
-  };
-
-  function PDFWorkerStreamReader(msgHandler) {
-    this._msgHandler = msgHandler;
-    this._contentLength = null;
-    this._isRangeSupported = false;
-    this._isStreamingSupported = false;
-
-    let readableStream = this._msgHandler.sendWithStream('GetReader');
-
-    this._reader = readableStream.getReader();
-    this._headersReady = this._msgHandler.sendWithPromise('ReaderHeadersReady').then(data => {
-      this._isStreamingSupported = data.isStreamingSupported;
-      this._isRangeSupported = data.isRangeSupported;
-      this._contentLength = data.contentLength;
-    });
-  }
-
-  PDFWorkerStreamReader.prototype = {
-    get headersReady() {
-      return this._headersReady;
-    },
-
-    get contentLength() {
-      return this._contentLength;
-    },
-
-    get isStreamingSupported() {
-      return this._isStreamingSupported;
-    },
-
-    get isRangeSupported() {
-      return this._isRangeSupported;
-    },
-
-    read() {
-      return this._reader.read().then(function ({
-        value,
-        done
-      }) {
-        if (done) {
-          return {
-            value: undefined,
-            done: true
-          };
-        }
-
-        return {
-          value: value.buffer,
-          done: false
-        };
-      });
-    },
-
-    cancel(reason) {
-      this._reader.cancel(reason);
-    }
-
-  };
-
-  function PDFWorkerStreamRangeReader(begin, end, msgHandler) {
-    this._msgHandler = msgHandler;
-    this.onProgress = null;
-
-    let readableStream = this._msgHandler.sendWithStream('GetRangeReader', {
-      begin,
-      end
-    });
-
-    this._reader = readableStream.getReader();
-  }
-
-  PDFWorkerStreamRangeReader.prototype = {
-    get isStreamingSupported() {
-      return false;
-    },
-
-    read() {
-      return this._reader.read().then(function ({
-        value,
-        done
-      }) {
-        if (done) {
-          return {
-            value: undefined,
-            done: true
-          };
-        }
-
-        return {
-          value: value.buffer,
-          done: false
-        };
-      });
-    },
-
-    cancel(reason) {
-      this._reader.cancel(reason);
-    }
-
-  };
-  return PDFWorkerStream;
-}();
-
 var WorkerMessageHandler = {
   setup(handler, port) {
     var testMessageProcessed = false;
@@ -378,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.207';
+    let workerVersion = '2.2.213';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -442,7 +304,7 @@ var WorkerMessageHandler = {
           cachedChunks = [];
 
       try {
-        pdfStream = new PDFWorkerStream(handler);
+        pdfStream = new _worker_stream.PDFWorkerStream(handler);
       } catch (ex) {
         pdfManagerCapability.reject(ex);
         return pdfManagerCapability.promise;
@@ -5196,7 +5058,12 @@ var XRef = function XRefClosure() {
 
       for (i = 0, ii = trailers.length; i < ii; ++i) {
         stream.pos = trailers[i];
-        var parser = new _parser.Parser(new _parser.Lexer(stream), true, this, true);
+        const parser = new _parser.Parser({
+          lexer: new _parser.Lexer(stream),
+          xref: this,
+          allowStreams: true,
+          recoveryMode: true
+        });
         var obj = parser.getObj();
 
         if (!(0, _primitives.isCmd)(obj, 'trailer')) {
@@ -5254,7 +5121,11 @@ var XRef = function XRefClosure() {
 
           startXRefParsedCache[startXRef] = true;
           stream.pos = startXRef + stream.start;
-          var parser = new _parser.Parser(new _parser.Lexer(stream), true, this);
+          const parser = new _parser.Parser({
+            lexer: new _parser.Lexer(stream),
+            xref: this,
+            allowStreams: true
+          });
           var obj = parser.getObj();
           var dict;
 
@@ -5382,7 +5253,11 @@ var XRef = function XRefClosure() {
       }
 
       var stream = this.stream.makeSubStream(xrefEntry.offset + this.stream.start);
-      var parser = new _parser.Parser(new _parser.Lexer(stream), true, this);
+      const parser = new _parser.Parser({
+        lexer: new _parser.Lexer(stream),
+        xref: this,
+        allowStreams: true
+      });
       var obj1 = parser.getObj();
       var obj2 = parser.getObj();
       var obj3 = parser.getObj();
@@ -5439,8 +5314,11 @@ var XRef = function XRefClosure() {
         throw new _util.FormatError('invalid first and n parameters for ObjStm stream');
       }
 
-      var parser = new _parser.Parser(new _parser.Lexer(stream), false, this);
-      parser.allowStreams = true;
+      const parser = new _parser.Parser({
+        lexer: new _parser.Lexer(stream),
+        xref: this,
+        allowStreams: true
+      });
       var i,
           entries = [],
           num,
@@ -5950,10 +5828,15 @@ function computeAdler32(bytes) {
 }
 
 class Parser {
-  constructor(lexer, allowStreams, xref, recoveryMode = false) {
+  constructor({
+    lexer,
+    xref,
+    allowStreams = false,
+    recoveryMode = false
+  }) {
     this.lexer = lexer;
-    this.allowStreams = allowStreams;
     this.xref = xref;
+    this.allowStreams = allowStreams;
     this.recoveryMode = recoveryMode;
     this.imageCache = Object.create(null);
     this.refill();
@@ -6648,7 +6531,7 @@ function toHexDigit(ch) {
 }
 
 class Lexer {
-  constructor(stream, knownCommands) {
+  constructor(stream, knownCommands = null) {
     this.stream = stream;
     this.nextChar();
     this.strBuf = [];
@@ -7155,7 +7038,10 @@ class Linearization {
       throw new Error('Hint array in the linearization dictionary is invalid.');
     }
 
-    const parser = new Parser(new Lexer(stream), false, null);
+    const parser = new Parser({
+      lexer: new Lexer(stream),
+      xref: null
+    });
     const obj1 = parser.getObj();
     const obj2 = parser.getObj();
     const obj3 = parser.getObj();
@@ -23015,7 +22901,10 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
 
   function EvaluatorPreprocessor(stream, xref, stateManager) {
     this.opMap = getOPMap();
-    this.parser = new _parser.Parser(new _parser.Lexer(stream, this.opMap), false, xref);
+    this.parser = new _parser.Parser({
+      lexer: new _parser.Lexer(stream, this.opMap),
+      xref
+    });
     this.stateManager = stateManager;
     this.nonProcessedArgs = [];
     this._numInvalidPathOPS = 0;
@@ -45100,6 +44989,159 @@ MessageHandler.prototype = {
   }
 
 };
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PDFWorkerStream = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
+class PDFWorkerStream {
+  constructor(msgHandler) {
+    this._msgHandler = msgHandler;
+    this._contentLength = null;
+    this._fullRequestReader = null;
+    this._rangeRequestReaders = [];
+  }
+
+  getFullReader() {
+    (0, _util.assert)(!this._fullRequestReader);
+    this._fullRequestReader = new PDFWorkerStreamReader(this._msgHandler);
+    return this._fullRequestReader;
+  }
+
+  getRangeReader(begin, end) {
+    const reader = new PDFWorkerStreamRangeReader(begin, end, this._msgHandler);
+
+    this._rangeRequestReaders.push(reader);
+
+    return reader;
+  }
+
+  cancelAllRequests(reason) {
+    if (this._fullRequestReader) {
+      this._fullRequestReader.cancel(reason);
+    }
+
+    const readers = this._rangeRequestReaders.slice(0);
+
+    readers.forEach(function (reader) {
+      reader.cancel(reason);
+    });
+  }
+
+}
+
+exports.PDFWorkerStream = PDFWorkerStream;
+
+class PDFWorkerStreamReader {
+  constructor(msgHandler) {
+    this._msgHandler = msgHandler;
+    this.onProgress = null;
+    this._contentLength = null;
+    this._isRangeSupported = false;
+    this._isStreamingSupported = false;
+
+    const readableStream = this._msgHandler.sendWithStream('GetReader');
+
+    this._reader = readableStream.getReader();
+    this._headersReady = this._msgHandler.sendWithPromise('ReaderHeadersReady').then(data => {
+      this._isStreamingSupported = data.isStreamingSupported;
+      this._isRangeSupported = data.isRangeSupported;
+      this._contentLength = data.contentLength;
+    });
+  }
+
+  get headersReady() {
+    return this._headersReady;
+  }
+
+  get contentLength() {
+    return this._contentLength;
+  }
+
+  get isStreamingSupported() {
+    return this._isStreamingSupported;
+  }
+
+  get isRangeSupported() {
+    return this._isRangeSupported;
+  }
+
+  async read() {
+    const {
+      value,
+      done
+    } = await this._reader.read();
+
+    if (done) {
+      return {
+        value: undefined,
+        done: true
+      };
+    }
+
+    return {
+      value: value.buffer,
+      done: false
+    };
+  }
+
+  cancel(reason) {
+    this._reader.cancel(reason);
+  }
+
+}
+
+class PDFWorkerStreamRangeReader {
+  constructor(begin, end, msgHandler) {
+    this._msgHandler = msgHandler;
+    this.onProgress = null;
+
+    const readableStream = this._msgHandler.sendWithStream('GetRangeReader', {
+      begin,
+      end
+    });
+
+    this._reader = readableStream.getReader();
+  }
+
+  get isStreamingSupported() {
+    return false;
+  }
+
+  async read() {
+    const {
+      value,
+      done
+    } = await this._reader.read();
+
+    if (done) {
+      return {
+        value: undefined,
+        done: true
+      };
+    }
+
+    return {
+      value: value.buffer,
+      done: false
+    };
+  }
+
+  cancel(reason) {
+    this._reader.cancel(reason);
+  }
+
+}
 
 /***/ })
 /******/ ]);
