@@ -53,7 +53,7 @@ var testURLs = [
     result: Cr.NS_ERROR_UNWANTED_URI,
   },
   { url: "http://itisatrap.org/firefox/its-a-trap.html",
-    table: "test-phish-simple",
+    table: "moztest-phish-simple",
     result: Cr.NS_ERROR_PHISHING_URI,
   },
   { url: "http://harmful.example.com",
@@ -92,7 +92,7 @@ function testService() {
         return;
       }
       let test = testURLs.shift();
-      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-block-simple,test-harmful-simple";
+      let tables = "test-malware-simple,test-unwanted-simple,moztest-phish-simple,test-block-simple,test-harmful-simple";
       let uri = SpecialPowers.Services.io.newURI(test.url);
       let prin = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
       SpecialPowers.doUrlClassify(prin, null, function(errorCode) {
@@ -117,8 +117,7 @@ function testService() {
 
 SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful-simple"],
-           ["urlclassifier.phishTable", "test-phish-simple"],
-           ["urlclassifier.downloadBlockTable", "test-block-simple"],
+           ["urlclassifier.blockedTable", "test-block-simple"],
            ["browser.safebrowsing.debug", true]]},
   function() {
     classifierHelper.waitForInit()

@@ -63,6 +63,10 @@ this.PROT_ListManager = function PROT_ListManager() {
   // success, update failure, download error).
   this.updateCheckers_ = {};
   this.requestBackoffs_ = {};
+
+  // This is only used by testcases to ensure SafeBrowsing.jsm is inited
+  this.registered = false;
+
   this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
                    .getService(Ci.nsIUrlClassifierDBService);
 
@@ -81,6 +85,8 @@ PROT_ListManager.prototype.registerTable = function(tableName,
                                                     providerName,
                                                     updateUrl,
                                                     gethashUrl) {
+  this.registered = true;
+
   this.tablesData[tableName] = {};
   if (!updateUrl) {
     log("Can't register table " + tableName + " without updateUrl");
@@ -176,6 +182,10 @@ PROT_ListManager.prototype.enableUpdate = function(tableName) {
     log("Enabling table updates for " + tableName);
     this.needsUpdate_[table.updateUrl][tableName] = true;
   }
+};
+
+PROT_ListManager.prototype.isRegistered = function() {
+  return this.registered;
 };
 
 /**

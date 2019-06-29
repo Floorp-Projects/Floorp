@@ -23,6 +23,13 @@ Services.prefs.setBoolPref("browser.safebrowsing.blockedURIs.enabled", true);
 Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled", true);
 Services.prefs.setBoolPref("browser.safebrowsing.provider.test.disableBackoff", true);
 
+// Add testing tables, we don't use moztest-* here because it doesn't support update
+Services.prefs.setCharPref("urlclassifier.phishTable", "test-phish-simple");
+Services.prefs.setCharPref("urlclassifier.malwareTable", "test-harmful-simple,test-malware-simple,test-unwanted-simple");
+Services.prefs.setCharPref("urlclassifier.blockedTable", "test-block-simple");
+Services.prefs.setCharPref("urlclassifier.trackingTable", "test-track-simple");
+Services.prefs.setCharPref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple");
+
 // Enable all completions for tests
 Services.prefs.setCharPref("urlclassifier.disallow_completions", "");
 

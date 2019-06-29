@@ -5200,13 +5200,13 @@ pref("captivedetect.maxRetryCount", 5);
 pref("dom.mapped_arraybuffer.enabled", true);
 
 // The tables used for Safebrowsing phishing and malware checks
-pref("urlclassifier.malwareTable", "goog-malware-proto,goog-unwanted-proto,test-harmful-simple,test-malware-simple,test-unwanted-simple");
+pref("urlclassifier.malwareTable", "goog-malware-proto,goog-unwanted-proto,moztest-harmful-simple,moztest-malware-simple,moztest-unwanted-simple");
 #ifdef MOZILLA_OFFICIAL
 // In official builds, we are allowed to use Google's private phishing
 // list (see bug 1288840).
-pref("urlclassifier.phishTable", "goog-phish-proto,test-phish-simple");
+pref("urlclassifier.phishTable", "goog-phish-proto,moztest-phish-simple");
 #else
-pref("urlclassifier.phishTable", "googpub-phish-proto,test-phish-simple");
+pref("urlclassifier.phishTable", "googpub-phish-proto,moztest-phish-simple");
 #endif
 
 // Tables for application reputation
@@ -5217,10 +5217,10 @@ pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");
 
 // Tables for anti-tracking features
-pref("urlclassifier.trackingAnnotationTable", "test-track-simple,ads-track-digest256,social-track-digest256,analytics-track-digest256,content-track-digest256");
-pref("urlclassifier.trackingAnnotationWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
-pref("urlclassifier.trackingTable", "test-track-simple,base-track-digest256");
-pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
+pref("urlclassifier.trackingAnnotationTable", "moztest-track-simple,ads-track-digest256,social-track-digest256,analytics-track-digest256,content-track-digest256");
+pref("urlclassifier.trackingAnnotationWhitelistTable", "moztest-trackwhite-simple,mozstd-trackwhite-digest256");
+pref("urlclassifier.trackingTable", "moztest-track-simple,base-track-digest256");
+pref("urlclassifier.trackingWhitelistTable", "moztest-trackwhite-simple,mozstd-trackwhite-digest256");
 
 pref("urlclassifier.features.fingerprinting.blacklistTables", "base-fingerprinting-track-digest256");
 pref("urlclassifier.features.fingerprinting.whitelistTables", "mozstd-trackwhite-digest256");
@@ -5309,7 +5309,7 @@ pref("browser.safebrowsing.provider.mozilla.lists.base", "moz-std");
 pref("browser.safebrowsing.provider.mozilla.lists.content", "moz-full");
 
 // The table and global pref for blocking plugin content
-pref("urlclassifier.blockedTable", "test-block-simple,mozplugin-block-digest256");
+pref("urlclassifier.blockedTable", "moztest-block-simple,mozplugin-block-digest256");
 
 // Flash blocking tables
 pref("urlclassifier.flashAllowTable", "allow-flashallow-digest256");

@@ -42,6 +42,10 @@ class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
   void CanonicalNum(const nsACString& num, uint32_t bytes, bool allowOctal,
                     nsACString& _retval);
 
+  static bool IsMozTestTable(const nsACString& aTableName);
+
+  static bool IsTestTable(const nsACString& aTableName);
+
  private:
   nsUrlClassifierUtils();
   ~nsUrlClassifierUtils();

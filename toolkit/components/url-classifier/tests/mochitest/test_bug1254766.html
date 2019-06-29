@@ -15,11 +15,11 @@
 
 <script src="head.js"></script>
 <script class="testbody" type="text/javascript">
-const MALWARE_LIST = "test-malware-simple";
+const MALWARE_LIST = "mochi-malware-simple";
 const MALWARE_HOST1 = "malware.example.com/";
 const MALWARE_HOST2 = "test1.example.com/";
 
-const UNWANTED_LIST = "test-unwanted-simple";
+const UNWANTED_LIST = "mochi-unwanted-simple";
 const UNWANTED_HOST1 = "unwanted.example.com/";
 const UNWANTED_HOST2 = "test2.example.com/";
 
@@ -248,6 +248,7 @@ SimpleTest.waitForExplicitFinish();
 // directly and bypass classifier check
 SpecialPowers.pushPrefEnv({"set": [
   ["browser.safebrowsing.malware.enabled", true],
+  ["urlclassifier.malwareTable", "mochi-malware-simple,mochi-unwanted-simple"],
   ["network.predictor.enabled", false],
   ["urlclassifier.gethash.timeout_ms", 30000],
 ]}, runTest);
