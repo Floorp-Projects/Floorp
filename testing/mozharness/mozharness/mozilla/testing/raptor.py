@@ -86,7 +86,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "action": "store_true",
             "dest": "enable_webrender",
             "default": False,
-            "help": "Tries to enable the WebRender compositor.",
+            "help": "Enable the WebRender compositor in Gecko.",
         }],
         [["--geckoProfile"], {
             "dest": "gecko_profile",
@@ -398,6 +398,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--memory-test'])
         if self.config.get('cpu_test', False):
             options.extend(['--cpu-test'])
+        if self.config.get('enable_webrender', False):
+            options.extend(['--enable-webrender'])
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
 
@@ -585,12 +587,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             env['PYTHONPATH'] = self.raptor_path + os.pathsep + env['PYTHONPATH']
         else:
             env['PYTHONPATH'] = self.raptor_path
-
-        # if running in production on a quantum_render build
-        if self.config['enable_webrender']:
-            self.info("webrender is enabled so setting MOZ_WEBRENDER=1 and MOZ_ACCELERATED=1")
-            env['MOZ_WEBRENDER'] = '1'
-            env['MOZ_ACCELERATED'] = '1'
 
         # mitmproxy needs path to mozharness when installing the cert, and tooltool
         env['SCRIPTSPATH'] = scripts_path
