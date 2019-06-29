@@ -32,6 +32,7 @@ window._gBrowser = {
     window.addEventListener("occlusionstatechange", this);
     window.addEventListener("framefocusrequested", this);
 
+    this.tabContainer.init();
     this._setupInitialBrowserAndTab();
 
     if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
@@ -67,6 +68,7 @@ window._gBrowser = {
       "toolkit.cosmeticAnimations.enabled");
 
     this._setupEventListeners();
+    this._initialized = true;
   },
 
   ownerGlobal: window,
@@ -76,6 +78,8 @@ window._gBrowser = {
   closingTabsEnum: { ALL: 0, OTHER: 1, TO_END: 2, MULTI_SELECTED: 3 },
 
   _visibleTabs: null,
+
+  _tabs: null,
 
   _lastRelatedTabMap: new WeakMap(),
 
@@ -205,8 +209,10 @@ window._gBrowser = {
   },
 
   get tabs() {
-    delete this.tabs;
-    return this.tabs = this.tabContainer.children;
+    if (!this._tabs) {
+      this._tabs = this.tabContainer.allTabs;
+    }
+    return this._tabs;
   },
 
   get tabbox() {
@@ -219,19 +225,16 @@ window._gBrowser = {
     return this.tabpanels = document.getElementById("tabbrowser-tabpanels");
   },
 
-  get addEventListener() {
-    delete this.addEventListener;
-    return this.addEventListener = this.tabpanels.addEventListener.bind(this.tabpanels);
+  addEventListener(...args) {
+    this.tabpanels.addEventListener(...args);
   },
 
-  get removeEventListener() {
-    delete this.removeEventListener;
-    return this.removeEventListener = this.tabpanels.removeEventListener.bind(this.tabpanels);
+  removeEventListener(...args) {
+    this.tabpanels.removeEventListener(...args);
   },
 
-  get dispatchEvent() {
-    delete this.dispatchEvent;
-    return this.dispatchEvent = this.tabpanels.dispatchEvent.bind(this.tabpanels);
+  dispatchEvent(...args) {
+    return this.tabpanels.dispatchEvent(...args);
   },
 
   get visibleTabs() {
@@ -495,6 +498,11 @@ window._gBrowser = {
     return this.selectedBrowser.userTypedValue;
   },
 
+  _invalidateCachedTabs() {
+    this._tabs = null;
+    this._visibleTabs = null;
+  },
+
   _setFindbarData() {
     // Ensure we know what the find bar key is in the content process:
     let {sharedData} = Services.ppmm;
@@ -634,12 +642,12 @@ window._gBrowser = {
 
   syncThrobberAnimations(aTab) {
     aTab.ownerGlobal.promiseDocumentFlushed(() => {
-      if (!aTab.parentNode) {
+      if (!aTab.container) {
         return;
       }
 
       const animations =
-        Array.from(aTab.parentNode.getElementsByTagName("tab"))
+        Array.from(aTab.container.getElementsByTagName("tab"))
         .map(tab => {
           const throbber = tab.throbber;
           return throbber ? throbber.getAnimations({ subtree: true }) : [];
@@ -2367,9 +2375,6 @@ window._gBrowser = {
       }, 0, this.tabContainer);
     }
 
-    // invalidate cache
-    this._visibleTabs = null;
-
     let usingPreloadedContent = false;
     let b;
 
@@ -2416,9 +2421,8 @@ window._gBrowser = {
         index = Math.min(index, this.tabs.length);
       }
 
-      // Use .item() instead of [] because we need .item() to return null in
-      // order to append the tab at the end in case index == tabs.length.
-      let tabAfter = this.tabs.item(index);
+      let tabAfter = this.tabs[index] || null;
+      this._invalidateCachedTabs();
       this.tabContainer.insertBefore(t, tabAfter);
       if (tabAfter) {
         this._updateTabsAfterInsert();
@@ -2842,7 +2846,7 @@ window._gBrowser = {
     aTab.removeAttribute("bursting");
 
     setTimeout(function(tab, tabbrowser) {
-      if (tab.parentNode &&
+      if (tab.container &&
           window.getComputedStyle(tab).maxWidth == "0.1px") {
         console.assert(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
         tabbrowser._endRemoveTab(tab);
@@ -2962,7 +2966,7 @@ window._gBrowser = {
 
     aTab.closing = true;
     this._removingTabs.push(aTab);
-    this._visibleTabs = null; // invalidate cache
+    this._invalidateCachedTabs();
 
     // Invalidate hovered tab state tracking for this closing tab.
     if (this.tabContainer._hoveredTab == aTab)
@@ -3088,6 +3092,7 @@ window._gBrowser = {
 
     // Remove the tab ...
     aTab.remove();
+    this._invalidateCachedTabs();
 
     // Update hashiddentabs if this tab was hidden.
     if (aTab.hidden)
@@ -3180,17 +3185,16 @@ window._gBrowser = {
     }
 
     // Try to find a remaining tab that comes after the given tab
-    let tab = aTab;
-    do {
-      tab = tab.nextElementSibling;
-    } while (tab && !remainingTabs.includes(tab));
+    let tab = this.tabContainer.findNextTab(aTab, {
+      direction: 1,
+      filter: _tab => remainingTabs.includes(_tab),
+    });
 
     if (!tab) {
-      tab = aTab;
-
-      do {
-        tab = tab.previousElementSibling;
-      } while (tab && !remainingTabs.includes(tab));
+      tab = this.tabContainer.findNextTab(aTab, {
+        direction: -1,
+        filter: _tab => remainingTabs.includes(_tab),
+      });
     }
 
     return tab;
@@ -3542,7 +3546,7 @@ window._gBrowser = {
   showTab(aTab) {
     if (aTab.hidden) {
       aTab.removeAttribute("hidden");
-      this._visibleTabs = null; // invalidate cache
+      this._invalidateCachedTabs();
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
@@ -3560,7 +3564,7 @@ window._gBrowser = {
     if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
         !aTab.closing && !aTab._sharingState) {
       aTab.setAttribute("hidden", "true");
-      this._visibleTabs = null; // invalidate cache
+      this._invalidateCachedTabs();
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
@@ -3727,12 +3731,9 @@ window._gBrowser = {
 
     aIndex = aIndex < aTab._tPos ? aIndex : aIndex + 1;
 
-    // invalidate cache
-    this._visibleTabs = null;
-
-    // use .item() instead of [] because dragging to the end of the strip goes out of
-    // bounds: .item() returns null (so it acts like appendChild), but [] throws
-    this.tabContainer.insertBefore(aTab, this.tabs.item(aIndex));
+    let neighbor = this.tabs[aIndex] || null;
+    this._invalidateCachedTabs();
+    this.tabContainer.insertBefore(aTab, neighbor);
     this._updateTabsAfterInsert();
 
     if (wasFocused)
@@ -3751,9 +3752,10 @@ window._gBrowser = {
   },
 
   moveTabForward() {
-    let nextTab = this.selectedTab.nextElementSibling;
-    while (nextTab && nextTab.hidden)
-      nextTab = nextTab.nextElementSibling;
+    let nextTab = this.tabContainer.findNextTab(this.selectedTab, {
+      direction: 1,
+      filter: tab => !tab.hidden,
+    });
 
     if (nextTab)
       this.moveTabTo(this.selectedTab, nextTab._tPos);
@@ -3797,7 +3799,7 @@ window._gBrowser = {
     let newTab = this.addWebTab("about:blank", params);
     let newBrowser = this.getBrowserForTab(newTab);
 
-    aTab.parentNode._finishAnimateTabMove();
+    aTab.container._finishAnimateTabMove();
 
     if (!createLazyBrowser) {
       // Stop the about:blank load.
@@ -3820,9 +3822,10 @@ window._gBrowser = {
   },
 
   moveTabBackward() {
-    let previousTab = this.selectedTab.previousElementSibling;
-    while (previousTab && previousTab.hidden)
-      previousTab = previousTab.previousElementSibling;
+    let previousTab = this.tabContainer.findNextTab(this.selectedTab, {
+      direction: -1,
+      filter: tab => !tab.hidden,
+    });
 
     if (previousTab)
       this.moveTabTo(this.selectedTab, previousTab._tPos);
@@ -3893,7 +3896,7 @@ window._gBrowser = {
       return;
     }
 
-    const tabs = this._visibleTabs;
+    const tabs = this.visibleTabs;
     const indexOfTab1 = tabs.indexOf(aTab1);
     const indexOfTab2 = tabs.indexOf(aTab2);
 
@@ -4454,6 +4457,7 @@ window._gBrowser = {
   },
 
   destroy() {
+    this.tabContainer.destroy();
     Services.obs.removeObserver(this, "contextual-identity-updated");
 
     for (let tab of this.tabs) {
@@ -5452,8 +5456,12 @@ var TabContextMenu = {
     let lastVisibleTab = visibleTabs[visibleTabs.length - 1];
     let tabsToMove = contextTabIsSelected ? selectedTabs : [this.contextTab];
     let lastTabToMove = tabsToMove[tabsToMove.length - 1];
-    let isLastPinnedTab = lastTabToMove.pinned &&
-      (!lastTabToMove.nextElementSibling || !lastTabToMove.nextElementSibling.pinned);
+
+    let isLastPinnedTab = false;
+    if (lastTabToMove.pinned) {
+      let sibling = gBrowser.tabContainer.findNextTab(lastTabToMove);
+      isLastPinnedTab = !sibling || !sibling.pinned;
+    }
     contextMoveTabToEnd.disabled = (lastTabToMove == lastVisibleTab || isLastPinnedTab) &&
                                    allSelectedTabsAdjacent;
     let contextMoveTabToStart = document.getElementById("context_moveToStart");

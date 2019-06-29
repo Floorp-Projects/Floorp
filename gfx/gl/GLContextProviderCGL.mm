@@ -98,7 +98,7 @@ bool GLContextCGL::MakeCurrentImpl() const {
     // If swapInt is 1, then glSwapBuffers will block and wait for a vblank signal.
     // When we're iterating as fast as possible, however, we want a non-blocking
     // glSwapBuffers, which will happen when swapInt==0.
-    GLint swapInt = StaticPrefs::LayoutFrameRate() == 0 ? 0 : 1;
+    GLint swapInt = StaticPrefs::layout_frame_rate() == 0 ? 0 : 1;
     [mContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
   }
   return true;

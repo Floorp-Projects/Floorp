@@ -622,7 +622,7 @@ LayerComposite* LayerManagerComposite::RootLayer() const {
 
 void LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion,
                                                    const IntRect& aBounds) {
-  bool drawFps = StaticPrefs::LayersDrawFPS();
+  bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
   bool drawFrameColorBars = StaticPrefs::gfx_draw_color_bars();
 
   if (drawFps) {
@@ -653,7 +653,7 @@ void LayerManagerComposite::DrawPaintTimes(Compositor* aCompositor) {
 
 static uint16_t sFrameCount = 0;
 void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
-  bool drawFps = StaticPrefs::LayersDrawFPS();
+  bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
   bool drawFrameColorBars = StaticPrefs::gfx_draw_color_bars();
 
   // Don't draw diagnostic overlays if we want to snapshot the output.
@@ -775,9 +775,9 @@ RefPtr<CompositingRenderTarget>
 LayerManagerComposite::PushGroupForLayerEffects() {
   // This is currently true, so just making sure that any new use of this
   // method is flagged for investigation
-  MOZ_ASSERT(StaticPrefs::LayersEffectInvert() ||
-             StaticPrefs::LayersEffectGrayscale() ||
-             StaticPrefs::LayersEffectContrast() != 0.0);
+  MOZ_ASSERT(StaticPrefs::layers_effect_invert() ||
+             StaticPrefs::layers_effect_grayscale() ||
+             StaticPrefs::layers_effect_contrast() != 0.0);
 
   RefPtr<CompositingRenderTarget> previousTarget =
       mCompositor->GetCurrentRenderTarget();
@@ -905,9 +905,9 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   // permutations. However, may as well just get the values onces and
   // then use them, just in case the consistency becomes important in
   // the future.
-  bool invertVal = StaticPrefs::LayersEffectInvert();
-  bool grayscaleVal = StaticPrefs::LayersEffectGrayscale();
-  float contrastVal = StaticPrefs::LayersEffectContrast();
+  bool invertVal = StaticPrefs::layers_effect_invert();
+  bool grayscaleVal = StaticPrefs::layers_effect_grayscale();
+  float contrastVal = StaticPrefs::layers_effect_contrast();
   bool haveLayerEffects = (invertVal || grayscaleVal || contrastVal != 0.0);
 
   // Set LayerScope begin/end frame
@@ -1423,7 +1423,7 @@ bool LayerManagerComposite::CanUseCanvasLayerForSize(const IntSize& aSize) {
 }
 
 void LayerManagerComposite::NotifyShadowTreeTransaction() {
-  if (StaticPrefs::LayersDrawFPS()) {
+  if (StaticPrefs::layers_acceleration_draw_fps()) {
     mDiagnostics->AddTxnFrame();
   }
 }

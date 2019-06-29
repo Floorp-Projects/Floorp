@@ -171,7 +171,7 @@ class HashMap {
 
   explicit HashMap(AllocPolicy aAllocPolicy = AllocPolicy(),
                    uint32_t aLen = Impl::sDefaultLen)
-      : mImpl(aAllocPolicy, aLen) {}
+      : mImpl(std::move(aAllocPolicy), aLen) {}
 
   explicit HashMap(uint32_t aLen) : mImpl(AllocPolicy(), aLen) {}
 
@@ -456,7 +456,7 @@ class HashSet {
 
   explicit HashSet(AllocPolicy aAllocPolicy = AllocPolicy(),
                    uint32_t aLen = Impl::sDefaultLen)
-      : mImpl(aAllocPolicy, aLen) {}
+      : mImpl(std::move(aAllocPolicy), aLen) {}
 
   explicit HashSet(uint32_t aLen) : mImpl(AllocPolicy(), aLen) {}
 
@@ -1510,8 +1510,8 @@ class HashTable : private AllocPolicy {
   };
 
   // HashTable is movable
-  HashTable(HashTable&& aRhs) : AllocPolicy(aRhs) {
-    PodAssign(this, &aRhs);
+  HashTable(HashTable&& aRhs) : AllocPolicy(std::move(aRhs)) {
+    initFrom(aRhs);
     aRhs.mTable = nullptr;
   }
   void operator=(HashTable&& aRhs) {
@@ -1519,11 +1519,24 @@ class HashTable : private AllocPolicy {
     if (mTable) {
       destroyTable(*this, mTable, capacity());
     }
-    PodAssign(this, &aRhs);
+    AllocPolicy::operator=(std::move(aRhs));
+    initFrom(aRhs);
     aRhs.mTable = nullptr;
   }
 
  private:
+  void initFrom(const HashTable& aRhs) {
+    mGen = aRhs.mGen;
+    mHashShift = aRhs.mHashShift;
+    mTable = aRhs.mTable;
+    mEntryCount = aRhs.mEntryCount;
+    mRemovedCount = aRhs.mRemovedCount;
+#ifdef DEBUG
+    mMutationCount = aRhs.mMutationCount;
+    mEntered = aRhs.mEntered;
+#endif
+  }
+
   // HashTable is not copyable or assignable
   HashTable(const HashTable&) = delete;
   void operator=(const HashTable&) = delete;
@@ -1650,7 +1663,7 @@ class HashTable : private AllocPolicy {
 
  public:
   HashTable(AllocPolicy aAllocPolicy, uint32_t aLen)
-      : AllocPolicy(aAllocPolicy),
+      : AllocPolicy(std::move(aAllocPolicy)),
         mGen(0),
         mHashShift(hashShift(aLen)),
         mTable(nullptr),

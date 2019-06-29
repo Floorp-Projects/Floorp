@@ -120,9 +120,9 @@ struct js::AtomHasher::Lookup {
 
 inline HashNumber js::AtomHasher::hash(const Lookup& l) { return l.hash; }
 
-MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
+MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
                                              const Lookup& lookup) {
-  JSAtom* key = entry.unbarrieredGet();
+  JSAtom* key = entry.asPtrUnbarriered();
   if (lookup.atom) {
     return lookup.atom == key;
   }
@@ -179,6 +179,14 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
 
   MOZ_ASSERT_UNREACHABLE("AtomHasher::match unknown type");
   return false;
+}
+
+inline JSAtom* js::AtomStateEntry::asPtr(JSContext* cx) const {
+  JSAtom* atom = asPtrUnbarriered();
+  if (!cx->isHelperThreadContext()) {
+    JSString::readBarrier(atom);
+  }
+  return atom;
 }
 
 UniqueChars js::AtomToPrintableString(JSContext* cx, JSAtom* atom) {
@@ -397,11 +405,13 @@ AtomsTable::getPartitionIndex(const AtomHasher::Lookup& lookup) {
 
 inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
   for (auto r = atoms.all(); !r.empty(); r.popFront()) {
-    JSAtom* atom = r.front().unbarrieredGet();
-    MOZ_DIAGNOSTIC_ASSERT(atom);
-    if (atom->isPinned()) {
+    const AtomStateEntry& entry = r.front();
+    MOZ_ASSERT(entry.isPinned() == entry.asPtrUnbarriered()->isPinned());
+    MOZ_DIAGNOSTIC_ASSERT(entry.asPtrUnbarriered());
+    if (entry.isPinned()) {
+      JSAtom* atom = entry.asPtrUnbarriered();
       TraceRoot(trc, &atom, "interned_atom");
-      MOZ_ASSERT(r.front().unbarrieredGet() == atom);
+      MOZ_ASSERT(entry.asPtrUnbarriered() == atom);
     }
   }
 }
@@ -426,7 +436,8 @@ void js::TraceAtoms(JSTracer* trc, const AutoAccessAtomsZone& access) {
 
 static void TracePermanentAtoms(JSTracer* trc, AtomSet::Range atoms) {
   for (; !atoms.empty(); atoms.popFront()) {
-    JSAtom* atom = atoms.front().unbarrieredGet();
+    const AtomStateEntry& entry = atoms.front();
+    JSAtom* atom = entry.asPtrUnbarriered();
     MOZ_ASSERT(atom->isPinned());
     TraceProcessGlobalRoot(trc, atom, "permanent atom");
   }
@@ -471,13 +482,13 @@ void AtomsTable::sweepAll(JSRuntime* rt) {
     AutoLock lock(rt, partitions[i]->lock);
     AtomSet& atoms = partitions[i]->atoms;
     for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
-      JSAtom* atom = e.front().unbarrieredGet();
+      JSAtom* atom = e.front().asPtrUnbarriered();
       MOZ_DIAGNOSTIC_ASSERT(atom);
       if (IsAboutToBeFinalizedUnbarriered(&atom)) {
         MOZ_ASSERT(!atom->isPinned());
         e.removeFront();
       } else {
-        MOZ_ASSERT(atom == e.front().unbarrieredGet());
+        MOZ_ASSERT(atom == e.front().asPtrUnbarriered());
       }
     }
   }
@@ -518,7 +529,7 @@ inline bool AtomsTable::SweepIterator::empty() const {
 
 inline JSAtom* AtomsTable::SweepIterator::front() const {
   MOZ_ASSERT(!empty());
-  return atomsIter->front().unbarrieredGet();
+  return atomsIter->front().asPtrUnbarriered();
 }
 
 inline void AtomsTable::SweepIterator::removeFront() {
@@ -570,8 +581,8 @@ void AtomsTable::mergeAtomsAddedWhileSweeping(Partition& part) {
   part.atomsAddedWhileSweeping = nullptr;
 
   for (auto r = newAtoms->all(); !r.empty(); r.popFront()) {
-    if (!part.atoms.putNew(AtomHasher::Lookup(r.front().unbarrieredGet()),
-                           r.front().unbarrieredGet())) {
+    if (!part.atoms.putNew(AtomHasher::Lookup(r.front().asPtrUnbarriered()),
+                           r.front())) {
       oomUnsafe.crash("Adding atom from secondary table after sweep");
     }
   }
@@ -676,7 +687,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
       // The cache is purged on GC so if we're in the middle of an
       // incremental GC we should have barriered the atom when we put
       // it in the cache.
-      JSAtom* atom = zonePtr.ref()->unbarrieredGet();
+      JSAtom* atom = zonePtr.ref()->asPtrUnbarriered();
       MOZ_ASSERT(AtomIsMarked(zone, atom));
       return atom;
     }
@@ -692,9 +703,9 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
 
   AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
   if (pp) {
-    // Permanent atoms don't need a read barrier.
-    JSAtom* atom = pp->unbarrieredGet();
-    if (zonePtr && MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, atom))) {
+    JSAtom* atom = pp->asPtr(cx);
+    if (zonePtr && MOZ_UNLIKELY(!zone->atomCache().add(
+                       *zonePtr, AtomStateEntry(atom, false)))) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
@@ -719,7 +730,8 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     return nullptr;
   }
 
-  if (zonePtr && MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, atom))) {
+  if (zonePtr && MOZ_UNLIKELY(!zone->atomCache().add(
+                     *zonePtr, AtomStateEntry(atom, false)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -763,7 +775,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     // is dead.
     if (!p) {
       if (AtomSet::AddPtr p2 = atoms.lookupForAdd(lookup)) {
-        JSAtom* atom = p2->unbarrieredGet();
+        JSAtom* atom = p2->asPtrUnbarriered();
         if (!IsAboutToBeFinalizedUnbarriered(&atom)) {
           p = p2;
         }
@@ -772,18 +784,10 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
   }
 
   if (p) {
-    // A read barrier is required for main thread atom lookup. We don't allow
-    // off-thread parsing while collecting the atoms zone so this is not
-    // necessary for helper threads.
-    JSAtom* atom;
-    if (!cx->isHelperThreadContext()) {
-      atom = *p;
-    } else {
-      atom = p->unbarrieredGet();
-    }
-
+    JSAtom* atom = p->asPtr(cx);
     if (pin && !atom->isPinned()) {
       atom->setPinned();
+      p->setPinned(true);
     }
     return atom;
   }
@@ -798,7 +802,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
   // p is still valid.
   AtomSet* addSet =
       part.atomsAddedWhileSweeping ? part.atomsAddedWhileSweeping : &atoms;
-  if (MOZ_UNLIKELY(!addSet->add(p, atom))) {
+  if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, bool(pin))))) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
     return nullptr;
   }
@@ -831,8 +835,7 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
   AtomSet& atoms = *rt->permanentAtomsDuringInit();
   AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
   if (p) {
-    // No read barrier is required for permanent atoms.
-    return p->unbarrieredGet();
+    return p->asPtr(cx);
   }
 
   JSAtom* atom =
@@ -846,12 +849,13 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
   // We are single threaded at this point, and the operations we've done since
   // then can't GC; therefore the atoms table has not been modified and p is
   // still valid.
-  if (!atoms.add(p, atom)) {
+  if (!atoms.add(p, AtomStateEntry(atom, true))) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
     return nullptr;
   }
 
-  if (zonePtr && MOZ_UNLIKELY(!cx->zone()->atomCache().add(*zonePtr, atom))) {
+  if (zonePtr && MOZ_UNLIKELY(!cx->zone()->atomCache().add(
+                     *zonePtr, AtomStateEntry(atom, false)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -1004,9 +1008,10 @@ void AtomsTable::pinExistingAtom(JSContext* cx, JSAtom* atom) {
   }
 
   MOZ_ASSERT(p);  // Unpinned atoms must exist in atoms table.
-  MOZ_ASSERT(p->unbarrieredGet() == atom);
+  MOZ_ASSERT(p->asPtrUnbarriered() == atom);
 
   atom->setPinned();
+  p->setPinned(true);
 }
 
 JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,

@@ -601,7 +601,7 @@ void GestureEventListener::CreateLongTapTimeoutTask() {
 
   mLongTapTimeoutTask = task;
   mAsyncPanZoomController->PostDelayedTask(
-      task.forget(), StaticPrefs::UiClickHoldContextMenusDelay());
+      task.forget(), StaticPrefs::ui_click_hold_context_menus_delay());
 }
 
 void GestureEventListener::CancelMaxTapTimeoutTask() {
