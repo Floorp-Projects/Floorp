@@ -320,7 +320,7 @@ class PageProtectingVector final {
 
  public:
   explicit PageProtectingVector(AllocPolicy policy = AllocPolicy())
-      : vector(policy),
+      : vector(std::move(policy)),
         elemsUntilTest(0),
         currPage(0),
         initPage(0),

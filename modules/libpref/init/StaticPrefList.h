@@ -3862,7 +3862,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.acceleration.disabled",
-  LayersAccelerationDisabledDoNotUseDirectly,
+   layers_acceleration_disabled_do_not_use_directly,
   bool, false
 )
 // Instead, use gfxConfig::IsEnabled(Feature::HW_COMPOSITING).
@@ -3870,21 +3870,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.acceleration.draw-fps",
-  LayersDrawFPS,
+   layers_acceleration_draw_fps,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.acceleration.draw-fps.print-histogram",
-  FPSPrintHistogram,
+   layers_acceleration_draw_fps_print_histogram,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.acceleration.draw-fps.write-to-file",
-  WriteFPSToFile,
+   layers_acceleration_draw_fps_write_to_file,
   RelaxedAtomicBool, false
 )
 
@@ -3902,7 +3902,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.acceleration.force-enabled",
-  LayersAccelerationForceEnabledDoNotUseDirectly,
+   layers_acceleration_force_enabled_do_not_use_directly,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3910,7 +3910,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.advanced.basic-layer.enabled",
-  LayersAdvancedBasicLayerEnabled,
+   layers_advanced_basic_layer_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3918,7 +3918,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.amd-switchable-gfx.enabled",
-  LayersAMDSwitchableGfxEnabled,
+   layers_amd_switchable_gfx_enabled,
   bool, true
 )
 
@@ -3926,28 +3926,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.async-pan-zoom.enabled",
-  AsyncPanZoomEnabledDoNotUseDirectly,
+   layers_async_pan_zoom_enabled_do_not_use_directly,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layers.bench.enabled",
-  LayersBenchEnabled,
+   layers_bench_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.bufferrotation.enabled",
-  BufferRotationEnabled,
+   layers_bufferrotation_enabled,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layers.child-process-shutdown",
-  ChildProcessShutdown,
+   layers_child_process_shutdown,
   RelaxedAtomicBool, true
 )
 
@@ -3957,7 +3957,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Skip,
   "layers.componentalpha.enabled",
-  ComponentAlphaEnabled,
+   layers_componentalpha_enabled,
   bool, false
 )
 #else
@@ -3966,7 +3966,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.componentalpha.enabled",
-  ComponentAlphaEnabled,
+   layers_componentalpha_enabled,
   bool, true
 )
 #endif
@@ -3974,56 +3974,56 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.d3d11.force-warp",
-  LayersD3D11ForceWARP,
+   layers_d3d11_force_warp,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.deaa.enabled",
-  LayersDEAAEnabled,
+   layers_deaa_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.draw-bigimage-borders",
-  DrawBigImageBorders,
+   layers_draw_bigimage_borders,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.draw-borders",
-  DrawLayerBorders,
+   layers_draw_borders,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.draw-tile-borders",
-  DrawTileBorders,
+   layers_draw_tile_borders,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.draw-layer-info",
-  DrawLayerInfo,
+   layers_draw_layer_info,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.dump",
-  LayersDump,
+   layers_dump,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.dump-texture",
-  LayersDumpTexture,
+   layers_dump_texture,
   RelaxedAtomicBool, false
 )
 
@@ -4031,7 +4031,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.dump-decision",
-  LayersDumpDecision,
+   layers_dump_decision,
   RelaxedAtomicBool, false
 )
 #endif
@@ -4039,14 +4039,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.dump-client-layers",
-  DumpClientLayers,
+   layers_dump_client_layers,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.dump-host-layers",
-  DumpHostLayers,
+   layers_dump_host_layers,
   RelaxedAtomicBool, false
 )
 
@@ -4055,21 +4055,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.effect.contrast",
-  LayersEffectContrast,
+   layers_effect_contrast,
   AtomicFloat, 0.0f
 )
 
 VARCACHE_PREF(
   Live,
   "layers.effect.grayscale",
-  LayersEffectGrayscale,
+   layers_effect_grayscale,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.effect.invert",
-  LayersEffectInvert,
+   layers_effect_invert,
   RelaxedAtomicBool, false
 )
 
@@ -4081,7 +4081,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.enable-tiles",
-  LayersTilesEnabled,
+   layers_enable_tiles,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -4094,7 +4094,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.enable-tiles-if-skia-pomtp",
-  LayersTilesEnabledIfSkiaPOMTP,
+   layers_enable_tiles_if_skia_pomtp,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -4102,49 +4102,49 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.flash-borders",
-  FlashLayerBorders,
+   layers_flash_borders,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.force-shmem-tiles",
-  ForceShmemTiles,
+   layers_force_shmem_tiles,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.draw-mask-debug",
-  DrawMaskLayer,
+   layers_draw_mask_debug,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.force-synchronous-resize",
-  LayersForceSynchronousResize,
+   layers_force_synchronous_resize,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layers.geometry.opengl.enabled",
-  OGLLayerGeometry,
+   layers_geometry_opengl_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.geometry.basic.enabled",
-  BasicLayerGeometry,
+   layers_geometry_basic_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.geometry.d3d11.enabled",
-  D3D11LayerGeometry,
+   layers_geometry_d3d11_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -4158,7 +4158,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.allow-software",
-  GPUProcessAllowSoftware,
+   layers_gpu_process_allow_software,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -4171,7 +4171,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.enabled",
-  GPUProcessEnabled,
+   layers_gpu_process_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -4179,21 +4179,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.force-enabled",
-  GPUProcessForceEnabled,
+   layers_gpu_process_force_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.ipc_reply_timeout_ms",
-  GPUProcessIPCReplyTimeoutMs,
+   layers_gpu_process_ipc_reply_timeout_ms,
   int32_t, 10000
 )
 
 VARCACHE_PREF(
   Live,
   "layers.gpu-process.max_restarts",
-  GPUProcessMaxRestarts,
+   layers_gpu_process_max_restarts,
   RelaxedAtomicInt32, 1
 )
 
@@ -4201,42 +4201,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.gpu-process.max_restarts_with_decoder",
-  GPUProcessMaxRestartsWithDecoder,
+   layers_gpu_process_max_restarts_with_decoder,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.startup_timeout_ms",
-  GPUProcessTimeoutMs,
+   layers_gpu_process_startup_timeout_ms,
   int32_t, 5000
 )
 
 VARCACHE_PREF(
   Live,
   "layers.low-precision-buffer",
-  UseLowPrecisionBuffer,
+   layers_low_precision_buffer,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.low-precision-opacity",
-  LowPrecisionOpacity,
+   layers_low_precision_opacity,
   AtomicFloat, 1.0f
 )
 
 VARCACHE_PREF(
   Live,
   "layers.low-precision-resolution",
-  LowPrecisionResolution,
+   layers_low_precision_resolution,
   AtomicFloat, 0.25f
 )
 
 VARCACHE_PREF(
   Live,
   "layers.max-active",
-  MaxActiveLayers,
+   layers_max_active,
   RelaxedAtomicInt32, -1
 )
 
@@ -4248,7 +4248,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enabled",
-  AdvancedLayersEnabledDoNotUseDirectly,
+   layers_mlgpu_enabled_do_not_use_directly,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -4256,42 +4256,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-buffer-cache",
-  AdvancedLayersEnableBufferCache,
+   layers_mlgpu_enable_buffer_cache,
   bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-buffer-sharing",
-  AdvancedLayersEnableBufferSharing,
+   layers_mlgpu_enable_buffer_sharing,
   bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-clear-view",
-  AdvancedLayersEnableClearView,
+   layers_mlgpu_enable_clear_view,
   bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-cpu-occlusion",
-  AdvancedLayersEnableCPUOcclusion,
+   layers_mlgpu_enable_cpu_occlusion,
   bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-depth-buffer",
-  AdvancedLayersEnableDepthBuffer,
+   layers_mlgpu_enable_depth_buffer,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.mlgpu.enable-invalidation",
-  AdvancedLayersUseInvalidation,
+   layers_mlgpu_enable_invalidation,
   RelaxedAtomicBool, true
 )
 
@@ -4305,64 +4305,57 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-on-windows7",
-  AdvancedLayersEnableOnWindows7,
+   layers_mlgpu_enable_on_windows7,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
 
 VARCACHE_PREF(
   Once,
-  "layers.mlgpu.enable-container-resizing",
-  AdvancedLayersEnableContainerResizing,
-  bool, true
-)
-
-VARCACHE_PREF(
-  Once,
   "layers.offmainthreadcomposition.force-disabled",
-  LayersOffMainThreadCompositionForceDisabled,
+   layers_offmainthreadcomposition_force_disabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.offmainthreadcomposition.frame-rate",
-  LayersCompositionFrameRate,
+   layers_offmainthreadcomposition_frame_rate,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Once,
   "layers.omtp.capture-limit",
-  LayersOMTPCaptureLimit,
+   layers_omtp_capture_limit,
   uint32_t, 25 * 1024 * 1024
 )
 
 VARCACHE_PREF(
   Live,
   "layers.omtp.dump-capture",
-  LayersOMTPDumpCapture,
+   layers_omtp_dump_capture,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.omtp.paint-workers",
-  LayersOMTPPaintWorkers,
+   layers_omtp_paint_workers,
   int32_t, -1
 )
 
 VARCACHE_PREF(
   Live,
   "layers.omtp.release-capture-on-main-thread",
-  LayersOMTPReleaseCaptureOnMainThread,
+   layers_omtp_release_capture_on_main_thread,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.orientation.sync.timeout",
-  OrientationSyncMillis,
+   layers_orientation_sync_timeout,
   RelaxedAtomicUint32, (uint32_t)0
 )
 
@@ -4370,7 +4363,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.prefer-opengl",
-  LayersPreferOpenGL,
+   layers_prefer_opengl,
   bool, false
 )
 #endif
@@ -4378,21 +4371,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.progressive-paint",
-  ProgressivePaint,
+   layers_progressive_paint,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.shared-buffer-provider.enabled",
-  PersistentBufferProviderSharedEnabled,
+   layers_shared_buffer_provider_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.single-tile.enabled",
-  LayersSingleTileEnabled,
+   layers_single_tile_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -4403,42 +4396,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.tile-width",
-  LayersTileWidth,
+   layers_tile_width,
   int32_t, 512
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-height",
-  LayersTileHeight,
+   layers_tile_height,
   int32_t, 512
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-initial-pool-size",
-  LayersTileInitialPoolSize,
+   layers_tile_initial_pool_size,
   uint32_t, (uint32_t)50
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-pool-unused-size",
-  LayersTilePoolUnusedSize,
+   layers_tile_pool_unused_size,
   uint32_t, (uint32_t)10
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-pool-shrink-timeout",
-  LayersTilePoolShrinkTimeout,
+   layers_tile_pool_shrink_timeout,
   uint32_t, (uint32_t)50
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-pool-clear-timeout",
-  LayersTilePoolClearTimeout,
+   layers_tile_pool_clear_timeout,
   uint32_t, (uint32_t)5000
 )
 
@@ -4450,7 +4443,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.tiles.adjust",
-  LayersTilesAdjust,
+   layers_tiles_adjust,
   bool, true
 )
 
@@ -4462,7 +4455,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "layers.tiles.edge-padding",
-  TileEdgePaddingEnabled,
+   layers_tiles_edge_padding,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -4470,42 +4463,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layers.tiles.fade-in.enabled",
-  LayerTileFadeInEnabled,
+   layers_tiles_fade_in_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layers.tiles.fade-in.duration-ms",
-  LayerTileFadeInDuration,
+   layers_tiles_fade_in_duration_ms,
   RelaxedAtomicUint32, 250
 )
 
 VARCACHE_PREF(
   Live,
   "layers.tiles.retain-back-buffer",
-  LayersTileRetainBackBuffer,
+   layers_tiles_retain_back_buffer,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layers.transaction.warning-ms",
-  LayerTransactionWarning,
+   layers_transaction_warning_ms,
   RelaxedAtomicUint32, 200
 )
 
 VARCACHE_PREF(
   Once,
   "layers.uniformity-info",
-  UniformityInfo,
+   layers_uniformity_info,
   bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.use-image-offscreen-surfaces",
-  UseImageOffscreenSurfaces,
+   layers_use_image_offscreen_surfaces,
   bool, true
 )
 
@@ -4633,35 +4626,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.partial",
-  PartiallyPrerenderAnimatedContent,
+   layout_animation_prerender_partial,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.viewport-ratio-limit-x",
-  AnimationPrerenderViewportRatioLimitX,
+   layout_animation_prerender_viewport_ratio_limit_x,
   AtomicFloat, 1.125f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.viewport-ratio-limit-y",
-  AnimationPrerenderViewportRatioLimitY,
+   layout_animation_prerender_viewport_ratio_limit_y,
   AtomicFloat, 1.125f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.absolute-limit-x",
-  AnimationPrerenderAbsoluteLimitX,
+   layout_animation_prerender_absolute_limit_x,
   RelaxedAtomicUint32, 4096
 )
 
 VARCACHE_PREF(
   Live,
   "layout.animation.prerender.absolute-limit-y",
-  AnimationPrerenderAbsoluteLimitY,
+   layout_animation_prerender_absolute_limit_y,
   RelaxedAtomicUint32, 4096
 )
 
@@ -4670,7 +4663,7 @@ VARCACHE_PREF(
   Live,
   "layout.css.cached-scrollbar-styles.enabled",
   layout_css_cached_scrollbar_styles_enabled,
-  bool, true
+  bool, false
 )
 
 // Is path() supported in clip-path?
@@ -4963,7 +4956,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.paint-order.enabled",
-  PaintOrderEnabled,
+   layout_css_paint_order_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -5049,7 +5042,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-behavior.damping-ratio",
-  ScrollBehaviorDampingRatio,
+   layout_css_scroll_behavior_damping_ratio,
   AtomicFloat, 1.0f
 )
 
@@ -5085,35 +5078,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-behavior.enabled",
-  ScrollBehaviorEnabled,
+   layout_css_scroll_behavior_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-behavior.spring-constant",
-  ScrollBehaviorSpringConstant,
+   layout_css_scroll_behavior_spring_constant,
   AtomicFloat, 250.0f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap.prediction-max-velocity",
-  ScrollSnapPredictionMaxVelocity,
+   layout_css_scroll_snap_prediction_max_velocity,
   RelaxedAtomicInt32, 2000
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap.prediction-sensitivity",
-  ScrollSnapPredictionSensitivity,
+   layout_css_scroll_snap_prediction_sensitivity,
   AtomicFloat, 0.750f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap.proximity-threshold",
-  ScrollSnapProximityThreshold,
+   layout_css_scroll_snap_proximity_threshold,
   RelaxedAtomicInt32, 200
 )
 
@@ -5220,77 +5213,77 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.display-list.build-twice",
-  LayoutDisplayListBuildTwice,
+   layout_display_list_build_twice,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain",
-  LayoutRetainDisplayList,
+   layout_display_list_retain,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain.chrome",
-  LayoutRetainDisplayListChrome,
+   layout_display_list_retain_chrome,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain.verify",
-  LayoutVerifyRetainDisplayList,
+   layout_display_list_retain_verify,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.retain.verify.order",
-  LayoutVerifyRetainDisplayListOrder,
+   layout_display_list_retain_verify_order,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.rebuild-frame-limit",
-  LayoutRebuildFrameLimit,
+   layout_display_list_rebuild_frame_limit,
   RelaxedAtomicUint32, 500
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.dump",
-  LayoutDumpDisplayList,
+   layout_display_list_dump,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.dump-content",
-  LayoutDumpDisplayListContent,
+   layout_display_list_dump_content,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.dump-parent",
-  LayoutDumpDisplayListParent,
+   layout_display_list_dump_parent,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.show-rebuild-area",
-  LayoutDisplayListShowArea,
+   layout_display_list_show_rebuild_area,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.display-list.flatten-transform",
-  LayoutFlattenTransform,
+   layout_display_list_flatten_transform,
   RelaxedAtomicBool, true
 )
 
@@ -5311,21 +5304,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.frame_rate",
-  LayoutFrameRate,
+   layout_frame_rate,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Live,
   "layout.min-active-layer-size",
-  LayoutMinActiveLayerSize,
+   layout_min_active_layer_size,
   int, 64
 )
 
 VARCACHE_PREF(
   Once,
   "layout.paint_rects_separately",
-  LayoutPaintRectsSeparately,
+   layout_paint_rects_separately,
   bool, true
 )
 
@@ -5333,7 +5326,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.scroll.root-frame-containers",
-  LayoutUseContainersForRootFrames,
+   layout_scroll_root_frame_containers,
   RelaxedAtomicBool, false
 )
 
@@ -5341,14 +5334,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.scrollbars.always-layerize-track",
-  AlwaysLayerizeScrollbarTrackTestOnly,
+   layout_scrollbars_always_layerize_track,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "layout.smaller-painted-layers",
-  LayoutSmallerPaintedLayers,
+   layout_smaller_painted_layers,
   RelaxedAtomicBool, false
 )
 
@@ -6482,14 +6475,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "mousewheel.acceleration.factor",
-  MouseWheelAccelerationFactor,
+   mousewheel_acceleration_factor,
   RelaxedAtomicInt32, -1
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.acceleration.start",
-  MouseWheelAccelerationStart,
+   mousewheel_acceleration_start,
   RelaxedAtomicInt32, -1
 )
 
@@ -6497,35 +6490,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "mousewheel.system_scroll_override_on_root_content.enabled",
-  MouseWheelHasRootScrollDeltaOverride,
+   mousewheel_system_scroll_override_on_root_content_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.system_scroll_override_on_root_content.horizontal.factor",
-  MouseWheelRootScrollHorizontalFactor,
+   mousewheel_system_scroll_override_on_root_content_horizontal_factor,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.system_scroll_override_on_root_content.vertical.factor",
-  MouseWheelRootScrollVerticalFactor,
+   mousewheel_system_scroll_override_on_root_content_vertical_factor,
   RelaxedAtomicInt32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.transaction.ignoremovedelay",
-  MouseWheelIgnoreMoveDelayMs,
+   mousewheel_transaction_ignoremovedelay,
   RelaxedAtomicInt32, (int32_t)100
 )
 
 VARCACHE_PREF(
   Live,
   "mousewheel.transaction.timeout",
-  MouseWheelTransactionTimeoutMs,
+   mousewheel_transaction_timeout,
   RelaxedAtomicInt32, (int32_t)1500
 )
 
@@ -6818,7 +6811,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "nglayout.debug.widget_update_flashing",
-  WidgetUpdateFlashing,
+   nglayout_debug_widget_update_flashing,
   RelaxedAtomicBool, false
 )
 
@@ -6875,7 +6868,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "print.font-variations-as-paths",
-  PrintFontVariationsAsPaths,
+   print_font_variations_as_paths,
   RelaxedAtomicBool, true
 )
 
@@ -6997,12 +6990,7 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-VARCACHE_PREF(
-  Live,
-  "privacy.resistFingerprinting",
-  ResistFingerprinting,
-  RelaxedAtomicBool, false
-)
+PREF("privacy.resistFingerprinting", bool, false)
 
 // Anti-tracking permission expiration
 VARCACHE_PREF(
@@ -7143,7 +7131,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
-  SliderSnapMultiplier,
+   slider_snapMultiplier,
   int32_t,
 #ifdef XP_WIN
   6
@@ -7185,14 +7173,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "test.events.async.enabled",
-  TestEventsAsyncEnabled,
+   test_events_async_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "test.mousescroll",
-  MouseScrollTestingEnabled,
+   test_mousescroll,
   RelaxedAtomicBool, false
 )
 
@@ -7214,14 +7202,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "toolkit.scrollbox.horizontalScrollDistance",
-  ToolkitHorizontalScrollDistance,
+   toolkit_scrollbox_horizontalScrollDistance,
   RelaxedAtomicInt32, 5
 )
 
 VARCACHE_PREF(
   Live,
   "toolkit.scrollbox.verticalScrollDistance",
-  ToolkitVerticalScrollDistance,
+   toolkit_scrollbox_verticalScrollDistance,
   RelaxedAtomicInt32, 3
 )
 
@@ -7248,7 +7236,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "ui.click_hold_context_menus.delay",
-  UiClickHoldContextMenusDelay,
+   ui_click_hold_context_menus_delay,
   RelaxedAtomicInt32, 500
 )
 
@@ -7542,7 +7530,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "widget.window-transforms.disabled",
-  WindowTransformsDisabled,
+   widget_window_transforms_disabled,
   RelaxedAtomicBool, false
 )
 

@@ -475,9 +475,10 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
 #endif
 
   // Enable visual warning for long transaction when draw FPS option is enabled
-  bool drawFps = StaticPrefs::LayersDrawFPS();
+  bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
   if (drawFps) {
-    uint32_t visualWarningTrigger = StaticPrefs::LayerTransactionWarning();
+    uint32_t visualWarningTrigger =
+        StaticPrefs::layers_transaction_warning_ms();
     // The default theshold is 200ms to trigger, hit red when it take 4 times
     // longer
     TimeDuration latency = TimeStamp::Now() - aInfo.transactionStart();
@@ -754,7 +755,7 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   // containers are enabled, then the APZ transform might not be on |layer| but
   // instead would be on the parent of |layer|, if that is the root scrollable
   // metrics. So we special-case that behaviour.
-  if (StaticPrefs::LayoutUseContainersForRootFrames() &&
+  if (StaticPrefs::layout_scroll_root_frame_containers() &&
       !layer->HasScrollableFrameMetrics() && layer->GetParent() &&
       layer->GetParent()->HasRootScrollableFrameMetrics()) {
     transform *= layer->GetParent()->AsHostLayer()->GetShadowBaseTransform();

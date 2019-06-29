@@ -432,6 +432,17 @@ void Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
   }
 }
 
+void Module::initGCMallocBytesExcludingCode() {
+  // The size doesn't have to be exact so use the serialization framework to
+  // calculate a value.
+  gcMallocBytesExcludingCode_ = sizeof(*this) +
+      SerializedVectorSize(imports_) +
+      SerializedVectorSize(exports_) +
+      SerializedVectorSize(dataSegments_) +
+      SerializedVectorSize(elemSegments_) +
+      SerializedVectorSize(customSections_);
+}
+
 // Extracting machine code as JS object. The result has the "code" property, as
 // a Uint8Array, and the "segments" property as array objects. The objects
 // contain offsets in the "code" array and basic information about a code

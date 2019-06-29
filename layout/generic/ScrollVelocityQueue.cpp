@@ -14,8 +14,10 @@ namespace mozilla {
 namespace layout {
 
 void ScrollVelocityQueue::Sample(const nsPoint& aScrollPosition) {
-  float flingSensitivity = StaticPrefs::ScrollSnapPredictionSensitivity();
-  int maxVelocity = StaticPrefs::ScrollSnapPredictionMaxVelocity();
+  float flingSensitivity =
+      StaticPrefs::layout_css_scroll_snap_prediction_sensitivity();
+  int maxVelocity =
+      StaticPrefs::layout_css_scroll_snap_prediction_max_velocity();
   maxVelocity = nsPresContext::CSSPixelsToAppUnits(maxVelocity);
   int maxOffset = maxVelocity * flingSensitivity;
   TimeStamp currentRefreshTime =
