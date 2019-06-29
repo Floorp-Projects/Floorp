@@ -1,3 +1,22 @@
+Overview of changes leading to 2.5.3
+Wednesday, June 26, 2019
+====================================
+- Fix UCD script data for Unicode 10+ scripts.  This was broken since 2.5.0.
+- More optimizations for HB_TINY.
+
+
+Overview of changes leading to 2.5.2
+Thursday, June 20, 2019
+====================================
+- More hb-config.hh facilities to shrink library size, namely when built as
+  HB_TINY.
+- New documentation of custom configurations in CONFIG.md.
+- Fix build on gcc 4.8.  That's supported again.
+- Universal Shaping Engine improvements thanks to David Corbett.
+- API Changes: Undeprecate some horizontal-kerning API and re-enable in hb-ft,
+  such that Type1 fonts will continue kerning.
+
+
 Overview of changes leading to 2.5.1
 Friday, May 31, 2019
 ====================================

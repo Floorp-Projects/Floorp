@@ -67,7 +67,7 @@ template<typename TableType>
 static bool
 _subset2 (hb_subset_plan_t *plan)
 {
-  bool result = true;
+  bool result = false;
   hb_blob_t *source_blob = hb_sanitize_context_t ().reference_table<TableType> (plan->source);
   const TableType *table = source_blob->as<TableType> ();
 
@@ -172,16 +172,16 @@ _subset_table (hb_subset_plan_t *plan,
       DEBUG_MSG(SUBSET, nullptr, "skip hhea handled by hmtx");
       return true;
     case HB_OT_TAG_hmtx:
-      result = _subset<const OT::hmtx> (plan);
+      result = _subset2<const OT::hmtx> (plan);
       break;
     case HB_OT_TAG_vhea:
       DEBUG_MSG(SUBSET, nullptr, "skip vhea handled by vmtx");
       return true;
     case HB_OT_TAG_vmtx:
-      result = _subset<const OT::vmtx> (plan);
+      result = _subset2<const OT::vmtx> (plan);
       break;
     case HB_OT_TAG_maxp:
-      result = _subset<const OT::maxp> (plan);
+      result = _subset2<const OT::maxp> (plan);
       break;
     case HB_OT_TAG_loca:
       DEBUG_MSG(SUBSET, nullptr, "skip loca handled by glyf");
@@ -190,10 +190,10 @@ _subset_table (hb_subset_plan_t *plan,
       result = _subset<const OT::cmap> (plan);
       break;
     case HB_OT_TAG_OS2:
-      result = _subset<const OT::OS2> (plan);
+      result = _subset2<const OT::OS2> (plan);
       break;
     case HB_OT_TAG_post:
-      result = _subset<const OT::post> (plan);
+      result = _subset2<const OT::post> (plan);
       break;
 
 #ifndef HB_NO_SUBSET_CFF
@@ -204,7 +204,7 @@ _subset_table (hb_subset_plan_t *plan,
       result = _subset<const OT::cff2> (plan);
       break;
     case HB_OT_TAG_VORG:
-      result = _subset<const OT::VORG> (plan);
+      result = _subset2<const OT::VORG> (plan);
       break;
 #endif
 

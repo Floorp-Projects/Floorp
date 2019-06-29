@@ -541,39 +541,29 @@ struct subr_subset_param_t
   bool	  drop_hints;
 };
 
-struct subr_remap_t : remap_t
+struct subr_remap_t : hb_inc_bimap_t
 {
   void create (hb_set_t *closure)
   {
     /* create a remapping of subroutine numbers from old to new.
      * no optimization based on usage counts. fonttools doesn't appear doing that either.
      */
-    reset (closure->get_max () + 1);
-    for (hb_codepoint_t old_num = 0; old_num < length; old_num++)
-    {
-      if (hb_set_has (closure, old_num))
-	add (old_num);
-    }
+    
+    hb_codepoint_t old_num = HB_SET_VALUE_INVALID;
+    while (hb_set_next (closure, &old_num))
+      add (old_num);
 
-    if (get_count () < 1240)
+    if (get_population () < 1240)
       bias = 107;
-    else if (get_count () < 33900)
+    else if (get_population () < 33900)
       bias = 1131;
     else
       bias = 32768;
   }
 
-  hb_codepoint_t operator[] (unsigned int old_num) const
-  {
-    if (old_num >= length)
-      return CFF_UNDEF_CODE;
-    else
-      return remap_t::operator[] (old_num);
-  }
-
   int biased_num (unsigned int old_num) const
   {
-    hb_codepoint_t new_num = (*this)[old_num];
+    hb_codepoint_t new_num = get (old_num);
     return (int)new_num - bias;
   }
 
@@ -581,15 +571,15 @@ struct subr_remap_t : remap_t
   int bias;
 };
 
-struct subr_remap_ts
+struct subr_remaps_t
 {
-  subr_remap_ts ()
+  subr_remaps_t ()
   {
     global_remap.init ();
     local_remaps.init ();
   }
 
-  ~subr_remap_ts () { fini (); }
+  ~subr_remaps_t () { fini (); }
 
   void init (unsigned int fdCount)
   {
@@ -765,7 +755,7 @@ struct subr_subsetter_t
 
   bool encode_subrs (const parsed_cs_str_vec_t &subrs, const subr_remap_t& remap, unsigned int fd, str_buff_vec_t &buffArray) const
   {
-    unsigned int  count = remap.get_count ();
+    unsigned int  count = remap.get_population ();
 
     if (unlikely (!buffArray.resize (count)))
       return false;
@@ -1005,7 +995,7 @@ struct subr_subsetter_t
   parsed_cs_str_vec_t		parsed_global_subrs;
   hb_vector_t<parsed_cs_str_vec_t>  parsed_local_subrs;
 
-  subr_remap_ts			remaps;
+  subr_remaps_t			remaps;
 
   private:
   typedef typename SUBRS::count_type subr_count_type;
@@ -1021,7 +1011,7 @@ hb_plan_subset_cff_fdselect (const hb_subset_plan_t *plan,
 			    unsigned int &subset_fdselect_size /* OUT */,
 			    unsigned int &subset_fdselect_format /* OUT */,
 			    hb_vector_t<CFF::code_pair_t> &fdselect_ranges /* OUT */,
-			    CFF::remap_t &fdmap /* OUT */);
+			    hb_inc_bimap_t &fdmap /* OUT */);
 
 HB_INTERNAL bool
 hb_serialize_cff_fdselect (hb_serialize_context_t *c,

@@ -26,6 +26,8 @@
 
 #include "hb.hh"
 
+#ifdef HAVE_GOBJECT
+
 
 /**
  * SECTION:hb-gobject
@@ -94,3 +96,6 @@ HB_DEFINE_VALUE_TYPE (user_data_key)
 
 HB_DEFINE_VALUE_TYPE (ot_math_glyph_variant)
 HB_DEFINE_VALUE_TYPE (ot_math_glyph_part)
+
+
+#endif

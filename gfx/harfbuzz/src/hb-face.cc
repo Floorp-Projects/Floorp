@@ -531,6 +531,7 @@ hb_face_get_table_tags (const hb_face_t *face,
  */
 
 
+#ifndef HB_NO_FACE_COLLECT_UNICODES
 /**
  * hb_face_collect_unicodes:
  * @face: font face.
@@ -544,7 +545,6 @@ hb_face_collect_unicodes (hb_face_t *face,
 {
   face->table.cmap->collect_unicodes (out);
 }
-
 /**
  * hb_face_collect_variation_selectors:
  * @face: font face.
@@ -560,7 +560,6 @@ hb_face_collect_variation_selectors (hb_face_t *face,
 {
   face->table.cmap->collect_variation_selectors (out);
 }
-
 /**
  * hb_face_collect_variation_unicodes:
  * @face: font face.
@@ -577,7 +576,7 @@ hb_face_collect_variation_unicodes (hb_face_t *face,
 {
   face->table.cmap->collect_variation_unicodes (variation_selector, out);
 }
-
+#endif
 
 
 /*

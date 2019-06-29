@@ -180,7 +180,7 @@ struct glyf
 
     + hb_range (plan->num_output_glyphs ())
     | hb_map ([&] (hb_codepoint_t new_gid) {
-      SubsetGlyph subset_glyph;
+      SubsetGlyph subset_glyph = {0};
       subset_glyph.new_gid = new_gid;
 
       // should never fail: all old gids should be mapped

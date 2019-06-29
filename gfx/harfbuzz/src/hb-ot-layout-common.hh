@@ -499,6 +499,9 @@ struct FeatureParams
 {
   bool sanitize (hb_sanitize_context_t *c, hb_tag_t tag) const
   {
+#ifdef HB_NO_LAYOUT_FEATURE_PARAMS
+    return true;
+#endif
     TRACE_SANITIZE (this);
     if (tag == HB_TAG ('s','i','z','e'))
       return_trace (u.size.sanitize (c));
@@ -509,26 +512,26 @@ struct FeatureParams
     return_trace (true);
   }
 
+#ifndef HB_NO_LAYOUT_FEATURE_PARAMS
   const FeatureParamsSize& get_size_params (hb_tag_t tag) const
   {
     if (tag == HB_TAG ('s','i','z','e'))
       return u.size;
     return Null (FeatureParamsSize);
   }
-
   const FeatureParamsStylisticSet& get_stylistic_set_params (hb_tag_t tag) const
   {
     if ((tag & 0xFFFF0000u) == HB_TAG ('s','s','\0','\0')) /* ssXX */
       return u.stylisticSet;
     return Null (FeatureParamsStylisticSet);
   }
-
   const FeatureParamsCharacterVariants& get_character_variants_params (hb_tag_t tag) const
   {
     if ((tag & 0xFFFF0000u) == HB_TAG ('c','v','\0','\0')) /* cvXX */
       return u.characterVariants;
     return Null (FeatureParamsCharacterVariants);
   }
+#endif
 
   private:
   union {
@@ -1747,11 +1750,11 @@ struct VarData
                     float *scalars /*OUT */,
                     unsigned int num_scalars) const
   {
-    assert (num_scalars == regionIndices.len);
-   for (unsigned int i = 0; i < num_scalars; i++)
-   {
-     scalars[i] = regions.evaluate (regionIndices.arrayZ[i], coords, coord_count);
-   }
+    unsigned count = hb_min (num_scalars, regionIndices.len);
+    for (unsigned int i = 0; i < count; i++)
+      scalars[i] = regions.evaluate (regionIndices.arrayZ[i], coords, coord_count);
+    for (unsigned int i = count; i < num_scalars; i++)
+      scalars[i] = 0.f;
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -1779,8 +1782,12 @@ struct VariationStore
   float get_delta (unsigned int outer, unsigned int inner,
 		   const int *coords, unsigned int coord_count) const
   {
+#ifdef HB_NO_VAR
+    return 0.f;
+#endif
+
     if (unlikely (outer >= dataSets.len))
-      return 0.;
+      return 0.f;
 
     return (this+dataSets[outer]).get_delta (inner,
 					     coords, coord_count,
@@ -1797,6 +1804,10 @@ struct VariationStore
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
+#ifdef HB_NO_VAR
+    return true;
+#endif
+
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
 		  format == 1 &&
@@ -1812,6 +1823,12 @@ struct VariationStore
 		    float *scalars /*OUT*/,
 		    unsigned int num_scalars) const
   {
+#ifdef HB_NO_VAR
+    for (unsigned i = 0; i < num_scalars; i++)
+      scalars[i] = 0.f;
+    return;
+#endif
+
     (this+dataSets[ivs]).get_scalars (coords, coord_count, this+regions,
                                       &scalars[0], num_scalars);
   }
@@ -2152,10 +2169,14 @@ struct Device
   {
     switch (u.b.format)
     {
+#ifndef HB_NO_HINTING
     case 1: case 2: case 3:
       return u.hinting.get_x_delta (font);
+#endif
+#ifndef HB_NO_VAR
     case 0x8000:
       return u.variation.get_x_delta (font, store);
+#endif
     default:
       return 0;
     }
@@ -2165,9 +2186,13 @@ struct Device
     switch (u.b.format)
     {
     case 1: case 2: case 3:
+#ifndef HB_NO_HINTING
       return u.hinting.get_y_delta (font);
+#endif
+#ifndef HB_NO_VAR
     case 0x8000:
       return u.variation.get_y_delta (font, store);
+#endif
     default:
       return 0;
     }
@@ -2178,10 +2203,14 @@ struct Device
     TRACE_SANITIZE (this);
     if (!u.b.format.sanitize (c)) return_trace (false);
     switch (u.b.format) {
+#ifndef HB_NO_HINTING
     case 1: case 2: case 3:
       return_trace (u.hinting.sanitize (c));
+#endif
+#ifndef HB_NO_VAR
     case 0x8000:
       return_trace (u.variation.sanitize (c));
+#endif
     default:
       return_trace (true);
     }
@@ -2191,7 +2220,9 @@ struct Device
   union {
   DeviceHeader		b;
   HintingDevice		hinting;
+#ifndef HB_NO_VAR
   VariationDevice	variation;
+#endif
   } u;
   public:
   DEFINE_SIZE_UNION (6, b);

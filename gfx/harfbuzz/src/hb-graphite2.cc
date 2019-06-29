@@ -26,6 +26,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb.hh"
+
+#ifdef HAVE_GRAPHITE2
+
 #include "hb-shaper-impl.hh"
 
 #include "hb-graphite2.h"
@@ -447,3 +451,6 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
 
   return true;
 }
+
+
+#endif

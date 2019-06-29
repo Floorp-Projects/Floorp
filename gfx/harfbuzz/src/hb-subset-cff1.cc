@@ -24,24 +24,27 @@
  * Adobe Author(s): Michiharu Ariza
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_SUBSET_CFF
+
 #include "hb-open-type.hh"
 #include "hb-ot-cff1-table.hh"
 #include "hb-set.h"
+#include "hb-bimap.hh"
 #include "hb-subset-cff1.hh"
 #include "hb-subset-plan.hh"
 #include "hb-subset-cff-common.hh"
 #include "hb-cff1-interp-cs.hh"
 
-#ifndef HB_NO_SUBSET_CFF
-
 using namespace CFF;
 
-struct remap_sid_t : remap_t
+struct remap_sid_t : hb_inc_bimap_t
 {
   unsigned int add (unsigned int sid)
   {
     if ((sid != CFF_UNDEF_SID) && !is_std_std (sid))
-      return offset_sid (remap_t::add (unoffset_sid (sid)));
+      return offset_sid (hb_inc_bimap_t::add (unoffset_sid (sid)));
     else
       return sid;
   }
@@ -51,7 +54,7 @@ struct remap_sid_t : remap_t
     if (is_std_std (sid) || (sid == CFF_UNDEF_SID))
       return sid;
     else
-      return offset_sid (remap_t::operator [] (unoffset_sid (sid)));
+      return offset_sid (get (unoffset_sid (sid)));
   }
 
   static const unsigned int num_std_strings = 391;
@@ -579,8 +582,7 @@ struct cff_subset_plan {
 
   bool collect_sids_in_dicts (const OT::cff1::accelerator_subset_t &acc)
   {
-    if (unlikely (!sidmap.reset (acc.stringIndex->count)))
-      return false;
+    sidmap.reset ();
 
     for (unsigned int i = 0; i < name_dict_values_t::ValCount; i++)
     {
@@ -594,7 +596,7 @@ struct cff_subset_plan {
 
     if (acc.fdArray != &Null(CFF1FDArray))
       for (unsigned int i = 0; i < orig_fdcount; i++)
-	if (fdmap.includes (i))
+	if (fdmap.has (i))
 	  (void)sidmap.add (acc.fontDicts[i].fontName);
 
     return true;
@@ -680,7 +682,7 @@ struct cff_subset_plan {
       /* SIDs for name strings in dicts are added before glyph names so they fit in 16-bit int range */
       if (unlikely (!collect_sids_in_dicts (acc)))
 	return false;
-      if (unlikely (sidmap.get_count () > 0x8000))	/* assumption: a dict won't reference that many strings */
+      if (unlikely (sidmap.get_population () > 0x8000))	/* assumption: a dict won't reference that many strings */
       	return false;
       if (subset_charset)
 	offsets.charsetInfo.size = plan_subset_charset (acc, plan);
@@ -737,7 +739,7 @@ struct cff_subset_plan {
       {
 	subset_localsubrs[fd].init ();
 	offsets.localSubrsInfos[fd].init ();
-	if (fdmap.includes (fd))
+	if (fdmap.has (fd))
 	{
 	  if (!subr_subsetter.encode_localsubrs (fd, subset_localsubrs[fd]))
 	    return false;
@@ -788,7 +790,7 @@ struct cff_subset_plan {
       cff1_font_dict_op_serializer_t fontSzr;
       unsigned int dictsSize = 0;
       for (unsigned int i = 0; i < acc.fontDicts.length; i++)
-	if (fdmap.includes (i))
+	if (fdmap.has (i))
 	  dictsSize += FontDict::calculate_serialized_size (acc.fontDicts[i], fontSzr);
 
       offsets.FDArrayInfo.offSize = calcOffSize (dictsSize);
@@ -811,7 +813,7 @@ struct cff_subset_plan {
     offsets.privateDictInfo.offset = final_size;
     for (unsigned int i = 0; i < orig_fdcount; i++)
     {
-      if (fdmap.includes (i))
+      if (fdmap.has (i))
       {
 	bool  has_localsubrs = offsets.localSubrsInfos[i].size > 0;
 	cff_private_dict_op_serializer_t privSzr (desubroutinize, plan->drop_hints);
@@ -855,7 +857,7 @@ struct cff_subset_plan {
 
   /* font dict index remap table from fullset FDArray to subset FDArray.
    * set to CFF_UNDEF_CODE if excluded from subset */
-  remap_t   fdmap;
+  hb_inc_bimap_t   fdmap;
 
   str_buff_vec_t		subset_charstrings;
   str_buff_vec_t		subset_globalsubrs;
@@ -1032,7 +1034,7 @@ static inline bool _write_cff1 (const cff_subset_plan &plan,
   assert (plan.offsets.privateDictInfo.offset == (unsigned) (c.head - c.start));
   for (unsigned int i = 0; i < acc.privateDicts.length; i++)
   {
-    if (plan.fdmap.includes (i))
+    if (plan.fdmap.has (i))
     {
       PrivateDict  *pd = c.start_embed<PrivateDict> ();
       if (unlikely (pd == nullptr)) return false;
@@ -1040,7 +1042,7 @@ static inline bool _write_cff1 (const cff_subset_plan &plan,
       bool result;
       cff_private_dict_op_serializer_t privSzr (plan.desubroutinize, plan.drop_hints);
       /* N.B. local subrs immediately follows its corresponding private dict. i.e., subr offset == private dict size */
-      unsigned int  subroffset = (plan.offsets.localSubrsInfos[i].size > 0)? priv_size: 0;
+      unsigned int subroffset = (plan.offsets.localSubrsInfos[i].size > 0) ? priv_size : 0;
       result = pd->serialize (&c, acc.privateDicts[i], privSzr, subroffset);
       if (unlikely (!result))
       {
@@ -1120,5 +1122,6 @@ hb_subset_cff1 (hb_subset_plan_t *plan,
 
   return result;
 }
+
 
 #endif

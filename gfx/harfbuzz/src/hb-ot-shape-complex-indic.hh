@@ -359,7 +359,7 @@ set_indic_properties (hb_glyph_info_t &info)
   /* According to ScriptExtensions.txt, these Grantha marks may also be used in Tamil,
    * so the Indic shaper needs to know their categories. */
   else if (unlikely (u == 0x11301u || u == 0x11303u)) cat = OT_SM;
-  else if (unlikely (u == 0x1133cu)) cat = OT_N;
+  else if (unlikely (u == 0x1133Bu || u == 0x1133Cu)) cat = OT_N;
 
   else if (unlikely (u == 0x0AFBu)) cat = OT_N; /* https://github.com/harfbuzz/harfbuzz/issues/552 */
 

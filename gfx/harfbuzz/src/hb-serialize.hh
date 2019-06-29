@@ -375,7 +375,7 @@ struct hb_serialize_context_t
   (Type *, src.copy (this, hb_forward<Ts> (ds)...))
 
   template <typename Type> auto
-  _copy (const Type &src, hb_priority<0>) -> decltype (&(src = src))
+  _copy (const Type &src, hb_priority<0>) -> decltype (&(hb_declval<Type> () = src))
   {
     Type *ret = this->allocate_size<Type> (sizeof (Type));
     if (unlikely (!ret)) return nullptr;

@@ -51,18 +51,6 @@ typedef FDSelect3_4_Range<HBUINT32, HBUINT16> FDSelect4_Range;
 
 struct CFF2FDSelect
 {
-  bool sanitize (hb_sanitize_context_t *c, unsigned int fdcount) const
-  {
-    TRACE_SANITIZE (this);
-
-    return_trace (likely (c->check_struct (this) && (format == 0 || format == 3 || format == 4) &&
-			  (format == 0)?
-			  u.format0.sanitize (c, fdcount):
-			    ((format == 3)?
-			    u.format3.sanitize (c, fdcount):
-			    u.format4.sanitize (c, fdcount))));
-  }
-
   bool serialize (hb_serialize_context_t *c, const CFF2FDSelect &src, unsigned int num_glyphs)
   {
     TRACE_SERIALIZE (this);
@@ -78,35 +66,51 @@ struct CFF2FDSelect
 
   unsigned int get_size (unsigned int num_glyphs) const
   {
-    unsigned int size = format.static_size;
-    if (format == 0)
-      size += u.format0.get_size (num_glyphs);
-    else if (format == 3)
-      size += u.format3.get_size ();
-    else
-      size += u.format4.get_size ();
-    return size;
+    switch (format)
+    {
+    case 0: return format.static_size + u.format0.get_size (num_glyphs);
+    case 3: return format.static_size + u.format3.get_size ();
+    case 4: return format.static_size + u.format4.get_size ();
+    default:return 0;
+    }
   }
 
   hb_codepoint_t get_fd (hb_codepoint_t glyph) const
   {
-    if (this == &Null(CFF2FDSelect))
+    if (this == &Null (CFF2FDSelect))
       return 0;
-    if (format == 0)
-      return u.format0.get_fd (glyph);
-    else if (format == 3)
-      return u.format3.get_fd (glyph);
-    else
-      return u.format4.get_fd (glyph);
+
+    switch (format)
+    {
+    case 0: return u.format0.get_fd (glyph);
+    case 3: return u.format3.get_fd (glyph);
+    case 4: return u.format4.get_fd (glyph);
+    default:return 0;
+    }
   }
 
-  HBUINT8       format;
-  union {
-    FDSelect0   format0;
-    FDSelect3   format3;
-    FDSelect4   format4;
-  } u;
+  bool sanitize (hb_sanitize_context_t *c, unsigned int fdcount) const
+  {
+    TRACE_SANITIZE (this);
+    if (unlikely (!c->check_struct (this)))
+      return_trace (false);
 
+    switch (format)
+    {
+    case 0: return_trace (u.format0.sanitize (c, fdcount));
+    case 3: return_trace (u.format3.sanitize (c, fdcount));
+    case 4: return_trace (u.format4.sanitize (c, fdcount));
+    default:return_trace (false);
+    }
+  }
+
+  HBUINT8	format;
+  union {
+  FDSelect0	format0;
+  FDSelect3	format3;
+  FDSelect4	format4;
+  } u;
+  public:
   DEFINE_SIZE_MIN (2);
 };
 

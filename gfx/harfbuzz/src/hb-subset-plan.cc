@@ -194,23 +194,12 @@ static void
 _nameid_closure (hb_face_t           *face,
                  hb_set_t            *nameids)
 {
-  hb_tag_t table_tags[32];
-  unsigned count = ARRAY_LENGTH (table_tags);
-  hb_face_get_table_tags (face, 0, &count, table_tags);
-  for (unsigned int i = 0; i < count; i++)
-  {
-    hb_tag_t tag = table_tags[i];
-    switch (tag) {
-      case HB_OT_TAG_STAT:
-        face->table.STAT->collect_name_ids (nameids);
-        break;
-      case HB_OT_TAG_fvar:
-        face->table.fvar->collect_name_ids (nameids);
-        break;
-      default:
-        break;
-    }
-  }
+#ifndef HB_NO_STAT
+  face->table.STAT->collect_name_ids (nameids);
+#endif
+#ifndef HB_NO_VAR
+  face->table.fvar->collect_name_ids (nameids);
+#endif
 }
 
 /**

@@ -65,14 +65,40 @@ struct hb_ot_shape_plan_t
   hb_ot_map_t map;
   hb_aat_map_t aat_map;
   const void *data;
+#ifndef HB_NO_OT_SHAPE_FRACTIONS
   hb_mask_t frac_mask, numr_mask, dnom_mask;
+#else
+  static constexpr hb_mask_t frac_mask = 0;
+  static constexpr hb_mask_t numr_mask = 0;
+  static constexpr hb_mask_t dnom_mask = 0;
+#endif
   hb_mask_t rtlm_mask;
+#ifndef HB_NO_OT_KERN
   hb_mask_t kern_mask;
+#else
+  static constexpr hb_mask_t kern_mask = 0;
+#endif
+#ifndef HB_NO_SHAPE_AAT
   hb_mask_t trak_mask;
+#else
+  static constexpr hb_mask_t trak_mask = 0;
+#endif
 
+#ifndef HB_NO_OT_KERN
   bool requested_kerning : 1;
+#else
+  static constexpr bool requested_kerning = false;
+#endif
+#ifndef HB_NO_SHAPE_AAT
   bool requested_tracking : 1;
+#else
+  static constexpr bool requested_tracking = false;
+#endif
+#ifndef HB_NO_OT_SHAPE_FRACTIONS
   bool has_frac : 1;
+#else
+  static constexpr bool has_frac = false;
+#endif
   bool has_gpos_mark : 1;
   bool zero_marks : 1;
   bool fallback_glyph_classes : 1;
@@ -80,7 +106,11 @@ struct hb_ot_shape_plan_t
   bool adjust_mark_positioning_when_zeroing : 1;
 
   bool apply_gpos : 1;
+#ifndef HB_NO_OT_KERN
   bool apply_kern : 1;
+#else
+  static constexpr bool apply_kern = false;
+#endif
 #ifndef HB_NO_SHAPE_AAT
   bool apply_kerx : 1;
   bool apply_morx : 1;

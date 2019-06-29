@@ -35,6 +35,9 @@
 #include <xlocale.h>
 #endif
 
+#ifdef HB_NO_SETLOCALE
+#define setlocale(Category, Locale) "C"
+#endif
 
 /**
  * SECTION:hb-common
@@ -67,7 +70,7 @@ _hb_options_init ()
         p = c + strlen (c);
 
 #define OPTION(name, symbol) \
-	if (0 == strncmp (c, name, p - c) && strlen (name) == p - c) do { u.opts.symbol = true; } while (0)
+	if (0 == strncmp (c, name, p - c) && strlen (name) == static_cast<size_t>(p - c)) do { u.opts.symbol = true; } while (0)
 
       OPTION ("uniscribe-bug-compatible", uniscribe_bug_compatible);
       OPTION ("aat", aat);
