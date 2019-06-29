@@ -180,7 +180,7 @@ nsresult LookupCacheV4::ClearLegacyFile() {
       return rv;
     }
 
-    LOG(("[%s] Old PrefixSet is succuessfully removed!", mTableName.get()));
+    LOG(("[%s] Old PrefixSet is successfully removed!", mTableName.get()));
   }
 
   return NS_OK;

@@ -863,9 +863,57 @@ nsresult LookupCacheV2::SanityCheck(const Header& aHeader) {
   return NS_OK;
 }
 
-nsresult LookupCacheV2::LoadLegacyFile() { return NS_ERROR_NOT_IMPLEMENTED; }
+nsresult LookupCacheV2::LoadLegacyFile() {
+  // Because mozilla Safe Browsing v2 server only includes completions
+  // in the update, we can simplify this function by only loading .sbtore
+  if (!mProvider.EqualsLiteral("mozilla")) {
+    return NS_OK;
+  }
 
-nsresult LookupCacheV2::ClearLegacyFile() { return NS_ERROR_NOT_IMPLEMENTED; }
+  HashStore store(mTableName, mProvider, mRootStoreDirectory);
+
+  // Support loading version 3 HashStore.
+  nsresult rv = store.Open(3);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AddPrefixArray prefix;
+  AddCompleteArray addComplete;
+
+  rv = store.ReadCompletionsLegacyV3(addComplete);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return Build(prefix, addComplete);
+}
+
+nsresult LookupCacheV2::ClearLegacyFile() {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    rv = file->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    LOG(("[%s]Old PrefixSet is successfully removed!", mTableName.get()));
+  }
+
+  return NS_OK;
+}
 
 nsCString LookupCacheV2::GetPrefixSetSuffix() const {
   return NS_LITERAL_CSTRING(".vlpset");
