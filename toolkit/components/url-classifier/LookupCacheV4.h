@@ -39,6 +39,8 @@ class LookupCacheV4 final : public LookupCache {
   nsresult WriteMetadata(RefPtr<const TableUpdateV4> aTableUpdate);
   nsresult LoadMetadata(nsACString& aState, nsACString& aChecksum);
 
+  virtual nsresult LoadMozEntries() override;
+
   static const int VER;
   static const uint32_t MAX_METADATA_VALUE_LENGTH;
   static const uint32_t VLPSET_MAGIC;

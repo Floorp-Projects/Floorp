@@ -17,8 +17,8 @@ TEST(UrlClassifierFindFullHash, Request)
   nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
 
   nsTArray<nsCString> listNames;
-  listNames.AppendElement("test-phish-proto");
-  listNames.AppendElement("test-unwanted-proto");
+  listNames.AppendElement("moztest-phish-proto");
+  listNames.AppendElement("moztest-unwanted-proto");
 
   nsCString listStates[] = {nsCString("sta\x00te1", 7),
                             nsCString("sta\x00te2", 7)};

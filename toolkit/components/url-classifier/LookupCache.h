@@ -240,6 +240,8 @@ class LookupCache {
 
   virtual void ClearAll();
 
+  virtual nsresult LoadMozEntries() = 0;
+
   template <typename T>
   static T* Cast(LookupCache* aThat) {
     return ((aThat && T::VER == aThat->Ver()) ? reinterpret_cast<T*>(aThat)
@@ -314,6 +316,8 @@ class LookupCacheV2 final : public LookupCache {
   void AddGethashResultToCache(const AddCompleteArray& aAddCompletes,
                                const MissPrefixArray& aMissPrefixes,
                                int64_t aExpirySec = 0);
+
+  virtual nsresult LoadMozEntries() override;
 
   static const int VER;
   static const uint32_t VLPSET_MAGIC;

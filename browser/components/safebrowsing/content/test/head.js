@@ -2,7 +2,7 @@ var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 
 // This url must sync with the table, url in SafeBrowsing.jsm addMozEntries
-const PHISH_TABLE = "test-phish-simple";
+const PHISH_TABLE = "moztest-phish-simple";
 const PHISH_URL = "https://www.itisatrap.org/firefox/its-a-trap.html";
 
 /**
@@ -86,7 +86,7 @@ function waitForDBInit(callback) {
   });
 }
 
-Services.prefs.setCharPref("urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple,test-harmful.simple");
-Services.prefs.setCharPref("urlclassifier.phishTable", "test-phish-simple");
-Services.prefs.setCharPref("urlclassifier.blockedTable", "test-block-simple");
+Services.prefs.setCharPref("urlclassifier.malwareTable", "moztest-malware-simple,moztest-unwanted-simple,moztest-harmful-simple");
+Services.prefs.setCharPref("urlclassifier.phishTable", "moztest-phish-simple");
+Services.prefs.setCharPref("urlclassifier.blockedTable", "moztest-block-simple");
 SafeBrowsing.init();

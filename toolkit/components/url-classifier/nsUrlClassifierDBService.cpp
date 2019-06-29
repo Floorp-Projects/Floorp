@@ -1228,7 +1228,7 @@ nsUrlClassifierLookupCallback::LookupComplete(
       // has registered the table. In the second case we should not call
       // complete.
       if ((!gethashUrl.IsEmpty() ||
-           StringBeginsWith(result->mTableName, NS_LITERAL_CSTRING("test"))) &&
+           nsUrlClassifierUtils::IsTestTable(result->mTableName)) &&
           mDBService->GetCompleter(result->mTableName,
                                    getter_AddRefs(completer))) {
         // Bug 1323953 - Send the first 4 bytes for completion no matter how

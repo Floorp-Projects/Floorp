@@ -51,8 +51,7 @@ function updateError(errorCode) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
-           ["urlclassifier.phishTable", "test-phish-simple"]]},
+  {"set": [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))
