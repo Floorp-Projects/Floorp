@@ -2553,6 +2553,13 @@ static bool WebRenderEnvvarDisabled() {
   return (env && *env == '0');
 }
 
+static bool InMarionetteRolloutTest() {
+  // This pref only ever gets set in test_pref_rollout_workaround, and in
+  // that case we want to ignore the MOZ_WEBRENDER=0 that will be set by
+  // the test harness so as to actually make the test work.
+  return Preferences::HasUserValue(WR_ROLLOUT_HW_QUALIFIED_OVERRIDE);
+}
+
 // If the "gfx.webrender.all.qualified" pref is true we want to enable
 // WebRender for qualifying hardware. The Normandy pref rollout code sets
 // default values on rolled out prefs on every startup, but Gfx starts up
@@ -2889,7 +2896,7 @@ void gfxPlatform::InitWebRenderConfig() {
   // override all the other enabling prefs (gfx.webrender.enabled,
   // gfx.webrender.all, and gfx.webrender.all.qualified).
   if (StaticPrefs::gfx_webrender_force_disabled() ||
-      WebRenderEnvvarDisabled()) {
+      (WebRenderEnvvarDisabled() && !InMarionetteRolloutTest())) {
     featureWebRender.UserDisable(
         "User force-disabled WR",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_USER_FORCE_DISABLED"));
