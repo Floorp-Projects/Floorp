@@ -77,6 +77,13 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
          "default": True,
          "help": "Run tests without multiple processes (e10s).",
          }
+    ], [
+        ['--enable-webrender'],
+        {"action": "store_true",
+         "dest": "enable_webrender",
+         "default": False,
+         "help": "Run with WebRender enabled.",
+         }
     ]] + copy.deepcopy(testing_config_options)
 
     def __init__(self, require_config_file=False):
@@ -118,6 +125,7 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.log_raw_level = c.get('log_raw_level')
         self.log_tbpl_level = c.get('log_tbpl_level')
         self.e10s = c.get('e10s')
+        self.enable_webrender = c.get('enable_webrender')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -246,6 +254,14 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
                 cmd.extend(['--disable-e10s'])
             elif category not in SUITE_DEFAULT_E10S and self.e10s:
                 cmd.extend(['--e10s'])
+
+        # Only enable WebRender if the flag is enabled. All downstream harnesses
+        # are expected to force-disable WebRender if not explicitly enabled,
+        # so that we don't have it accidentally getting enabled because the
+        # underlying hardware running the test becomes part of the WR-qualified
+        # set.
+        if self.enable_webrender:
+            cmd.extend(['--enable-webrender'])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
