@@ -160,7 +160,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "action": "store_true",
             "dest": "enable_webrender",
             "default": False,
-            "help": "Tries to enable the WebRender compositor."}
+            "help": "Enable the WebRender compositor in Gecko."}
          ],
         [["--gpu-required"], {
             "action": "store_true",
@@ -438,6 +438,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
             if c['headless']:
                 base_cmd.append('--headless')
+
+            if c['enable_webrender']:
+                base_cmd.append('--enable-webrender')
 
             if c['extra_prefs']:
                 base_cmd.extend(['--setpref={}'.format(p) for p in c['extra_prefs']])
@@ -869,9 +872,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
                 if self.config['allow_software_gl_layers']:
                     env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
-                if self.config['enable_webrender']:
-                    env['MOZ_WEBRENDER'] = '1'
-                    env['MOZ_ACCELERATED'] = '1'
 
                 if self.config['single_stylo_traversal']:
                     env['STYLO_THREADS'] = '1'
