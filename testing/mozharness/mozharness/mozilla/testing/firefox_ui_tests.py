@@ -36,7 +36,7 @@ firefox_ui_tests_config_options = [
         "action": "store_true",
         "dest": "enable_webrender",
         "default": False,
-        "help": "Tries to enable the WebRender compositor.",
+        "help": "Enable the WebRender compositor in Gecko.",
     }],
     [['--dry-run'], {
         'dest': 'dry_run',
@@ -234,6 +234,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             '-vv',
         ]
 
+        if self.config['enable_webrender']:
+            cmd.append('--enable-webrender')
+
         # Collect all pass-through harness options to the script
         cmd.extend(self.query_harness_args())
 
@@ -269,9 +272,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
-        if self.config['enable_webrender']:
-            env['MOZ_WEBRENDER'] = '1'
-            env['MOZ_ACCELERATED'] = '1'
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_fxui_dir'],
