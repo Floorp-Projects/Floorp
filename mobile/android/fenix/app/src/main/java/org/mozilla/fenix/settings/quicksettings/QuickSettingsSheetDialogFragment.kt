@@ -203,7 +203,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
                     }
                     is QuickSettingsAction.TogglePermission -> {
 
-                        lifecycleScope.launch {
+                        lifecycleScope.launch(Dispatchers.IO) {
                             sitePermissions = quickSettingsComponent.toggleSitePermission(
                                 context = requireContext(),
                                 featurePhone = it.featurePhone,
@@ -236,7 +236,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private val sessionObserver = object : Session.Observer {
         override fun onUrlChanged(session: Session, url: String) {
             super.onUrlChanged(session, url)
-            lifecycleScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 val host = session.url.toUri()?.host
                 val sitePermissions: SitePermissions? = host?.let {
                     val storage = requireContext().components.core.permissionStorage
