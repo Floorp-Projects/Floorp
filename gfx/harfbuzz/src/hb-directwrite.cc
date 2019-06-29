@@ -23,6 +23,9 @@
  */
 
 #include "hb.hh"
+
+#ifdef HAVE_DIRECTWRITE
+
 #include "hb-shaper-impl.hh"
 
 #include <DWrite_1.h>
@@ -173,7 +176,7 @@ _hb_directwrite_shaper_face_data_create (hb_face_t *face)
   HB_STMT_START { \
     DEBUG_MSG (DIRECTWRITE, nullptr, __VA_ARGS__); \
     return nullptr; \
-  } HB_STMT_END;
+  } HB_STMT_END
 
   if (FAILED (hr))
     FAIL ("Failed to load font file from data!");
@@ -951,10 +954,13 @@ hb_directwrite_face_create (IDWriteFontFace *font_face)
 *
 * Return value: DirectWrite IDWriteFontFace object corresponding to the given input
 *
-* Since: REPLACEME
+* Since: 2.5.0
 **/
 IDWriteFontFace *
 hb_directwrite_face_get_font_face (hb_face_t *face)
 {
   return face->data.directwrite->fontFace;
 }
+
+
+#endif

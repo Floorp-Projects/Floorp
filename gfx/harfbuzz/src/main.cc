@@ -38,6 +38,10 @@
 
 using namespace OT;
 
+#ifdef HB_NO_OPEN
+#define hb_blob_create_from_file(x)  hb_blob_get_empty ()
+#endif
+
 int
 main (int argc, char **argv)
 {

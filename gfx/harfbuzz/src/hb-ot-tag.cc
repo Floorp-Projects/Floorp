@@ -145,7 +145,9 @@ hb_ot_all_tags_from_script (hb_script_t   script,
   hb_tag_t new_tag = hb_ot_new_tag_from_script (script);
   if (unlikely (new_tag != HB_OT_TAG_DEFAULT_SCRIPT))
   {
-    tags[i++] = new_tag | '3';
+    /* HB_SCRIPT_MYANMAR maps to 'mym2', but there is no 'mym3'. */
+    if (new_tag != HB_TAG('m','y','m','2'))
+      tags[i++] = new_tag | '3';
     if (*count > i)
       tags[i++] = new_tag;
   }
@@ -303,28 +305,28 @@ parse_private_use_subtag (const char     *private_use_subtag,
 			  const char     *prefix,
 			  unsigned char (*normalize) (unsigned char))
 {
-  if (private_use_subtag && count && tags && *count)
-  {
-    const char *s = strstr (private_use_subtag, prefix);
-    if (s)
-    {
-      char tag[4];
-      int i;
-      s += strlen (prefix);
-      for (i = 0; i < 4 && ISALNUM (s[i]); i++)
-	tag[i] = normalize (s[i]);
-      if (i)
-      {
-	for (; i < 4; i++)
-	  tag[i] = ' ';
-	tags[0] = HB_TAG (tag[0], tag[1], tag[2], tag[3]);
-	if ((tags[0] & 0xDFDFDFDF) == HB_OT_TAG_DEFAULT_SCRIPT)
-	  tags[0] ^= ~0xDFDFDFDF;
-	*count = 1;
-	return false;
-      }
-    }
-  }
+#ifdef HB_NO_LANGUAGE_PRIVATE_SUBTAG
+  return false;
+#endif
+
+  if (!(private_use_subtag && count && tags && *count)) return false;
+
+  const char *s = strstr (private_use_subtag, prefix);
+  if (!s) return false;
+
+  char tag[4];
+  int i;
+  s += strlen (prefix);
+  for (i = 0; i < 4 && ISALNUM (s[i]); i++)
+    tag[i] = normalize (s[i]);
+  if (!i) return false;
+
+  for (; i < 4; i++)
+    tag[i] = ' ';
+  tags[0] = HB_TAG (tag[0], tag[1], tag[2], tag[3]);
+  if ((tags[0] & 0xDFDFDFDF) == HB_OT_TAG_DEFAULT_SCRIPT)
+    tags[0] ^= ~0xDFDFDFDF;
+  *count = 1;
   return true;
 }
 
@@ -392,8 +394,8 @@ hb_ot_tags_from_script_and_language (hb_script_t   script,
 	limit = s;
     }
 
-    needs_script = parse_private_use_subtag (private_use_subtag, script_count, script_tags, "-hbsc", TOLOWER);
-    needs_language = parse_private_use_subtag (private_use_subtag, language_count, language_tags, "-hbot", TOUPPER);
+    needs_script = !parse_private_use_subtag (private_use_subtag, script_count, script_tags, "-hbsc", TOLOWER);
+    needs_language = !parse_private_use_subtag (private_use_subtag, language_count, language_tags, "-hbot", TOUPPER);
 
     if (needs_language && language_count && language_tags && *language_count)
       hb_ot_tags_from_language (lang_str, limit, language_count, language_tags);

@@ -36,6 +36,7 @@ HB_BASE_sources = \
 	hb-dispatch.hh \
 	hb-face.cc \
 	hb-face.hh \
+	hb-fallback-shape.cc \
 	hb-font.cc \
 	hb-font.hh \
 	hb-iter.hh \
@@ -43,6 +44,7 @@ HB_BASE_sources = \
 	hb-machinery.hh \
 	hb-map.cc \
 	hb-map.hh \
+	hb-bimap.hh \
 	hb-meta.hh \
 	hb-mutex.hh \
 	hb-null.hh \
@@ -63,6 +65,7 @@ HB_BASE_sources = \
 	hb-ot-color.cc \
 	hb-ot-face.cc \
 	hb-ot-face.hh \
+	hb-ot-face-table-list.hh \
 	hb-ot-font.cc \
 	hb-ot-gasp-table.hh \
 	hb-ot-glyf-table.hh \
@@ -198,10 +201,6 @@ HB_BASE_headers = \
 	hb-unicode.h \
 	hb-version.h \
 	hb.h \
-	$(NULL)
-
-HB_FALLBACK_sources = \
-	hb-fallback-shape.cc	\
 	$(NULL)
 
 # Optional Sources and Headers with external deps

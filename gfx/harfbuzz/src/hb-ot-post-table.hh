@@ -73,26 +73,25 @@ struct post
 {
   static constexpr hb_tag_t tableTag = HB_OT_TAG_post;
 
-  bool subset (hb_subset_plan_t *plan) const
+  void serialize (hb_serialize_context_t *c) const
   {
-    unsigned int post_prime_length;
-    hb_blob_t *post_blob = hb_sanitize_context_t ().reference_table<post>(plan->source);
-    hb_blob_t *post_prime_blob = hb_blob_create_sub_blob (post_blob, 0, post::min_size);
-    post *post_prime = (post *) hb_blob_get_data_writable (post_prime_blob, &post_prime_length);
-    hb_blob_destroy (post_blob);
+    post *post_prime = c->allocate_min<post> ();
+    if (unlikely (!post_prime))  return;
 
-    if (unlikely (!post_prime || post_prime_length != post::min_size))
-    {
-      hb_blob_destroy (post_prime_blob);
-      DEBUG_MSG(SUBSET, nullptr, "Invalid source post table with length %d.", post_prime_length);
-      return false;
-    }
-
+    memcpy (post_prime, this, post::min_size);
     post_prime->version.major = 3; // Version 3 does not have any glyph names.
-    bool result = plan->add_table (HB_OT_TAG_post, post_prime_blob);
-    hb_blob_destroy (post_prime_blob);
+  }
 
-    return result;
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    post *post_prime = c->serializer->start_embed<post> ();
+    if (unlikely (!post_prime)) return_trace (false);
+
+    serialize (c->serializer);
+    if (c->serializer->in_error () || c->serializer->ran_out_of_room) return_trace (false);
+
+    return_trace (true);
   }
 
   struct accelerator_t
@@ -158,7 +157,7 @@ struct post
 
 	for (unsigned int i = 0; i < count; i++)
 	  gids[i] = i;
-	hb_sort_r (gids, count, sizeof (gids[0]), cmp_gids, (void *) this);
+	hb_qsort (gids, count, sizeof (gids[0]), cmp_gids, (void *) this);
 
 	if (unlikely (!gids_sorted_by_name.cmpexch (nullptr, gids)))
 	{
@@ -168,8 +167,8 @@ struct post
       }
 
       hb_bytes_t st (name, len);
-      const uint16_t *gid = (const uint16_t *) hb_bsearch_r (hb_addressof (st), gids, count,
-							     sizeof (gids[0]), cmp_key, (void *) this);
+      const uint16_t *gid = (const uint16_t *) hb_bsearch (hb_addressof (st), gids, count,
+							   sizeof (gids[0]), cmp_key, (void *) this);
       if (gid)
       {
 	*glyph = *gid;

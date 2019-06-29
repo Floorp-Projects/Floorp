@@ -24,14 +24,16 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_BUFFER_SERIALIZE
+
 #include "hb-buffer.hh"
 
 
 static const char *serialize_formats[] = {
-#ifndef HB_NO_BUFFER_SERIALIZE
   "text",
   "json",
-#endif
   nullptr
 };
 
@@ -89,10 +91,8 @@ hb_buffer_serialize_format_to_string (hb_buffer_serialize_format_t format)
 {
   switch ((unsigned) format)
   {
-#ifndef HB_NO_BUFFER_SERIALIZE
     case HB_BUFFER_SERIALIZE_FORMAT_TEXT:	return serialize_formats[0];
     case HB_BUFFER_SERIALIZE_FORMAT_JSON:	return serialize_formats[1];
-#endif
     default:
     case HB_BUFFER_SERIALIZE_FORMAT_INVALID:	return nullptr;
   }
@@ -348,10 +348,6 @@ hb_buffer_serialize_glyphs (hb_buffer_t *buffer,
   if (buf_size)
     *buf = '\0';
 
-#ifdef HB_NO_BUFFER_SERIALIZE
-  return 0;
-#endif
-
   assert ((!buffer->len && buffer->content_type == HB_BUFFER_CONTENT_TYPE_INVALID) ||
 	  buffer->content_type == HB_BUFFER_CONTENT_TYPE_GLYPHS);
 
@@ -457,10 +453,6 @@ hb_buffer_deserialize_glyphs (hb_buffer_t *buffer,
     end_ptr = &end;
   *end_ptr = buf;
 
-#ifdef HB_NO_BUFFER_SERIALIZE
-  return false;
-#endif
-
   assert ((!buffer->len && buffer->content_type == HB_BUFFER_CONTENT_TYPE_INVALID) ||
 	  buffer->content_type == HB_BUFFER_CONTENT_TYPE_GLYPHS);
 
@@ -496,3 +488,6 @@ hb_buffer_deserialize_glyphs (hb_buffer_t *buffer,
 
   }
 }
+
+
+#endif

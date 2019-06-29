@@ -51,7 +51,7 @@
   HB_FONT_FUNC_IMPLEMENT (glyph_v_advances) \
   HB_FONT_FUNC_IMPLEMENT (glyph_h_origin) \
   HB_FONT_FUNC_IMPLEMENT (glyph_v_origin) \
-  HB_IF_NOT_DEPRECATED (HB_FONT_FUNC_IMPLEMENT (glyph_h_kerning)) \
+  HB_FONT_FUNC_IMPLEMENT (glyph_h_kerning) \
   HB_IF_NOT_DEPRECATED (HB_FONT_FUNC_IMPLEMENT (glyph_v_kerning)) \
   HB_FONT_FUNC_IMPLEMENT (glyph_extents) \
   HB_FONT_FUNC_IMPLEMENT (glyph_contour_point) \

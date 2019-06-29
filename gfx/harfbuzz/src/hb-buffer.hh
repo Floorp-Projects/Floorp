@@ -124,7 +124,9 @@ struct hb_buffer_t
   unsigned int context_len[2];
 
   /* Debugging API */
+#ifndef HB_NO_BUFFER_MESSAGE
   hb_buffer_message_func_t message_func;
+#endif
   void *message_data;
   hb_destroy_func_t message_destroy;
 
@@ -347,9 +349,19 @@ struct hb_buffer_t
 
   HB_INTERNAL void sort (unsigned int start, unsigned int end, int(*compar)(const hb_glyph_info_t *, const hb_glyph_info_t *));
 
-  bool messaging () { return unlikely (message_func); }
+  bool messaging ()
+  {
+#ifdef HB_NO_BUFFER_MESSAGE
+    return false;
+#else
+    return unlikely (message_func);
+#endif
+  }
   bool message (hb_font_t *font, const char *fmt, ...) HB_PRINTF_FUNC(3, 4)
   {
+#ifdef HB_NO_BUFFER_MESSAGE
+   return true;
+#else
     if (!messaging ())
       return true;
     va_list ap;
@@ -357,6 +369,7 @@ struct hb_buffer_t
     bool ret = message_impl (font, fmt, ap);
     va_end (ap);
     return ret;
+#endif
   }
   HB_INTERNAL bool message_impl (hb_font_t *font, const char *fmt, va_list ap) HB_PRINTF_FUNC(3, 0);
 

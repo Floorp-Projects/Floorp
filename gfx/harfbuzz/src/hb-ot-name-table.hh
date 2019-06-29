@@ -63,7 +63,7 @@ struct NameRecord
 
 #ifndef HB_NO_OT_NAME_LANGUAGE_AAT
     if (p == 0)
-      return _hb_aat_language_get (face, l);
+      return face->table.ltag->get_language (l);
 #endif
 
 #endif

@@ -23,7 +23,16 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-#include "hb.h"
+#include "hb.hh"
+
+#include <cairo.h>
+
+#ifdef HB_NO_OPEN
+#define hb_blob_create_from_file(x)  hb_blob_get_empty ()
+#endif
+
+#if !defined(HB_NO_COLOR) && defined(CAIRO_HAS_SVG_SURFACE)
+
 #include "hb-ot.h"
 
 #include "hb-ft.h"
@@ -32,7 +41,6 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 
-#include <cairo.h>
 #include <cairo-ft.h>
 #include <cairo-svg.h>
 
@@ -133,7 +141,7 @@ layered_glyph_dump (hb_face_t *face, cairo_font_face_t *cairo_face, unsigned int
   unsigned glyph_count = hb_face_get_glyph_count (face);
   for (hb_codepoint_t gid = 0; gid < glyph_count; ++gid)
   {
-    unsigned int num_layers = hb_ot_color_glyph_get_layers (face, gid, 0, NULL, NULL);
+    unsigned int num_layers = hb_ot_color_glyph_get_layers (face, gid, 0, nullptr, nullptr);
     if (!num_layers)
       continue;
 
@@ -169,7 +177,7 @@ layered_glyph_dump (hb_face_t *face, cairo_font_face_t *cairo_face, unsigned int
       unsigned int palette_count = hb_ot_color_palette_get_count (face);
       for (unsigned int palette = 0; palette < palette_count; palette++)
       {
-	unsigned int num_colors = hb_ot_color_palette_get_colors (face, palette, 0, NULL, NULL);
+	unsigned int num_colors = hb_ot_color_palette_get_colors (face, palette, 0, nullptr, nullptr);
 	if (!num_colors)
 	  continue;
 
@@ -271,14 +279,14 @@ main (int argc, char **argv)
 
 
   FILE *font_name_file = fopen ("out/.dumped_font_name", "r");
-  if (font_name_file != NULL)
+  if (font_name_file != nullptr)
   {
     fprintf (stderr, "Purge or move ./out folder in order to run a new dump\n");
     exit (1);
   }
 
   font_name_file = fopen ("out/.dumped_font_name", "w");
-  if (font_name_file == NULL)
+  if (font_name_file == nullptr)
   {
     fprintf (stderr, "./out is not accessible as a folder, create it please\n");
     exit (1);
@@ -334,3 +342,7 @@ main (int argc, char **argv)
 
   return 0;
 }
+
+#else
+int main (int argc, char **argv) { return 0; }
+#endif
