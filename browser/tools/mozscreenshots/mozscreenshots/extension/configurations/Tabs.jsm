@@ -59,8 +59,7 @@ var Tabs = {
         browserWindow.gBrowser.selectTabAtIndex(5);
         hoverTab(browserWindow.gBrowser.tabs[2]);
         // also hover the new tab button
-        let newTabButton = browserWindow.document.getAnonymousElementByAttribute(browserWindow.
-                           gBrowser.tabContainer, "anonid", "tabs-newtab-button");
+        let newTabButton = browserWindow.gBrowser.tabContainer.newTabButton;
         hoverTab(newTabButton);
         browserWindow.gBrowser.tabs[browserWindow.gBrowser.tabs.length - 1].
                       setAttribute("beforehovered", true);
@@ -197,7 +196,7 @@ function closeAllButOneTab(url = "about:blank") {
   });
   if (gBrowser.selectedTab.pinned)
     gBrowser.unpinTab(gBrowser.selectedTab);
-  let newTabButton = browserWindow.document.getAnonymousElementByAttribute(browserWindow.gBrowser.tabContainer, "class", "tabs-newtab-button toolbarbutton-1");
+  let newTabButton = gBrowser.tabContainer.newTabButton;
   hoverTab(newTabButton, false);
 }
 

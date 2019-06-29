@@ -844,7 +844,7 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
 
 template <typename T, size_t N, class AP>
 MOZ_ALWAYS_INLINE Vector<T, N, AP>::Vector(AP aAP)
-    : AP(aAP),
+    : AP(std::move(aAP)),
       mLength(0),
       mTail(kInlineCapacity, 0)
 #ifdef DEBUG

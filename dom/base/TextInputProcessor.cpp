@@ -389,7 +389,7 @@ nsresult TextInputProcessor::BeginInputTransactionInternal(
 
   nsresult rv = NS_OK;
   if (aForTests) {
-    bool isAPZAware = StaticPrefs::TestEventsAsyncEnabled();
+    bool isAPZAware = StaticPrefs::test_events_async_enabled();
     rv = dispatcher->BeginTestInputTransaction(this, isAPZAware);
   } else {
     rv = dispatcher->BeginInputTransaction(this);

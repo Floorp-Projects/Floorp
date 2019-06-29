@@ -263,8 +263,8 @@ void LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp,
   }
 
   // Don't draw the diagnostic overlay if we want to snapshot the output.
-  mDrawDiagnostics = StaticPrefs::LayersDrawFPS() && !mTarget;
-  mUsingInvalidation = StaticPrefs::AdvancedLayersUseInvalidation();
+  mDrawDiagnostics = StaticPrefs::layers_acceleration_draw_fps() && !mTarget;
+  mUsingInvalidation = StaticPrefs::layers_mlgpu_enable_invalidation();
   mDebugFrameNumber++;
 
   AL_LOG("--- Compositing frame %d ---\n", mDebugFrameNumber);
@@ -551,7 +551,7 @@ void LayerManagerMLGPU::ClearCachedResources(Layer* aSubtree) {
 }
 
 void LayerManagerMLGPU::NotifyShadowTreeTransaction() {
-  if (StaticPrefs::LayersDrawFPS()) {
+  if (StaticPrefs::layers_acceleration_draw_fps()) {
     mDiagnostics->AddTxnFrame();
   }
 }

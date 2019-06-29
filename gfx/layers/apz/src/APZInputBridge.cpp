@@ -22,7 +22,7 @@ namespace layers {
 static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
   return aEvent.mMessage == eMouseMove || aEvent.mMessage == eMouseDown ||
          aEvent.mMessage == eMouseUp || aEvent.mMessage == eDragEnd ||
-         (StaticPrefs::TestEventsAsyncEnabled() &&
+         (StaticPrefs::test_events_async_enabled() &&
           aEvent.mMessage == eMouseHitTest);
 }
 

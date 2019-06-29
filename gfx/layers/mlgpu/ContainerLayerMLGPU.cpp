@@ -63,7 +63,7 @@ bool ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder) {
   mSurfaceCopyNeeded = surfaceCopyNeeded;
 
   gfx::IntRect viewport(gfx::IntPoint(0, 0), mTargetSize);
-  if (!mRenderTarget || !StaticPrefs::AdvancedLayersUseInvalidation() ||
+  if (!mRenderTarget || !StaticPrefs::layers_mlgpu_enable_invalidation() ||
       mInvalidateEntireSurface) {
     // Fine-grained invalidation is disabled, invalidate everything.
     mInvalidRect = viewport;
