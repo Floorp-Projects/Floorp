@@ -66,7 +66,7 @@ class Diagnostics {
   class Record {
    public:
     explicit Record(TimeStamp aStart = TimeStamp()) {
-      if (StaticPrefs::LayersDrawFPS()) {
+      if (StaticPrefs::layers_acceleration_draw_fps()) {
         mStart = aStart.IsNull() ? TimeStamp::Now() : aStart;
       }
     }

@@ -408,7 +408,6 @@ tabbox {
 }
 
 tabs {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs");
   -moz-box-orient: horizontal;
 }
 
@@ -588,7 +587,6 @@ page {
 
 wizard,
 wizard:root /* override :root from above */ {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard");
   -moz-box-orient: vertical;
   width: 40em;
   height: 30em;

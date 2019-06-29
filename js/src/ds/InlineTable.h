@@ -92,7 +92,7 @@ class InlineTable : private AllocPolicy {
   static const size_t SizeOfInlineEntries = sizeof(InlineEntry) * InlineEntries;
 
   explicit InlineTable(AllocPolicy a = AllocPolicy())
-      : AllocPolicy(a), inlNext_(0), inlCount_(0), table_(a) {}
+      : AllocPolicy(std::move(a)), inlNext_(0), inlCount_(0), table_(a) {}
 
   class Ptr {
     friend class InlineTable;
@@ -467,7 +467,7 @@ class InlineMap {
 
   static const size_t SizeOfInlineEntries = Impl::SizeOfInlineEntries;
 
-  explicit InlineMap(AllocPolicy a = AllocPolicy()) : impl_(a) {}
+  explicit InlineMap(AllocPolicy a = AllocPolicy()) : impl_(std::move(a)) {}
 
   size_t count() const { return impl_.count(); }
 
@@ -571,7 +571,7 @@ class InlineSet {
 
   static const size_t SizeOfInlineEntries = Impl::SizeOfInlineEntries;
 
-  explicit InlineSet(AllocPolicy a = AllocPolicy()) : impl_(a) {}
+  explicit InlineSet(AllocPolicy a = AllocPolicy()) : impl_(std::move(a)) {}
 
   size_t count() const { return impl_.count(); }
 

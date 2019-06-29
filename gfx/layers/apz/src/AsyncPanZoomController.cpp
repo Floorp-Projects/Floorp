@@ -1054,7 +1054,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   ScrollDirection direction = *scrollbarData.mDirection;
 
   bool isMouseAwayFromThumb = false;
-  if (int snapMultiplier = StaticPrefs::SliderSnapMultiplier()) {
+  if (int snapMultiplier = StaticPrefs::slider_snapMultiplier()) {
     // It's fine to ignore the async component of the thumb's transform,
     // because any async transform of the thumb will be in the direction of
     // scrolling, but here we're interested in the other direction.
@@ -1964,7 +1964,8 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   // EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction
   // and WheelTransaction::OverrideSystemScrollSpeed. Note that we do *not*
   // restrict this to the root content, see bug 1217715 for discussion on this.
-  if (StaticPrefs::MouseWheelHasRootScrollDeltaOverride() &&
+  if (StaticPrefs::
+          mousewheel_system_scroll_override_on_root_content_enabled() &&
       !aEvent.IsCustomizedByUserPrefs() &&
       aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
       aEvent.mAllowToOverrideSystemScrollSpeed) {
@@ -1976,9 +1977,9 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   // it might need extra acceleration. See WheelHandlingHelper.cpp.
   if (aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
       aEvent.mScrollSeriesNumber > 0) {
-    int32_t start = StaticPrefs::MouseWheelAccelerationStart();
+    int32_t start = StaticPrefs::mousewheel_acceleration_start();
     if (start >= 0 && aEvent.mScrollSeriesNumber >= uint32_t(start)) {
-      int32_t factor = StaticPrefs::MouseWheelAccelerationFactor();
+      int32_t factor = StaticPrefs::mousewheel_acceleration_factor();
       if (factor > 0) {
         delta.x = ComputeAcceleratedWheelDelta(
             delta.x, aEvent.mScrollSeriesNumber, factor);
@@ -2112,7 +2113,8 @@ CSSPoint AsyncPanZoomController::GetKeyboardDestination(
 
   switch (aAction.mType) {
     case KeyboardScrollAction::eScrollCharacter: {
-      int32_t scrollDistance = StaticPrefs::ToolkitHorizontalScrollDistance();
+      int32_t scrollDistance =
+          StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
 
       if (aAction.mForward) {
         scrollDestination.x += scrollDistance * lineScrollSize.width;
@@ -2122,7 +2124,8 @@ CSSPoint AsyncPanZoomController::GetKeyboardDestination(
       break;
     }
     case KeyboardScrollAction::eScrollLine: {
-      int32_t scrollDistance = StaticPrefs::ToolkitVerticalScrollDistance();
+      int32_t scrollDistance =
+          StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
 
       if (aAction.mForward) {
         scrollDestination.y += scrollDistance * lineScrollSize.height;
@@ -2342,7 +2345,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
   } else if ((delta.x || delta.y) && !CanScrollWithWheel(delta)) {
     // We can't scroll this apz anymore, so we simply drop the event.
     if (mInputQueue->GetActiveWheelTransaction() &&
-        StaticPrefs::MouseScrollTestingEnabled()) {
+        StaticPrefs::test_mousescroll()) {
       if (RefPtr<GeckoContentController> controller =
               GetGeckoContentController()) {
         controller->NotifyMozMouseScrollEvent(
@@ -3459,8 +3462,8 @@ void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
 
     StartAnimation(new SmoothScrollAnimation(
         *this, initialPosition, initialVelocity, destination,
-        StaticPrefs::ScrollBehaviorSpringConstant(),
-        StaticPrefs::ScrollBehaviorDampingRatio()));
+        StaticPrefs::layout_css_scroll_behavior_spring_constant(),
+        StaticPrefs::layout_css_scroll_behavior_damping_ratio()));
   }
 }
 
@@ -5205,7 +5208,7 @@ void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics() {
           ? static_cast<FrameMetrics*>(mSharedFrameMetricsBuffer->memory())
           : nullptr;
 
-  if (frame && mSharedLock && StaticPrefs::ProgressivePaint()) {
+  if (frame && mSharedLock && StaticPrefs::layers_progressive_paint()) {
     mSharedLock->Lock();
     *frame = Metrics();
     mSharedLock->Unlock();
@@ -5219,7 +5222,7 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
   // we are using progressive tile painting, and we have a
   // controller to pass the shared memory back to the content process/thread.
   if (!mSharedFrameMetricsBuffer && mMetricsSharingController &&
-      StaticPrefs::ProgressivePaint()) {
+      StaticPrefs::layers_progressive_paint()) {
     // Create shared memory and initialize it with the current FrameMetrics
     // value
     mSharedFrameMetricsBuffer = new ipc::SharedMemoryBasic;

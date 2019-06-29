@@ -95,6 +95,7 @@
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabsintitlebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser-tab.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser-tabs.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/autocomplete-popup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/searchbar.js", this);
 
@@ -723,11 +724,19 @@
         <hbox flex="1" align="end" class="toolbar-items">
           <hbox id="TabsToolbar-customization-target" flex="1">
             <tabs id="tabbrowser-tabs"
+                  is="tabbrowser-tabs"
                   flex="1"
                   setfocus="false"
                   tooltip="tabbrowser-tab-tooltip"
                   stopwatchid="FX_TAB_CLICK_MS">
-              <tab is="tabbrowser-tab" class="tabbrowser-tab" selected="true" visuallyselected="true" fadein="true"/>
+              <hbox class="tab-drop-indicator-box">
+                <image class="tab-drop-indicator" hidden="true"/>
+              </hbox>
+              <arrowscrollbox orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true" class="tabbrowser-arrowscrollbox" scrolledtostart="true" scrolledtoend="true">
+                <tab is="tabbrowser-tab" class="tabbrowser-tab" selected="true" visuallyselected="true" fadein="true"/>
+                <toolbarbutton class="tabs-newtab-button toolbarbutton-1" command="cmd_newNavigatorTab" onclick="checkForMiddleClick(this, event);"/>
+                <spacer class="closing-tabs-spacer" style="width: 0;"/>
+              </arrowscrollbox>
             </tabs>
 
             <toolbarbutton id="new-tab-button"
@@ -1338,35 +1347,10 @@
 #include ../../components/customizableui/content/customizeMode.inc.xul
   ]]></box>
 
-  <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true" renderroot="content">
-    <html:div class="pointerlockfswarning-domain-text">
-      &fullscreenWarning.beforeDomain.label;
-      <html:span class="pointerlockfswarning-domain"/>
-      &fullscreenWarning.afterDomain.label;
-    </html:div>
-    <html:div class="pointerlockfswarning-generic-text">
-      &fullscreenWarning.generic.label;
-    </html:div>
-    <html:button id="fullscreen-exit-button"
-                 onclick="FullScreen.exitDomFullScreen();">
-#ifdef XP_MACOSX
-            &exitDOMFullscreenMac.button;
-#else
-            &exitDOMFullscreen.button;
-#endif
-    </html:button>
-  </html:div>
-
-  <html:div id="pointerlock-warning" class="pointerlockfswarning" hidden="true" renderroot="content">
-    <html:div class="pointerlockfswarning-domain-text">
-      &pointerlockWarning.beforeDomain.label;
-      <html:span class="pointerlockfswarning-domain"/>
-      &pointerlockWarning.afterDomain.label;
-    </html:div>
-    <html:div class="pointerlockfswarning-generic-text">
-      &pointerlockWarning.generic.label;
-    </html:div>
-  </html:div>
+# Everything that needs to straddle the line between chrome and content, without being
+# its own widget-level window, needs to go in here, and set the renderroot="popover"
+# attribute, or it will fail to render properly in WebRender.
+#include popovers.inc
 
   <vbox id="browser-bottombox" layer="true" renderroot="content">
     <!-- gNotificationBox will be added here lazily. -->

@@ -122,7 +122,7 @@ void CompositorD3D11::SetVertexBuffer(ID3D11Buffer* aBuffer) {
 }
 
 bool CompositorD3D11::SupportsLayerGeometry() const {
-  return StaticPrefs::D3D11LayerGeometry();
+  return StaticPrefs::layers_geometry_d3d11_enabled();
 }
 
 bool CompositorD3D11::UpdateDynamicVertexBuffer(
@@ -1050,7 +1050,7 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
       mContext->PSSetShaderResources(TexSlot::Y, 3, srViews);
     } break;
     case EffectTypes::COMPONENT_ALPHA: {
-      MOZ_ASSERT(StaticPrefs::ComponentAlphaEnabled());
+      MOZ_ASSERT(StaticPrefs::layers_componentalpha_enabled());
       MOZ_ASSERT(mAttachments->mComponentBlendState);
       EffectComponentAlpha* effectComponentAlpha =
           static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
@@ -1202,7 +1202,7 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  if (StaticPrefs::LayersDrawFPS()) {
+  if (StaticPrefs::layers_acceleration_draw_fps()) {
     uint32_t pixelsPerFrame = 0;
     for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
       pixelsPerFrame += iter.Get().Width() * iter.Get().Height();
