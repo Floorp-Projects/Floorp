@@ -34,7 +34,7 @@ class RemoteGTests(object):
     def __init__(self):
         self.device = None
 
-    def build_environment(self, shuffle, test_filter):
+    def build_environment(self, shuffle, test_filter, enable_webrender):
         """
            Create and return a dictionary of all the appropriate env variables
            and values.
@@ -54,11 +54,15 @@ class RemoteGTests(object):
             env["GTEST_SHUFFLE"] = "True"
         if test_filter:
             env["GTEST_FILTER"] = test_filter
+        if enable_webrender:
+            env["MOZ_WEBRENDER"] = "1"
+        else:
+            env["MOZ_WEBRENDER"] = "0"
 
         return env
 
     def run_gtest(self, test_dir, shuffle, test_filter, package, adb_path, device_serial,
-                  remote_test_root, libxul_path, symbols_path):
+                  remote_test_root, libxul_path, symbols_path, enable_webrender):
         """
            Launch the test app, run gtest, collect test results and wait for completion.
            Return False if a crash or other failure is detected, else True.
@@ -94,7 +98,7 @@ class RemoteGTests(object):
             if not os.path.isdir(f):
                 self.device.push(f, self.remote_profile)
 
-        env = self.build_environment(shuffle, test_filter)
+        env = self.build_environment(shuffle, test_filter, enable_webrender)
         args = ["-unittest", "--gtest_death_test_style=threadsafe",
                 "-profile %s" % self.remote_profile]
         if 'geckoview' in self.package:
@@ -349,6 +353,11 @@ class remoteGtestOptions(OptionParser):
         self.add_option("--tests-path",
                         default=None,
                         help="Path to gtest directory containing test support files.")
+        self.add_option("--enable-webrender",
+                        action="store_true",
+                        dest="enable_webrender",
+                        default=False,
+                        help="Enable the WebRender compositor in Gecko.")
 
 
 def update_mozinfo():
@@ -383,7 +392,7 @@ def main():
                                   options.shuffle, test_filter, options.package,
                                   options.adb_path, options.device_serial,
                                   options.remote_test_root, options.libxul_path,
-                                  options.symbols_path)
+                                  options.symbols_path, options.enable_webrender)
     except KeyboardInterrupt:
         log.info("gtest | Received keyboard interrupt")
     except Exception as e:
