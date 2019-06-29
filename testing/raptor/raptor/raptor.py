@@ -84,7 +84,7 @@ class Raptor(object):
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
-                 interrupt_handler=None, e10s=True, **kwargs):
+                 interrupt_handler=None, e10s=True, enable_webrender=False, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -108,6 +108,7 @@ class Raptor(object):
             'is_release_build': is_release_build,
             'enable_control_server_wait': memory_test,
             'e10s': e10s,
+            'enable_webrender': enable_webrender,
         }
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
@@ -500,6 +501,12 @@ class RaptorDesktop(Raptor):
         self.runner = runner_cls(
             self.config['binary'], profile=self.profile, process_args=process_args,
             symbols_path=self.config['symbols_path'])
+
+        if self.config['enable_webrender']:
+            self.runner.env['MOZ_WEBRENDER'] = '1'
+            self.runner.env['MOZ_ACCELERATED'] = '1'
+        else:
+            self.runner.env['MOZ_WEBRENDER'] = '0'
 
     def launch_desktop_browser(self, test):
         raise NotImplementedError
@@ -956,7 +963,8 @@ class RaptorAndroid(Raptor):
 
         extra_args = ["-profile", self.remote_profile,
                       "--es", "env0", "LOG_VERBOSE=1",
-                      "--es", "env1", "R_LOG_LEVEL=6"]
+                      "--es", "env1", "R_LOG_LEVEL=6",
+                      "--es", "env2", "MOZ_WEBRENDER=%d" % self.config['enable_webrender']]
 
         try:
             # make sure the android app is not already running
@@ -1258,6 +1266,7 @@ def main(args=sys.argv[1:]):
                           activity=args.activity,
                           intent=args.intent,
                           interrupt_handler=SignalHandler(),
+                          enable_webrender=args.enable_webrender,
                           )
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
