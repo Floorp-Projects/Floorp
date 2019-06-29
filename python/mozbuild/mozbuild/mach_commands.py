@@ -621,6 +621,9 @@ class GTestCommands(MachCommandBase):
     @CommandArgument('--libxul',
                      dest='libxul_path',
                      help='(Android only) Path to gtest libxul.so.')
+    @CommandArgument('--enable-webrender', action='store_true',
+                     default=False, dest='enable_webrender',
+                     help='Enable the WebRender compositor in Gecko.')
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
                      help='Enable the debugger. Not specifying a --debugger option will result in '
@@ -633,7 +636,7 @@ class GTestCommands(MachCommandBase):
                      'split as the Bourne shell would.')
     def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser,
               package, adb_path, device_serial, remote_test_root, libxul_path,
-              debug, debugger, debugger_args):
+              enable_webrender, debug, debugger, debugger_args):
 
         # We lazy build gtest because it's slow to link
         try:
@@ -670,7 +673,8 @@ class GTestCommands(MachCommandBase):
                 print("--debug options are not supported on Android and will be ignored")
             return self.android_gtest(cwd, shuffle, gtest_filter,
                                       package, adb_path, device_serial,
-                                      remote_test_root, libxul_path)
+                                      remote_test_root, libxul_path,
+                                      enable_webrender)
 
         if package or adb_path or device_serial or remote_test_root or libxul_path:
             print("One or more Android-only options will be ignored")
@@ -707,6 +711,12 @@ class GTestCommands(MachCommandBase):
 
         if tbpl_parser:
             gtest_env[b"MOZ_TBPL_PARSER"] = b"True"
+
+        if enable_webrender:
+            gtest_env[b"MOZ_WEBRENDER"] = b"1"
+            gtest_env[b"MOZ_ACCELERATED"] = b"1"
+        else:
+            gtest_env[b"MOZ_WEBRENDER"] = b"0"
 
         if jobs == 1:
             return self.run_process(args=args,
@@ -749,7 +759,8 @@ class GTestCommands(MachCommandBase):
         return exit_code
 
     def android_gtest(self, test_dir, shuffle, gtest_filter,
-                      package, adb_path, device_serial, remote_test_root, libxul_path):
+                      package, adb_path, device_serial, remote_test_root, libxul_path,
+                      enable_webrender):
         # setup logging for mozrunner
         from mozlog.commandline import setup_logging
         format_args = {'level': self._mach_context.settings['test']['level']}
@@ -774,7 +785,7 @@ class GTestCommands(MachCommandBase):
         import remotegtests
         tester = remotegtests.RemoteGTests()
         tester.run_gtest(test_dir, shuffle, gtest_filter, package, adb_path, device_serial,
-                         remote_test_root, libxul_path, None)
+                         remote_test_root, libxul_path, None, enable_webrender)
         tester.cleanup()
 
         return 0
