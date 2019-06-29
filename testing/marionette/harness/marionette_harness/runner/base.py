@@ -361,6 +361,11 @@ class BaseMarionetteArguments(ArgumentParser):
                           dest='e10s',
                           default=True,
                           help='Disable e10s when running marionette tests.')
+        self.add_argument('--enable-webrender',
+                          action='store_true',
+                          dest='enable_webrender',
+                          default=False,
+                          help='Enable the WebRender compositor in Gecko.')
         self.add_argument("-z", "--headless",
                           action="store_true",
                           dest="headless",
@@ -520,7 +525,8 @@ class BaseMarionetteTestRunner(object):
                  socket_timeout=None,
                  startup_timeout=None,
                  addons=None, workspace=None,
-                 verbose=0, e10s=True, emulator=False, headless=False, **kwargs):
+                 verbose=0, e10s=True, emulator=False, headless=False,
+                 enable_webrender=False, **kwargs):
         self._appName = None
         self._capabilities = None
         self._filename_pattern = None
@@ -562,6 +568,7 @@ class BaseMarionetteTestRunner(object):
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
         self.headless = headless
+        self.enable_webrender = enable_webrender
 
         # self.e10s stores the desired configuration, whereas
         # self._e10s_from_browser is the cached value from querying e10s
@@ -724,6 +731,7 @@ class BaseMarionetteTestRunner(object):
             'startup_timeout': self.startup_timeout,
             'verbose': self.verbose,
             'symbols_path': self.symbols_path,
+            'enable_webrender': self.enable_webrender,
         }
         if self.bin or self.emulator:
             kwargs.update({
