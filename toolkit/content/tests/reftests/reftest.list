@@ -1,4 +1,4 @@
-!= textbox-multiline-default-value.xul textbox-multiline-empty.xul
+!= chrome://reftest/content/toolkit/reftests/textbox-multiline-default-value.xul chrome://reftest/content/toolkit/reftests/textbox-multiline-empty.xul
 == videocontrols-dynamically-add-cc.html videocontrols-dynamically-add-cc-ref.html
 == audio-with-bogus-url.html audio-with-bogus-url-ref.html
 == audio-dynamically-change-small-width.html audio-dynamically-change-small-width-ref.html

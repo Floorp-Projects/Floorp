@@ -29,9 +29,9 @@ fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 
 != 427122-1.html 427122-1-ref.html
 
-== 470711-1.xul 470711-1-ref.xul
+== chrome://reftest/content/native-theme/470711-1.xul chrome://reftest/content/native-theme/470711-1-ref.xul
 
-== 482955-1.xul 482955-1-ref.xul
+== chrome://reftest/content/native-theme/482955-1.xul chrome://reftest/content/native-theme/482955-1-ref.xul
 
 == 492155-1.html about:blank
 == 492155-2.html about:blank
@@ -45,25 +45,25 @@ fails-if(Android&&!asyncPan) != 492155-4.html about:blank
 
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
-skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
-skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
+skip-if(!cocoaWidget) == chrome://reftest/content/native-theme/menulist-mirrored-when-rtl.xul chrome://reftest/content/native-theme/menulist-mirrored-when-rtl-ref.xul
+skip-if(!cocoaWidget) == chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl.xul chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl-ref.xul
 skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 
-!= resizer-bottomend.xul blank-window.xul
-random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086
-!= resizer-bottomend.xul resizer-bottomend-rtl.xul
+!= chrome://reftest/content/native-theme/resizer-bottomend.xul chrome://reftest/content/native-theme/blank-window.xul
+random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomend.xul chrome://reftest/content/native-theme/resizer-bottomright.xul # bug 581086
+!= chrome://reftest/content/native-theme/resizer-bottomend.xul chrome://reftest/content/native-theme/resizer-bottomend-rtl.xul
 # Disabled on Linux (bug 519152), random on Windows (bug 581086)
-skip-if(gtkWidget) != resizer-bottomend-rtl.xul blank-window.xul
-skip-if(gtkWidget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
-skip-if(gtkWidget) == resizer-bottomleft-rtl.xul resizer-bottomleft.xul
-skip-if(gtkWidget) == resizer-bottomright-rtl.xul resizer-bottomright.xul
+skip-if(gtkWidget) != chrome://reftest/content/native-theme/resizer-bottomend-rtl.xul chrome://reftest/content/native-theme/blank-window.xul
+skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomend-rtl.xul chrome://reftest/content/native-theme/resizer-bottomend-flipped.xul
+skip-if(gtkWidget) == chrome://reftest/content/native-theme/resizer-bottomleft-rtl.xul chrome://reftest/content/native-theme/resizer-bottomleft.xul
+skip-if(gtkWidget) == chrome://reftest/content/native-theme/resizer-bottomright-rtl.xul chrome://reftest/content/native-theme/resizer-bottomright.xul
 
-!= resizer-bottomstart.xul blank-window.xul
-random-if(d2d) == resizer-bottomstart.xul resizer-bottomleft.xul
-random-if(d2d) == resizer-bottomstart.xul resizer-left.xul
-!= resizer-bottomstart.xul resizer-bottomstart-rtl.xul
-skip-if(gtkWidget) != resizer-bottomstart-rtl.xul blank-window.xul
-skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul
+!= chrome://reftest/content/native-theme/resizer-bottomstart.xul chrome://reftest/content/native-theme/blank-window.xul
+random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart.xul chrome://reftest/content/native-theme/resizer-bottomleft.xul
+random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart.xul chrome://reftest/content/native-theme/resizer-left.xul
+!= chrome://reftest/content/native-theme/resizer-bottomstart.xul chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xul
+skip-if(gtkWidget) != chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xul chrome://reftest/content/native-theme/blank-window.xul
+skip-if(gtkWidget) random-if(d2d) == chrome://reftest/content/native-theme/resizer-bottomstart-rtl.xul chrome://reftest/content/native-theme/resizer-bottomend.xul
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
@@ -81,4 +81,4 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
 fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow-small.html progress-nobar.html
 
-== 676387-1.xul 676387-1-ref.xul
+== chrome://reftest/content/native-theme/676387-1.xul chrome://reftest/content/native-theme/676387-1-ref.xul
