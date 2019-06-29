@@ -97,8 +97,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                 self.remote_bin_dir, os.path.basename(local_file))
             self.device.push(local_file, remote_file)
 
-    def build_environment(self):
-        env = self.build_core_environment()
+    def build_environment(self, enable_webrender=False):
+        env = self.build_core_environment({}, enable_webrender)
         env['LD_LIBRARY_PATH'] = self.remote_bin_dir
         env["TMPDIR"] = self.remote_tmp_dir
         env["HOME"] = self.remote_home_dir
@@ -230,7 +230,8 @@ def run_test_harness(options, args):
                                                      mozinfo.info,
                                                      options.manifest_path)
     tester = RemoteCPPUnitTests(options, [item[0] for item in progs])
-    result = tester.run_tests(progs, options.xre_path, options.symbols_path)
+    result = tester.run_tests(progs, options.xre_path, options.symbols_path,
+                              enable_webrender=options.enable_webrender)
     return result
 
 
