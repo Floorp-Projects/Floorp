@@ -66,7 +66,7 @@ info = {'os': unknown,
         'os_version': unknown,
         'bits': unknown,
         'has_sandbox': unknown,
-        'webrender': bool(os.environ.get("MOZ_WEBRENDER", False)),
+        'webrender': False,
         'automation': bool(os.environ.get("MOZ_AUTOMATION", False)),
         }
 (system, node, release, version, machine, processor) = platform.uname()
