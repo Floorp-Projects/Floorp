@@ -199,7 +199,11 @@ class Classifier {
   // Used by worker thread and update thread to abort current operation.
   bool ShouldAbort() const;
 
+  // Add built-in entries for testing.
   nsresult AddMozEntries(nsTArray<nsCString>& aTables);
+
+  // Remove test files if exist
+  nsresult ClearLegacyFiles();
 
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;

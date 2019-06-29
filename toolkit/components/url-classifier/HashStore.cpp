@@ -253,6 +253,7 @@ nsresult HashStore::Reset() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   mFileSize = 0;
+  mInputStream = nullptr;
 
   return NS_OK;
 }
@@ -293,7 +294,7 @@ nsresult HashStore::CheckChecksum(uint32_t aFileSize) {
   return NS_OK;
 }
 
-nsresult HashStore::Open() {
+nsresult HashStore::Open(uint32_t aVersion) {
   nsCOMPtr<nsIFile> storeFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -327,7 +328,7 @@ nsresult HashStore::Open() {
   rv = ReadHeader();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SanityCheck();
+  rv = SanityCheck(aVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -350,10 +351,13 @@ nsresult HashStore::ReadHeader() {
   return NS_OK;
 }
 
-nsresult HashStore::SanityCheck() const {
-  if (mHeader.magic != STORE_MAGIC || mHeader.version != CURRENT_VERSION) {
+nsresult HashStore::SanityCheck(uint32_t aVersion) const {
+  const uint32_t VER = aVersion == 0 ? CURRENT_VERSION : aVersion;
+  if (mHeader.magic != STORE_MAGIC || mHeader.version != VER) {
     NS_WARNING("Unexpected header data in the store.");
-    return NS_ERROR_FAILURE;
+    // Version mismatch is also considered file corrupted,
+    // We need this error code to know if we should remove the file.
+    return NS_ERROR_FILE_CORRUPTED;
   }
 
   return NS_OK;
@@ -935,6 +939,34 @@ nsresult HashStore::WriteFile() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = safeOut->Finish();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult HashStore::ReadCompletionsLegacyV3(AddCompleteArray& aCompletes) {
+  if (mHeader.version != 3) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIFile> storeFile;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(STORE_SUFFIX));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t offset = mFileSize -
+                    sizeof(struct AddComplete) * mHeader.numAddCompletes -
+                    sizeof(struct SubComplete) * mHeader.numSubCompletes -
+                    nsCheckSummedOutputStream::CHECKSUM_SIZE;
+
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
+
+  rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, offset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ReadTArray(mInputStream, &aCompletes, mHeader.numAddCompletes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
