@@ -2594,6 +2594,7 @@ toolbar#nav-bar {
                 'dom.serviceWorkers.parent_intercept', False),
             "socketprocess_e10s": self.extraPrefs.get(
                 'network.process.enabled', False),
+            "webrender": options.enable_webrender,
         })
 
         self.setTestRoot(options)

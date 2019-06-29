@@ -167,3 +167,10 @@ topsrcdir
    The path to the source directory the build came from.
 
    Always defined.
+
+webrender
+   Whether or not WebRender is enabled as the Gecko compositor.
+
+   Values are ``true`` and ``false``.
+
+   Always defined.
