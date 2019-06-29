@@ -170,6 +170,10 @@ class JUnitTestRunner(MochitestDesktop):
         env["R_LOG_VERBOSE"] = "1"
         env["R_LOG_LEVEL"] = "6"
         env["R_LOG_DESTINATION"] = "stderr"
+        if self.options.enable_webrender:
+            env["MOZ_WEBRENDER"] = '1'
+        else:
+            env["MOZ_WEBRENDER"] = '0'
         for (env_count, (env_key, env_val)) in enumerate(env.iteritems()):
             cmd = cmd + " -e env%d %s=%s" % (env_count, env_key, env_val)
         # runner
@@ -425,6 +429,11 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           dest="sslPort",
                           default=DEFAULT_PORTS['https'],
                           help="ssl port of the remote web server.")
+        self.add_argument("--enable-webrender",
+                          action="store_true",
+                          dest="enable_webrender",
+                          default=False,
+                          help="Enable the WebRender compositor in Gecko.")
         # Remaining arguments are test filters.
         self.add_argument("test_filters",
                           nargs="*",
