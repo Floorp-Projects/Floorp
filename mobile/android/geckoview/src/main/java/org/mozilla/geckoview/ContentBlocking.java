@@ -432,7 +432,7 @@ public class ContentBlocking {
     }
 
 
-    private static final String TEST = "test-track-simple";
+    private static final String TEST = "moztest-track-simple";
     private static final String AD = "ads-track-digest256";
     private static final String ANALYTIC = "analytics-track-digest256";
     private static final String SOCIAL = "social-track-digest256";

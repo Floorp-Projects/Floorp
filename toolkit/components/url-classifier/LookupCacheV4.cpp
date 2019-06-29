@@ -570,5 +570,7 @@ bool VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) const {
   return pick != nullptr;
 }
 
+nsresult LookupCacheV4::LoadMozEntries() { return NS_ERROR_NOT_IMPLEMENTED; }
+
 }  // namespace safebrowsing
 }  // namespace mozilla

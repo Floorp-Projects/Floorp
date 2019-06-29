@@ -306,9 +306,12 @@ static const struct {
     {"goog-passwordwhite-proto", CSD_WHITELIST},  // 8
 
     // For testing purpose.
-    {"test-phish-proto", SOCIAL_ENGINEERING_PUBLIC},  // 2
-    {"test-unwanted-proto", UNWANTED_SOFTWARE},       // 3
-    {"test-passwordwhite-proto", CSD_WHITELIST},      // 8
+    {"moztest-phish-proto", SOCIAL_ENGINEERING_PUBLIC},  // 2
+    {"test-phish-proto", SOCIAL_ENGINEERING_PUBLIC},     // 2
+    {"moztest-unwanted-proto", UNWANTED_SOFTWARE},       // 3
+    {"test-unwanted-proto", UNWANTED_SOFTWARE},          // 3
+    {"moztest-passwordwhite-proto", CSD_WHITELIST},      // 8
+    {"test-passwordwhite-proto", CSD_WHITELIST},         // 8
 };
 
 NS_IMETHODIMP
@@ -344,7 +347,8 @@ nsUrlClassifierUtils::GetProvider(const nsACString& aTableName,
                                   nsACString& aProvider) {
   MutexAutoLock lock(mProviderDictLock);
   nsCString* provider = nullptr;
-  if (StringBeginsWith(aTableName, NS_LITERAL_CSTRING("test"))) {
+
+  if (IsTestTable(aTableName)) {
     aProvider = NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME);
   } else if (mProviderDict.Get(aTableName, &provider)) {
     aProvider = provider ? *provider : EmptyCString();
@@ -1086,4 +1090,19 @@ bool nsUrlClassifierUtils::SpecialEncode(const nsACString& url,
 
 bool nsUrlClassifierUtils::ShouldURLEscape(const unsigned char c) const {
   return c <= 32 || c == '%' || c >= 127;
+}
+
+// moztest- tables are built-in created in LookupCache, they contain hardcoded
+// url entries in it. moztest tables don't support updates.
+// static
+bool nsUrlClassifierUtils::IsMozTestTable(const nsACString& aTableName) {
+  return StringBeginsWith(aTableName, NS_LITERAL_CSTRING("moztest-"));
+}
+
+// test- tables are used by testcases and can add custom test entries
+// through update API.
+// static
+bool nsUrlClassifierUtils::IsTestTable(const nsACString& aTableName) {
+  return IsMozTestTable(aTableName) ||
+         StringBeginsWith(aTableName, NS_LITERAL_CSTRING("test"));
 }

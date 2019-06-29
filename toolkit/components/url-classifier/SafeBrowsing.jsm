@@ -172,7 +172,6 @@ var SafeBrowsing = {
     Services.prefs.addObserver("plugins.flashBlock.enabled", this);
 
     this.readPrefs();
-    this.addMozEntries();
 
     this.controlUpdateChecking();
     this.initialized = true;
@@ -424,88 +423,4 @@ var SafeBrowsing = {
 
     listManager.maybeToggleUpdateChecking();
   },
-
-
-  addMozEntries() {
-    // Add test entries to the DB.
-    // XXX bug 779008 - this could be done by DB itself?
-    const phishURL    = "itisatrap.org/firefox/its-a-trap.html";
-    const malwareURL  = "itisatrap.org/firefox/its-an-attack.html";
-    const unwantedURL = "itisatrap.org/firefox/unwanted.html";
-    const harmfulURL  = "itisatrap.org/firefox/harmful.html";
-    const trackerURLs = [
-      "trackertest.org/",
-      "itisatracker.org/",
-    ];
-    const whitelistURL  = "itisatrap.org/?resource=itisatracker.org";
-    const blockedURL    = "itisatrap.org/firefox/blocked.html";
-
-    let update = "n:1000\ni:test-malware-simple\nad:1\n" +
-                 "a:1:32:" + malwareURL.length + "\n" +
-                 malwareURL + "\n";
-    update += "n:1000\ni:test-phish-simple\nad:1\n" +
-              "a:1:32:" + phishURL.length + "\n" +
-              phishURL + "\n";
-    update += "n:1000\ni:test-unwanted-simple\nad:1\n" +
-              "a:1:32:" + unwantedURL.length + "\n" +
-              unwantedURL + "\n";
-    update += "n:1000\ni:test-harmful-simple\nad:1\n" +
-              "a:1:32:" + harmfulURL.length + "\n" +
-              harmfulURL + "\n";
-    update += "n:1000\ni:test-track-simple\n" +
-              "ad:" + trackerURLs.length + "\n";
-    trackerURLs.forEach((trackerURL, i) => {
-      update += "a:" + (i + 1) + ":32:" + trackerURL.length + "\n" +
-                trackerURL + "\n";
-    });
-    update += "n:1000\ni:test-trackwhite-simple\nad:1\n" +
-              "a:1:32:" + whitelistURL.length + "\n" +
-              whitelistURL;
-    update += "n:1000\ni:test-block-simple\nad:1\n" +
-              "a:1:32:" + blockedURL.length + "\n" +
-              blockedURL;
-    log("addMozEntries:", update);
-
-    let db = Cc["@mozilla.org/url-classifier/dbservice;1"].
-             getService(Ci.nsIUrlClassifierDBService);
-
-    // nsIUrlClassifierUpdateObserver
-    let dummyListener = {
-      updateUrlRequested() { },
-      streamFinished() { },
-      // We notify observers when we're done in order to be able to make perf
-      // test results more consistent
-      updateError() {
-        Services.obs.notifyObservers(db, "mozentries-update-finished", "error");
-      },
-      updateSuccess() {
-        Services.obs.notifyObservers(db, "mozentries-update-finished", "success");
-      },
-    };
-
-    try {
-      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-harmful-simple,test-track-simple,test-trackwhite-simple,test-block-simple";
-      db.beginUpdate(dummyListener, tables, "");
-      db.beginStream("", "");
-      db.updateStream(update);
-      db.finishStream();
-      db.finishUpdate();
-    } catch (ex) {
-      // beginUpdate will throw harmlessly if there's an existing update in progress, ignore failures.
-      log("addMozEntries failed!", ex);
-      Services.obs.notifyObservers(db, "mozentries-update-finished", "exception");
-    }
-  },
-
-  addMozEntriesFinishedPromise: new Promise(resolve => {
-    let finished = (subject, topic, data) => {
-      Services.obs.removeObserver(finished, "mozentries-update-finished");
-      if (data == "error") {
-        Cu.reportError("addMozEntries failed to update the db!");
-      }
-      resolve();
-    };
-    Services.obs.addObserver(finished, "mozentries-update-finished");
-  }),
-
 };

@@ -67,7 +67,7 @@ for (let list of lists) {
     continue;
 
   // For lists having a provider, it should have a correct gethash url
-  // For lists without a provider, for example, test-malware-simple, it should not
+  // For lists without a provider, for example, moztest-malware-simple, it should not
   // have a gethash url.
   var url = listmanager.getGethashUrl(list);
   var index = listsWithProvider.indexOf(list);

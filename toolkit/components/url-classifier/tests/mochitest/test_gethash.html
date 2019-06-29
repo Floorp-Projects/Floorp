@@ -107,6 +107,7 @@ SimpleTest.waitForExplicitFinish();
 // directly and bypass classifier check
 SpecialPowers.pushPrefEnv({"set": [
   ["browser.safebrowsing.malware.enabled", true],
+  ["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
   ["network.predictor.enabled", false],
   ["urlclassifier.gethash.timeout_ms", 30000],
 ]}, runTest);

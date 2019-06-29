@@ -199,6 +199,8 @@ class Classifier {
   // Used by worker thread and update thread to abort current operation.
   bool ShouldAbort() const;
 
+  nsresult AddMozEntries(nsTArray<nsCString>& aTables);
+
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;
   // Main directory where to store the databases.

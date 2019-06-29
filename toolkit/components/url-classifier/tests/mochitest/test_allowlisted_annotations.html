@@ -33,7 +33,7 @@ function clearPermissions() {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set": [["urlclassifier.trackingTable", "test-track-simple"],
+  {"set": [["urlclassifier.trackingTable", "moztest-track-simple"],
            ["privacy.trackingprotection.enabled", true],
            ["channelclassifier.allowlist_example", true]]},
   test);

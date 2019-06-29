@@ -85,4 +85,10 @@ interface nsIUrlListManager : nsISupports
      * are not in back-off mode.
      */
     uint64_t getBackOffTime(in ACString provider);
+
+    /**
+     * Return true if someone registers a table, this is used by testcase
+     * to figure out it SafeBrowsing.jsm is initialized.
+     */
+    boolean isRegistered();
 };

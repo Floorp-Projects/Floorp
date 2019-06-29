@@ -12,7 +12,7 @@ from marionette_harness import MarionetteTestCase
 class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
 
     v2_file_extensions = [
-        'pset',
+        'vlpset',
         'sbstore',
     ]
 
@@ -56,6 +56,10 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
 
         for pref_name in self.prefs_download_lists:
             base_names = self.marionette.get_pref(pref_name).split(',')
+
+            # moztest- lists are not saved to disk
+            base_names = filter(lambda x: not x.startswith('moztest-'), base_names)
+
             for ext in my_file_extensions:
                 files.extend(['{name}.{ext}'.format(name=f, ext=ext)
                               for f in base_names if f and f.endswith('-proto') == is_v4])
