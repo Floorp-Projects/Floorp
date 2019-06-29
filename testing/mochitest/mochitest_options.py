@@ -600,6 +600,12 @@ class MochitestArguments(ArgumentContainer):
           "default": 3600,
           "help": "Maximum time, in seconds, to run in --verify mode.",
           }],
+        [["--enable-webrender"],
+         {"action": "store_true",
+          "dest": "enable_webrender",
+          "default": False,
+          "help": "Enable the WebRender compositor in Gecko.",
+          }],
     ]
 
     defaults = {
