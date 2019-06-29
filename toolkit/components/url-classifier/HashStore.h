@@ -201,7 +201,12 @@ class HashStore {
 
   const nsCString& TableName() const { return mTableName; }
 
-  nsresult Open();
+  // Version is set to 0 by default, it is only used when we want to open
+  // a specific version of HashStore. Note that the intention of aVersion
+  // is only to pass SanityCheck, reading data from older version should
+  // be handled additionally.
+  nsresult Open(uint32_t aVersion = 0);
+
   // Add Prefixes/Completes are stored partly in the PrefixSet (contains the
   // Prefix data organized for fast lookup/low RAM usage) and partly in the
   // HashStore (Add Chunk numbers - only used for updates, slow retrieval).
@@ -237,11 +242,13 @@ class HashStore {
   // have a mess on your hands.
   nsresult WriteFile();
 
- private:
+  nsresult ReadCompletionsLegacyV3(AddCompleteArray& aCompletes);
+
   nsresult Reset();
 
+ private:
   nsresult ReadHeader();
-  nsresult SanityCheck() const;
+  nsresult SanityCheck(uint32_t aVersion = 0) const;
   nsresult CalculateChecksum(nsAutoCString& aChecksum, uint32_t aFileSize,
                              bool aChecksumPresent);
   nsresult CheckChecksum(uint32_t aFileSize);

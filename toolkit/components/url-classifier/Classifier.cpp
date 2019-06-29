@@ -197,6 +197,64 @@ nsresult Classifier::CreateStoreDirectory() {
   return NS_OK;
 }
 
+// Testing entries are created directly in LookupCache instead of
+// created via update(Bug 1531354). We can remove unused testing
+// files from profile.
+// TODO: See Bug 723153 to clear old safebrowsing store
+nsresult Classifier::ClearLegacyFiles() {
+  if (ShouldAbort()) {
+    return NS_OK;  // nothing to do, the classifier is done
+  }
+
+  nsTArray<nsLiteralCString> tables = {
+      NS_LITERAL_CSTRING("test-phish-simple"),
+      NS_LITERAL_CSTRING("test-malware-simple"),
+      NS_LITERAL_CSTRING("test-unwanted-simple"),
+      NS_LITERAL_CSTRING("test-harmful-simple"),
+      NS_LITERAL_CSTRING("test-track-simple"),
+      NS_LITERAL_CSTRING("test-trackwhite-simple"),
+      NS_LITERAL_CSTRING("test-block-simple"),
+  };
+
+  const auto fnFindAndRemove = [](nsIFile* aRootDirectory,
+                                  const nsACString& aFileName) {
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = aRootDirectory->Clone(getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    rv = file->AppendNative(aFileName);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    bool exists;
+    rv = file->Exists(&exists);
+    if (NS_FAILED(rv) || !exists) {
+      return false;
+    }
+
+    rv = file->Remove(false);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    return true;
+  };
+
+  for (const auto& table : tables) {
+    // Remove both .sbstore and .vlpse if .sbstore exists
+    if (fnFindAndRemove(mRootStoreDirectory,
+                        table + NS_LITERAL_CSTRING(".sbstore"))) {
+      fnFindAndRemove(mRootStoreDirectory,
+                      table + NS_LITERAL_CSTRING(".vlpset"));
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult Classifier::Open(nsIFile& aCacheDirectory) {
   // Remember the Local profile directory.
   nsresult rv = aCacheDirectory.Clone(getter_AddRefs(mCacheDirectory));
@@ -228,6 +286,9 @@ nsresult Classifier::Open(nsIFile& aCacheDirectory) {
   // Make sure the main store directory exists.
   rv = CreateStoreDirectory();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ClearLegacyFiles();
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 
   // Build the list of know urlclassifier lists
   // XXX: Disk IO potentially on the main thread during startup
@@ -1218,7 +1279,26 @@ nsresult Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
   }
 
   nsresult rv = store.Open();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // This is where we remove the older version(3) of HashStore, we cannot
+    // remove it earlier because we need the 'Completions' in it before
+    // upgrading to new format. Remove this during update because we know that
+    // newer version of HashStore and PrefixSet will be written in the update
+    // process.
+    LOG(("HashStore is corrupted, remove on-disk data and continue to update"));
+
+    // store.Reset removes the on-disk file. We can still apply this update
+    // by merging recived update data to an empty HashStore.
+    rv = store.Reset();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Open HashStore again, it should be an empty HashStore at this point.
+    rv = store.Open();
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   rv = store.BeginUpdate();
   NS_ENSURE_SUCCESS(rv, rv);
 
