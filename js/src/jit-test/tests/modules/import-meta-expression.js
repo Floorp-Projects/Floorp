@@ -80,6 +80,11 @@ function assertModuleParseThrowsSyntaxError(source)
     assertThrowsInstanceOf(() => parseAsModule(source), SyntaxError);
 }
 
+function assertModuleParseThrowsReferenceError(source)
+{
+    assertThrowsInstanceOf(() => parseAsModule(source), ReferenceError);
+}
+
 assertModuleParseThrowsSyntaxError("import");
 assertModuleParseThrowsSyntaxError("import.");
 assertModuleParseThrowsSyntaxError("import.met");
@@ -88,4 +93,5 @@ assertModuleParseThrowsSyntaxError("x = import");
 assertModuleParseThrowsSyntaxError("x = import.");
 assertModuleParseThrowsSyntaxError("x = import.met");
 assertModuleParseThrowsSyntaxError("x = import.metaa");
-assertModuleParseThrowsSyntaxError("import.meta = x");
+
+assertModuleParseThrowsReferenceError("import.meta = x");
