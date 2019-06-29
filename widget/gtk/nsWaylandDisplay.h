@@ -101,7 +101,6 @@ class nsWaylandDisplay {
 void WaylandDispatchDisplays();
 void WaylandDisplayShutdown();
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
-wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay = nullptr);
 
 typedef struct gbm_device* (*CreateDeviceFunc)(int);
 typedef struct gbm_bo* (*CreateFunc)(struct gbm_device*, uint32_t, uint32_t,

@@ -35,7 +35,6 @@
 
 #ifdef MOZ_WAYLAND
 #  include <sys/mman.h>
-#  include "nsWaylandDisplay.h"
 #endif
 
 namespace mozilla {
@@ -759,7 +758,11 @@ static const struct wl_registry_listener keyboard_registry_listener = {
     gdk_registry_handle_global, gdk_registry_handle_global_remove};
 
 void KeymapWrapper::InitBySystemSettingsWayland() {
-  wl_display* display = WaylandDisplayGetWLDisplay();
+  // Available as of GTK 3.8+
+  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
+      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+  wl_display* display =
+      sGdkWaylandDisplayGetWlDisplay(gdk_display_get_default());
   wl_registry_add_listener(wl_display_get_registry(display),
                            &keyboard_registry_listener, this);
 }
