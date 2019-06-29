@@ -86,74 +86,71 @@ struct hmtxvmtx
     return result;
   }
 
-  bool subset (hb_subset_plan_t *plan) const
+  template<typename Iterator,
+           hb_requires (hb_is_iterator (Iterator))>
+  void serialize (hb_serialize_context_t *c, 
+                  Iterator it, 
+                  unsigned num_advances)
   {
-    typename T::accelerator_t _mtx;
-    _mtx.init (plan->source);
+    unsigned idx = 0;
+    + it
+    | hb_apply ([c, &idx, num_advances] (const hb_item_type<Iterator>& _)
+                {
+                  if (idx < num_advances) 
+                  {
+                    LongMetric lm;
+                    lm.advance = _.first;
+                    lm.sb = _.second;
+                    if (unlikely (!c->embed<LongMetric> (&lm))) return;
+                  } 
+                  else 
+                  {
+                    FWORD *sb = c->allocate_size<FWORD> (FWORD::static_size);
+                    if (unlikely (!sb)) return;
+                    *sb = _.second;
+                  }
+                  idx++;
+                })
+    ;
+  }
 
-    /* All the trailing glyphs with the same advance can use one LongMetric
-     * and just keep LSB */
-    unsigned int num_output_glyphs = plan->num_output_glyphs ();
-    unsigned int num_advances = _mtx.num_advances_for_subset (plan);
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
 
-    /* alloc the new table */
-    size_t dest_sz = num_advances * 4
-		  + (num_output_glyphs - num_advances) * 2;
-    void *dest = (void *) malloc (dest_sz);
-    if (unlikely (!dest))
-    {
-      return false;
-    }
-    DEBUG_MSG(SUBSET, nullptr, "%c%c%c%c in src has %d advances, %d lsbs", HB_UNTAG(T::tableTag), _mtx.num_advances, _mtx.num_metrics - _mtx.num_advances);
-    DEBUG_MSG(SUBSET, nullptr, "%c%c%c%c in dest has %d advances, %d lsbs, %u bytes",
-              HB_UNTAG(T::tableTag), num_advances, num_output_glyphs - num_advances, (unsigned int) dest_sz);
+    T *table_prime = c->serializer->start_embed <T> ();
+    if (unlikely (!table_prime)) return_trace (false);
+    
+    accelerator_t _mtx;
+    _mtx.init (c->plan->source);
+    unsigned num_advances = _mtx.num_advances_for_subset (c->plan);
+    
+    auto it = 
+    + hb_range (c->plan->num_output_glyphs ())
+    | hb_map ([c, &_mtx] (unsigned _)
+	{
+	  hb_codepoint_t old_gid;
+	  if (c->plan->old_gid_for_new_gid (_, &old_gid))
+            return hb_pair (_mtx.get_advance (old_gid), _mtx.get_side_bearing (old_gid));
+          else
+	    return hb_pair (0u, 0u);
+	})
+    ;
 
-    // Copy everything over
-    char * dest_pos = (char *) dest;
+    table_prime->serialize (c->serializer, it, num_advances);
 
-    bool failed = false;
-    for (unsigned int i = 0; i < num_output_glyphs; i++)
-    {
-      unsigned int side_bearing = 0;
-      unsigned int advance = 0;
-      hb_codepoint_t old_gid;
-      if (plan->old_gid_for_new_gid (i, &old_gid))
-      {
-        // Glyph is not an empty glyph so copy advance and side bearing
-        // from the input font.
-        side_bearing = _mtx.get_side_bearing (old_gid);
-        advance = _mtx.get_advance (old_gid);
-      }
-
-      bool has_advance = i < num_advances;
-      if (has_advance)
-      {
-        ((LongMetric *) dest_pos)->advance = advance;
-        ((LongMetric *) dest_pos)->sb = side_bearing;
-      }
-      else
-      {
-        *((FWORD *) dest_pos) = side_bearing;
-      }
-      dest_pos += (has_advance ? 4 : 2);
-    }
     _mtx.fini ();
 
+    if (unlikely (c->serializer->ran_out_of_room || c->serializer->in_error ()))
+      return_trace (false);
+
     // Amend header num hmetrics
-    if (failed || unlikely (!subset_update_header (plan, num_advances)))
+    if (unlikely (!subset_update_header (c->plan, num_advances)))
     {
-      free (dest);
-      return false;
+      return_trace (false);
     }
 
-    hb_blob_t *result = hb_blob_create ((const char *)dest,
-                                        dest_sz,
-                                        HB_MEMORY_MODE_READONLY,
-                                        dest,
-                                        free);
-    bool success = plan->add_table (T::tableTag, result);
-    hb_blob_destroy (result);
-    return success;
+    return_trace (true);
   }
 
   struct accelerator_t

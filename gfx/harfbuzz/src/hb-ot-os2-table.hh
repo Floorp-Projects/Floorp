@@ -145,36 +145,28 @@ struct OS2
     }
   }
 
-  bool subset (hb_subset_plan_t *plan) const
+  bool subset (hb_subset_context_t *c) const
   {
-    hb_blob_t *os2_blob = hb_sanitize_context_t ().reference_table<OS2> (plan->source);
-    hb_blob_t *os2_prime_blob = hb_blob_create_sub_blob (os2_blob, 0, -1);
-    // TODO(grieger): move to hb_blob_copy_writable_or_fail
-    hb_blob_destroy (os2_blob);
-
-    OS2 *os2_prime = (OS2 *) hb_blob_get_data_writable (os2_prime_blob, nullptr);
-    if (unlikely (!os2_prime)) {
-      hb_blob_destroy (os2_prime_blob);
-      return false;
-    }
+    TRACE_SUBSET (this);
+    OS2 *os2_prime = c->serializer->embed (this);
+    if (unlikely (!os2_prime)) return_trace (false);
 
     uint16_t min_cp, max_cp;
-    find_min_and_max_codepoint (plan->unicodes, &min_cp, &max_cp);
+    find_min_and_max_codepoint (c->plan->unicodes, &min_cp, &max_cp);
     os2_prime->usFirstCharIndex = min_cp;
     os2_prime->usLastCharIndex = max_cp;
 
-    _update_unicode_ranges (plan->unicodes, os2_prime->ulUnicodeRange);
-    bool result = plan->add_table (HB_OT_TAG_OS2, os2_prime_blob);
+    _update_unicode_ranges (c->plan->unicodes, os2_prime->ulUnicodeRange);
 
-    hb_blob_destroy (os2_prime_blob);
-    return result;
+    return_trace (true);
   }
 
   void _update_unicode_ranges (const hb_set_t *codepoints,
 			       HBUINT32 ulUnicodeRange[4]) const
   {
+    HBUINT32	newBits[4];
     for (unsigned int i = 0; i < 4; i++)
-      ulUnicodeRange[i] = 0;
+      newBits[i] = 0;
 
     hb_codepoint_t cp = HB_SET_VALUE_INVALID;
     while (codepoints->next (&cp)) {
@@ -184,16 +176,19 @@ struct OS2
 	unsigned int block = bit / 32;
 	unsigned int bit_in_block = bit % 32;
 	unsigned int mask = 1 << bit_in_block;
-	ulUnicodeRange[block] = ulUnicodeRange[block] | mask;
+	newBits[block] = newBits[block] | mask;
       }
       if (cp >= 0x10000 && cp <= 0x110000)
       {
 	/* the spec says that bit 57 ("Non Plane 0") implies that there's
 	   at least one codepoint beyond the BMP; so I also include all
 	   the non-BMP codepoints here */
-	ulUnicodeRange[1] = ulUnicodeRange[1] | (1 << 25);
+	newBits[1] = newBits[1] | (1 << 25);
       }
     }
+
+    for (unsigned int i = 0; i < 4; i++)
+      ulUnicodeRange[i] = ulUnicodeRange[i] & newBits[i]; // set bits only if set in the original
   }
 
   static void find_min_and_max_codepoint (const hb_set_t *codepoints,
@@ -217,6 +212,15 @@ struct OS2
   // https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681
   font_page_t get_font_page () const
   { return (font_page_t) (version == 0 ? fsSelection & 0xFF00 : 0); }
+
+  unsigned get_size () const
+  {
+    unsigned result = min_size;
+    if (version >= 1) result += v1X.get_size ();
+    if (version >= 2) result += v2X.get_size ();
+    if (version >= 5) result += v5X.get_size ();
+    return result;
+  }
 
   bool sanitize (hb_sanitize_context_t *c) const
   {

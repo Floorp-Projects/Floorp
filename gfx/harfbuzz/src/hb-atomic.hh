@@ -107,7 +107,7 @@ _hb_atomic_ptr_impl_cmplexch (const void **P, const void *O_, const void *N)
 
 static inline void _hb_memory_barrier ()
 {
-#ifndef MemoryBarrier
+#if !defined(MemoryBarrier) && !defined(__MINGW32_VERSION)
   /* MinGW has a convoluted history of supporting MemoryBarrier. */
   LONG dummy = 0;
   InterlockedExchange (&dummy, 1);

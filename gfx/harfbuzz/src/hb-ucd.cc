@@ -114,6 +114,14 @@ _cmp_pair (const void *_key, const void *_item)
 
   return a < b ? -1 : a > b ? +1 : 0;
 }
+static int
+_cmp_pair_11_7_14 (const void *_key, const void *_item)
+{
+  uint32_t& a = * (uint32_t*) _key;
+  uint32_t b = (* (uint32_t*) _item) & HB_CODEPOINT_ENCODE3_11_7_14(0x1FFFFFu, 0x1FFFFFu, 0);
+
+  return a < b ? -1 : a > b ? +1 : 0;
+}
 
 static hb_bool_t
 hb_ucd_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
@@ -122,16 +130,30 @@ hb_ucd_compose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 {
   if (_hb_ucd_compose_hangul (a, b, ab)) return true;
 
-  uint64_t k = HB_CODEPOINT_ENCODE3 (a, b, 0);
-  uint64_t *v = (uint64_t*) hb_bsearch (&k, _hb_ucd_dm2_map,
-					ARRAY_LENGTH (_hb_ucd_dm2_map),
-					sizeof (*_hb_ucd_dm2_map),
-					_cmp_pair);
-  if (likely (!v)) return false;
+  hb_codepoint_t u = 0;
 
-  hb_codepoint_t u = HB_CODEPOINT_DECODE3_3 (*v);
+  if ((a & 0xFFFFF800u) == 0x0000u && (b & 0xFFFFFF80) == 0x0300u)
+  {
+    uint32_t k = HB_CODEPOINT_ENCODE3_11_7_14 (a, b, 0);
+    uint32_t *v = (uint32_t*) hb_bsearch (&k, _hb_ucd_dm2_u32_map,
+					  ARRAY_LENGTH (_hb_ucd_dm2_u32_map),
+					  sizeof (*_hb_ucd_dm2_u32_map),
+					  _cmp_pair_11_7_14);
+    if (likely (!v)) return false;
+    u = HB_CODEPOINT_DECODE3_11_7_14_3 (*v);
+  }
+  else
+  {
+    uint64_t k = HB_CODEPOINT_ENCODE3 (a, b, 0);
+    uint64_t *v = (uint64_t*) hb_bsearch (&k, _hb_ucd_dm2_u64_map,
+					  ARRAY_LENGTH (_hb_ucd_dm2_u64_map),
+					  sizeof (*_hb_ucd_dm2_u64_map),
+					  _cmp_pair);
+    if (likely (!v)) return false;
+    u = HB_CODEPOINT_DECODE3_3 (*v);
+  }
+
   if (unlikely (!u)) return false;
-
   *ab = u;
   return true;
 }
@@ -148,15 +170,30 @@ hb_ucd_decompose (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   if (likely (!i)) return false;
   i--;
 
-  if (i < ARRAY_LENGTH (_hb_ucd_dm1_map))
+  if (i < ARRAY_LENGTH (_hb_ucd_dm1_p0_map) + ARRAY_LENGTH (_hb_ucd_dm1_p2_map))
   {
-    *a = _hb_ucd_dm1_map[i];
+    if (i < ARRAY_LENGTH (_hb_ucd_dm1_p0_map))
+      *a = _hb_ucd_dm1_p0_map[i];
+    else
+    {
+      i -= ARRAY_LENGTH (_hb_ucd_dm1_p0_map);
+      *a = 0x20000 | _hb_ucd_dm1_p2_map[i];
+    }
     *b = 0;
     return true;
   }
-  i -= ARRAY_LENGTH (_hb_ucd_dm1_map);
+  i -= ARRAY_LENGTH (_hb_ucd_dm1_p0_map) + ARRAY_LENGTH (_hb_ucd_dm1_p2_map);
 
-  uint64_t v = _hb_ucd_dm2_map[i];
+  if (i < ARRAY_LENGTH (_hb_ucd_dm2_u32_map))
+  {
+    uint32_t v = _hb_ucd_dm2_u32_map[i];
+    *a = HB_CODEPOINT_DECODE3_11_7_14_1 (v);
+    *b = HB_CODEPOINT_DECODE3_11_7_14_2 (v);
+    return true;
+  }
+  i -= ARRAY_LENGTH (_hb_ucd_dm2_u32_map);
+
+  uint64_t v = _hb_ucd_dm2_u64_map[i];
   *a = HB_CODEPOINT_DECODE3_1 (v);
   *b = HB_CODEPOINT_DECODE3_2 (v);
   return true;

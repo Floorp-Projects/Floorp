@@ -17,6 +17,8 @@ For license information, see [COPYING](COPYING).
 
 For build information, see [BUILD.md](BUILD.md).
 
+For custom configurations, see [CONFIG.md](CONFIG.md).
+
 For test execution, see [TESTING.md](TESTING.md).
 
 Documentation: https://harfbuzz.github.io

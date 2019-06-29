@@ -27,6 +27,8 @@
 
 #include "hb.hh"
 
+#ifdef HAVE_GOBJECT
+
 /* g++ didn't like older gtype.h gcc-only code path. */
 #include <glib.h>
 #if !GLIB_CHECK_VERSION(2,29,16)
@@ -43,6 +45,11 @@
 /*** BEGIN file-production ***/
 /* enumerations from "@filename@" */
 /*** END file-production ***/
+
+/*** BEGIN file-tail ***/
+
+#endif
+/*** END file-tail ***/
 
 /*** BEGIN value-header ***/
 GType

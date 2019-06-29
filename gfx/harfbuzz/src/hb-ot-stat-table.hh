@@ -59,13 +59,13 @@ enum
 
 struct AxisValueFormat1
 {
+  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
   }
-
-  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
 
   protected:
   HBUINT16	format;		/* Format identifier — set to 1. */
@@ -84,13 +84,13 @@ struct AxisValueFormat1
 
 struct AxisValueFormat2
 {
+  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
   }
-
-  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
 
   protected:
   HBUINT16	format;		/* Format identifier — set to 2. */
@@ -113,13 +113,13 @@ struct AxisValueFormat2
 
 struct AxisValueFormat3
 {
+  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
   }
-
-  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
 
   protected:
   HBUINT16	format;		/* Format identifier — set to 3. */
@@ -157,13 +157,13 @@ struct AxisValueRecord
 
 struct AxisValueFormat4
 {
+  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
   }
-
-  hb_ot_name_id_t get_value_name_id () const { return valueNameID; }
 
   protected:
   HBUINT16	format;		/* Format identifier — set to 4. */
@@ -183,6 +183,18 @@ struct AxisValueFormat4
 
 struct AxisValue
 {
+  hb_ot_name_id_t get_value_name_id () const
+  {
+    switch (u.format)
+    {
+    case 1: return u.format1.get_value_name_id ();
+    case 2: return u.format2.get_value_name_id ();
+    case 3: return u.format3.get_value_name_id ();
+    case 4: return u.format4.get_value_name_id ();
+    default:return HB_OT_NAME_ID_INVALID;
+    }
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -191,23 +203,11 @@ struct AxisValue
 
     switch (u.format)
     {
-    case 1:  return_trace (likely (u.format1.sanitize (c)));
-    case 2:  return_trace (likely (u.format2.sanitize (c)));
-    case 3:  return_trace (likely (u.format3.sanitize (c)));
-    case 4:  return_trace (likely (u.format4.sanitize (c)));
-    default: return_trace (true);
-    }
-  }
-
-  hb_ot_name_id_t get_value_name_id () const
-  {
-    switch (u.format)
-    {
-      case 1: return u.format1.get_value_name_id ();
-      case 2: return u.format2.get_value_name_id ();
-      case 3: return u.format3.get_value_name_id ();
-      case 4: return u.format4.get_value_name_id ();
-      default: return HB_OT_NAME_ID_INVALID;
+    case 1: return_trace (u.format1.sanitize (c));
+    case 2: return_trace (u.format2.sanitize (c));
+    case 3: return_trace (u.format3.sanitize (c));
+    case 4: return_trace (u.format4.sanitize (c));
+    default:return_trace (true);
     }
   }
 
@@ -226,13 +226,13 @@ struct AxisValue
 
 struct StatAxisRecord
 {
+  hb_ot_name_id_t get_name_id () const { return nameID; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
   }
-
-  hb_ot_name_id_t get_name_id () const { return nameID; }
 
   protected:
   Tag		tag;		/* A tag identifying the axis of design variation. */
@@ -248,16 +248,6 @@ struct StatAxisRecord
 struct STAT
 {
   static constexpr hb_tag_t tableTag = HB_OT_TAG_STAT;
-
-  bool sanitize (hb_sanitize_context_t *c) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace (likely (c->check_struct (this) &&
-			  version.major == 1 &&
-                          version.minor > 0 &&
-			  designAxesOffset.sanitize (c, this, designAxisCount) &&
-			  offsetToAxisValueOffsets.sanitize (c, this, axisValueCount, &(this+offsetToAxisValueOffsets))));
-  }
 
   bool has_data () const { return version.to_int (); }
 
@@ -293,6 +283,16 @@ struct STAT
     | hb_map (&AxisValue::get_value_name_id)
     | hb_sink (nameids_to_retain)
     ;
+  }
+
+  bool sanitize (hb_sanitize_context_t *c) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (likely (c->check_struct (this) &&
+			  version.major == 1 &&
+			  version.minor > 0 &&
+			  designAxesOffset.sanitize (c, this, designAxisCount) &&
+			  offsetToAxisValueOffsets.sanitize (c, this, axisValueCount, &(this+offsetToAxisValueOffsets))));
   }
 
   protected:

@@ -24,13 +24,15 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-open-type.hh"
+#include "hb.hh"
 
-#include "hb-ot-face.hh"
+#ifndef HB_NO_VAR
+
+#include "hb-ot-var.h"
+
 #include "hb-ot-var-avar-table.hh"
 #include "hb-ot-var-fvar-table.hh"
 #include "hb-ot-var-mvar-table.hh"
-#include "hb-ot-var.h"
 
 
 /**
@@ -213,3 +215,6 @@ hb_ot_var_normalize_coords (hb_face_t    *face,
 
   face->table.avar->map_coords (normalized_coords, coords_length);
 }
+
+
+#endif

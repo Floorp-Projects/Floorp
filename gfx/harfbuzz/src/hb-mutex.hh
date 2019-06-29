@@ -106,7 +106,7 @@ typedef volatile int hb_mutex_impl_t;
 #define HB_MUTEX_IMPL_INIT	0
 #define hb_mutex_impl_init(M)	*(M) = 0
 #define hb_mutex_impl_lock(M)	HB_STMT_START { while (*(M)) HB_SCHED_YIELD (); (*(M))++; } HB_STMT_END
-#define hb_mutex_impl_unlock(M)	(*(M))--;
+#define hb_mutex_impl_unlock(M)	(*(M))--
 #define hb_mutex_impl_finish(M)	HB_STMT_START {} HB_STMT_END
 
 

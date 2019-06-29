@@ -134,10 +134,10 @@ struct dict_opset_t : opset_t<number_t>
 	  return value;
 
 	case END:
-	  value = (double)(neg? -int_part: int_part);
+	  value = (double) (neg ? -int_part : int_part);
 	  if (frac_count > 0)
 	  {
-	    double frac = (frac_part / pow (10.0, (double)frac_count));
+	    double frac = (frac_part / pow (10.0, (double) frac_count));
 	    if (neg) frac = -frac;
 	    value += frac;
 	  }
@@ -146,16 +146,16 @@ struct dict_opset_t : opset_t<number_t>
 	    if (value == 0.0)
 	      return value;
 	    if (exp_neg)
-	      return neg? -DBL_MIN: DBL_MIN;
+	      return neg ? -DBL_MIN : DBL_MIN;
 	    else
-	      return neg? -DBL_MAX: DBL_MAX;
+	      return neg ? -DBL_MAX : DBL_MAX;
 	  }
 	  if (exp_part != 0)
 	  {
 	    if (exp_neg)
-	      value /= pow (10.0, (double)exp_part);
+	      value /= pow (10.0, (double) exp_part);
 	    else
-	      value *= pow (10.0, (double)exp_part);
+	      value *= pow (10.0, (double) exp_part);
 	  }
 	  return value;
 
