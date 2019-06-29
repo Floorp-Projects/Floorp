@@ -161,7 +161,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             "action": "store_true",
             "dest": "enable_webrender",
             "default": False,
-            "help": "Tries to enable the WebRender compositor.",
+            "help": "Enable the WebRender compositor in Gecko.",
         }],
         [["--setpref"], {
             "action": "append",
@@ -335,6 +335,9 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             options.extend(['--code-coverage'])
         if self.config['extra_prefs']:
             options.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
+        if self.config['enable_webrender']:
+            options.extend(['--enable-webrender'])
+
         return options
 
     def populate_webroot(self):
@@ -555,10 +558,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
         if self.obj_path is not None:
             env['MOZ_DEVELOPER_OBJ_DIR'] = self.obj_path
-
-        if self.config['enable_webrender']:
-            env['MOZ_WEBRENDER'] = '1'
-            env['MOZ_ACCELERATED'] = '1'
 
         # TODO: consider getting rid of this as we should be default to stylo now
         env['STYLO_FORCE_ENABLED'] = '1'
