@@ -15,8 +15,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMQuad, mParent, mBounds, mPoints[0],
-                                      mPoints[1], mPoints[2], mPoints[3])
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMQuad, mParent, mPoints[0], mPoints[1],
+                                      mPoints[2], mPoints[3])
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMQuad, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMQuad, Release)
@@ -87,13 +87,6 @@ void DOMQuad::GetVerticalMinMax(double* aY1, double* aY2) const {
   *aY2 = y2;
 }
 
-DOMRectReadOnly* DOMQuad::Bounds() {
-  if (!mBounds) {
-    mBounds = GetBounds();
-  }
-  return mBounds;
-}
-
 already_AddRefed<DOMRectReadOnly> DOMQuad::GetBounds() const {
   double x1, x2;
   double y1, y2;
@@ -104,13 +97,6 @@ already_AddRefed<DOMRectReadOnly> DOMQuad::GetBounds() const {
   RefPtr<DOMRectReadOnly> rval =
       new DOMRectReadOnly(GetParentObject(), x1, y1, x2 - x1, y2 - y1);
   return rval.forget();
-}
-
-void DOMQuad::ToJSON(DOMQuadJSON& aInit) {
-  aInit.mP1.Construct(RefPtr<DOMPoint>(P1()).forget());
-  aInit.mP2.Construct(RefPtr<DOMPoint>(P2()).forget());
-  aInit.mP3.Construct(RefPtr<DOMPoint>(P3()).forget());
-  aInit.mP4.Construct(RefPtr<DOMPoint>(P4()).forget());
 }
 
 // https://drafts.fxtf.org/geometry/#structured-serialization

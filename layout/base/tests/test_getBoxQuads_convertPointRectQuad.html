@@ -68,8 +68,8 @@ function checkConvertPoints(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
   var selfQuads = eval(fromStr).getBoxQuads(
     {box:options.box == "" ? "border" : options.box,
      relativeTo:eval(fromStr)});
-  var boxWidth = selfQuads[0].bounds.width;
-  var boxHeight = selfQuads[0].bounds.height;
+  var boxWidth = selfQuads[0].getBounds().width;
+  var boxHeight = selfQuads[0].getBounds().height;
 
   var convertTopLeftPointExpr = makePointExpr(fromStr, options, 0, 0);
   var topLeft = eval(convertTopLeftPointExpr);
@@ -96,8 +96,8 @@ function checkConvertRect(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
   var selfQuads = eval(fromStr).getBoxQuads(
     {box:options.box == "" ? "border" : options.box,
      relativeTo:eval(fromStr)});
-  var boxWidth = selfQuads[0].bounds.width;
-  var boxHeight = selfQuads[0].bounds.height;
+  var boxWidth = selfQuads[0].getBounds().width;
+  var boxHeight = selfQuads[0].getBounds().height;
 
   var convertPointOptionParts = [];
   if ('box' in options) {
@@ -125,8 +125,8 @@ function checkConvertQuad(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
   var selfQuads = eval(fromStr).getBoxQuads(
     {box:options.box == "" ? "border" : options.box,
      relativeTo:eval(fromStr)});
-  var boxWidth = selfQuads[0].bounds.width;
-  var boxHeight = selfQuads[0].bounds.height;
+  var boxWidth = selfQuads[0].getBounds().width;
+  var boxHeight = selfQuads[0].getBounds().height;
 
   var convertPointOptionParts = [];
   if ('box' in options) {
@@ -164,10 +164,10 @@ function checkQuadIsRect(fromStr, options, x, y, w, h) {
   isApprox(q.p4.x, x, quadsExpr + " checking quad.p4.x", options);
   isApprox(q.p4.y, y + h, quadsExpr + " checking quad.p4.y", options);
 
-  isApprox(q.bounds.left, x, quadsExpr + " checking quad.bounds.left", options);
-  isApprox(q.bounds.top, y, quadsExpr + " checking quad.bounds.top", options);
-  isApprox(q.bounds.width, w, quadsExpr + " checking quad.bounds.width", options);
-  isApprox(q.bounds.height, h, quadsExpr + " checking quad.bounds.height", options);
+  isApprox(q.getBounds().left, x, quadsExpr + " checking quad.getBounds().left", options);
+  isApprox(q.getBounds().top, y, quadsExpr + " checking quad.getBounds().top", options);
+  isApprox(q.getBounds().width, w, quadsExpr + " checking quad.getBounds().width", options);
+  isApprox(q.getBounds().height, h, quadsExpr + " checking quad.getBounds().height", options);
 
   checkConvertPoints(fromStr, options, x, y, x + w, y, x + w, y + h, x, y + h);
   checkConvertRect(fromStr, options, x, y, x + w, y, x + w, y + h, x, y + h);
@@ -188,10 +188,10 @@ function checkQuadIsQuad(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
   isApprox(q.p4.x, x4, quadsExpr + " checking quad.p4.x", options);
   isApprox(q.p4.y, y4, quadsExpr + " checking quad.p4.y", options);
 
-  isApprox(q.bounds.left, Math.min(x1,x2,x3,x4), quadsExpr + " checking quad.bounds.left", options);
-  isApprox(q.bounds.top, Math.min(y1,y2,y3,y4), quadsExpr + " checking quad.bounds.top", options);
-  isApprox(q.bounds.right, Math.max(x1,x2,x3,x4), quadsExpr + " checking quad.bounds.right", options);
-  isApprox(q.bounds.bottom, Math.max(y1,y2,y3,y4), quadsExpr + " checking quad.bounds.bottom", options);
+  isApprox(q.getBounds().left, Math.min(x1,x2,x3,x4), quadsExpr + " checking quad.getBounds().left", options);
+  isApprox(q.getBounds().top, Math.min(y1,y2,y3,y4), quadsExpr + " checking quad.getBounds().top", options);
+  isApprox(q.getBounds().right, Math.max(x1,x2,x3,x4), quadsExpr + " checking quad.getBounds().right", options);
+  isApprox(q.getBounds().bottom, Math.max(y1,y2,y3,y4), quadsExpr + " checking quad.getBounds().bottom", options);
 
   checkConvertPoints(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4);
   checkConvertRect(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4);
@@ -454,13 +454,13 @@ function runTest() {
   var ibSplitPart1X = ibSplitPart1.getBoundingClientRect().left;
   var ibSplitY = ibSplit.getBoundingClientRect().top;
   isEval("ibSplit.getBoxQuads().length", 3);
-  isEval("ibSplit.getBoxQuads()[0].bounds.left", ibSplitPart1X);
-  isEval("ibSplit.getBoxQuads()[0].bounds.width", 100);
-  isEval("ibSplit.getBoxQuads()[1].bounds.width", 110);
-  isEval("ibSplit.getBoxQuads()[2].bounds.width", 130);
+  isEval("ibSplit.getBoxQuads()[0].getBounds().left", ibSplitPart1X);
+  isEval("ibSplit.getBoxQuads()[0].getBounds().width", 100);
+  isEval("ibSplit.getBoxQuads()[1].getBounds().width", 110);
+  isEval("ibSplit.getBoxQuads()[2].getBounds().width", 130);
   isEval("table.getBoxQuads().length", 2);
-  isEval("table.getBoxQuads()[0].bounds.height", 50);
-  isEval("table.getBoxQuads()[1].bounds.height", 40);
+  isEval("table.getBoxQuads()[0].getBounds().height", 50);
+  isEval("table.getBoxQuads()[1].getBounds().height", 40);
 
   // Test that we skip anonymous boxes when finding the right box to be relative to.
   checkQuadIsRect("d", {toStr:"ibSplit", tolerance:0.0001},
@@ -475,55 +475,55 @@ function runTest() {
   // Test boxes generated by block splitting. Check for borders being placed correctly.
   var colSplitY = colSplit.getClientRects()[0].top;
   isEval("colSplit.getBoxQuads().length", 2);
-  isEval("colSplit.getBoxQuads()[0].bounds.top", colSplitY);
-  isEval("colSplit.getBoxQuads()[0].bounds.height", 60);
-  isEval("colSplit.getBoxQuads()[1].bounds.top", colSplitY - 20);
-  isEval("colSplit.getBoxQuads()[1].bounds.height", 45);
+  isEval("colSplit.getBoxQuads()[0].getBounds().top", colSplitY);
+  isEval("colSplit.getBoxQuads()[0].getBounds().height", 60);
+  isEval("colSplit.getBoxQuads()[1].getBounds().top", colSplitY - 20);
+  isEval("colSplit.getBoxQuads()[1].getBounds().height", 45);
   isEval("colSplit.getBoxQuads({box:'content'}).length", 2);
   // The first box for the block has the top border; the second box has the bottom border.
-  isEval("colSplit.getBoxQuads({box:'content'})[0].bounds.top", colSplitY + 10);
-  isEval("colSplit.getBoxQuads({box:'content'})[0].bounds.height", 50);
-  isEval("colSplit.getBoxQuads({box:'content'})[1].bounds.top", colSplitY - 20);
-  isEval("colSplit.getBoxQuads({box:'content'})[1].bounds.height", 30);
+  isEval("colSplit.getBoxQuads({box:'content'})[0].getBounds().top", colSplitY + 10);
+  isEval("colSplit.getBoxQuads({box:'content'})[0].getBounds().height", 50);
+  isEval("colSplit.getBoxQuads({box:'content'})[1].getBounds().top", colSplitY - 20);
+  isEval("colSplit.getBoxQuads({box:'content'})[1].getBounds().height", 30);
 
   var inlineSplitX = inlineSplit.getClientRects()[0].left;
   isEval("inlineSplit.getBoxQuads().length", 2);
-  isEval("inlineSplit.getBoxQuads()[0].bounds.left", inlineSplitX);
-  isEval("inlineSplit.getBoxQuads()[0].bounds.width", 30);
-  isEval("inlineSplit.getBoxQuads()[1].bounds.left", inlineSplitX - 150);
-  isEval("inlineSplit.getBoxQuads()[1].bounds.width", 75);
+  isEval("inlineSplit.getBoxQuads()[0].getBounds().left", inlineSplitX);
+  isEval("inlineSplit.getBoxQuads()[0].getBounds().width", 30);
+  isEval("inlineSplit.getBoxQuads()[1].getBounds().left", inlineSplitX - 150);
+  isEval("inlineSplit.getBoxQuads()[1].getBounds().width", 75);
   isEval("inlineSplit.getBoxQuads({box:'content'}).length", 2);
   // The first box for the inline has the left border; the second box has the right border.
-  isEval("inlineSplit.getBoxQuads({box:'content'})[0].bounds.left", inlineSplitX + 10);
-  isEval("inlineSplit.getBoxQuads({box:'content'})[0].bounds.width", 20);
-  isEval("inlineSplit.getBoxQuads({box:'content'})[1].bounds.left", inlineSplitX - 150);
-  isEval("inlineSplit.getBoxQuads({box:'content'})[1].bounds.width", 60);
+  isEval("inlineSplit.getBoxQuads({box:'content'})[0].getBounds().left", inlineSplitX + 10);
+  isEval("inlineSplit.getBoxQuads({box:'content'})[0].getBounds().width", 20);
+  isEval("inlineSplit.getBoxQuads({box:'content'})[1].getBounds().left", inlineSplitX - 150);
+  isEval("inlineSplit.getBoxQuads({box:'content'})[1].getBounds().width", 60);
 
   var textX = textContainer.getClientRects()[0].left;
   isEval("text.getBoxQuads().length", 2);
-  isEval("text.getBoxQuads()[0].bounds.left", textX);
-  isEval("text.getBoxQuads()[1].bounds.left", textX - 150);
+  isEval("text.getBoxQuads()[0].getBounds().left", textX);
+  isEval("text.getBoxQuads()[1].getBounds().left", textX - 150);
   // Box types are irrelevant for text
   isEval("text.getBoxQuads({box:'content'}).length", 2);
-  isEval("text.getBoxQuads({box:'content'})[0].bounds.left", textX);
-  isEval("text.getBoxQuads({box:'content'})[1].bounds.left", textX - 150);
+  isEval("text.getBoxQuads({box:'content'})[0].getBounds().left", textX);
+  isEval("text.getBoxQuads({box:'content'})[1].getBounds().left", textX - 150);
   isEval("text.getBoxQuads({box:'padding'}).length", 2);
-  isEval("text.getBoxQuads({box:'padding'})[0].bounds.left", textX);
-  isEval("text.getBoxQuads({box:'padding'})[1].bounds.left", textX - 150);
+  isEval("text.getBoxQuads({box:'padding'})[0].getBounds().left", textX);
+  isEval("text.getBoxQuads({box:'padding'})[1].getBounds().left", textX - 150);
   isEval("text.getBoxQuads({box:'margin'}).length", 2);
-  isEval("text.getBoxQuads({box:'margin'})[0].bounds.left", textX);
-  isEval("text.getBoxQuads({box:'margin'})[1].bounds.left", textX - 150);
+  isEval("text.getBoxQuads({box:'margin'})[0].getBounds().left", textX);
+  isEval("text.getBoxQuads({box:'margin'})[1].getBounds().left", textX - 150);
 
   // Test table margins
   isEval("table.getBoxQuads({box:'margin'}).length", 1);
-  isEval("table.getBoxQuads({box:'margin'})[0].bounds.height", 106);
+  isEval("table.getBoxQuads({box:'margin'})[0].getBounds().height", 106);
 
   // Check that a text node whose layout might have been optimized away gives
   // correct results.
   var suppressedTextContainerX = suppressedTextContainer.getBoundingClientRect().left;
   isEval("suppressedText.getBoxQuads().length", 1);
-  isEval("suppressedText.getBoxQuads()[0].bounds.left", suppressedTextContainerX);
-  isEval("suppressedText.getBoxQuads()[0].bounds.width", 0);
+  isEval("suppressedText.getBoxQuads()[0].getBounds().left", suppressedTextContainerX);
+  isEval("suppressedText.getBoxQuads()[0].getBounds().width", 0);
 
   var suppressedTextContainer2X = suppressedTextContainer2.getBoundingClientRect().left;
   isEval("document.convertPointFromNode(zeroPoint,suppressedText2).x",
