@@ -134,6 +134,8 @@ def create_parser(mach_interface=False):
             help="Run Raptor in debug mode (open browser console, limited page-cycles, etc.)")
     add_arg('--disable-e10s', dest="e10s", action="store_false", default=True,
             help="Run without multiple processes (e10s).")
+    add_arg('--enable-webrender', dest="enable_webrender", action="store_true", default=False,
+            help="Enable the WebRender compositor in Gecko.")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag which indicates if Raptor is running locally or in production")
@@ -164,6 +166,12 @@ def verify_options(parser, args):
                 or args.host in ('localhost', '127.0.0.1'):
             parser.error("Power test is only supported when running Raptor on Firefox Android "
                          "browsers when host is specified!")
+
+    # if --enable-webrender specified, must be on desktop firefox or geckoview-based browser.
+    if args.enable_webrender:
+        if args.app not in ["firefox", "geckoview", "refbrow", "fenix"]:
+            parser.error("WebRender is only supported when running Raptor on Firefox Desktop "
+                         "or GeckoView-based Android browsers!")
 
     # if running on geckoview/refbrow/fenix, we need an activity and intent
     if args.app in ["geckoview", "refbrow", "fenix"]:
