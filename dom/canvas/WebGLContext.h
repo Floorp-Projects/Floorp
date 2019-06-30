@@ -254,6 +254,7 @@ struct TexImageSourceAdapter final : public TexImageSource {
 // --
 
 namespace webgl {
+
 class AvailabilityRunnable final : public Runnable {
  public:
   const RefPtr<WebGLContext> mWebGL;  // Prevent CC
@@ -265,6 +266,12 @@ class AvailabilityRunnable final : public Runnable {
 
   NS_IMETHOD Run() override;
 };
+
+struct BufferAndIndex final {
+  const WebGLBuffer* buffer = nullptr;
+  uint32_t id = -1;
+};
+
 }  // namespace webgl
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1018,6 +1025,23 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTarget(GLenum target);
   WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTargetIndexed(GLenum target,
                                                          GLuint index);
+
+  // -
+
+  bool ValidateBufferForNonTf(const WebGLBuffer&, GLenum nonTfTarget,
+                              uint32_t nonTfId) const;
+
+  bool ValidateBufferForNonTf(const WebGLBuffer* const nonTfBuffer,
+                              const GLenum nonTfTarget,
+                              const uint32_t nonTfId = -1) const {
+    if (!nonTfBuffer) return true;
+    return ValidateBufferForNonTf(*nonTfBuffer, nonTfTarget, nonTfId);
+  }
+
+  bool ValidateBuffersForTf(const WebGLTransformFeedback&,
+                            const webgl::LinkedProgramInfo&) const;
+  bool ValidateBuffersForTf(
+      const std::vector<webgl::BufferAndIndex>& tfBuffers) const;
 
   // -----------------------------------------------------------------------------
   // Queries (WebGL2ContextQueries.cpp)
@@ -2119,7 +2143,6 @@ class ScopedLazyBind final {
  private:
   gl::GLContext* const mGL;
   const GLenum mTarget;
-  const WebGLBuffer* const mBuf;
 
  public:
   ScopedLazyBind(gl::GLContext* gl, GLenum target, const WebGLBuffer* buf);

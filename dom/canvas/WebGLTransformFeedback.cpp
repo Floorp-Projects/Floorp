@@ -164,15 +164,6 @@ void WebGLTransformFeedback::ResumeTransformFeedback() {
 
 ////////////////////////////////////////
 
-void WebGLTransformFeedback::AddBufferBindCounts(int8_t addVal) const {
-  const GLenum target = LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER;
-  for (const auto& binding : mIndexedBindings) {
-    WebGLBuffer::AddBindCount(target, binding.mBufferBinding.get(), addVal);
-  }
-}
-
-////////////////////////////////////////
-
 JSObject* WebGLTransformFeedback::WrapObject(JSContext* cx,
                                              JS::Handle<JSObject*> givenProto) {
   return dom::WebGLTransformFeedback_Binding::Wrap(cx, this, givenProto);

@@ -20,20 +20,13 @@ JSObject* WebGLVertexArray::WrapObject(JSContext* cx,
 }
 
 WebGLVertexArray::WebGLVertexArray(WebGLContext* const webgl, const GLuint name)
-    : WebGLRefCountedObject(webgl), mGLName(name) {
-  mAttribs.SetLength(mContext->mGLMaxVertexAttribs);
+    : WebGLRefCountedObject(webgl),
+      mGLName(name),
+      mAttribs(mContext->mGLMaxVertexAttribs) {
   mContext->mVertexArrays.insertBack(this);
 }
 
 WebGLVertexArray::~WebGLVertexArray() { MOZ_ASSERT(IsDeleted()); }
-
-void WebGLVertexArray::AddBufferBindCounts(int8_t addVal) const {
-  const GLenum target = 0;  // Anything non-TF is fine.
-  WebGLBuffer::AddBindCount(target, mElementArrayBuffer.get(), addVal);
-  for (const auto& attrib : mAttribs) {
-    WebGLBuffer::AddBindCount(target, attrib.mBuf.get(), addVal);
-  }
-}
 
 WebGLVertexArray* WebGLVertexArray::Create(WebGLContext* webgl) {
   WebGLVertexArray* array;
@@ -50,7 +43,25 @@ void WebGLVertexArray::Delete() {
 
   LinkedListElement<WebGLVertexArray>::removeFrom(mContext->mVertexArrays);
   mElementArrayBuffer = nullptr;
-  mAttribs.Clear();
+  mAttribs.clear();
+}
+
+// -
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& callback,
+    const std::vector<WebGLVertexAttribData>& field, const char* name,
+    uint32_t flags = 0) {
+  for (auto& cur : field) {
+    ImplCycleCollectionTraverse(callback, cur.mBuf, name, flags);
+  }
+}
+
+inline void ImplCycleCollectionUnlink(
+    std::vector<WebGLVertexAttribData>& field) {
+  for (auto& cur : field) {
+    cur.mBuf = nullptr;
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLVertexArray, mAttribs,

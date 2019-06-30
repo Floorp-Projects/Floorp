@@ -601,6 +601,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
   bool hasActiveAttrib = false;
   bool hasActiveDivisor0 = false;
   webgl::CachedDrawFetchLimits fetchLimits = {UINT64_MAX, UINT64_MAX};
+  fetchLimits.usedBuffers.reserve(this->attribs.size());
 
   for (const auto& progAttrib : this->attribs) {
     const auto& loc = progAttrib.mLoc;
@@ -613,13 +614,9 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
     webgl::AttribBaseType attribDataBaseType;
     if (attribData.mEnabled) {
       MOZ_ASSERT(attribData.mBuf);
-      if (attribData.mBuf->IsBoundForTF()) {
-        webgl->ErrorInvalidOperation(
-            "Vertex attrib %u's buffer is bound for"
-            " transform feedback.",
-            loc);
-        return nullptr;
-      }
+      fetchLimits.usedBuffers.push_back(
+          {attribData.mBuf.get(), static_cast<uint32_t>(loc)});
+
       cacheDeps.push_back(&attribData.mBuf->mFetchInvalidator);
 
       attribDataBaseType = attribData.BaseType();

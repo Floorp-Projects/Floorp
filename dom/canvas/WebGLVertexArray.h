@@ -6,7 +6,8 @@
 #ifndef WEBGL_VERTEX_ARRAY_H_
 #define WEBGL_VERTEX_ARRAY_H_
 
-#include "nsTArray.h"
+#include <vector>
+
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
 
@@ -39,8 +40,6 @@ class WebGLVertexArray : public nsWrapperCache,
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLVertexArray)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLVertexArray)
 
-  void AddBufferBindCounts(int8_t addVal) const;
-
  protected:
   WebGLVertexArray(WebGLContext* webgl, GLuint name);
   virtual ~WebGLVertexArray();
@@ -53,7 +52,7 @@ class WebGLVertexArray : public nsWrapperCache,
   bool mHasBeenBound = false;
 
  protected:
-  nsTArray<WebGLVertexAttribData> mAttribs;
+  std::vector<WebGLVertexAttribData> mAttribs;
   WebGLRefPtr<WebGLBuffer> mElementArrayBuffer;
 
   friend class ScopedDrawHelper;
