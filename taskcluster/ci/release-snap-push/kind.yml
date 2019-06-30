@@ -16,12 +16,6 @@ job-defaults:
     description: Pushes (Ubuntu) Snaps onto Snap Store
     run-on-projects: []  # to make sure this never runs as part of CI
     shipping-phase: push
-    scopes:
-        by-project:
-            mozilla-beta: ["project:releng:snapcraft:firefox:beta"]
-            mozilla-release: ["project:releng:snapcraft:firefox:candidate"]
-            mozilla-esr60: ["project:releng:snapcraft:firefox:esr"]
-            default: ["project:releng:snapcraft:firefox:mock"]
     treeherder:
         platform: linux64/opt
         kind: build
@@ -32,6 +26,13 @@ job-defaults:
             staging: scriptworker-prov-v1/dep-pushsnap
     worker:
         implementation: push-snap
+        channel:
+            by-release-type:
+                beta: beta
+                release: candidate
+                esr60: esr/stable
+                esr68: esr/candidate
+                default: mock
 
 jobs:
     firefox:
