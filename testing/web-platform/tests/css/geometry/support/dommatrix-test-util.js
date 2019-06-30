@@ -37,7 +37,7 @@ function matrix2D(dict) {
 
 function checkMatrix(actual, expected, { epsilon = 0 } = {}) {
   for (let member in expected) {
-    if (typeof expected[member] === "number") {
+    if (epsilon && typeof expected[member] === "number") {
       assert_approx_equals(actual[member], expected[member], epsilon, member);
     } else {
       assert_equals(actual[member], expected[member], member);
