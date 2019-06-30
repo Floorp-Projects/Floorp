@@ -42,6 +42,9 @@ int alsa_init(cubeb ** context, char const * context_name);
 #if defined(USE_AUDIOUNIT)
 int audiounit_init(cubeb ** context, char const * context_name);
 #endif
+#if defined(USE_AUDIOUNIT_RUST)
+int audiounit_rust_init(cubeb ** contet, char const * context_name);
+#endif
 #if defined(USE_WINMM)
 int winmm_init(cubeb ** context, char const * context_name);
 #endif
@@ -50,6 +53,9 @@ int wasapi_init(cubeb ** context, char const * context_name);
 #endif
 #if defined(USE_SNDIO)
 int sndio_init(cubeb ** context, char const * context_name);
+#endif
+#if defined(USE_SUN)
+int sun_init(cubeb ** context, char const * context_name);
 #endif
 #if defined(USE_OPENSL)
 int opensl_init(cubeb ** context, char const * context_name);
@@ -136,6 +142,10 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #if defined(USE_AUDIOUNIT)
       init_oneshot = audiounit_init;
 #endif
+    } else if (!strcmp(backend_name, "audiounit-rust")) {
+#if defined(USE_AUDIOUNIT_RUST)
+      init_oneshot = audiounit_rust_init;
+#endif
     } else if (!strcmp(backend_name, "wasapi")) {
 #if defined(USE_WASAPI)
       init_oneshot = wasapi_init;
@@ -147,6 +157,10 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
     } else if (!strcmp(backend_name, "sndio")) {
 #if defined(USE_SNDIO)
       init_oneshot = sndio_init;
+#endif
+    } else if (!strcmp(backend_name, "sun")) {
+#if defined(USE_SUN)
+      init_oneshot = sun_init;
 #endif
     } else if (!strcmp(backend_name, "opensl")) {
 #if defined(USE_OPENSL)
@@ -186,6 +200,9 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #if defined(USE_AUDIOUNIT)
     audiounit_init,
 #endif
+#if defined(USE_AUDIOUNIT_RUST)
+    audiounit_rust_init,
+#endif
 #if defined(USE_WASAPI)
     wasapi_init,
 #endif
@@ -194,6 +211,9 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #endif
 #if defined(USE_SNDIO)
     sndio_init,
+#endif
+#if defined(USE_SUN)
+    sun_init,
 #endif
 #if defined(USE_OPENSL)
     opensl_init,
