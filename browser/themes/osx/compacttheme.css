@@ -9,7 +9,7 @@
   -moz-font-smoothing-background-color: -moz-mac-vibrant-titlebar-light;
 }
 
-.tabbrowser-tab[multiselected],
-.tabbrowser-tab[visuallyselected=true] {
+.tabbrowser-tab[multiselected]:-moz-lwtheme-darktext,
+.tabbrowser-tab[visuallyselected=true]:-moz-lwtheme-darktext {
   -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
 }
