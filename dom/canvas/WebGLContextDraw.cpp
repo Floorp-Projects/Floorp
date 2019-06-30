@@ -200,6 +200,123 @@ bool WebGLContext::ValidateStencilParamsForDrawCall() const {
   return ok;
 }
 
+// -
+
+static void GenErrorIllegalUse(const WebGLContext& webgl,
+                               const GLenum useTarget, const uint32_t useId,
+                               const GLenum boundTarget,
+                               const uint32_t boundId) {
+  const auto fnName = [&](const GLenum target, const uint32_t id) {
+    auto name = nsCString(EnumString(target).c_str());
+    if (id != static_cast<uint32_t>(-1)) {
+      name += nsPrintfCString("[%u]", id);
+    }
+    return name;
+  };
+  const auto& useName = fnName(useTarget, useId);
+  const auto& boundName = fnName(boundTarget, boundId);
+  webgl.GenerateError(LOCAL_GL_INVALID_OPERATION,
+                      "Illegal use of buffer at %s"
+                      " while also bound to %s.",
+                      useName.BeginReading(), boundName.BeginReading());
+}
+
+bool WebGLContext::ValidateBufferForNonTf(const WebGLBuffer& nonTfBuffer,
+                                          const GLenum nonTfTarget,
+                                          const uint32_t nonTfId) const {
+  bool dupe = false;
+  const auto& tfAttribs = mBoundTransformFeedback->mIndexedBindings;
+  for (const auto& cur : tfAttribs) {
+    dupe |= (&nonTfBuffer == cur.mBufferBinding.get());
+  }
+  if (MOZ_LIKELY(!dupe)) return true;
+
+  dupe = false;
+  for (const auto tfId : IntegerRange(tfAttribs.size())) {
+    const auto& tfBuffer = tfAttribs[tfId].mBufferBinding;
+    if (&nonTfBuffer == tfBuffer) {
+      dupe = true;
+      GenErrorIllegalUse(*this, nonTfTarget, nonTfId,
+                         LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, tfId);
+    }
+  }
+  MOZ_ASSERT(dupe);
+  return false;
+}
+
+bool WebGLContext::ValidateBuffersForTf(
+    const WebGLTransformFeedback& tfo,
+    const webgl::LinkedProgramInfo& linkInfo) const {
+  size_t numUsed;
+  switch (linkInfo.transformFeedbackBufferMode) {
+    case LOCAL_GL_INTERLEAVED_ATTRIBS:
+      numUsed = 1;
+      break;
+
+    case LOCAL_GL_SEPARATE_ATTRIBS:
+      numUsed = linkInfo.transformFeedbackVaryings.size();
+      break;
+
+    default:
+      MOZ_CRASH();
+  }
+
+  std::vector<webgl::BufferAndIndex> tfBuffers;
+  tfBuffers.reserve(numUsed);
+  for (const auto i : IntegerRange(numUsed)) {
+    tfBuffers.push_back({tfo.mIndexedBindings[i].mBufferBinding.get(),
+                         static_cast<uint32_t>(i)});
+  }
+
+  return ValidateBuffersForTf(tfBuffers);
+}
+
+bool WebGLContext::ValidateBuffersForTf(
+    const std::vector<webgl::BufferAndIndex>& tfBuffers) const {
+  bool dupe = false;
+  const auto fnCheck = [&](const WebGLBuffer* const nonTf,
+                           const GLenum nonTfTarget, const uint32_t nonTfId) {
+    for (const auto& tf : tfBuffers) {
+      dupe |= (nonTf && tf.buffer == nonTf);
+    }
+
+    if (MOZ_LIKELY(!dupe)) return false;
+
+    for (const auto& tf : tfBuffers) {
+      if (nonTf && tf.buffer == nonTf) {
+        dupe = true;
+        GenErrorIllegalUse(*this, LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, tf.id,
+                           nonTfTarget, nonTfId);
+      }
+    }
+    return true;
+  };
+
+  fnCheck(mBoundArrayBuffer.get(), LOCAL_GL_ARRAY_BUFFER, -1);
+  fnCheck(mBoundCopyReadBuffer.get(), LOCAL_GL_COPY_READ_BUFFER, -1);
+  fnCheck(mBoundCopyWriteBuffer.get(), LOCAL_GL_COPY_WRITE_BUFFER, -1);
+  fnCheck(mBoundPixelPackBuffer.get(), LOCAL_GL_PIXEL_PACK_BUFFER, -1);
+  fnCheck(mBoundPixelUnpackBuffer.get(), LOCAL_GL_PIXEL_UNPACK_BUFFER, -1);
+  // fnCheck(mBoundTransformFeedbackBuffer.get(),
+  // LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, -1);
+  fnCheck(mBoundUniformBuffer.get(), LOCAL_GL_UNIFORM_BUFFER, -1);
+
+  for (const auto i : IntegerRange(mIndexedUniformBufferBindings.size())) {
+    const auto& cur = mIndexedUniformBufferBindings[i];
+    fnCheck(cur.mBufferBinding.get(), LOCAL_GL_UNIFORM_BUFFER, i);
+  }
+
+  fnCheck(mBoundVertexArray->mElementArrayBuffer.get(),
+          LOCAL_GL_ELEMENT_ARRAY_BUFFER, -1);
+  const auto& vertAttribs = mBoundVertexArray->mAttribs;
+  for (const auto i : IntegerRange(vertAttribs.size())) {
+    const auto& cur = vertAttribs[i];
+    fnCheck(cur.mBuf.get(), LOCAL_GL_ARRAY_BUFFER, i);
+  }
+
+  return !dupe;
+}
+
 ////////////////////////////////////////
 
 template <typename T>
@@ -251,7 +368,8 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
   // -
   // Check UBO sizes.
 
-  for (const auto& cur : linkInfo->uniformBlocks) {
+  for (const auto i : IntegerRange(linkInfo->uniformBlocks.size())) {
+    const auto& cur = linkInfo->uniformBlocks[i];
     const auto& dataSize = cur->mDataSize;
     const auto& binding = cur->mBinding;
     if (!binding) {
@@ -267,12 +385,9 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
       return nullptr;
     }
 
-    if (binding->mBufferBinding->IsBoundForTF()) {
-      webgl->ErrorInvalidOperation(
-          "Buffer for uniform block is bound or"
-          " in use for transform feedback.");
+    if (!webgl->ValidateBufferForNonTf(binding->mBufferBinding,
+                                       LOCAL_GL_UNIFORM_BUFFER, i))
       return nullptr;
-    }
   }
 
   // -
@@ -288,34 +403,7 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
       }
     }
 
-    uint32_t numUsed;
-    switch (linkInfo->transformFeedbackBufferMode) {
-      case LOCAL_GL_INTERLEAVED_ATTRIBS:
-        numUsed = 1;
-        break;
-
-      case LOCAL_GL_SEPARATE_ATTRIBS:
-        numUsed = linkInfo->transformFeedbackVaryings.size();
-        break;
-
-      default:
-        MOZ_CRASH();
-    }
-
-    for (uint32_t i = 0; i < numUsed; ++i) {
-      const auto& buffer = tfo->mIndexedBindings[i].mBufferBinding;
-      if (buffer->IsBoundForNonTF()) {
-        webgl->ErrorInvalidOperation(
-            "Transform feedback varying %u's buffer"
-            " is bound for non-transform-feedback.",
-            i);
-        return nullptr;
-      }
-
-      // Technically we don't know that this will be updated yet, but we can
-      // speculatively mark it.
-      buffer->ResetLastUpdateFenceId();
-    }
+    if (!webgl->ValidateBuffersForTf(*tfo, *linkInfo)) return nullptr;
   }
 
   // -
@@ -385,6 +473,15 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
         " supply %u.",
         instanceCount, uint32_t(fetchLimits->maxInstances));
     return nullptr;
+  }
+
+  if (tfo) {
+    for (const auto& used : fetchLimits->usedBuffers) {
+      MOZ_ASSERT(used.buffer);
+      if (!webgl->ValidateBufferForNonTf(*used.buffer, LOCAL_GL_ARRAY_BUFFER,
+                                         used.id))
+        return nullptr;
+    }
   }
 
   // -
@@ -489,6 +586,13 @@ class ScopedDrawWithTransformFeedback final {
     if (!mWithTF) return;
 
     mTFO->mActive_VertPosition += mUsedVerts;
+
+    for (const auto& cur : mTFO->mIndexedBindings) {
+      const auto& buffer = cur.mBufferBinding;
+      if (buffer) {
+        buffer->ResetLastUpdateFenceId();
+      }
+    }
   }
 };
 
@@ -645,7 +749,6 @@ WebGLBuffer* WebGLContext::DrawElements_check(const GLsizei rawIndexCount,
     ErrorInvalidOperation("Index buffer not bound.");
     return nullptr;
   }
-  MOZ_ASSERT(!indexBuffer->IsBoundForTF(), "This should be impossible.");
 
   const size_t availBytes = indexBuffer->ByteLength();
   const auto availIndices =

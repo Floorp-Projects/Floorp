@@ -69,7 +69,7 @@ void WebGLVertexAttribData::VertexAttribPointer(bool integerFunc,
                                                 uint32_t stride,
                                                 uint64_t byteOffset) {
   mIntegerFunc = integerFunc;
-  WebGLBuffer::SetSlot(0, buf, &mBuf);
+  mBuf = buf;
   mType = type;
   mBaseType = AttribPointerBaseType(integerFunc, type);
   mSize = size;
@@ -82,6 +82,7 @@ void WebGLVertexAttribData::VertexAttribPointer(bool integerFunc,
 
 void WebGLVertexAttribData::DoVertexAttribPointer(gl::GLContext* gl,
                                                   GLuint index) const {
+  const ScopedLazyBind lazyBind(gl, LOCAL_GL_ARRAY_BUFFER, mBuf);
   if (mIntegerFunc) {
     gl->fVertexAttribIPointer(index, mSize, mType, mStride,
                               (const void*)mByteOffset);

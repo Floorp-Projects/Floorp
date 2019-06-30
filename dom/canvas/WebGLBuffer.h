@@ -55,32 +55,6 @@ class WebGLBuffer final : public nsWrapperCache,
 
   ////
 
-  static void AddBindCount(GLenum target, WebGLBuffer* buffer, int8_t addVal) {
-    if (!buffer) return;
-
-    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER) {
-      MOZ_ASSERT_IF(addVal < 0, buffer->mTFBindCount >= size_t(-addVal));
-      buffer->mTFBindCount += addVal;
-      buffer->mFetchInvalidator.InvalidateCaches();
-    } else {
-      MOZ_ASSERT_IF(addVal < 0, buffer->mNonTFBindCount >= size_t(-addVal));
-      buffer->mNonTFBindCount += addVal;
-    }
-  }
-
-  static void SetSlot(GLenum target, WebGLBuffer* newBuffer,
-                      WebGLRefPtr<WebGLBuffer>* const out_slot) {
-    WebGLBuffer* const oldBuffer = *out_slot;
-    AddBindCount(target, oldBuffer, -1);
-    AddBindCount(target, newBuffer, +1);
-    *out_slot = newBuffer;
-  }
-
-  bool IsBoundForTF() const { return bool(mTFBindCount); }
-  bool IsBoundForNonTF() const { return bool(mNonTFBindCount); }
-
-  ////
-
   const GLenum mGLName;
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLBuffer)
@@ -91,11 +65,9 @@ class WebGLBuffer final : public nsWrapperCache,
 
   void InvalidateCacheRange(uint64_t byteOffset, uint64_t byteLength) const;
 
-  Kind mContent;
-  GLenum mUsage;
-  size_t mByteLength;
-  size_t mTFBindCount;
-  size_t mNonTFBindCount;
+  Kind mContent = Kind::Undefined;
+  GLenum mUsage = LOCAL_GL_STATIC_DRAW;
+  size_t mByteLength = 0;
   mutable uint64_t mLastUpdateFenceId = 0;
 
   struct IndexRange final {

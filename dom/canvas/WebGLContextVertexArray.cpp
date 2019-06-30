@@ -18,10 +18,6 @@ void WebGLContext::BindVertexArray(WebGLVertexArray* array) {
 
   if (array && !ValidateObject("array", *array)) return;
 
-  if (mBoundVertexArray) {
-    mBoundVertexArray->AddBufferBindCounts(-1);
-  }
-
   if (array == nullptr) {
     array = mDefaultVertexArray;
   }
@@ -30,7 +26,6 @@ void WebGLContext::BindVertexArray(WebGLVertexArray* array) {
 
   MOZ_ASSERT(mBoundVertexArray == array);
   if (mBoundVertexArray) {
-    mBoundVertexArray->AddBufferBindCounts(+1);
     mBoundVertexArray->mHasBeenBound = true;
   }
 }

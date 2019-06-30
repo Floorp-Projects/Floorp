@@ -60,8 +60,6 @@ class WebGLTransformFeedback final
 
   bool IsActiveAndNotPaused() const { return mIsActive && !mIsPaused; }
 
-  void AddBufferBindCounts(int8_t addVal) const;
-
   // GL Funcs
   void BeginTransformFeedback(GLenum primMode);
   void EndTransformFeedback();

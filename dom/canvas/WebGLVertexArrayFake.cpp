@@ -38,7 +38,7 @@ void WebGLVertexArrayFake::BindVertexArray() {
     ++i;
   }
 
-  size_t len = prevVertexArray->mAttribs.Length();
+  size_t len = prevVertexArray->mAttribs.size();
   for (; i < len; ++i) {
     const auto& vd = prevVertexArray->mAttribs[i];
 
