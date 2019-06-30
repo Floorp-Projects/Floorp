@@ -5,6 +5,8 @@
 
 #include "WebGLContext.h"
 
+#include <limits>
+
 #include "GLContext.h"
 #include "WebGLBuffer.h"
 #include "WebGLTransformFeedback.h"
@@ -165,11 +167,9 @@ bool WebGLContext::ValidateIndexedBufferBinding(
   return true;
 }
 
-void WebGLContext::BindBufferBase(GLenum target, GLuint index,
-                                  WebGLBuffer* buffer) {
-  const FuncScope funcScope(*this, "bindBufferBase");
-  if (IsContextLost()) return;
-
+void WebGLContext::BindBufferRangeImpl(GLenum target, GLuint index,
+                                       WebGLBuffer* buffer, WebGLintptr offset,
+                                       WebGLsizeiptr size) {
   if (buffer && !ValidateObject("buffer", *buffer)) return;
 
   WebGLRefPtr<WebGLBuffer>* genericBinding;
@@ -180,52 +180,6 @@ void WebGLContext::BindBufferBase(GLenum target, GLuint index,
   }
 
   if (buffer && !buffer->ValidateCanBindToTarget(target)) return;
-
-  ////
-
-  gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
-  if (buffer) {
-    gl->fBindBuffer(target, 0);  // Reset generic.
-  }
-
-  ////
-
-  *genericBinding = buffer;
-  indexedBinding->mBufferBinding = buffer;
-  indexedBinding->mRangeStart = 0;
-  indexedBinding->mRangeSize = 0;
-
-  if (buffer) {
-    buffer->SetContentAfterBind(target);
-  }
-}
-
-void WebGLContext::BindBufferRange(GLenum target, GLuint index,
-                                   WebGLBuffer* buffer, WebGLintptr offset,
-                                   WebGLsizeiptr size) {
-  const FuncScope funcScope(*this, "bindBufferRange");
-  if (IsContextLost()) return;
-
-  if (buffer && !ValidateObject("buffer", *buffer)) return;
-
-  if (!ValidateNonNegative("offset", offset) ||
-      !ValidateNonNegative("size", size)) {
-    return;
-  }
-
-  WebGLRefPtr<WebGLBuffer>* genericBinding;
-  IndexedBufferBinding* indexedBinding;
-  if (!ValidateIndexedBufferBinding(target, index, &genericBinding,
-                                    &indexedBinding)) {
-    return;
-  }
-
-  if (buffer && !buffer->ValidateCanBindToTarget(target)) return;
-
-  if (buffer && !size) {
-    ErrorInvalidValue("Size must be non-zero for non-null buffer.");
-    return;
-  }
 
   ////
 
@@ -250,19 +204,28 @@ void WebGLContext::BindBufferRange(GLenum target, GLuint index,
     } break;
   }
 
-    ////
+  ////
 
+  bool needsPrebind = false;
+  needsPrebind |= gl->IsANGLE();
 #ifdef XP_MACOSX
-  if (buffer && buffer->Content() == WebGLBuffer::Kind::Undefined &&
-      gl->WorkAroundDriverBugs()) {
-    // BindBufferRange will fail if the buffer's contents is undefined.
-    // Bind so driver initializes the buffer.
-    gl->fBindBuffer(target, buffer->mGLName);
-  }
+  needsPrebind = true;
 #endif
 
-  gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset,
-                       size);
+  if (gl->WorkAroundDriverBugs() && buffer && needsPrebind) {
+    // BindBufferBase/Range will fail (on some drivers) if the buffer name has
+    // never been bound. (GenBuffers makes a name, but BindBuffer initializes
+    // that name as a real buffer object)
+    gl->fBindBuffer(target, buffer->mGLName);
+  }
+
+  if (size) {
+    gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset,
+                         size);
+  } else {
+    gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
+  }
+
   if (buffer) {
     gl->fBindBuffer(target, 0);  // Reset generic.
   }
