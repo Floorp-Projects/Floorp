@@ -220,7 +220,7 @@ wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.getTra
 
 // Uniform buffer objects and transform feedback buffers
 wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.bindBufferBase(contextA.UNIFORM_BUFFER, 0, bufferB)");
-wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.bindBufferRange(contextA.UNIFORM_BUFFER, 0, bufferB, 0, 0)");
+wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.bindBufferRange(contextA.UNIFORM_BUFFER, 0, bufferB, 0, 4)");
 wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.getUniformIndices(programB, ['u_modelViewProjMatrix'])");
 wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.getActiveUniforms(programB, [0], contextA.UNIFORM_TYPE)");
 wtu.shouldGenerateGLError(contextA, contextA.INVALID_OPERATION, "contextA.getUniformBlockIndex(programB, 'nonexistent_uniform_block_name')");

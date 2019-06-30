@@ -977,9 +977,34 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   // -----------------------------------------------------------------------------
   // Buffer Objects (WebGLContextBuffers.cpp)
   void BindBuffer(GLenum target, WebGLBuffer* buffer);
-  void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buf);
+
+ private:
+  void BindBufferRangeImpl(GLenum target, GLuint index, WebGLBuffer* buf,
+                           WebGLintptr offset, WebGLsizeiptr size);
+
+ public:
+  void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buf) {
+    const FuncScope funcScope(*this, "bindBufferBase");
+    if (IsContextLost()) return;
+
+    BindBufferRangeImpl(target, index, buf, 0, 0);
+  }
+
   void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buf,
-                       WebGLintptr offset, WebGLsizeiptr size);
+                       WebGLintptr offset, WebGLsizeiptr size) {
+    const FuncScope funcScope(*this, "bindBufferRange");
+    if (IsContextLost()) return;
+
+    if (!ValidateNonNegative("offset", offset) ||
+        !ValidateNonNegative("size", size)) {
+      return;
+    }
+    if (buf && !size) {
+      ErrorInvalidValue("Size must be non-zero for non-null buffer.");
+      return;
+    }
+    BindBufferRangeImpl(target, index, buf, offset, size);
+  }
 
  private:
   void BufferDataImpl(GLenum target, uint64_t dataLen, const uint8_t* data,
