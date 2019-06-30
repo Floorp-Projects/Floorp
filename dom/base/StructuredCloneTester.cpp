@@ -47,8 +47,10 @@ bool StructuredCloneTester::Serializable() const { return mSerializable; }
 bool StructuredCloneTester::Deserializable() const { return mDeserializable; }
 
 /* static */
-JSObject* StructuredCloneTester::ReadStructuredClone(
-    JSContext* aCx, JSStructuredCloneReader* aReader) {
+already_AddRefed<StructuredCloneTester>
+StructuredCloneTester::ReadStructuredClone(JSContext* aCx,
+                                           nsIGlobalObject* aGlobal,
+                                           JSStructuredCloneReader* aReader) {
   uint32_t serializable = 0;
   uint32_t deserializable = 0;
 
@@ -56,35 +58,25 @@ JSObject* StructuredCloneTester::ReadStructuredClone(
     return nullptr;
   }
 
-  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  RefPtr<StructuredCloneTester> sct =
+      new StructuredCloneTester(aGlobal, static_cast<bool>(serializable),
+                                static_cast<bool>(deserializable));
 
-  if (NS_WARN_IF(!global)) {
+  // "Fail" deserialization
+  if (!sct->Deserializable()) {
+    xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
     return nullptr;
   }
 
-  // Prevent the return value from being trashed by a GC during ~RefPtr
-  JS::Rooted<JSObject*> result(aCx);
-  {
-    RefPtr<StructuredCloneTester> sct =
-        new StructuredCloneTester(global, static_cast<bool>(serializable),
-                                  static_cast<bool>(deserializable));
-
-    // "Fail" deserialization
-    if (!sct->Deserializable()) {
-      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-      return nullptr;
-    }
-
-    result = sct->WrapObject(aCx, nullptr);
-  }
-
-  return result;
+  return sct.forget();
 }
 
 bool StructuredCloneTester::WriteStructuredClone(
-    JSStructuredCloneWriter* aWriter) const {
-  return JS_WriteUint32Pair(aWriter, SCTAG_DOM_STRUCTURED_CLONE_TESTER, 0) &&
-         JS_WriteUint32Pair(aWriter, static_cast<uint32_t>(Serializable()),
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
+  if (!Serializable()) {
+    return xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  }
+  return JS_WriteUint32Pair(aWriter, static_cast<uint32_t>(Serializable()),
                             static_cast<uint32_t>(Deserializable()));
 }
 
