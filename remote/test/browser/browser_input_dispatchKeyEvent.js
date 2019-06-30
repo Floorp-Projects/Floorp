@@ -26,6 +26,17 @@ const CTRL_MODIFIER = 2;
 const ARROW_MODIFIER = isMac ? ALT_MODIFIER : CTRL_MODIFIER;
 
 add_task(async function() {
+  // The selectionchange event was flagged behind dom.select_events.textcontrols.enabled,
+  // which is only true on Nightly and Local builds. Force the pref to true so that
+  // the test passes on all channels. See Bug 1309628 for more details.
+  info("Enable selectionchange events on input elements");
+  await new Promise(resolve => {
+    const options = {
+      set: [["dom.select_events.textcontrols.enabled", true]],
+    };
+    SpecialPowers.pushPrefEnv(options, resolve);
+  });
+
   const { client, tab } = await setupTestForUri(TEST_URI);
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
