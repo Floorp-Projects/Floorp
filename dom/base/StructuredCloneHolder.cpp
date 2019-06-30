@@ -25,8 +25,6 @@
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
-#include "mozilla/dom/StructuredCloneTester.h"
-#include "mozilla/dom/StructuredCloneTesterBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebIDLSerializable.h"
 #include "mozilla/gfx/2D.h"
@@ -125,7 +123,7 @@ void AssertTagValues() {
                     SCTAG_DOM_DOMMATRIX == 0xffff8013 &&
                     SCTAG_DOM_URLSEARCHPARAMS == 0xffff8014 &&
                     SCTAG_DOM_DOMMATRIXREADONLY == 0xffff8015 &&
-                    SCTAG_DOM_STRUCTURED_CLONE_TESTER == 0xffff8018,
+                    SCTAG_DOM_STRUCTUREDCLONETESTER == 0xffff8018,
                 "Something has changed the sctag values. This is wrong!");
 }
 
@@ -365,10 +363,6 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return result.toObjectOrNull();
   }
 
-  if (aTag == SCTAG_DOM_STRUCTURED_CLONE_TESTER) {
-    return StructuredCloneTester::ReadStructuredClone(aCx, aReader);
-  }
-
   // Don't know what this is. Bail.
   xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return nullptr;
@@ -390,22 +384,6 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   const DOMJSClass* domClass = GetDOMClass(obj);
   if (domClass && domClass->mSerializer) {
     return domClass->mSerializer(aCx, aWriter, obj);
-  }
-
-  // StructuredCloneTester - testing only
-  {
-    StructuredCloneTester* sct = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneTester, &obj, sct))) {
-      MOZ_ASSERT(StaticPrefs::dom_testing_structuredclonetester_enabled());
-
-      // "Fail" serialization
-      if (!sct->Serializable()) {
-        xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-        return false;
-      }
-
-      return sct->WriteStructuredClone(aWriter);
-    }
   }
 
   if (NS_IsMainThread() && xpc::IsReflector(obj, aCx)) {

@@ -6,7 +6,8 @@
 
 [Constructor(boolean serializable, boolean deserializable),
  Exposed=(Window,Worker),
- Pref="dom.testing.structuredclonetester.enabled"]
+ Pref="dom.testing.structuredclonetester.enabled",
+ Serializable]
 interface StructuredCloneTester {
   readonly attribute boolean serializable;
   readonly attribute boolean deserializable;
