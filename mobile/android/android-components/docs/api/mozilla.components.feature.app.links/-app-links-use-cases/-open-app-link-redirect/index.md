@@ -12,4 +12,4 @@ This does not do any additional UI other than the chooser that Android may provi
 
 | Name | Summary |
 |---|---|
-| [invoke](invoke.md) | `fun invoke(redirect: `[`AppLinkRedirect`](../../-app-link-redirect/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [invoke](invoke.md) | `operator fun invoke(redirect: `[`AppLinkRedirect`](../../-app-link-redirect/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

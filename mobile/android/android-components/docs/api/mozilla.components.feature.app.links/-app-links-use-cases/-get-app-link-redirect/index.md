@@ -24,4 +24,4 @@ if no web fallback is available.
 
 | Name | Summary |
 |---|---|
-| [invoke](invoke.md) | `fun invoke(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`AppLinkRedirect`](../../-app-link-redirect/index.md) |
+| [invoke](invoke.md) | `operator fun invoke(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`AppLinkRedirect`](../../-app-link-redirect/index.md) |

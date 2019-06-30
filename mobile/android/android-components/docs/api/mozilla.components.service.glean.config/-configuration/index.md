@@ -31,7 +31,6 @@ The Configuration class describes how to configure the Glean.
 | Name | Summary |
 |---|---|
 | [DEFAULT_CONNECTION_TIMEOUT](-d-e-f-a-u-l-t_-c-o-n-n-e-c-t-i-o-n_-t-i-m-e-o-u-t.md) | `const val DEFAULT_CONNECTION_TIMEOUT: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
-| [DEFAULT_DEBUGVIEW_ENDPOINT](-d-e-f-a-u-l-t_-d-e-b-u-g-v-i-e-w_-e-n-d-p-o-i-n-t.md) | `const val DEFAULT_DEBUGVIEW_ENDPOINT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [DEFAULT_LOG_PINGS](-d-e-f-a-u-l-t_-l-o-g_-p-i-n-g-s.md) | `const val DEFAULT_LOG_PINGS: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [DEFAULT_MAX_EVENTS](-d-e-f-a-u-l-t_-m-a-x_-e-v-e-n-t-s.md) | `const val DEFAULT_MAX_EVENTS: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [DEFAULT_READ_TIMEOUT](-d-e-f-a-u-l-t_-r-e-a-d_-t-i-m-e-o-u-t.md) | `const val DEFAULT_READ_TIMEOUT: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |

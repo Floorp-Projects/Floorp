@@ -18,7 +18,7 @@ active browsing sessions to use the new setting.
 | Name | Summary |
 |---|---|
 | [forEachSession](for-each-session.md) | `open fun forEachSession(session: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`, value: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called to update an active session. Defaults to updating the session's [Settings](../../../mozilla.components.concept.engine/-settings/index.md) object. |
-| [invoke](invoke.md) | `fun invoke(value: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Updates the engine setting and all active sessions. |
+| [invoke](invoke.md) | `operator fun invoke(value: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Updates the engine setting and all active sessions. |
 | [update](update.md) | `abstract fun update(settings: `[`Settings`](../../../mozilla.components.concept.engine/-settings/index.md)`, value: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called to update a [Settings](../../../mozilla.components.concept.engine/-settings/index.md) object using the value from the invoke call. |
 
 ### Inheritors

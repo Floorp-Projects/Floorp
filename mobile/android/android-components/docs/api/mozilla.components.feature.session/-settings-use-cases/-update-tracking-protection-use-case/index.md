@@ -18,4 +18,4 @@ All active sessions are automatically updated with the new policy.
 
 | Name | Summary |
 |---|---|
-| [invoke](../-update-setting-use-case/invoke.md) | `fun invoke(value: `[`T`](../-update-setting-use-case/index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Updates the engine setting and all active sessions. |
+| [invoke](../-update-setting-use-case/invoke.md) | `operator fun invoke(value: `[`T`](../-update-setting-use-case/index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Updates the engine setting and all active sessions. |

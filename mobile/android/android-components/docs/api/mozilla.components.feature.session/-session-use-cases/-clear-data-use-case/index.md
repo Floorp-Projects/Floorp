@@ -8,4 +8,4 @@
 
 | Name | Summary |
 |---|---|
-| [invoke](invoke.md) | `fun invoke(session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md)`? = sessionManager.selectedSession, data: `[`BrowsingData`](../../../mozilla.components.concept.engine/-engine/-browsing-data/index.md)` = BrowsingData.all()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all user data sources available. |
+| [invoke](invoke.md) | `operator fun invoke(session: `[`Session`](../../../mozilla.components.browser.session/-session/index.md)`? = sessionManager.selectedSession, data: `[`BrowsingData`](../../../mozilla.components.concept.engine/-engine/-browsing-data/index.md)` = BrowsingData.all()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all user data sources available. |
