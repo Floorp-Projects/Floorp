@@ -12,13 +12,7 @@
 namespace mozilla {
 
 WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
-    : WebGLRefCountedObject(webgl),
-      mGLName(buf),
-      mContent(Kind::Undefined),
-      mUsage(LOCAL_GL_STATIC_DRAW),
-      mByteLength(0),
-      mTFBindCount(0),
-      mNonTFBindCount(0) {
+    : WebGLRefCountedObject(webgl), mGLName(buf) {
   mContext->mBuffers.insertBack(this);
 }
 

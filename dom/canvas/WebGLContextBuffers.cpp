@@ -78,19 +78,14 @@ WebGLBuffer* WebGLContext::ValidateBufferSelection(GLenum target) {
           " transform feedback is active and unpaused.");
       return nullptr;
     }
-    if (buffer->IsBoundForNonTF()) {
-      ErrorInvalidOperation(
-          "Specified WebGLBuffer is currently bound for"
-          " non-transform-feedback.");
-      return nullptr;
-    }
+    const auto tfBuffers = std::vector<webgl::BufferAndIndex>{{
+        {buffer},
+    }};
+
+    if (!ValidateBuffersForTf(tfBuffers)) return nullptr;
   } else {
-    if (buffer->IsBoundForTF()) {
-      ErrorInvalidOperation(
-          "Specified WebGLBuffer is currently bound for"
-          " transform feedback.");
+    if (mBoundTransformFeedback && !ValidateBufferForNonTf(buffer, target))
       return nullptr;
-    }
   }
 
   return buffer.get();
@@ -137,18 +132,13 @@ void WebGLContext::BindBuffer(GLenum target, WebGLBuffer* buffer) {
 
   if (buffer && !buffer->ValidateCanBindToTarget(target)) return;
 
-  gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
-
-  WebGLBuffer::SetSlot(target, buffer, slot);
-  if (buffer) {
-    buffer->SetContentAfterBind(target);
+  if (!IsVirtualBufferTarget(target)) {
+    gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
   }
 
-  switch (target) {
-    case LOCAL_GL_PIXEL_PACK_BUFFER:
-    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
-      gl->fBindBuffer(target, 0);
-      break;
+  *slot = buffer;
+  if (buffer) {
+    buffer->SetContentAfterBind(target);
   }
 }
 
@@ -194,11 +184,14 @@ void WebGLContext::BindBufferBase(GLenum target, GLuint index,
   ////
 
   gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
+  if (buffer) {
+    gl->fBindBuffer(target, 0);  // Reset generic.
+  }
 
   ////
 
-  WebGLBuffer::SetSlot(target, buffer, genericBinding);
-  WebGLBuffer::SetSlot(target, buffer, &indexedBinding->mBufferBinding);
+  *genericBinding = buffer;
+  indexedBinding->mBufferBinding = buffer;
   indexedBinding->mRangeStart = 0;
   indexedBinding->mRangeSize = 0;
 
@@ -270,11 +263,14 @@ void WebGLContext::BindBufferRange(GLenum target, GLuint index,
 
   gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset,
                        size);
+  if (buffer) {
+    gl->fBindBuffer(target, 0);  // Reset generic.
+  }
 
   ////
 
-  WebGLBuffer::SetSlot(target, buffer, genericBinding);
-  WebGLBuffer::SetSlot(target, buffer, &indexedBinding->mBufferBinding);
+  *genericBinding = buffer;
+  indexedBinding->mBufferBinding = buffer;
   indexedBinding->mRangeStart = offset;
   indexedBinding->mRangeSize = size;
 
@@ -408,7 +404,7 @@ void WebGLContext::DeleteBuffer(WebGLBuffer* buffer) {
   const auto fnClearIfBuffer = [&](GLenum target,
                                    WebGLRefPtr<WebGLBuffer>& bindPoint) {
     if (bindPoint == buffer) {
-      WebGLBuffer::SetSlot(target, nullptr, &bindPoint);
+      bindPoint = nullptr;
     }
   };
 

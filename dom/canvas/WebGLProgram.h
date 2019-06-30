@@ -85,8 +85,9 @@ struct FragOutputInfo final {
 };
 
 struct CachedDrawFetchLimits final {
-  uint64_t maxVerts;
-  uint64_t maxInstances;
+  uint64_t maxVerts = 0;
+  uint64_t maxInstances = 0;
+  std::vector<BufferAndIndex> usedBuffers;
 };
 
 struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,

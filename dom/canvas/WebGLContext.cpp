@@ -1998,22 +1998,15 @@ ScopedFBRebinder::~ScopedFBRebinder() {
 
 ////////////////////
 
-static GLenum TargetIfLazy(GLenum target) {
-  switch (target) {
-    case LOCAL_GL_PIXEL_PACK_BUFFER:
-    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
-      return target;
-
-    default:
-      return 0;
-  }
+static GLenum IsVirtualBufferTarget(GLenum target) {
+  return target != LOCAL_GL_ELEMENT_ARRAY_BUFFER;
 }
 
 ScopedLazyBind::ScopedLazyBind(gl::GLContext* const gl, const GLenum target,
-                               const WebGLBuffer* buf)
-    : mGL(gl), mTarget(buf ? TargetIfLazy(target) : 0), mBuf(buf) {
+                               const WebGLBuffer* const buf)
+    : mGL(gl), mTarget(IsVirtualBufferTarget(target) ? target : 0) {
   if (mTarget) {
-    mGL->fBindBuffer(mTarget, mBuf->mGLName);
+    mGL->fBindBuffer(mTarget, buf ? buf->mGLName : 0);
   }
 }
 
