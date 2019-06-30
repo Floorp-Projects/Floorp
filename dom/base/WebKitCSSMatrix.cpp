@@ -55,9 +55,9 @@ WebKitCSSMatrix* WebKitCSSMatrix::SetMatrixValue(
 }
 
 already_AddRefed<WebKitCSSMatrix> WebKitCSSMatrix::Multiply(
-    const DOMMatrixInit& aOtherInit, ErrorResult& aRv) const {
+    const WebKitCSSMatrix& other) const {
   RefPtr<WebKitCSSMatrix> retval = new WebKitCSSMatrix(mParent, *this);
-  retval->MultiplySelf(aOtherInit, aRv);
+  retval->MultiplySelf(other);
 
   return retval.forget();
 }
