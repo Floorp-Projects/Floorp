@@ -1172,6 +1172,7 @@ def build_push_apk_payload(config, task, task_def):
 
 
 @payload_builder('push-snap', schema={
+    Required('channel'): basestring,
     Required('upstream-artifacts'): [{
         Required('taskId'): taskref_or_string,
         Required('taskType'): basestring,
@@ -1182,6 +1183,7 @@ def build_push_snap_payload(config, task, task_def):
     worker = task['worker']
 
     task_def['payload'] = {
+        'channel': worker['channel'],
         'upstreamArtifacts':  worker['upstream-artifacts'],
     }
 
