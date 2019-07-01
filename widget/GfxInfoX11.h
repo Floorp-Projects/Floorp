@@ -81,7 +81,6 @@ class GfxInfo final : public GfxInfoBase {
   bool mIsMesa;
   bool mIsAccelerated;
   bool mIsWayland;
-  bool mIsWaylandDRM;
 
   void AddCrashReportAnnotations();
 };
