@@ -5062,18 +5062,12 @@ VARCACHE_PREF(
   bool, true
 )
 
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   Live,
   "layout.css.supports-selector.enabled",
   layout_css_supports_selector_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
