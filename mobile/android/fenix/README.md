@@ -1,6 +1,6 @@
-# Firefox Fenix
+# Firefox Preview
 
-Firefox Fenix is a new browser for Android
+Firefox Preview (internal code name: "Fenix") is an all-new browser for Android, based on [GeckoView](https://mozilla.github.io/geckoview/) and [Mozilla Android Components](https://mozac.org/).
 
 ## Getting Involved
 
