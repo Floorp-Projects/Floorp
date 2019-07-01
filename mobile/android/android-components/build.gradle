@@ -19,7 +19,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.0.0-RC14")
+    id("io.gitlab.arturbosch.detekt").version("1.0.0-RC16")
 }
 
 allprojects {
@@ -218,11 +218,8 @@ task clean(type: Delete) {
 
 
 detekt {
-    // The version number is duplicated, please refer to plugins block for more details
-    toolVersion = "1.0.0-RC14"
     input = files("$projectDir/components", "$projectDir/buildSrc", "$projectDir/samples")
     config = files("$projectDir/config/detekt.yml")
-    filters = ".*test.*,.*/resources/.*,.*/tmp/.*,.*/build/.*"
     baseline = file("$projectDir/config/detekt-baseline.xml")
 
     reports {
@@ -230,7 +227,23 @@ detekt {
             enabled = true
             destination = file("$projectDir/build/reports/detekt.html")
         }
+        xml {
+            enabled = false
+        }
     }
+}
+
+tasks.withType(io.gitlab.arturbosch.detekt.Detekt) {
+    autoCorrect = true
+
+    exclude "**/src/androidTest/**"
+    exclude "**/src/test/**"
+    exclude "**/test/src/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+    exclude "**/tooling/fetch/tests/**"
+    exclude "**/tooling/fetch-tests/**"
 }
 
 configurations {

@@ -86,6 +86,8 @@ internal interface Connection : Closeable {
             }
         }
     }
+
+    @Suppress("EmptyFunctionBlock")
     fun sendHistoryPing() {}
 
     // This function is almost identical to `recordHistoryPing`, with additional
@@ -142,6 +144,8 @@ internal interface Connection : Closeable {
             }
         }
     }
+
+    @Suppress("EmptyFunctionBlock")
     fun sendBookmarksPing() {}
 }
 

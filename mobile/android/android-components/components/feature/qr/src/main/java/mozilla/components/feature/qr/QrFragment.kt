@@ -43,7 +43,6 @@ import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
@@ -52,8 +51,6 @@ import com.google.zxing.common.HybridBinarizer
 import mozilla.components.support.base.android.view.AutoFitTextureView
 import mozilla.components.support.base.log.logger.Logger
 import java.io.Serializable
-import java.lang.IllegalStateException
-
 import java.util.ArrayList
 import java.util.Arrays
 import java.util.Collections
@@ -86,6 +83,7 @@ class QrFragment : Fragment() {
             configureTransform(width, height)
         }
 
+        @Suppress("EmptyFunctionBlock")
         override fun onSurfaceTextureUpdated(texture: SurfaceTexture) { }
 
         override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean {

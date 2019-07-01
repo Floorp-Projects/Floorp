@@ -6,9 +6,9 @@ package org.mozilla.samples.sync.logins
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -21,12 +21,12 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.feature.sync.BackgroundSyncManager
 import mozilla.components.feature.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.fxa.Config
+import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.manager.DeviceTuple
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.Log
@@ -103,12 +103,15 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     }
 
     private val accountObserver = object : AccountObserver {
+
+        @Suppress("EmptyFunctionBlock")
         override fun onLoggedOut() {}
 
         override fun onAuthenticated(account: OAuthAccount) {
             syncManager.syncNow()
         }
 
+        @Suppress("EmptyFunctionBlock")
         override fun onProfileUpdated(profile: Profile) {}
 
         override fun onAuthenticationProblems() {

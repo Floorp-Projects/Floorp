@@ -1,4 +1,3 @@
-autoCorrect: true
 failFast: false
 
 test-pattern: # Configure exclusions for test sources
@@ -327,6 +326,9 @@ style:
     active: true
   ModifierOrder:
     active: true
+  MultiLineIfElse:
+    active: true
+    autoCorrect: true
   NestedClassesVisibility:
     active: false
   NewLineAtEndOfFile:
