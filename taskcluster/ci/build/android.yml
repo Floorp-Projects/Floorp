@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    attributes:
+        artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
     index:
         product: mobile
     worker:
