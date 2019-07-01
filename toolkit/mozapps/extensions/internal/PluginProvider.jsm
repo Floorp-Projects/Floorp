@@ -36,6 +36,7 @@ var PluginProvider = {
 
   startup() {
     Services.obs.addObserver(this, LIST_UPDATED_TOPIC);
+    Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
   },
 
   /**
@@ -44,11 +45,33 @@ var PluginProvider = {
    */
   shutdown() {
     this.plugins = null;
+    Services.obs.removeObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
     Services.obs.removeObserver(this, LIST_UPDATED_TOPIC);
   },
 
   async observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+    case AddonManager.OPTIONS_NOTIFICATION_DISPLAYED:
+      let plugin = await this.getAddonByID(aData);
+      if (!plugin)
+        return;
+
+      let document = aSubject.getElementById("addon-options").contentDocument;
+
+      let libLabel = document.getElementById("pluginLibraries");
+      libLabel.textContent = plugin.pluginLibraries.join(", ");
+
+      let typeLabel = document.getElementById("pluginMimeTypes"), types = [];
+      for (let type of plugin.pluginMimeTypes) {
+        let extras = [type.description.trim(), type.suffixes].
+                     filter(x => x).join(": ");
+        types.push(type.type + (extras ? " (" + extras + ")" : ""));
+      }
+      typeLabel.textContent = types.join(",\n");
+      let showProtectedModePref = canDisableFlashProtectedMode(plugin);
+      document.getElementById("pluginEnableProtectedMode")
+        .setAttribute("collapsed", showProtectedModePref ? "" : "true");
+      break;
     case LIST_UPDATED_TOPIC:
       if (this.plugins)
         this.updatePluginList();
@@ -217,6 +240,10 @@ function isFlashPlugin(aPlugin) {
     }
   }
   return false;
+}
+// Protected mode is win32-only, not win64
+function canDisableFlashProtectedMode(aPlugin) {
+  return isFlashPlugin(aPlugin) && Services.appinfo.XPCOMABI == "x86-msvc";
 }
 
 const wrapperMap = new WeakMap();
@@ -453,7 +480,7 @@ PluginWrapper.prototype = {
   },
 
   get optionsURL() {
-    return "chrome://mozapps/content/extensions/pluginPrefs.xul#id=" + encodeURIComponent(this.id);
+    return "chrome://mozapps/content/extensions/pluginPrefs.xul";
   },
 
   get updateDate() {
