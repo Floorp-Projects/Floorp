@@ -7,6 +7,7 @@
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "tls13hkdf.h"
+#include "tls13subcerts.h"
 
 SECStatus
 SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
@@ -79,6 +80,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             inf.signatureScheme = sid->sigScheme;
         }
         inf.resumed = ss->statelessResume || ss->ssl3.hs.isResuming;
+        inf.peerDelegCred = tls13_IsVerifyingWithDelegatedCredential(ss);
 
         if (sid) {
             unsigned int sidLen;
