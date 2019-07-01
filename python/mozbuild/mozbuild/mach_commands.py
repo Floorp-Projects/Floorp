@@ -5,24 +5,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import hashlib
-import io
 import itertools
 import json
 import logging
-import ntpath
 import operator
 import os
 import re
-import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
-import xml.etree.ElementTree as ET
-import yaml
-
-from collections import OrderedDict
 
 import mozpack.path as mozpath
 
@@ -35,19 +26,12 @@ from mach.decorators import (
     SubCommand,
 )
 
-from mach.main import Mach
-
-from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.base import (
     BuildEnvironmentNotFoundException,
     MachCommandBase,
     MachCommandConditions as conditions,
     MozbuildObject,
 )
-from mozbuild.util import ensureParentDir
-
-from mozversioncontrol import get_repository_object
-
 
 EXCESSIVE_SWAP_MESSAGE = '''
 ===================
@@ -658,7 +642,6 @@ class GTestCommands(MachCommandBase):
         # Prepend the debugger args.
         args = [debuggerInfo.path] + debuggerInfo.args + args
         return args
-
 
 
 @CommandProvider
