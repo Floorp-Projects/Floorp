@@ -3374,22 +3374,20 @@ nsresult nsFocusManager::GetNextTabbableContent(
       } else {
         currentTopLevelScopeOwner = currentContent;
       }
-      if (currentTopLevelScopeOwner) {
-        if (currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
-          // We're within non-document scope, continue.
-          do {
-            if (aForward) {
-              frameTraversal->Next();
-            } else {
-              frameTraversal->Prev();
-            }
-            frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
-            // For the usage of GetPrevContinuation, see the comment
-            // at the end of while (frame) loop.
-          } while (frame && frame->GetPrevContinuation());
-          continue;
-        }
-        currentContent = currentTopLevelScopeOwner;
+      if (currentTopLevelScopeOwner &&
+          currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
+        // We're within non-document scope, continue.
+        do {
+          if (aForward) {
+            frameTraversal->Next();
+          } else {
+            frameTraversal->Prev();
+          }
+          frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+          // For the usage of GetPrevContinuation, see the comment
+          // at the end of while (frame) loop.
+        } while (frame && frame->GetPrevContinuation());
+        continue;
       }
 
       // For document navigation, check if this element is an open panel. Since
@@ -3441,18 +3439,18 @@ nsresult nsFocusManager::GetNextTabbableContent(
       //  append ELEMENT to NAVIGATION-ORDER."
       // and later in "For each element ELEMENT in NAVIGATION-ORDER: "
       // hosts and slots are handled before other elements.
-      if (IsHostOrSlot(currentContent)) {
+      if (IsHostOrSlot(currentTopLevelScopeOwner)) {
         bool focusableHostSlot;
-        int32_t tabIndex =
-            HostOrSlotTabIndexValue(currentContent, &focusableHostSlot);
+        int32_t tabIndex = HostOrSlotTabIndexValue(currentTopLevelScopeOwner,
+                                                   &focusableHostSlot);
         // Host or slot itself isn't focusable or going backwards, enter its
         // scope.
         if ((!aForward || !focusableHostSlot) && tabIndex >= 0 &&
             (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
           nsIContent* contentToFocus = GetNextTabbableContentInScope(
-              currentContent, currentContent, aOriginalStartContent, aForward,
-              aForward ? 1 : 0, aIgnoreTabIndex, aForDocumentNavigation,
-              true /* aSkipOwner */);
+              currentTopLevelScopeOwner, currentTopLevelScopeOwner,
+              aOriginalStartContent, aForward, aForward ? 1 : 0,
+              aIgnoreTabIndex, aForDocumentNavigation, true /* aSkipOwner */);
           if (contentToFocus) {
             NS_ADDREF(*aResultContent = contentToFocus);
             return NS_OK;
