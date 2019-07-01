@@ -41,6 +41,11 @@ add_task(async function hide_search_engine_nomatch() {
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix(token);
   Assert.ok(!matchedEngine || matchedEngine.getResultDomain() != domain);
+  engine.hidden = false;
+  await TestUtils.waitForCondition(() => PlacesSearchAutocompleteProvider.engineForDomainPrefix(token));
+  let matchedEngine2 =
+    await PlacesSearchAutocompleteProvider.engineForDomainPrefix(token);
+  Assert.ok(matchedEngine2);
 });
 
 add_task(async function add_search_engine_match() {
@@ -148,10 +153,18 @@ add_task(async function test_parseSubmissionURL_basic() {
 });
 
 add_task(async function test_builtin_aliased_search_engine_match() {
+  let engine = await PlacesSearchAutocompleteProvider.engineForAlias("@google");
+  Assert.ok(engine);
+  Assert.equal(engine.name, "Google");
+  let promiseTopic = promiseSearchTopic("engine-changed");
+  await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForAlias("@google");
-  Assert.ok(matchedEngine);
-  Assert.equal(matchedEngine.name, "Google");
+  Assert.ok(!matchedEngine);
+  engine.hidden = false;
+  await TestUtils.waitForCondition(() => PlacesSearchAutocompleteProvider.engineForAlias("@google"));
+  engine = await PlacesSearchAutocompleteProvider.engineForAlias("@google");
+  Assert.ok(engine);
 });
 
 function promiseSearchTopic(expectedVerb) {
