@@ -57,7 +57,7 @@ class ToolbarIntegration(
                     {
                         toolbar.hideKeyboard()
                         // We need to dynamically add the options here because if you do it in XML it overwrites
-                        val options = NavOptions.Builder().setPopUpTo(R.id.homeFragment, true)
+                        val options = NavOptions.Builder().setPopUpTo(R.id.nav_graph, false)
                             .setEnterAnim(R.anim.fade_in).build()
                         val extras = null
 // Disabled while awaiting a better solution to #3209
