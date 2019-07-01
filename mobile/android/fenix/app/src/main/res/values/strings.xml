@@ -242,6 +242,8 @@
     <string name="quick_action_download">Download</string>
     <!-- Button in the browser chrome in the browser to bookmark the current page -->
     <string name="quick_action_bookmark">Bookmark</string>
+    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
+    <string name="quick_action_bookmark_edit">Edit Bookmark</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">Read</string>
     <!-- Button in the browser chrome to exit reader mode -->
