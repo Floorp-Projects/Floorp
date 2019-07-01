@@ -281,9 +281,6 @@ class DOMMatrix : public DOMMatrixReadOnly {
                        double aOriginZ);
   DOMMatrix* Scale3dSelf(double aScale, double aOriginX = 0,
                          double aOriginY = 0, double aOriginZ = 0);
-  DOMMatrix* ScaleNonUniformSelf(double aScaleX, double aScaleY = 1,
-                                 double aScaleZ = 1, double aOriginX = 0,
-                                 double aOriginY = 0, double aOriginZ = 0);
   DOMMatrix* RotateSelf(double aAngle, double aOriginX = 0,
                         double aOriginY = 0);
   DOMMatrix* RotateFromVectorSelf(double aX, double aY);
