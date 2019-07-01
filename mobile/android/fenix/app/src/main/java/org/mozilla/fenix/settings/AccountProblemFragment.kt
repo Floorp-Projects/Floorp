@@ -69,8 +69,8 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
         return Preference.OnPreferenceClickListener {
             lifecycleScope.launch {
                 requireComponents.backgroundServices.accountManager.logoutAsync().await()
-                Navigation.findNavController(view!!).popBackStack()
             }
+            Navigation.findNavController(view!!).popBackStack()
             true
         }
     }
