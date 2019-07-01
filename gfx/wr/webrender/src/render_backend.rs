@@ -985,6 +985,8 @@ impl RenderBackend {
             }
         }
 
+        self.documents.clear();
+
         self.notifier.shut_down();
 
         if let Some(ref sampler) = self.sampler {
