@@ -29,6 +29,7 @@
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
 #include "irregexp/RegExpStack.h"
+#include "js/AllocationRecording.h"
 #include "js/BuildId.h"  // JS::BuildIdOp
 #include "js/Debug.h"
 #include "js/experimental/SourceHook.h"  // js::SourceHook
@@ -524,6 +525,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   // number of realms visited by RealmsIter.
   js::MainThreadData<size_t> numRealms;
 
+  // The Gecko Profiler may want to sample the allocations happening across the
+  // browser. This callback can be registered to record the allocation.
+  js::MainThreadData<JS::RecordAllocationsCallback> recordAllocationCallback;
+  js::MainThreadData<double> allocationSamplingProbability;
+
  private:
   // Number of debuggee realms in the runtime.
   js::MainThreadData<size_t> numDebuggeeRealms_;
@@ -539,6 +545,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
 
   void incrementNumDebuggeeRealmsObservingCoverage();
   void decrementNumDebuggeeRealmsObservingCoverage();
+
+  void startRecordingAllocations(double probability,
+                                 JS::RecordAllocationsCallback callback);
+  void stopRecordingAllocations();
+  void ensureRealmIsRecordingAllocations(JS::Handle<js::GlobalObject*> global);
 
   /* Locale-specific callbacks for string conversion. */
   js::MainThreadData<const JSLocaleCallbacks*> localeCallbacks;
