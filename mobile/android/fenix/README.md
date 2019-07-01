@@ -12,7 +12,7 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * [View current Issues](https://github.com/mozilla-mobile/fenix/issues), [view current Pull Requests](https://github.com/mozilla-mobile/fenix/pulls), or [file a security issue][sec issue].
 
-* IRC: [#focus (irc.mozilla.org)](https://wiki.mozilla.org/IRC) | [view logs](https://mozilla.logbot.info/fenix/)
+* IRC: [#fenix (irc.mozilla.org)](https://wiki.mozilla.org/IRC) | [view logs](https://mozilla.logbot.info/fenix/)
 (**We're available Monday-Friday, GMT and PST working hours**).
 
 * [View the Wiki](https://github.com/mozilla-mobile/fenix/wiki).
