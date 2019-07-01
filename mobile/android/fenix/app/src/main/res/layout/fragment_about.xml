@@ -2,66 +2,70 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+<ScrollView
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         tools:context="org.mozilla.fenix.settings.AboutFragment">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
         <ImageView
-            android:id="@+id/wordmark"
-            android:importantForAccessibility="no"
-            android:src="?fenixLogo"
-            android:layout_marginTop="24dp"
-            android:layout_height="80dp"
-            android:layout_width="0dp"
-            app:layout_constraintWidth_percent="0.75"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+                android:id="@+id/wordmark"
+                android:layout_marginTop="24dp"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:contentDescription="@string/app_name"
+                android:src="?fenixLogo"
+                app:layout_constraintWidth_percent="0.75"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
-            android:id="@+id/about_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textIsSelectable="true"
-            android:layout_marginTop="24dp"
-            app:layout_constraintWidth_percent="0.8"
-            app:layout_constraintTop_toBottomOf="@id/wordmark"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:textAlignment="center" />
+                android:id="@+id/about_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textIsSelectable="true"
+                android:layout_marginTop="24dp"
+                app:layout_constraintWidth_percent="0.8"
+                app:layout_constraintTop_toBottomOf="@id/wordmark"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="1.0.x (Build #x 🦎 69.x-x)\nAC: 1.0.0"
+                android:textAlignment="center" />
 
         <TextView
-            android:id="@+id/about_content"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:layout_marginTop="16dp"
-            app:layout_constraintWidth_percent="0.8"
-            app:layout_constraintTop_toBottomOf="@id/about_text"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:textAlignment="center" />
+                android:id="@+id/about_content"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_marginTop="16dp"
+                app:layout_constraintWidth_percent="0.8"
+                app:layout_constraintTop_toBottomOf="@id/about_text"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="@string/about_content"
+                android:textAlignment="center" />
 
         <TextView
-            android:id="@+id/build_date"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textSize="16sp"
-            android:textIsSelectable="true"
-            app:layout_constraintWidth_percent="0.8"
-            app:layout_constraintTop_toBottomOf="@id/about_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:textAlignment="center" />
+                android:id="@+id/build_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textSize="16sp"
+                android:textIsSelectable="true"
+                app:layout_constraintWidth_percent="0.8"
+                app:layout_constraintTop_toBottomOf="@id/about_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="Monday 1/2 @ 5:00 PM"
+                android:textAlignment="center" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
