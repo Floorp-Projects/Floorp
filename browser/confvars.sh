@@ -50,8 +50,8 @@ if test "$MOZ_UPDATE_CHANNEL" = "aurora"; then
   ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-aurora
   MAR_CHANNEL_ID=firefox-mozilla-aurora
 else
-  ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-central
-  MAR_CHANNEL_ID=firefox-mozilla-central
+  ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release
+  MAR_CHANNEL_ID=firefox-mozilla-beta
 fi
 # ASan reporter builds should have different channel ids
 if [ "${MOZ_ASAN_REPORTER}" = "1" ]; then
