@@ -47,6 +47,7 @@ function* test(testDriver) {
   checkHitResult(hitTest(centerOf(scroller)),
                  APZHitResultFlags.VISIBLE,
                  scrollerViewId,
+                 utils.getLayersId(),
                  "active scrollframe");
 
   subtestDone();

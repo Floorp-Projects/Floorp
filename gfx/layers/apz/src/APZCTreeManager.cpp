@@ -1314,7 +1314,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           auto it = mTestData.find(guid.mLayersId);
           MOZ_ASSERT(it != mTestData.end());
           it->second->RecordHitResult(mouseInput.mOrigin, hitResult,
-                                      guid.mScrollId);
+                                      guid.mLayersId, guid.mScrollId);
         }
 
         TargetConfirmationFlags confFlags{hitResult};

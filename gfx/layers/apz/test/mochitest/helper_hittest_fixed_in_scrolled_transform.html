@@ -76,6 +76,7 @@ function* test(testDriver) {
   checkHitResult(hitTest(centerOf(target)),
                  APZHitResultFlags.VISIBLE,
                  utils.getViewId(subframe),
+                 utils.getLayersId(),
                  "fixed item inside a scrolling transform");
 
   subtestDone();

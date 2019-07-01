@@ -171,7 +171,6 @@ struct ImageResource {
     data: CachedImageData,
     descriptor: ImageDescriptor,
     tiling: Option<TileSize>,
-    viewport_tiles: Option<TileRange>,
 }
 
 #[derive(Clone, Debug)]
@@ -851,7 +850,6 @@ impl ResourceCache {
             descriptor,
             data,
             tiling,
-            viewport_tiles: None,
         };
 
         self.resources.image_templates.insert(image_key, resource);
@@ -909,7 +907,6 @@ impl ResourceCache {
             descriptor,
             data,
             tiling,
-            viewport_tiles: image.viewport_tiles,
         };
     }
 
@@ -1245,6 +1242,7 @@ impl ResourceCache {
                         format: template.descriptor.format,
                     };
 
+                    assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
                     // TODO: We only track dirty rects for non-tiled blobs but we
                     // should also do it with tiled ones unless we settle for a small
                     // tile size.
@@ -1293,6 +1291,7 @@ impl ResourceCache {
                     template.dirty_rect
                 };
 
+                assert!(template.descriptor.size.width > 0 && template.descriptor.size.height > 0);
                 blob_request_params.push(
                     BlobImageParams {
                         request: BlobImageRequest {
@@ -2266,7 +2265,6 @@ impl ResourceCache {
                 data,
                 descriptor: template.descriptor,
                 tiling: template.tiling,
-                viewport_tiles: None,
             });
         }
 

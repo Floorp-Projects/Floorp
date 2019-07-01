@@ -402,9 +402,7 @@ enum class AstExprKind {
   ComparisonOperator,
   Const,
   ConversionOperator,
-#ifdef ENABLE_WASM_BULKMEM_OPS
   DataOrElemDrop,
-#endif
   Drop,
   ExtraConversionOperator,
   First,
@@ -412,11 +410,9 @@ enum class AstExprKind {
   GetLocal,
   If,
   Load,
-#ifdef ENABLE_WASM_BULKMEM_OPS
   MemFill,
   MemOrTableCopy,
   MemOrTableInit,
-#endif
   MemoryGrow,
   MemorySize,
   Nop,
@@ -821,7 +817,6 @@ class AstWake : public AstExpr {
   AstExpr& count() const { return *count_; }
 };
 
-#ifdef ENABLE_WASM_BULKMEM_OPS
 class AstMemOrTableCopy : public AstExpr {
   bool isMem_;
   AstRef destTable_;
@@ -919,7 +914,6 @@ class AstMemOrTableInit : public AstExpr {
   AstExpr& src() const { return *src_; }
   AstExpr& len() const { return *len_; }
 };
-#endif
 
 #ifdef ENABLE_WASM_REFTYPES
 class AstTableFill : public AstExpr {

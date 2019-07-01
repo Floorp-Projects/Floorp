@@ -36,6 +36,7 @@
 #  ifdef MOZ_WAYLAND
 #    include <gdk/gdkwayland.h>
 #    include <dlfcn.h>
+#    include "mozilla/widget/nsWaylandDisplay.h"
 #  endif  // MOZ_WIDGET_GTK
 #endif    // MOZ_WAYLAND
 
@@ -787,10 +788,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
     // Some drivers doesn't support EGL_DEFAULT_DISPLAY
     GdkDisplay* gdkDisplay = gdk_display_get_default();
     if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
-      static auto sGdkWaylandDisplayGetWlDisplay =
-          (wl_display * (*)(GdkDisplay*))
-              dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-      nativeDisplay = sGdkWaylandDisplayGetWlDisplay(gdkDisplay);
+      nativeDisplay = WaylandDisplayGetWLDisplay(gdkDisplay);
       if (!nativeDisplay) {
         NS_WARNING("Failed to get wl_display.");
         return nullptr;
