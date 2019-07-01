@@ -288,10 +288,11 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
     return false;
   }
 
-  mDisableExtensions = StaticPrefs::WebGLDisableExtensions();
+  mDisableExtensions = StaticPrefs::webgl_disable_extensions();
   mLoseContextOnMemoryPressure =
-      StaticPrefs::WebGLLoseContextOnMemoryPressure();
-  mCanLoseContextInForeground = StaticPrefs::WebGLCanLoseContextInForeground();
+      StaticPrefs::webgl_lose_context_on_memory_pressure();
+  mCanLoseContextInForeground =
+      StaticPrefs::webgl_can_lose_context_in_foreground();
 
   // These are the default values, see 6.2 State tables in the
   // OpenGL ES 2.0.25 spec.
@@ -476,7 +477,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
 
   ////////////////
 
-  if (StaticPrefs::WebGLMinCapabilityMode()) {
+  if (StaticPrefs::webgl_min_capability_mode()) {
     bool ok = true;
 
     ok &= RestrictCap(&mGLMaxVertexTextureImageUnits,
@@ -653,7 +654,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
 
   mNeedsIndexValidation =
       !gl->IsSupported(gl::GLFeature::robust_buffer_access_behavior);
-  switch (StaticPrefs::WebGLForceIndexValidation()) {
+  switch (StaticPrefs::webgl_force_index_validation()) {
     case -1:
       mNeedsIndexValidation = false;
       break;
@@ -661,7 +662,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
       mNeedsIndexValidation = true;
       break;
     default:
-      MOZ_ASSERT(StaticPrefs::WebGLForceIndexValidation() == 0);
+      MOZ_ASSERT(StaticPrefs::webgl_force_index_validation() == 0);
       break;
   }
 

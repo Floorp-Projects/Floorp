@@ -990,7 +990,7 @@ void MediaEncoder::Stop() {
 
 #ifdef MOZ_WEBM_ENCODER
 bool MediaEncoder::IsWebMEncoderEnabled() {
-  return StaticPrefs::MediaEncoderWebMEnabled();
+  return StaticPrefs::media_encoder_webm_enabled();
 }
 #endif
 

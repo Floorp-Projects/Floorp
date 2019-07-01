@@ -162,7 +162,7 @@ uint32_t DecideAudioPlaybackChannels(const AudioInfo& info) {
     return 1;
   }
 
-  if (StaticPrefs::MediaForcestereoEnabled()) {
+  if (StaticPrefs::media_forcestereo_enabled()) {
     return 2;
   }
 
