@@ -53,20 +53,20 @@ static const nscoord kMediumBorderWidth = nsPresContext::CSSPixelsToAppUnits(3);
 // 512 bytes, which minimizes allocator slop.
 static constexpr size_t kStyleStructSizeLimit = 504;
 
-// template <typename Struct, size_t Actual, size_t Limit>
-// struct AssertSizeIsLessThan {
-//   static_assert(Actual == sizeof(Struct), "Bogus invocation");
-//   static_assert(Actual <= Limit,
-//                 "Style struct became larger than the size limit");
-//   static constexpr bool instantiate = true;
-// };
-//
-// #define STYLE_STRUCT(name_)                                                  \
-//   static_assert(AssertSizeIsLessThan<nsStyle##name_, sizeof(nsStyle##name_), \
-//                                      kStyleStructSizeLimit>::instantiate,    \
-//                 "");
-// #include "nsStyleStructList.h"
-// #undef STYLE_STRUCT
+template <typename Struct, size_t Actual, size_t Limit>
+struct AssertSizeIsLessThan {
+  static_assert(Actual == sizeof(Struct), "Bogus invocation");
+  static_assert(Actual <= Limit,
+                "Style struct became larger than the size limit");
+  static constexpr bool instantiate = true;
+};
+
+#define STYLE_STRUCT(name_)                                                  \
+  static_assert(AssertSizeIsLessThan<nsStyle##name_, sizeof(nsStyle##name_), \
+                                     kStyleStructSizeLimit>::instantiate,    \
+                "");
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
 static bool DefinitelyEqualImages(const nsStyleImageRequest* aRequest1,
                                   const nsStyleImageRequest* aRequest2) {

@@ -658,7 +658,7 @@ inline Maybe<size_t> StyleGridTemplateComponent::RepeatAutoIndex() const {
   if (!IsTrackList()) {
     return Nothing();
   }
-  auto& list = AsTrackList();
+  auto& list = *AsTrackList();
   return list.auto_repeat_index < list.values.Length()
              ? Some(list.auto_repeat_index)
              : Nothing();
@@ -673,7 +673,7 @@ template <>
 inline Span<const StyleGenericTrackListValue<LengthPercentage, StyleInteger>>
 StyleGridTemplateComponent::TrackListValues() const {
   if (IsTrackList()) {
-    return AsTrackList().values.AsSpan();
+    return AsTrackList()->values.AsSpan();
   }
   return {};
 }
