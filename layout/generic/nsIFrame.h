@@ -2159,6 +2159,12 @@ class nsIFrame : public nsQueryFrame {
   virtual void MarkIntrinsicISizesDirty() = 0;
 
   /**
+   * Make this frame and all descendants dirty (if not already).
+   * Exceptions: XULBoxFrame and TableColGroupFrame children.
+   */
+  void MarkSubtreeDirty();
+
+  /**
    * Get the min-content intrinsic inline size of the frame.  This must be
    * less than or equal to the max-content intrinsic inline size.
    *

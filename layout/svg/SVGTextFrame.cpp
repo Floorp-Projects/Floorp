@@ -2967,7 +2967,7 @@ void SVGTextFrame::ReflowSVGNonDisplayText() {
 
   // We had a style change, so we mark this frame as dirty so that the next
   // time it is painted, we reflow the anonymous block frame.
-  AddStateBits(NS_FRAME_IS_DIRTY);
+  this->MarkSubtreeDirty();
 
   // We also need to call InvalidateRenderingObservers, so that if the <text>
   // element is within a <mask>, say, the element referencing the <mask> will
@@ -5030,7 +5030,7 @@ void SVGTextFrame::MaybeReflowAnonymousBlockChild() {
       // (Note that our anonymous nsBlockFrame is not an nsSVGDisplayableFrame,
       // so even when we are called via our ReflowSVG this will not be done for
       // us by nsSVGDisplayContainerFrame::ReflowSVG.)
-      kid->AddStateBits(NS_FRAME_IS_DIRTY);
+      kid->MarkSubtreeDirty();
     }
 
     // The RecordCorrespondence and DoReflow calls can result in new text frames
