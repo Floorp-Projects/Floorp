@@ -69,7 +69,7 @@ class TaskBuilder(object):
 
         capitalized_channel = upper_case_first_letter(channel)
         gradle_commands = (
-            './gradlew --no-daemon -PversionName={} clean test assemble{}'.format(
+            './gradlew --no-daemon -PversionName="{}" clean test assemble{}'.format(
                 version_name, capitalized_channel),
         )
 
