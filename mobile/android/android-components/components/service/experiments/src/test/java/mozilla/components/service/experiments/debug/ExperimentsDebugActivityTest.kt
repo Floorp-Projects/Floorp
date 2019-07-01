@@ -110,9 +110,9 @@ class ExperimentsDebugActivityTest {
 
         activity.create().start().resume()
 
-        // Right now we default to the dev instance, so make sure that we are on the default if no
-        // extra is used
-        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_DEV, Experiments.updater.source.baseUrl)
+        // We default to the prod instance, so make sure that we are on the default if no extra is
+        // used.
+        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_PROD, Experiments.updater.source.baseUrl)
 
         // Destroy the activity so we can create a new one with the command added to the intent
         activity.pause().stop().destroy()
@@ -128,24 +128,24 @@ class ExperimentsDebugActivityTest {
         // Destroy the activity so we can create a new one with a new command added to the intent
         activity.pause().stop().destroy()
 
-        intent.putExtra(ExperimentsDebugActivity.SET_KINTO_INSTANCE_EXTRA_KEY, "prod")
-        activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
-
-        activity.create().start().resume()
-
-        // Make sure we changed to the 'production' instance
-        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_PROD, Experiments.updater.source.baseUrl)
-
-        // Destroy the activity so we can create a new one with a new command added to the intent
-        activity.pause().stop().destroy()
-
         intent.putExtra(ExperimentsDebugActivity.SET_KINTO_INSTANCE_EXTRA_KEY, "dev")
         activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
 
         activity.create().start().resume()
 
-        // Make sure we changed to the 'developer' instance
+        // Make sure we changed to the 'dev' instance
         assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_DEV, Experiments.updater.source.baseUrl)
+
+        // Destroy the activity so we can create a new one with a new command added to the intent
+        activity.pause().stop().destroy()
+
+        intent.putExtra(ExperimentsDebugActivity.SET_KINTO_INSTANCE_EXTRA_KEY, "prod")
+        activity = Robolectric.buildActivity(ExperimentsDebugActivity::class.java, intent)
+
+        activity.create().start().resume()
+
+        // Make sure we changed to the 'developer' instance
+        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_PROD, Experiments.updater.source.baseUrl)
     }
 
     @Test
@@ -161,9 +161,9 @@ class ExperimentsDebugActivityTest {
 
         activity.create().start().resume()
 
-        // Right now we default to the dev instance, so make sure that we are on the default if no
+        // Right now we default to the prod instance, so make sure that we are on the default if no
         // extra is used
-        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_DEV, Experiments.updater.source.baseUrl)
+        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_PROD, Experiments.updater.source.baseUrl)
 
         // Destroy the activity so we can create a new one with the command added to the intent
         activity.pause().stop().destroy()
@@ -173,8 +173,8 @@ class ExperimentsDebugActivityTest {
 
         activity.create().start().resume()
 
-        // Make sure we stayed on the 'developer' instance
-        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_DEV, Experiments.updater.source.baseUrl)
+        // Make sure we stayed on the 'production' instance
+        assertEquals(ExperimentsUpdater.KINTO_ENDPOINT_PROD, Experiments.updater.source.baseUrl)
     }
 
     @Test

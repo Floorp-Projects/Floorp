@@ -14,5 +14,5 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
  */
 data class Configuration(
     val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
-    val kintoEndpoint: String = ExperimentsUpdater.KINTO_ENDPOINT_DEV
+    val kintoEndpoint: String = ExperimentsUpdater.KINTO_ENDPOINT_PROD
 )
