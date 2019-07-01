@@ -7,7 +7,7 @@
     #constructed-function-with-body-string,
     #multiple-assignment,
     #promise,
-    #math-pow,
+    #arraysort,
     #handleEvent {
       border: 1px solid #000;
       width: 200px;
@@ -44,8 +44,8 @@
           promiseNode.addEventListener("click", resolve);
         });
 
-        let mathPowNode = document.getElementById("math-pow");
-        mathPowNode.addEventListener("click", Math.pow);
+        let arraySortNode = document.getElementById("arraysort");
+        arraySortNode.addEventListener("click", Array.sort);
 
         new HandleEvent();
 
@@ -95,7 +95,7 @@
     </div>
     <div id="multiple-assignment">Multiple Assignment</div>
     <div id="promise">Promise</div>
-    <div id="math-pow">Math.pow</div>
+    <div id="arraysort">Array.sort</div>
     <div id="handleEvent">HandleEvent</div>
   </body>
 </html>
