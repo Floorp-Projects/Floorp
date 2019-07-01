@@ -1245,6 +1245,7 @@ impl ResourceCache {
                         format: template.descriptor.format,
                     };
 
+                    assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
                     // TODO: We only track dirty rects for non-tiled blobs but we
                     // should also do it with tiled ones unless we settle for a small
                     // tile size.
@@ -1293,6 +1294,7 @@ impl ResourceCache {
                     template.dirty_rect
                 };
 
+                assert!(template.descriptor.size.width > 0 && template.descriptor.size.height > 0);
                 blob_request_params.push(
                     BlobImageParams {
                         request: BlobImageRequest {
