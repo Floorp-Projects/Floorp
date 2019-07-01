@@ -20,9 +20,6 @@
 #include "GfxInfoX11.h"
 
 #include <gdk/gdkx.h>
-#ifdef MOZ_WAYLAND
-#  include "mozilla/widget/nsWaylandDisplay.h"
-#endif
 
 #ifdef DEBUG
 bool fire_glxtest_process();
@@ -46,7 +43,6 @@ nsresult GfxInfo::Init() {
   mIsMesa = false;
   mIsAccelerated = true;
   mIsWayland = false;
-  mIsWaylandDRM = false;
   return GfxInfoBase::Init();
 }
 
@@ -61,8 +57,6 @@ void GfxInfo::AddCrashReportAnnotations() {
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWayland,
                                      mIsWayland);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWaylandDRM,
-                                     mIsWaylandDRM);
 }
 
 void GfxInfo::GetData() {
@@ -299,12 +293,8 @@ void GfxInfo::GetData() {
   }
 
   mAdapterDescription.Assign(glRenderer);
-#ifdef MOZ_WAYLAND
   mIsWayland = !GDK_IS_X11_DISPLAY(gdk_display_get_default());
-  if (mIsWayland) {
-    mIsWaylandDRM = nsWaylandDisplay::IsDMABufEnabled();
-  }
-#endif
+
   AddCrashReportAnnotations();
 }
 
@@ -461,11 +451,7 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
 NS_IMETHODIMP
 GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
   if (mIsWayland) {
-    if (mIsWaylandDRM) {
-      aWindowProtocol.AssignLiteral("wayland (drm)");
-    } else {
-      aWindowProtocol.AssignLiteral("wayland");
-    }
+    aWindowProtocol.AssignLiteral("wayland");
     return NS_OK;
   }
 
