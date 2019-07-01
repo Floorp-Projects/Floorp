@@ -8,10 +8,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
-import kotlinx.coroutines.Job
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
+import org.mozilla.fenix.utils.AdapterWithJob
 
 private sealed class AdapterItem {
     object DeleteButton : AdapterItem()
@@ -34,9 +34,8 @@ private class ExceptionsList(val exceptions: List<ExceptionsItem>) {
 
 class ExceptionsAdapter(
     private val actionEmitter: Observer<ExceptionsAction>
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : AdapterWithJob<RecyclerView.ViewHolder>() {
     private var exceptionsList: ExceptionsList = ExceptionsList(emptyList())
-    private lateinit var job: Job
 
     fun updateData(items: List<ExceptionsItem>) {
         this.exceptionsList = ExceptionsList(items)
@@ -59,7 +58,7 @@ class ExceptionsAdapter(
         return when (viewType) {
             ExceptionsDeleteButtonViewHolder.LAYOUT_ID -> ExceptionsDeleteButtonViewHolder(view, actionEmitter)
             ExceptionsHeaderViewHolder.LAYOUT_ID -> ExceptionsHeaderViewHolder(view)
-            ExceptionsListItemViewHolder.LAYOUT_ID -> ExceptionsListItemViewHolder(view, actionEmitter, job)
+            ExceptionsListItemViewHolder.LAYOUT_ID -> ExceptionsListItemViewHolder(view, actionEmitter, adapterJob)
             else -> throw IllegalStateException()
         }
     }
@@ -70,15 +69,5 @@ class ExceptionsAdapter(
                 holder.bind(it.item)
             }
         }
-    }
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        job = Job()
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        job.cancel()
     }
 }

@@ -26,18 +26,17 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.utils.AdapterWithJob
 import kotlin.coroutines.CoroutineContext
 
 class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkAction>) :
-    RecyclerView.Adapter<BookmarkAdapter.BookmarkNodeViewHolder>() {
+    AdapterWithJob<BookmarkAdapter.BookmarkNodeViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
     val selected: Set<BookmarkNode>
         get() = (mode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
     private var isFirstRun = true
-
-    lateinit var job: Job
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkState.Mode) {
         this.tree = tree?.children ?: listOf()
@@ -54,13 +53,13 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
         return when (viewType) {
             BookmarkItemViewHolder.viewType.ordinal -> BookmarkItemViewHolder(
-                view, actionEmitter, job
+                view, actionEmitter, adapterJob
             )
             BookmarkFolderViewHolder.viewType.ordinal -> BookmarkFolderViewHolder(
-                view, actionEmitter, job
+                view, actionEmitter, adapterJob
             )
             BookmarkSeparatorViewHolder.viewType.ordinal -> BookmarkSeparatorViewHolder(
-                view, actionEmitter, job
+                view, actionEmitter, adapterJob
             )
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
@@ -73,16 +72,6 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             BookmarkNodeType.SEPARATOR -> ViewType.SEPARATOR.ordinal
             else -> throw IllegalStateException("Item $tree[position] does not match to a ViewType")
         }
-    }
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        job = Job()
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        job.cancel()
     }
 
     override fun getItemCount(): Int = tree.size
