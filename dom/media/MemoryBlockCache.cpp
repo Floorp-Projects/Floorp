@@ -132,7 +132,7 @@ enum MemoryBlockCacheTelemetryErrors {
 };
 
 static int32_t CalculateMaxBlocks(int64_t aContentLength) {
-  int64_t maxSize = int64_t(StaticPrefs::MediaMemoryCacheMaxSize()) * 1024;
+  int64_t maxSize = int64_t(StaticPrefs::media_memory_cache_max_size()) * 1024;
   MOZ_ASSERT(aContentLength <= maxSize);
   MOZ_ASSERT(maxSize % MediaBlockCacheBase::BLOCK_SIZE == 0);
   // Note: It doesn't matter if calculations overflow, Init() would later fail.
@@ -193,8 +193,9 @@ bool MemoryBlockCache::EnsureBufferCanContain(size_t aContentLength) {
     static const size_t sysmem =
         std::max<size_t>(PR_GetPhysicalMemorySize(), 32 * 1024 * 1024);
     const size_t limit = std::min(
-        size_t(StaticPrefs::MediaMemoryCachesCombinedLimitKb()) * 1024,
-        sysmem * StaticPrefs::MediaMemoryCachesCombinedLimitPcSysmem() / 100);
+        size_t(StaticPrefs::media_memory_caches_combined_limit_kb()) * 1024,
+        sysmem * StaticPrefs::media_memory_caches_combined_limit_pc_sysmem() /
+            100);
     const size_t currentSizes = static_cast<size_t>(gCombinedSizes);
     if (currentSizes + extra > limit) {
       LOG("EnsureBufferCanContain(%zu) - buffer size %zu, wanted + %zu = %zu;"
