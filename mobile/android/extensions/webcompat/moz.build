@@ -24,8 +24,11 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org'] += [
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug0000000-dummy-css-injection.css',
   'injections/css/bug1305028-gaming.youtube.com-webkit-scrollbar.css',
+  'injections/css/bug1432935-breitbart.com-webkit-scrollbar.css',
+  'injections/css/bug1432935-discordapp.com-webkit-scorllbar-white-line.css',
   'injections/css/bug1518781-twitch.tv-webkit-scrollbar.css',
-  'injections/css/bug1526977-sreedharscce.in-login-fix.css'
+  'injections/css/bug1526977-sreedharscce.in-login-fix.css',
+  'injections/css/bug1561371-mail.google.com-allow-horizontal-scrolling.css'
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [

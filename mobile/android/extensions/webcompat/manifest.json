@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "4.2.0",
+  "version": "4.3.2",
 
   "applications": {
     "gecko": {
