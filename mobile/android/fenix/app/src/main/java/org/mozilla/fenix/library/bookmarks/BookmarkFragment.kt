@@ -23,7 +23,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -62,7 +62,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
     private lateinit var bookmarkComponent: BookmarkComponent
     private lateinit var signInComponent: SignInComponent
     var currentRoot: BookmarkNode? = null
-    private val navigation by lazy { Navigation.findNavController(requireView()) }
+    private val navigation by lazy { findNavController() }
     private val onDestinationChangedListener =
         NavController.OnDestinationChangedListener { _, destination, args ->
             if (destination.id != R.id.bookmarkFragment ||
@@ -144,8 +144,8 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         navigation.removeOnDestinationChangedListener(onDestinationChangedListener)
     }
 
