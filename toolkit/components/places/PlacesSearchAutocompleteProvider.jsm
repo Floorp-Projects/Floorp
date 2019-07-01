@@ -76,8 +76,12 @@ const SearchAutocompleteProviderInternal = {
   },
 
   _addEngine(engine) {
+    if (engine.hidden) {
+      return;
+    }
+
     let domain = engine.getResultDomain();
-    if (domain && !engine.hidden) {
+    if (domain) {
       this.enginesByDomain.set(domain, engine);
     }
 
