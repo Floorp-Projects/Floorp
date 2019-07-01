@@ -4785,6 +4785,11 @@ JS_PUBLIC_API bool JS::ReadableStreamUpdateDataAvailableFromSource(
   return true;
 }
 
+JS_PUBLIC_API void JS::ReadableStreamReleaseCCObject(JSObject* streamObj) {
+  MOZ_ASSERT(JS::IsReadableStream(streamObj));
+  JS_SetPrivate(streamObj, nullptr);
+}
+
 JS_PUBLIC_API bool JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
                                          MutableHandleObject branch1Obj,
                                          MutableHandleObject branch2Obj) {

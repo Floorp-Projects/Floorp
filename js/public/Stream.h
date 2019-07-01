@@ -261,6 +261,13 @@ extern JS_PUBLIC_API bool ReadableStreamUpdateDataAvailableFromSource(
     JSContext* cx, HandleObject stream, uint32_t availableData);
 
 /**
+ * Break the cycle between this object and the
+ * nsISupportsObject_alreadyAddreffed passed in
+ * NewReadableExternalSourceStreamObject().
+ */
+extern JS_PUBLIC_API void ReadableStreamReleaseCCObject(JSObject* stream);
+
+/**
  * Returns true if the given object is a ReadableStream object or an
  * unwrappable wrapper for one, false otherwise.
  */
