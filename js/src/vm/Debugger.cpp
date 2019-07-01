@@ -3298,7 +3298,12 @@ void Debugger::removeAllocationsTracking(GlobalObject& global) {
     return;
   }
 
-  global.realm()->forgetAllocationMetadataBuilder();
+  if (!global.realm()->runtimeFromMainThread()->recordAllocationCallback) {
+    // Something like the Gecko Profiler could request from the the JS runtime
+    // to record allocations. If it is recording allocations, then do not
+    // destroy the allocation metadata builder at this time.
+    global.realm()->forgetAllocationMetadataBuilder();
+  }
 }
 
 bool Debugger::addAllocationsTrackingForAllDebuggees(JSContext* cx) {
