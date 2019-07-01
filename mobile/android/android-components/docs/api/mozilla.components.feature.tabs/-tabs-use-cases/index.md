@@ -2,7 +2,7 @@
 
 # TabsUseCases
 
-`class TabsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L15)
+`class TabsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L16)
 
 Contains use cases related to the tabs feature.
 

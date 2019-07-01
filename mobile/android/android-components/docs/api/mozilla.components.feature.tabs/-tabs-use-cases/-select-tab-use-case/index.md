@@ -2,7 +2,7 @@
 
 # SelectTabUseCase
 
-`class SelectTabUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L18)
+`class SelectTabUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L19)
 
 ### Functions
 
