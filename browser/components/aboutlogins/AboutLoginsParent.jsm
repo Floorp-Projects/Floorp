@@ -9,8 +9,6 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Localization",
-                               "resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "MigrationUtils",

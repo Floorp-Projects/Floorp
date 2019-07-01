@@ -3,6 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * This is an internal XPIDL used to expose a JS based Localization class to be used
+ * by its C++ wrapper.
+ *
+ * Consumers should use the WebIDL Localization API instead of this one.
+ */
 #include "nsISupports.idl"
 
 [scriptable, uuid(7d468600-551f-4fe0-98c9-92a53b63ec8d)]
@@ -15,11 +21,14 @@ interface mozILocalization : nsISupports
   Promise formatMessages(in Array<jsval> aKeys);
   Promise formatValues(in Array<jsval> aKeys);
   Promise formatValue(in AString aId, [optional] in jsval aArgs);
+
+  Array<jsval> formatMessagesSync(in Array<jsval> aKeys);
+  void setIsSync(in boolean isSync);
 };
 
 [scriptable, uuid(96632d26-1422-12e9-b1ce-9bb586acd241)]
 interface mozILocalizationJSM : nsISupports
 {
-  mozILocalization getLocalization(in Array<AString> resourceIds);
+  mozILocalization getLocalization(in Array<AString> resourceIds, in bool sync);
   mozILocalization getLocalizationWithCustomGenerateMessages(in Array<AString> resourceIds, in jsval generateMessages);
 };
