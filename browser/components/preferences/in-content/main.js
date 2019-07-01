@@ -13,7 +13,6 @@ var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 var {TransientPrefs} = ChromeUtils.import("resource:///modules/TransientPrefs.jsm");
 var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 var {L10nRegistry} = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
-var {Localization} = ChromeUtils.import("resource://gre/modules/Localization.jsm");
 var {HomePage} = ChromeUtils.import("resource:///modules/HomePage.jsm");
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
