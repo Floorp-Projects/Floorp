@@ -312,7 +312,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 const mozilla::wr::LayoutIntRect* aDirtyRect,
                                 Range<uint8_t> aOutput) {
   AUTO_PROFILER_TRACING("WebRender", "RasterizeSingleBlob", GRAPHICS);
-  MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
+  MOZ_RELEASE_ASSERT(aSize.width > 0 && aSize.height > 0);
   if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
   }
