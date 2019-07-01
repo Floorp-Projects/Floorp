@@ -16,9 +16,12 @@
 #include "mozilla/net/TimingStruct.h"
 
 #include "nsString.h"
+#include "nsCRTGlue.h"
 #include "GeckoProfiler.h"
 
 #include "js/Utility.h"
+#include "js/AllocationRecording.h"
+#include "js/ProfilingFrameIterator.h"
 #include "gfxASurface.h"
 #include "mozilla/ServoTraversalStatistics.h"
 
@@ -411,6 +414,44 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
  private:
   nsAutoCStringN<32> mModule;  // longest known LazyLogModule name is ~24
   nsCString mText;
+};
+
+class JsAllocationMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  JsAllocationMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                            const JS::RecordAllocationInfo& aInfo,
+                            UniqueProfilerBacktrace aStack)
+      : ProfilerMarkerPayload(aStartTime, aStartTime, mozilla::Nothing(),
+                              mozilla::Nothing(), std::move(aStack)),
+        // Copy the strings, and take ownership of them.
+        mTypeName(aInfo.typeName ? NS_xstrdup(aInfo.typeName) : nullptr),
+        mClassName(aInfo.className ? strdup(aInfo.className) : nullptr),
+        mDescriptiveTypeName(aInfo.descriptiveTypeName
+                                 ? NS_xstrdup(aInfo.descriptiveTypeName)
+                                 : nullptr),
+        mScriptFilename(aInfo.scriptFilename ? strdup(aInfo.scriptFilename)
+                                             : nullptr),
+        // The coarseType points to a string literal, so does not need to be
+        // duplicated.
+        mCoarseType(aInfo.coarseType),
+        mSize(aInfo.size),
+        mInNursery(aInfo.inNursery) {}
+
+  DECL_STREAM_PAYLOAD
+
+ private:
+  mozilla::UniqueFreePtr<const char16_t> mTypeName;
+  mozilla::UniqueFreePtr<const char> mClassName;
+  mozilla::UniqueFreePtr<const char16_t> mDescriptiveTypeName;
+  mozilla::UniqueFreePtr<const char> mScriptFilename;
+  // Points to a string literal, so does not need to be freed.
+  const char* mCoarseType;
+
+  // The size in bytes of the allocation.
+  uint64_t mSize;
+
+  // Whether or not the allocation is in the nursery or not.
+  bool mInNursery;
 };
 
 #endif  // ProfilerMarkerPayload_h
