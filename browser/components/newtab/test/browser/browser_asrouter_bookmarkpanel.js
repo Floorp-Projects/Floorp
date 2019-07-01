@@ -38,8 +38,13 @@ add_task(async function test_fxa_message_shown() {
 
   await BrowserTestUtils.waitForCondition(() => document.getElementById("cfrMessageContainer"), `Should create a
     container for the message`);
-  Assert.equal(document.getElementById("cfrMessageContainer").childElementCount, 4,
-    `Should attach 4 children elements`);
+  for (const selector of ["#cfrClose",
+      "#editBookmarkPanelRecommendationTitle",
+      "#editBookmarkPanelRecommendationContent",
+      "#editBookmarkPanelRecommendationCta"]) {
+    Assert.ok(document.getElementById("cfrMessageContainer").querySelector(selector),
+      `Should contain ${selector}`);
+  }
 
   const ftlFiles = Array.from(document.querySelectorAll("link"))
     .filter(l => l.getAttribute("href") === "browser/newtab/asrouter.ftl" ||

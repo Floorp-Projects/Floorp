@@ -26,6 +26,7 @@
                   "*://*.ebay-kleinanzeigen.de/*",
                   "*://*.espn.com/*",
                   "*://*.facebook.com/*",
+                  "*://*.fandom.com/*",
                   "*://*.google.com/*",
                   "*://*.imdb.com/*",
                   "*://*.imgur.com/*",

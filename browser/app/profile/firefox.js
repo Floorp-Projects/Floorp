@@ -492,6 +492,9 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // for certain mozilla webpages (which are listed in the pref
 // browser.tabs.remote.separatedMozillaDomains).
 pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+// This pref will cause assertions when a remoteType triggers a process switch
+// to a new remoteType it should not be able to trigger.
+pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
 #endif
 
 #ifdef NIGHTLY_BUILD

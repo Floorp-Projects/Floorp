@@ -72,6 +72,7 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
   MOZ_MAKE_MEM_UNDEFINED(this, extent);
+  MOZ_MAKE_MEM_UNDEFINED(&trailer, sizeof(trailer));
 
   Poison(this, JS_FRESH_NURSERY_PATTERN, extent, MemCheckKind::MakeUndefined);
 
@@ -190,8 +191,9 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(capacity_ >= ArenaSize);
   /* After this point the Nursery has been enabled */
 
-  setCurrentChunk(0, true);
+  setCurrentChunk(0);
   setStartPosition();
+  poisonAndInitCurrentChunk(true);
 
   char* env = getenv("JS_GC_PROFILE_NURSERY");
   if (env) {
@@ -243,8 +245,9 @@ void js::Nursery::enable() {
     MOZ_ASSERT(capacity_ >= ArenaSize);
   }
 
-  setCurrentChunk(0, true);
+  setCurrentChunk(0);
   setStartPosition();
+  poisonAndInitCurrentChunk(true);
 #ifdef JS_GC_ZEAL
   if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
     enterZealMode();
@@ -308,8 +311,9 @@ void js::Nursery::enterZealMode() {
 void js::Nursery::leaveZealMode() {
   if (isEnabled()) {
     MOZ_ASSERT(isEmpty());
-    setCurrentChunk(0, true);
+    setCurrentChunk(0);
     setStartPosition();
+    poisonAndInitCurrentChunk(true);
   }
 }
 #endif  // JS_GC_ZEAL
@@ -410,6 +414,7 @@ void* js::Nursery::allocate(size_t size) {
       MOZ_ASSERT(chunkno < allocatedChunkCount());
     }
     setCurrentChunk(chunkno);
+    poisonAndInitCurrentChunk();
   }
 
   void* thing = (void*)position();
@@ -832,6 +837,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   previousGC.reason = JS::GCReason::NO_REASON;
   if (!isEmpty()) {
     doCollection(reason, tenureCounts);
+    poisonAndInitCurrentChunk();
   } else {
     previousGC.nurseryUsedBytes = 0;
     previousGC.nurseryCapacity = capacity();
@@ -1132,16 +1138,13 @@ void js::Nursery::clear() {
       .poisonAfterEvict(position() - chunk(currentChunk_).start());
 #endif
 
-  if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
-    /* Only reset the alloc point when we are close to the end. */
-    if (currentChunk_ + 1 == maxChunkCount()) {
-      setCurrentChunk(0, true);
-    } else {
-      // poisonAfterSweep poisons the chunk trailer. Ensure it's
-      // initialized.
-      chunk(currentChunk_).poisonAndInit(runtime());
-    }
-  } else {
+  /*
+   * Reset the start chunk & position if we're not in this zeal mode, or we're
+   * in it and close to the end of the nursery.
+   */
+  if (!runtime()->hasZealMode(ZealMode::GenerationalGC) ||
+      (runtime()->hasZealMode(ZealMode::GenerationalGC) &&
+       currentChunk_ + 1 == maxChunkCount())) {
     setCurrentChunk(0);
   }
 
@@ -1182,28 +1185,23 @@ size_t js::Nursery::spaceToEnd(unsigned chunkCount) const {
   return bytes;
 }
 
-MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno,
-                                                    bool fullPoison) {
+MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno) {
   MOZ_ASSERT(chunkno < chunkCountLimit());
   MOZ_ASSERT(chunkno < allocatedChunkCount());
-
-  if (!fullPoison && chunkno == currentChunk_ &&
-      position_ < chunk(chunkno).end() && position_ >= chunk(chunkno).start()) {
-    // When we setup a new chunk the whole chunk must be poisoned with the
-    // correct value (JS_FRESH_NURSERY_PATTERN).
-    //  1. The first time it was used it was fully poisoned with the
-    //     correct value.
-    //  2. When it is swept, only the used part is poisoned with the swept
-    //     value.
-    //  3. We repoison the swept part here, with the correct value.
-    chunk(chunkno).poisonAndInit(runtime(), position_ - chunk(chunkno).start());
-  } else {
-    chunk(chunkno).poisonAndInit(runtime());
-  }
 
   currentChunk_ = chunkno;
   position_ = chunk(chunkno).start();
   setCurrentEnd();
+}
+
+void js::Nursery::poisonAndInitCurrentChunk(bool fullPoison) {
+  if (fullPoison || runtime()->hasZealMode(ZealMode::GenerationalGC) ||
+      !isSubChunkMode()) {
+    chunk(currentChunk_).poisonAndInit(runtime());
+  } else {
+    MOZ_ASSERT(isSubChunkMode());
+    chunk(currentChunk_).poisonAndInit(runtime(), capacity_);
+  }
 }
 
 MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
