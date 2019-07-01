@@ -87,6 +87,7 @@ struct APZTestDataToJSConverter {
                   "number of bits in uint16_t");
     aOutHitResult.mHitResult.Construct() =
         static_cast<uint16_t>(aResult.result.serialize());
+    aOutHitResult.mLayersId.Construct() = aResult.layersId.mId;
     aOutHitResult.mScrollId.Construct() = aResult.scrollId;
   }
 };
