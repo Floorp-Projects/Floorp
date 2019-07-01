@@ -174,7 +174,7 @@ function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   }
 }
 
-function invokeAsyncChromeTask(message, response, payload = {}) {
+function invokeAsyncChromeTask(message, payload = {}) {
   info(`expecting the chrome task finished: ${message}`);
   return formFillChromeScript.sendQuery(message, payload);
 }
