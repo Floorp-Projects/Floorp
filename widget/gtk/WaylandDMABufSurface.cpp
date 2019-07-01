@@ -30,26 +30,6 @@ using namespace mozilla::widget;
 #endif
 #define BUFFER_FLAGS 0
 
-bool WaylandDMABufSurface::mAvailable = false;
-bool WaylandDMABufSurface::mInitialized = false;
-
-bool WaylandDMABufSurface::IsAvailable() {
-  if (!mInitialized) {
-    mInitialized = true;
-    if (!nsGbmLib::IsAvailable()) {
-      return false;
-    }
-
-    // Test Alpha and non-alpha formats
-    nsWaylandDisplay* display = WaylandDisplayGet();
-    if (!display->GetGbmFormat(false) || !display->GetGbmFormat(true)) {
-      return false;
-    }
-    mAvailable = true;
-  }
-  return static_cast<bool>(mAvailable);
-}
-
 void WaylandDMABufSurface::SetWLBuffer(struct wl_buffer* aWLBuffer) {
   MOZ_ASSERT(mWLBuffer == nullptr, "WLBuffer already assigned!");
   mWLBuffer = aWLBuffer;

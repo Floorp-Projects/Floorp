@@ -33,6 +33,8 @@ struct GbmFormat {
 
 // Our general connection to Wayland display server,
 // holds our display connection and runs event loop.
+// We have a global nsWaylandDisplay object for each thread,
+// recently we have three for main, compositor and render one.
 class nsWaylandDisplay {
  public:
   explicit nsWaylandDisplay(wl_display* aDisplay);
@@ -72,7 +74,7 @@ class nsWaylandDisplay {
   GbmFormat* GetGbmFormat(bool aHasAlpha);
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
-  static bool IsDMABufEnabled() { return mIsDMABufEnabled; };
+  static bool IsDMABufEnabled();
 
  private:
   bool ConfigureGbm();
@@ -95,7 +97,8 @@ class nsWaylandDisplay {
   bool mGdmConfigured;
   bool mExplicitSync;
   static bool mIsDMABufEnabled;
-  static bool mIsDMABufPrefLoaded;
+  static int mIsDMABufPrefState;
+  static bool mIsDMABufConfigured;
 };
 
 void WaylandDispatchDisplays();
