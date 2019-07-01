@@ -165,7 +165,8 @@ val deviceEventsObserver = object : DeviceEventsObserver {
 ### Low level APIs
 
 First you need some OAuth information. Generate a `client_id`, `redirectUrl` and find out the scopes for your application.
-See Firefox Account documentation for that.
+See the [Firefox Account documentation](https://mozilla.github.io/application-services/docs/accounts/welcome.html)
+for that.
 
 Once you have the OAuth info, you can start adding `FxAClient` to your Android project.
 As part of the OAuth flow your application will be opening up a WebView or a Custom Tab.
