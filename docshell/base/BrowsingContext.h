@@ -51,6 +51,7 @@ template <typename>
 struct Nullable;
 template <typename T>
 class Sequence;
+class StructuredCloneHolder;
 struct WindowPostMessageOptions;
 class WindowProxyHolder;
 
@@ -265,6 +266,12 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
 
   JSObject* WrapObject(JSContext* aCx);
+
+  static JSObject* ReadStructuredClone(JSContext* aCx,
+                                       JSStructuredCloneReader* aReader,
+                                       StructuredCloneHolder* aHolder);
+  bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+                            StructuredCloneHolder* aHolder);
 
   void StartDelayedAutoplayMediaComponents();
 
