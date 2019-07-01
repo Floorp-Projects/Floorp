@@ -116,7 +116,7 @@ const TEST_DATA = [ // eslint-disable-line
     ],
   },
   {
-    selector: "#math-pow",
+    selector: "#arraysort",
     expected: [
       {
         type: "click",
@@ -125,7 +125,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2",
         ],
-        handler: "function pow(, ) {\n" +
+        handler: "function sort(, ) {\n" +
                  "  [native code]\n" +
                  "}",
       },

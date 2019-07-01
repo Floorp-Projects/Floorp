@@ -37,6 +37,9 @@ Object.defineProperty(src, 4, {
 
 assertThrowsInstanceOf(() => a.set(src), TypeError);
 
+// Not really needed
+Array.reverse(a_2);
+
 /******************************************************************************/
 
 if (typeof reportCompare === "function")
