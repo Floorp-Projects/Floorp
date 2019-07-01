@@ -137,12 +137,6 @@ interface DOMMatrix : DOMMatrixReadOnly {
                           optional unrestricted double originX = 0,
                           optional unrestricted double originY = 0,
                           optional unrestricted double originZ = 0);
-    DOMMatrix scaleNonUniformSelf(unrestricted double scaleX,
-                                  optional unrestricted double scaleY = 1,
-                                  optional unrestricted double scaleZ = 1,
-                                  optional unrestricted double originX = 0,
-                                  optional unrestricted double originY = 0,
-                                  optional unrestricted double originZ = 0);
     DOMMatrix rotateSelf(unrestricted double angle,
                          optional unrestricted double originX = 0,
                          optional unrestricted double originY = 0);
