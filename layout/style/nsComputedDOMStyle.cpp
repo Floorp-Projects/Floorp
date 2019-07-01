@@ -1505,7 +1505,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     // XXX TODO: add support for repeat(auto-fill) for 'subgrid' (bug 1234311)
     RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
-    auto& subgrid = aTrackList.AsSubgrid();
+    auto& subgrid = *aTrackList.AsSubgrid();
 
     RefPtr<nsROCSSPrimitiveValue> subgridKeyword = new nsROCSSPrimitiveValue;
     subgridKeyword->SetIdent(eCSSKeyword_subgrid);
@@ -1668,7 +1668,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     }
     // We don't have a frame.  So, we'll just return a serialization of
     // the tracks from the style (without resolved sizes).
-    auto& trackList = aTrackList.AsTrackList();
+    auto& trackList = *aTrackList.AsTrackList();
     auto nameLists = trackList.line_names.AsSpan();
     auto values = trackList.values.AsSpan();
     uint32_t numSizes = values.Length();
