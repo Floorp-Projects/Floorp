@@ -28,6 +28,7 @@ import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -122,11 +123,12 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
     }
 
     private fun loadInitialBookmarkFolder(currentGuid: String): Job {
-        return lifecycleScope.launch(IO) {
+        return viewLifecycleOwner.lifecycleScope.launch(IO) {
             currentRoot =
                 context?.bookmarkStorage()?.getTree(currentGuid).withOptionalDesktopFolders(context) as BookmarkNode
 
-            lifecycleScope.launch(Main) {
+            if (!isActive) return@launch
+            launch(Main) {
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
 
                 activity?.run {
