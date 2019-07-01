@@ -45,7 +45,7 @@ static inline bool IsRemoteAcceleratedCompositor(KnowsCompositor* aKnows) {
 
 already_AddRefed<MediaDataDecoder> GpuDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  if (!StaticPrefs::MediaGpuProcessDecoder() || !aParams.mKnowsCompositor ||
+  if (!StaticPrefs::media_gpu_process_decoder() || !aParams.mKnowsCompositor ||
       !IsRemoteAcceleratedCompositor(aParams.mKnowsCompositor)) {
     return mWrapped->CreateVideoDecoder(aParams);
   }

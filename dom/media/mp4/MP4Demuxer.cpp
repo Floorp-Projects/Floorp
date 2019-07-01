@@ -150,7 +150,7 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
 
   auto audioTrackCount = metadata.GetNumberTracks(TrackInfo::kAudioTrack);
   if (audioTrackCount.Ref() == MP4Metadata::NumberTracksError()) {
-    if (StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+    if (StaticPrefs::media_playback_warnings_as_errors()) {
       return InitPromise::CreateAndReject(
           MediaResult(
               NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
@@ -163,7 +163,7 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
 
   auto videoTrackCount = metadata.GetNumberTracks(TrackInfo::kVideoTrack);
   if (videoTrackCount.Ref() == MP4Metadata::NumberTracksError()) {
-    if (StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+    if (StaticPrefs::media_playback_warnings_as_errors()) {
       return InitPromise::CreateAndReject(
           MediaResult(
               NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
@@ -196,7 +196,7 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
       MP4Metadata::ResultAndTrackInfo info =
           metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
       if (!info.Ref()) {
-        if (StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+        if (StaticPrefs::media_playback_warnings_as_errors()) {
           return InitPromise::CreateAndReject(
               MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
                           RESULT_DETAIL("Invalid MP4 audio track (%s)",
@@ -233,7 +233,7 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
       MP4Metadata::ResultAndTrackInfo info =
           metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
       if (!info.Ref()) {
-        if (StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+        if (StaticPrefs::media_playback_warnings_as_errors()) {
           return InitPromise::CreateAndReject(
               MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
                           RESULT_DETAIL("Invalid MP4 video track (%s)",

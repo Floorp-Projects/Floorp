@@ -242,7 +242,7 @@ void RDDProcessManager::DestroyProcess() {
 bool RDDProcessManager::CreateContentBridge(
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager) {
-  if (!EnsureRDDReady() || !StaticPrefs::MediaRddProcessEnabled()) {
+  if (!EnsureRDDReady() || !StaticPrefs::media_rdd_process_enabled()) {
     return false;
   }
 

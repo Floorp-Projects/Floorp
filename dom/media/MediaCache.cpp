@@ -326,19 +326,19 @@ class MediaCache {
 
   static size_t CacheSize() {
     MOZ_ASSERT(sThread->IsOnCurrentThread());
-    return sOnCellular ? StaticPrefs::MediaCacheCellularSize()
-                       : StaticPrefs::MediaCacheSize();
+    return sOnCellular ? StaticPrefs::media_cache_size_cellular()
+                       : StaticPrefs::media_cache_size();
   }
 
   static size_t ReadaheadLimit() {
     MOZ_ASSERT(sThread->IsOnCurrentThread());
-    return sOnCellular ? StaticPrefs::MediaCacheCellularReadaheadLimit()
-                       : StaticPrefs::MediaCacheReadaheadLimit();
+    return sOnCellular ? StaticPrefs::media_cache_readahead_limit_cellular()
+                       : StaticPrefs::media_cache_readahead_limit();
   }
 
   static size_t ResumeThreshold() {
-    return sOnCellular ? StaticPrefs::MediaCacheCellularResumeThreshold()
-                       : StaticPrefs::MediaCacheResumeThreshold();
+    return sOnCellular ? StaticPrefs::media_cache_resume_threshold_cellular()
+                       : StaticPrefs::media_cache_resume_threshold();
   }
 
   // Find a free or reusable block and return its index. If there are no
@@ -789,7 +789,7 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength) {
 
   if (aContentLength > 0 &&
       aContentLength <=
-          int64_t(StaticPrefs::MediaMemoryCacheMaxSize()) * 1024) {
+          int64_t(StaticPrefs::media_memory_cache_max_size()) * 1024) {
     // Small-enough resource, use a new memory-backed MediaCache.
     RefPtr<MediaBlockCacheBase> bc = new MemoryBlockCache(aContentLength);
     nsresult rv = bc->Init();

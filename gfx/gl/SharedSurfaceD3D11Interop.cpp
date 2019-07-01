@@ -414,7 +414,7 @@ SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(
       mLockHandle(lockHandle),
       mTexD3D(texD3D),
       mDXGIHandle(dxgiHandle),
-      mNeedsFinish(StaticPrefs::WebGLDXGLNeedsFinish()),
+      mNeedsFinish(StaticPrefs::webgl_dxgl_needs_finish()),
       mLockedForGL(false) {
   MOZ_ASSERT(bool(mProdTex) == bool(mInteropFB));
 }
