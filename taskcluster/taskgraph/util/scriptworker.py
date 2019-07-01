@@ -409,9 +409,7 @@ def get_worker_type_for_scope(config, scope):
 
 
 # generate_beetmover_upstream_artifacts {{{1
-def generate_beetmover_upstream_artifacts(
-    config, job, platform, locale=None, dependencies=None, **kwargs
-):
+def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, dependencies=None):
     """Generate the upstream artifacts for beetmover, using the artifact map.
 
     Currently only applies to beetmover tasks.
@@ -445,12 +443,7 @@ def generate_beetmover_upstream_artifacts(
         locales = [locale]
 
     if not dependencies:
-        if job.get('dependencies'):
-            dependencies = job['dependencies'].keys()
-        elif job.get('primary-dependency'):
-            dependencies = [job['primary-dependency'].kind]
-        else:
-            raise Exception('Unsupported type of dependency. Got job: {}'.format(job))
+        dependencies = job['dependencies'].keys()
 
     for locale, dep in itertools.product(locales, dependencies):
         paths = list()
@@ -472,23 +465,16 @@ def generate_beetmover_upstream_artifacts(
             file_config = deepcopy(map_config['mapping'][filename])
             resolve_keyed_by(file_config, "source_path_modifier",
                              'source path modifier', locale=locale)
-
-            kwargs['locale'] = locale
-
             paths.append(os.path.join(
                 base_artifact_prefix,
-                jsone.render(file_config['source_path_modifier'], kwargs),
-                jsone.render(filename, kwargs),
+                jsone.render(file_config['source_path_modifier'], {'locale': locale}),
+                filename,
             ))
 
-        if (
-            job.get('dependencies') and
-            getattr(job['dependencies'][dep], 'release_artifacts', None)
-        ):
+        if getattr(job['dependencies'][dep], 'release_artifacts', None):
             paths = [
                 path for path in paths
-                if path in job['dependencies'][dep].release_artifacts
-            ]
+                if path in job['dependencies'][dep].release_artifacts]
 
         if not paths:
             continue
@@ -500,6 +486,57 @@ def generate_beetmover_upstream_artifacts(
             "taskType": map_config['tasktype_map'].get(dep),
             "paths": sorted(paths),
             "locale": locale,
+        })
+
+    return upstream_artifacts
+
+
+# generate_beetmover_compressed_upstream_artifacts {{{1
+def generate_beetmover_compressed_upstream_artifacts(job, dependencies=None):
+    """Generate compressed file upstream artifacts for beetmover.
+
+    These artifacts will not be beetmoved directly, but will be
+    decompressed from upstream_mapping and the contents beetmoved
+    using the `mapping` entry in the artifact map.
+
+    Currently only applies to beetmover tasks.
+
+    Args:
+        job (dict): The current job being generated
+        dependencies (list): A list of the job's dependency labels.
+
+    Returns:
+        list: A list of dictionaries conforming to the upstream_artifacts spec.
+    """
+    base_artifact_prefix = get_artifact_prefix(job)
+    map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
+    upstream_artifacts = list()
+
+    if not dependencies:
+        dependencies = job['dependencies'].keys()
+
+    for dep in dependencies:
+        paths = list()
+
+        for filename in map_config['upstream_mapping']:
+            if dep not in map_config['upstream_mapping'][filename]['from']:
+                continue
+
+            paths.append(os.path.join(
+                base_artifact_prefix,
+                filename,
+            ))
+
+        if not paths:
+            continue
+
+        upstream_artifacts.append({
+            "taskId": {
+                "task-reference": "<{}>".format(dep)
+            },
+            "taskType": map_config['tasktype_map'].get(dep),
+            "paths": sorted(paths),
+            "zipExtract": True,
         })
 
     return upstream_artifacts

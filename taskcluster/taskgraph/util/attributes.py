@@ -35,7 +35,6 @@ RELEASE_PROMOTION_PROJECTS = {
 } | RELEASE_PROJECTS
 
 _OPTIONAL_ATTRIBUTES = (
-    'artifact_map',
     'artifact_prefix',
     'l10n_chunk',
     'locale',
