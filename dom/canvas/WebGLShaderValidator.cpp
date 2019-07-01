@@ -67,7 +67,7 @@ static ShCompileOptions ChooseValidatorCompileOptions(
     }
   }
 
-  if (StaticPrefs::WebGLAllANGLEOptions()) {
+  if (StaticPrefs::webgl_all_angle_options()) {
     options = -1;
 
     options ^= SH_INTERMEDIATE_TREE;

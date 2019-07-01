@@ -530,7 +530,7 @@ bool MediaChangeMonitor::CanRecycleDecoder() const {
   AssertOnTaskQueue();
 
   MOZ_ASSERT(mDecoder);
-  return StaticPrefs::MediaDecoderRecycleEnabled() &&
+  return StaticPrefs::media_decoder_recycle_enabled() &&
          mDecoder->SupportDecoderRecycling();
 }
 

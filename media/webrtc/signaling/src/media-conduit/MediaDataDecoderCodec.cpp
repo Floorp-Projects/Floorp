@@ -20,12 +20,12 @@ WebrtcVideoDecoder* MediaDataDecoderCodec::CreateDecoder(
   switch (aCodecType) {
     case webrtc::VideoCodecType::kVideoCodecVP8:
     case webrtc::VideoCodecType::kVideoCodecVP9:
-      if (!StaticPrefs::MediaNavigatorMediadatadecoderVPXEnabled()) {
+      if (!StaticPrefs::media_navigator_mediadatadecoder_vpx_enabled()) {
         return nullptr;
       }
       break;
     case webrtc::VideoCodecType::kVideoCodecH264:
-      if (!StaticPrefs::MediaNavigatorMediadatadecoderH264Enabled()) {
+      if (!StaticPrefs::media_navigator_mediadatadecoder_h264_enabled()) {
         return nullptr;
       }
       break;

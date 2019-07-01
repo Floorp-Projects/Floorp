@@ -192,7 +192,7 @@ bool MP4Decoder::IsAAC(const nsACString& aMimeType) {
 }
 
 /* static */
-bool MP4Decoder::IsEnabled() { return StaticPrefs::MediaMp4Enabled(); }
+bool MP4Decoder::IsEnabled() { return StaticPrefs::media_mp4_enabled(); }
 
 /* static */
 nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
