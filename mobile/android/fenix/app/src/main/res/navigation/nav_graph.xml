@@ -405,7 +405,6 @@
     <dialog
         android:id="@+id/shareFragment"
         android:name="org.mozilla.fenix.share.ShareFragment"
-        android:label="fragment_share"
         tools:layout="@layout/fragment_share" >
         <argument
             android:name="url"

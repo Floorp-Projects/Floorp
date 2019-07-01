@@ -11,15 +11,10 @@ import kotlinx.coroutines.Job
 
 /**
  * [RecyclerView.Adapter] with a [Job] for coroutines.
- * The adapterJob is setup when the adapter is attached to a RecyclerView and canceled when detached.
+ * The adapterJob is setup when the adapter is initialized to a RecyclerView and canceled when detached.
  */
 abstract class AdapterWithJob<VH : RecyclerView.ViewHolder> : RecyclerView.Adapter<VH>() {
-    protected lateinit var adapterJob: Job
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        adapterJob = Job()
-    }
+    protected var adapterJob: Job = Job()
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
@@ -29,17 +24,12 @@ abstract class AdapterWithJob<VH : RecyclerView.ViewHolder> : RecyclerView.Adapt
 
 /**
  * [ListAdapter] with a [Job] for coroutines.
- * The adapterJob is setup when the adapter is attached to a RecyclerView and canceled when detached.
+ * The adapterJob is setup when the adapter is initialized to a RecyclerView and canceled when detached.
  */
 abstract class ListAdapterWithJob<T, VH : RecyclerView.ViewHolder>(
     diffCallback: DiffUtil.ItemCallback<T>
 ) : ListAdapter<T, VH>(diffCallback) {
-    protected lateinit var adapterJob: Job
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        adapterJob = Job()
-    }
+    protected var adapterJob: Job = Job()
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
