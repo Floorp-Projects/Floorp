@@ -112,6 +112,44 @@ class Element;
 class Document;
 }  // namespace dom
 
+// Replacement for a Rust Box<T> for a non-dynamically-sized-type.
+//
+// TODO(emilio): If this was some sort of nullable box then this could be made
+// to work with moves, and also reduce memory layout size of stuff, potentially.
+template <typename T>
+struct StyleBox {
+  explicit StyleBox(UniquePtr<T> aPtr) : mRaw(aPtr.release()) {
+    MOZ_DIAGNOSTIC_ASSERT(mRaw);
+  }
+
+  StyleBox(const StyleBox& aOther) : StyleBox(MakeUnique<T>(*aOther)) {}
+  ~StyleBox() {
+    MOZ_DIAGNOSTIC_ASSERT(mRaw);
+    delete mRaw;
+  }
+
+  const T* operator->() const {
+    MOZ_DIAGNOSTIC_ASSERT(mRaw);
+    return mRaw;
+  }
+
+  const T& operator*() const {
+    MOZ_DIAGNOSTIC_ASSERT(mRaw);
+    return *mRaw;
+  }
+
+  bool operator==(const StyleBox<T>& aOther) const {
+    return *(*this) == *aOther;
+  }
+
+  bool operator!=(const StyleBox<T>& aOther) const {
+    return *this != *aOther;
+  }
+
+ private:
+  T* mRaw;
+};
+
 // Work-around weird cbindgen renaming / avoiding moving stuff outside its
 // namespace.
 

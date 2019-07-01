@@ -71,10 +71,10 @@ template <>
 inline Span<const StyleOwnedSlice<StyleCustomIdent>>
 GridTemplate::LineNameLists(bool aIsSubgrid) const {
   if (IsTrackList()) {
-    return AsTrackList().line_names.AsSpan();
+    return AsTrackList()->line_names.AsSpan();
   }
   if (IsSubgrid() && aIsSubgrid) {
-    return AsSubgrid().names.AsSpan();
+    return AsSubgrid()->names.AsSpan();
   }
   MOZ_ASSERT(IsNone() || (IsSubgrid() && !aIsSubgrid));
   return {};
