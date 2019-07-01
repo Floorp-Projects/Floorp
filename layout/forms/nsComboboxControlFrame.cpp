@@ -1569,16 +1569,14 @@ nsComboboxControlFrame::RestoreState(PresState* aState) {
 // Append a suffix so that the state key for the combobox is different
 // from the state key the list control uses to sometimes save the scroll
 // position for the same Element
-NS_IMETHODIMP
-nsComboboxControlFrame::GenerateStateKey(nsIContent* aContent,
-                                         Document* aDocument,
-                                         nsACString& aKey) {
-  nsresult rv = nsContentUtils::GenerateStateKey(aContent, aDocument, aKey);
-  if (NS_FAILED(rv) || aKey.IsEmpty()) {
-    return rv;
+void nsComboboxControlFrame::GenerateStateKey(nsIContent* aContent,
+                                              Document* aDocument,
+                                              nsACString& aKey) {
+  nsContentUtils::GenerateStateKey(aContent, aDocument, aKey);
+  if (aKey.IsEmpty()) {
+    return;
   }
   aKey.AppendLiteral("CCF");
-  return NS_OK;
 }
 
 // Fennec uses a custom combobox built-in widget.
