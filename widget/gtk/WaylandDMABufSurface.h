@@ -14,8 +14,6 @@
 
 class WaylandDMABufSurface {
  public:
-  static bool IsAvailable();
-
   bool Create(int aWidth, int aHeight, bool aHasAlpha = true);
   bool Resize(int aWidth, int aHeight);
   void Release();
@@ -62,9 +60,6 @@ class WaylandDMABufSurface {
 
   bool mWLBufferAttached;
   bool mFastWLBufferCreation;
-
-  static bool mAvailable;
-  static bool mInitialized;
 };
 
 #endif
