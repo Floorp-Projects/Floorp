@@ -51,7 +51,7 @@ ln -s ../../config/pre-push-recommended.sh .git/hooks/pre-push
 ```
 or for Windows run this command with administrative privileges:
 ```sh
-mklink /d .git\hooks\pre-push ..\..\config\pre-push-recommended.sh
+mklink .git\hooks\pre-push ..\..\config\pre-push-recommended.sh
 ```
 
 To push without running the pre-push hook (e.g. doc updates):
