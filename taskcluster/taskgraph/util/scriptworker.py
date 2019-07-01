@@ -445,7 +445,12 @@ def generate_beetmover_upstream_artifacts(
         locales = [locale]
 
     if not dependencies:
-        dependencies = job['dependencies'].keys()
+        if job.get('dependencies'):
+            dependencies = job['dependencies'].keys()
+        elif job.get('primary-dependency'):
+            dependencies = [job['primary-dependency'].kind]
+        else:
+            raise Exception('Unsupported type of dependency. Got job: {}'.format(job))
 
     for locale, dep in itertools.product(locales, dependencies):
         paths = list()
@@ -476,10 +481,14 @@ def generate_beetmover_upstream_artifacts(
                 jsone.render(filename, kwargs),
             ))
 
-        if getattr(job['dependencies'][dep], 'release_artifacts', None):
+        if (
+            job.get('dependencies') and
+            getattr(job['dependencies'][dep], 'release_artifacts', None)
+        ):
             paths = [
                 path for path in paths
-                if path in job['dependencies'][dep].release_artifacts]
+                if path in job['dependencies'][dep].release_artifacts
+            ]
 
         if not paths:
             continue
