@@ -42,9 +42,6 @@ signing_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
     Required('depname'): basestring,
 
-    # attributes for this task
-    Optional('attributes'): {basestring: object},
-
     # unique label to describe this signing task, defaults to {dep.label}-signing
     Optional('label'): basestring,
 
@@ -140,8 +137,7 @@ def make_task_description(config, jobs):
             )
         )
 
-        attributes = job['attributes'] if job.get('attributes') else \
-            copy_attributes_from_dependent_job(dep_job)
+        attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['signed'] = True
 
         if dep_job.attributes.get('chunk_locales'):
