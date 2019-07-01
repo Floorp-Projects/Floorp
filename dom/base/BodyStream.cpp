@@ -17,6 +17,27 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 namespace mozilla {
 namespace dom {
 
+// BodyStreamHolder
+// ---------------------------------------------------------------------------
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(BodyStreamHolder)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BodyStreamHolder)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BodyStreamHolder)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+// BodyStream
+// ---------------------------------------------------------------------------
+
 class BodyStream::WorkerShutdown final : public WorkerControlRunnable {
  public:
   WorkerShutdown(WorkerPrivate* aWorkerPrivate, RefPtr<BodyStream> aStream)
@@ -86,8 +107,8 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
   }
 
   aRv.MightThrowJSException();
-  JS::Rooted<JSObject*> body(
-      aCx, JS::NewReadableExternalSourceStreamObject(aCx, stream));
+  JS::Rooted<JSObject*> body(aCx, JS::NewReadableExternalSourceStreamObject(
+                                      aCx, stream, aStreamHolder));
   if (!body) {
     aRv.StealExceptionFromJSContext(aCx);
     return;
