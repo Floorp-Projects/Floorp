@@ -589,7 +589,7 @@ static void ReparentFrameInternal(nsIFrame* aFrame,
 
   aFrame->SetParent(aNewParent);
   if (aMarkDirty) {
-    aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+    // aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
   }
 
   // When pushing and pulling frames we need to check for whether any
@@ -2991,12 +2991,12 @@ void nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine) {
     int32_t n = aLine->GetChildCount();
     for (nsIFrame* f = aLine->mFirstChild; n > 0;
          f = f->GetNextSibling(), --n) {
-      f->AddStateBits(NS_FRAME_IS_DIRTY);
+      f->MarkSubtreeDirty();
     }
     // And mark all the floats whose reflows we might be skipping dirty too.
     if (aLine->HasFloats()) {
       for (nsFloatCache* fc = aLine->GetFirstFloat(); fc; fc = fc->Next()) {
-        fc->mFloat->AddStateBits(NS_FRAME_IS_DIRTY);
+        fc->mFloat->MarkSubtreeDirty();
       }
     }
   } else {

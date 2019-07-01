@@ -314,7 +314,6 @@ void nsSVGDisplayContainerFrame::ReflowSVG() {
     if (SVGFrame) {
       MOZ_ASSERT(!(kid->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
                  "Check for this explicitly in the |if|, then");
-      kid->AddStateBits(mState & NS_FRAME_IS_DIRTY);
       SVGFrame->ReflowSVG();
 
       // We build up our child frame overflows here instead of using
