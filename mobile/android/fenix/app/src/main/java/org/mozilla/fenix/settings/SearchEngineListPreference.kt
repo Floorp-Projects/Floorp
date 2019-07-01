@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.RadioGroup
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
@@ -23,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
@@ -119,19 +117,11 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         val wrapper = layoutInflater.inflate(itemResId, null) as ConstraintLayout
         wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
         wrapper.radio_button.setOnCheckedChangeListener(this)
-        val buttonItem = wrapper.radio_button
         wrapper.engine_text.text = engine.name
         val iconSize = res.getDimension(R.dimen.preference_icon_drawable_size).toInt()
         val engineIcon = BitmapDrawable(res, engine.icon)
         engineIcon.setBounds(0, 0, iconSize, iconSize)
         wrapper.engine_icon.setImageDrawable(engineIcon)
-        val attr =
-            ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
-        val buttonDrawable = ContextCompat.getDrawable(context, attr)
-        buttonDrawable.apply {
-            this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
-        }
-        buttonItem.setCompoundDrawablesRelative(buttonDrawable, null, null, null)
         return wrapper
     }
 

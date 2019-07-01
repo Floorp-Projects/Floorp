@@ -14,7 +14,6 @@
         android:id="@+id/radio_button"
         android:layout_width="@dimen/search_engine_radio_button_height"
         android:layout_height="@dimen/search_engine_radio_button_height"
-        android:button="@null"
         android:textAlignment="textStart"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:layout_marginStart="@dimen/radio_button_padding_horizontal"
