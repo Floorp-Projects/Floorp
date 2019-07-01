@@ -99,7 +99,7 @@ internal class EditToolbar(
         scaleType = ImageView.ScaleType.CENTER
 
         setOnClickListener {
-            urlView.text.clear()
+            urlView.setText("")
         }
     }
 

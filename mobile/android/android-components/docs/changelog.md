@@ -18,6 +18,7 @@ permalink: /changelog/
   
 * **browser-awesomebar**
   * Updated `DefaultSuggestionViewHolder` to have a style more consistent with Fenix mocks.
+  * Fixed a bug with `InlineAutocompleteEditText` where the cursor would disappear if a user cleared an suggested URL.
   
 * **lib-state**
   * A new component for maintaining application, screen or component state via a redux-style `Store`. This component provides the architectural foundation for the `browser-state` component (in development).
