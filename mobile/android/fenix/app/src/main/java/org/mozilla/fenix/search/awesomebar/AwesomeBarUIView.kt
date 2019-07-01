@@ -15,6 +15,7 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
@@ -69,7 +70,7 @@ class AwesomeBarUIView(
     }
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
-        override fun invoke(url: String) {
+        override fun invoke(url: String, flags: EngineSession.LoadUrlFlags) {
             actionEmitter.onNext(AwesomeBarAction.URLTapped(url))
         }
     }
