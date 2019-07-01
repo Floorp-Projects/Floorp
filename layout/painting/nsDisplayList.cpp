@@ -7023,6 +7023,19 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+
+  // It's important to get the userData here even in the early-return case,
+  // because this has the important side-effect of marking the user data "used"
+  // so it doesn't get discarded at the end of the transaction.
+  RefPtr<WebRenderRenderRootData> userData =
+      aManager->CommandBuilder()
+          .CreateOrRecycleWebRenderUserData<WebRenderRenderRootData>(
+              this, aBuilder.GetRenderRoot());
+  // Technically the next line is redundant but maybe it will stop people who
+  // don't read comments from accidentally moving the above line of code back
+  // down below the early-return.
+  userData->SetUsed(true);
+
   if (!aDisplayListBuilder->GetNeedsDisplayListBuild(mRenderRoot) &&
       mBuiltWRCommands) {
     return true;
@@ -7031,10 +7044,6 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
     nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, aSc,
                                                aManager, aDisplayListBuilder);
   } else {
-    RefPtr<WebRenderRenderRootData> userData =
-        aManager->CommandBuilder()
-            .CreateOrRecycleWebRenderUserData<WebRenderRenderRootData>(
-                this, aBuilder.GetRenderRoot());
     mBoundary = Some(userData->EnsureHasBoundary(mRenderRoot));
 
     WebRenderCommandBuilder::ScrollDataBoundaryWrapper wrapper(
