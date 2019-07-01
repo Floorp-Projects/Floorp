@@ -38,6 +38,8 @@ test(function () {
   }, "mediaDevices.getUserMedia() is present on navigator");
 
 promise_test(async t => {
+  assert_true(navigator.mediaDevices.getSupportedConstraints()["groupId"],
+    "groupId should be supported");
   const devices = await navigator.mediaDevices.enumerateDevices();
   for (const device of devices) {
     await navigator.mediaDevices.getUserMedia(
@@ -58,6 +60,8 @@ promise_test(async t => {
 }, 'groupId is correctly supported by getUserMedia() for video devices');
 
 promise_test(async t => {
+  assert_true(navigator.mediaDevices.getSupportedConstraints()["groupId"],
+    "groupId should be supported");
   const devices = await navigator.mediaDevices.enumerateDevices();
   for (const device of devices) {
     await navigator.mediaDevices.getUserMedia(
@@ -78,6 +82,8 @@ promise_test(async t => {
 }, 'groupId is correctly supported by getUserMedia() for audio devices');
 
 promise_test(async t => {
+  assert_true(navigator.mediaDevices.getSupportedConstraints()["resizeMode"],
+    "resizeMode should be supported");
   const stream = await navigator.mediaDevices.getUserMedia(
       { video: {resizeMode: {exact: 'none'}}});
   const [track] = stream.getVideoTracks();
@@ -86,6 +92,8 @@ promise_test(async t => {
 }, 'getUserMedia() supports setting none as resizeMode.');
 
 promise_test(async t => {
+  assert_true(navigator.mediaDevices.getSupportedConstraints()["resizeMode"],
+    "resizeMode should be supported");
   const stream = await navigator.mediaDevices.getUserMedia(
       { video: {resizeMode: {exact: 'crop-and-scale'}}});
   const [track] = stream.getVideoTracks();
@@ -94,6 +102,8 @@ promise_test(async t => {
 }, 'getUserMedia() supports setting crop-and-scale as resizeMode.');
 
 promise_test(async t => {
+  assert_true(navigator.mediaDevices.getSupportedConstraints()["resizeMode"],
+    "resizeMode should be supported");
   try {
     const stream = await navigator.mediaDevices.getUserMedia(
         { video: {resizeMode: {exact: 'INVALID'}}});
