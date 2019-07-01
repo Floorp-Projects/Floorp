@@ -73,13 +73,14 @@ static void GenPrintf(DebugChannel channel, MacroAssembler& masm,
   UniqueChars str = JS_vsmprintf(fmt, ap);
   va_end(ap);
 
-  // We leak the strings! This is done only for debugging purposes, and doing
-  // the right thing is cumbersome (in Ion, it'd mean add a vec of strings to
-  // the IonScript; in wasm, it'd mean add it to the current Module and
-  // serialize it properly).
-  const char* text = str.release();
-
   GenPrint(channel, masm, Nothing(), [&](bool inWasm, Register temp) {
+    // If we've gone this far, it means we're actually using the debugging
+    // strings. In this case, we leak them! This is only for debugging, and
+    // doing the right thing is cumbersome (in Ion, it'd mean add a vec of
+    // strings to the IonScript; in wasm, it'd mean add it to the current
+    // Module and serialize it properly).
+    const char* text = str.release();
+
     masm.movePtr(ImmPtr((void*)text, ImmPtr::NoCheckToken()), temp);
     masm.passABIArg(temp);
     if (inWasm) {
