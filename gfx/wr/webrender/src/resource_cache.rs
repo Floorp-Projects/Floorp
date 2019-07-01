@@ -171,7 +171,6 @@ struct ImageResource {
     data: CachedImageData,
     descriptor: ImageDescriptor,
     tiling: Option<TileSize>,
-    viewport_tiles: Option<TileRange>,
 }
 
 #[derive(Clone, Debug)]
@@ -851,7 +850,6 @@ impl ResourceCache {
             descriptor,
             data,
             tiling,
-            viewport_tiles: None,
         };
 
         self.resources.image_templates.insert(image_key, resource);
@@ -909,7 +907,6 @@ impl ResourceCache {
             descriptor,
             data,
             tiling,
-            viewport_tiles: image.viewport_tiles,
         };
     }
 
@@ -2268,7 +2265,6 @@ impl ResourceCache {
                 data,
                 descriptor: template.descriptor,
                 tiling: template.tiling,
-                viewport_tiles: None,
             });
         }
 
