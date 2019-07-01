@@ -3183,7 +3183,11 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::IndexedGetterOuter(
 
   const BrowsingContext::Children& children = bc->GetChildren();
   if (aIndex < children.Length()) {
-    return WindowProxyHolder(children[aIndex]);
+    BrowsingContext* child = children[aIndex];
+    if (child->IsInProcess()) {
+      child->GetDOMWindow()->EnsureInnerWindow();
+    }
+    return WindowProxyHolder(child);
   }
   return nullptr;
 }
