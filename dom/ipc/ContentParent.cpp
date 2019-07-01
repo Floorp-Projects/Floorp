@@ -4974,7 +4974,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     const bool& aCalledFromJS, const bool& aPositionSpecified,
     const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
     const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
-    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+    nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     nsIReferrerInfo* aReferrerInfo) {
   MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(aName));
 
@@ -4982,6 +4982,36 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
   bool windowIsNew;
   nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
+
+  // If we have enough data, check the schemes of the loader and loadee
+  // to make sure they make sense.
+  if (uriToLoad && uriToLoad->SchemeIs("file") &&
+      !GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE) &&
+      Preferences::GetBool("browser.tabs.remote.enforceRemoteTypeRestrictions",
+                           false)) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#  ifdef DEBUG
+    nsAutoCString uriToLoadStr;
+    uriToLoad->GetAsciiSpec(uriToLoadStr);
+
+    nsCOMPtr<nsIURI> triggeringUri;
+    aTriggeringPrincipal->GetURI(getter_AddRefs(triggeringUri));
+    nsAutoCString triggeringUriStr;
+    if (triggeringUri) {
+      triggeringUri->GetAsciiSpec(triggeringUriStr);
+    }
+
+    NS_WARNING(nsPrintfCString(
+                   "RecvCreateWindowInDifferentProcess blocked loading file "
+                   "scheme from non-file remotetype: %s tried to load %s",
+                   triggeringUriStr.get(), uriToLoadStr.get())
+                   .get());
+#  endif
+    MOZ_CRASH(
+        "RecvCreateWindowInDifferentProcess blocked loading improper scheme");
+#endif
+    return IPC_OK();
+  }
 
   nsresult rv;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(

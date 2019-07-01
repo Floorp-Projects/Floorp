@@ -1,0 +1,10 @@
+[
+    {
+        "size": 5501545,
+        "visibility": "public",
+        "digest": "a5c441b3ede7d7c0da2ed5414761929c17863e3bb03612a396fd40259eca767bd344ea1d64d2b7d3bea88aee75172406766b9bd4a7cd2c02d3b0a9a4993eb61b",
+        "algorithm": "sha512",
+        "filename": "mitm4-linux-firefox-instagram-binast.zip",
+        "unpack": true
+    }
+]

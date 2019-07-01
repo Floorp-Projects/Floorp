@@ -101,6 +101,7 @@ function* test(testDriver) {
     checkHitResult(hitTest(centerOf(target)),
                    APZHitResultFlags.VISIBLE,
                    scrollerViewId,
+                   utils.getLayersId(),
                    `center of scroller in testcase ${testId}`);
 
     var bounds = target.getBoundingClientRect();
@@ -111,19 +112,23 @@ function* test(testDriver) {
     checkHitResult(hitTest({x: bounds.x + 1, y: bounds.y + 1}),
                    APZHitResultFlags.VISIBLE,
                    scrollerViewId,
+                   utils.getLayersId(),
                    `top left of scroller in testcase ${testId}`);
     checkHitResult(hitTest({x: bounds.x + 1, y: bounds.y + (bounds.height / 2)}),
                    APZHitResultFlags.VISIBLE,
                    scrollerViewId,
+                   utils.getLayersId(),
                    `middle left of scroller in testcase ${testId}`);
     checkHitResult(hitTest({x: bounds.x + 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
                    APZHitResultFlags.VISIBLE,
                    scrollerViewId,
+                   utils.getLayersId(),
                    `bottom left (excluding scrollbar) of scroller in testcase ${testId}`);
     if (horizontalScrollbarHeight > 0) {
       checkHitResult(hitTest({x: bounds.x + 1, y: bounds.bottom - 1}),
                      APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR,
                      scrollerViewId,
+                     utils.getLayersId(),
                      `bottom left of scroller in testcase ${testId}`);
     }
 
@@ -137,25 +142,30 @@ function* test(testDriver) {
       checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.y + 1}),
                      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                      rootViewId,
+                     utils.getLayersId(),
                      `top right of scroller in testcase ${testId}`);
       checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
                      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                      rootViewId,
+                     utils.getLayersId(),
                      `bottom right of scroller in testcase ${testId}`);
     } else {
       checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.y + 1}),
                      APZHitResultFlags.VISIBLE,
                      scrollerViewId,
+                     utils.getLayersId(),
                      `top right of scroller in testcase ${testId}`);
       checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
                      APZHitResultFlags.VISIBLE,
                      scrollerViewId,
+                     utils.getLayersId(),
                      `bottom right of scroller in testcase ${testId}`);
     }
 
     checkHitResult(hitTest({x: bounds.right - 1, y: bounds.y + (bounds.height / 2)}),
                    APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                    rootViewId,
+                   utils.getLayersId(),
                    `middle right of scroller in testcase ${testId}`);
   }
 }
