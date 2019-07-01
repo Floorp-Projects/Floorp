@@ -211,7 +211,7 @@ class HistoryFragment : Fragment(), BackHandler {
     private fun openItem(item: HistoryItem) {
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,
-            newTab = false,
+            newTab = true,
             from = BrowserDirection.FromHistory
         )
     }

@@ -181,7 +181,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
                                 (activity as HomeActivity)
                                     .openToBrowserAndLoad(
                                         searchTermOrURL = url,
-                                        newTab = false,
+                                        newTab = true,
                                         from = BrowserDirection.FromBookmarks
                                     )
                             }
