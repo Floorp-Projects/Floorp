@@ -40,6 +40,7 @@ not-for-build-platforms:
 job-template:
     attributes:
         artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
+        artifact_prefix: public/build/maven
     run-on-projects: ['mozilla-central', 'mozilla-release']
     run-on-hg-branches:
         by-project:
