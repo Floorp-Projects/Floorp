@@ -375,6 +375,33 @@ class SessionManagerTest {
     }
 
     @Test
+    fun `Restore sessions with already existing session`() {
+        val manager = SessionManager(engine = mock())
+        manager.add(Session("https://www.mozilla.org"))
+
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+
+        val snapshot = SessionManager.Snapshot(
+            listOf(
+                SessionManager.Snapshot.Item(session = Session("https://www.firefox.com")),
+                SessionManager.Snapshot.Item(session = Session("https://www.wikipedia.org")),
+                SessionManager.Snapshot.Item(session = Session("https://getpocket.com"))
+            ),
+            selectedSessionIndex = 1
+        )
+
+        manager.restore(snapshot, updateSelection = false)
+
+        assertEquals(4, manager.size)
+
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.firefox.com", manager.sessions[0].url)
+        assertEquals("https://www.wikipedia.org", manager.sessions[1].url)
+        assertEquals("https://getpocket.com", manager.sessions[2].url)
+        assertEquals("https://www.mozilla.org", manager.sessions[3].url)
+    }
+
+    @Test
     fun `restore may be used to bulk-add session from a SessionsSnapshot`() {
         val manager = SessionManager(mock())
 

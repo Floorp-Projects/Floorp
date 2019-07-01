@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import androidx.lifecycle.Transformations.map
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
 import mozilla.components.browser.session.ext.toTabSessionState
@@ -125,15 +126,15 @@ class SessionManager(
     fun restore(snapshot: Snapshot, updateSelection: Boolean = true) {
         delegate.restore(snapshot, updateSelection)
 
-        val tabs = snapshot.sessions.mapNotNull { item ->
-            if (!item.session.isCustomTabSession()) {
-                item.session.toTabSessionState()
-            } else {
+        val tabs = snapshot.sessions
+            .filter {
                 // A restored snapshot should not contain any custom tab so we should be able to safely ignore
                 // them here.
-                null
+                !it.session.isCustomTabSession()
             }
-        }
+            .map { item ->
+                item.session.toTabSessionState()
+            }
 
         val selectedTabId = if (updateSelection && snapshot.selectedSessionIndex != NO_SELECTION) {
             val index = snapshot.selectedSessionIndex

@@ -261,7 +261,7 @@ class TabListActionTest {
 
     @Test
     fun `RestoreAction - Adds restored tabs and updates selected tab`() {
-        val store = BrowserStore(BrowserState())
+        val store = BrowserStore()
 
         assertEquals(0, store.state.tabs.size)
 

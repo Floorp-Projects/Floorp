@@ -54,7 +54,7 @@ internal object TabListReducer {
 
             is TabListAction.RestoreAction -> {
                 // We are adding the restored tabs first and then the already existing tabs. Since restore can or should
-                // happen asynchronously we may already have a tab at this point (e.g. from an `Intent` and so we
+                // happen asynchronously we may already have a tab at this point (e.g. from an `Intent`) and so we
                 // pretend we restored the list of tabs before any tab was added.
                 state.copy(
                     tabs = action.tabs + state.tabs,

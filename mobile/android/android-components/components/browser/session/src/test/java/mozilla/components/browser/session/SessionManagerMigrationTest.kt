@@ -203,7 +203,7 @@ class SessionManagerMigrationTest {
 
     @Test
     fun `Restoring snapshot with invalid index`() {
-        val store = BrowserStore(BrowserState())
+        val store = BrowserStore()
 
         val manager = SessionManager(engine = mock(), store = store)
         manager.restore(SessionManager.Snapshot(listOf(), selectedSessionIndex = 0))
@@ -219,7 +219,7 @@ class SessionManagerMigrationTest {
     fun `Restoring snapshot without updating selection`() {
         val session: Session
 
-        val store = BrowserStore(BrowserState())
+        val store = BrowserStore()
 
         val manager = SessionManager(engine = mock(), store = store).apply {
             session = Session("https://getpocket.com")
@@ -269,7 +269,7 @@ class SessionManagerMigrationTest {
             selectedSessionIndex = 2
         )
 
-        val store = BrowserStore(BrowserState())
+        val store = BrowserStore()
         val manager = SessionManager(engine = mock(), store = store)
 
         manager.restore(snapshot)
