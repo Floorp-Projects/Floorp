@@ -807,15 +807,6 @@ DOMMatrix* DOMMatrix::Scale3dSelf(double aScale, double aOriginX,
   return this;
 }
 
-DOMMatrix* DOMMatrix::ScaleNonUniformSelf(double aScaleX, double aScaleY,
-                                          double aScaleZ, double aOriginX,
-                                          double aOriginY, double aOriginZ) {
-  ScaleSelf(aScaleX, Optional<double>(aScaleY), aScaleZ, aOriginX, aOriginY,
-            aOriginZ);
-
-  return this;
-}
-
 DOMMatrix* DOMMatrix::RotateFromVectorSelf(double aX, double aY) {
   if (aX == 0.0 || aY == 0.0) {
     return this;
