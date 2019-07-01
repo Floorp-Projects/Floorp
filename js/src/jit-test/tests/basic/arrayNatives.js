@@ -1,4 +1,4 @@
-
+// |jit-test| skip-if: !(getBuildConfiguration().release_or_beta)
 /* Array natives applied to non-arrays. */
 
 var oa = {};

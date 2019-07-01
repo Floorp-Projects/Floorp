@@ -35,7 +35,7 @@ function test()
   try
   {
     var b = { length: 1 };
-    b.__defineGetter__(0, function () { return Array.slice(b);});
+    b.__defineGetter__(0, function () { return Array.prototype.slice.call(b); });
     b[0];
   }
   catch(ex)
