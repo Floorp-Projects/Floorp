@@ -3,31 +3,38 @@
 <head>
     <meta charset="utf-8">
     <title>Test case for text-decoration-width</title>
-    <meta name="assert" content="text-decoration-width; the width of the decoration line is increased">
+    <meta name="assert" content="text-decoration-width: the width of the decoration line is increased">
     <link rel="author" title="Charlie Marlow" href="mailto:cmarlow@mozilla.com">
     <link rel="author" title="Mozilla" href="https://www.mozilla.org">
     <link rel="help" href="https://drafts.csswg.org/css-text-decor-4/#text-decoration-width-property">
     <link rel="match" href="reference/text-decoration-width-green-rect-ref.html">
     <link rel="stylesheet" type="text/css" href="/fonts/ahem.css">
     <style>
-        div{
+        #box{
+            font: 20px/1 Ahem;
             overflow: hidden;
             height: 1em;
             width: 4em;
             background-color: red;
-            font: 20px/1 Ahem;
+        }
+        /*
+         * This is testing to ensure that the underline
+         * "grows down" and covers the red in the box
+         */
+        #text{
             color: transparent;
-            text-decoration: green line-through;
-            /* We make the text decoration just a bit thicker than the div's height, so that
-             * it will entirely cover the div's content-box (making it fully green) as long
-             * as the line-through is approximately centered, vertically.
-             */
-            text-decoration-width: 1.1em;
+            position: relative;
+            bottom: 3em;
+            text-decoration: green underline;
+            text-decoration-skip-ink: none;
+            text-decoration-width: 4em;
         }
     </style>
 </head>
 <body>
     <p>Test passes if there is a wide green block, fails if there is any red visible</p>
-    <div>XXXXXXXXXXXXXXXXXXXX</div>
+    <div id="box">
+        <div id="text">XXXXXXXXXXXXXXXXXXXX</div>
+    </div>
 </body>
 </html>
