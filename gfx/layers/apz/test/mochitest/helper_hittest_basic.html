@@ -29,6 +29,7 @@ function* test(testDriver) {
                  (config.isWebRender ? APZHitResultFlags.INACTIVE_SCROLLFRAME
                                      : APZHitResultFlags.IRREGULAR_AREA),
                  utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
                  "inactive scrollframe");
 
   // The apz-aware div (which has a non-passive wheel listener) is not visible
@@ -37,6 +38,7 @@ function* test(testDriver) {
   checkHitResult(hitTest(centerOf(apzaware)),
                  APZHitResultFlags.VISIBLE,
                  utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
                  "inactive scrollframe - apzaware block");
 
   // Hit test where the scroll thumbs should be.
@@ -44,6 +46,7 @@ function* test(testDriver) {
     element: scroller,
     directions: { vertical: true, horizontal: true },
     expectedScrollId: utils.getViewId(document.scrollingElement),
+    expectedLayersId: utils.getLayersId(),
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: true,
     layerState: LayerState.INACTIVE,
@@ -70,6 +73,7 @@ function* test(testDriver) {
   checkHitResult(hitTest(centerOf(scroller)),
                  APZHitResultFlags.VISIBLE,
                  scrollerViewId,
+                 utils.getLayersId(),
                  "active scrollframe");
 
   // Test the apz-aware block
@@ -80,6 +84,7 @@ function* test(testDriver) {
                  (config.isWebRender ? APZHitResultFlags.APZ_AWARE_LISTENERS
                                      : APZHitResultFlags.IRREGULAR_AREA),
                  scrollerViewId,
+                 utils.getLayersId(),
                  "active scrollframe - apzaware block");
 
   // Test the scrollbars. Note that this time the vertical scrollthumb is
@@ -91,6 +96,7 @@ function* test(testDriver) {
     element: scroller,
     directions: { vertical: true },
     expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: false,
     layerState: LayerState.ACTIVE,
@@ -100,6 +106,7 @@ function* test(testDriver) {
     element: scroller,
     directions: { vertical: true },
     expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
     trackLocation: ScrollbarTrackLocation.END,
     expectThumb: true,
     layerState: LayerState.ACTIVE,
@@ -109,6 +116,7 @@ function* test(testDriver) {
     element: scroller,
     directions: { horizontal: true },
     expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: true,
     layerState: LayerState.ACTIVE,
@@ -118,6 +126,7 @@ function* test(testDriver) {
     element: scroller,
     directions: { horizontal: true },
     expectedScrollId: scrollerViewId,
+    expectedLayersId: utils.getLayersId(),
     trackLocation: ScrollbarTrackLocation.END,
     expectThumb: false,
     layerState: LayerState.ACTIVE,
