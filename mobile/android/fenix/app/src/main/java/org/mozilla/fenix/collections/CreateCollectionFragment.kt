@@ -19,6 +19,7 @@ import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.toSessionBundle
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -121,6 +122,7 @@ class CreateCollectionFragment : DialogFragment() {
                         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                             context.components.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
                         }
+                        closeTabsIfNecessary(it.tabs)
                     }
                 }
                 is CollectionCreationAction.SelectCollection -> {
@@ -131,6 +133,7 @@ class CreateCollectionFragment : DialogFragment() {
                             context.components.core.tabCollectionStorage
                                 .addTabsToCollection(it.collection, sessionBundle)
                         }
+                        closeTabsIfNecessary(it.tabs)
                     }
                 }
                 is CollectionCreationAction.RenameCollection -> {
@@ -167,6 +170,17 @@ class CreateCollectionFragment : DialogFragment() {
             }
             SaveCollectionStep.RenameCollection -> {
                 dismiss()
+            }
+        }
+    }
+
+    private fun closeTabsIfNecessary(tabs: List<Tab>) {
+        // Only close the tabs if the user is not on the BrowserFragment
+        if (viewModel.previousFragmentId == R.id.browserFragment) { return }
+
+        tabs.forEach {
+            requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
+                requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
             }
         }
     }

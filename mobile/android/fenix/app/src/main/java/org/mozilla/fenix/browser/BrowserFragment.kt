@@ -790,6 +790,7 @@ class BrowserFragment : Fragment(), BackHandler {
             viewModel?.saveCollectionStep =
                 viewModel?.tabCollections?.getStepForCollectionsSize() ?: SaveCollectionStep.SelectCollection
             viewModel?.snackbarAnchorView = nestedScrollQuickAction
+            viewModel?.previousFragmentId = R.id.browserFragment
             view?.let {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
                 nav(R.id.browserFragment, directions)

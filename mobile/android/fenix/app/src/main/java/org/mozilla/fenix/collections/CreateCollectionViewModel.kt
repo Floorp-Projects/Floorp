@@ -16,6 +16,7 @@ class CreateCollectionViewModel : ViewModel() {
     var tabCollections = listOf<TabCollection>()
     var selectedTabCollection: TabCollection? = null
     var snackbarAnchorView: View? = null
+    var previousFragmentId: Int? = null
 
     fun getStepForTabsAndCollectionSize(): SaveCollectionStep =
         if (tabs.size > 1) SaveCollectionStep.SelectTabs else tabCollections.getStepForCollectionsSize()

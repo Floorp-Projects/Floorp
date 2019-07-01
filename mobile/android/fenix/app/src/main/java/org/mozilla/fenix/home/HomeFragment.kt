@@ -702,6 +702,7 @@ class HomeFragment : Fragment(), AccountObserver {
         viewModel?.selectedTabCollection = selectedTabCollection
         viewModel?.saveCollectionStep =
             step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
+        viewModel?.previousFragmentId = R.id.homeFragment
 
         // Only register the observer right before moving to collection creation
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
