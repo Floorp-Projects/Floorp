@@ -1073,7 +1073,7 @@ void AudioContext::ReportBlocked() {
                   "BlockAutoplayWebAudioStartError");
   mWasAllowedToStart = false;
 
-  if (!StaticPrefs::MediaBlockEventEnabled()) {
+  if (!StaticPrefs::media_autoplay_block_event_enabled()) {
     return;
   }
 
