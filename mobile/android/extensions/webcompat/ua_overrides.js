@@ -25,24 +25,6 @@ for (const override of [
     },
   }, {
     /*
-     * Bug 1464106 - directvnow.com - Create a UA override for Directvnow.com for playback on desktop
-     * WebCompat issue #3846 - https://webcompat.com/issues/3846
-     *
-     * directvnow.com is blocking Firefox via UA sniffing. Outreach is still going
-     * on, and playback works fine if we spoof as Chrome.
-     */
-    id: "bug1464106",
-    platform: "desktop",
-    domain: "directvnow.com",
-    bug: "1464106",
-    config: {
-      matches: ["*://*.directvnow.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36";
-      },
-    },
-  }, {
-    /*
      * Bug 1480710 - m.imgur.com - Build UA override
      * WebCompat issue #13154 - https://webcompat.com/issues/13154
      *
@@ -62,24 +44,6 @@ for (const override of [
     },
   }, {
     /*
-     * Bug 755590 - sites.google.com - top bar doesn't show up in Firefox for Android
-     *
-     * Google Sites does show a different top bar template based on the User Agent.
-     * For Fennec, this results in a broken top bar. Appending Chrome and Mobile Safari
-     * identifiers to the UA results in a correct rendering.
-     */
-    id: "bug755590",
-    platform: "android",
-    domain: "sites.google.com",
-    bug: "755590",
-    config: {
-      matches: ["*://sites.google.com/*"],
-      uaTransformer: (originalUA) => {
-        return originalUA + " Chrome/68.0.3440.85 Mobile Safari/537.366";
-      },
-    },
-  }, {
-    /*
      * Bug 945963 - tieba.baidu.com serves simplified mobile content to Firefox Android
      * WebCompat issue #18455 - https://webcompat.com/issues/18455
      *
@@ -95,50 +59,6 @@ for (const override of [
       matches: ["*://tieba.baidu.com/*", "*://tiebac.baidu.com/*"],
       uaTransformer: (originalUA) => {
         return originalUA + " AppleWebKit/537.36 (KHTML, like Gecko)";
-      },
-    },
-  }, {
-    /*
-     * Bug 1518625 - rottentomatoes.com - Add UA override for videos on www.rottentomatoes.com
-     *
-     * The video framework loaded in via pdk.theplatform.com fails to
-     * acknowledge that Firefox does support HLS, so it fails to find a
-     * supported video format and shows the loading bar forever. Spoofing as
-     * Chrome works.
-     *
-     * Contrary to other PDK sites, rottentomatoes sometimes uses an iFrame to
-     * player.theplatform.com to show a video, so we need to override that domain
-     * as well.
-     */
-    id: "bug1518625",
-    platform: "android",
-    domain: "rottentomatoes.com",
-    bug: "1518625",
-    config: {
-      matches: [
-        "*://*.rottentomatoes.com/*",
-        "*://player.theplatform.com/*",
-      ],
-      uaTransformer: (_) => {
-        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
-      },
-    },
-  }, {
-    /*
-     * Bug 1177298 - Write UA overrides for top Japanese Sites
-     * (Imported from ua-update.json.in)
-     *
-     * To receive the proper mobile version instead of the desktop version or
-     * a lower grade mobile experience, the UA is spoofed.
-     */
-    id: "bug1177298-1",
-    platform: "android",
-    domain: "weather.yahoo.co.jp",
-    bug: "1177298",
-    config: {
-      matches: ["*://weather.yahoo.co.jp/*"],
-      uaTransformer: (_) => {
-        return "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36";
       },
     },
   }, {
@@ -175,24 +95,6 @@ for (const override of [
       matches: ["*://*.nhk.or.jp/*"],
       uaTransformer: (originalUA) => {
         return originalUA + " AppleWebKit";
-      },
-    },
-  }, {
-    /*
-     * Bug 1177298 - Write UA overrides for top Japanese Sites
-     * (Imported from ua-update.json.in)
-     *
-     * To receive the proper mobile version instead of the desktop version or
-     * a lower grade mobile experience, the UA is spoofed.
-     */
-    id: "bug1177298-4",
-    platform: "android",
-    domain: "uniqlo.com",
-    bug: "1177298",
-    config: {
-      matches: ["*://*.uniqlo.com/*"],
-      uaTransformer: (originalUA) => {
-        return originalUA + " Mobile Safari";
       },
     },
   }, {
@@ -248,25 +150,6 @@ for (const override of [
     },
   }, {
     /*
-     * Bug 1476436 - mobile.bet365.com - add UA override for fennec
-     * WebCompat issue #17010 - https://webcompat.com/issues/17010
-     *
-     * mobile.bet365.com serves fennec an alternative version with less interactive
-     * elements, although they work just fine. Spoofing as Chrome makes the
-     * interactive elements appear.
-     */
-    id: "bug1476436",
-    platform: "android",
-    domain: "mobile.bet365.com",
-    bug: "1476436",
-    config: {
-      matches: ["*://mobile.bet365.com/*"],
-      uaTransformer: (_) => {
-        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
-      },
-    },
-  }, {
-    /*
      * Bug 1509831 - cc.com - Add UA override for CC.com
      * WebCompat issue #329 - https://webcompat.com/issues/329
      *
@@ -280,26 +163,6 @@ for (const override of [
     bug: "1509831",
     config: {
       matches: ["*://*.cc.com/*"],
-      uaTransformer: (_) => {
-        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
-      },
-    },
-  }, {
-    /*
-     * Bug 1508564 - cnbc.com - Add UA override for videos on www.cnbc.com
-     * WebCompat issue #8410 - https://webcompat.com/issues/8410
-     *
-     * The video framework loaded in via pdk.theplatform.com fails to
-     * acknowledge that Firefox does support HLS, so it fails to find a
-     * supported video format and shows the loading bar forever. Spoofing as
-     * Chrome works.
-     */
-    id: "bug1508564",
-    platform: "android",
-    domain: "cnbc.com",
-    bug: "1508564",
-    config: {
-      matches: ["*://*.cnbc.com/*"],
       uaTransformer: (_) => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
