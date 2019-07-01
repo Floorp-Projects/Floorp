@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build-signing
+    - build  # geckoview builds aren't signed
 
 only-for-attributes:
     - nightly
