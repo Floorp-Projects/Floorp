@@ -24,6 +24,8 @@ HINSTANCE g_hInst;
 NSIS::stack_t*g_pLocations = NULL;
 HANDLE g_hThread = NULL;
 HANDLE g_hGETStartedEvent = NULL;
+HINTERNET g_hInetSes = NULL;
+HINTERNET g_hInetFile = NULL;
 volatile UINT g_FilesTotal = 0;
 volatile UINT g_FilesCompleted = 0;
 volatile UINT g_Status = STATUS_INITIAL;
@@ -96,9 +98,20 @@ void Reset()
   if (g_hThread)
   {
     TRACE(_T("InetBgDl: waiting on g_hThread\n"));
-    if (WAIT_OBJECT_0 != WaitForSingleObject(g_hThread, 10 * 1000))
+    if (WAIT_OBJECT_0 != WaitForSingleObject(g_hThread, 5 * 1000))
     {
       TRACE(_T("InetBgDl: terminating g_hThread\n"));
+      // Suspend the thread so that it's not still trying to use these handles
+      // that we're about to close out from under it.
+      SuspendThread(g_hThread);
+      if (g_hInetFile) {
+        InternetCloseHandle(g_hInetFile);
+        g_hInetFile = nullptr;
+      }
+      if (g_hInetSes) {
+        InternetCloseHandle(g_hInetSes);
+        g_hInetSes = nullptr;
+      }
       TerminateThread(g_hThread, ERROR_OPERATION_ABORTED);
     }
     CloseHandle(g_hThread);
@@ -270,7 +283,6 @@ void __stdcall InetStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
 DWORD CALLBACK TaskThreadProc(LPVOID ThreadParam)
 {
   NSIS::stack_t *pURL,*pFile;
-  HINTERNET hInetSes = NULL, hInetFile = NULL;
   DWORD cbio = sizeof(DWORD);
   DWORD previouslyWritten = 0, writtenThisSession = 0;
   HANDLE hLocalFile;
@@ -328,9 +340,10 @@ diegle:
       g_Status = STATUS_ERR_GETLASTERROR;
     }
 die:
-    if (hInetSes)
+    if (g_hInetSes)
     {
-      InternetCloseHandle(hInetSes);
+      InternetCloseHandle(g_hInetSes);
+      g_hInetSes = nullptr;
     }
     if (INVALID_HANDLE_VALUE != hLocalFile)
     {
@@ -341,40 +354,40 @@ die:
     return 0;
   }
 
-  if (!hInetSes)
+  if (!g_hInetSes)
   {
-    hInetSes = InternetOpen(USERAGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (!hInetSes)
+    g_hInetSes = InternetOpen(USERAGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!g_hInetSes)
     {
       TRACE(_T("InetBgDl: InternetOpen failed with gle=%u\n"),
             GetLastError());
       goto diegle;
     }
-    InternetSetStatusCallback(hInetSes, (INTERNET_STATUS_CALLBACK)InetStatusCallback);
+    InternetSetStatusCallback(g_hInetSes, (INTERNET_STATUS_CALLBACK)InetStatusCallback);
 
     //msdn.microsoft.com/library/default.asp?url=/workshop/components/offline/offline.asp#Supporting Offline Browsing in Applications and Components
     ULONG longOpt;
     DWORD cbio = sizeof(ULONG);
-    if (InternetQueryOption(hInetSes, INTERNET_OPTION_CONNECTED_STATE, &longOpt, &cbio))
+    if (InternetQueryOption(g_hInetSes, INTERNET_OPTION_CONNECTED_STATE, &longOpt, &cbio))
     {
       if (INTERNET_STATE_DISCONNECTED_BY_USER&longOpt)
       {
         INTERNET_CONNECTED_INFO ci = {INTERNET_STATE_CONNECTED, 0};
-        InternetSetOption(hInetSes, INTERNET_OPTION_CONNECTED_STATE, &ci, sizeof(ci));
+        InternetSetOption(g_hInetSes, INTERNET_OPTION_CONNECTED_STATE, &ci, sizeof(ci));
       }
     }
 
     // Change the default connect timeout if specified.
     if(g_ConnectTimeout > 0)
     {
-      InternetSetOption(hInetSes, INTERNET_OPTION_CONNECT_TIMEOUT,
+      InternetSetOption(g_hInetSes, INTERNET_OPTION_CONNECT_TIMEOUT,
                         &g_ConnectTimeout, sizeof(g_ConnectTimeout));
     }
 
     // Change the default receive timeout if specified.
     if (g_ReceiveTimeout)
     {
-      InternetSetOption(hInetSes, INTERNET_OPTION_RECEIVE_TIMEOUT,
+      InternetSetOption(g_hInetSes, INTERNET_OPTION_RECEIVE_TIMEOUT,
                         &g_ReceiveTimeout, sizeof(DWORD));
     }
   }
@@ -438,11 +451,11 @@ die:
   _snwprintf(headers, 32, _T("Range: bytes=%d-\r\n"), previouslyWritten);
 
   TRACE(_T("InetBgDl: calling InternetOpenUrl with url=%s\n"), pURL->text);
-  hInetFile = InternetOpenUrl(hInetSes, pURL->text,
-                              headers, -1, IOUFlags |
-                              (uc.nScheme == INTERNET_SCHEME_HTTPS ?
-                               INTERNET_FLAG_SECURE : 0), 1);
-  if (!hInetFile)
+  g_hInetFile = InternetOpenUrl(g_hInetSes, pURL->text,
+                                headers, -1, IOUFlags |
+                                (uc.nScheme == INTERNET_SCHEME_HTTPS ?
+                                 INTERNET_FLAG_SECURE : 0), 1);
+  if (!g_hInetFile)
   {
     TRACE(_T("InetBgDl: InternetOpenUrl failed with gle=%u\n"),
           GetLastError());
@@ -452,7 +465,7 @@ die:
   // Get the file length via the Content-Length header
   FILESIZE_T cbThisFile;
   cbio = sizeof(cbThisFile);
-  if (!HttpQueryInfo(hInetFile,
+  if (!HttpQueryInfo(g_hInetFile,
                      HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
                      &cbThisFile, &cbio, NULL))
   {
@@ -470,7 +483,7 @@ die:
 
   // Up the default internal buffer size from 4096 to internalReadBufferSize.
   DWORD internalReadBufferSize = cbReadBufXF;
-  if (!InternetSetOption(hInetFile, INTERNET_OPTION_READ_BUFFER_SIZE,
+  if (!InternetSetOption(g_hInetFile, INTERNET_OPTION_READ_BUFFER_SIZE,
                          &internalReadBufferSize, sizeof(DWORD)))
   {
     TRACE(_T("InetBgDl: InternetSetOption failed to set read buffer size to %u bytes, gle=%u\n"),
@@ -479,7 +492,7 @@ die:
     // Maybe it's too big, try half of the optimal value.  If that fails just
     // use the default.
     internalReadBufferSize /= 2;
-    if (!InternetSetOption(hInetFile, INTERNET_OPTION_READ_BUFFER_SIZE,
+    if (!InternetSetOption(g_hInetFile, INTERNET_OPTION_READ_BUFFER_SIZE,
                            &internalReadBufferSize, sizeof(DWORD)))
     {
       TRACE(_T("InetBgDl: InternetSetOption failed to set read buffer size ") \
@@ -491,7 +504,7 @@ die:
   for(;;)
   {
     DWORD cbio = 0, cbXF = 0;
-    BOOL retXF = InternetReadFile(hInetFile, bufXF, cbBufXF, &cbio);
+    BOOL retXF = InternetReadFile(g_hInetFile, g_bufXF, g_cbBufXF, &cbio);
     if (!retXF)
     {
       ec = GetLastError();
@@ -536,7 +549,7 @@ die:
     cbXF = cbio;
     if (cbXF)
     {
-      retXF = WriteFile(hLocalFile, bufXF, cbXF, &cbio, NULL);
+      retXF = WriteFile(hLocalFile, g_bufXF, cbXF, &cbio, NULL);
       if (!retXF || cbXF != cbio)
       {
         ec = GetLastError();
@@ -554,7 +567,8 @@ die:
   }
 
   TRACE(_T("InetBgDl: TaskThreadProc completed %s, ec=%u\n"), pURL->text, ec);
-  InternetCloseHandle(hInetFile);
+  InternetCloseHandle(g_hInetFile);
+  g_hInetFile = nullptr;
   if (ERROR_SUCCESS == ec)
   {
     if (INVALID_HANDLE_VALUE != hLocalFile)
