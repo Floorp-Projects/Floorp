@@ -73,12 +73,7 @@ const kBuiltInInputs = {
     title: "home",
     image: "home.pdf",
     type: "button",
-    callback: () => {
-      let win = BrowserWindowTracker.getTopWindow();
-      win.BrowserHome();
-      let telemetry = Services.telemetry.getHistogramById("TOUCHBAR_BUTTON_PRESSES");
-      telemetry.add("Home");
-    },
+    callback: () => execCommand("Browser:Home", "Home"),
   },
   Fullscreen: {
     title: "fullscreen",
@@ -99,15 +94,10 @@ const kBuiltInInputs = {
     callback: () => execCommand("cmd_newNavigatorTabNoEvent", "NewTab"),
   },
   Sidebar: {
-    title: "open-sidebar",
+    title: "open-bookmarks-sidebar",
     image: "sidebar-left.pdf",
     type: "button",
-    callback: () => {
-      let win = BrowserWindowTracker.getTopWindow();
-      win.SidebarUI.toggle();
-      let telemetry = Services.telemetry.getHistogramById("TOUCHBAR_BUTTON_PRESSES");
-      telemetry.add("Sidebar");
-    },
+    callback: () => execCommand("viewBookmarksSidebar", "Sidebar"),
   },
   AddBookmark: {
     title: "add-bookmark",
@@ -151,6 +141,9 @@ class TouchBarHelper {
     for (let topic of kHelperObservers) {
       Services.obs.addObserver(this, topic);
     }
+
+    XPCOMUtils.defineLazyPreferenceGetter(this, "_touchBarLayout",
+      "ui.touchbar.layout", "Back,Forward,Reload,OpenLocation,NewTab,Share");
   }
 
   destructor() {
@@ -168,9 +161,11 @@ class TouchBarHelper {
     return activeTitle;
   }
 
-  get allItems() {
+  get layout() {
+    let prefArray = this.storedLayout;
     let layoutItems = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    for (let inputName of Object.keys(kBuiltInInputs)) {
+
+    for (let inputName of prefArray) {
       if (typeof kBuiltInInputs[inputName].context == "function") {
         inputName = kBuiltInInputs[inputName].context();
       }
@@ -192,6 +187,23 @@ class TouchBarHelper {
     return this.window.BookmarkingUI;
   }
 
+  /**
+   * Returns a string array of the user's Touch Bar layout preference.
+   * Set by a pref ui.touchbar.layout and returned in an array.
+   */
+  get storedLayout() {
+    let prefArray = this._touchBarLayout.split(",");
+    prefArray = prefArray.map(str => str.trim());
+    // Remove duplicates.
+    prefArray = Array.from(new Set(prefArray));
+
+    // Remove unimplemented/mispelled inputs.
+    prefArray = prefArray.filter(input =>
+      Object.keys(kBuiltInInputs).includes(input));
+    this._storedLayout = prefArray;
+    return this._storedLayout;
+  }
+
   getTouchBarInput(inputName) {
     // inputName might be undefined if an input's context() returns undefined.
     if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
@@ -210,6 +222,7 @@ class TouchBarHelper {
     let inputData = kBuiltInInputs[inputName];
 
     let item = new TouchBarInput(inputData);
+
     // Skip localization if there is already a cached localized title.
     if (kBuiltInInputs[inputName].hasOwnProperty("localTitle")) {
       return item;
@@ -245,6 +258,12 @@ class TouchBarHelper {
 
     let inputs = [];
     for (let inputName of inputNames) {
+      // Updating Touch Bar items isn't cheap in terms of performance, so
+      // only consider this input if it's actually part of the layout.
+      if (!this._storedLayout.includes(inputName)) {
+        continue;
+      }
+
       let input = this.getTouchBarInput(inputName);
       if (!input) {
         continue;
@@ -281,10 +300,10 @@ class TouchBarHelper {
         break;
       case "intl:app-locales-changed":
         // On locale change, refresh all inputs after loading new localTitle.
-        for (let input in kBuiltInInputs) {
-          delete input.localTitle;
+        for (let inputName of this._storedLayout) {
+          delete kBuiltInInputs[inputName].localTitle;
         }
-        this._updateTouchBarInputs(...kBuiltInInputs.keys());
+        this._updateTouchBarInputs(...this._storedLayout);
         break;
       case "quit-application":
         this.destructor();
