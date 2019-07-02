@@ -135,7 +135,7 @@ project(freetype C)
 
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "10")
-set(VERSION_PATCH "0")
+set(VERSION_PATCH "1")
 
 # SOVERSION scheme: CURRENT.AGE.REVISION
 #   If there was an incompatible interface change:
@@ -234,12 +234,20 @@ if (UNIX)
   endif ()
   string(REPLACE "/undef " "#undef "
     FTCONFIG_H "${FTCONFIG_H}")
-else()
+else ()
   file(READ "${PROJECT_SOURCE_DIR}/include/freetype/config/ftconfig.h"
     FTCONFIG_H)
 endif ()
-file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftconfig.h"
-  "${FTCONFIG_H}")
+
+set(FTCONFIG_H_NAME "${PROJECT_BINARY_DIR}/include/freetype/config/ftconfig.h")
+if (EXISTS "${FTCONFIG_H_NAME}")
+  file(READ "${FTCONFIG_H_NAME}" ORIGINAL_FTCONFIG_H)
+else ()
+  set(ORIGINAL_FTCONFIG_H "")
+endif ()
+if (NOT (ORIGINAL_FTCONFIG_H STREQUAL FTCONFIG_H))
+  file(WRITE "${FTCONFIG_H_NAME}" "${FTCONFIG_H}")
+endif ()
 
 
 # Create the options file
@@ -265,8 +273,16 @@ if (HARFBUZZ_FOUND)
     "/\\* +(#define +FT_CONFIG_OPTION_USE_HARFBUZZ) +\\*/" "\\1"
     FTOPTION_H "${FTOPTION_H}")
 endif ()
-file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h"
-  "${FTOPTION_H}")
+
+set(FTOPTION_H_NAME "${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h")
+if (EXISTS "${FTOPTION_H_NAME}")
+  file(READ "${FTOPTION_H_NAME}" ORIGINAL_FTOPTION_H)
+else ()
+  set(ORIGINAL_FTOPTION_H "")
+endif ()
+if (NOT (ORIGINAL_FTOPTION_H STREQUAL FTOPTION_H))
+  file(WRITE "${FTOPTION_H_NAME}" "${FTOPTION_H}")
+endif ()
 
 
 file(GLOB PUBLIC_HEADERS "include/ft2build.h" "include/freetype/*.h")
@@ -333,7 +349,7 @@ endif ()
 
 if (NOT DISABLE_FORCE_DEBUG_POSTFIX)
   set(CMAKE_DEBUG_POSTFIX d)
-endif()
+endif ()
 
 
 add_library(freetype
@@ -456,7 +472,15 @@ if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
     string(REPLACE "%LIBS_PRIVATE%" ""  # All libs support pkg-config
            FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
 
-    file(WRITE ${PROJECT_BINARY_DIR}/freetype2.pc ${FREETYPE2_PC_IN})
+    set(FREETYPE2_PC_IN_NAME "${PROJECT_BINARY_DIR}/freetype2.pc")
+    if (EXISTS "${FREETYPE2_PC_IN_NAME}")
+      file(READ "${FREETYPE2_PC_IN_NAME}" ORIGINAL_FREETYPE2_PC_IN)
+    else ()
+      set(ORIGINAL_FREETYPE2_PC_IN "")
+    endif ()
+    if (NOT (ORIGINAL_FREETYPE2_PC_IN STREQUAL FREETYPE2_PC_IN))
+      file(WRITE "${FREETYPE2_PC_IN_NAME}" ${FREETYPE2_PC_IN})
+    endif ()
 
     install(
       FILES ${PROJECT_BINARY_DIR}/freetype2.pc
@@ -493,9 +517,9 @@ set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSIO
 
 if (WIN32)
   set(CPACK_GENERATOR ZIP)
-else()
+else ()
   set(CPACK_GENERATOR TGZ)
-endif()
+endif ()
 
 set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
 set(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C/C++ Headers")

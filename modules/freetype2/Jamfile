@@ -210,7 +210,7 @@ actions RefDoc
 {
   python -m docwriter
          --prefix=ft2
-         --title=FreeType-2.10.0
+         --title=FreeType-2.10.1
          --output=$(DOC_DIR)
          $(FT2_INCLUDE)/freetype/*.h
          $(FT2_INCLUDE)/freetype/config/*.h

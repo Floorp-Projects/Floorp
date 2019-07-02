@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.0">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.1">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Base Interface - FreeType-2.10.0 API Reference</title>
+        <title>Base Interface - FreeType-2.10.1 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="index.html" title="FreeType-2.10.0 API Reference" class="md-header-nav__button md-logo">
+        <a href="index.html" title="FreeType-2.10.1 API Reference" class="md-header-nav__button md-logo">
           
             <img src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.0 API Reference
+              FreeType-2.10.1 API Reference
             </span>
             <span class="md-header-nav__topic">
               Base Interface
@@ -166,12 +166,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="index.html" title="FreeType-2.10.0 API Reference" class="md-nav__button md-logo">
+    <a href="index.html" title="FreeType-2.10.1 API Reference" class="md-nav__button md-logo">
       
         <img src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.0 API Reference
+    FreeType-2.10.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -2338,7 +2338,7 @@
 <p>For example, if you want to access Unicode value U+1F028 (and the font contains it), use value 0x1F028 as the input value for <code><a href="ft2-base_interface.html#ft_get_char_index">FT_Get_Char_Index</a></code>.</p>
 </td></tr>
 <tr><td class="val" id="ft_encoding_ms_symbol">FT_ENCODING_MS_SYMBOL</td><td class="desc">
-<p>Microsoft Symbol encoding, used to encode mathematical symbols and wingdings. For more information, see &lsquo;<a href="https://www.microsoft.com/typography/otspec/recom.htm">https://www.microsoft.com/typography/otspec/recom.htm</a>&rsquo;, &lsquo;<a href="http://www.kostis.net/charsets/symbol.htm">http://www.kostis.net/charsets/symbol.htm</a>&rsquo;, and &lsquo;<a href="http://www.kostis.net/charsets/wingding.htm">http://www.kostis.net/charsets/wingding.htm</a>&rsquo;.</p>
+<p>Microsoft Symbol encoding, used to encode mathematical symbols and wingdings. For more information, see &lsquo;<a href="https://www.microsoft.com/typography/otspec/recom.htm#non-standard-symbol-fonts">https://www.microsoft.com/typography/otspec/recom.htm#non-standard-symbol-fonts</a>&rsquo;, &lsquo;<a href="http://www.kostis.net/charsets/symbol.htm">http://www.kostis.net/charsets/symbol.htm</a>&rsquo;, and &lsquo;<a href="http://www.kostis.net/charsets/wingding.htm">http://www.kostis.net/charsets/wingding.htm</a>&rsquo;.</p>
 <p>This encoding uses character codes from the PUA (Private Unicode Area) in the range U+F020-U+F0FF.</p>
 </td></tr>
 <tr><td class="val" id="ft_encoding_sjis">FT_ENCODING_SJIS</td><td class="desc">
@@ -2972,6 +2972,7 @@
 </td></tr>
 <tr><td class="val" id="outline">outline</td><td class="desc">
 <p>The outline descriptor for the current glyph image if its format is <code><a href="ft2-basic_types.html#ft_glyph_format">FT_GLYPH_FORMAT_OUTLINE</a></code>. Once a glyph is loaded, <code>outline</code> can be transformed, distorted, emboldened, etc. However, it must not be freed.</p>
+<p>[Since 2.10.1] If <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code> is set, outline coordinates of OpenType variation fonts for a selected instance are internally handled as 26.6 fractional font units but returned as (rounded) integers, as expected. To get unrounded font units, don't use <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code> but load the glyph with <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_HINTING</a></code> and scale it, using the font's <code>units_per_EM</code> value as the ppem.</p>
 </td></tr>
 <tr><td class="val" id="num_subglyphs">num_subglyphs</td><td class="desc">
 <p>The number of subglyphs in a composite glyph. This field is only valid for the composite glyph format that should normally only be loaded with the <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_RECURSE</a></code> flag.</p>
@@ -4194,8 +4195,8 @@
 <div class = "codehilite">
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#ft_uint">FT_UInt</a> )
-  <b>FT_Get_Name_Index</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>     face,
-                     <a href="ft2-basic_types.html#ft_string">FT_String</a>*  glyph_name );
+  <b>FT_Get_Name_Index</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>           face,
+                     <span class="keyword">const</span> <a href="ft2-basic_types.html#ft_string">FT_String</a>*  glyph_name );
 </pre>
 </div>
 
