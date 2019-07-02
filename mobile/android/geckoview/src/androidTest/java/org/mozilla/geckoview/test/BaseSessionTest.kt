@@ -40,6 +40,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
         const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html"
         const val POPUP_HTML_PATH = "/assets/www/popup.html"
+        const val PROMPT_HTML_PATH = "/assets/www/prompts.html"
         const val SAVE_STATE_PATH = "/assets/www/saveState.html"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
         const val TRACKERS_PATH = "/assets/www/trackers.html"
