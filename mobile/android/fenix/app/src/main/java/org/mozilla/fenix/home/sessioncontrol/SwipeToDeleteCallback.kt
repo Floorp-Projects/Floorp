@@ -108,7 +108,9 @@ class SwipeToDeleteCallback(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
-        return if (viewHolder is TabViewHolder || viewHolder is TabInCollectionViewHolder) {
+        return if (recyclerView.hasWindowFocus() &&
+            (viewHolder is TabViewHolder || viewHolder is TabInCollectionViewHolder)
+        ) {
             super.getSwipeDirs(recyclerView, viewHolder)
         } else 0
     }
