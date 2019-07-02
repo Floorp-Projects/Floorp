@@ -8,12 +8,14 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
@@ -80,5 +82,26 @@ class GeckoEngineViewTest {
         engineView.setVerticalClipping(42)
 
         verify(engineView.currentGeckoView).setVerticalClipping(42)
+    }
+
+    @Test
+    fun `release method releases session from GeckoView`() {
+        val engineView = GeckoEngineView(context)
+        val engineSession = mock<GeckoEngineSession>()
+        val geckoSession = mock<GeckoSession>()
+        val geckoView = mock<NestedGeckoView>()
+
+        whenever(engineSession.geckoSession).thenReturn(geckoSession)
+        engineView.currentGeckoView = geckoView
+
+        engineView.render(engineSession)
+
+        verify(geckoView, never()).releaseSession()
+        verify(engineSession, never()).unregister(any())
+
+        engineView.release()
+
+        verify(geckoView).releaseSession()
+        verify(engineSession).unregister(any())
     }
 }

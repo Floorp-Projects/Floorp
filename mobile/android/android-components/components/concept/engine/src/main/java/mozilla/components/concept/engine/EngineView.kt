@@ -26,6 +26,15 @@ interface EngineView {
     fun render(session: EngineSession)
 
     /**
+     * Releases an [EngineSession] that is currently rendered by this view (after calling [render]).
+     *
+     * Usually an app does not need to call this itself since [EngineView] will take care of that if it gets detached.
+     * However there are situations where an app wants to hand-off rendering of an [EngineSession] to a different
+     * [EngineView] without the current [EngineView] getting detached immediately.
+     */
+    fun release()
+
+    /**
      * To be called in response to [Lifecycle.Event.ON_RESUME]. See [EngineView]
      * implementations for details.
      */

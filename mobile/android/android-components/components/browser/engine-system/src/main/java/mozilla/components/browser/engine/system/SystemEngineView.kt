@@ -85,6 +85,12 @@ class SystemEngineView @JvmOverloads constructor(
         addView(initWebView(session.webView))
     }
 
+    override fun release() {
+        this.session = null
+
+        removeAllViews()
+    }
+
     override fun onLongClick(view: View?): Boolean {
         val result = session?.webView?.hitTestResult
         return result?.let { handleLongClick(result.type, result.extra ?: "") } ?: false

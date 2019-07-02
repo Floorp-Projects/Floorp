@@ -63,6 +63,7 @@ class EngineViewTest {
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
+        override fun release() {}
     }
 
     // Class it not actually a View!
@@ -70,5 +71,6 @@ class EngineViewTest {
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
+        override fun release() {}
     }
 }

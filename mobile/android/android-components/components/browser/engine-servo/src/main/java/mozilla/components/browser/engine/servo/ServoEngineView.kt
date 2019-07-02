@@ -33,6 +33,10 @@ class ServoEngineView @JvmOverloads constructor(
         session.attachView(this)
     }
 
+    override fun release() {
+        // no-op
+    }
+
     override fun onResume() {
         super.onResume()
 

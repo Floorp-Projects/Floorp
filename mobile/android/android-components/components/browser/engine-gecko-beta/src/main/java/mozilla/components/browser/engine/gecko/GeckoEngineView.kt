@@ -85,10 +85,19 @@ class GeckoEngineView @JvmOverloads constructor(
         }
     }
 
+    @Synchronized
+    override fun release() {
+        currentSession?.apply { unregister(observer) }
+
+        currentSession = null
+
+        currentGeckoView.releaseSession()
+    }
+
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
 
-        currentSession?.apply { unregister(observer) }
+        release()
     }
 
     override fun canScrollVerticallyUp() = currentSession?.let { it.scrollY > 0 } != false

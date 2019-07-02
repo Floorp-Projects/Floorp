@@ -96,5 +96,6 @@ class SwipeRefreshFeatureTest {
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
+        override fun release() {}
     }
 }

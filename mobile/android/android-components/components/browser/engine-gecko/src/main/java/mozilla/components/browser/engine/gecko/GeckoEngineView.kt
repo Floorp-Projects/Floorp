@@ -59,6 +59,11 @@ class GeckoEngineView @JvmOverloads constructor(
         }
     }
 
+    @Synchronized
+    override fun release() {
+        currentGeckoView.releaseSession()
+    }
+
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {

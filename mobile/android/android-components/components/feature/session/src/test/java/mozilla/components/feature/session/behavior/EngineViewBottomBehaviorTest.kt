@@ -62,6 +62,8 @@ class FakeEngineView(context: Context) : TextView(context), EngineView {
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {}
 
     override fun setVerticalClipping(clippingHeight: Int) {}
+
+    override fun release() {}
 }
 
 class BrowserToolbar(context: Context) : TextView(context)
