@@ -804,7 +804,7 @@ nsresult HTMLEditor::DeleteTableElementAndChildrenWithTransaction(
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
-    SelectionRefPtr()->AddRange(*range, error);
+    SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*range, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }

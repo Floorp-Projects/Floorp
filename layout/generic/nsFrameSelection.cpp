@@ -1245,7 +1245,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
       RefPtr<nsRange> newRange = new nsRange(aNewFocus);
 
       newRange->CollapseTo(aNewFocus, aContentOffset);
-      mDomSelections[index]->AddRange(*newRange, IgnoreErrors());
+      mDomSelections[index]->AddRangeAndSelectFramesAndNotifyListeners(
+          *newRange, IgnoreErrors());
       mBatching = batching;
       mChangesDuringBatching = changes;
     } else {
@@ -2638,7 +2639,7 @@ nsresult nsFrameSelection::CreateAndAddRange(nsINode* aContainer,
   if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
 
   ErrorResult err;
-  mDomSelections[index]->AddRange(*range, err);
+  mDomSelections[index]->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
   return err.StealNSResult();
 }
 
