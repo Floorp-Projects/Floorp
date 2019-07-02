@@ -169,6 +169,7 @@ class TaskBuilder(object):
             ],
             artifacts=artifacts,
             env_vars=env_vars,
+        )
 
     def craft_beetmover_task(
         self, build_task_id, sign_task_id, wait_on_all_sign_tasks_id, build_artifacts, sign_artifacts, component_name, is_snapshot,

@@ -350,10 +350,6 @@ if __name__ == "__main__":
     command = result.command
 
     components = components()
-    # XXX: TO DELETE once bug 1558795 is fixed in early Q3
-    if result.is_snapshot:
-        components = snapshot_components()
-
     if command == 'release':
         components = [info for info in components if info['shouldPublish']]
 
@@ -362,10 +358,13 @@ if __name__ == "__main__":
         sys.exit(2)
 
     if command == 'pr':
-        ordered_groups_of_tasks = pr(artifacts_info)
+        ordered_groups_of_tasks = pr(components)
     elif command == 'push':
-        ordered_groups_of_tasks = push(artifacts_info)
+        ordered_groups_of_tasks = push(components)
     elif command == 'release':
+        # XXX: TO DELETE once bug 1558795 is fixed in early Q3
+        if result.is_snapshot:
+            components = snapshot_components()
         ordered_groups_of_tasks = release(
             components, result.is_snapshot, result.is_staging
         )
