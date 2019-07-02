@@ -1805,7 +1805,7 @@ void nsDisplayListBuilder::FreeClipChains() {
 
       mClipDeduplicator.erase(*indirect);
       (*indirect)->DisplayItemClipChain::~DisplayItemClipChain();
-      Destroy(DisplayItemType::TYPE_ZERO, *indirect);
+      Destroy(DisplayListArenaObjectId::CLIPCHAIN, *indirect);
 
       *indirect = next;
     } else {
@@ -1926,23 +1926,6 @@ void nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(
   }
 }
 
-uint32_t gDisplayItemSizes[static_cast<uint32_t>(DisplayItemType::TYPE_MAX)] = {
-    0};
-
-void* nsDisplayListBuilder::Allocate(size_t aSize, DisplayItemType aType) {
-  size_t roundedUpSize = RoundUpPow2(aSize);
-  uint_fast8_t type = FloorLog2Size(roundedUpSize);
-
-  MOZ_RELEASE_ASSERT(gDisplayItemSizes[static_cast<uint32_t>(aType)] == type ||
-                     gDisplayItemSizes[static_cast<uint32_t>(aType)] == 0);
-  gDisplayItemSizes[static_cast<uint32_t>(aType)] = type;
-  return mPool.AllocateByCustomID(type, roundedUpSize);
-}
-
-void nsDisplayListBuilder::Destroy(DisplayItemType aType, void* aPtr) {
-  mPool.FreeByCustomID(gDisplayItemSizes[static_cast<uint32_t>(aType)], aPtr);
-}
-
 ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRoot(
     const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame) {
   RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForFrame(
@@ -1955,7 +1938,8 @@ const DisplayItemClipChain* nsDisplayListBuilder::AllocateDisplayItemClipChain(
     const DisplayItemClip& aClip, const ActiveScrolledRoot* aASR,
     const DisplayItemClipChain* aParent) {
   MOZ_ASSERT(!(aParent && aParent->mOnStack));
-  void* p = Allocate(sizeof(DisplayItemClipChain), DisplayItemType::TYPE_ZERO);
+  void* p = Allocate(sizeof(DisplayItemClipChain),
+                     DisplayListArenaObjectId::CLIPCHAIN);
   DisplayItemClipChain* c = new (KnownNotNull, p)
       DisplayItemClipChain(aClip, aASR, aParent, mFirstClipChainToDestroy);
 #ifdef DEBUG
@@ -1969,7 +1953,7 @@ const DisplayItemClipChain* nsDisplayListBuilder::AllocateDisplayItemClipChain(
     // collapse into the same clip chain object, because clip chains do not keep
     // track of the reference frame that they were created in.
     c->DisplayItemClipChain::~DisplayItemClipChain();
-    Destroy(DisplayItemType::TYPE_ZERO, c);
+    Destroy(DisplayListArenaObjectId::CLIPCHAIN, c);
     return *(result.first);
   }
   mFirstClipChainToDestroy = c;
@@ -2361,8 +2345,7 @@ void nsDisplayTransform::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
 }
 
 void nsDisplayListBuilder::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
-  mPool.AddSizeOfExcludingThis(aSizes,
-                               &nsWindowSizes::mLayoutRetainedDisplayListSize);
+  mPool.AddSizeOfExcludingThis(aSizes, Arena::ArenaKind::DisplayList);
 
   size_t n = 0;
   MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
