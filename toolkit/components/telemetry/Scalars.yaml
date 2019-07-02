@@ -584,6 +584,43 @@ sandbox:
     operating_systems:
       - "windows"
 
+pictureinpicture:
+  opened_method:
+    bug_numbers:
+      - 1560590
+    description: >
+      The number of times a Picture-in-Picture window was opened, per trigger
+      mechanism (e.g.: the video toggle, the context menu).
+    expires: "74"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - content
+    operating_systems:
+      - "windows"
+  closed_method:
+    bug_numbers:
+      - 1560590
+    description: >
+      The number of times a Picture-in-Picture window was closed, per trigger
+      mechanism (e.g.: the close button, the unpip button, originating tab going away,
+      process shutdown, etc).
+    expires: "74"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - main
+    operating_systems:
+      - "windows"
+
 preferences:
   created_new_user_prefs_file:
     bug_numbers:
