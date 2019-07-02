@@ -31,3 +31,8 @@ var AboutRestartRequired = {
 };
 
 AboutRestartRequired.init();
+
+let restartButton = document.getElementById("restart");
+restartButton.onclick = function() {
+  AboutRestartRequired.restart();
+};
