@@ -140,7 +140,8 @@ class TestConfigSettings(unittest.TestCase):
         a = s.a
 
         # Assigning an undeclared setting raises.
-        with self.assertRaises(AttributeError):
+        exc_type = AttributeError if sys.version_info < (3, 0) else KeyError
+        with self.assertRaises(exc_type):
             a.undefined = True
 
         with self.assertRaises(KeyError):
