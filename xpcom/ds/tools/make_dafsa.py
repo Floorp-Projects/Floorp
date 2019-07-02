@@ -193,6 +193,7 @@ The bytes in the generated array has the following meaning:
 """
 
 import sys
+import struct
 
 
 class InputError(Exception):
@@ -382,7 +383,7 @@ def encode_prefix(label):
     """Encodes a node label as a list of bytes without a trailing high byte.
 
     This method encodes a node if there is exactly one child  and the
-    child follows immidiately after so that no jump is needed. This label
+    child follows immediately after so that no jump is needed. This label
     will then be a prefix to the label in the child node.
     """
     assert label
@@ -416,6 +417,13 @@ def encode(dafsa):
     output.reverse()
     return output
 
+def encode_words(words):
+    """Generates a dafsa representation of a word list"""
+    dafsa = to_dafsa(words)
+    for fun in (reverse, join_suffixes, reverse, join_suffixes, join_labels):
+        dafsa = fun(dafsa)
+    return dafsa
+
 
 def to_cxx(data, preamble=None):
     """Generates C++ code from a list of encoded bytes."""
@@ -439,10 +447,15 @@ def to_cxx(data, preamble=None):
 
 def words_to_cxx(words, preamble=None):
     """Generates C++ code from a word list"""
-    dafsa = to_dafsa(words)
-    for fun in (reverse, join_suffixes, reverse, join_suffixes, join_labels):
-        dafsa = fun(dafsa)
+    dafsa = encode_words(words)
     return to_cxx(encode(dafsa), preamble)
+
+
+def words_to_bin(words):
+    """Generates bytes from a word list"""
+    dafsa = encode_words(words)
+    data = encode(dafsa)
+    return struct.pack('%dB' % len(data), *data)
 
 
 def parse_gperf(infile):
