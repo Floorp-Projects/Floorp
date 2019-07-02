@@ -79,6 +79,14 @@ args:
       help: Dump the source of the specified shader
       takes_value: true
       global: true
+  - renderer:
+      long: renderer
+      help: Select rendering API (gl3, es3)
+      takes_value: true
+      global: true
+  - no_block:
+      long: no-block
+      help: Don't block on UI events - run event loop as fast as possible.
 
 subcommands:
     - png:
