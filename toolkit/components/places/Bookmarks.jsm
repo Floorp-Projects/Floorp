@@ -1973,7 +1973,7 @@ async function fetchBookmark(info, options = {}) {
        WHERE b.guid = :guid
       `, { guid: info.guid });
 
-    return rows.length ? rowsToItemsArray(rows, options.ignoreInvalidURLs)[0] : null;
+    return rows.length ? rowsToItemsArray(rows, !!options.ignoreInvalidURLs)[0] : null;
   };
   if (options.concurrent) {
     let db = await PlacesUtils.promiseDBConnection();
