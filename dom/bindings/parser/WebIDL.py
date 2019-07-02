@@ -1641,6 +1641,11 @@ class IDLInterface(IDLInterfaceOrNamespace):
                         raise WebIDLError(str(identifier) + " must take no arguments",
                                           [attr.location])
 
+                if self.globalNames:
+                    raise WebIDLError("[%s] must not be specified together with "
+                                      "[Global]" % identifier,
+                                      [self.location, attr.location])
+
                 args = attr.args() if attr.hasArgs() else []
 
                 retType = IDLWrapperType(self.location, self)
@@ -1701,6 +1706,10 @@ class IDLInterface(IDLInterfaceOrNamespace):
                                       "an interface with inherited interfaces",
                                       [attr.location, self.location])
             elif identifier == "Global":
+                if self.ctor() or self.namedConstructors:
+                    raise WebIDLError("[Global] cannot be specified on an "
+                                      "interface with a constructor",
+                                      [attr.location, self.location]);
                 if attr.hasValue():
                     self.globalNames = [attr.value()]
                 elif attr.hasArgs():
