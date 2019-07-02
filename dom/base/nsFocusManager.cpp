@@ -2310,7 +2310,8 @@ void nsFocusManager::MoveCaretToFocus(PresShell* aPresShell,
           newRange->SetStartBefore(*aContent, IgnoreErrors());
           newRange->SetEndBefore(*aContent, IgnoreErrors());
         }
-        domSelection->AddRange(*newRange, IgnoreErrors());
+        domSelection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
+                                                                IgnoreErrors());
         domSelection->CollapseToStart(IgnoreErrors());
       }
     }

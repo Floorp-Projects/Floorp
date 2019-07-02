@@ -1575,7 +1575,7 @@ bool HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
   }
 
   IgnoredErrorResult err;
-  domSel->AddRange(*range, err);
+  domSel->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
 
   if (!err.Failed()) {
     // Changing the direction of the selection assures that the caret

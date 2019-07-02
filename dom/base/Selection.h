@@ -441,7 +441,8 @@ class Selection final : public nsSupportsWeakReference,
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  void AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
+                                                 mozilla::ErrorResult& aRv);
 
   /**
    * Adds all children of the specified node to the selection.
