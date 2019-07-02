@@ -879,10 +879,21 @@ Function createInstall
     ${DialogUnitsToPixels} ${INSTALL_HEADER_WIDTH} X $0
     ${GetTextWidthHeight} "$(STUB_INSTALLING_HEADLINE)" $FontHeader $0 $R1 $R2
     ${ConvertLeftCoordForRTL} ${INSTALL_HEADER_LEFT} $0 $9
+    ; If this text is over the maximum height, drop the font size until it fits.
+    StrCpy $4 $FontHeader
+    !ifdef INSTALL_HEADER_HEIGHT
+      ${DialogUnitsToPixels} ${INSTALL_HEADER_HEIGHT} Y $2
+      StrCpy $3 ${INSTALL_HEADER_FONT_SIZE}
+      ${While} $R2 > $2
+        IntOp $3 $3 - 2
+        CreateFont $4 "$FontFamilyName" $3 ${INSTALL_HEADER_FONT_WEIGHT}
+        ${GetTextWidthHeight} "$(STUB_INSTALLING_HEADLINE)" $4 $0 $R1 $R2
+      ${EndWhile}
+    !endif
     ${NSD_CreateLabel} $9 ${INSTALL_HEADER_TOP} $0 $R2 \
       "$(STUB_INSTALLING_HEADLINE)"
     Pop $0
-    SendMessage $0 ${WM_SETFONT} $FontHeader 0
+    SendMessage $0 ${WM_SETFONT} $4 0
     SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
   !endif
 
