@@ -757,7 +757,7 @@ pub enum ApiMsg {
     WakeUp,
     WakeSceneBuilder,
     FlushSceneBuilder(MsgSender<()>),
-    ShutDown,
+    ShutDown(Option<MsgSender<()>>),
 }
 
 impl fmt::Debug for ApiMsg {
@@ -776,7 +776,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
             ApiMsg::ReportMemory(..) => "ApiMsg::ReportMemory",
             ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
-            ApiMsg::ShutDown => "ApiMsg::ShutDown",
+            ApiMsg::ShutDown(..) => "ApiMsg::ShutDown",
             ApiMsg::WakeUp => "ApiMsg::WakeUp",
             ApiMsg::WakeSceneBuilder => "ApiMsg::WakeSceneBuilder",
             ApiMsg::FlushSceneBuilder(..) => "ApiMsg::FlushSceneBuilder",
@@ -1189,8 +1189,14 @@ impl RenderApi {
         self.api_sender.send(ApiMsg::DebugCommand(cmd)).unwrap();
     }
 
-    pub fn shut_down(&self) {
-        self.api_sender.send(ApiMsg::ShutDown).unwrap();
+    pub fn shut_down(&self, synchronously: bool) {
+        if synchronously {
+            let (tx, rx) = channel::msg_channel().unwrap();
+            self.api_sender.send(ApiMsg::ShutDown(Some(tx))).unwrap();
+            rx.recv().unwrap();
+        } else {
+            self.api_sender.send(ApiMsg::ShutDown(None)).unwrap();
+        }
     }
 
     /// Create a new unique key that can be used for
