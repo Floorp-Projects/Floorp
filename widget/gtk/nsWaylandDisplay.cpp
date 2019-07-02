@@ -100,6 +100,9 @@ static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
     aGdkDisplay = gdk_display_get_default();
+    if (!aGdkDisplay) {
+      return nullptr;
+    }
   }
 
   StaticMutexAutoLock lock(gWaylandDisplaysMutex);
@@ -346,6 +349,11 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
 
   // WaylandDisplayGet() sets mIsDMABufPrefState
   nsWaylandDisplay* display = WaylandDisplayGet();
+  if (!display) {
+    NS_WARNING("Failed to get nsWaylandDisplay, called too early?");
+    return false;
+  }
+
   if (nsWaylandDisplay::mIsDMABufPrefState == -1) {
     MOZ_ASSERT(false,
                "We're missing nsWaylandDisplay preference configuration!");
