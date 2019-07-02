@@ -147,15 +147,11 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/menu-button.css">
       <button class="menu-button alternate-button"></button>
       <ul class="menu" role="menu" hidden>
-        <li role="menuitem" class="menuitem windows-only">
-          <button class="menuitem-button menuitem-import alternate-button" data-event-name="AboutLoginsImport"></button>
+        <button role="menuitem" class="menuitem-button menuitem-import alternate-button" hidden data-supported-platforms="Win32" data-event-name="AboutLoginsImport"></button>
+        <button role="menuitem" class="menuitem-button menuitem-preferences alternate-button" data-event-name="AboutLoginsOpenPreferences"></button>
         </li>
         <li role="menuitem" class="menuitem">
           <button class="menuitem-button menuitem-feedback alternate-button" data-event-name="AboutLoginsOpenFeedback"></button>
-        </li>
-        <li role="menuitem" class="menuitem">
-          <button class="menuitem-button menuitem-preferences alternate-button" data-event-name="AboutLoginsOpenPreferences"></button>
-        </li>
       </ul>
     </template>
 
