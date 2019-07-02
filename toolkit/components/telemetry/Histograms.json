@@ -6675,6 +6675,16 @@
                "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
     "description": "Count how many times people use items from the main page action button"
   },
+  "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["mconley@mozilla.com", "astevenson@mozilla.com"],
+    "bug_numbers": [1560590],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in seconds) that a Picture-in-Picture window was open."
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com", "chutten@mozilla.com"],

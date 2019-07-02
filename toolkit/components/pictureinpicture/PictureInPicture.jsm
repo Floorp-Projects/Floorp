@@ -130,7 +130,8 @@ var PictureInPicture = {
    * unload event has been called in player.js, cleanup our preserved
    * browser object.
    */
-  unload() {
+  unload(window) {
+    TelemetryStopwatch.finish("FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION", window);
     this.clearPipTabIcon();
     delete this.weakPipControls;
     delete this.browser;
@@ -220,6 +221,10 @@ var PictureInPicture = {
 
     let pipWindow =
       Services.ww.openWindow(parentWin, PLAYER_URI, null, features, null);
+
+    TelemetryStopwatch.start("FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION", pipWindow, {
+      inSeconds: true,
+    });
 
     return new Promise(resolve => {
       pipWindow.addEventListener("load", () => {

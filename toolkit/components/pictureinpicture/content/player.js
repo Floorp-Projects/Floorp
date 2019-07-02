@@ -42,7 +42,7 @@ async function setupPlayer(originatingBrowser, videoData) {
   });
 
   window.addEventListener("unload", () => {
-    PictureInPicture.unload();
+    PictureInPicture.unload(window);
   });
 
   let close = document.getElementById("close");
