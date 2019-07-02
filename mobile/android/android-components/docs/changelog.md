@@ -44,13 +44,13 @@ permalink: /changelog/
 
 * **concept-engine**, **browser-engine-gecko(-beta/nightly)**, **feature-session**, **feature-tabs**
   * Added to support for specifying additional flags when loading URLs. This can be done using the engine session directly, as well as via use cases:
+
   ```kotlin
   // Bypass cache
   sessionManager.getEngineSession().loadUrl(url, LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE))
 
   // Bypass cache and proxy
-  sessionUseCases.loadUrl.invoke(url, LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE, LoadUrlFlags.BYPASS_PROXY))
-  
+  sessionUseCases.loadUrl.invoke(url, LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE, LoadUrlFlags.BYPASS_PROXY))  
   ```
 
 # 1.0.0
