@@ -16,8 +16,8 @@ SimpleTest.waitForExplicitFinish();
 
 SimpleTest.requestFlakyTimeout("This test is flaky.");
 
-SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, async function() {
-  await new Promise(resolve => setTimeout(resolve, 1000));
+SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}).then(async function() {
+  await new Promise(resolve => setTimeout(resolve, 2000));
 
   var testWin = document.querySelector("iframe");
   testWin.height = 0;
