@@ -659,7 +659,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     MutableHandleFunction fun, StandaloneFunctionInfo& info,
     FunctionNode* parsedFunction) {
   FunctionBox* funbox = parsedFunction->funbox();
-  if (funbox->isInterpreted()) {
+  if (funbox->function()->isInterpreted()) {
     MOZ_ASSERT(fun == funbox->function());
 
     if (!createFunctionScript(info, funbox->toStringStart,
