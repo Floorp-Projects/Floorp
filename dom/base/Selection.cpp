@@ -1983,11 +1983,12 @@ void Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv) {
 
 void Selection::AddRange(nsRange& aRange, ErrorResult& aRv) {
   RefPtr<Document> document(GetDocument());
-  return AddRangeInternal(aRange, document, aRv);
+  return AddRangeAndSelectFramesAndNotifyListeners(aRange, document, aRv);
 }
 
-void Selection::AddRangeInternal(nsRange& aRange, Document* aDocument,
-                                 ErrorResult& aRv) {
+void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
+                                                          Document* aDocument,
+                                                          ErrorResult& aRv) {
   // If the given range is part of another Selection, we need to clone the
   // range first.
   RefPtr<nsRange> range;

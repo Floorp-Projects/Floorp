@@ -600,7 +600,9 @@ class Selection final : public nsSupportsWeakReference,
   friend class ::nsCopySupport;
   friend class ::nsHTMLCopyEncoder;
   MOZ_CAN_RUN_SCRIPT
-  void AddRangeInternal(nsRange& aRange, Document* aDocument, ErrorResult&);
+  void AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
+                                                 Document* aDocument,
+                                                 ErrorResult&);
 
   // This is helper method for GetPrimaryFrameForFocusNode.
   // If aVisual is true, this returns caret frame.
