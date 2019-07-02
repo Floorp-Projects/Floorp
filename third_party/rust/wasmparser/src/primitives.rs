@@ -14,9 +14,11 @@
  */
 
 use std::boxed::Box;
-use std::error::Error;
 use std::fmt;
 use std::result;
+
+#[cfg(feature = "std")]
+use std::error::Error;
 
 #[derive(Debug, Copy, Clone)]
 pub struct BinaryReaderError {
@@ -26,6 +28,7 @@ pub struct BinaryReaderError {
 
 pub type Result<T> = result::Result<T, BinaryReaderError>;
 
+#[cfg(feature = "std")]
 impl Error for BinaryReaderError {}
 
 impl fmt::Display for BinaryReaderError {
@@ -46,7 +49,7 @@ pub enum CustomSectionKind {
 
 /// Section code as defined [here].
 ///
-/// [here]: https://webassembly.github.io/spec/binary/modules.html#sections
+/// [here]: https://webassembly.github.io/spec/core/binary/modules.html#sections
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SectionCode<'a> {
     Custom {
@@ -69,7 +72,7 @@ pub enum SectionCode<'a> {
 
 /// Types as defined [here].
 ///
-/// [here]: https://webassembly.github.io/spec/syntax/types.html#types
+/// [here]: https://webassembly.github.io/spec/core/syntax/types.html#types
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Type {
     I32,
@@ -83,9 +86,22 @@ pub enum Type {
     EmptyBlockType,
 }
 
+/// Either a value type or a function type.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum TypeOrFuncType {
+    /// A value type.
+    ///
+    /// When used as the type for a block, this type is the optional result
+    /// type: `[] -> [t?]`.
+    Type(Type),
+
+    /// A function type (referenced as an index into the types section).
+    FuncType(u32),
+}
+
 /// External types as defined [here].
 ///
-/// [here]: https://webassembly.github.io/spec/syntax/types.html#external-types
+/// [here]: https://webassembly.github.io/spec/core/syntax/types.html#external-types
 #[derive(Debug, Copy, Clone)]
 pub enum ExternalKind {
     Function,
@@ -215,14 +231,14 @@ pub type SIMDLineIndex = u8;
 
 /// Instructions as defined [here].
 ///
-/// [here]: https://webassembly.github.io/spec/binary/instructions.html
+/// [here]: https://webassembly.github.io/spec/core/binary/instructions.html
 #[derive(Debug)]
 pub enum Operator<'a> {
     Unreachable,
     Nop,
-    Block { ty: Type },
-    Loop { ty: Type },
-    If { ty: Type },
+    Block { ty: TypeOrFuncType },
+    Loop { ty: TypeOrFuncType },
+    If { ty: TypeOrFuncType },
     Else,
     End,
     Br { relative_depth: u32 },

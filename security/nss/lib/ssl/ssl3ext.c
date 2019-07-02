@@ -16,6 +16,7 @@
 #include "ssl3exthandle.h"
 #include "tls13err.h"
 #include "tls13exthandle.h"
+#include "tls13subcerts.h"
 
 /* Callback function that handles a received extension. */
 typedef SECStatus (*ssl3ExtensionHandlerFunc)(const sslSocket *ss,
@@ -45,6 +46,7 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_signature_algorithms_xtn, &ssl3_HandleSigAlgsXtn },
     { ssl_extended_master_secret_xtn, &ssl3_HandleExtendedMasterSecretXtn },
     { ssl_signed_cert_timestamp_xtn, &ssl3_ServerHandleSignedCertTimestampXtn },
+    { ssl_delegated_credentials_xtn, &tls13_ServerHandleDelegatedCredentialsXtn },
     { ssl_tls13_key_share_xtn, &tls13_ServerHandleKeyShareXtn },
     { ssl_tls13_pre_shared_key_xtn, &tls13_ServerHandlePreSharedKeyXtn },
     { ssl_tls13_early_data_xtn, &tls13_ServerHandleEarlyDataXtn },
@@ -96,6 +98,7 @@ static const ssl3ExtensionHandler newSessionTicketHandlers[] = {
 static const ssl3ExtensionHandler serverCertificateHandlers[] = {
     { ssl_signed_cert_timestamp_xtn, &ssl3_ClientHandleSignedCertTimestampXtn },
     { ssl_cert_status_xtn, &ssl3_ClientHandleStatusRequestXtn },
+    { ssl_delegated_credentials_xtn, &tls13_ClientHandleDelegatedCredentialsXtn },
     { 0, NULL }
 };
 
@@ -127,6 +130,7 @@ static const sslExtensionBuilder clientHelloSendersTLS[] =
       { ssl_app_layer_protocol_xtn, &ssl3_ClientSendAppProtoXtn },
       { ssl_use_srtp_xtn, &ssl3_ClientSendUseSRTPXtn },
       { ssl_cert_status_xtn, &ssl3_ClientSendStatusRequestXtn },
+      { ssl_delegated_credentials_xtn, &tls13_ClientSendDelegatedCredentialsXtn },
       { ssl_signed_cert_timestamp_xtn, &ssl3_ClientSendSignedCertTimestampXtn },
       { ssl_tls13_key_share_xtn, &tls13_ClientSendKeyShareXtn },
       { ssl_tls13_early_data_xtn, &tls13_ClientSendEarlyDataXtn },
@@ -170,6 +174,7 @@ static const struct {
 } ssl_supported_extensions[] = {
     { ssl_server_name_xtn, ssl_ext_native_only },
     { ssl_cert_status_xtn, ssl_ext_native },
+    { ssl_delegated_credentials_xtn, ssl_ext_native },
     { ssl_supported_groups_xtn, ssl_ext_native_only },
     { ssl_ec_point_formats_xtn, ssl_ext_native },
     { ssl_signature_algorithms_xtn, ssl_ext_native_only },
@@ -951,6 +956,9 @@ ssl3_InitExtensionData(TLSExtensionData *xtnData, const sslSocket *ss)
         ++advertisedMax;
     }
     xtnData->advertised = PORT_ZNewArray(PRUint16, advertisedMax);
+    xtnData->peerDelegCred = NULL;
+    xtnData->peerRequestedDelegCred = PR_FALSE;
+    xtnData->sendingDelegCredToPeer = PR_FALSE;
 }
 
 void
@@ -969,6 +977,7 @@ ssl3_DestroyExtensionData(TLSExtensionData *xtnData)
     PORT_Free(xtnData->advertised);
     ssl_FreeEphemeralKeyPair(xtnData->esniPrivateKey);
     SECITEM_FreeItem(&xtnData->keyShareExtension, PR_FALSE);
+    tls13_DestroyDelegatedCredential(xtnData->peerDelegCred);
 }
 
 /* Free everything that has been allocated and then reset back to

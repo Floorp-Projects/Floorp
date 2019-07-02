@@ -76,6 +76,7 @@ class TlsAgent : public PollTarget {
   static const std::string kServerEcdhEcdsa;
   static const std::string kServerEcdhRsa;
   static const std::string kServerDsa;
+  static const std::string kDelegatorEcdsa256;  // draft-ietf-tls-subcerts
 
   TlsAgent(const std::string& name, Role role, SSLProtocolVariant variant);
   virtual ~TlsAgent();
@@ -113,6 +114,26 @@ class TlsAgent : public PollTarget {
   static bool LoadCertificate(const std::string& name,
                               ScopedCERTCertificate* cert,
                               ScopedSECKEYPrivateKey* priv);
+  static bool LoadKeyPairFromCert(const std::string& name,
+                                  ScopedSECKEYPublicKey* pub,
+                                  ScopedSECKEYPrivateKey* priv);
+
+  // Delegated credentials.
+  //
+  // Generate a delegated credential and sign it using the certificate
+  // associated with |name|.
+  static void DelegateCredential(const std::string& name,
+                                 const ScopedSECKEYPublicKey& dcPub,
+                                 SSLSignatureScheme dcCertVerifyAlg,
+                                 PRUint32 dcValidFor, PRTime now, SECItem* dc);
+  // Indicate support for the delegated credentials extension.
+  void EnableDelegatedCredentials();
+  // Generate and configure a delegated credential to use in the handshake with
+  // clients that support this extension..
+  void AddDelegatedCredential(const std::string& dc_name,
+                              SSLSignatureScheme dcCertVerifyAlg,
+                              PRUint32 dcValidFor, PRTime now);
+
   bool ConfigServerCert(const std::string& name, bool updateKeyBits = false,
                         const SSLExtraServerCertData* serverCertData = nullptr);
   bool ConfigServerCertWithChain(const std::string& name);
@@ -163,6 +184,7 @@ class TlsAgent : public PollTarget {
   void DisableECDHEServerKeyReuse();
   bool GetPeerChainLength(size_t* count);
   void CheckCipherSuite(uint16_t cipher_suite);
+  void CheckPeerDelegCred(bool expected);
   void SetResumptionTokenCallback();
   bool MaybeSetResumptionToken();
   void SetResumptionToken(const std::vector<uint8_t>& resumption_token) {
