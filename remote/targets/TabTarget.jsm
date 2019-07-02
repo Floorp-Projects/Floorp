@@ -45,6 +45,10 @@ class TabTarget extends Target {
     return this.browsingContext.id;
   }
 
+  get browserContextId() {
+    return parseInt(this.browser.getAttribute("usercontextid"));
+  }
+
   get browsingContext() {
     return this.browser.browsingContext;
   }
