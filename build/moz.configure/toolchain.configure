@@ -123,9 +123,16 @@ with only_when(target_is_osx):
     set_config('MACOSX_DEPLOYMENT_TARGET', macos_target)
     add_old_configure_assignment('MACOSX_DEPLOYMENT_TARGET', macos_target)
 
+
+@depends(host)
+def host_is_osx(host):
+    if host.os == 'OSX':
+        return True
+
+
+with only_when(host_is_osx | target_is_osx):
     # MacOS SDK
     # =========
-
     js_option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
            help='Location of platform SDK to use')
 
@@ -161,6 +168,8 @@ with only_when(target_is_osx):
 
     set_config('MACOS_SDK_DIR', macos_sdk)
 
+
+with only_when(target_is_osx):
     with only_when(cross_compiling):
         option('--with-macos-private-frameworks',
                env="MACOS_PRIVATE_FRAMEWORKS_DIR", nargs=1,
