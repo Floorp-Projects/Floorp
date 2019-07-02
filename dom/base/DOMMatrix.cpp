@@ -246,11 +246,11 @@ already_AddRefed<DOMMatrix> DOMMatrixReadOnly::ScaleNonUniform(
   return retval.forget();
 }
 
-already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Rotate(double aAngle,
-                                                      double aOriginX,
-                                                      double aOriginY) const {
+already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Rotate(
+    double aRotX, const Optional<double>& aRotY,
+    const Optional<double>& aRotZ) const {
   RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
-  retval->RotateSelf(aAngle, aOriginX, aOriginY);
+  retval->RotateSelf(aRotX, aRotY, aRotZ);
 
   return retval.forget();
 }
@@ -812,26 +812,51 @@ DOMMatrix* DOMMatrix::RotateFromVectorSelf(double aX, double aY) {
     return this;
   }
 
-  RotateSelf(atan2(aY, aX) / radPerDegree);
+  const double angle = atan2(aY, aX);
+
+  if (fmod(angle, 2 * M_PI) == 0) {
+    return this;
+  }
+
+  if (mMatrix3D) {
+    RotateAxisAngleSelf(0, 0, 1, angle / radPerDegree);
+  } else {
+    *mMatrix2D = mMatrix2D->PreRotate(angle);
+  }
 
   return this;
 }
 
-DOMMatrix* DOMMatrix::RotateSelf(double aAngle, double aOriginX,
-                                 double aOriginY) {
-  if (fmod(aAngle, 360) == 0) {
-    return this;
+DOMMatrix* DOMMatrix::RotateSelf(double aRotX, const Optional<double>& aRotY,
+                                 const Optional<double>& aRotZ) {
+  double rotY;
+  double rotZ;
+  if (!aRotY.WasPassed() && !aRotZ.WasPassed()) {
+    rotZ = aRotX;
+    aRotX = 0;
+    rotY = 0;
+  } else {
+    rotY = aRotY.WasPassed() ? aRotY.Value() : 0;
+    rotZ = aRotZ.WasPassed() ? aRotZ.Value() : 0;
   }
 
-  TranslateSelf(aOriginX, aOriginY);
+  if (aRotX != 0 || rotY != 0) {
+    Ensure3DMatrix();
+  }
 
   if (mMatrix3D) {
-    RotateAxisAngleSelf(0, 0, 1, aAngle);
-  } else {
-    *mMatrix2D = mMatrix2D->PreRotate(aAngle * radPerDegree);
+    if (fmod(rotZ, 360) != 0) {
+      mMatrix3D->RotateZ(rotZ * radPerDegree);
+    }
+    if (fmod(rotY, 360) != 0) {
+      mMatrix3D->RotateY(rotY * radPerDegree);
+    }
+    if (fmod(aRotX, 360) != 0) {
+      mMatrix3D->RotateX(aRotX * radPerDegree);
+    }
+  } else if (fmod(rotZ, 360) != 0) {
+    *mMatrix2D = mMatrix2D->PreRotate(rotZ * radPerDegree);
   }
-
-  TranslateSelf(-aOriginX, -aOriginY);
 
   return this;
 }
