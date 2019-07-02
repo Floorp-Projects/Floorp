@@ -14,7 +14,7 @@ import os
 import taskcluster
 import sys
 
-from lib.build_config import components_version, components
+from lib.build_config import components_version, components, snapshot_components
 from lib.tasks import TaskBuilder, schedule_task_graph
 from lib.util import (
     populate_chain_of_trust_task_graph,
@@ -219,12 +219,49 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
-def release(components, is_snapshot, is_staging):
+# XXX: TO DELETE once bug 1558795 is fixed in early Q3
+def release_snapshot(components, is_snapshot, is_staging):
     version = components_version()
 
-    # XXX: temporarily until we add signing support in snapshots in bug 1558795
+    build_tasks = {}
+    wait_on_builds_tasks = {}
+    beetmover_tasks = {}
+    other_tasks = {}
+    wait_on_builds_task_id = taskcluster.slugId()
+
+    # TODO: check components structure to match the old one
+    for component in components:
+        build_task_id = taskcluster.slugId()
+        module_name = _get_gradle_module_name(component)
+        build_tasks[build_task_id] = BUILDER.craft_build_task(
+            module_name=module_name,
+            gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
+            subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
+            run_coverage=False,
+            is_snapshot=is_snapshot,
+            component=component
+        )
+
+        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_snapshot_beetmover_task(
+            build_task_id, wait_on_builds_task_id, version, component['artifact'],
+            component['name'], is_snapshot, is_staging
+        )
+
+    wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_barrier_task(build_tasks.keys())
+
+    for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
+        other_tasks[taskcluster.slugId()] = craft_function()
+
+    return (build_tasks, wait_on_builds_tasks, beetmover_tasks, other_tasks)
+
+
+def release(components, is_snapshot, is_staging):
+    # XXX: temporarily until we add signing support in snapshots in bug 155879
+    # in early Q3
     if is_snapshot:
-        release_snapshot(components, is_staging)
+        return release_snapshot(components, is_snapshot, is_staging)
+
+    version = components_version()
 
     build_tasks = {}
     sign_tasks = {}
@@ -267,7 +304,7 @@ def release(components, is_snapshot, is_staging):
         sign_task_id = taskcluster.slugId()
         sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
             build_task_id, [_to_release_artifact(extension)
-                                                    for extension in ('.aar', '.pom', '-sources.jar')],
+                            for extension in ('.aar', '.pom', '-sources.jar')],
             component['name'], is_staging,
         )
 
@@ -281,7 +318,7 @@ def release(components, is_snapshot, is_staging):
             component['name'], is_snapshot, is_staging
         )
 
-    wait_on_all_signing_tasks[wait_on_all_signing_task_id] = BUILDER.craft_wait_on_all_signing_task(sign_tasks.keys())
+    wait_on_all_signing_tasks[wait_on_all_signing_task_id] = BUILDER.craft_barrier_task(sign_tasks.keys())
 
     if is_snapshot:     # XXX These jobs perma-fail on release
         for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
@@ -314,6 +351,10 @@ if __name__ == "__main__":
     command = result.command
 
     components = components()
+    # XXX: TO DELETE once bug 1558795 is fixed in early Q3
+    if result.is_snapshot:
+        components = snapshot_components()
+
     if command == 'release':
         components = [info for info in components if info['shouldPublish']]
 

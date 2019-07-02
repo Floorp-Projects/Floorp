@@ -6,7 +6,6 @@ from __future__ import print_function
 
 import datetime
 import json
-import os
 import taskcluster
 
 DEFAULT_EXPIRES_IN = '1 year'
@@ -29,16 +28,27 @@ class TaskBuilder(object):
 
     def craft_build_task(self, module_name, gradle_tasks, subtitle='', run_coverage=False,
                          is_snapshot=False, component=None, artifacts=None):
-        taskcluster_artifacts = {}
-        # component is not None when this is a release build, in which case artifacts is defined too
-        if component is not None:
-            taskcluster_artifacts = {
-                artifact['taskcluster_path']: {
+        if is_snapshot:
+            # XXX: temporarily until we add signing support in snapshots in
+            # bug 155879 in early Q3
+            taskcluster_artifacts = {} if component is None else {
+                component['artifact']: {
                     'type': 'file',
                     'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
-                    'path': artifact['build_fs_path'],
-                } for artifact in artifacts
+                    'path': component['path']
+                }
             }
+        else:
+            taskcluster_artifacts = {}
+            # component is not None when this is a release build, in which case artifacts is defined too
+            if component is not None:
+                taskcluster_artifacts = {
+                    artifact['taskcluster_path']: {
+                        'type': 'file',
+                        'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
+                        'path': artifact['build_fs_path'],
+                    } for artifact in artifacts
+                }
 
         scopes = [
             "secrets:get:project/mobile/android-components/public-tokens"
@@ -68,10 +78,10 @@ class TaskBuilder(object):
             artifacts=taskcluster_artifacts
         )
 
-    def craft_wait_on_all_signing_task(self, dependencies):
+    def craft_barrier_task(self, dependencies):
         return self._craft_build_ish_task(
-            name='Android Components - Wait on all signing tasks to be completed',
-            description='Dummy tasks that ensures all build and signing tasks are correctly done before publishing them',
+            name='Android Components - Barrier task to wait on other tasks to complete',
+            description='Dummy tasks that ensures all other tasks are correctly done before publishing them',
             dependencies=dependencies,
             command="exit 0"
         )
@@ -249,6 +259,56 @@ class TaskBuilder(object):
             ],
             name="Android Components - Publish Module :{} via beetmover".format(component_name),
             description="Publish release module {} to {}".format(component_name, bucket_public_url),
+            payload=payload
+        )
+
+    # XXX: temporarily until we add signing support in snapshots in bug 155879
+    # in early Q3
+    def craft_snapshot_beetmover_task(
+        self, build_task_id, wait_on_builds_task_id, version, artifact, artifact_name,
+        is_snapshot, is_staging
+    ):
+        if is_snapshot:
+            if is_staging:
+                bucket_name = 'maven-snapshot-staging'
+                bucket_public_url = 'https://maven-snapshots.stage.mozaws.net/'
+            else:
+                bucket_name = 'maven-snapshot-production'
+                bucket_public_url = 'https://snapshots.maven.mozilla.org/'
+        else:
+            if is_staging:
+                bucket_name = 'maven-staging'
+                bucket_public_url = 'https://maven-default.stage.mozaws.net/'
+            else:
+                bucket_name = 'maven-production'
+                bucket_public_url = 'https://maven.mozilla.org/'
+
+        payload = {
+            "maxRunTime": 600,
+            "upstreamArtifacts": [{
+                'paths': [artifact],
+                'taskId': build_task_id,
+                'taskType': 'build',
+                'zipExtract': True,
+            }],
+            "releaseProperties": {
+                "appName": "snapshot_components" if is_snapshot else "components",
+            },
+            "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
+            "artifact_id": artifact_name
+        }
+
+        return self._craft_default_task_definition(
+            self.beetmover_worker_type,
+            'scriptworker-prov-v1',
+            dependencies=[build_task_id, wait_on_builds_task_id],
+            routes=[],
+            scopes=[
+                "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
+                "project:mobile:android-components:releng:beetmover:action:push-to-maven",
+            ],
+            name="Android Components - Publish Module :{} via beetmover".format(artifact_name),
+            description="Publish release module {} to {}".format(artifact_name, bucket_public_url),
             payload=payload
         )
 

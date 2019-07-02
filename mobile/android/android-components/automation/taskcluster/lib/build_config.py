@@ -27,6 +27,17 @@ def components():
     } for (name, project) in build_config['projects'].items()]
 
 
+# XXX: TO DELETE once bug 1558795 is fixed in early Q3
+def snapshot_components():
+    build_config = read_build_config()
+    return [{
+        'name': name,
+        'artifact': 'public/build/{}.maven.zip'.format(name),
+        'path': '{}/build/target.maven.zip'.format(os.path.abspath(project['path'])),
+        'shouldPublish': project['publish']
+    } for (name, project) in build_config['projects'].items()]
+
+
 def components_version():
     build_config = read_build_config()
     return build_config['componentsVersion']
