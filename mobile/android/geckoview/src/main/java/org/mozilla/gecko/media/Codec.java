@@ -145,6 +145,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private void feedSampleToBuffer() {
             while (!mAvailableInputBuffers.isEmpty() && !mInputSamples.isEmpty()) {
                 int index = mAvailableInputBuffers.poll();
+                if (!isValidBuffer(index)) {
+                    continue;
+                }
                 int len = 0;
                 final Sample sample = mInputSamples.poll().sample;
                 long pts = sample.info.presentationTimeUs;
