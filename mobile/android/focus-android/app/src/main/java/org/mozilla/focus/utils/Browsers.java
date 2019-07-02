@@ -25,6 +25,9 @@ import java.util.Map;
 public class Browsers {
     public enum KnownBrowser {
         FIREFOX("org.mozilla.firefox"),
+        FIREFOX_PREVIEW("org.mozilla.fenix"),
+        FIREFOX_PREVIEW_BETA("org.mozilla.fenix.beta"),
+        FIREFOX_PREVIEW_NIGHTLY("org.mozilla.fenix.nightly"),
 
         FIREFOX_BETA("org.mozilla.firefox_beta"),
         FIREFOX_AURORA("org.mozilla.fennec_aurora"),
@@ -102,6 +105,12 @@ public class Browsers {
             return browsers.get(KnownBrowser.FIREFOX_NIGHTLY.packageName);
         } else if (browsers.containsKey(KnownBrowser.FIREFOX_FDROID.packageName)) {
             return browsers.get(KnownBrowser.FIREFOX_FDROID.packageName);
+        } else if (browsers.containsKey(KnownBrowser.FIREFOX_PREVIEW.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX_PREVIEW.packageName);
+        } else if (browsers.containsKey(KnownBrowser.FIREFOX_PREVIEW_NIGHTLY.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX_PREVIEW_NIGHTLY.packageName);
+        } else if (browsers.containsKey(KnownBrowser.FIREFOX_PREVIEW_BETA.packageName)) {
+            return browsers.get(KnownBrowser.FIREFOX_PREVIEW_BETA.packageName);
         }
         return null;
     }
@@ -197,7 +206,8 @@ public class Browsers {
 
     }
 
-    public @Nullable ActivityInfo getDefaultBrowser() {
+    public @Nullable
+    ActivityInfo getDefaultBrowser() {
         return defaultBrowser;
     }
 
