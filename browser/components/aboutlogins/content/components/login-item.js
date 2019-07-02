@@ -32,7 +32,6 @@ export default class LoginItem extends ReflectedFluentElement {
       button.addEventListener("click", this);
     }
 
-    this._confirmDeleteDialog = document.querySelector("confirm-delete-dialog");
     this._copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
     this._copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
@@ -186,7 +185,12 @@ export default class LoginItem extends ReflectedFluentElement {
           return;
         }
         if (classList.contains("delete-button")) {
-          this.confirmDelete();
+          document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
+            bubbles: true,
+            detail: this._login,
+          }));
+
+          recordTelemetryEvent({object: "existing_login", method: "delete"});
           return;
         }
         if (classList.contains("edit-button")) {
@@ -229,21 +233,6 @@ export default class LoginItem extends ReflectedFluentElement {
         break;
       }
     }
-  }
-
-  /**
-   * Toggles the confirm delete dialog, completing the deletion if the user
-   * agrees.
-   */
-  confirmDelete() {
-    const dialog = document.querySelector("confirm-delete-dialog");
-    dialog.show().then(() => {
-      document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
-        bubbles: true,
-        detail: this._login,
-      }));
-      recordTelemetryEvent({object: "existing_login", method: "delete"});
-    }, () => {});
   }
 
   /**
