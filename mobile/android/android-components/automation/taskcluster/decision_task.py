@@ -222,6 +222,10 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
 def release(components, is_snapshot, is_staging):
     version = components_version()
 
+    # XXX: temporarily until we add signing support in snapshots in bug 1558795
+    if is_snapshot:
+        release_snapshot(components, is_staging)
+
     build_tasks = {}
     sign_tasks = {}
     wait_on_all_signing_tasks = {}
