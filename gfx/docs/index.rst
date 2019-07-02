@@ -16,3 +16,4 @@ information about graphics and the graphics team at Mozilla.
    AsyncPanZoom
    AdvancedLayers
    Silk
+   DocumentSplitting
