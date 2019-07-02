@@ -157,7 +157,7 @@ class ActivationPing(private val context: Context) {
         // Generate the activation_id.
         Activation.activationId.generateAndSet()
 
-        CoroutineScope(Dispatchers.Default).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             val hashedId = getHashedIdentifier()
             if (hashedId != null) {
                 Logger.info("ActivationPing - generating ping with the hashed id")

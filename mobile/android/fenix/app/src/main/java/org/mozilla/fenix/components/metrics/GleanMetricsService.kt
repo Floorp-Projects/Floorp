@@ -247,7 +247,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         if (initialized) return
         initialized = true
 
-        starter = CoroutineScope(Dispatchers.Default).launch {
+        starter = CoroutineScope(Dispatchers.IO).launch {
             Glean.registerPings(Pings)
             Glean.initialize(context, Configuration(channel = BuildConfig.BUILD_TYPE))
 

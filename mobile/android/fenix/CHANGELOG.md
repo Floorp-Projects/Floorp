@@ -68,4 +68,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #2789 Custom tabs is not covering the full screen size.
 - #2893, #2673, #2916, #2314: Fix several crashes navigating from external links
 - #3750 - Crash when tapping "Blocked" on Google Maps after disabling location requests
+- #2945 - Fixed "Launches to blank screen and hangs on Nexus 10"
 ### Removed

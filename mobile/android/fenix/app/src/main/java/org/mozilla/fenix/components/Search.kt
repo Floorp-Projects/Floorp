@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
@@ -21,7 +22,7 @@ class Search(private val context: Context) {
      * This component provides access to a centralized registry of search engines.
      */
     val searchEngineManager by lazy {
-        SearchEngineManager().apply {
+        SearchEngineManager(coroutineContext = IO).apply {
             registerForLocaleUpdates(context)
             GlobalScope.launch {
                 loadAsync(context).await()
