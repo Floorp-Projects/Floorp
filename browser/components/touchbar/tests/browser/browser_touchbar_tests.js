@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const PREF_NAME = "ui.touchbar.layout";
+
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "TouchBarHelper",
@@ -20,6 +22,31 @@ function is_element_hidden(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null when checking visibility");
   ok(BrowserTestUtils.is_hidden(aElement), aMsg);
 }
+
+/**
+ * Sets the pref to contain errors. .layout should contain only the
+ * non-erroneous elements.
+ */
+add_task(async function setWrongPref() {
+  registerCleanupFunction(function() {
+    Services.prefs.deleteBranch(PREF_NAME);
+  });
+
+  let wrongValue   = "Back, Back, Forwrd, NewTab, Unimplemented,";
+  let correctValue = ["back", "new-tab"];
+  let testValue = [];
+  Services.prefs.setStringPref(PREF_NAME, wrongValue);
+
+  let layoutItems = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+  layoutItems = TouchBarHelper.layout;
+  for (let i = 0; i < layoutItems.length; i++) {
+    let input = layoutItems.queryElementAt(i, Ci.nsITouchBarInput);
+    testValue.push(input.key);
+  }
+  Assert.equal(testValue.toString(),
+               correctValue.toString(),
+               "Pref should filter out incorrect inputs.");
+});
 
 /**
  * Tests if our bookmark button updates with our event.
