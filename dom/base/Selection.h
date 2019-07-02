@@ -117,7 +117,10 @@ class Selection final : public nsSupportsWeakReference,
     }
   }
 
+  // Required for WebIDL bindings, see
+  // https://developer.mozilla.org/en-US/docs/Mozilla/WebIDL_bindings#Adding_WebIDL_bindings_to_a_class.
   Document* GetParentObject() const;
+
   DocGroup* GetDocGroup() const;
 
   // utility methods for scrolling the selection into view
