@@ -9,8 +9,10 @@ var EXPORTED_SYMBOLS = ["Target"];
 const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
 const {TabManager} = ChromeUtils.import("chrome://remote/content/WindowManager.jsm");
 const {TabSession} = ChromeUtils.import("chrome://remote/content/sessions/TabSession.jsm");
+const {ContextualIdentityService} = ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
 
 let sessionIds = 1;
+let browserContextIds = 1;
 
 class Target extends Domain {
   constructor(session) {
@@ -24,6 +26,16 @@ class Target extends Domain {
     return {
       browserContextIds: [],
     };
+  }
+
+  createBrowserContext() {
+    const identity = ContextualIdentityService.create("remote-agent-" + (browserContextIds++));
+    return { browserContextId: identity.userContextId };
+  }
+
+  disposeBrowserContext({ browserContextId }) {
+    ContextualIdentityService.remove(browserContextId);
+    ContextualIdentityService.closeContainerTabs(browserContextId);
   }
 
   setDiscoverTargets({ discover }) {
@@ -43,7 +55,7 @@ class Target extends Domain {
   onTargetCreated(eventName, target) {
     this.emit("Target.targetCreated", {
       targetInfo: {
-        browserContextId: target.id,
+        browserContextId: target.browserContextId,
         targetId: target.id,
         type: target.type,
         url: target.url,
@@ -57,10 +69,10 @@ class Target extends Domain {
     });
   }
 
-  async createTarget() {
+  async createTarget({ browserContextId }) {
     const { targets } = this.session.target;
     const onTarget = targets.once("connect");
-    const tab = TabManager.addTab();
+    const tab = TabManager.addTab({ userContextId: browserContextId });
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
       throw new Error("Unexpected tab opened: " + tab.linkedBrowser.currentURI.spec);
