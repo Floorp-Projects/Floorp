@@ -56,7 +56,7 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                          ipc::StructuredCloneData&& aData);
 
-  virtual nsIGlobalObject* GetParentObject() const = 0;
+  nsIGlobalObject* GetParentObject() const;
 
   void RejectPendingQueries();
 

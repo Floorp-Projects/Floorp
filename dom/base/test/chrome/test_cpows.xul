@@ -13,14 +13,12 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
   SimpleTest.waitForExplicitFinish();
 
   const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
-  Services.prefs.setBoolPref(PREF_UNSAFE_FORBIDDEN, false);
+  SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, false);
   SimpleTest.registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(PREF_UNSAFE_FORBIDDEN);
+    SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
   });
 
   function done() {
