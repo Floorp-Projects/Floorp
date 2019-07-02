@@ -4900,6 +4900,8 @@ var XULBrowserWindow = {
 
       gIdentityHandler.onLocationChange();
 
+      gProtectionsHandler.onLocationChange();
+
       BrowserPageActions.onLocationChange();
 
       SafeBrowsingNotificationBox.onLocationChange(aLocationURI);
