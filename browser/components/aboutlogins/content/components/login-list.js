@@ -37,7 +37,6 @@ export default class LoginList extends ReflectedFluentElement {
                    .addEventListener("change", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
-    this.addEventListener("keydown", this);
 
     super.connectedCallback();
   }
@@ -52,8 +51,6 @@ export default class LoginList extends ReflectedFluentElement {
 
     if (!this._selectedGuid) {
       this._blankLoginListItem.classList.add("selected");
-      this._blankLoginListItem.setAttribute("aria-selected", "true");
-      this._list.setAttribute("aria-activedescendant", this._blankLoginListItem.id);
       this._list.append(this._blankLoginListItem);
     }
 
@@ -62,8 +59,6 @@ export default class LoginList extends ReflectedFluentElement {
       listItem.setAttribute("missing-username", this.getAttribute("missing-username"));
       if (login.guid == this._selectedGuid) {
         listItem.classList.add("selected");
-        listItem.setAttribute("aria-selected", "true");
-        this._list.setAttribute("aria-activedescendant", listItem.id);
       }
       this._list.append(listItem);
     }
@@ -94,16 +89,11 @@ export default class LoginList extends ReflectedFluentElement {
         this.render();
         break;
       }
-      case "keydown": {
-        this._handleKeyboardNav(event);
-        break;
-      }
     }
   }
 
   static get reflectedFluentIDs() {
-    return ["aria-label",
-            "count",
+    return ["count",
             "last-used-option",
             "last-changed-option",
             "missing-username",
@@ -119,10 +109,6 @@ export default class LoginList extends ReflectedFluentElement {
 
   handleSpecialCaseFluentString(attrName) {
     switch (attrName) {
-      case "aria-label": {
-        this._list.setAttribute("aria-label", this.getAttribute(attrName));
-        break;
-      }
       case "missing-username": {
         break;
       }
@@ -207,85 +193,6 @@ export default class LoginList extends ReflectedFluentElement {
     }
 
     return matchingLoginGuids.length;
-  }
-
-  _handleKeyboardNav(event) {
-    if (this._list != this.shadowRoot.activeElement) {
-      return;
-    }
-
-    let isLTR = document.dir == "ltr";
-    let activeDescendantId = this._list.getAttribute("aria-activedescendant");
-    let activeDescendant = activeDescendantId ?
-      this.shadowRoot.getElementById(activeDescendantId) :
-      this._list.firstElementChild;
-    let newlyFocusedItem = null;
-    switch (event.key) {
-      case "ArrowDown": {
-        let nextItem = activeDescendant.nextElementSibling;
-        if (!nextItem) {
-          return;
-        }
-        newlyFocusedItem = nextItem;
-        break;
-      }
-      case "ArrowLeft": {
-        let item = isLTR ?
-          activeDescendant.previousElementSibling :
-          activeDescendant.nextElementSibling;
-        if (!item) {
-          return;
-        }
-        newlyFocusedItem = item;
-        break;
-      }
-      case "ArrowRight": {
-        let item = isLTR ?
-          activeDescendant.nextElementSibling :
-          activeDescendant.previousElementSibling;
-        if (!item) {
-          return;
-        }
-        newlyFocusedItem = item;
-        break;
-      }
-      case "ArrowUp": {
-        let previousItem = activeDescendant.previousElementSibling;
-        if (!previousItem) {
-          return;
-        }
-        newlyFocusedItem = previousItem;
-        break;
-      }
-      case "Tab": {
-        // Bug 1562716: Pressing Tab from the login-list cycles back to the
-        // login-sort dropdown due to the login-list having `overflow`
-        // CSS property set. Explicitly forward focus here until
-        // this keyboard trap is fixed.
-        if (event.shiftKey) {
-          return;
-        }
-        let loginItem = document.querySelector("login-item");
-        if (loginItem) {
-          event.preventDefault();
-          loginItem.shadowRoot.querySelector(".edit-button").focus();
-        }
-        return;
-      }
-      case " ":
-      case "Enter": {
-        event.preventDefault();
-        activeDescendant.click();
-        return;
-      }
-      default:
-        return;
-    }
-    event.preventDefault();
-    this._list.setAttribute("aria-activedescendant", newlyFocusedItem.id);
-    activeDescendant.classList.remove("keyboard-selected");
-    newlyFocusedItem.classList.add("keyboard-selected");
-    newlyFocusedItem.scrollIntoView(false);
   }
 }
 customElements.define("login-list", LoginList);

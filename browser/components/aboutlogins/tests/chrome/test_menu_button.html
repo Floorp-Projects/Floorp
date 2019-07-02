@@ -48,55 +48,36 @@ add_task(async function test_menu_open_close() {
   is(true, menu.hidden, "menu should be hidden before pressing 'space'");
   sendKey("SPACE");
   await new Promise(resolve => requestAnimationFrame(resolve));
-  ok(!menu.hidden, "menu should be visible after pressing 'space'");
-  let firstVisibleItem = gMenuButton.shadowRoot.querySelector(".menuitem-button:not([hidden])");
-  ok(firstVisibleItem.matches(":focus"), "the first menuitem should be focused when opening the menu");
+  is(false, menu.hidden, "menu should be visible after pressing 'space'");
 
-  sendKey("ESCAPE");
-  await new Promise(resolve => requestAnimationFrame(resolve));
-  ok(menu.hidden, "menu should be hidden after pressing 'escape'");
-  is(gMenuButton.shadowRoot.activeElement, gMenuButton.shadowRoot.querySelector(".menu-button"),
-    "the .menu-button should be focused after closing the menu via keyboard");
-
-  sendKey("RETURN");
-  await new Promise(resolve => requestAnimationFrame(resolve));
-  ok(!menu.hidden, "menu should be visible after pressing 'return'");
-
-  if (navigator.platform == "Win32") {
-    // The Import menuitem is only visible on Windows, where we will need a Tab
-    // press to get to the Preferences item.
-    let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
-    ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
+  let feedbackItem = gMenuButton.shadowRoot.querySelector(".menuitem-feedback");
+  ok(!feedbackItem.matches(":focus"), ".menuitem-feedback should not be focused before tabbing to it");
+  // The Import menuitem is only visible on Windows, where we will need a second Tab
+  // press to get to the Feedback item.
+  let tabs = navigator.platform == "Win32" ? 2 : 1;
+  while (tabs--) {
     sendKey("TAB");
-    await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
-      "waiting for preferencesItem to get focus");
-    ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");
-    synthesizeKey("VK_TAB", { shiftKey: true });
-    await SimpleTest.promiseWaitForCondition(() => !preferencesItem.matches(":focus"),
-      "waiting for preferencesItem to lose focus");
-    ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should lose focus after tabbing away from it");
-
-    sendKey("DOWN");
-    await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
-      "waiting for preferencesItem to gain focus");
-    ok(preferencesItem.matches(":focus"), `.menuitem-preferences should be now be focused (DOWN)`);
-    sendKey("UP");
-    await SimpleTest.promiseWaitForCondition(() => !preferencesItem.matches(":focus"),
-      `waiting for preferencesItem to lose focus (UP)`);
-    ok(!preferencesItem.matches(":focus"), `.menuitem-preferences should lose focus after pressing up`);
-
-    sendKey("TAB");
-    await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
-      "waiting for preferencesItem to get focus");
-    ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");
   }
 
+  await SimpleTest.promiseWaitForCondition(() => feedbackItem.matches(":focus"),
+                                           "waiting for feedbackItem to get focus");
+  ok(feedbackItem.matches(":focus"), ".menuitem-feedback should be focused after tabbing to it");
+
+  let preferencesItem = gMenuButton.shadowRoot.querySelector(".menuitem-preferences");
+  ok(!preferencesItem.matches(":focus"), ".menuitem-preferences should not be focused before tabbing to it");
+  // We will need a third Tab press to get to the Preferences item.
+  sendKey("TAB");
+
+  await SimpleTest.promiseWaitForCondition(() => preferencesItem.matches(":focus"),
+    "waiting for preferencesItem to get focus");
+  ok(preferencesItem.matches(":focus"), ".menuitem-preferences should be focused after tabbing to it");
+
   let openPreferencesEvent = null;
-  ok(!menu.hidden, "menu should be visible before pressing 'space' on .menuitem-preferences");
+  is(false, menu.hidden, "menu should be visible before pressing 'space' on .menuitem-preferences");
   window.addEventListener("AboutLoginsOpenPreferences", event => openPreferencesEvent = event);
   sendKey("SPACE");
   ok(openPreferencesEvent, "AboutLoginsOpenPreferences event should be dispatched after pressing 'space' on .menuitem-preferences");
-  ok(menu.hidden, "menu should be hidden after pressing 'space' on .menuitem-preferences");
+  is(true, menu.hidden, "menu should be hidden after pressing 'space' on .menuitem-preferences");
 });
 </script>
 
