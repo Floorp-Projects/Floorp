@@ -2069,7 +2069,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   }
 }
 
-// Selection::RemoveRange
+// Selection::RemoveRangeAndUnselectFramesAndNotifyListeners
 //
 //    Removes the given range from the selection. The tricky part is updating
 //    the flags on the frames that indicate whether they have a selection or
@@ -2081,7 +2081,8 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 //    being removed, and cause them to set the selected bits back on their
 //    selected frames after we've cleared the bit from ours.
 
-void Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv) {
+void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
+    nsRange& aRange, ErrorResult& aRv) {
   nsresult rv = RemoveItem(&aRange);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

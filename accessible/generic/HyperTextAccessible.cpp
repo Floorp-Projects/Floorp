@@ -1272,7 +1272,8 @@ nsresult HyperTextAccessible::SetSelectionRange(int32_t aStartPos,
 
   // Set up the selection.
   for (int32_t idx = domSel->RangeCount() - 1; idx > 0; idx--)
-    domSel->RemoveRange(*domSel->GetRangeAt(idx), IgnoreErrors());
+    domSel->RemoveRangeAndUnselectFramesAndNotifyListeners(
+        *domSel->GetRangeAt(idx), IgnoreErrors());
   SetSelectionBoundsAt(0, aStartPos, aEndPos);
 
   // Make sure it is visible
@@ -1571,7 +1572,8 @@ bool HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
   // If this is not a new range, notify selection listeners that the existing
   // selection range has changed. Otherwise, just add the new range.
   if (aSelectionNum != static_cast<int32_t>(rangeCount)) {
-    domSel->RemoveRange(*range, IgnoreErrors());
+    domSel->RemoveRangeAndUnselectFramesAndNotifyListeners(*range,
+                                                           IgnoreErrors());
   }
 
   IgnoredErrorResult err;
@@ -1595,7 +1597,8 @@ bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {
       aSelectionNum >= static_cast<int32_t>(domSel->RangeCount()))
     return false;
 
-  domSel->RemoveRange(*domSel->GetRangeAt(aSelectionNum), IgnoreErrors());
+  domSel->RemoveRangeAndUnselectFramesAndNotifyListeners(
+      *domSel->GetRangeAt(aSelectionNum), IgnoreErrors());
   return true;
 }
 
