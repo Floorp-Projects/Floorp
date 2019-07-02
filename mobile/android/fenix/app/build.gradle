@@ -47,6 +47,9 @@ android {
             applicationIdSuffix ".performancetest"
             debuggable true
         }
+        nightlyLegacy releaseTemplate >> {
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+        }
         nightly releaseTemplate >> {
             applicationIdSuffix ".nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"

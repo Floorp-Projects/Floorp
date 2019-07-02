@@ -40,12 +40,13 @@ class TaskBuilder(object):
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
 
-    def craft_assemble_release_task(self, architectures, channel, is_staging, version_name):
+    def craft_assemble_release_task(self, architectures, build_type, is_staging, version_name, index_channel=None):
+        index_channel = index_channel or build_type
         artifacts = {
             'public/target.{}.apk'.format(arch): {
                 "type": 'file',
                 "path": '/opt/fenix/app/build/outputs/apk/'
-                        '{arch}/{channel}/app-{arch}-{channel}-unsigned.apk'.format(arch=arch, channel=channel),
+                        '{arch}/{build_type}/app-{arch}-{build_type}-unsigned.apk'.format(arch=arch, build_type=build_type),
                 "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
             }
             for arch in architectures
@@ -54,7 +55,7 @@ class TaskBuilder(object):
         if is_staging:
             secret_index = 'garbage/staging/project/mobile/fenix'
         else:
-            secret_index = 'project/mobile/fenix/{}'.format(channel)
+            secret_index = 'project/mobile/fenix/{}'.format(index_channel)
 
         pre_gradle_commands = (
             'python automation/taskcluster/helper/get-secret.py -s {} -k {} -f {}'.format(
@@ -67,10 +68,10 @@ class TaskBuilder(object):
             )
         )
 
-        capitalized_channel = upper_case_first_letter(channel)
+        capitalized_build_type = upper_case_first_letter(build_type)
         gradle_commands = (
             './gradlew --no-daemon -PversionName="{}" clean test assemble{}'.format(
-                version_name, capitalized_channel),
+                version_name, capitalized_build_type),
         )
 
         command = ' && '.join(
@@ -85,8 +86,8 @@ class TaskBuilder(object):
         ]
 
         return self._craft_build_ish_task(
-            name='Build {} task'.format(capitalized_channel),
-            description='Build Fenix {} from source code'.format(capitalized_channel),
+            name='Build {} task'.format(capitalized_build_type),
+            description='Build Fenix {} from source code'.format(capitalized_build_type),
             command=command,
             scopes=[
                 "secrets:get:{}".format(secret_index)
@@ -98,7 +99,7 @@ class TaskBuilder(object):
                 'machine': {
                     'platform': 'android-all',
                 },
-                'symbol': '{}-A'.format(channel),
+                'symbol': '{}-A'.format(build_type),
                 'tier': 1,
             },
         )
@@ -423,18 +424,19 @@ class TaskBuilder(object):
         )
 
     def craft_release_signing_task(
-        self, build_task_id, apk_paths, channel, is_staging
+        self, build_task_id, apk_paths, channel, is_staging, index_channel=None
     ):
+        index_channel = index_channel or channel
         staging_prefix = '.staging' if is_staging else ''
 
         routes = [
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.latest".format(
-                staging_prefix, channel, self.date.year, self.date.month, self.date.day
+                staging_prefix, index_channel, self.date.year, self.date.month, self.date.day
             ),
             "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.revision.{}".format(
-                staging_prefix, channel, self.date.year, self.date.month, self.date.day, self.commit
+                staging_prefix, index_channel, self.date.year, self.date.month, self.date.day, self.commit
             ),
-            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, channel),
+            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, index_channel),
         ]
 
         capitalized_channel = upper_case_first_letter(channel)
