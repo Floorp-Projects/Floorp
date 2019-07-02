@@ -42,8 +42,10 @@ jobs:
         notifications:
             subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
             message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
-    fennec-rc:
+    fennec-release-rc:
+        attributes:
+            release-type: release
         shipping-product: fennec
         notifications:
-            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
-            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped to the regular RC channel!"
+            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped to the regular RC channel!"
