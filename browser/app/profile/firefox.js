@@ -1320,6 +1320,9 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 
 pref("trailhead.firstrun.branches", "join-privacy");
 
+// The pref that controls if the What's New panel is enabled.
+pref("browser.messaging-system.whatsNewPanel.enabled", false);
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 
