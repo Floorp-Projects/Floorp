@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/aboutlogins/components/confirm-delete-dialog.css      (content/components/confirm-delete-dialog.css)
+  content/browser/aboutlogins/components/confirm-delete-dialog.js       (content/components/confirm-delete-dialog.js)
   content/browser/aboutlogins/components/copy-to-clipboard-button.css (content/components/copy-to-clipboard-button.css)
   content/browser/aboutlogins/components/copy-to-clipboard-button.js  (content/components/copy-to-clipboard-button.js)
   content/browser/aboutlogins/components/login-filter.css      (content/components/login-filter.css)

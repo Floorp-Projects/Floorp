@@ -9,6 +9,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; img-src data: blob:;"/>
     <title data-l10n-id="about-logins-page-title"></title>
     <link rel="localization" href="browser/aboutLogins.ftl">
+    <script type="module" src="chrome://browser/content/aboutlogins/components/confirm-delete-dialog.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/copy-to-clipboard-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
@@ -64,6 +65,32 @@
                                  time-used,
                                  username-label,
                                  username-placeholder"></login-item>
+    <confirm-delete-dialog hidden
+                           data-l10n-id="confirm-delete-dialog"
+                           data-l10n-attrs="title,
+                                            message,
+                                            cancel-button,
+                                            confirm-button"></confirm-delete-dialog>
+
+    <template id="confirm-delete-dialog-template">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/confirm-delete-dialog.css">
+      <div class="overlay">
+        <div class="container" role="dialog" aria-labelledby="title" aria-describedby="message">
+          <div class="title-bar">
+            <h1 class="title" id="title"></h1>
+            <button class="dismiss-button"></button>
+          </div>
+          <div class="content">
+            <p class="message" id="message"></p>
+          </div>
+          <div class="buttons">
+            <button class="cancel-button"></button>
+            <button class="confirm-button"></button>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <template id="login-list-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
