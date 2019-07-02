@@ -7176,6 +7176,8 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     mozilla::dom::BrowserChild* aBrowserChild) {
   nsresult rv;
 
+  aTransferable->SetIsPrivateData(aIsPrivateData);
+
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
   for (const auto& item : items) {
     aTransferable->AddDataFlavor(item.flavor().get());
@@ -7225,7 +7227,6 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     }
   }
 
-  aTransferable->SetIsPrivateData(aIsPrivateData);
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
   aTransferable->SetContentPolicyType(aContentPolicyType);
   return NS_OK;

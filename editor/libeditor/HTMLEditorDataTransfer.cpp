@@ -1508,6 +1508,7 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
       return NS_ERROR_FAILURE;
     }
     contextTransferable->Init(nullptr);
+    contextTransferable->SetIsPrivateData(transferable->GetIsPrivateData());
     contextTransferable->AddDataFlavor(kHTMLContext);
     clipboard->GetData(contextTransferable, aClipboardType);
     nsCOMPtr<nsISupports> contextDataObj;
@@ -1525,6 +1526,7 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
       return NS_ERROR_FAILURE;
     }
     infoTransferable->Init(nullptr);
+    contextTransferable->SetIsPrivateData(transferable->GetIsPrivateData());
     infoTransferable->AddDataFlavor(kHTMLInfo);
     clipboard->GetData(infoTransferable, aClipboardType);
     nsCOMPtr<nsISupports> infoDataObj;
