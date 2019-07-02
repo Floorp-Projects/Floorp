@@ -246,12 +246,14 @@ fn make_window(
     vsync: bool,
     events_loop: &Option<winit::EventsLoop>,
     angle: bool,
-    gl_request: glutin::GlRequest,
 ) -> WindowWrapper {
     let wrapper = match *events_loop {
         Some(ref events_loop) => {
             let context_builder = glutin::ContextBuilder::new()
-                .with_gl(gl_request)
+                .with_gl(glutin::GlRequest::GlThenGles {
+                    opengl_version: (3, 2),
+                    opengles_version: (3, 0),
+                })
                 .with_vsync(vsync);
             let window_builder = winit::WindowBuilder::new()
                 .with_title("WRench")
@@ -482,31 +484,8 @@ fn main() {
         Some(winit::EventsLoop::new())
     };
 
-    let gl_request = match args.value_of("renderer") {
-        Some("es3") => {
-            glutin::GlRequest::Specific(glutin::Api::OpenGlEs, (3, 0))
-        }
-        Some("gl3") => {
-            glutin::GlRequest::Specific(glutin::Api::OpenGl, (3, 2))
-        }
-        Some("default") | None => {
-            glutin::GlRequest::GlThenGles {
-                opengl_version: (3, 2),
-                opengles_version: (3, 0),
-            }
-        }
-        Some(api) => {
-            panic!("Unexpected renderer string {}", api);
-        }
-    };
-
     let mut window = make_window(
-        size,
-        dp_ratio,
-        args.is_present("vsync"),
-        &events_loop,
-        args.is_present("angle"),
-        gl_request,
+        size, dp_ratio, args.is_present("vsync"), &events_loop, args.is_present("angle"),
     );
     let dp_ratio = dp_ratio.unwrap_or(window.hidpi_factor());
     let dim = window.get_inner_size();
@@ -549,15 +528,7 @@ fn main() {
     }
 
     if let Some(subargs) = args.subcommand_matches("show") {
-        let no_block = args.is_present("no_block");
-        render(
-            &mut wrench,
-            &mut window,
-            size,
-            &mut events_loop,
-            subargs,
-            no_block,
-        );
+        render(&mut wrench, &mut window, size, &mut events_loop, subargs);
     } else if let Some(subargs) = args.subcommand_matches("png") {
         let surface = match subargs.value_of("surface") {
             Some("screen") | None => png::ReadSurface::Screen,
@@ -600,7 +571,6 @@ fn render<'a>(
     size: DeviceIntSize,
     events_loop: &mut Option<winit::EventsLoop>,
     subargs: &clap::ArgMatches<'a>,
-    no_block: bool,
 ) {
     let input_path = subargs.value_of("INPUT").map(PathBuf::from).unwrap();
 
@@ -865,7 +835,7 @@ fn render<'a>(
                 // Block the thread until at least one event arrives
                 // On Android, we are generally profiling when running
                 // wrench, and don't want to block on UI events.
-                if !no_block && cfg!(not(target_os = "android")) {
+                if cfg!(not(target_os = "android")) {
                     events_loop.run_forever(|event| {
                         pending_events.push(event);
                         winit::ControlFlow::Break
