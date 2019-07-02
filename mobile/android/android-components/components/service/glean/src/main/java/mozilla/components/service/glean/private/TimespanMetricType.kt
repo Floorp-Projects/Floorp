@@ -105,30 +105,6 @@ data class TimespanMetricType(
     }
 
     /**
-     * Add an explicit timespan, in nanoseconds, to the already recorded
-     * timespans.
-     *
-     * This API should only be used if your library or application requires recording
-     * times in a way that can not make use of [start]/[stop]/[cancel].
-     *
-     * @param elapsedNanos The elapsed time to record, in nanoseconds.
-     */
-    fun sumRawNanos(elapsedNanos: Long) {
-        if (!shouldRecord(logger)) {
-            return
-        }
-
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.launch {
-            TimespansStorageEngine.sum(
-                this@TimespanMetricType,
-                timeUnit,
-                elapsedNanos
-            )
-        }
-    }
-
-    /**
      * Explicitly set the timespan value, in nanoseconds.
      *
      * This API should only be used if your library or application requires recording

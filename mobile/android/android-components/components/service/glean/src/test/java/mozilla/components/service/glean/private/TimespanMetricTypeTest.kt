@@ -192,23 +192,4 @@ class TimespanMetricTypeTest {
         val value = metric.testGetValue()
         assertTrue(timespanNanos < value)
     }
-
-    @Test
-    fun `test sumRawNanos`() {
-        val timespanNanos = 1200000000L
-
-        val metric = TimespanMetricType(
-            false,
-            "telemetry",
-            Lifetime.Ping,
-            "explicit_timespan",
-            listOf("store1"),
-            timeUnit = TimeUnit.Second
-        )
-
-        metric.sumRawNanos(timespanNanos)
-        assertEquals(timespanNanos, metric.testGetValue())
-        metric.sumRawNanos(timespanNanos)
-        assertEquals(timespanNanos * 2, metric.testGetValue())
-    }
 }
