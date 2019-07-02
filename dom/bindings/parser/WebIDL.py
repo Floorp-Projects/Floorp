@@ -6670,9 +6670,9 @@ class Parser(Tokenizer):
         """
         p[0] = p[2].withExtendedAttributes(p[1])
 
-    def p_SingleTypeNonAnyType(self, p):
+    def p_SingleTypeDistinguishableType(self, p):
         """
-            SingleType : NonAnyType
+            SingleType : DistinguishableType
         """
         p[0] = p[1]
 
@@ -6682,6 +6682,14 @@ class Parser(Tokenizer):
         """
         p[0] = BuiltinTypes[IDLBuiltinType.Types.any]
 
+    # Note: Promise<void> is allowed, so we want to parametrize on ReturnType,
+    # not Type.  Promise types can't be null, hence no "Null" in there.
+    def p_SingleTypePromiseType(self, p):
+        """
+            SingleType : PROMISE LT ReturnType GT
+        """
+        p[0] = IDLPromiseType(self.getLocation(p, 1), p[3])
+
     def p_UnionType(self, p):
         """
             UnionType : LPAREN UnionMemberType OR UnionMemberType UnionMemberTypes RPAREN
@@ -6690,9 +6698,9 @@ class Parser(Tokenizer):
         types.extend(p[5])
         p[0] = IDLUnionType(self.getLocation(p, 1), types)
 
-    def p_UnionMemberTypeNonAnyType(self, p):
+    def p_UnionMemberTypeDistinguishableType(self, p):
         """
-            UnionMemberType : ExtendedAttributeList NonAnyType
+            UnionMemberType : ExtendedAttributeList DistinguishableType
         """
         p[0] = p[2].withExtendedAttributes(p[1])
 
@@ -6715,13 +6723,13 @@ class Parser(Tokenizer):
         """
         p[0] = []
 
-    def p_NonAnyType(self, p):
+    def p_DistinguishableType(self, p):
         """
-            NonAnyType : PrimitiveType Null
-                       | ARRAYBUFFER Null
-                       | SHAREDARRAYBUFFER Null
-                       | READABLESTREAM Null
-                       | OBJECT Null
+            DistinguishableType : PrimitiveType Null
+                                | ARRAYBUFFER Null
+                                | SHAREDARRAYBUFFER Null
+                                | READABLESTREAM Null
+                                | OBJECT Null
         """
         if p[1] == "object":
             type = BuiltinTypes[IDLBuiltinType.Types.object]
@@ -6736,40 +6744,32 @@ class Parser(Tokenizer):
 
         p[0] = self.handleNullable(type, p[2])
 
-    def p_NonAnyTypeStringType(self, p):
+    def p_DistinguishableTypeStringType(self, p):
         """
-            NonAnyType : StringType Null
+            DistinguishableType : StringType Null
         """
         p[0] = self.handleNullable(p[1], p[2])
 
-    def p_NonAnyTypeSequenceType(self, p):
+    def p_DistinguishableTypeSequenceType(self, p):
         """
-            NonAnyType : SEQUENCE LT TypeWithExtendedAttributes GT Null
+            DistinguishableType : SEQUENCE LT TypeWithExtendedAttributes GT Null
         """
         innerType = p[3]
         type = IDLSequenceType(self.getLocation(p, 1), innerType)
         p[0] = self.handleNullable(type, p[5])
 
-    # Note: Promise<void> is allowed, so we want to parametrize on ReturnType,
-    # not Type.  Promise types can't be null, hence no "Null" in there.
-    def p_NonAnyTypePromiseType(self, p):
+    def p_DistinguishableTypeRecordType(self, p):
         """
-            NonAnyType : PROMISE LT ReturnType GT
-        """
-        p[0] = IDLPromiseType(self.getLocation(p, 1), p[3])
-
-    def p_NonAnyTypeRecordType(self, p):
-        """
-            NonAnyType : RECORD LT StringType COMMA TypeWithExtendedAttributes GT Null
+            DistinguishableType : RECORD LT StringType COMMA TypeWithExtendedAttributes GT Null
         """
         keyType = p[3]
         valueType = p[5]
         type = IDLRecordType(self.getLocation(p, 1), keyType, valueType)
         p[0] = self.handleNullable(type, p[7])
 
-    def p_NonAnyTypeScopedName(self, p):
+    def p_DistinguishableTypeScopedName(self, p):
         """
-            NonAnyType : ScopedName Null
+            DistinguishableType : ScopedName Null
         """
         assert isinstance(p[1], IDLUnresolvedIdentifier)
 
@@ -6799,9 +6799,9 @@ class Parser(Tokenizer):
         type = IDLUnresolvedType(self.getLocation(p, 1), p[1])
         p[0] = self.handleNullable(type, p[2])
 
-    def p_NonAnyTypeDate(self, p):
+    def p_DistinguishableTypeDate(self, p):
         """
-            NonAnyType : DATE Null
+            DistinguishableType : DATE Null
         """
         p[0] = self.handleNullable(BuiltinTypes[IDLBuiltinType.Types.date],
                                    p[2])
