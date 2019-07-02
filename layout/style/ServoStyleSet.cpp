@@ -96,6 +96,7 @@ class MOZ_RAII AutoPrepareTraversal {
 
 ServoStyleSet::ServoStyleSet(Document& aDocument) : mDocument(&aDocument) {
   PreferenceSheet::EnsureInitialized();
+  PodArrayZero(mCachedAnonymousContentStyleIndexes);
   mRawSet.reset(Servo_StyleSet_Init(&aDocument));
 }
 
@@ -122,6 +123,7 @@ void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
 void ServoStyleSet::ShellDetachedFromDocument() {
   ClearNonInheritingComputedStyles();
   mCachedAnonymousContentStyles.Clear();
+  PodArrayZero(mCachedAnonymousContentStyleIndexes);
   mStyleRuleMap = nullptr;
 
   // Remove all our stylesheets...
