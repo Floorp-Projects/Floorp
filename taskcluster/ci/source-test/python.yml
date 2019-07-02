@@ -40,6 +40,22 @@ taskgraph-tests:
             - 'taskcluster/**/*.py'
             - 'python/mach/**/*.py'
 
+mach:
+    description: python/mach unit tests
+    platform:
+        - linux64/opt
+        - macosx1010-64/opt
+        - windows10-64/opt
+    python-version: [2]
+    treeherder:
+        symbol: mach
+    run:
+        using: python-test
+        subsuite: mach
+    when:
+        files-changed:
+            - 'python/mach/**'
+
 marionette-harness:
     description: testing/marionette/harness unit tests
     platform:
