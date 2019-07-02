@@ -15,7 +15,8 @@
                   mainViewId="protections-popup-mainView">
     <panelview id="protections-popup-mainView"
                descriptionheightworkaround="true">
-      <hbox id="protections-popup-mainView-panel-header">
+      <hbox id="protections-popup-mainView-panel-header"
+            onclick="gProtectionsHandler.onHeaderClicked(event);">
         <label id="protections-popup-main-header-label">
           <html:span id="protections-popup-mainView-panel-header-span"/>
         </label>
