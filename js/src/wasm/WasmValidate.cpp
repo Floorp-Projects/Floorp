@@ -832,7 +832,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::MemCopy): {
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -845,7 +845,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::DataDrop): {
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -855,7 +855,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::MemFill):
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -863,7 +863,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::MemInit): {
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -876,7 +876,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::TableCopy): {
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -889,7 +889,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::ElemDrop): {
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -899,7 +899,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(MiscOp::TableInit): {
 #ifndef ENABLE_WASM_BULKMEM_OPS
             // Bulk memory must be available if shared memory is enabled.
-            if (!env.sharedMemoryEnabled) {
+            if (env.sharedMemoryEnabled == Shareable::False) {
               return iter.fail("bulk memory ops disabled");
             }
 #endif
@@ -2424,7 +2424,7 @@ static bool DecodeDataCountSection(Decoder& d, ModuleEnvironment* env) {
 
 #ifndef ENABLE_WASM_BULKMEM_OPS
   // Bulk memory must be available if shared memory is enabled.
-  if (!env->sharedMemoryEnabled) {
+  if (env->sharedMemoryEnabled == Shareable::False) {
     return d.fail("bulk memory ops disabled");
   }
 #endif
