@@ -12,6 +12,7 @@
 #include "gfxConfig.h"
 #include "gfxContext.h"
 #include "gfxCrashReporterUtils.h"
+#include "gfxEnv.h"
 #include "gfxPattern.h"
 #include "gfxUtils.h"
 #include "MozFramebuffer.h"
@@ -289,6 +290,8 @@ void WebGLContext::DestroyResourcesAndContext() {
   gl->MarkDestroyed();
   mGL_OnlyClearInDestroyResourcesAndContext = nullptr;
   MOZ_ASSERT(!gl);
+
+  mDynDGpuManager = nullptr;
 }
 
 void WebGLContext::Invalidate() {
@@ -484,8 +487,20 @@ bool WebGLContext::CreateAndInitGL(
   }
 
   {
-    bool highPower = false;
-    switch (mOptions.powerPreference) {
+    auto powerPref = mOptions.powerPreference;
+
+    // If "Use hardware acceleration when available" option is disabled:
+    if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+      powerPref = dom::WebGLPowerPreference::Low_power;
+    }
+
+    if (StaticPrefs::webgl_default_low_power() &&
+        powerPref == dom::WebGLPowerPreference::Default) {
+      powerPref = dom::WebGLPowerPreference::Low_power;
+    }
+
+    bool highPower;
+    switch (powerPref) {
       case dom::WebGLPowerPreference::Low_power:
         highPower = false;
         break;
@@ -503,21 +518,12 @@ bool WebGLContext::CreateAndInitGL(
         // - Same origin with root page (try to stem bleeding from WebGL
         // ads/trackers)
       default:
-        highPower = true;
-        if (StaticPrefs::webgl_default_low_power()) {
-          highPower = false;
-        } else if (mCanvasElement && !mCanvasElement->GetParentNode()) {
-          GenerateWarning(
-              "WebGLContextAttributes.powerPreference: 'default' when <canvas>"
-              " has no parent Element defaults to 'low-power'.");
-          highPower = false;
+        highPower = false;
+        mDynDGpuManager = webgl::DynDGpuManager::Get();
+        if (!mDynDGpuManager) {
+          highPower = true;
         }
         break;
-    }
-
-    // If "Use hardware acceleration when available" option is disabled:
-    if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-      highPower = false;
     }
 
     if (highPower) {
@@ -1397,6 +1403,7 @@ bool WebGLContext::PresentScreenBuffer(GLScreenBuffer* const targetScreen) {
   if (IsContextLost()) return false;
 
   if (!mShouldPresent) return false;
+  ReportActivity();
 
   if (!ValidateAndInitFB(nullptr)) return false;
 
@@ -2406,6 +2413,101 @@ nsresult webgl::AvailabilityRunnable::Run() {
   mWebGL->mAvailabilityRunnable = nullptr;
   return NS_OK;
 }
+
+// ---------------
+
+namespace webgl {
+
+/*static*/
+std::shared_ptr<DynDGpuManager> DynDGpuManager::Get() {
+#ifndef XP_MACOSX
+  if (true) return nullptr;
+#endif
+
+  static std::weak_ptr<DynDGpuManager> sCurrent;
+
+  auto ret = sCurrent.lock();
+  if (!ret) {
+    ret.reset(new DynDGpuManager);
+    sCurrent = ret;
+  }
+  return ret;
+}
+
+DynDGpuManager::DynDGpuManager() : mMutex("DynDGpuManager") {}
+DynDGpuManager::~DynDGpuManager() = default;
+
+void DynDGpuManager::SetState(const MutexAutoLock&, const State newState) {
+  if (gfxEnv::GpuSwitchingSpew()) {
+    printf_stderr(
+        "[MOZ_GPU_SWITCHING_SPEW] DynDGpuManager::SetState(%u -> %u)\n",
+        uint32_t(mState), uint32_t(newState));
+  }
+
+  if (newState == State::Active) {
+    if (!mDGpuContext) {
+      const auto flags = gl::CreateContextFlags::HIGH_POWER;
+      nsCString failureId;
+      mDGpuContext = gl::GLContextProvider::CreateHeadless(flags, &failureId);
+    }
+  } else {
+    mDGpuContext = nullptr;
+  }
+
+  mState = newState;
+}
+
+void DynDGpuManager::ReportActivity(
+    const std::shared_ptr<DynDGpuManager>& strong) {
+  MOZ_ASSERT(strong.get() == this);
+  const MutexAutoLock lock(mMutex);
+
+  if (mActivityThisTick) return;
+  mActivityThisTick = true;
+
+  // Promote!
+  switch (mState) {
+    case State::Inactive:
+      SetState(lock, State::Primed);
+      DispatchTick(strong);  // Initial tick
+      break;
+
+    case State::Primed:
+      SetState(lock, State::Active);
+      break;
+    case State::Active:
+      if (!mDGpuContext) {
+        SetState(lock, State::Active);
+      }
+      break;
+  }
+}
+
+void DynDGpuManager::Tick(const std::shared_ptr<DynDGpuManager>& strong) {
+  MOZ_ASSERT(strong.get() == this);
+  const MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mState != State::Inactive);
+
+  if (!mActivityThisTick) {
+    SetState(lock, State::Inactive);
+    return;
+  }
+  mActivityThisTick = false;  // reset
+
+  DispatchTick(strong);
+}
+
+void DynDGpuManager::DispatchTick(
+    const std::shared_ptr<DynDGpuManager>& strong) {
+  MOZ_ASSERT(strong.get() == this);
+
+  const auto fnTick = [strong]() { strong->Tick(strong); };
+  already_AddRefed<mozilla::Runnable> event =
+      NS_NewRunnableFunction("DynDGpuManager fnWeakTick", fnTick);
+  NS_DelayedDispatchToCurrentThread(std::move(event), TICK_MS);
+}
+
+}  // namespace webgl
 
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM goop
