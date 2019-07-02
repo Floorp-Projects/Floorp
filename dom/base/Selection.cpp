@@ -1978,10 +1978,11 @@ nsresult Selection::RemoveAllRangesTemporarily() {
 void Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv) {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
-  AddRange(aRange, aRv);
+  AddRangeAndSelectFramesAndNotifyListeners(aRange, aRv);
 }
 
-void Selection::AddRange(nsRange& aRange, ErrorResult& aRv) {
+void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
+                                                          ErrorResult& aRv) {
   RefPtr<Document> document(GetDocument());
   return AddRangeAndSelectFramesAndNotifyListeners(aRange, document, aRv);
 }
@@ -3488,7 +3489,7 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
     return;
   }
 
-  AddRange(*newRange, aRv);
+  AddRangeAndSelectFramesAndNotifyListeners(*newRange, aRv);
   if (aRv.Failed()) {
     return;
   }
