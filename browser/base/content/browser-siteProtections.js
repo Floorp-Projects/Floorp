@@ -84,6 +84,35 @@ var gProtectionsHandler = {
     }
   },
 
+  onHeaderClicked(event) {
+    // Display the whole protections panel if the toast has been clicked.
+    if (this._protectionsPopup.hasAttribute("toast")) {
+      // Hide the toast first.
+      PanelMultiView.hidePopup(this._protectionsPopup);
+
+      // Open the full protections panel.
+      this.showProtectionsPopup({event});
+    }
+  },
+
+  onLocationChange() {
+    if (!this._showToastAfterRefresh) {
+      return;
+    }
+
+    this._showToastAfterRefresh = false;
+
+    // We only display the toast if we're still on the same page.
+    if (this._previousURI != gBrowser.currentURI.spec ||
+        this._previousOuterWindowID != gBrowser.selectedBrowser.outerWindowID) {
+      return;
+    }
+
+    this.showProtectionsPopup({
+      toast: true,
+    });
+  },
+
   handleEvent(event) {
     let elem = document.activeElement;
     let position = elem.compareDocumentPosition(this._protectionsPopup);
@@ -144,6 +173,13 @@ var gProtectionsHandler = {
       this._protectionsPopup.toggleAttribute("hasException");
     this._protectionsPopupTPSwitch.toggleAttribute("enabled", !newExceptionState);
 
+    // Indicating that we need to show a toast after refreshing the page.
+    // And caching the current URI and window ID in order to only show the mini
+    // panel if it's still on the same page.
+    this._showToastAfterRefresh = true;
+    this._previousURI = gBrowser.currentURI.spec;
+    this._previousOuterWindowID = gBrowser.selectedBrowser.outerWindowID;
+
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     if (newExceptionState) {
@@ -174,9 +210,8 @@ var gProtectionsHandler = {
    *                   The event triggers the protections popup to be opened.
    *                 toast:
    *                   A boolean to indicate if we need to open the protections
-   *                   popup as a mini panel. A mini panel only has a header
-   *                   section and will be hidden after a certain amount of
-   *                   time.
+   *                   popup as a toast. A toast only has a header section and
+   *                   will be hidden after a certain amount of time.
    */
   showProtectionsPopup(options = {}) {
     const {event, toast} = options;
