@@ -16,3 +16,4 @@ patch -p0 < solaris-types.patch
 # unpleasantries.
 rm -f ./src/ogg_alloc.c
 patch -p0 < memory-reporting.patch
+patch -p0 < ogg-fuzzing.patch
