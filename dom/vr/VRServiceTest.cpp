@@ -631,19 +631,11 @@ void VRServiceTest::ClearController(uint32_t aControllerIdx) {
 }
 
 void VRServiceTest::Timeout(uint32_t aDuration) {
-  // Clamp to 32-bit unsigned value
-  if (aDuration > 0xffffffff) {
-    aDuration = 0xffffffff;
-  }
   AddCommand((uint64_t)VRPuppet_Command::VRPuppet_Timeout |
              (uint64_t)aDuration);
 }
 
 void VRServiceTest::Wait(uint32_t aDuration) {
-  // Clamp to 32-bit unsigned value
-  if (aDuration > 0xffffffff) {
-    aDuration = 0xffffffff;
-  }
   AddCommand((uint64_t)VRPuppet_Command::VRPuppet_Wait | (uint64_t)aDuration);
 }
 
