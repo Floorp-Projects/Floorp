@@ -52,11 +52,11 @@ tasks:
 
     decision_task:
       $if: 'tasks_for == "github-pull-request"'
-      then: 'pr' 
+      then: 'pr'
       else:
         $if: 'tasks_for == "github-push"'
-        then: 'push' 
-        else: 'release' 
+        then: 'push'
+        else: 'release'
 
   in:
     $let:
@@ -133,7 +133,7 @@ tasks:
                     && git config advice.detachedHead false
                     && git checkout ${head_rev}
                     && ./gradlew --no-daemon --version
-                    && python automation/taskcluster/decision_task.py ${decision_task} 
+                    && python automation/taskcluster/decision_task.py ${decision_task}
           in:
             - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "edited", "synchronize"]'
               then:
@@ -237,9 +237,7 @@ tasks:
                       - {$eval: 'nightly_or_release_definition'}
                       - scopes:
                           # XXX Replace with your own hook, if you perform staging releases
-                          # FIXME: temporarily to test this in staging snapshot releases
-                          #- assume:hook-id:project-mobile/android-components-snapshot-release
-                          - assume:hook-id:project-mobile/mtabara-staging-snapshot-android-components
+                          - assume:hook-id:project-mobile/android-components-snapshot-release
                         payload:
                           command:
                             - >-
