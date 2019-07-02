@@ -118,10 +118,25 @@ char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
   struct pollfd fds;
   fds.fd = pipe_fd[0];
   fds.events = POLLIN;
+  int pollReturn = -1;
 
-  // Choose some reasonable timeout here
-  int ret = poll(&fds, 1, kClipboardTimeout / 1000);
-  if (!ret || ret == -1) {
+#define MAX_CLIPBOARD_POLL_ATTEMPTS 10
+  for (int i = 0; i < MAX_CLIPBOARD_POLL_ATTEMPTS; i++) {
+    pollReturn = poll(&fds, 1, kClipboardTimeout / 1000);
+    // ret > 0 means we have data available
+    // ret = 0 means poll timeout expired
+    // ret < 0 means poll failed with error
+    if (pollReturn >= 0) {
+      break;
+    }
+    // We should try again for EINTR/EAGAIN errors,
+    // quit for all other ones.
+    if (errno != EINTR && errno != EAGAIN) {
+      break;
+    }
+  }
+  // Quit for poll error() and timeout
+  if (pollReturn <= 0) {
     close(pipe_fd[0]);
     return nullptr;
   }
