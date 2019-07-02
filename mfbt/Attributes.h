@@ -93,6 +93,15 @@
 #endif
 
 /*
+ * MOZ_NEVER_INLINE_DEBUG is a macro which expands to MOZ_NEVER_INLINE
+ * in debug builds, and nothing in opt builds.
+ */
+#if defined(DEBUG)
+#  define MOZ_NEVER_INLINE_DEBUG MOZ_NEVER_INLINE
+#else
+#  define MOZ_NEVER_INLINE_DEBUG /* don't inline in opt builds */
+#endif
+/*
  * MOZ_NORETURN, specified at the start of a function declaration, indicates
  * that the given function does not return.  (The function definition does not
  * need to be annotated.)
