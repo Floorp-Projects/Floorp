@@ -457,8 +457,6 @@ void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
     return;
   }
 
-  mState = eClosed;
-
   if (!NS_IsMainThread() && !IsCurrentThreadRunningWorker()) {
     // Let's dispatch a WorkerControlRunnable if the owning thread is a worker.
     if (mWorkerRef) {
@@ -477,6 +475,8 @@ void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
   }
 
   AssertIsOnOwningThread();
+
+  mState = eClosed;
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
