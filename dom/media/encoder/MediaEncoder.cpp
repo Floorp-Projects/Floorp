@@ -457,41 +457,42 @@ void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
 
 void MediaEncoder::Suspend() {
   RunOnGraph(NS_NewRunnableFunction(
-      "MediaEncoder::Suspend",
+      "MediaEncoder::Suspend (graph)",
       [thread = mEncoderThread, audio = mAudioEncoder, video = mVideoEncoder] {
-        if (audio) {
-          nsresult rv = thread->Dispatch(
-              NewRunnableMethod("AudioTrackEncoder::Suspend", audio,
-                                &AudioTrackEncoder::Suspend));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
-        }
-        if (video) {
-          nsresult rv = thread->Dispatch(NewRunnableMethod<TimeStamp>(
-              "VideoTrackEncoder::Suspend", video, &VideoTrackEncoder::Suspend,
-              TimeStamp::Now()));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
+        if (NS_FAILED(thread->Dispatch(
+                NS_NewRunnableFunction("MediaEncoder::Suspend (encoder)",
+                                       [audio, video, now = TimeStamp::Now()] {
+                                         if (audio) {
+                                           audio->Suspend();
+                                         }
+                                         if (video) {
+                                           video->Suspend(now);
+                                         }
+                                       })))) {
+          // RunOnGraph added an extra async step, and now `thread` has shut
+          // down.
+          return;
         }
       }));
 }
 
 void MediaEncoder::Resume() {
   RunOnGraph(NS_NewRunnableFunction(
-      "MediaEncoder::Resume",
+      "MediaEncoder::Resume (graph)",
       [thread = mEncoderThread, audio = mAudioEncoder, video = mVideoEncoder] {
-        if (audio) {
-          nsresult rv = thread->Dispatch(NewRunnableMethod(
-              "AudioTrackEncoder::Resume", audio, &AudioTrackEncoder::Resume));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
-        }
-        if (video) {
-          nsresult rv = thread->Dispatch(NewRunnableMethod<TimeStamp>(
-              "VideoTrackEncoder::Resume", video, &VideoTrackEncoder::Resume,
-              TimeStamp::Now()));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
+        if (NS_FAILED(thread->Dispatch(
+                NS_NewRunnableFunction("MediaEncoder::Resume (encoder)",
+                                       [audio, video, now = TimeStamp::Now()] {
+                                         if (audio) {
+                                           audio->Resume();
+                                         }
+                                         if (video) {
+                                           video->Resume(now);
+                                         }
+                                       })))) {
+          // RunOnGraph added an extra async step, and now `thread` has shut
+          // down.
+          return;
         }
       }));
 }
