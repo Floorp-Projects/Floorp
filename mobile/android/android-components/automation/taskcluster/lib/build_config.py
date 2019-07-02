@@ -27,7 +27,7 @@ def components():
     } for (name, project) in build_config['projects'].items()]
 
 
-# XXX: TO DELETE once bug 1558795 is fixed in early Q3
+# TODO: DELETE once bug 1558795 is fixed in early Q3
 def snapshot_components():
     build_config = read_build_config()
     return [{

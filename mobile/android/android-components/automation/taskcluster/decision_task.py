@@ -219,7 +219,7 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
-# XXX: TO DELETE once bug 1558795 is fixed in early Q3
+# TODO: DELETE once bug 1558795 is fixed in early Q3
 def release_snapshot(components, is_snapshot, is_staging):
     version = components_version()
 
@@ -255,9 +255,8 @@ def release_snapshot(components, is_snapshot, is_staging):
 
 
 def release(components, is_snapshot, is_staging):
-    # XXX: temporarily until we add signing support in snapshots in bug 155879
-    # in early Q3
     if is_snapshot:
+        # TODO: DELETE once bug 1558795 is fixed in early Q3
         return release_snapshot(components, is_snapshot, is_staging)
 
     version = components_version()
@@ -351,8 +350,8 @@ if __name__ == "__main__":
 
     components = components()
     if command == 'release':
-        # XXX: TO DELETE once bug 1558795 is fixed in early Q3
         if result.is_snapshot:
+            # TODO: DELETE once bug 1558795 is fixed in early Q3
             components = snapshot_components()
         components = [info for info in components if info['shouldPublish']]
 
