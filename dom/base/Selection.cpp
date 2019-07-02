@@ -938,7 +938,7 @@ nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
     AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
     *aOutIndex = int32_t(mRanges.Length()) - 1;
 
-    Document* doc = GetParentObject();
+    Document* doc = GetDocument();
     bool selectEventsEnabled =
         StaticPrefs::dom_select_events_enabled() ||
         (doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
@@ -984,7 +984,7 @@ nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
 
         if (dispatchEvent) {
           nsContentUtils::DispatchTrustedEvent(
-              GetParentObject(), target, NS_LITERAL_STRING("selectstart"),
+              GetDocument(), target, NS_LITERAL_STRING("selectstart"),
               CanBubble::eYes, Cancelable::eYes, &defaultAction);
 
           if (!defaultAction) {
@@ -1982,7 +1982,7 @@ void Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv) {
 }
 
 void Selection::AddRange(nsRange& aRange, ErrorResult& aRv) {
-  RefPtr<Document> document(GetParentObject());
+  RefPtr<Document> document(GetDocument());
   return AddRangeInternal(aRange, document, aRv);
 }
 
@@ -3672,6 +3672,6 @@ AutoHideSelectionChanges::AutoHideSelectionChanges(
 
 bool Selection::HasSameRootOrSameComposedDoc(const nsINode& aNode) {
   nsINode* root = aNode.SubtreeRoot();
-  Document* doc = GetParentObject();
+  Document* doc = GetDocument();
   return doc == root || (root && doc == root->GetComposedDoc());
 }
