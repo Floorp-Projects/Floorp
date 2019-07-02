@@ -58,15 +58,15 @@ interface DOMMatrixReadOnly {
                       optional unrestricted double originX = 0,
                       optional unrestricted double originY = 0,
                       optional unrestricted double originZ = 0);
-    DOMMatrix rotate(unrestricted double angle,
-                     optional unrestricted double originX = 0,
-                     optional unrestricted double originY = 0);
-    DOMMatrix rotateFromVector(unrestricted double x,
-                               unrestricted double y);
-    DOMMatrix rotateAxisAngle(unrestricted double x,
-                              unrestricted double y,
-                              unrestricted double z,
-                              unrestricted double angle);
+    [NewObject] DOMMatrix rotate(optional unrestricted double rotX = 0,
+                                 optional unrestricted double rotY,
+                                 optional unrestricted double rotZ);
+    [NewObject] DOMMatrix rotateFromVector(optional unrestricted double x = 0,
+                                           optional unrestricted double y = 0);
+    [NewObject] DOMMatrix rotateAxisAngle(optional unrestricted double x = 0,
+                                          optional unrestricted double y = 0,
+                                          optional unrestricted double z = 0,
+                                          optional unrestricted double angle = 0);
     DOMMatrix skewX(optional unrestricted double sx = 0);
     DOMMatrix skewY(optional unrestricted double sy = 0);
     [NewObject, Throws] DOMMatrix multiply(optional DOMMatrixInit other);
@@ -137,15 +137,15 @@ interface DOMMatrix : DOMMatrixReadOnly {
                           optional unrestricted double originX = 0,
                           optional unrestricted double originY = 0,
                           optional unrestricted double originZ = 0);
-    DOMMatrix rotateSelf(unrestricted double angle,
-                         optional unrestricted double originX = 0,
-                         optional unrestricted double originY = 0);
-    DOMMatrix rotateFromVectorSelf(unrestricted double x,
-                                  unrestricted double y);
-    DOMMatrix rotateAxisAngleSelf(unrestricted double x,
-                                  unrestricted double y,
-                                  unrestricted double z,
-                                  unrestricted double angle);
+    DOMMatrix rotateSelf(optional unrestricted double rotX = 0,
+                         optional unrestricted double rotY,
+                         optional unrestricted double rotZ);
+    DOMMatrix rotateFromVectorSelf(optional unrestricted double x = 0,
+                                   optional unrestricted double y = 0);
+    DOMMatrix rotateAxisAngleSelf(optional unrestricted double x = 0,
+                                  optional unrestricted double y = 0,
+                                  optional unrestricted double z = 0,
+                                  optional unrestricted double angle = 0);
     DOMMatrix skewXSelf(optional unrestricted double sx = 0);
     DOMMatrix skewYSelf(optional unrestricted double sy = 0);
     DOMMatrix invertSelf();
