@@ -3,6 +3,8 @@
 
 "use strict";
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
 const test = new SearchConfigTest({
   identifier: "google",
   aliases: ["@google"],
@@ -33,12 +35,14 @@ const test = new SearchConfigTest({
   details: [{
     included: [{regions: ["us"]}],
     domain: "google.com",
-    codes: "client=firefox-b-1-d",
+    codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr") ?
+      "client=firefox-b-1-e" : "client=firefox-b-1-d",
   }, {
     excluded: [{regions: ["us"]}],
     included: [],
     domain: "google.com",
-    codes: "client=firefox-b-d",
+    codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr") ?
+      "client=firefox-b-e" : "client=firefox-b-d",
   }],
 });
 
