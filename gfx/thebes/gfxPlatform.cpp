@@ -991,7 +991,7 @@ void gfxPlatform::Init() {
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
   Preferences::RegisterCallback(
       FrameRatePrefChanged,
-      nsDependentCString(StaticPrefs::Getlayout_frame_ratePrefName()));
+      nsDependentCString(StaticPrefs::GetPrefName_layout_frame_rate()));
   // Set up the vsync source for the parent process.
   ReInitFrameRate();
 
@@ -2465,8 +2465,8 @@ void gfxPlatform::InitGPUProcessPrefs() {
                              NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
   } else {
     gpuProc.SetDefaultFromPref(
-        StaticPrefs::Getlayers_gpu_process_enabledPrefName(), true,
-        StaticPrefs::Getlayers_gpu_process_enabledPrefDefault());
+        StaticPrefs::GetPrefName_layers_gpu_process_enabled(), true,
+        StaticPrefs::GetPrefDefault_layers_gpu_process_enabled());
   }
 
   if (StaticPrefs::layers_gpu_process_force_enabled()) {
@@ -3527,8 +3527,8 @@ void gfxPlatform::InitOpenGLConfig() {
 
 #ifdef XP_WIN
   openGLFeature.SetDefaultFromPref(
-      StaticPrefs::Getlayers_prefer_openglPrefName(), true,
-      StaticPrefs::Getlayers_prefer_openglPrefDefault());
+      StaticPrefs::GetPrefName_layers_prefer_opengl(), true,
+      StaticPrefs::GetPrefDefault_layers_prefer_opengl());
 #else
   openGLFeature.EnableByDefault();
 #endif
