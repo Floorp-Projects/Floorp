@@ -415,7 +415,7 @@ def _get_filter_promote_fennec(fennec_release_type):
 
 
 def _get_filter_ship_fennec(fennec_release_type, filtered_for_candidates, parameters):
-    is_rc = (parameters.get('release_type') == 'release-rc')
+    is_rc = (parameters.get('release_type') == 'esr68-rc')
 
     def filter_(task):
         # XXX Starting 68, Geckoview is shipped in a separate target_tasks
@@ -426,14 +426,16 @@ def _get_filter_ship_fennec(fennec_release_type, filtered_for_candidates, parame
         if task.label in filtered_for_candidates:
             return True
 
-        # secondary-notify-ship is only for RC
-        if task.kind == 'release-secondary-notify-ship':
-            return is_rc
-
         attr = task.attributes.get
-        return attr('shipping_product') == 'fennec' and \
-            attr('shipping_phase') in ('ship', 'push') and \
-            attr('release-type') in (None, fennec_release_type)
+        if attr('shipping_product') != 'fennec' or \
+                attr('shipping_phase') not in ('ship', 'push'):
+            return False
+
+        if attr('release-type') in (None, fennec_release_type):
+            if is_rc:
+                return task.kind in ('release-secondary-notify-ship', 'push-apk')
+            else:
+                return task.kind != 'release-secondary-notify-ship'
 
     return filter_
 

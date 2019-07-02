@@ -51,6 +51,7 @@ def make_task_description(config, jobs):
 
         params_kwargs = {
             'release-level': config.params.release_level(),
+            'release-type': config.params['release_type'],
         }
 
         for key in (
