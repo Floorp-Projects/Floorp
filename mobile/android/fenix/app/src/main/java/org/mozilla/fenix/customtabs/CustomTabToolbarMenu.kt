@@ -9,6 +9,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.BrowserMenuSwitch
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -114,6 +115,19 @@ class CustomTabToolbarMenu(
                 )
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.Share)
+            },
+
+            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
+                { session?.desktopMode ?: false }, { checked ->
+                    onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+                }),
+
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_find_in_page),
+                R.drawable.mozac_ic_search,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            ) {
+                onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
             },
 
             SimpleBrowserMenuItem(

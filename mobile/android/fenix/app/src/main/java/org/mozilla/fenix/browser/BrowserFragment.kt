@@ -726,7 +726,9 @@ class BrowserFragment : Fragment(), BackHandler {
                 R.id.browserFragment,
                 BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
             )
-            is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
+            is ToolbarMenu.Item.RequestDesktop -> getSessionById()?.let { session ->
+                sessionUseCases.requestDesktopSite.invoke(action.item.isChecked, session)
+            }
             ToolbarMenu.Item.Share -> getSessionById()?.let { session ->
                 session.url.apply {
                     shareUrl(this)
