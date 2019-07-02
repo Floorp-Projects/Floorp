@@ -417,6 +417,7 @@ def encode(dafsa):
     output.reverse()
     return output
 
+
 def encode_words(words):
     """Generates a dafsa representation of a word list"""
     dafsa = to_dafsa(words)
