@@ -4,8 +4,6 @@ py3:
     include: ['.']
     exclude:
         - browser/app
-        - browser/components
-        - browser/extensions
         - build
         - client.py
         - config
