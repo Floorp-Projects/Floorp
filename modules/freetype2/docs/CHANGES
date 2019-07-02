@@ -1,5 +1,59 @@
 
-CHANGES BETWEEN 2.9.1 and 2.10
+CHANGES BETWEEN 2.10.0 and 2.10.1
+
+  I. IMPORTANT BUG FIXES
+
+  - The bytecode hinting of OpenType variation fonts was flawed, since
+    the data in the `CVAR' table wasn't correctly applied.
+
+
+  II. MISCELLANEOUS
+
+  - Auto-hinter support for Mongolian.
+
+  - For distribution,  `.tar.bz2' packages are replaced with `.tar.xz'
+    bundles.
+
+  - The handling of  the default character in PCF fonts as  introduced
+    in version 2.10.0 was partially broken, causing premature abortion
+    of charmap iteration for many fonts.
+
+  - If  `FT_Set_Named_Instance' was  called  with  the same  arguments
+    twice in a row, the function  returned an incorrect error code the
+    second time.
+
+  - Direct   rendering   using  FT_RASTER_FLAG_DIRECT   crashed   (bug
+    introduced in version 2.10.0).
+
+  - Increased  precision  while  computing  OpenType  font   variation
+    instances.
+
+  - The  flattening  algorithm of  cubic  Bezier  curves was  slightly
+    changed to make  it faster.  This can cause  very subtle rendering
+    changes, which aren't noticeable by the eye, however.
+
+  - The  auto-hinter  now  disables hinting  if there  are blue  zones
+    defined for a `style' (i.e., a certain combination of a script and
+    its related typographic features) but the font doesn't contain any
+    characters needed to set up at least one blue zone.
+
+  - The `ftmulti' demo program now  supports multiple hidden axes with
+    the same name tag.
+
+  - `ftview', `ftstring', and `ftgrid' got  a `-k' command line option
+    to emulate a sequence of keystrokes at start-up.
+
+  - `ftview', `ftstring', and `ftgrid' now support screen dumping to a
+    PNG file.
+
+  - The bytecode debugger, `ttdebug',  now supports variation TrueType
+    fonts; a variation font instance can be selected with the new `-d'
+    command line option.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.9.1 and 2.10.0
 
   I. IMPORTANT CHANGES
 

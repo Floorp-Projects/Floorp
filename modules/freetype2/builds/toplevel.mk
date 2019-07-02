@@ -208,7 +208,7 @@ patch := $(firstword $(patch))
 dist:
 	-rm -rf tmp
 	rm -f freetype-$(version).tar.gz
-	rm -f freetype-$(version).tar.bz2
+	rm -f freetype-$(version).tar.xz
 	rm -f ft$(winversion).zip
 
 	for d in `find . -wholename '*/.git' -prune \
@@ -235,7 +235,7 @@ dist:
 	tar -H ustar -chf - freetype-$(version) \
 	| gzip -9 -c > freetype-$(version).tar.gz
 	tar -H ustar -chf - freetype-$(version) \
-	| bzip2 -c > freetype-$(version).tar.bz2
+	| xz -c > freetype-$(version).tar.xz
 
 	@# Use CR/LF for zip files.
 	zip -lr9 ft$(winversion).zip freetype-$(version)
