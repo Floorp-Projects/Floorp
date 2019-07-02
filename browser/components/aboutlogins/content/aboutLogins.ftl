@@ -18,6 +18,7 @@ login-filter =
   .placeholder = Search Logins
 
 login-list =
+  .aria-label = Logins matching search query
   .count =
     { $count ->
         [one] { $count } login
