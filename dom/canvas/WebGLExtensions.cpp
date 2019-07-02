@@ -30,12 +30,14 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLExtensionBase, Release)
 
 // -
 
-WebGLExtensionExplicitPresent::WebGLExtensionExplicitPresent(WebGLContext* const webgl)
+WebGLExtensionExplicitPresent::WebGLExtensionExplicitPresent(
+    WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
-bool WebGLExtensionExplicitPresent::IsSupported(const WebGLContext* const webgl) {
+bool WebGLExtensionExplicitPresent::IsSupported(
+    const WebGLContext* const webgl) {
   return StaticPrefs::webgl_enable_draft_extensions();
 }
 
