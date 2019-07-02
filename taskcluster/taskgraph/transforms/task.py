@@ -1277,7 +1277,9 @@ def build_invalid_payload(config, task, task_def):
 @payload_builder('always-optimized', schema={
     Extra: object,
 })
-def build_always_optimized_payload(config, task, task_def):
+@payload_builder('succeed', schema={
+})
+def build_dummy_payload(config, task, task_def):
     task_def['payload'] = {}
 
 
