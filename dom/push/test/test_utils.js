@@ -62,7 +62,7 @@ let currentMockSocket = null;
 function setupMockPushSocket(mockWebSocket) {
   currentMockSocket = mockWebSocket;
   currentMockSocket._isActive = true;
-  chromeScript.sendAsyncMessage("socket-setup");
+  chromeScript.sendSyncMessage("socket-setup");
   chromeScript.addMessageListener("socket-client-msg", function(msg) {
     mockWebSocket.handleMessage(msg);
   });
@@ -73,7 +73,7 @@ function teardownMockPushSocket() {
     return new Promise(resolve => {
       currentMockSocket._isActive = false;
       chromeScript.addMessageListener("socket-server-teardown", resolve);
-      chromeScript.sendAsyncMessage("socket-teardown");
+      chromeScript.sendSyncMessage("socket-teardown");
     });
   }
   return Promise.resolve();

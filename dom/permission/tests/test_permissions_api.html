@@ -130,9 +130,9 @@
             const permission = 'geolocation';
             const promiseGranted = this.promiseStateChanged(permission, 'granted');
             this.setPermissions(ALLOW_ACTION);
-            promiseGranted.then(async () => {
+            promiseGranted.then(() => {
               const promisePrompt = this.promiseStateChanged(permission, 'prompt');
-              await SpecialPowers.popPermissions();
+              SpecialPowers.popPermissions();
               return promisePrompt;
             }).then(resolve);
           });

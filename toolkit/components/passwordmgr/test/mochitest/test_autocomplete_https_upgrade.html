@@ -90,9 +90,8 @@ add_task(async function test_autocomplete_http() {
   info("test_autocomplete_http, setup with " + HTTP_FORM_URL);
   await setup(HTTP_FORM_URL);
 
-  LoginManager.getAllLogins().then(logins => {
-    info("got logins: " + logins.map(l => l.origin));
-  });
+  let logins = LoginManager.getAllLogins();
+  info("got logins: " + logins.map(l => l.origin));
   // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
   // we're expecting just login2 as a match
   // Make sure initial form is empty.
@@ -216,9 +215,9 @@ add_task(async function test_delete_duplicate_entry() {
   await deletionPromise;
   checkLoginForm(uname, "", pword, "");
 
-  is(await LoginManager.countLogins("http://example.org", "http://example.org", null), 1,
+  is(LoginManager.countLogins("http://example.org", "http://example.org", null), 1,
      "Check that the HTTP login remains");
-  is(await LoginManager.countLogins("https://example.org", "https://example.org", null), 0,
+  is(LoginManager.countLogins("https://example.org", "https://example.org", null), 0,
      "Check that the HTTPS login was deleted");
 
   // Two menu items should remain as the HTTPS login should have been deleted but
