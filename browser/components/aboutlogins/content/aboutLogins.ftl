@@ -59,6 +59,12 @@ master-password-reload-button-label = Log in
 # TODO: Not sure how to use formatValue with these as attributes on a single ID
 master-password-reload-button-accesskey = L
 
+confirm-delete-dialog =
+  .title = Confirm Deletion
+  .message = Are you sure you want to delete this login?
+  .cancel-button = Cancel
+  .confirm-button = Delete login
+
 menu-button =
   .button-title = Open menu
   .menuitem-feedback = Leave Feedback
