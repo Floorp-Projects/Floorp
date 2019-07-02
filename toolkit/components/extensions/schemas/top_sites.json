@@ -40,6 +40,16 @@
             "type": "string",
             "optional": true,
             "description": "Data URL for the favicon, if available."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "url",
+              "search"
+            ],
+            "optional": true,
+            "default": "url",
+            "description": "The entry type, either <code>url</code> for a normal page link, or <code>search</code> for a search shortcut."
           }
         }
       }
@@ -87,6 +97,18 @@
                 "default": false,
                 "optional": true,
                 "description": "Include sites favicon if available."
+              },
+              "includePinned": {
+                "type": "boolean",
+                "default": false,
+                "optional": true,
+                "description": "Include sites that the user has pinned on the Firefox new tab."
+              },
+              "includeSearchShortcuts": {
+                "type": "boolean",
+                "default": false,
+                "optional": true,
+                "description": "Include search shortcuts appearing on the Firefox new tab."
               }
             },
             "default": {},
