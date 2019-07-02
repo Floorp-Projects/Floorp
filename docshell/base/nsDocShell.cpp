@@ -1567,7 +1567,13 @@ nsDocShell::GetUseRemoteSubframes(bool* aUseRemoteSubframes) {
 
 NS_IMETHODIMP
 nsDocShell::SetRemoteSubframes(bool aUseRemoteSubframes) {
-  // Should we annotate crash reports like in aUseRemoteTabs?
+  static bool annotated = false;
+
+  if (aUseRemoteSubframes && !annotated) {
+    annotated = true;
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::DOMFissionEnabled,
+                                       true);
+  }
 
   // Don't allow non-remote tabs with remote subframes.
   if (NS_WARN_IF(aUseRemoteSubframes && !mUseRemoteTabs)) {
