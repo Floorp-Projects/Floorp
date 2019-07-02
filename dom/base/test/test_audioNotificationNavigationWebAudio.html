@@ -14,16 +14,15 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// playback starts, stops when the page is reloaded, and starts again.
-var expectedNotification = ["active", "inactive-pause", "active"];
+var expectedNotification = null;
 var iframe = null;
 
 var observer = {
   observe: function(subject, topic, data) {
     is(topic, "audio-playback", "audio-playback received");
     var expected = expectedNotification.shift();
-    is(data, expected, "This is the right notification");
-    if (expected != "inactive-pause") {
+    is(data, expected, `"${data}" is the right notification`);
+    if (expectedNotification.length == 0) {
       runTest();
     }
   }
@@ -41,17 +40,22 @@ var tests = [
   },
 
   function() {
+    info("Load iframe");
+    expectedNotification = ["active"];
     iframe.src = "file_webAudioAudible.html";
   },
 
   function() {
-    // Reload
+    info("Reload iframe");
+    // As reloading frame would stop previous audio playing in frame, we would
+    // receive "inactive-pause" first.
+    expectedNotification = ["inactive-pause", "active"];
     iframe.src = "file_webAudioAudible.html";
   },
   function() {
-    // Wait for the "active" notification, that is expected after the previous
-    // load of "file_webAudioAudible.html".
-    runTest();
+    info("Cleaning up iframe");
+    expectedNotification = ["inactive-pause"];
+    iframe.src = null;
   }
 ];
 
