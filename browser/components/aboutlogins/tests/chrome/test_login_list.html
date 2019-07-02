@@ -7,6 +7,7 @@ Test the login-list component
   <meta charset="utf-8">
   <title>Test the login-list component</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
   <script src="aboutlogins_common.js"></script>
 
@@ -74,7 +75,59 @@ add_task(async function test_empty_list() {
   is(gLoginList.textContent, "", "Initially empty");
 });
 
+add_task(async function test_keyboard_navigation() {
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2, TEST_LOGIN_3]);
+
+  while (document.activeElement != gLoginList) {
+    sendKey("TAB");
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  sendKey("TAB");
+  sendKey("TAB");
+  let loginSort = gLoginList.shadowRoot.querySelector("#login-sort");
+  await SimpleTest.promiseWaitForCondition(() => loginSort == gLoginList.shadowRoot.activeElement,
+    "waiting for login-sort to get focus");
+  ok(loginSort == gLoginList.shadowRoot.activeElement, "#login-sort should be focused after tabbing to it");
+
+  sendKey("TAB");
+  let ol = gLoginList.shadowRoot.querySelector("ol");
+  await SimpleTest.promiseWaitForCondition(() => ol.matches(":focus"),
+    "waiting for 'ol' to get focus");
+  ok(ol.matches(":focus"), "'ol' should be focused after tabbing to it");
+
+  for (let [keyFwd, keyRev] of [["LEFT", "RIGHT"], ["DOWN", "UP"]]) {
+    sendKey(keyFwd);
+    await SimpleTest.promiseWaitForCondition(() => ol.getAttribute("aria-activedescendant") == ol.children[1].id,
+      `waiting for second item in list to get focused (${keyFwd})`);
+    ok(ol.children[1].classList.contains("keyboard-selected"), `second item should be marked as keyboard-selected (${keyFwd})`);
+
+    sendKey(keyRev);
+    await SimpleTest.promiseWaitForCondition(() => ol.getAttribute("aria-activedescendant") == ol.children[0].id,
+      `waiting for first item in list to get focused (${keyRev})`);
+    ok(ol.children[0].classList.contains("keyboard-selected"), `first item should be marked as keyboard-selected (${keyRev})`);
+  }
+
+  sendKey("DOWN");
+  await SimpleTest.promiseWaitForCondition(() => ol.getAttribute("aria-activedescendant") == ol.children[1].id,
+    `waiting for second item in list to get focused (DOWN)`);
+  ok(ol.children[1].classList.contains("keyboard-selected"), `second item should be marked as keyboard-selected (DOWN)`);
+  let selectedGuid = ol.children[1].dataset.guid;
+
+  let loginSelectedEvent = null;
+  gLoginList.addEventListener("AboutLoginsLoginSelected", event => loginSelectedEvent = event, {once: true});
+  sendKey("RETURN");
+  is(ol.querySelector(".selected").dataset.guid, selectedGuid, "item should be marked as selected");
+  ok(loginSelectedEvent, "AboutLoginsLoginSelected event should be dispatched on pressing Enter");
+  is(loginSelectedEvent.detail.guid, selectedGuid, "event should have expected login attached");
+});
+
 add_task(async function test_empty_login_username_in_list() {
+  // Clear the selection so the 'new' login will be in the list too.
+  window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
+    detail: {},
+  }));
+
   gLoginList.setLogins([TEST_LOGIN_3]);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "A blank login and the one stored login should be displayed");
