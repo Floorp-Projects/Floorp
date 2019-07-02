@@ -1511,8 +1511,7 @@ class HashTable : private AllocPolicy {
 
   // HashTable is movable
   HashTable(HashTable&& aRhs) : AllocPolicy(std::move(aRhs)) {
-    initFrom(aRhs);
-    aRhs.mTable = nullptr;
+    moveFrom(aRhs);
   }
   void operator=(HashTable&& aRhs) {
     MOZ_ASSERT(this != &aRhs, "self-move assignment is prohibited");
@@ -1520,12 +1519,11 @@ class HashTable : private AllocPolicy {
       destroyTable(*this, mTable, capacity());
     }
     AllocPolicy::operator=(std::move(aRhs));
-    initFrom(aRhs);
-    aRhs.mTable = nullptr;
+    moveFrom(aRhs);
   }
 
  private:
-  void initFrom(const HashTable& aRhs) {
+  void moveFrom(HashTable& aRhs) {
     mGen = aRhs.mGen;
     mHashShift = aRhs.mHashShift;
     mTable = aRhs.mTable;
@@ -1535,6 +1533,7 @@ class HashTable : private AllocPolicy {
     mMutationCount = aRhs.mMutationCount;
     mEntered = aRhs.mEntered;
 #endif
+    aRhs.mTable = nullptr;
   }
 
   // HashTable is not copyable or assignable
