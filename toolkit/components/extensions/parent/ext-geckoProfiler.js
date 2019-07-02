@@ -104,6 +104,27 @@ this.geckoProfiler = class extends ExtensionAPI {
           Services.profiler.ResumeSampling();
         },
 
+        async dumpProfileToFile(fileName) {
+          if (!Services.profiler.IsActive()) {
+            throw new ExtensionError("The profiler is stopped. " +
+              "You need to start the profiler before you can capture a profile.");
+          }
+
+          if (fileName.includes("\\") || fileName.includes("/")) {
+            throw new ExtensionError("Path cannot contain a subdirectory.");
+          }
+
+          let fragments = [OS.Constants.Path.profileDir, "profiler", fileName];
+          let filePath = OS.Path.join(...fragments);
+
+          try {
+            await Services.profiler.dumpProfileToFileAsync(filePath);
+          } catch (e) {
+            Cu.reportError(e);
+            throw new ExtensionError(`Dumping profile to ${filePath} failed.`);
+          }
+        },
+
         async getProfile() {
           if (!Services.profiler.IsActive()) {
             throw new ExtensionError("The profiler is stopped. " +
