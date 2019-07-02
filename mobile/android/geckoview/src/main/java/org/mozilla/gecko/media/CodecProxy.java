@@ -224,7 +224,7 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean input(final ByteBuffer bytes, final BufferInfo info,
-                                      final CryptoInfo cryptoInfo, final long session) {
+                                      final CryptoInfo cryptoInfo) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
@@ -239,7 +239,7 @@ public final class CodecProxy {
         try {
             Sample s = mRemote.dequeueInput(info.size);
             fillInputBuffer(s.bufferId, bytes, info.offset, info.size);
-            return sendInput(s.set(info, cryptoInfo, session));
+            return sendInput(s.set(info, cryptoInfo));
         } catch (RemoteException | NullPointerException e) {
             Log.e(LOGTAG, "fail to dequeue input buffer", e);
         } catch (IOException e) {

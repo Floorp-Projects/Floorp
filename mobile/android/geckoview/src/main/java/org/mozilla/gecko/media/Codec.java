@@ -69,7 +69,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
         private Queue<Input> mInputSamples = new LinkedList<>();
         private boolean mStopped;
-        private long mSession;
 
         private synchronized Sample onAllocate(final int size) {
             Sample sample = mSamplePool.obtainInput(size);
@@ -90,12 +89,10 @@ import org.mozilla.gecko.gfx.GeckoSurface;
                 return;
             }
 
-            if (sample.session >= mSession) {
-                Sample dequeued = mDequeuedSamples.remove();
-                dequeued.setBufferInfo(sample.info);
-                dequeued.setCryptoInfo(sample.cryptoInfo);
-                queueSample(dequeued);
-            }
+            Sample dequeued = mDequeuedSamples.remove();
+            dequeued.setBufferInfo(sample.info);
+            dequeued.setCryptoInfo(sample.cryptoInfo);
+            queueSample(dequeued);
 
             sample.dispose();
         }
@@ -148,9 +145,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private void feedSampleToBuffer() {
             while (!mAvailableInputBuffers.isEmpty() && !mInputSamples.isEmpty()) {
                 int index = mAvailableInputBuffers.poll();
-                if (!isValidBuffer(index)) {
-                    continue;
-                }
                 int len = 0;
                 final Sample sample = mInputSamples.poll().sample;
                 long pts = sample.info.presentationTimeUs;
@@ -213,7 +207,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mDequeuedSamples.clear();
 
             mAvailableInputBuffers.clear();
-            mSession++;
         }
 
         private synchronized void start() {
@@ -247,7 +240,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private boolean mHasOutputCapacitySet;
         private Queue<Output> mSentOutputs = new LinkedList<>();
         private boolean mStopped;
-        private long mSession;
 
         private OutputProcessor(final boolean renderToSurface) {
             mRenderToSurface = renderToSurface;
@@ -261,7 +253,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             try {
                 Sample output = obtainOutputSample(index, info);
                 mSentOutputs.add(new Output(output, index));
-                output.session = mSession;
                 mCallbacks.onOutput(output);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -341,7 +332,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
                 mSamplePool.recycleOutput(o.sample);
             }
             mSentOutputs.clear();
-            mSession++;
         }
 
         private synchronized void start() {
