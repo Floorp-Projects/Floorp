@@ -14,6 +14,9 @@ permalink: /changelog/
 
 * **feature-pwa**
   * Added preliminary support for pinning websites to the home screen.
+  
+* **browser-search**
+  * Loading search engines should no longer deadlock on devices with 1-2 CPUs
 
 # 2.0.0
 

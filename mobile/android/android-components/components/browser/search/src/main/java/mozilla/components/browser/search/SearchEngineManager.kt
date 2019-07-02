@@ -27,7 +27,7 @@ import kotlin.coroutines.CoroutineContext
 class SearchEngineManager(
     private val providers: List<SearchEngineProvider> = listOf(
             AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())),
-    coroutineContext: CoroutineContext = Dispatchers.Default
+    coroutineContext: CoroutineContext = Dispatchers.IO
 ) {
     private var deferredSearchEngines: Deferred<SearchEngineList>? = null
     private val scope = CoroutineScope(coroutineContext)
