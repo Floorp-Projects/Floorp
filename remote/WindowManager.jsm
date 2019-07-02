@@ -146,11 +146,12 @@ class TabObserver {
 }
 
 var TabManager = {
-  addTab() {
+  addTab({ userContextId }) {
     const window = Services.wm.getMostRecentWindow("navigator:browser");
     const { gBrowser } = window;
     const tab = gBrowser.addTab("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      userContextId,
     });
     gBrowser.selectedTab = tab;
     return tab;
