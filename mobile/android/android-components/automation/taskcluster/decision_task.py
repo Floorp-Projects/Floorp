@@ -351,6 +351,9 @@ if __name__ == "__main__":
 
     components = components()
     if command == 'release':
+        # XXX: TO DELETE once bug 1558795 is fixed in early Q3
+        if result.is_snapshot:
+            components = snapshot_components()
         components = [info for info in components if info['shouldPublish']]
 
     if len(components) == 0:
@@ -362,9 +365,6 @@ if __name__ == "__main__":
     elif command == 'push':
         ordered_groups_of_tasks = push(components)
     elif command == 'release':
-        # XXX: TO DELETE once bug 1558795 is fixed in early Q3
-        if result.is_snapshot:
-            components = snapshot_components()
         ordered_groups_of_tasks = release(
             components, result.is_snapshot, result.is_staging
         )
