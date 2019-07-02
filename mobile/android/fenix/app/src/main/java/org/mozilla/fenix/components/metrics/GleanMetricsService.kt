@@ -154,6 +154,9 @@ private val Event.wrapper
         is Event.AddBookmarkFolder -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.folderAdd.record(it) }
         )
+        is Event.RemoveBookmarkFolder -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.folderRemove.record(it) }
+        )
         is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
             { CustomTab.menu.record(it) }
         )

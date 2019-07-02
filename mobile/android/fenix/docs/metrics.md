@@ -435,6 +435,15 @@ tracking_protection</td>
         <td></td>
         <td>2020-03-01</td>
     </tr>
+    
+    <tr>
+        <td>folder_remove</td>
+        <td>event</td>
+        <td>A user removed a bookmark folder.</td>
+        <td> <a href="https://github.com/mozilla-mobile/fenix/pull/3724">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
 </table>
 </pre>
 

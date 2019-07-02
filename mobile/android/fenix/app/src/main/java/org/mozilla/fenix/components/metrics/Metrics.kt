@@ -65,6 +65,7 @@ sealed class Event {
     object ShareBookmark : Event()
     object CopyBookmark : Event()
     object AddBookmarkFolder : Event()
+    object RemoveBookmarkFolder : Event()
     object RemoveBookmarks : Event()
     object QuickActionSheetOpened : Event()
     object QuickActionSheetClosed : Event()

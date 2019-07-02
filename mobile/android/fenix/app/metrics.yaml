@@ -561,6 +561,17 @@ bookmarks_management:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+  folder_remove:
+    type: event
+    description: >
+      A user removed a bookmark folder.
+    bugs:
+      - 3174
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3724
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 custom_tab:
   closed:

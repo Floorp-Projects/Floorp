@@ -298,7 +298,11 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
 
         val deleteOperation: (suspend () -> Unit) = {
             bookmarkStorage?.deleteNode(bookmarkNode.guid)
-            metrics()?.track(Event.RemoveBookmark)
+            when (bookmarkNode.type) {
+                BookmarkNodeType.FOLDER -> metrics()?.track(Event.RemoveBookmarkFolder)
+                BookmarkNodeType.ITEM -> metrics()?.track(Event.RemoveBookmark)
+                else -> { }
+            }
             pendingBookmarkDeletionJob = null
             refreshBookmarks()
         }
