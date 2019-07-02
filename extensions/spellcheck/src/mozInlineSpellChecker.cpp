@@ -1604,7 +1604,8 @@ nsresult mozInlineSpellChecker::RemoveRange(Selection* aSpellCheckSelection,
   NS_ENSURE_ARG_POINTER(aRange);
 
   ErrorResult rv;
-  aSpellCheckSelection->RemoveRange(*aRange, rv);
+  aSpellCheckSelection->RemoveRangeAndUnselectFramesAndNotifyListeners(*aRange,
+                                                                       rv);
   if (!rv.Failed() && mNumWordsInSpellSelection) mNumWordsInSpellSelection--;
 
   return rv.StealNSResult();

@@ -1793,7 +1793,8 @@ HTMLEditor::SelectBlockOfCells(Element* aStartCell, Element* aEndCell) {
     if (currentCellIndexes.mRow < maxRow || currentCellIndexes.mRow > maxRow ||
         currentCellIndexes.mColumn < maxColumn ||
         currentCellIndexes.mColumn > maxColumn) {
-      SelectionRefPtr()->RemoveRange(*range, IgnoreErrors());
+      SelectionRefPtr()->RemoveRangeAndUnselectFramesAndNotifyListeners(
+          *range, IgnoreErrors());
       // Since we've removed the range, decrement pointer to next range
       MOZ_ASSERT(mSelectedCellIndex > 0);
       mSelectedCellIndex--;
@@ -2649,7 +2650,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
       RefPtr<Element> deletedCell;
       HTMLEditor::GetCellFromRange(range, getter_AddRefs(deletedCell));
       if (!deletedCell) {
-        SelectionRefPtr()->RemoveRange(*range, IgnoreErrors());
+        SelectionRefPtr()->RemoveRangeAndUnselectFramesAndNotifyListeners(
+            *range, IgnoreErrors());
         rangeCount--;
         i--;
       }
