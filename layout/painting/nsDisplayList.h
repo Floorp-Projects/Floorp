@@ -91,6 +91,14 @@ class DisplayListBuilder;
 namespace dom {
 class Selection;
 }  // namespace dom
+
+enum class DisplayListArenaObjectId {
+#define DISPLAY_LIST_ARENA_OBJECT(name_) name_,
+#include "nsDisplayListArenaTypes.h"
+#undef DISPLAY_LIST_ARENA_OBJECT
+  COUNT
+};
+
 }  // namespace mozilla
 
 /*
@@ -1048,12 +1056,33 @@ class nsDisplayListBuilder {
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
-   * builder is destroyed. This memory holds nsDisplayItems. nsDisplayItem
-   * destructors are called as soon as the item is no longer used.
+   * builder is destroyed. This memory holds nsDisplayItems and
+   * DisplayItemClipChain objects.
+   *
+   * Destructors are called as soon as the item is no longer used.
    */
-  void* Allocate(size_t aSize, DisplayItemType aType);
+  void* Allocate(size_t aSize, mozilla::DisplayListArenaObjectId aId) {
+    return mPool.Allocate(aId, aSize);
+  }
+  void* Allocate(size_t aSize, DisplayItemType aType) {
+    static_assert(size_t(DisplayItemType::TYPE_ZERO) ==
+                      size_t(mozilla::DisplayListArenaObjectId::CLIPCHAIN),
+                  "");
+#define DECLARE_DISPLAY_ITEM_TYPE(name_, ...)                         \
+  static_assert(size_t(DisplayItemType::TYPE_##name_) ==              \
+                    size_t(mozilla::DisplayListArenaObjectId::name_), \
+                "");
+#include "nsDisplayItemTypesList.h"
+#undef DECLARE_DISPLAY_ITEM_TYPE
+    return Allocate(aSize, mozilla::DisplayListArenaObjectId(size_t(aType)));
+  }
 
-  void Destroy(DisplayItemType aType, void* aPtr);
+  void Destroy(mozilla::DisplayListArenaObjectId aId, void* aPtr) {
+    return mPool.Free(aId, aPtr);
+  }
+  void Destroy(DisplayItemType aType, void* aPtr) {
+    return Destroy(mozilla::DisplayListArenaObjectId(size_t(aType)), aPtr);
+  }
 
   /**
    * Allocate a new ActiveScrolledRoot in the arena. Will be cleaned up
@@ -1858,7 +1887,10 @@ class nsDisplayListBuilder {
 
   nsIFrame* const mReferenceFrame;
   nsIFrame* mIgnoreScrollFrame;
-  nsPresArena<32768> mPool;
+
+  using Arena = nsPresArena<32768, mozilla::DisplayListArenaObjectId,
+                            size_t(mozilla::DisplayListArenaObjectId::COUNT)>;
+  Arena mPool;
 
   AutoTArray<PresShellState, 8> mPresShellStates;
   AutoTArray<nsIFrame*, 400> mFramesMarkedForDisplay;
