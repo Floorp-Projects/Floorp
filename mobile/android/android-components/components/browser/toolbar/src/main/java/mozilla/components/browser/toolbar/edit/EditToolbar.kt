@@ -99,6 +99,7 @@ internal class EditToolbar(
         scaleType = ImageView.ScaleType.CENTER
 
         setOnClickListener {
+            // We set text to an empty string instead of using clear to avoid #3612.
             urlView.setText("")
         }
     }
