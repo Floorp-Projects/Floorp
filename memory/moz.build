@@ -9,7 +9,6 @@ with Files("**"):
 
 DIRS += [
     'build',
-    'fallible',
 ]
 
 # For now, don't build mozalloc when building with --enable-project=memory
