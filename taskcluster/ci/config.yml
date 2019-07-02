@@ -385,11 +385,6 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
-        succeed:
-            provisioner: built-in
-            implementation: succeed
-            os: none
-            worker-type: succeed
         t-win7-32(|-gpu):
             provisioner: aws-provisioner-v1
             implementation: generic-worker
