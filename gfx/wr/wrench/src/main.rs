@@ -778,6 +778,11 @@ fn render<'a>(
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                             do_render = true;
                         }
+                        VirtualKeyCode::Y => {
+                            println!("Clearing all caches...");
+                            wrench.api.send_debug_cmd(DebugCommand::ClearCaches(ClearCache::all()));
+                            do_frame = true;
+                        }
                         _ => {}
                     }
                     _ => {}
