@@ -55,11 +55,10 @@ function navigateByHyperlink(name) {
 // Functions that call into Mochitest framework
 // /////////////////////////////////////////////////////////////////////////
 
-async function isNavigated(wnd, message) {
+function isNavigated(wnd, message) {
   var result = null;
   try {
-    result = await SpecialPowers.spawn(
-      wnd, [], () => this.content.document.body.innerHTML.trim());
+    result = SpecialPowers.wrap(wnd).document.body.innerHTML.trim();
   } catch (ex) {
     result = ex;
   }

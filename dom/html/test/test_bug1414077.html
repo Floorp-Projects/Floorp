@@ -14,11 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1414077
 
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.requestFlakyTimeout("This test is flaky.");
-
-SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}).then(async function() {
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
+SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, function() {
   var testWin = document.querySelector("iframe");
   testWin.height = 0;
   testWin.width = 0;

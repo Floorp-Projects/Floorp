@@ -7,14 +7,13 @@
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
 #include "nsGlobalWindow.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "nsDOMWindowList.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/ResultExtensions.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "XPCJSMemoryReporter.h"
@@ -62,16 +61,19 @@ static nsresult AddNonJSSizeOfWindowAndItsDescendents(
 
   windowSizes.addToTabSizes(aSizes);
 
-  BrowsingContext* bc = aWindow->GetBrowsingContext();
-  if (!bc) {
-    return NS_OK;
-  }
+  nsDOMWindowList* frames = aWindow->GetFrames();
+
+  uint32_t length = frames->GetLength();
 
   // Measure this window's descendents.
-  for (const auto& frame : bc->GetChildren()) {
-    if (auto* childWin = nsGlobalWindowOuter::Cast(frame->GetDOMWindow())) {
-      MOZ_TRY(AddNonJSSizeOfWindowAndItsDescendents(childWin, aSizes));
-    }
+  for (uint32_t i = 0; i < length; i++) {
+    nsCOMPtr<nsPIDOMWindowOuter> child = frames->IndexedGetter(i);
+    NS_ENSURE_STATE(child);
+
+    nsGlobalWindowOuter* childWin = nsGlobalWindowOuter::Cast(child);
+
+    nsresult rv = AddNonJSSizeOfWindowAndItsDescendents(childWin, aSizes);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }

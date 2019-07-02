@@ -273,7 +273,7 @@ add_task(async function testActiveTabOnNonExistingSidebar() {
   // to simulate the scenario where an extension has installed a sidebar
   // which has been saved in the preference but it doesn't exist anymore.
   await SpecialPowers.pushPrefEnv({
-    set: [["devtools.inspector.activeSidebar", "unexisting-sidebar-id"]],
+    set: [["devtools.inspector.activeSidebar"], "unexisting-sidebar-id"],
   });
 
   const res = await openInspectorForURL("about:blank");

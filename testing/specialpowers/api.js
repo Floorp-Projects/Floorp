@@ -6,7 +6,6 @@
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -18,26 +17,14 @@ this.specialpowers = class extends ExtensionAPI {
     resProto.setSubstitutionWithFlags("specialpowers", uri,
                                       resProto.ALLOW_CONTENT_ACCESS);
 
-    // Register special testing modules.
-    Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
-              .autoRegister(FileUtils.getFile("ProfD", ["tests.manifest"]));
-
-    ChromeUtils.registerWindowActor("SpecialPowers", {
-      allFrames: true,
-      child: {
-        moduleURI: "resource://specialpowers/SpecialPowersChild.jsm",
-        events: {
-          DOMWindowCreated: {},
-        },
-      },
-      parent: {
-        moduleURI: "resource://specialpowers/SpecialPowersParent.jsm",
-      },
-    });
+    const {SpecialPowersObserver} = ChromeUtils.import("resource://specialpowers/SpecialPowersObserver.jsm");
+    this.observer = new SpecialPowersObserver();
+    this.observer.init();
   }
 
   onShutdown() {
-    ChromeUtils.unregisterWindowActor("SpecialPowers");
+    this.observer.uninit();
+    this.observer = null;
     resProto.setSubstitution("specialpowers", null);
   }
 };

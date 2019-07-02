@@ -456,8 +456,6 @@ var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
   }
 
   await removeTab(tab);
-
-  await new Promise(resolve => setTimeout(resolve, 0));
 };
 
 /**
@@ -598,8 +596,10 @@ function waitForClipboardPromise(setup, expected) {
  * @return {Promise} resolves when the preferences have been updated
  */
 function pushPref(preferenceName, value) {
-  const options = {"set": [[preferenceName, value]]};
-  return SpecialPowers.pushPrefEnv(options);
+  return new Promise(resolve => {
+    const options = {"set": [[preferenceName, value]]};
+    SpecialPowers.pushPrefEnv(options, resolve);
+  });
 }
 
 /**

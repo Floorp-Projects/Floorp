@@ -8,12 +8,12 @@ var NotificationTest = (function() {
   function setup_testing_env() {
     SimpleTest.waitForExplicitFinish();
     // turn on testing pref (used by notification.cpp, and mock the alerts
-    return SpecialPowers.setBoolPref("notification.prompt.testing", true);
+    SpecialPowers.setBoolPref("notification.prompt.testing", true);
   }
 
-  async function teardown_testing_env() {
-    await SpecialPowers.clearUserPref("notification.prompt.testing");
-    await SpecialPowers.clearUserPref("notification.prompt.testing.allow");
+  function teardown_testing_env() {
+    SpecialPowers.clearUserPref("notification.prompt.testing");
+    SpecialPowers.clearUserPref("notification.prompt.testing.allow");
 
     SimpleTest.finish();
   }
@@ -78,10 +78,9 @@ var NotificationTest = (function() {
   // NotificationTest API
   return {
     run(tests, callback) {
-      let ready = setup_testing_env();
+      setup_testing_env();
 
-      addLoadEvent(async function() {
-        await ready;
+      addLoadEvent(function() {
         executeTests(tests, function() {
           teardown_testing_env();
           callback && callback();
@@ -90,11 +89,11 @@ var NotificationTest = (function() {
     },
 
     allowNotifications() {
-      return SpecialPowers.setBoolPref("notification.prompt.testing.allow", true);
+      SpecialPowers.setBoolPref("notification.prompt.testing.allow", true);
     },
 
     denyNotifications() {
-      return SpecialPowers.setBoolPref("notification.prompt.testing.allow", false);
+      SpecialPowers.setBoolPref("notification.prompt.testing.allow", false);
     },
 
     clickNotification(notification) {

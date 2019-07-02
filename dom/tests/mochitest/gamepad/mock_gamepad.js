@@ -4,7 +4,7 @@
 var GamepadService;
 
 function setGamepadPreferenceAndCreateIframe(iframeSrc) {
-  SpecialPowers.pushPrefEnv({"set" : [["dom.gamepad.test.enabled", true]]}).then(() => {
+  SpecialPowers.pushPrefEnv({"set" : [["dom.gamepad.test.enabled", true]]}, () => {
     let iframe = document.createElement("iframe");
     iframe.src = iframeSrc;
     document.body.appendChild(iframe);

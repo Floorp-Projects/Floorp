@@ -174,47 +174,54 @@ function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   }
 }
 
-function invokeAsyncChromeTask(message, payload = {}) {
+function invokeAsyncChromeTask(message, response, payload = {}) {
   info(`expecting the chrome task finished: ${message}`);
-  return formFillChromeScript.sendQuery(message, payload);
+  return new Promise(resolve => {
+    formFillChromeScript.sendAsyncMessage(message, payload);
+    formFillChromeScript.addMessageListener(response, function onReceived(data) {
+      formFillChromeScript.removeMessageListener(response, onReceived);
+
+      resolve(data);
+    });
+  });
 }
 
 async function addAddress(address) {
-  await invokeAsyncChromeTask("FormAutofillTest:AddAddress", {address});
+  await invokeAsyncChromeTask("FormAutofillTest:AddAddress", "FormAutofillTest:AddressAdded", {address});
   await sleep();
 }
 
 async function removeAddress(guid) {
-  return invokeAsyncChromeTask("FormAutofillTest:RemoveAddress", {guid});
+  return invokeAsyncChromeTask("FormAutofillTest:RemoveAddress", "FormAutofillTest:AddressRemoved", {guid});
 }
 
 async function updateAddress(guid, address) {
-  return invokeAsyncChromeTask("FormAutofillTest:UpdateAddress", {address, guid});
+  return invokeAsyncChromeTask("FormAutofillTest:UpdateAddress", "FormAutofillTest:AddressUpdated", {address, guid});
 }
 
 async function checkAddresses(expectedAddresses) {
-  return invokeAsyncChromeTask("FormAutofillTest:CheckAddresses", {expectedAddresses});
+  return invokeAsyncChromeTask("FormAutofillTest:CheckAddresses", "FormAutofillTest:areAddressesMatching", {expectedAddresses});
 }
 
 async function cleanUpAddresses() {
-  return invokeAsyncChromeTask("FormAutofillTest:CleanUpAddresses");
+  return invokeAsyncChromeTask("FormAutofillTest:CleanUpAddresses", "FormAutofillTest:AddressesCleanedUp");
 }
 
 async function addCreditCard(creditcard) {
-  await invokeAsyncChromeTask("FormAutofillTest:AddCreditCard", {creditcard});
+  await invokeAsyncChromeTask("FormAutofillTest:AddCreditCard", "FormAutofillTest:CreditCardAdded", {creditcard});
   await sleep();
 }
 
 async function removeCreditCard(guid) {
-  return invokeAsyncChromeTask("FormAutofillTest:RemoveCreditCard", {guid});
+  return invokeAsyncChromeTask("FormAutofillTest:RemoveCreditCard", "FormAutofillTest:CreditCardRemoved", {guid});
 }
 
 async function checkCreditCards(expectedCreditCards) {
-  return invokeAsyncChromeTask("FormAutofillTest:CheckCreditCards", {expectedCreditCards});
+  return invokeAsyncChromeTask("FormAutofillTest:CheckCreditCards", "FormAutofillTest:areCreditCardsMatching", {expectedCreditCards});
 }
 
 async function cleanUpCreditCards() {
-  return invokeAsyncChromeTask("FormAutofillTest:CleanUpCreditCards");
+  return invokeAsyncChromeTask("FormAutofillTest:CleanUpCreditCards", "FormAutofillTest:CreditCardsCleanedUp");
 }
 
 async function cleanUpStorage() {
@@ -223,12 +230,12 @@ async function cleanUpStorage() {
 }
 
 async function canTestOSKeyStoreLogin() {
-  let {canTest} = await invokeAsyncChromeTask("FormAutofillTest:CanTestOSKeyStoreLogin");
+  let {canTest} = await invokeAsyncChromeTask("FormAutofillTest:CanTestOSKeyStoreLogin", "FormAutofillTest:CanTestOSKeyStoreLoginResult");
   return canTest;
 }
 
 async function waitForOSKeyStoreLogin(login = false) {
-  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", {login});
+  await invokeAsyncChromeTask("FormAutofillTest:OSKeyStoreLogin", "FormAutofillTest:OSKeyStoreLoggedIn", {login});
 }
 
 function patchRecordCCNumber(record) {
@@ -295,13 +302,15 @@ function formAutoFillCommonSetup() {
   });
 
   add_task(async function setup() {
+    formFillChromeScript.sendAsyncMessage("setup");
     info(`expecting the storage setup`);
-    await formFillChromeScript.sendQuery("setup");
+    await formFillChromeScript.promiseOneMessage("setup-finished");
   });
 
   SimpleTest.registerCleanupFunction(async () => {
+    formFillChromeScript.sendAsyncMessage("cleanup");
     info(`expecting the storage cleanup`);
-    await formFillChromeScript.sendQuery("cleanup");
+    await formFillChromeScript.promiseOneMessage("cleanup-finished");
 
     formFillChromeScript.destroy();
     expectingPopup = null;

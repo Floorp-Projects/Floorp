@@ -17,7 +17,7 @@ async function setup() {
   winUtils.advanceTimeAndRefresh(100);
 }
 
-async function* runTests() {
+function* runTests() {
   var e = document.getElementById("edit");
   var doc = e.contentDocument;
   var win = e.contentWindow;
@@ -181,9 +181,9 @@ async function* runTests() {
     is(testPageSelectCommand("cmd_selectPageUp", 0), 22 - lineNum, "cmd_selectPageUp");
   };
 
-  await SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", false]]});
+  yield SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", false]]});
   runSelectionTests(body, 1);
-  await SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", true]]});
+  yield SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", true]]});
   runSelectionTests(node(2), 0);
 }
 
@@ -196,7 +196,7 @@ async function testRunner() {
   let curTest = runTests();
   while (true) {
     winUtils.advanceTimeAndRefresh(100);
-    if ((await curTest.next()).done) {
+    if (curTest.next().done) {
       break;
     }
     winUtils.advanceTimeAndRefresh(100);
