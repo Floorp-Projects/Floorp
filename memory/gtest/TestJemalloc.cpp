@@ -16,6 +16,10 @@
 
 #include "gtest/gtest.h"
 
+#ifdef MOZ_PHC
+#  include "replace_malloc_bridge.h"
+#endif
+
 #if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
 #  define HAS_GDB_SLEEP_DURATION 1
 extern unsigned int _gdb_sleep_duration;
@@ -46,6 +50,21 @@ static void DisableCrashReporter() {
 #endif
 
 using namespace mozilla;
+
+class AutoDisablePHCOnCurrentThread {
+ public:
+  AutoDisablePHCOnCurrentThread() {
+#ifdef MOZ_PHC
+    ReplaceMalloc::DisablePHCOnCurrentThread();
+#endif
+  }
+
+  ~AutoDisablePHCOnCurrentThread() {
+#ifdef MOZ_PHC
+    ReplaceMalloc::ReenablePHCOnCurrentThread();
+#endif
+  }
+};
 
 static inline void TestOne(size_t size) {
   size_t req = size;
@@ -378,6 +397,12 @@ static bool IsSameRoundedHugeClass(size_t aSize1, size_t aSize2,
 
 static bool CanReallocInPlace(size_t aFromSize, size_t aToSize,
                               jemalloc_stats_t& aStats) {
+  // PHC allocations must be disabled because PHC reallocs differently to
+  // mozjemalloc.
+#ifdef MOZ_PHC
+  MOZ_RELEASE_ASSERT(!ReplaceMalloc::IsPHCEnabledOnCurrentThread());
+#endif
+
   if (aFromSize == malloc_good_size(aToSize)) {
     // Same size class: in-place.
     return true;
@@ -397,6 +422,10 @@ static bool CanReallocInPlace(size_t aFromSize, size_t aToSize,
 
 TEST(Jemalloc, InPlace)
 {
+  // Disable PHC allocations for this test, because CanReallocInPlace() isn't
+  // valid for PHC allocations.
+  AutoDisablePHCOnCurrentThread disable;
+
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
@@ -430,6 +459,10 @@ TEST(Jemalloc, InPlace)
 #if !defined(XP_WIN) || !defined(MOZ_CODE_COVERAGE)
 TEST(Jemalloc, JunkPoison)
 {
+  // Disable PHC allocations for this test, because CanReallocInPlace() isn't
+  // valid for PHC allocations, and the testing UAFs aren't valid.
+  AutoDisablePHCOnCurrentThread disable;
+
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
@@ -631,6 +664,10 @@ TEST(Jemalloc, JunkPoison)
 
 TEST(Jemalloc, GuardRegion)
 {
+  // Disable PHC allocations for this test, because even a single PHC
+  // allocation occurring can throw it off.
+  AutoDisablePHCOnCurrentThread disable;
+
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
