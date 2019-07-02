@@ -8,19 +8,14 @@
 #include "nsITouchBarInput.h"
 #include "nsTouchBarUpdater.h"
 
+#include "nsCocoaWindow.h"
 #include "nsIArray.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 
-// defined in nsCocoaWindow.mm.
-extern BOOL sTouchBarIsInitialized;
-
 #if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
 @interface BaseWindow (NSTouchBarProvider)
 @property(strong) NSTouchBar* touchBar;
-@end
-@interface NSApplication (TouchBarMenu)
-- (IBAction)toggleTouchBarCustomizationPalette:(id)sender;
 @end
 #endif
 
@@ -52,24 +47,5 @@ nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTouchBarUpdater::EnterCustomizeMode() {
-  [NSApp toggleTouchBarCustomizationPalette:(id)this];
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTouchBarUpdater::IsTouchBarInitialized(bool* aResult) {
-  *aResult = sTouchBarIsInitialized;
-  return NS_OK;
-}
-
-// NOTE: This method is for internal unit tests only.
-NS_IMETHODIMP
-nsTouchBarUpdater::SetTouchBarInitialized(bool aIsInitialized) {
-  sTouchBarIsInitialized = aIsInitialized;
   return NS_OK;
 }

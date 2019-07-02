@@ -39,12 +39,9 @@ __attribute__((weak_import)) @interface NSCustomTouchBarItem : NSTouchBarItem
 @protocol NSTouchBarDelegate
 @end
 
-typedef NSString* NSTouchBarCustomizationIdentifier;
 __attribute__((weak_import)) @interface NSTouchBar : NSObject
 @property(strong) NSArray<NSTouchBarItemIdentifier>* defaultItemIdentifiers;
 @property(strong) id<NSTouchBarDelegate> delegate;
-@property(strong) NSTouchBarCustomizationIdentifier customizationIdentifier;
-@property(strong) NSArray<NSTouchBarItemIdentifier>* customizationAllowedItemIdentifiers;
 - (NSTouchBarItem*)itemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 @end
 
