@@ -2,6 +2,7 @@
 name = "baldrdash"
 version = "0.1.0"
 authors = ["The Spidermonkey and Cranelift developers"]
+edition = "2018"
 
 [lib]
 crate-type = ["rlib"]
