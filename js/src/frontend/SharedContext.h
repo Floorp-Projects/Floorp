@@ -394,9 +394,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isSetter_ : 1;
   bool isMethod_ : 1;
 
-  bool isInterpreted_ : 1;
-  bool isInterpretedLazy_ : 1;
-
   JSFunction::FunctionKind kind_;
   JSAtom* explicitName_;
 
@@ -434,20 +431,14 @@ class FunctionBox : public ObjectBox, public SharedContext {
                             HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
-    return isInterpretedLazy() &&
+    return function()->isInterpretedLazy() &&
            !function()->lazyScript()->hasEnclosingScope();
   }
   void setEnclosingScopeForInnerLazyFunction(Scope* enclosingScope);
   void finish();
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
-  
-  void clobberFunction(JSFunction* function) {
-    gcThing = function;
-    // After clobbering, these flags need to be updated
-    setIsInterpreted(function->isInterpreted());
-    setIsInterpretedLazy(function->isInterpretedLazy());
-  }
+  void clobberFunction(JSFunction* function) { gcThing = function; }
 
   Scope* compilationEnclosingScope() const override {
     // This method is used to distinguish the outermost SharedContext. If
@@ -459,7 +450,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     // from the lazy function at the beginning of delazification and should
     // keep pointing the same scope.
     MOZ_ASSERT_IF(
-        isInterpretedLazy() &&
+        function()->isInterpretedLazy() &&
             function()->lazyScript()->hasEnclosingScope(),
         enclosingScope_ == function()->lazyScript()->enclosingScope());
 
@@ -532,11 +523,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isGetter() const { return isGetter_; }
   bool isSetter() const { return isSetter_; }
   bool isMethod() const { return isMethod_; }
-
-  bool isInterpreted() const { return isInterpreted_; }
-  void setIsInterpreted(bool interpreted) { isInterpreted_ = interpreted; }
-  bool isInterpretedLazy() const { return isInterpretedLazy_; }
-  void setIsInterpretedLazy(bool interpretedLazy) { isInterpretedLazy_ = interpretedLazy; }
 
   JSFunction::FunctionKind kind() { return kind_; }
 
