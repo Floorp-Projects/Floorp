@@ -824,7 +824,7 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
 
   if (callback) {
     success = callback(handler.dump_path_c_, handler.next_minidump_id_c_,
-                       callback_context, NULL, NULL, success);
+                       callback_context, NULL, NULL, nullptr, success);
   }
 
   return success;
@@ -840,7 +840,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
   // HandleException to call any previous handler or return
   // EXCEPTION_CONTINUE_SEARCH on the exception thread, allowing it to appear
   // as though this handler were not present at all.
-  if (filter_ && !filter_(callback_context_, exinfo, assertion)) {
+  if (filter_ && !filter_(callback_context_, exinfo, nullptr, assertion)) {
     return false;
   }
 
@@ -861,7 +861,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
     // scenario, the server process ends up creating the dump path and dump
     // id so they are not known to the client.
     success = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
-                        exinfo, assertion, success);
+                        exinfo, assertion, nullptr, success);
   }
 
   return success;

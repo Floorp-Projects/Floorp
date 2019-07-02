@@ -350,6 +350,40 @@ GraphicsStartupTest:
     Set to 1 by the graphics driver crash guard when it's activated.
   type: boolean
 
+PHCKind:
+  description: >
+    The allocation kind, if the crash involved a bad access of a special PHC
+    allocation.
+  type: string
+
+PHCBaseAddress:
+  description: >
+    The allocation's base address, if the crash involved a bad access of a
+    special PHC allocation. Encoded as a decimal address.
+  type: string
+
+PHCUsableSize:
+  description: >
+    The allocation's usable size, if the crash involved a bad access of a
+    special PHC allocation.
+  # A 32-bit integer is enough because the maximum usable size of a special PHC
+  # allocation is far less than 2 GiB.
+  type: integer
+
+PHCAllocStack:
+  description: >
+    The allocation's allocation stack trace, if the crash involved a bad access
+    of a special PHC allocation. Encoded as a comma-separated list of decimal
+    addresses.
+  type: string
+
+PHCFreeStack:
+  description: >
+    The allocation's free stack trace, if the crash involved a bad access
+    of a special PHC allocation. Encoded as a comma-separated list of decimal
+    addresses.
+  type: string
+
 HangMonitorDescription:
   description: >
     Name of the hang monitor that generated the crash.

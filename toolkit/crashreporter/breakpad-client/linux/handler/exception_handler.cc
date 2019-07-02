@@ -98,6 +98,10 @@
 #include "third_party/lss/linux_syscall_support.h"
 #include "prenv.h"
 
+#ifdef MOZ_PHC
+#include "replace_malloc_bridge.h"
+#endif
+
 #if defined(__ANDROID__)
 #include "linux/sched.h"
 #endif
@@ -446,10 +450,24 @@ int ExceptionHandler::ThreadEntry(void *arg) {
                                      thread_arg->context_size) == false;
 }
 
+#ifdef MOZ_PHC
+void GetPHCAddrInfo(siginfo_t* siginfo, mozilla::phc::AddrInfo* addr_info) {
+  // Is this a crash involving a PHC allocation?
+  if (siginfo->si_signo == SIGSEGV || siginfo->si_signo == SIGBUS) {
+    ReplaceMalloc::IsPHCAllocation(siginfo->si_addr, addr_info);
+  }
+}
+#endif
+
 // This function runs in a compromised context: see the top of the file.
 // Runs on the crashing thread.
 bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
-  if (filter_ && !filter_(callback_context_))
+  mozilla::phc::AddrInfo addr_info;
+#ifdef MOZ_PHC
+  GetPHCAddrInfo(info, &addr_info);
+#endif
+
+  if (filter_ && !filter_(callback_context_, &addr_info))
     return false;
 
   // Allow ourselves to be dumped if the signal is trusted.
@@ -489,7 +507,8 @@ bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
       return true;
     }
   }
-  return GenerateDump(&g_crash_context_);
+
+  return GenerateDump(&g_crash_context_, &addr_info);
 }
 
 // This is a public interface to HandleSignal that allows the client to
@@ -506,7 +525,8 @@ bool ExceptionHandler::SimulateSignalDelivery(int sig) {
 }
 
 // This function may run in a compromised context: see the top of the file.
-bool ExceptionHandler::GenerateDump(CrashContext *context) {
+bool ExceptionHandler::GenerateDump(
+    CrashContext *context, const mozilla::phc::AddrInfo* addr_info) {
   if (IsOutOfProcess())
     return crash_generation_client_->RequestDump(context, sizeof(*context));
 
@@ -591,7 +611,8 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
 
   bool success = r != -1 && WIFEXITED(status) && WEXITSTATUS(status) == 0;
   if (callback_)
-    success = callback_(minidump_descriptor_, callback_context_, success);
+    success =
+      callback_(minidump_descriptor_, callback_context_, addr_info, success);
   return success;
 }
 
@@ -765,7 +786,8 @@ bool ExceptionHandler::WriteMinidump() {
 #error "This code has not been ported to your platform yet."
 #endif
 
-  return GenerateDump(&context);
+  // nullptr here for phc::AddrInfo* is ok because this is not a crash.
+  return GenerateDump(&context, nullptr);
 }
 
 void ExceptionHandler::AddMappingInfo(const string& name,
@@ -822,7 +844,9 @@ bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
                                       child_blamed_thread))
       return false;
 
-  return callback ? callback(descriptor, callback_context, true) : true;
+  // nullptr here for phc::AddrInfo* is ok because this is not a crash.
+  return callback ? callback(descriptor, callback_context, nullptr, true)
+                  : true;
 }
 
 void SetFirstChanceExceptionHandler(FirstChanceHandler callback) {
