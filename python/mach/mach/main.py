@@ -339,14 +339,15 @@ To see more help for a specific command, run:
         orig_env = dict(os.environ)
 
         try:
-            if stdin.encoding is None:
-                sys.stdin = codecs.getreader('utf-8')(stdin)
+            if sys.version_info < (3, 0):
+                if stdin.encoding is None:
+                    sys.stdin = codecs.getreader('utf-8')(stdin)
 
-            if stdout.encoding is None:
-                sys.stdout = codecs.getwriter('utf-8')(stdout)
+                if stdout.encoding is None:
+                    sys.stdout = codecs.getwriter('utf-8')(stdout)
 
-            if stderr.encoding is None:
-                sys.stderr = codecs.getwriter('utf-8')(stderr)
+                if stderr.encoding is None:
+                    sys.stderr = codecs.getwriter('utf-8')(stderr)
 
             # Allow invoked processes (which may not have a handle on the
             # original stdout file descriptor) to know if the original stdout
