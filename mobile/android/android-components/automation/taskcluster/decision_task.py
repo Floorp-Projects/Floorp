@@ -229,7 +229,6 @@ def release_snapshot(components, is_snapshot, is_staging):
     other_tasks = {}
     wait_on_builds_task_id = taskcluster.slugId()
 
-    # TODO: check components structure to match the old one
     for component in components:
         build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
