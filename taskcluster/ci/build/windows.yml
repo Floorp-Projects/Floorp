@@ -823,6 +823,7 @@ win64-asan-fuzzing/opt:
 
 win32-devedition-nightly/opt:
     description: "Win32 Dev Edition Nightly"
+    use-pgo: win32-shippable/opt
     index:
         product: devedition
         job-name: win32-opt
@@ -874,6 +875,7 @@ win32-devedition-nightly/opt:
 
 win64-devedition-nightly/opt:
     description: "Win64 Dev Edition Nightly"
+    use-pgo: win64-shippable/opt
     index:
         product: devedition
         job-name: win64-opt
