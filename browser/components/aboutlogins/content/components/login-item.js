@@ -253,7 +253,6 @@ export default class LoginItem extends ReflectedFluentElement {
 
     this._revealCheckbox.checked = false;
 
-    this._editButton.focus();
     this.render();
   }
 
@@ -365,16 +364,11 @@ export default class LoginItem extends ReflectedFluentElement {
 
     this._deleteButton.disabled = this.dataset.isNewLogin;
     this._editButton.disabled = shouldEdit;
-    let inputTabIndex = !shouldEdit ? -1 : 0;
-    this._originInput.readOnly = !shouldEdit;
-    this._originInput.tabIndex = inputTabIndex;
+    this._originInput.readOnly = !this.dataset.isNewLogin;
     this._usernameInput.readOnly = !shouldEdit;
-    this._usernameInput.tabIndex = inputTabIndex;
     this._passwordInput.readOnly = !shouldEdit;
-    this._passwordInput.tabIndex = inputTabIndex;
     if (shouldEdit) {
       this.dataset.editing = true;
-      this._originInput.focus();
     } else {
       delete this.dataset.editing;
     }
