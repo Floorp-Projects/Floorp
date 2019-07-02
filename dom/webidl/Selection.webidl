@@ -35,7 +35,7 @@ interface Selection {
   /**
    * Removes a range from the current selection.
    */
-  [Throws]
+  [Throws, BinaryName="removeRangeAndUnselectFramesAndNotifyListeners"]
   void      removeRange(Range range);
   /**
    * Removes all ranges from the current selection.

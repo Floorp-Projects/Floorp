@@ -295,7 +295,8 @@ class Selection final : public nsSupportsWeakReference,
   void AddRangeJS(nsRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void RemoveRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  void RemoveRangeAndUnselectFramesAndNotifyListeners(
+      nsRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void RemoveAllRanges(mozilla::ErrorResult& aRv);
 
