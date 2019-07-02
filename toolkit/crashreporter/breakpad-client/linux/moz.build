@@ -33,3 +33,6 @@ if CONFIG['OS_TARGET'] == 'Android':
 FINAL_LIBRARY = 'breakpad_client'
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
+
+if CONFIG['MOZ_PHC']:
+    DEFINES['MOZ_PHC'] = True

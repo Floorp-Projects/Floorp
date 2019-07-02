@@ -75,6 +75,12 @@
 #include "common/scoped_ptr.h"
 #include "google_breakpad/common/minidump_format.h"
 
+#ifdef MOZ_PHC
+#include "PHC.h"
+#else
+namespace mozilla { namespace phc { class AddrInfo {}; } }
+#endif
+
 namespace google_breakpad {
 
 using std::vector;
@@ -94,6 +100,7 @@ class ExceptionHandler {
   // Breakpad will immediately report the exception as unhandled without
   // writing a minidump, allowing another handler the opportunity to handle it.
   typedef bool (*FilterCallback)(void* context, EXCEPTION_POINTERS* exinfo,
+                                 const mozilla::phc::AddrInfo* addr_info,
                                  MDRawAssertionInfo* assertion);
 
   // A callback function to run after the minidump has been written.
@@ -125,6 +132,7 @@ class ExceptionHandler {
                                    void* context,
                                    EXCEPTION_POINTERS* exinfo,
                                    MDRawAssertionInfo* assertion,
+                                   const mozilla::phc::AddrInfo* addr_info,
                                    bool succeeded);
 
   // HandlerType specifies which types of handlers should be installed, if
