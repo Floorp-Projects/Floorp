@@ -1,7 +1,6 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {cardContextTypes} from "./types";
 import {connect} from "react-redux";
-import {injectIntl} from "react-intl";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
@@ -247,7 +246,7 @@ export class _Card extends React.PureComponent {
       </a>
       {!props.placeholder && <button aria-haspopup="true"
         data-l10n-id="newtab-menu-content-tooltip"
-        data-l10n-args={`{ "title": "${title}" }`}
+        data-l10n-args={JSON.stringify({title})}
         className="context-menu-button icon"
         onClick={this.onMenuButtonClick} />}
       {isContextMenuOpen &&
@@ -265,5 +264,5 @@ export class _Card extends React.PureComponent {
   }
 }
 _Card.defaultProps = {link: {}};
-export const Card = connect(state => ({platform: state.Prefs.values.platform}))(injectIntl(_Card));
+export const Card = connect(state => ({platform: state.Prefs.values.platform}))(_Card);
 export const PlaceholderCard = props => <Card placeholder={true} className={props.className} />;
