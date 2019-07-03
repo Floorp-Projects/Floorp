@@ -15,7 +15,7 @@
  Exposed=(Window,Worker),
  Serializable]
 interface DOMMatrixReadOnly {
-    [NewObject, Throws] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other);
+    [NewObject, Throws] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other = {});
     [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
     [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
 
@@ -72,7 +72,7 @@ interface DOMMatrixReadOnly {
                                           optional unrestricted double angle = 0);
     DOMMatrix skewX(optional unrestricted double sx = 0);
     DOMMatrix skewY(optional unrestricted double sy = 0);
-    [NewObject, Throws] DOMMatrix multiply(optional DOMMatrixInit other);
+    [NewObject, Throws] DOMMatrix multiply(optional DOMMatrixInit other = {});
     DOMMatrix flipX();
     DOMMatrix flipY();
     DOMMatrix inverse();
@@ -80,7 +80,7 @@ interface DOMMatrixReadOnly {
     // Helper methods
     readonly attribute boolean is2D;
     readonly attribute boolean isIdentity;
-    DOMPoint                   transformPoint(optional DOMPointInit point);
+    DOMPoint                   transformPoint(optional DOMPointInit point = {});
     [Throws] Float32Array      toFloat32Array();
     [Throws] Float64Array      toFloat64Array();
     [Exposed=Window]           stringifier;
@@ -98,7 +98,7 @@ interface DOMMatrixReadOnly {
  Serializable,
  LegacyWindowAlias=WebKitCSSMatrix]
 interface DOMMatrix : DOMMatrixReadOnly {
-    [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
+    [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other = {});
     [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
     [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
 
@@ -129,8 +129,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     inherit attribute unrestricted double m44;
 
     // Mutable transform methods
-    [Throws] DOMMatrix multiplySelf(optional DOMMatrixInit other);
-    [Throws] DOMMatrix preMultiplySelf(optional DOMMatrixInit other);
+    [Throws] DOMMatrix multiplySelf(optional DOMMatrixInit other = {});
+    [Throws] DOMMatrix preMultiplySelf(optional DOMMatrixInit other = {});
     DOMMatrix translateSelf(optional unrestricted double tx = 0,
                             optional unrestricted double ty = 0,
                             optional unrestricted double tz = 0);
