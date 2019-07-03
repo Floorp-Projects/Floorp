@@ -63,6 +63,9 @@ WebVTTListener::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 nsresult WebVTTListener::LoadResource() {
+  if (IsCanceled()) {
+    return NS_OK;
+  }
   // Exit if we failed to create the WebVTTParserWrapper (vtt.jsm)
   NS_ENSURE_SUCCESS(mParserWrapperError, mParserWrapperError);
 
@@ -74,6 +77,9 @@ NS_IMETHODIMP
 WebVTTListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
                                        nsIChannel* aNewChannel, uint32_t aFlags,
                                        nsIAsyncVerifyRedirectCallback* cb) {
+  if (IsCanceled()) {
+    return NS_OK;
+  }
   if (mElement) {
     mElement->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
   }
@@ -83,12 +89,20 @@ WebVTTListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 
 NS_IMETHODIMP
 WebVTTListener::OnStartRequest(nsIRequest* aRequest) {
+  if (IsCanceled()) {
+    return NS_OK;
+  }
+
   LOG("OnStartRequest");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WebVTTListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
+  if (IsCanceled()) {
+    return NS_OK;
+  }
+
   LOG("OnStopRequest");
   if (NS_FAILED(aStatus)) {
     LOG("Got error status");
@@ -111,6 +125,7 @@ nsresult WebVTTListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
                                     uint32_t* aWriteCount) {
   nsCString buffer(aFromSegment, aCount);
   WebVTTListener* listener = static_cast<WebVTTListener*>(aClosure);
+  MOZ_ASSERT(!listener->IsCanceled());
 
   if (NS_FAILED(listener->mParserWrapper->Parse(buffer))) {
     LOG_WIHTOUT_ADDRESS(
@@ -127,6 +142,10 @@ nsresult WebVTTListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
 NS_IMETHODIMP
 WebVTTListener::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
                                 uint64_t aOffset, uint32_t aCount) {
+  if (IsCanceled()) {
+    return NS_OK;
+  }
+
   LOG("OnDataAvailable");
   uint32_t count = aCount;
   while (count > 0) {
@@ -144,6 +163,7 @@ WebVTTListener::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
 
 NS_IMETHODIMP
 WebVTTListener::OnCue(JS::Handle<JS::Value> aCue, JSContext* aCx) {
+  MOZ_ASSERT(!IsCanceled());
   if (!aCue.isObject()) {
     return NS_ERROR_FAILURE;
   }
@@ -161,12 +181,14 @@ WebVTTListener::OnCue(JS::Handle<JS::Value> aCue, JSContext* aCx) {
 
 NS_IMETHODIMP
 WebVTTListener::OnRegion(JS::Handle<JS::Value> aRegion, JSContext* aCx) {
+  MOZ_ASSERT(!IsCanceled());
   // Nothing for this callback to do.
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WebVTTListener::OnParsingError(int32_t errorCode, JSContext* cx) {
+  MOZ_ASSERT(!IsCanceled());
   // We only care about files that have a bad WebVTT file signature right now
   // as that means the file failed to load.
   if (errorCode == ErrorCodes::BadSignature) {
@@ -174,6 +196,17 @@ WebVTTListener::OnParsingError(int32_t errorCode, JSContext* cx) {
     mElement->SetReadyState(TextTrackReadyState::FailedToLoad);
   }
   return NS_OK;
+}
+
+bool WebVTTListener::IsCanceled() const { return mCancel; }
+
+void WebVTTListener::Cancel() {
+  MOZ_ASSERT(!IsCanceled(), "Do not cancel canceled listener again!");
+  LOG("Cancel listen to channel's response.");
+  mCancel = true;
+  mParserWrapper->Cancel();
+  mParserWrapper = nullptr;
+  mElement = nullptr;
 }
 
 }  // namespace dom

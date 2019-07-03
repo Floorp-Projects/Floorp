@@ -299,7 +299,13 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
 
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->SetNotificationCallbacks(nullptr);
     mChannel = nullptr;
+  }
+
+  if (mListener) {
+    mListener->Cancel();
+    mListener = nullptr;
   }
 
   // According to
