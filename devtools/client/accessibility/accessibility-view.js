@@ -52,8 +52,9 @@ AccessibilityView.prototype = {
    * @param {JSON}   supports       a collection of flags indicating which accessibility
    *                                panel features are supported by the current serverside
    *                                version.
+   * @param {Array}  fluentBundles  array of FluentBundles elements for localization
    */
-  async initialize(accessibility, walker, supports) {
+  async initialize(accessibility, walker, supports, fluentBundles) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(accessibility, supports));
     const container = document.getElementById("content");
@@ -63,7 +64,7 @@ AccessibilityView.prototype = {
       return;
     }
 
-    const mainFrame = MainFrame({ accessibility, walker });
+    const mainFrame = MainFrame({ accessibility, walker, fluentBundles });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
     this.mainFrame = ReactDOM.render(provider, container);
