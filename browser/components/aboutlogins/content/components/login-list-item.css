@@ -24,6 +24,11 @@
   background-color: var(--in-content-box-background-active);
 }
 
+:host(.keyboard-selected) {
+  border-inline-start-color: var(--in-content-border-active-shadow);
+  background-color: var(--in-content-box-background-odd);
+}
+
 :host(.selected) {
   border-inline-start-color: var(--in-content-border-highlight);
   background-color: var(--in-content-box-background-hover);
