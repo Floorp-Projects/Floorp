@@ -12,8 +12,6 @@ ac_add_options --enable-profiling
 ac_add_options --with-android-min-sdk=16
 ac_add_options --target=arm-linux-androideabi
 
-ac_add_options --with-branding=mobile/android/branding/nightly
-
 ac_add_options --with-android-distribution-directory=/builds/worker/workspace/build/partner
 
 export MOZILLA_OFFICIAL=1

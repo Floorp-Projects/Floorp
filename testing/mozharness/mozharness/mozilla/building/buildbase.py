@@ -353,40 +353,23 @@ class BuildOptionParser(object):
         'api-16-gradle-dependencies':
             'builds/releng_sub_%s_configs/%s_api_16_gradle_dependencies.py',
         'api-16': 'builds/releng_sub_%s_configs/%s_api_16.py',
-        'api-16-beta': 'builds/releng_sub_%s_configs/%s_api_16_beta.py',
-        'api-16-beta-debug': 'builds/releng_sub_%s_configs/%s_api_16_beta_debug.py',
         'api-16-debug': 'builds/releng_sub_%s_configs/%s_api_16_debug.py',
         'api-16-debug-ccov': 'builds/releng_sub_%s_configs/%s_api_16_debug_ccov.py',
         'api-16-debug-searchfox': 'builds/releng_sub_%s_configs/%s_api_16_debug_searchfox.py',
         'api-16-gradle': 'builds/releng_sub_%s_configs/%s_api_16_gradle.py',
         'api-16-profile-generate': 'builds/releng_sub_%s_configs/%s_api_16_profile_generate.py',
-        'api-16-profile-use': 'builds/releng_sub_%s_configs/%s_api_16_profile_use.py',
-        'api-16-release': 'builds/releng_sub_%s_configs/%s_api_16_release.py',
-        'api-16-release-debug': 'builds/releng_sub_%s_configs/%s_api_16_release_debug.py',
         'api-16-without-google-play-services':
             'builds/releng_sub_%s_configs/%s_api_16_without_google_play_services.py',
         'rusttests': 'builds/releng_sub_%s_configs/%s_rusttests.py',
         'rusttests-debug': 'builds/releng_sub_%s_configs/%s_rusttests_debug.py',
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
-        'x86-beta': 'builds/releng_sub_%s_configs/%s_x86_beta.py',
-        'x86-beta-debug': 'builds/releng_sub_%s_configs/%s_x86_beta_debug.py',
         'x86-debug': 'builds/releng_sub_%s_configs/%s_x86_debug.py',
         'x86-fuzzing-debug': 'builds/releng_sub_%s_configs/%s_x86_fuzzing_debug.py',
-        'x86-release': 'builds/releng_sub_%s_configs/%s_x86_release.py',
-        'x86-release-debug': 'builds/releng_sub_%s_configs/%s_x86_release_debug.py',
         'x86_64': 'builds/releng_sub_%s_configs/%s_x86_64.py',
-        'x86_64-beta': 'builds/releng_sub_%s_configs/%s_x86_64_beta.py',
-        'x86_64-beta-debug': 'builds/releng_sub_%s_configs/%s_x86_64_beta_debug.py',
         'x86_64-debug': 'builds/releng_sub_%s_configs/%s_x86_64_debug.py',
-        'x86_64-release': 'builds/releng_sub_%s_configs/%s_x86_64_release.py',
-        'x86_64-release-debug': 'builds/releng_sub_%s_configs/%s_x86_64_release_debug.py',
         'api-16-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_16_partner_sample1.py',
         'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
-        'aarch64-beta': 'builds/releng_sub_%s_configs/%s_aarch64_beta.py',
-        'aarch64-beta-debug': 'builds/releng_sub_%s_configs/%s_aarch64_beta_debug.py',
         'aarch64-debug': 'builds/releng_sub_%s_configs/%s_aarch64_debug.py',
-        'aarch64-release': 'builds/releng_sub_%s_configs/%s_aarch64_release.py',
-        'aarch64-release-debug': 'builds/releng_sub_%s_configs/%s_aarch64_release_debug.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-test-ccov': 'builds/releng_sub_%s_configs/%s_test_ccov.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
@@ -793,6 +776,12 @@ or run without that action (ie: --no-{action})"
             else:  # let's just give the generic channel based on branch
                 env["MOZ_UPDATE_CHANNEL"] = "nightly-%s" % (self.branch,)
             self.info("Update channel set to: {}".format(env["MOZ_UPDATE_CHANNEL"]))
+
+        if c.get('branding'):
+            env['MOZ_BRANDING'] = c['branding']
+
+        if c.get('version_file'):
+            env['MOZ_VERSION_FILE'] = c['version_file']
 
         if self.config.get('pgo_build') or self._compile_against_pgo():
             env['MOZ_PGO'] = '1'
