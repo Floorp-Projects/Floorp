@@ -114,7 +114,7 @@
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Avanzate</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Permessi del sito</string>
+    <string name="preferences_site_permissions">Permessi dei siti</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilità</string>
     <!-- Preference category for account information -->
@@ -340,7 +340,7 @@
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">Elimina cronologia</string>
+    <string name="history_delete_all">Cancella cronologia</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Cancellare la cronologia?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
@@ -482,9 +482,9 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Eccezioni</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Attivo</string>
+    <string name="tracking_protection_on">Attiva</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
-    <string name="tracking_protection_off">Disattivato</string>
+    <string name="tracking_protection_off">Disattivata</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -597,13 +597,13 @@
     <!-- Summary for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Aumenta o riduci la dimensione del testo dei siti web</string>
     <!-- Title for Accessiblity Text Size Scaling Preference -->
-    <string name="preference_accessibility_font_size_title">Dimensione carattere</string>
+    <string name="preference_accessibility_font_size_title">Dimensione caratteri</string>
 
     <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Dimensionamento automatico dei caratteri</string>
 
     <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">La dimensione dei caratteri corrisponderà alle impostazioni di Android. Disattivare per gestire la dimensione dei caratteri qui.</string>
+    <string name="preference_accessibility_auto_size_summary">La dimensione dei caratteri corrisponderà alle impostazioni di Android. Disattivare per gestire la dimensione dei caratteri separatamente.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Elimina i dati di navigazione</string>

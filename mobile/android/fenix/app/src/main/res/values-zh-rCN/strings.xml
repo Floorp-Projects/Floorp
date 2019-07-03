@@ -664,12 +664,12 @@
     <!-- text for the button to sign out of your Firefox account. -->
     <string name="onboarding_firefox_account_sign_out">退出登录</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">保护自己</string>
+    <string name="onboarding_tracking_protection_header">自己权利自己护</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s 可拦截在在网络上跟踪您的广告追踪器。</string>
+    <string name="onboarding_tracking_protection_description">%s 会拦截在网络上跟踪您的广告追踪器。</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">私密浏览</string>
+    <string name="onboarding_private_browsing_header">上网冲浪也私密</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description">轻点 %s 图标，即可开启隐私浏览。</string>
@@ -677,18 +677,18 @@
     <string name="onboarding_privacy_notice_header">您的隐私权</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">我们设计 %s 的重要目标是让您可以控制要在网上晒出哪些内容、告诉我们哪些信息。</string>
+    <string name="onboarding_privacy_notice_description">%s 的设计目标是让您可以控制要在网上披露哪些内容，以及告诉我们哪些信息。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">阅读我们的隐私声明</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">开始上网</string>
+    <string name="onboarding_finish">开始上网旅程</string>
 
     <!-- Onboarding theme -->
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自动</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">自适应设备设置</string>
+    <string name="onboarding_theme_automatic_summary">匹配您系统的设置</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">深邃主题</string>
     <!-- Theme setting for light mode -->
