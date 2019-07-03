@@ -173,7 +173,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   nsresult AddRangesForSelectableNodes(nsRange* aRange, int32_t* aOutIndex,
                                        bool aNoStartSelect = false);
-  nsresult RemoveItem(nsRange* aRange);
+  nsresult RemoveRangeInternal(nsRange& aRange);
 
  public:
   nsresult RemoveCollapsedRanges();
