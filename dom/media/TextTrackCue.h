@@ -298,6 +298,8 @@ class TextTrackCue final : public DOMEventTargetHelper {
   void SetDefaultCueSettings();
   nsresult StashDocument();
 
+  bool IsTextBaseDirectionLTR() const;
+
   RefPtr<Document> mDocument;
   nsString mText;
   double mStartTime;
