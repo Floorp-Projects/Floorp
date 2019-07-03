@@ -108,6 +108,9 @@ add_task(async function test_telemetry_events() {
     let loginItem = content.document.querySelector("login-item");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
+    let confirmDeleteDialog = content.document.querySelector("confirm-delete-dialog");
+    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
+    confirmDeleteButton.click();
   });
   await waitForTelemetryEventCount(10);
 
