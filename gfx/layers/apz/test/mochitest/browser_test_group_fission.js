@@ -11,6 +11,7 @@ add_task(async function test_main() {
   // is fission-enabled.
   var test_urls = [
     httpURL("helper_fission_basic.html"),
+    httpURL("helper_fission_tap.html"),
     // add additional tests here
   ];
   if (isWebRender) {
