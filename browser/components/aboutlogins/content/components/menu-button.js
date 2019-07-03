@@ -14,11 +14,11 @@ export default class MenuButton extends ReflectedFluentElement {
     this.attachShadow({mode: "open"})
         .appendChild(MenuButtonTemplate.content.cloneNode(true));
 
-    if (navigator.platform == "Win32") {
-      // We can't add navigator.platform in all cases
-      // because some platforms, such as Ubuntu 64-bit,
-      // use "Linux x86_64" which is an invalid className.
-      this.classList.add(navigator.platform);
+    for (let menuitem of this.shadowRoot.querySelectorAll(".menuitem-button[data-supported-platforms]")) {
+      let supportedPlatforms = menuitem.dataset.supportedPlatforms.split(",").map(platform => platform.trim());
+      if (supportedPlatforms.includes(navigator.platform)) {
+        menuitem.hidden = false;
+      }
     }
 
     this._menu = this.shadowRoot.querySelector(".menu");
