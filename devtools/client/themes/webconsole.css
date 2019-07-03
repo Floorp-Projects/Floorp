@@ -21,9 +21,11 @@
   --console-error-background: hsl(345, 23%, 24%);
   --console-error-border: hsl(345, 30%, 35%);
   --console-error-color: var(--red-20);
+  --console-error-icon-color: var(--red-40);
   --console-warning-background: hsl(42, 37%, 19%);
   --console-warning-border: hsl(60, 30%, 26%);
   --console-warning-color: hsl(43, 94%, 81%);
+  --console-warning-icon-color: var(--yellow-60);
   --console-navigation-color: var(--theme-highlight-blue);
   --console-navigation-border: var(--blue-60);
   --console-indent-border-color: var(--theme-highlight-blue);
@@ -43,9 +45,11 @@
   --console-error-background: hsl(344, 73%, 97%);
   --console-error-border: rgba(215, 0, 34, 0.12); /* Red 60 + opacity */
   --console-error-color: var(--red-70);
+  --console-error-icon-color: var(--red-60);
   --console-warning-background: hsl(54, 100%, 92%);
   --console-warning-border: rgba(215, 182, 0, 0.28); /* Yellow 60 + opacity */
   --console-warning-color: var(--yellow-80);
+  --console-warning-icon-color: var(--yellow-65);
   --console-navigation-color: var(--theme-highlight-blue);
   --console-navigation-border: var(--blue-30);
   --console-indent-border-color: var(--theme-highlight-blue);
@@ -276,17 +280,17 @@ a {
 
 .message.info > .icon {
   color: var(--theme-icon-color);
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole/info.svg);
 }
 
 .message.error > .icon {
-  color: var(--theme-icon-error-color);
-  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  color: var(--console-error-icon-color);
+  background-image: url(chrome://devtools/skin/images/webconsole/error.svg);
 }
 
 .message.warn > .icon {
-  color: var(--theme-icon-warning-color);
-  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  color: var(--console-warning-icon-color);
+  background-image: url(chrome://devtools/skin/images/alert.svg);
 }
 
 .message.navigationMarker > .icon {

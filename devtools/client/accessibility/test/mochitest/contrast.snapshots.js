@@ -8,13 +8,13 @@ window._snapshots = {
     "type": "div",
     "props": {
       "role": "presentation",
-      "className": "accessibility-check",
+      "className": "accessibility-color-contrast-check",
     },
     "children": [
       {
         "type": "h3",
         "props": {
-          "className": "accessibility-check-header",
+          "className": "accessibility-color-contrast-header",
         },
         "children": [
           "Color and Contrast",
@@ -45,13 +45,13 @@ window._snapshots = {
     "type": "div",
     "props": {
       "role": "presentation",
-      "className": "accessibility-check",
+      "className": "accessibility-color-contrast-check",
     },
     "children": [
       {
         "type": "h3",
         "props": {
-          "className": "accessibility-check-header",
+          "className": "accessibility-color-contrast-header",
         },
         "children": [
           "Color and Contrast",
@@ -83,7 +83,7 @@ window._snapshots = {
       {
         "type": "p",
         "props": {
-          "className": "accessibility-check-annotation",
+          "className": "accessibility-color-contrast-annotation",
         },
         "children": [
           "Does not meet WCAG standards for accessible text. ",
@@ -110,13 +110,13 @@ window._snapshots = {
     "type": "div",
     "props": {
       "role": "presentation",
-      "className": "accessibility-check",
+      "className": "accessibility-color-contrast-check",
     },
     "children": [
       {
         "type": "h3",
         "props": {
-          "className": "accessibility-check-header",
+          "className": "accessibility-color-contrast-header",
         },
         "children": [
           "Color and Contrast",
@@ -170,7 +170,7 @@ window._snapshots = {
       {
         "type": "p",
         "props": {
-          "className": "accessibility-check-annotation",
+          "className": "accessibility-color-contrast-annotation",
         },
         "children": [
           "Does not meet WCAG standards for accessible text. ",
@@ -197,13 +197,13 @@ window._snapshots = {
     "type": "div",
     "props": {
       "role": "presentation",
-      "className": "accessibility-check",
+      "className": "accessibility-color-contrast-check",
     },
     "children": [
       {
         "type": "h3",
         "props": {
-          "className": "accessibility-check-header",
+          "className": "accessibility-color-contrast-header",
         },
         "children": [
           "Color and Contrast",
@@ -246,7 +246,7 @@ window._snapshots = {
       {
         "type": "p",
         "props": {
-          "className": "accessibility-check-annotation",
+          "className": "accessibility-color-contrast-annotation",
         },
         "children": [
           "Meets WCAG AA standards for accessible text. ",
