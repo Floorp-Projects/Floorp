@@ -94,6 +94,7 @@ class UrlbarInput {
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
     this._lastSearchString = "";
+    this._textValueOnLastSearch = "";
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
     this._untrimmedValue = "";
@@ -494,7 +495,7 @@ class UrlbarInput {
           // visit anything.  The user can then type a search string.  Also
           // start a new search so that the offer appears in the view by itself
           // to make it even clearer to the user what's going on.
-          this.startQuery({ allowEmptyInput: true });
+          this.startQuery();
           return;
         }
         const actionDetails = {
@@ -552,7 +553,10 @@ class UrlbarInput {
     let canonizedUrl;
 
     if (!result) {
-      this.value = this._lastSearchString;
+      // This usually happens when there's no selected results (the user cycles
+      // through results and there was no heuristic), and we reset the input
+      // value to the previous text value.
+      this.value = this._textValueOnLastSearch;
     } else {
       // For autofilled results, the value that should be canonized is not the
       // autofilled value but the value that the user typed.
@@ -634,16 +638,11 @@ class UrlbarInput {
    *   to false so that state is maintained during a single interaction.  The
    *   intended use for this parameter is that it should be set to false when
    *   this method is called due to input events.
-   * @param {boolean} [options.allowEmptyInput]
-   *   If true and the search string is empty, then the input will become empty
-   *   when no result is selected.  If false, the input will continue showing
-   *   the last non-empty search string when no result is selected.
    */
   startQuery({
     allowAutofill = true,
     searchString = null,
     resetSearchState = true,
-    allowEmptyInput = false,
   } = {}) {
     if (this._suppressStartQuery) {
       return;
@@ -660,9 +659,8 @@ class UrlbarInput {
       throw new Error("The current value doesn't start with the search string");
     }
 
-    if (searchString || allowEmptyInput) {
-      this._lastSearchString = searchString;
-    }
+    this._lastSearchString = searchString;
+    this._textValueOnLastSearche = this.textValue;
 
     // TODO (Bug 1522902): This promise is necessary for tests, because some
     // tests are not listening for completion when starting a query through
@@ -1337,7 +1335,9 @@ class UrlbarInput {
         this.editor.selectAll();
         event.preventDefault();
       } else if (this.openViewOnFocus && !this.view.isOpen) {
-        this.startQuery({ allowAutofill: false });
+        this.startQuery({
+          allowAutofill: false,
+        });
       }
       return;
     }
@@ -1347,7 +1347,9 @@ class UrlbarInput {
         this.view.close();
       } else {
         this.focus();
-        this.startQuery({ allowAutofill: false });
+        this.startQuery({
+          allowAutofill: false,
+        });
       }
     }
   }
@@ -1406,7 +1408,6 @@ class UrlbarInput {
     this.startQuery({
       searchString: value,
       allowAutofill,
-      allowEmptyInput: true,
       resetSearchState: false,
     });
   }
