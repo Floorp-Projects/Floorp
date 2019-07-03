@@ -1,4 +1,4 @@
-// Copyright 2007-2010 Baptiste Lepilleur
+// Copyright 2007-2010 Baptiste Lepilleur and The JsonCpp Authors
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
@@ -6,6 +6,9 @@
 #ifndef LIB_JSONCPP_JSON_TOOL_H_INCLUDED
 #define LIB_JSONCPP_JSON_TOOL_H_INCLUDED
 
+#if !defined(JSON_IS_AMALGAMATION)
+#include <json/config.h>
+#endif
 
 // Also support old flag NO_LOCALE_SUPPORT
 #ifdef NO_LOCALE_SUPPORT
@@ -23,7 +26,7 @@
  */
 
 namespace Json {
-static char getDecimalPoint() {
+static inline char getDecimalPoint() {
 #ifdef JSONCPP_NO_LOCALE_SUPPORT
   return '\0';
 #else
@@ -33,8 +36,8 @@ static char getDecimalPoint() {
 }
 
 /// Converts a unicode code-point to UTF-8.
-static inline JSONCPP_STRING codePointToUTF8(unsigned int cp) {
-  JSONCPP_STRING result;
+static inline String codePointToUTF8(unsigned int cp) {
+  String result;
 
   // based on description from http://en.wikipedia.org/wiki/UTF-8
 
@@ -61,9 +64,6 @@ static inline JSONCPP_STRING codePointToUTF8(unsigned int cp) {
   return result;
 }
 
-/// Returns true if ch is a control character (in range [1,31]).
-static inline bool isControlCharacter(char ch) { return ch > 0 && ch <= 0x1F; }
-
 enum {
   /// Constant that specify the size of the buffer that must be passed to
   /// uintToString.
@@ -74,7 +74,7 @@ enum {
 typedef char UIntToStringBuffer[uintToStringBufferSize];
 
 /** Converts an unsigned integer to string.
- * @param value Unsigned interger to convert to string
+ * @param value Unsigned integer to convert to string
  * @param current Input/Output string buffer.
  *        Must have at least uintToStringBufferSize chars free.
  */
@@ -91,27 +91,44 @@ static inline void uintToString(LargestUInt value, char*& current) {
  * We had a sophisticated way, but it did not work in WinCE.
  * @see https://github.com/open-source-parsers/jsoncpp/pull/9
  */
-static inline void fixNumericLocale(char* begin, char* end) {
-  while (begin < end) {
+template <typename Iter> Iter fixNumericLocale(Iter begin, Iter end) {
+  for (; begin != end; ++begin) {
     if (*begin == ',') {
       *begin = '.';
     }
-    ++begin;
   }
+  return begin;
 }
 
-static inline void fixNumericLocaleInput(char* begin, char* end) {
+template <typename Iter> void fixNumericLocaleInput(Iter begin, Iter end) {
   char decimalPoint = getDecimalPoint();
-  if (decimalPoint != '\0' && decimalPoint != '.') {
-    while (begin < end) {
-      if (*begin == '.') {
-        *begin = decimalPoint;
-      }
-      ++begin;
+  if (decimalPoint == '\0' || decimalPoint == '.') {
+    return;
+  }
+  for (; begin != end; ++begin) {
+    if (*begin == '.') {
+      *begin = decimalPoint;
     }
   }
 }
 
-} // namespace Json {
+/**
+ * Return iterator that would be the new end of the range [begin,end), if we
+ * were to delete zeros in the end of string, but not the last zero before '.'.
+ */
+template <typename Iter> Iter fixZerosInTheEnd(Iter begin, Iter end) {
+  for (; begin != end; --end) {
+    if (*(end - 1) != '0') {
+      return end;
+    }
+    // Don't delete the last zero before the decimal point.
+    if (begin != (end - 1) && *(end - 2) == '.') {
+      return end;
+    }
+  }
+  return end;
+}
+
+} // namespace Json
 
 #endif // LIB_JSONCPP_JSON_TOOL_H_INCLUDED
