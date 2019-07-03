@@ -112,6 +112,7 @@ class Raptor(object):
         }
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
+        self.raptor_webext = None
         self.control_server = None
         self.playback = None
         self.benchmark = None
@@ -323,6 +324,10 @@ class Raptor(object):
 
     def remove_raptor_webext(self):
         # remove the raptor webext; as it must be reloaded with each subtest anyway
+        if not self.raptor_webext:
+            LOG.info("raptor webext not installed - not attempting removal")
+            return
+
         LOG.info("removing webext %s" % self.raptor_webext)
         if self.config['app'] in ['firefox', 'geckoview', 'fennec', 'refbrow', 'fenix']:
             self.profile.addons.remove_addon(self.webext_id)
