@@ -245,7 +245,6 @@ EXPORTS.mozilla.dom += [
     'TreeWalker.h',
     'UIDirectionManager.h',
     'VisualViewport.h',
-    'WebKitCSSMatrix.h',
     'WindowOrientationObserver.h',
     'WindowProxyHolder.h',
 ]
@@ -416,7 +415,6 @@ UNIFIED_SOURCES += [
     'TreeWalker.cpp',
     'UIDirectionManager.cpp',
     'VisualViewport.cpp',
-    'WebKitCSSMatrix.cpp',
     'WindowDestroyedEvent.cpp',
     'WindowNamedPropertiesHandler.cpp',
     'WindowOrientationObserver.cpp',

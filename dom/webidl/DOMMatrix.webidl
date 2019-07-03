@@ -95,7 +95,8 @@ interface DOMMatrixReadOnly {
  Constructor(Float64Array array64),
  Constructor(sequence<unrestricted double> numberSequence),
  Exposed=(Window,Worker),
- Serializable]
+ Serializable,
+ LegacyWindowAlias=WebKitCSSMatrix]
 interface DOMMatrix : DOMMatrixReadOnly {
     [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
     [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);

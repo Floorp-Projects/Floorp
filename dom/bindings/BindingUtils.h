@@ -720,6 +720,9 @@ struct NamedConstructor {
  * isGlobal if true, we're creating interface objects for a [Global] or
  *        [PrimaryGlobal] interface, and hence shouldn't define properties on
  *        the prototype object.
+ * legacyWindowAliases if not null it points to a null-terminated list of const
+ *                     char* names of the legacy window aliases for this
+ *                     interface.
  *
  * At least one of protoClass, constructorClass or constructor should be
  * non-null. If constructorClass or constructor are non-null, the resulting
@@ -736,7 +739,8 @@ void CreateInterfaceObjects(
     JS::Heap<JSObject*>* constructorCache,
     const NativeProperties* regularProperties,
     const NativeProperties* chromeOnlyProperties, const char* name,
-    bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal);
+    bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
+    const char* const* legacyWindowAliases);
 
 /**
  * Define the properties (regular and chrome-only) on obj.
