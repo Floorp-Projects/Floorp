@@ -9,12 +9,9 @@
   display: none;
 }
 
-#identity-popup {
-  --identity-popup-width: 33rem;
-}
-
+#identity-popup,
 #protections-popup {
-  --protections-popup-width: 33rem;
+  --popup-width: 33rem;
 }
 
 /* This is used by screenshots tests to hide intermittently different
@@ -78,13 +75,13 @@
 }
 
 #identity-popup-mainView {
-  min-width: var(--identity-popup-width);
-  max-width: var(--identity-popup-width);
+  min-width: var(--popup-width);
+  max-width: var(--popup-width);
 }
 
 #protections-popup-mainView {
-  min-width: var(--protections-popup-width);
-  max-width: var(--protections-popup-width);
+  min-width: var(--popup-width);
+  max-width: var(--popup-width);
 }
 
 #protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header),
@@ -240,7 +237,13 @@
   overflow-wrap: break-word;
   /* This is needed for the overflow-wrap to work correctly.
    * 33em is the panel width, panel-header has 1em padding on each side. */
-  max-width: calc(var(--identity-popup-width) - 2em);
+  max-width: calc(var(--popup-width) - 2em);
+}
+
+#protections-popup-mainView-panel-header-span,
+#protections-popup-toast-panel-tp-on-desc,
+#protections-popup-toast-panel-tp-off-desc {
+  max-width: calc(var(--popup-width) - 2em);
 }
 
 #identity-popup-permissions-content > description,
@@ -263,7 +266,7 @@
   /* This is needed for the overflow-wrap to work correctly.
    * 1em + 2em + 24px is .identity-popup-security-content padding
    * 33em is the panel width */
-  max-width: calc(var(--identity-popup-width) - 3rem - 24px);
+  max-width: calc(var(--popup-width) - 3rem - 24px);
 }
 
 .identity-popup-warning-gray {
@@ -545,8 +548,8 @@ description#identity-popup-content-verifier,
 #identity-popup-trackersView-strict-info {
   min-height: 40px;
   /* Limit to full width - margin */
-  max-width: calc(var(--identity-popup-width) - 12px);
-  min-width: calc(var(--identity-popup-width) - 12px);
+  max-width: calc(var(--popup-width) - 12px);
+  min-width: calc(var(--popup-width) - 12px);
   background-color: #45a1ff80;
   margin: 6px;
   text-align: center;
@@ -566,7 +569,7 @@ description#identity-popup-content-verifier,
 #identity-popup-trackersView-strict-info > label {
   overflow-wrap: break-word;
   /* Limit to full width - container margin - container padding - icon width - icon margin */
-  max-width: calc(var(--identity-popup-width) - 12px - 20px - 16px - 10px);
+  max-width: calc(var(--popup-width) - 12px - 20px - 16px - 10px);
 }
 
 /* Content Blocking categories */
