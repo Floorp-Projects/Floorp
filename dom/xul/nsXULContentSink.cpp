@@ -67,14 +67,13 @@ XULContentSinkImpl::ContextStack::~ContextStack() {
   }
 }
 
-nsresult XULContentSinkImpl::ContextStack::Push(nsXULPrototypeNode* aNode,
-                                                State aState) {
+void XULContentSinkImpl::ContextStack::Push(nsXULPrototypeNode* aNode,
+                                            State aState) {
   Entry* entry = new Entry(aNode, aState, mTop);
 
   mTop = entry;
 
   ++mDepth;
-  return NS_OK;
 }
 
 nsresult XULContentSinkImpl::ContextStack::Pop(State* aState) {
@@ -631,14 +630,10 @@ nsresult XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
 
   // Push the element onto the context stack, so that child
   // containers will hook up to us as their parent.
-  nsresult rv = mContextStack.Push(element, mState);
-  if (NS_FAILED(rv)) {
-    element->Release();
-    return rv;
-  }
+  mContextStack.Push(element, mState);
 
   // Add the attributes
-  rv = AddAttributes(aAttributes, aAttrLen, element);
+  nsresult rv = AddAttributes(aAttributes, aAttrLen, element);
   if (NS_FAILED(rv)) return rv;
 
   mState = eInDocumentElement;
@@ -683,8 +678,7 @@ nsresult XULContentSinkImpl::OpenTag(const char16_t** aAttributes,
 
   // Push the element onto the context stack, so that child
   // containers will hook up to us as their parent.
-  rv = mContextStack.Push(element, mState);
-  if (NS_FAILED(rv)) return rv;
+  mContextStack.Push(element, mState);
 
   mState = eInDocumentElement;
   return NS_OK;
