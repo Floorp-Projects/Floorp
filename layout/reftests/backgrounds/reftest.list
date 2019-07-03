@@ -187,3 +187,4 @@ fuzzy-if(winWidget,0-102,0-2032) fuzzy-if(skiaContent,0-102,0-2811) fuzzy-if(web
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-2.html background-clip-text-2-ref.html # Bug 1392106
 
 == background-clip-text-scale.html background-clip-text-scale-ref.html
+!= text-clip-and-stroke.html text-clip-and-no-stroke.html
