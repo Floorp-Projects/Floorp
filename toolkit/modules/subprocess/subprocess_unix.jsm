@@ -112,7 +112,7 @@ var SubprocessUnix = {
       }
     }
 
-    for (let envp = environ; !envp.contents.isNull(); envp = envp.increment()) {
+    for (let envp = environ; !envp.isNull() && !envp.contents.isNull(); envp = envp.increment()) {
       let buf = ptrToUint8Array(envp.contents);
 
       for (let i = 0; i < buf.length; i++) {
