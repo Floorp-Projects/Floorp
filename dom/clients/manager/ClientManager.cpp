@@ -9,6 +9,7 @@
 #include "ClientHandle.h"
 #include "ClientManagerChild.h"
 #include "ClientManagerOpChild.h"
+#include "ClientPrefs.h"
 #include "ClientSource.h"
 #include "mozilla/dom/WorkerHolderToken.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -240,6 +241,8 @@ void ClientManager::Startup() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   sClientManagerThreadLocalIndexDuplicate = sClientManagerThreadLocalIndex;
 #endif
+
+  ClientPrefsInit();
 }
 
 // static

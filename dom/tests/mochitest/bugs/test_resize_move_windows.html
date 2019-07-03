@@ -314,6 +314,7 @@ function checkChangeIsEnabled(aWindow, aNext)
 
 SpecialPowers.pushPrefEnv({
   "set": [["dom.disable_window_move_resize", false],
+          ["security.data_uri.unique_opaque_origin", false],
           ["security.data_uri.block_toplevel_data_uri_navigations", false],]},
                           function() {
 SimpleTest.waitForFocus(function() {
