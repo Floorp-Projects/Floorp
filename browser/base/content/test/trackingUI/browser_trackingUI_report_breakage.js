@@ -265,6 +265,7 @@ async function testReportBreakage(url, tags) {
         "network.http.referer.defaultPolicy.pbmode",
         "network.cookie.cookieBehavior",
         "network.cookie.lifetimePolicy",
+        "privacy.annotate_channels.strict_list.enabled",
         "privacy.restrict3rdpartystorage.expiration",
         "privacy.trackingprotection.fingerprinting.enabled",
         "privacy.trackingprotection.cryptomining.enabled",
