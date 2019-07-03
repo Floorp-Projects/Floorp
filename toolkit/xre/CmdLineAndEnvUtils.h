@@ -359,14 +359,14 @@ inline UniquePtr<wchar_t[]> MakeCommandLine(int argc, wchar_t** argv,
   return s;
 }
 
-inline UniquePtr<wchar_t[]> GetFullModulePath(HMODULE aModule) {
+inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
   DWORD bufLen = MAX_PATH;
   mozilla::UniquePtr<wchar_t[]> buf;
   DWORD retLen;
 
   while (true) {
     buf = mozilla::MakeUnique<wchar_t[]>(bufLen);
-    retLen = ::GetModuleFileNameW(aModule, buf.get(), bufLen);
+    retLen = ::GetModuleFileNameW(nullptr, buf.get(), bufLen);
     if (!retLen) {
       return nullptr;
     }
@@ -390,10 +390,6 @@ inline UniquePtr<wchar_t[]> GetFullModulePath(HMODULE aModule) {
   }
 
   return result;
-}
-
-inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
-  return GetFullModulePath(nullptr);
 }
 
 inline bool SetArgv0ToFullBinaryPath(wchar_t* aArgv[]) {
