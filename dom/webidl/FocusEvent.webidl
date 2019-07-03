@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString typeArg, optional FocusEventInit focusEventInitDict)]
+[Constructor(DOMString typeArg, optional FocusEventInit focusEventInitDict = {})]
 interface FocusEvent : UIEvent {
   // Introduced in DOM Level 3:
   readonly attribute EventTarget?   relatedTarget;

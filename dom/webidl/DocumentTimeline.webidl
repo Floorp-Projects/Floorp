@@ -15,6 +15,6 @@ dictionary DocumentTimelineOptions {
 };
 
 [Func="Document::AreWebAnimationsTimelinesEnabled",
- Constructor(optional DocumentTimelineOptions options)]
+ Constructor(optional DocumentTimelineOptions options = {})]
 interface DocumentTimeline : AnimationTimeline {
 };
