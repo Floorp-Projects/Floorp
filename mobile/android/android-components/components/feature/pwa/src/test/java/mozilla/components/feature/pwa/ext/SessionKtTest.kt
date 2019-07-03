@@ -9,8 +9,8 @@ import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class SessionKtTest {
@@ -22,7 +22,7 @@ class SessionKtTest {
         val httpSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = false))
         }
-        assertFalse(httpSession.isInstallable())
+        assertNull(httpSession.installableManifest())
     }
 
     @Test
@@ -31,7 +31,7 @@ class SessionKtTest {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
             whenever(it.webAppManifest).thenReturn(null)
         }
-        assertFalse(noManifestSession.isInstallable())
+        assertNull(noManifestSession.installableManifest())
     }
 
     @Test
@@ -40,7 +40,7 @@ class SessionKtTest {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
             whenever(it.webAppManifest).thenReturn(demoManifest)
         }
-        assertFalse(noIconSession.isInstallable())
+        assertNull(noIconSession.installableManifest())
 
         val noSizeIconSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
@@ -48,7 +48,7 @@ class SessionKtTest {
                 demoManifest.copy(icons = listOf(demoIcon))
             )
         }
-        assertFalse(noSizeIconSession.isInstallable())
+        assertNull(noSizeIconSession.installableManifest())
 
         val onlyBadgeIconSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
@@ -61,7 +61,7 @@ class SessionKtTest {
                 ))
             )
         }
-        assertFalse(onlyBadgeIconSession.isInstallable())
+        assertNull(onlyBadgeIconSession.installableManifest())
     }
 
     @Test
@@ -74,7 +74,7 @@ class SessionKtTest {
                 ))
             )
         }
-        assertFalse(smallIconSession.isInstallable())
+        assertNull(smallIconSession.installableManifest())
 
         val weirdSizeSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
@@ -84,7 +84,7 @@ class SessionKtTest {
                 ))
             )
         }
-        assertFalse(weirdSizeSession.isInstallable())
+        assertNull(weirdSizeSession.installableManifest())
 
         val largeIconSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
@@ -94,7 +94,12 @@ class SessionKtTest {
                 ))
             )
         }
-        assertTrue(largeIconSession.isInstallable())
+        assertEquals(
+            demoManifest.copy(icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(192, 192)))
+            )),
+            largeIconSession.installableManifest()
+        )
 
         val multiSizeIconSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
@@ -104,7 +109,12 @@ class SessionKtTest {
                 ))
             )
         }
-        assertTrue(multiSizeIconSession.isInstallable())
+        assertEquals(
+            demoManifest.copy(icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(16, 16), Size(512, 512)))
+            )),
+            multiSizeIconSession.installableManifest()
+        )
 
         val multiIconSession = mock<Session>().also {
             whenever(it.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
@@ -119,6 +129,16 @@ class SessionKtTest {
                 ))
             )
         }
-        assertTrue(multiIconSession.isInstallable())
+        assertEquals(
+            demoManifest.copy(icons = listOf(
+                demoIcon.copy(sizes = listOf(Size(191, 193))),
+                demoIcon.copy(sizes = listOf(Size(512, 512))),
+                demoIcon.copy(
+                    sizes = listOf(Size(192, 192)),
+                    purpose = setOf(WebAppManifest.Icon.Purpose.BADGE)
+                )
+            )),
+            multiIconSession.installableManifest()
+        )
     }
 }

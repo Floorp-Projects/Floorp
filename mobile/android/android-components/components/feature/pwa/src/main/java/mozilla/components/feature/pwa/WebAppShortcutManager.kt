@@ -12,19 +12,29 @@ import android.os.Build.VERSION_CODES
 import androidx.core.content.getSystemService
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.pwa.ext.installableManifest
 
-internal class WebAppShortcutManager(
+class WebAppShortcutManager(
     private val storage: ManifestStorage
 ) {
 
     /**
      * Request to create a new shortcut on the home screen.
      */
-    suspend fun requestPinShortcut(context: Context, manifest: WebAppManifest) {
+    suspend fun requestPinShortcut(context: Context, session: Session) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
-            buildShortcut(context, manifest)?.let { shortcut ->
+            val manifest = session.installableManifest()
+            val shortcut = if (manifest != null) {
+                buildWebAppShortcut(context, manifest)
+            } else {
+                buildBasicShortcut(context, session)
+            }
+
+            if (shortcut != null) {
                 ShortcutManagerCompat.requestPinShortcut(context, shortcut, null)
             }
         }
@@ -39,16 +49,36 @@ internal class WebAppShortcutManager(
     suspend fun updateShortcuts(context: Context, manifests: List<WebAppManifest>) {
         if (SDK_INT >= VERSION_CODES.N_MR1) {
             context.getSystemService<ShortcutManager>()?.apply {
-                val shortcuts = manifests.mapNotNull { buildShortcut(context, it)?.toShortcutInfo() }
+                val shortcuts = manifests.mapNotNull { buildWebAppShortcut(context, it)?.toShortcutInfo() }
                 updateShortcuts(shortcuts)
             }
         }
     }
 
     /**
-     * Create a new shortcut using a web app manifest.
+     * Create a new basic pinned website shortcut using info from the session.
      */
-    suspend fun buildShortcut(context: Context, manifest: WebAppManifest): ShortcutInfoCompat? {
+    fun buildBasicShortcut(context: Context, session: Session): ShortcutInfoCompat? {
+        val shortcutIntent = Intent(context, WebAppLauncherActivity::class.java).apply {
+            action = WebAppLauncherActivity.INTENT_ACTION
+            data = session.url.toUri()
+        }
+
+        val builder = ShortcutInfoCompat.Builder(context, session.url)
+            .setShortLabel(session.title)
+            .setIntent(shortcutIntent)
+
+        session.icon?.let {
+            builder.setIcon(IconCompat.createWithBitmap(it))
+        }
+
+        return builder.build()
+    }
+
+    /**
+     * Create a new Progressive Web App shortcut using a web app manifest.
+     */
+    suspend fun buildWebAppShortcut(context: Context, manifest: WebAppManifest): ShortcutInfoCompat? {
         val shortcutIntent = Intent(context, WebAppLauncherActivity::class.java).apply {
             action = WebAppLauncherActivity.INTENT_ACTION
             data = manifest.startUrl.toUri()

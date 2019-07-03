@@ -12,7 +12,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.db.ManifestDatabase
 import mozilla.components.feature.pwa.db.ManifestEntity
 
-internal class ManifestStorage(context: Context) {
+class ManifestStorage(context: Context) {
 
     @VisibleForTesting
     internal var manifestDao = lazy { ManifestDatabase.get(context).manifestDao() }
