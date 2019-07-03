@@ -62,6 +62,16 @@ var gProtectionsHandler = {
     return this._protectionsPopupSiteNotWorkingTPSwitch =
       document.getElementById("protections-popup-siteNotWorking-tp-switch");
   },
+  get _protectionsPopupSendReportLearnMore() {
+    delete this._protectionsPopupSendReportLearnMore;
+    return this._protectionsPopupSendReportLearnMore =
+      document.getElementById("protections-popup-sendReportView-learn-more");
+  },
+  get _protectionsPopupSendReportURL() {
+    delete this._protectionsPopupSendReportURL;
+    return this._protectionsPopupSendReportURL =
+      document.getElementById("protections-popup-sendReportView-collection-url");
+  },
   get _protectionsPopupToastTimeout() {
     delete this._protectionsPopupToastTimeout;
     XPCOMUtils.defineLazyPreferenceGetter(this, "_protectionsPopupToastTimeout",
@@ -266,6 +276,21 @@ var gProtectionsHandler = {
   },
 
   showSendReportView() {
+    // Save this URI to make sure that the user really only submits the location
+    // they see in the report breakage dialog.
+    this.reportURI = gBrowser.currentURI;
+    let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
+    this._protectionsPopupSendReportURL.value = urlWithoutQuery;
     this._protectionsPopupMultiView.showSubView("protections-popup-sendReportView");
   },
+
+  onSendReportClicked() {
+    this._protectionsPopup.hidePopup();
+    let comments = document.getElementById(
+      "protections-popup-sendReportView-collection-comments").value;
+    ContentBlocking.submitBreakageReport(this.reportURI, comments);
+  },
 };
+
+let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+gProtectionsHandler._protectionsPopupSendReportLearnMore.href = baseURL + "blocking-breakage";
