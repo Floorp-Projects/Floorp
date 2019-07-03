@@ -115,7 +115,7 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
 
     int32_t Depth() { return mDepth; }
 
-    nsresult Push(nsXULPrototypeNode* aNode, State aState);
+    void Push(nsXULPrototypeNode* aNode, State aState);
     nsresult Pop(State* aState);
 
     nsresult GetTopNode(RefPtr<nsXULPrototypeNode>& aNode);
