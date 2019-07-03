@@ -1096,6 +1096,9 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   // -
 
+  void GenErrorIllegalUse(GLenum useTarget, uint32_t useId, GLenum boundTarget,
+                          uint32_t boundId) const;
+
   bool ValidateBufferForNonTf(const WebGLBuffer&, GLenum nonTfTarget,
                               uint32_t nonTfId) const;
 

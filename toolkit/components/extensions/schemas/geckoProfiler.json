@@ -114,6 +114,19 @@
         "parameters": []
       },
       {
+        "name": "dumpProfileToFile",
+        "type": "function",
+        "description": "Gathers the profile data from the current profiling session, and writes it to disk. The returned promise resolves to a path that locates the created file.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "string",
+            "name": "fileName",
+            "description": "The name of the file inside the profile/profiler directory"
+          }
+        ]
+      },
+      {
         "name": "getProfile",
         "type": "function",
         "description": "Gathers the profile data from the current profiling session.",

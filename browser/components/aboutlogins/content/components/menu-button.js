@@ -14,17 +14,19 @@ export default class MenuButton extends ReflectedFluentElement {
     this.attachShadow({mode: "open"})
         .appendChild(MenuButtonTemplate.content.cloneNode(true));
 
-    if (navigator.platform == "Win32") {
-      // We can't add navigator.platform in all cases
-      // because some platforms, such as Ubuntu 64-bit,
-      // use "Linux x86_64" which is an invalid className.
-      this.classList.add(navigator.platform);
+    for (let menuitem of this.shadowRoot.querySelectorAll(".menuitem-button[data-supported-platforms]")) {
+      let supportedPlatforms = menuitem.dataset.supportedPlatforms.split(",").map(platform => platform.trim());
+      if (supportedPlatforms.includes(navigator.platform)) {
+        menuitem.hidden = false;
+      }
     }
 
     this._menu = this.shadowRoot.querySelector(".menu");
     this._menuButton = this.shadowRoot.querySelector(".menu-button");
 
+    this.addEventListener("blur", this);
     this._menuButton.addEventListener("click", this);
+    this.addEventListener("keydown", this, true);
 
     super.connectedCallback();
   }
@@ -32,6 +34,7 @@ export default class MenuButton extends ReflectedFluentElement {
   static get reflectedFluentIDs() {
     return [
       "button-title",
+      "menuitem-faq",
       "menuitem-import",
       "menuitem-feedback",
       "menuitem-preferences",
@@ -54,6 +57,15 @@ export default class MenuButton extends ReflectedFluentElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "blur": {
+        if (event.relatedTarget &&
+            event.relatedTarget.closest(".menu") == this._menu) {
+          // Only hide the menu if focus has left the menu-button.
+          return;
+        }
+        this._hideMenu();
+        break;
+      }
       case "click": {
         // Skip the catch-all event listener if it was the menu-button
         // that was clicked on.
@@ -64,6 +76,7 @@ export default class MenuButton extends ReflectedFluentElement {
         }
         let classList = event.originalTarget.classList;
         if (classList.contains("menuitem-import") ||
+            classList.contains("menuitem-faq") ||
             classList.contains("menuitem-feedback") ||
             classList.contains("menuitem-preferences")) {
           let eventName = event.originalTarget.dataset.eventName;
@@ -76,7 +89,38 @@ export default class MenuButton extends ReflectedFluentElement {
         this._toggleMenu();
         break;
       }
+      case "keydown": {
+        this._handleKeyDown(event);
+      }
     }
+  }
+
+  _handleKeyDown(event) {
+    if (event.key == "Enter") {
+      event.preventDefault();
+      this._toggleMenu();
+    } else if (event.key == "Escape") {
+      this._hideMenu();
+      this._menuButton.focus();
+    }
+
+    if (!event.key.startsWith("Arrow")) {
+      return;
+    }
+
+    let activeMenuitem = this.shadowRoot.activeElement ||
+                         this._menu.querySelector(".menuitem-button:not([hidden])");
+
+    let newlyFocusedItem = null;
+    if (event.key == "ArrowDown") {
+      newlyFocusedItem = activeMenuitem.nextElementSibling;
+    } else if (event.key == "ArrowUp") {
+      newlyFocusedItem = activeMenuitem.previousElementSibling;
+    }
+    if (!newlyFocusedItem) {
+      return;
+    }
+    newlyFocusedItem.focus();
   }
 
   _hideMenu() {

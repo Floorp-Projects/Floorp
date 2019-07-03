@@ -60,6 +60,14 @@ class DOMMatrixReadOnly : public nsWrapperCache {
       const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
       ErrorResult& aRv);
 
+  static already_AddRefed<DOMMatrixReadOnly> FromFloat32Array(
+      const GlobalObject& aGlobal, const Float32Array& aArray32,
+      ErrorResult& aRv);
+
+  static already_AddRefed<DOMMatrixReadOnly> FromFloat64Array(
+      const GlobalObject& aGlobal, const Float64Array& aArray64,
+      ErrorResult& aRv);
+
   static already_AddRefed<DOMMatrixReadOnly> Constructor(
       const GlobalObject& aGlobal,
       const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
@@ -247,6 +255,14 @@ class DOMMatrix : public DOMMatrixReadOnly {
 
   static already_AddRefed<DOMMatrix> FromMatrix(
       const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
+      ErrorResult& aRv);
+
+  static already_AddRefed<DOMMatrix> FromFloat32Array(
+      const GlobalObject& aGlobal, const Float32Array& aArray32,
+      ErrorResult& aRv);
+
+  static already_AddRefed<DOMMatrix> FromFloat64Array(
+      const GlobalObject& aGlobal, const Float64Array& aArray64,
       ErrorResult& aRv);
 
   static already_AddRefed<DOMMatrix> Constructor(const GlobalObject& aGlobal,
