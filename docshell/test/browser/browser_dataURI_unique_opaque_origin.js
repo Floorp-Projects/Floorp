@@ -1,3 +1,11 @@
+add_task(async function setup() {
+  Services.prefs.setBoolPref("security.data_uri.unique_opaque_origin", true);
+
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("security.data_uri.unique_opaque_origin");
+  });
+});
+
 add_task(async function test_dataURI_unique_opaque_origin() {
   let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com");
   let browser = tab.linkedBrowser;

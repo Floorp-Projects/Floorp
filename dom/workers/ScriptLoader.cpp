@@ -161,7 +161,9 @@ nsresult ChannelFromScriptURL(
   rv = uri->SchemeIs("data", &isData);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (inheritAttrs && !isData) {
+  bool isURIUniqueOrigin =
+      net::nsIOService::IsDataURIUniqueOpaqueOrigin() && isData;
+  if (inheritAttrs && !isURIUniqueOrigin) {
     secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 

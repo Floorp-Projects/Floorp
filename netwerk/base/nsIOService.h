@@ -99,6 +99,7 @@ class nsIOService final : public nsIIOService,
 
   bool IsLinkUp();
 
+  static bool IsDataURIUniqueOpaqueOrigin();
   static bool BlockToplevelDataUriNavigations();
 
   static bool BlockFTPSubresources();
@@ -219,6 +220,7 @@ class nsIOService final : public nsIIOService,
 
   bool mNetworkNotifyChanged;
 
+  static bool sIsDataURIUniqueOpaqueOrigin;
   static bool sBlockToplevelDataUriNavigations;
 
   static bool sBlockFTPSubresources;

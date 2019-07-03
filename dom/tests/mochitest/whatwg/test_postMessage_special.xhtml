@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
 
 SimpleTest.waitForExplicitFinish();
 
-var isDataUnique = true;
+var isDataUnique = SpecialPowers.Services.prefs.getBoolPref("security.data_uri.unique_opaque_origin");
 var B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /**

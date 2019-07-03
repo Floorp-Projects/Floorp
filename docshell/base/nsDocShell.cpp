@@ -9989,7 +9989,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         true,  // aInheritForAboutBlank
         isSrcdoc);
 
-    inheritPrincipal = inheritAttrs && !SchemeIsData(aLoadState->URI());
+    bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
+                             SchemeIsData(aLoadState->URI());
+    inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
   }
 
   nsLoadFlags loadFlags = mDefaultLoadFlags;
