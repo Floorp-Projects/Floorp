@@ -37,11 +37,15 @@ var gFrame;
 // fail to load when there's no principal to load them against. This only
 // matters when these tests fail (produces better error messages).
 var tests = [
-  function testInitiation(cb) {
+  function testInheritFromParent(cb) {
     gFrame = document.createXULElement("iframe");
+    loadListener(gFrame, function () {
+      is(window.inheritedFromParent, true, "load in type=content iframe inherited principal of same type parent");
+      cb();
+    });
     gFrame.setAttribute("type", "content");
+    gFrame.setAttribute("src", "data:text/html,<script>parent.inheritedFromParent = true;</script>");
     document.documentElement.appendChild(gFrame);
-    cb();
   },
   function testInheritFromCurrent_system(cb) {
     loadListener(gFrame, function () {
@@ -49,12 +53,35 @@ var tests = [
       cb();
     }, true);
     gFrame.setAttribute("src", "data:text/html,<script>parent.inheritedSystem = true;</script>");
+  },
+  function testInheritFromCreated(cb) {
+    // Open a new chrome window with a type="content" iframe, so that it has no
+    // same-type parent.
+    // Load a javascript: URI in it to ensure that GetInheritedPrincipal will
+    // force creation of a content viewer.
+    let xulWinURL = 'data:application/vnd.mozilla.xul+xml,<?xml version="1.0"?>' +
+                    '<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>';
+    let newWin = window.openDialog(xulWinURL, "chrome_window", "chrome");
+    loadListener(newWin, function () {
+      let frame = newWin.document.createXULElement("iframe");
+      frame.setAttribute("type", "content");
+      frame.setAttribute("src", "javascript:'1';");
+      loadListener(frame, function () {
+        is(frame.contentWindow.document.body.textContent, "1", "content viewer was created");
+        SimpleTest.executeSoon(function () {
+          newWin.close();
+          cb();
+        })
+      });
+      newWin.document.documentElement.appendChild(frame);
+    });
   }
 ];
 
 addLoadEvent(function onLoad() {
   ok(Components.stack, "this test must be run with the system principal");
-  nextTest();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false]]}, nextTest);
 });
 
 function loadListener(target, func) {

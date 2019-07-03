@@ -282,7 +282,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
   }
 
   addLoadEvent(function onLoad() {
-    test();
+    SpecialPowers.pushPrefEnv({"set": [
+      ["security.data_uri.unique_opaque_origin", false]]}, test);
+  });
   ]]>
   </script>
 </window>

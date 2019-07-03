@@ -15,7 +15,7 @@
 <script class="testbody" type="text/javascript">
 
 var path = "/tests/dom/base/test/";
-var isUnique = true;
+var isUnique = SpecialPowers.getBoolPref("security.data_uri.unique_opaque_origin");
 
 var testFramesLoaded = function() {
   var harness = SpecialPowers.wrap(document).getElementById("harness");

@@ -52,7 +52,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.responsive.metaViewport.enabled", true],
           ["layout.testing.overlay-scrollbars.always-visible", true],
-    ],
+          ["security.data_uri.unique_opaque_origin", false]],
   });
 
   const store = ui.toolWindow.store;
