@@ -704,7 +704,6 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
         # outputs the constructs in the order that namedConstructors enumerates
         # them.
         self.namedConstructors = list()
-        self.legacyWindowAliases = []
         self.implementedInterfaces = set()
         self._consequential = False
         self._isKnownNonPartial = False
@@ -774,16 +773,6 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                               [self.location])
 
         IDLExposureMixins.finish(self, scope)
-
-        if len(self.legacyWindowAliases) > 0:
-            if not self.hasInterfaceObject():
-                raise WebIDLError("Interface %s unexpectedly has [LegacyWindowAlias] "
-                                  "and [NoInterfaceObject] together" % self.identifier.name,
-                                  [self.location])
-            if not self.isExposedInWindow():
-                raise WebIDLError("Interface %s has [LegacyWindowAlias] "
-                                  "but not exposed in Window" % self.identifier.name,
-                                  [self.location])
 
         # Now go ahead and merge in our partial interfaces.
         for partial in self._partialInterfaces:
@@ -1744,18 +1733,6 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 self.parentScope.addIfaceGlobalNames(self.identifier.name,
                                                      [self.identifier.name])
                 self._isOnGlobalProtoChain = True
-            elif identifier == "LegacyWindowAlias":
-                if attr.hasValue():
-                    self.legacyWindowAliases = [attr.value()]
-                elif attr.hasArgs():
-                    self.legacyWindowAliases = attr.args()
-                else:
-                    raise WebIDLError("[%s] must either take an identifier "
-                                      "or take an identifier list" % identifier,
-                                      [attr.location])
-                for alias in self.legacyWindowAliases:
-                    unresolved = IDLUnresolvedIdentifier(attr.location, alias)
-                    IDLObjectWithIdentifier(attr.location, self.parentScope, unresolved)
             elif identifier == "SecureContext":
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must take no arguments" % identifier,
