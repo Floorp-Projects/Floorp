@@ -75,14 +75,8 @@ function testEnd() {
 let load = async function () {
   removeEventListener("load", load);
 
-  await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["security.data_uri.unique_opaque_origin", false],
-    ]}, resolve);
-  });
-
   // Open a content window to test XRay functionality on built in functions.
-  gWin = window.open("data:text/html,");
+  gWin = window.open("javascript:1"); 
   info ("Waiting for content window to load");
   gWin.onload = startTest;
 };
@@ -91,3 +85,4 @@ addEventListener("load", load);
 </script>
 </body>
 </html>
+ 
