@@ -10,6 +10,7 @@
 [NoInterfaceObject]
 interface FeaturePolicy {
   boolean allowsFeature(DOMString feature, optional DOMString origin);
+  sequence<DOMString> features();
   sequence<DOMString> allowedFeatures();
   sequence<DOMString> getAllowlistForFeature(DOMString feature);
 };
