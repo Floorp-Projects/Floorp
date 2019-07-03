@@ -7,7 +7,7 @@
     <dimen name="crash_reporter_close_tab_button_bottom_margin">24dp</dimen>
     <dimen name="glyph_button_height">48dp</dimen>
     <dimen name="glyph_button_width">48dp</dimen>
-    <dimen name="mozac_browser_menu_corner_radius">14dp</dimen>
+    <dimen name="mozac_browser_menu_corner_radius">8dp</dimen>
     <dimen name="toolbar_elevation">7dp</dimen>
     <dimen name="library_item_height">56dp</dimen>
     <dimen name="library_item_icon_height">48dp</dimen>
@@ -37,7 +37,7 @@
     <dimen name="onboarding_header_icon_height_width">32dp</dimen>
 
     <!-- Bottom Sheet Fragment card -->
-    <dimen name="bottom_sheet_corner_radius">16dp</dimen>
+    <dimen name="bottom_sheet_corner_radius">8dp</dimen>
     <dimen name="bottom_sheet_top_padding">8dp</dimen>
 
     <!-- Browser Toolbar -->
