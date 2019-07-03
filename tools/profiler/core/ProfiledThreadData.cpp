@@ -87,6 +87,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
         schema.WriteField("line");
         schema.WriteField("column");
         schema.WriteField("category");
+        schema.WriteField("subcategory");
       }
 
       aWriter.StartArrayProperty("data");

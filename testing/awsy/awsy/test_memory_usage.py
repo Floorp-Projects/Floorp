@@ -187,7 +187,7 @@ class TestMemoryUsage(AwsyTestCase):
         try:
             result = self.marionette.execute_script(script,
                                                     script_timeout=180000)
-        except JavascriptException, e:
+        except JavascriptException as e:
             self.logger.error("removePreloadedBrowser() JavaScript error: %s" % e)
         except ScriptTimeoutException:
             self.logger.error("removePreloadedBrowser() timed out")

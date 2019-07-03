@@ -4,8 +4,6 @@ py3:
     include: ['.']
     exclude:
         - browser/app
-        - browser/components
-        - browser/extensions
         - build
         - client.py
         - config
@@ -22,11 +20,9 @@ py3:
         - modules/freetype2
         - security/manager/ssl
         - servo
-        - testing/awsy
         - testing/mochitest
         - testing/mozharness
         - testing/tools/iceserver
-        - testing/tps
         - testing/web-platform
         - toolkit
         - tools/jprof
