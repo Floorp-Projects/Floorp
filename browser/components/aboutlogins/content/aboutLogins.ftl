@@ -18,6 +18,7 @@ login-filter =
   .placeholder = Search Logins
 
 login-list =
+  .aria-label = Logins matching search query
   .count =
     { $count ->
         [one] { $count } login
@@ -61,6 +62,7 @@ master-password-reload-button-accesskey = L
 
 menu-button =
   .button-title = Open menu
+  .menuitem-faq = Frequently Asked Questions
   .menuitem-feedback = Leave Feedback
   .menuitem-import = Import Passwords…
   .menuitem-preferences =
