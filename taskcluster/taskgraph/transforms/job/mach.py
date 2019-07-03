@@ -43,14 +43,9 @@ defaults = {
 def configure_mach(config, job, taskdesc):
     run = job['run']
 
-    additional_prefix = []
+    command_prefix = 'cd $GECKO_PATH && ./mach '
     if job['worker-type'].endswith('1014'):
-        additional_prefix = [
-            'LC_ALL=en_US.UTF-8',
-            'LANG=en_US.UTF-8'
-        ]
-
-    command_prefix = ' '.join(['cd $GECKO_PATH'] + additional_prefix + ['&& ./mach '])
+        command_prefix = 'cd $GECKO_PATH && LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 ./mach '
 
     mach = run['mach']
     if isinstance(mach, dict):
