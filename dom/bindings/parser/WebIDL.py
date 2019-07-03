@@ -3581,6 +3581,8 @@ class IDLNullValue(IDLObject):
     def coerceToType(self, type, location):
         if (not isinstance(type, IDLNullableType) and
             not (type.isUnion() and type.hasNullableType) and
+            not (type.isUnion() and type.hasDictionaryType()) and
+            not type.isDictionary() and
             not type.isAny()):
             raise WebIDLError("Cannot coerce null value to type %s." % type,
                               [location])
@@ -3624,35 +3626,6 @@ class IDLEmptySequenceValue(IDLObject):
         emptySequenceValue = IDLEmptySequenceValue(self.location)
         emptySequenceValue.type = type
         return emptySequenceValue
-
-    def _getDependentObjects(self):
-        return set()
-
-
-class IDLDefaultDictionaryValue(IDLObject):
-    def __init__(self, location):
-        IDLObject.__init__(self, location)
-        self.type = None
-        self.value = None
-
-    def coerceToType(self, type, location):
-        if type.isUnion():
-            # We use the flat member types here, because if we have a nullable
-            # member type, or a nested union, we want the type the value
-            # actually coerces to, not the nullable or nested union type.
-            for subtype in type.unroll().flatMemberTypes:
-                try:
-                    return self.coerceToType(subtype, location)
-                except:
-                    pass
-
-        if not type.isDictionary():
-            raise WebIDLError("Cannot coerce default dictionary value to type %s." % type,
-                              [location])
-
-        defaultDictionaryValue = IDLDefaultDictionaryValue(self.location)
-        defaultDictionaryValue.type = type
-        return defaultDictionaryValue
 
     def _getDependentObjects(self):
         return set()
@@ -4657,7 +4630,14 @@ class IDLArgument(IDLObjectWithIdentifier):
             assert not isinstance(type.name, IDLUnresolvedIdentifier)
             self.type = type
 
-        if self.type.isAny():
+        if ((self.type.isDictionary() or
+             self.type.isUnion() and self.type.unroll().hasDictionaryType()) and
+            self.optional and not self.defaultValue and not self.variadic and
+            not self.dictionaryMember):
+            # Default optional non-variadic dictionary arguments to null,
+            # for simplicity, so the codegen doesn't have to special-case this.
+            self.defaultValue = IDLNullValue(self.location)
+        elif self.type.isAny():
             assert (self.defaultValue is None or
                     isinstance(self.defaultValue, IDLNullValue))
             # optional 'any' values always have a default value
@@ -5095,15 +5075,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                                           "containing such dictionary not "
                                           "followed by a required argument "
                                           "must be optional",
-                                          [argument.location])
-
-                    if (not argument.defaultValue and
-                        all(arg.optional for arg in arguments[idx+1:])):
-                        raise WebIDLError("Dictionary argument without any "
-                                          "required fields or union argument "
-                                          "containing such dictionary not "
-                                          "followed by a required argument "
-                                          "must have a default value",
                                           [argument.location])
 
                     # An argument cannot be a Nullable Dictionary
@@ -5975,17 +5946,12 @@ class Parser(Tokenizer):
         """
             DefaultValue : ConstValue
                          | LBRACKET RBRACKET
-                         | LBRACE RBRACE
         """
         if len(p) == 2:
             p[0] = p[1]
         else:
-            assert len(p) == 3  # Must be [] or {}
-            if p[1] == "[":
-                p[0] = IDLEmptySequenceValue(self.getLocation(p, 1))
-            else:
-                assert p[1] == "{"
-                p[0] = IDLDefaultDictionaryValue(self.getLocation(p, 1))
+            assert len(p) == 3  # Must be []
+            p[0] = IDLEmptySequenceValue(self.getLocation(p, 1))
 
     def p_DefaultValueNull(self, p):
         """
