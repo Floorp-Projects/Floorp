@@ -106,9 +106,32 @@
     <!-- Send Report SubView -->
     <panelview id="protections-popup-sendReportView"
                title="Send Report"
-               descriptionheightworkaround="true"
-               flex="1">
-        <label>Under Construction</label>
+               descriptionheightworkaround="true">
+        <vbox id="protections-popup-sendReportView-heading">
+          <description>&contentBlocking.breakageReportView2.description;</description>
+          <label id="protections-popup-sendReportView-learn-more"
+                 is="text-link">&contentBlocking.breakageReportView.learnMore;</label>
+        </vbox>
+        <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
+          <vbox class="protections-popup-sendReportView-collection-section">
+            <label>&contentBlocking.breakageReportView.collection.url.label;</label>
+            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url"/>
+          </vbox>
+          <vbox class="protections-popup-sendReportView-collection-section">
+            <label>&contentBlocking.breakageReportView.collection.comments.label;</label>
+            <html:textarea id="protections-popup-sendReportView-collection-comments"/>
+          </vbox>
+        </vbox>
+        <vbox id="protections-popup-sendReportView-footer"
+              class="panel-footer">
+          <button id="protections-popup-sendReportView-cancel"
+                  label="&contentBlocking.breakageReportView.cancel.label;"
+                  oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"/>
+          <button id="protections-popup-sendReportView-submit"
+                  default="true"
+                  label="&contentBlocking.breakageReportView.sendReport.label;"
+                  oncommand="gProtectionsHandler.onSendReportClicked();"/>
+        </vbox>
     </panelview>
   </panelmultiview>
 </panel>

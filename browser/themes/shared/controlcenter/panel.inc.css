@@ -189,6 +189,7 @@
 #identity-popup-trackersView > .panel-header,
 #identity-popup-securityView > .panel-header,
 #identity-popup-breakageReportView > .panel-header,
+#protections-popup-sendReportView > .panel-header,
 #identity-popup-content-blocking-report-breakage,
 .identity-popup-content-blocking-category-label,
 .identity-popup-content-blocking-category-state-label,
@@ -375,33 +376,41 @@ description#identity-popup-content-verifier,
 
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
-#identity-popup-breakageReportView-footer {
+#identity-popup-breakageReportView-footer,
+#protections-popup-sendReportView-footer {
   display: flex;
 }
 
-#identity-popup-breakageReportView-footer > button {
+#identity-popup-breakageReportView-footer > button,
+#protections-popup-sendReportView-footer > button {
   flex: 1;
 }
 
 #identity-popup-breakageReportView-heading,
-#identity-popup-breakageReportView-body {
+#identity-popup-breakageReportView-body,
+#protections-popup-sendReportView-heading,
+#protections-popup-sendReportView-body {
   padding: 16px;
   font-size: 110%;
 }
 
-.identity-popup-breakageReportView-collection-section {
+.identity-popup-breakageReportView-collection-section,
+.protections-popup-sendReportView-collection-section {
   margin-bottom: 16px;
 }
 
-#identity-popup-breakageReportView-body {
+#identity-popup-breakageReportView-body,
+#protections-popup-sendReportView-body {
   border-top: 1px solid var(--panel-separator-color);
 }
 
-#identity-popup-breakageReportView-collection-url {
+#identity-popup-breakageReportView-collection-url,
+#protections-popup-sendReportView-collection-url {
   font: inherit;
 }
 
-#identity-popup-breakageReportView-collection-comments {
+#identity-popup-breakageReportView-collection-comments,
+#protections-popup-sendReportView-collection-comments {
   height: 120px;
 }
 
