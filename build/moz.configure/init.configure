@@ -1130,6 +1130,7 @@ add_old_configure_assignment('MOZILLA_OFFICIAL', mozilla_official)
 
 # Allow specifying custom paths to the version files used by the milestone() function below.
 option('--with-version-file-path',
+       env='MOZ_VERSION_FILE',
        nargs=1,
        help='Specify a custom path to app version files instead of auto-detecting',
        default=None)

@@ -22,6 +22,4 @@ ac_add_options --target=arm-linux-androideabi
 
 . "$topsrcdir/build/mozconfig.artifact"
 
-ac_add_options --with-branding=mobile/android/branding/nightly
-
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
