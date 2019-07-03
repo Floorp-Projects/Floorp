@@ -95,6 +95,8 @@ class IndexedDatabaseManager final {
 
   static uint32_t MaxSerializedMsgSize();
 
+  static bool PreprocessingEnabled();
+
   void ClearBackgroundActor();
 
   already_AddRefed<FileManager> GetFileManager(PersistenceType aPersistenceType,
