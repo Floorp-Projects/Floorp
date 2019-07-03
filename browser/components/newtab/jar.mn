@@ -14,7 +14,6 @@ browser.jar:
   res/activity-stream/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
 #endif
   res/activity-stream/vendor/prop-types.js (./vendor/prop-types.js)
-  res/activity-stream/vendor/react-intl.js (./vendor/react-intl.js)
   res/activity-stream/vendor/redux.js (./vendor/redux.js)
   res/activity-stream/vendor/react-redux.js (./vendor/react-redux.js)
   res/activity-stream/data/content/assets/ (./data/content/assets/*)
