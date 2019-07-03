@@ -31,6 +31,7 @@ import mozilla.components.service.fxa.FxaPanicException
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
@@ -117,6 +118,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = getChangeListenerForDeviceName()
             deviceConstellation?.state()?.currentDevice?.let { device ->
                 summary = device.displayName
+                text = device.displayName
             }
             setOnBindEditTextListener { editText ->
                 editText.filters = arrayOf(InputFilter.LengthFilter(DEVICE_NAME_MAX_LENGTH))
@@ -158,6 +160,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     private fun getChangeListenerForDeviceName(): Preference.OnPreferenceChangeListener {
         return Preference.OnPreferenceChangeListener { _, newValue ->
+            // The network request requires a nonempty string, so don't persist any changes if the user inputs one.
+            if (newValue.toString().trim().isEmpty()) {
+                FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
+                    .setText(getString(R.string.empty_device_name_error))
+                    .show()
+                return@OnPreferenceChangeListener false
+            }
             // Optimistically set the device name to what user requested.
             val deviceNameKey = context!!.getPreferenceKey(R.string.pref_key_sync_device_name)
             val preferenceDeviceName = findPreference<Preference>(deviceNameKey)
@@ -175,7 +184,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     Logger.error("Setting device name failed.", e)
                 }
             }
-
             true
         }
     }

@@ -155,6 +155,8 @@
     <string name="preferences_sign_out">Sign out</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Device name</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Device name cannot be empty.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Syncing…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
