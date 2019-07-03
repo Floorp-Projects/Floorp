@@ -472,6 +472,8 @@ var gSitePermissionsManager = {
       SitePermissions.setDefault("autoplay-media", Number(menulist.value));
     });
 
+    menulist.menupopup.setAttribute("incontentshell", "false");
+
     document.getElementById("setAutoplayPref").appendChild(menulist);
   },
 
