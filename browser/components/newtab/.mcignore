@@ -8,7 +8,6 @@ npm-debug.log
 .eslintcache
 
 /.git/
-/data/locales.json
 /dist/
 /logs/
 /node_modules/
