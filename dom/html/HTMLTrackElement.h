@@ -95,9 +95,7 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
   void DispatchTrackRunnable(const nsString& aEventName);
   void DispatchTrustedEvent(const nsAString& aName);
 
-  void DropChannel();
-
-  void NotifyShutdown();
+  void CancelChannelAndListener();
 
   // Only load resource for the non-disabled track with media parent.
   void MaybeDispatchLoadResource();
