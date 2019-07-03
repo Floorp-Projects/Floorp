@@ -34,7 +34,7 @@ const HTML_VOID_ELEMENTS = [
 // element markup and their respective title tooltip text.
 const DISPLAY_TYPES = {
   "flex": INSPECTOR_L10N.getStr("markupView.display.flex.tooltiptext"),
-  "inline-flex": INSPECTOR_L10N.getStr("markupView.display.flex.tooltiptext"),
+  "inline-flex": INSPECTOR_L10N.getStr("markupView.display.inlineFlex.tooltiptext"),
   "grid": INSPECTOR_L10N.getStr("markupView.display.grid.tooltiptext"),
   "inline-grid": INSPECTOR_L10N.getStr("markupView.display.inlineGrid.tooltiptext"),
   "subgrid": INSPECTOR_L10N.getStr("markupView.display.subgrid.tooltiptiptext"),
