@@ -9,6 +9,7 @@
 #include "mozilla/dom/TextTrackRegion.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "unicode/ubidi.h"
 
 extern mozilla::LazyLogModule gTextTrackLog;
 
@@ -205,8 +206,22 @@ PositionAlignSetting TextTrackCue::ComputedPositionAlign() {
     return PositionAlignSetting::Line_left;
   } else if (mAlign == AlignSetting::Right) {
     return PositionAlignSetting::Line_right;
+  } else if (mAlign == AlignSetting::Start) {
+    return IsTextBaseDirectionLTR() ? PositionAlignSetting::Line_left
+                                    : PositionAlignSetting::Line_right;
+  } else if (mAlign == AlignSetting::End) {
+    return IsTextBaseDirectionLTR() ? PositionAlignSetting::Line_right
+                                    : PositionAlignSetting::Line_left;
   }
   return PositionAlignSetting::Center;
+}
+
+bool TextTrackCue::IsTextBaseDirectionLTR() const {
+  // The returned result by `ubidi_getBaseDirection` might be `neutral` if the
+  // text only contains netural charaters. In this case, we would treat its
+  // base direction as LTR.
+  return ubidi_getBaseDirection(mText.BeginReading(), mText.Length()) !=
+         UBIDI_RTL;
 }
 
 void TextTrackCue::NotifyDisplayStatesChanged() {
