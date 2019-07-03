@@ -26,7 +26,8 @@ browser.jar:
 #else
   res/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
 #endif
+  res/activity-stream/prerendered/activity-stream.html (./prerendered/activity-stream.html)
 #ifndef RELEASE_OR_BETA
-  res/activity-stream/prerendered/static/activity-stream-debug.html (./prerendered/static/activity-stream-debug.html)
+  res/activity-stream/prerendered/activity-stream-debug.html (./prerendered/activity-stream-debug.html)
 #endif
-  res/activity-stream/prerendered/ (./prerendered/locales/*)
+  res/activity-stream/prerendered/activity-stream-noscripts.html (./prerendered/activity-stream-noscripts.html)
