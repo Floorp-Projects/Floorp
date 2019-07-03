@@ -3,16 +3,13 @@ def firstArgType(method):
 
 def WebIDLTest(parser, harness):
     parser.parse("""
-      // Give our dictionary a required member so we don't need to
-      // mess with optional and default values.
       dictionary Dict {
-        required long member;
       };
       callback interface Foo {
       };
       interface Bar {
         // Bit of a pain to get things that have dictionary types
-        void passDict(Dict arg);
+        void passDict(optional Dict arg);
         void passFoo(Foo arg);
         void passNullableUnion((object? or DOMString) arg);
         void passNullable(Foo? arg);
@@ -159,8 +156,8 @@ def WebIDLTest(parser, harness):
                  "AncestorInterface", "UnrelatedInterface",
                  "ImplementedInterface", "CallbackInterface",
                  "CallbackInterface?", "CallbackInterface2",
-                 "object", "Callback", "Callback2", "Dict",
-                 "Dict2", "sequence<long>", "sequence<short>",
+                 "object", "Callback", "Callback2", "optional Dict",
+                 "optional Dict2", "sequence<long>", "sequence<short>",
                  "record<DOMString, object>",
                  "record<USVString, Dict>",
                  "record<ByteString, long>",
@@ -168,7 +165,7 @@ def WebIDLTest(parser, harness):
                  "Promise<any>", "Promise<any>?",
                  "USVString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer",
                  "Uint8Array", "Uint16Array",
-                 "(long or Callback)", "(long or Dict)",
+                 "(long or Callback)", "optional (long or Dict)",
     ]
     # When we can parse Date, we need to add it here.
     # XXXbz we can, and should really do that...
@@ -177,7 +174,7 @@ def WebIDLTest(parser, harness):
     def allBut(list1, list2):
         return [a for a in list1 if a not in list2 and
                 (a != "any" and a != "Promise<any>" and a != "Promise<any>?")]
-    unions = [ "(long or Callback)", "(long or Dict)" ]
+    unions = [ "(long or Callback)", "optional (long or Dict)" ]
     numerics = [ "long", "short", "long?", "short?" ]
     booleans = [ "boolean", "boolean?" ]
     primitives = numerics + booleans
@@ -192,7 +189,7 @@ def WebIDLTest(parser, harness):
     interfaces = [ "Interface", "Interface?", "AncestorInterface",
                    "UnrelatedInterface", "ImplementedInterface" ] + bufferSourceTypes + sharedBufferSourceTypes
     nullables = (["long?", "short?", "boolean?", "Interface?",
-                  "CallbackInterface?", "Dict", "Dict2",
+                  "CallbackInterface?", "optional Dict", "optional Dict2",
                   "Date?", "any", "Promise<any>?"] +
                  allBut(unions, [ "(long or Callback)" ]))
     dates = [ "Date", "Date?" ]
@@ -236,8 +233,8 @@ def WebIDLTest(parser, harness):
     setDistinguishable("object", nonObjects)
     setDistinguishable("Callback", nonUserObjects)
     setDistinguishable("Callback2", nonUserObjects)
-    setDistinguishable("Dict", allBut(nonUserObjects, nullables))
-    setDistinguishable("Dict2", allBut(nonUserObjects, nullables))
+    setDistinguishable("optional Dict", allBut(nonUserObjects, nullables))
+    setDistinguishable("optional Dict2", allBut(nonUserObjects, nullables))
     setDistinguishable("sequence<long>",
                        allBut(argTypes, sequences + ["object"]))
     setDistinguishable("sequence<short>",
@@ -257,7 +254,7 @@ def WebIDLTest(parser, harness):
     setDistinguishable("SharedArrayBuffer", allBut(argTypes, ["SharedArrayBuffer", "object"]))
     setDistinguishable("(long or Callback)",
                        allBut(nonUserObjects, numerics))
-    setDistinguishable("(long or Dict)",
+    setDistinguishable("optional (long or Dict)",
                        allBut(nonUserObjects, numerics + nullables))
 
     def areDistinguishable(type1, type2):
@@ -276,10 +273,8 @@ def WebIDLTest(parser, harness):
           callback interface CallbackInterface2 {};
           callback Callback = any();
           callback Callback2 = long(short arg);
-          // Give our dictionaries required members so we don't need to
-          // mess with optional and default values.
-          dictionary Dict { required long member; };
-          dictionary Dict2 { required long member; };
+          dictionary Dict {};
+          dictionary Dict2 {};
           interface TestInterface {%s
           };
         """
