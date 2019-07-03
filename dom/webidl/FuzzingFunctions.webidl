@@ -108,5 +108,5 @@ interface FuzzingFunctions {
    */
   [Throws]
   static void synthesizeKeyboardEvents(DOMString aKeyValue,
-                                       optional KeyboardEventInit aDictionary);
+                                       optional KeyboardEventInit aDictionary = {});
 };

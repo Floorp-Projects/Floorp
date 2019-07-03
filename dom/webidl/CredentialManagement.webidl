@@ -16,9 +16,9 @@ interface Credential {
 [Exposed=Window, SecureContext, Pref="security.webauth.webauthn"]
 interface CredentialsContainer {
   [Throws]
-  Promise<Credential?> get(optional CredentialRequestOptions options);
+  Promise<Credential?> get(optional CredentialRequestOptions options = {});
   [Throws]
-  Promise<Credential?> create(optional CredentialCreationOptions options);
+  Promise<Credential?> create(optional CredentialCreationOptions options = {});
   [Throws]
   Promise<Credential> store(Credential credential);
   [Throws]
@@ -26,13 +26,13 @@ interface CredentialsContainer {
 };
 
 dictionary CredentialRequestOptions {
-  // FIXME: bug 1493860: should this "= null" be here?
-  PublicKeyCredentialRequestOptions publicKey = null;
+  // FIXME: bug 1493860: should this "= {}" be here?
+  PublicKeyCredentialRequestOptions publicKey = {};
   AbortSignal signal;
 };
 
 dictionary CredentialCreationOptions {
-  // FIXME: bug 1493860: should this "= null" be here?
-  PublicKeyCredentialCreationOptions publicKey = null;
+  // FIXME: bug 1493860: should this "= {}" be here?
+  PublicKeyCredentialCreationOptions publicKey = {};
   AbortSignal signal;
 };

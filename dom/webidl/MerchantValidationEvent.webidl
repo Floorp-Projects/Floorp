@@ -11,7 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional MerchantValidationEventInit eventInitDict),
+[Constructor(DOMString type, optional MerchantValidationEventInit eventInitDict = {}),
 SecureContext,
 Exposed=Window,
 Func="mozilla::dom::PaymentRequest::PrefEnabled"]

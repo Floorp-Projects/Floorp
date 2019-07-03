@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.gamepad.enabled",
- Constructor(DOMString type, optional GamepadEventInit eventInitDict)]
+ Constructor(DOMString type, optional GamepadEventInit eventInitDict = {})]
 interface GamepadEvent : Event
 {
   readonly attribute Gamepad? gamepad;
