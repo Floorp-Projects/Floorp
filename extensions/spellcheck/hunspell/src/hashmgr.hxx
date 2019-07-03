@@ -81,6 +81,12 @@
 
 enum flag { FLAG_CHAR, FLAG_LONG, FLAG_NUM, FLAG_UNI };
 
+// morphological description of a dictionary item can contain
+// arbitrary number "ph:" (MORPH_PHON) fields to store typical
+// phonetic or other misspellings of that word.
+// ratio of lines/lines with "ph:" in the dic file: 1/MORPH_PHON_RATIO
+#define MORPH_PHON_RATIO 500
+
 class HashMgr {
   int tablesize;
   struct hentry** tableptr;
@@ -99,6 +105,10 @@ class HashMgr {
   unsigned short* aliasflen;
   int numaliasm;  // morphological desciption `compression' with aliases
   char** aliasm;
+  // reptable created from REP table of aff file and from "ph:" fields
+  // of the dic file. It contains phonetic and other common misspellings
+  // (letters, letter groups and words) for better suggestions
+  std::vector<replentry> reptable;
 
  public:
   HashMgr(const char* tpath, const char* apath, const char* key = NULL);
@@ -119,6 +129,7 @@ class HashMgr {
   int get_aliasf(int index, unsigned short** fvec, FileMgr* af) const;
   int is_aliasm() const;
   char* get_aliasm(int index) const;
+  const std::vector<replentry>& get_reptable() const;
 
  private:
   int get_clen_and_captype(const std::string& word, int* captype);
@@ -129,7 +140,8 @@ class HashMgr {
                unsigned short* ap,
                int al,
                const std::string* desc,
-               bool onlyupcase);
+               bool onlyupcase,
+               int captype);
   int load_config(const char* affpath, const char* key);
   bool parse_aliasf(const std::string& line, FileMgr* af);
   int add_hidden_capitalized_word(const std::string& word,
@@ -139,6 +151,7 @@ class HashMgr {
                                   const std::string* dp,
                                   int captype);
   bool parse_aliasm(const std::string& line, FileMgr* af);
+  bool parse_reptable(const std::string& line, FileMgr* af);
   int remove_forbidden_flag(const std::string& word);
 };
 
