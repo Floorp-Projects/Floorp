@@ -2211,7 +2211,7 @@ nsresult Document::Init() {
 
   // we need to create a policy here so getting the policy within
   // ::Policy() can *always* return a non null policy
-  mFeaturePolicy = new mozilla::dom::FeaturePolicy(this);
+  mFeaturePolicy = new FeaturePolicy(this);
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
   mStyleSet = MakeUnique<ServoStyleSet>(*this);
@@ -3275,14 +3275,14 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
 
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
-  RefPtr<mozilla::dom::FeaturePolicy> parentPolicy = nullptr;
+  RefPtr<FeaturePolicy> parentPolicy = nullptr;
   if (mDocumentContainer) {
     nsPIDOMWindowOuter* containerWindow = mDocumentContainer->GetWindow();
     if (containerWindow) {
       nsCOMPtr<nsINode> node = containerWindow->GetFrameElementInternal();
       HTMLIFrameElement* iframe = HTMLIFrameElement::FromNodeOrNull(node);
       if (iframe) {
-        parentPolicy = iframe->FeaturePolicy();
+        parentPolicy = iframe->Policy();
       }
     }
   }
@@ -12573,10 +12573,10 @@ void Document::MaybeResolveReadyForIdle() {
   }
 }
 
-mozilla::dom::FeaturePolicy* Document::FeaturePolicy() const {
+FeaturePolicy* Document::Policy() const {
   // The policy is created when the document is initialized. We _must_ have a
   // policy here even if the featurePolicy pref is off. If this assertion fails,
-  // it means that ::FeaturePolicy() is called before ::StartDocumentLoad().
+  // it means that ::Policy() is called before ::StartDocumentLoad().
   MOZ_ASSERT(mFeaturePolicy);
   return mFeaturePolicy;
 }
