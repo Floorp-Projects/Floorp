@@ -268,6 +268,8 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_DTD:
     case nsIContentPolicy::TYPE_OTHER:
     case nsIContentPolicy::TYPE_SPECULATIVE:
+    case nsIContentPolicy::TYPE_INTERNAL_DTD:
+    case nsIContentPolicy::TYPE_INTERNAL_FORCE_ALLOWED_DTD:
       return nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE;
 
     // csp shold not block top level loads, e.g. in case
