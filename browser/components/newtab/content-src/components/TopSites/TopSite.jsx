@@ -6,7 +6,6 @@ import {
   TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SOURCE,
 } from "./TopSitesConstants";
-import {injectIntl} from "react-intl";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import {ScreenshotUtils} from "content-src/lib/screenshot-utils";
@@ -284,7 +283,7 @@ export class TopSite extends React.PureComponent {
           <button aria-haspopup="true"
             className="context-menu-button icon"
             data-l10n-id="newtab-menu-content-tooltip"
-            data-l10n-args={`{ "title": "${title}" }`}
+            data-l10n-args={JSON.stringify({title})}
             onClick={this.onMenuButtonClick} />
           {isContextMenuOpen &&
             <LinkMenu
@@ -325,7 +324,7 @@ export class TopSitePlaceholder extends React.PureComponent {
   }
 }
 
-export class _TopSiteList extends React.PureComponent {
+export class TopSiteList extends React.PureComponent {
   static get DEFAULT_STATE() {
     return {
       activeIndex: null,
@@ -338,7 +337,7 @@ export class _TopSiteList extends React.PureComponent {
 
   constructor(props) {
     super(props);
-    this.state = _TopSiteList.DEFAULT_STATE;
+    this.state = TopSiteList.DEFAULT_STATE;
     this.onDragEvent = this.onDragEvent.bind(this);
     this.onActivate = this.onActivate.bind(this);
   }
@@ -351,7 +350,7 @@ export class _TopSiteList extends React.PureComponent {
         prevTopSites[this.state.draggedIndex].url === this.state.draggedSite.url &&
         (!newTopSites[this.state.draggedIndex] || newTopSites[this.state.draggedIndex].url !== this.state.draggedSite.url)) {
         // We got the new order from the redux store via props. We can clear state now.
-        this.setState(_TopSiteList.DEFAULT_STATE);
+        this.setState(TopSiteList.DEFAULT_STATE);
       }
     }
   }
@@ -379,7 +378,7 @@ export class _TopSiteList extends React.PureComponent {
       case "dragend":
         if (!this.dropped) {
           // If there was no drop event, reset the state to the default.
-          this.setState(_TopSiteList.DEFAULT_STATE);
+          this.setState(TopSiteList.DEFAULT_STATE);
         }
         break;
       case "dragenter":
@@ -472,7 +471,6 @@ export class _TopSiteList extends React.PureComponent {
     const commonProps = {
       onDragEvent: this.onDragEvent,
       dispatch: props.dispatch,
-      intl: props.intl,
     };
     // We assign a key to each placeholder slot. We need it to be independent
     // of the slot index (i below) so that the keys used stay the same during
@@ -511,5 +509,3 @@ export class _TopSiteList extends React.PureComponent {
     </ul>);
   }
 }
-
-export const TopSiteList = injectIntl(_TopSiteList);
