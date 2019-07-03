@@ -47,8 +47,8 @@
 .spectrum-controls {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
-  margin-right: 5px;
+  margin-block-start: 10px;
+  margin-inline-end: 5px;
   width: 200px;
 }
 
@@ -85,7 +85,7 @@
   flex-direction: column;
   justify-content: space-around;
   width: 130px;
-  margin-left: 10px;
+  margin-inline-start: 10px;
   height: 30px;
 }
 
@@ -117,7 +117,7 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 .spectrum-hue {
   position: relative;
   height: 8px;
-  margin-top: 3px;
+  margin-block-start: 3px;
 }
 
 .spectrum-alpha-inner,

@@ -395,6 +395,11 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
+        succeed:
+            provisioner: built-in
+            implementation: succeed
+            os: none
+            worker-type: succeed
 
 mac-notarization:
     mac-behavior:

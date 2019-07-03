@@ -1113,7 +1113,7 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     bufferInfo->Set(0, size, inputImage.render_time_ms() * PR_USEC_PER_MSEC, 0);
   }
 
-  mJavaEncoder->Input(bytes, bufferInfo, nullptr);
+  mJavaEncoder->Input(bytes, bufferInfo, nullptr, 0);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
