@@ -265,16 +265,13 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
   }
 
   float sampleRate = MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE;
-  if (Preferences::GetBool(
-          "media.webaudio.audiocontextoptions-samplerate.enabled")) {
-    if (aOptions.mSampleRate > 0 &&
-        (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
-         WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return nullptr;
-    }
-    sampleRate = aOptions.mSampleRate;
+  if (aOptions.mSampleRate > 0 &&
+      (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
+       WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
   }
+  sampleRate = aOptions.mSampleRate;
 
   uint32_t maxChannelCount = std::min<uint32_t>(
       WebAudioUtils::MaxChannelCount, CubebUtils::MaxNumberOfChannels());
