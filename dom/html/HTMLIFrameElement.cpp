@@ -54,7 +54,7 @@ HTMLIFrameElement::HTMLIFrameElement(
     FromParser aFromParser)
     : nsGenericHTMLFrameElement(std::move(aNodeInfo), aFromParser) {
   // We always need a featurePolicy, even if not exposed.
-  mFeaturePolicy = new mozilla::dom::FeaturePolicy(this);
+  mFeaturePolicy = new FeaturePolicy(this);
 
   nsCOMPtr<nsIPrincipal> origin = GetFeaturePolicyDefaultOrigin();
   MOZ_ASSERT(origin);
@@ -224,9 +224,7 @@ JSObject* HTMLIFrameElement::WrapNode(JSContext* aCx,
   return HTMLIFrameElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-mozilla::dom::FeaturePolicy* HTMLIFrameElement::FeaturePolicy() const {
-  return mFeaturePolicy;
-}
+FeaturePolicy* HTMLIFrameElement::Policy() const { return mFeaturePolicy; }
 
 already_AddRefed<nsIPrincipal>
 HTMLIFrameElement::GetFeaturePolicyDefaultOrigin() const {
@@ -270,7 +268,7 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
                                         origin);
     }
 
-    mFeaturePolicy->InheritPolicy(OwnerDoc()->FeaturePolicy());
+    mFeaturePolicy->InheritPolicy(OwnerDoc()->Policy());
   }
 
   if (AllowPaymentRequest()) {
