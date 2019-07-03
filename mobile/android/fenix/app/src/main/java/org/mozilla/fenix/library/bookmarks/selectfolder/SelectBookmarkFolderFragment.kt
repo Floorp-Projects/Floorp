@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.library.bookmarks.selectfolder
 
-import android.content.Context
 import android.graphics.PorterDuff.Mode.SRC_IN
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -56,12 +55,6 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
     private lateinit var signInComponent: SignInComponent
 
-    // Fill out our title map once we have context.
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        setRootTitles(context, showMobileRoot = true)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -99,6 +92,9 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
+        context?.let {
+            setRootTitles(it, showMobileRoot = true)
+        }
         (activity as AppCompatActivity).title =
             getString(R.string.bookmark_select_folder_fragment_label)
         (activity as AppCompatActivity).supportActionBar?.show()

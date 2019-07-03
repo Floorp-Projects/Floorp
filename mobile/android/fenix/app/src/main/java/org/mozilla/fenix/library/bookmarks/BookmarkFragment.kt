@@ -99,12 +99,6 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
         return view
     }
 
-    // Fill out our title map once we have context.
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        setRootTitles(context)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity?.title = getString(R.string.library_bookmarks)
@@ -113,6 +107,8 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
 
     override fun onResume() {
         super.onResume()
+        context?.let { setRootTitles(it) }
+
         (activity as? AppCompatActivity)?.supportActionBar?.show()
         checkIfSignedIn()
 
