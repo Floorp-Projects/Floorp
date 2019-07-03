@@ -346,7 +346,7 @@
           <button id="identity-popup-breakageReportView-submit"
                   default="true"
                   label="&contentBlocking.breakageReportView.sendReport.label;"
-                  oncommand="ContentBlocking.onSubmitBreakageReportClicked();"/>
+                  oncommand="ContentBlocking.submitBreakageReport();"/>
         </vbox>
     </panelview>
   </panelmultiview>
