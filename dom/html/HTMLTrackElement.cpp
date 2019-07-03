@@ -498,5 +498,12 @@ nsresult HTMLTrackElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
+void HTMLTrackElement::DispatchTestEvent(const nsAString& aName) {
+  if (!StaticPrefs::media_webvtt_testing_events()) {
+    return;
+  }
+  DispatchTrustedEvent(aName);
+}
+
 }  // namespace dom
 }  // namespace mozilla

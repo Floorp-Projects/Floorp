@@ -94,6 +94,7 @@ WebVTTListener::OnStartRequest(nsIRequest* aRequest) {
   }
 
   LOG("OnStartRequest");
+  mElement->DispatchTestEvent(NS_LITERAL_STRING("mozStartedLoadingTextTrack"));
   return NS_OK;
 }
 

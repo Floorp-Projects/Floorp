@@ -94,6 +94,7 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
 
   void DispatchTrackRunnable(const nsString& aEventName);
   void DispatchTrustedEvent(const nsAString& aName);
+  void DispatchTestEvent(const nsAString& aName);
 
   void CancelChannelAndListener();
 
