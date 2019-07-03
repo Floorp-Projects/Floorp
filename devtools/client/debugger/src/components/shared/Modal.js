@@ -20,7 +20,7 @@ type ModalProps = {
   handleClose: () => any,
 };
 
-export const transitionTimeout = 175;
+export const transitionTimeout = 50;
 
 export class Modal extends React.Component<ModalProps> {
   onClick = (e: SyntheticEvent<HTMLElement>) => {
