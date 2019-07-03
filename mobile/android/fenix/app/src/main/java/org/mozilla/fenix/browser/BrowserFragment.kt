@@ -895,6 +895,7 @@ class BrowserFragment : Fragment(), BackHandler {
             override fun onSessionSelected(session: Session) {
                 super.onSessionSelected(session)
                 (activity as HomeActivity).updateThemeForSession(session)
+                updateBookmarkState(session)
             }
         }.also { requireComponents.core.sessionManager.register(it, this) }
     }
