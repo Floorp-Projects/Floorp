@@ -89,7 +89,7 @@ interface MediaStreamTrack : EventTarget {
     MediaTrackSettings     getSettings ();
 
     [Throws, NeedsCallerType]
-    Promise<void>          applyConstraints (optional MediaTrackConstraints constraints);
+    Promise<void>          applyConstraints (optional MediaTrackConstraints constraints = {});
 //              attribute EventHandler          onoverconstrained;
 
     [ChromeOnly]

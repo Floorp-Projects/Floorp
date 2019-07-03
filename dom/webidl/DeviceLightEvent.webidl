@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="device.sensors.ambientLight.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceLightEventInit eventInitDict)]
+[Pref="device.sensors.ambientLight.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceLightEventInit eventInitDict = {})]
 interface DeviceLightEvent : Event
 {
   readonly attribute unrestricted double value;

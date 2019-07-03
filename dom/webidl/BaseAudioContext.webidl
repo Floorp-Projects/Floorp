@@ -98,5 +98,5 @@ interface BaseAudioContext : EventTarget {
     [NewObject, Throws]
     PeriodicWave createPeriodicWave(Float32Array real,
                                     Float32Array imag,
-                                    optional PeriodicWaveConstraints constraints);
+                                    optional PeriodicWaveConstraints constraints = {});
 };

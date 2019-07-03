@@ -15,7 +15,7 @@
  Exposed=(Window,Worker),
  Serializable]
 interface DOMRect : DOMRectReadOnly {
-    [NewObject] static DOMRect fromRect(optional DOMRectInit other);
+    [NewObject] static DOMRect fromRect(optional DOMRectInit other = {});
 
     inherit attribute unrestricted double x;
     inherit attribute unrestricted double y;
@@ -29,7 +29,7 @@ interface DOMRect : DOMRectReadOnly {
  Exposed=(Window,Worker),
  Serializable]
 interface DOMRectReadOnly {
-    [NewObject] static DOMRectReadOnly fromRect(optional DOMRectInit other);
+    [NewObject] static DOMRectReadOnly fromRect(optional DOMRectInit other = {});
 
     readonly attribute unrestricted double x;
     readonly attribute unrestricted double y;
