@@ -73,30 +73,6 @@ web-platform-tests:
         extra-options:
             - --test-type=testharness
 
-web-platform-tests-headless:
-    description: "Web platform test headless run"
-    suite: web-platform-tests
-    treeherder-symbol: W(wptH)
-    chunks:
-        by-test-platform:
-            macosx.*/opt: 8
-            macosx.*/debug: 16
-    e10s: true
-    max-run-time: 7200
-    run-on-projects: []  # disabled pending releng approval
-    mozharness:
-        chunked: true
-        extra-options:
-            by-test-platform:
-                windows.*:
-                    - --test-type=testharness
-                    - --headless
-                    - --headless-width=1024
-                    - --headless-height=768
-                default:
-                    - --test-type=testharness
-                    - --headless
-
 web-platform-tests-reftests:
     description: "Web platform reftest run"
     suite:
@@ -126,26 +102,6 @@ web-platform-tests-reftests:
     mozharness:
         extra-options:
             - --test-type=reftest
-
-web-platform-tests-reftests-headless:
-    description: "Web platform reftest headless run"
-    suite:
-        name: web-platform-tests-reftests
-    schedules-component: web-platform-tests-reftests
-    treeherder-symbol: W(WrH)
-    chunks: 6
-    e10s: true
-    run-on-projects: []  # disabled pending releng approval
-    mozharness:
-        extra-options:
-            by-test-platform:
-                windows.*:
-                    - --test-type=reftest
-                    - --headless
-                    - --headless-width=1024
-                    - --headless-height=768
-                default:
-                    - --test-type=reftest
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
@@ -178,15 +134,16 @@ web-platform-tests-wdspec-headless:
         name: web-platform-tests-wdspec
     schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(WdH)
-    run-on-projects: []  # disabled pending releng approval
+    chunks: 2
+    tier: 2
     mozharness:
         extra-options:
             by-test-platform:
                 windows.*:
                     - --test-type=wdspec
                     - --headless
-                    - --headless-width=1024
-                    - --headless-height=768
+                    - --headless-width=1600
+                    - --headless-height=1200
                 default:
                     - --test-type=wdspec
                     - --headless
