@@ -682,6 +682,9 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   // Events for child process windows will be sent when ParentActivated
   // is called.
   if (XRE_IsParentProcess()) {
+    // Popping upon lowering was inhibited to accommodate ATOK,
+    // so we need to do it here.
+    BrowserParent::PopFocusAll();
     ActivateOrDeactivate(window, true);
   }
 
