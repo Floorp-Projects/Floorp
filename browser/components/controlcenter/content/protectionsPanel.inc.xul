@@ -101,5 +101,14 @@
             class="text-link">Send Report</label>
         </hbox>
     </panelview>
+
+
+    <!-- Send Report SubView -->
+    <panelview id="protections-popup-sendReportView"
+               title="Send Report"
+               descriptionheightworkaround="true"
+               flex="1">
+        <label>Under Construction</label>
+    </panelview>
   </panelmultiview>
 </panel>
