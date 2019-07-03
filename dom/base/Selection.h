@@ -161,8 +161,8 @@ class Selection final : public nsSupportsWeakReference,
                           ScrollAxis aVertical = ScrollAxis(),
                           ScrollAxis aHorizontal = ScrollAxis(),
                           int32_t aFlags = 0);
-  nsresult SubtractRange(RangeData* aRange, nsRange* aSubtract,
-                         nsTArray<RangeData>* aOutput);
+  static nsresult SubtractRange(RangeData* aRange, nsRange* aSubtract,
+                                nsTArray<RangeData>* aOutput);
 
  private:
   /**
@@ -745,9 +745,10 @@ class Selection final : public nsSupportsWeakReference,
                                     nsTArray<RefPtr<nsRange>>& rangesToAdd);
 
   /**
-   * Helper method for AddRangesForSelectableNodes.
+   * Preserves the sorting of mRanges.
    */
-  nsresult AddItemInternal(nsRange* aRange, int32_t* aOutIndex);
+  nsresult MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
+                                            int32_t* aOutIndex);
 
   Document* GetDocument() const;
   nsPIDOMWindowOuter* GetWindow() const;
