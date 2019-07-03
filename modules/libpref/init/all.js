@@ -555,8 +555,6 @@ pref("media.av1.use-dav1d", false);
 #endif
 #endif
 
-pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);
-
 // Whether to enable arbitrary layer geometry for OpenGL compositor
 pref("layers.geometry.opengl.enabled", true);
 
