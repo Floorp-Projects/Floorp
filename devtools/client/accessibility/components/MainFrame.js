@@ -12,6 +12,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { reset } = require("../actions/ui");
 
+// Localization
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
+
 // Constants
 const { SIDEBAR_WIDTH, PORTRAIT_MODE_WIDTH } = require("../constants");
 
@@ -31,6 +35,7 @@ class MainFrame extends Component {
   static get propTypes() {
     return {
       accessibility: PropTypes.object.isRequired,
+      fluentBundles: PropTypes.array.isRequired,
       walker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
@@ -91,7 +96,7 @@ class MainFrame extends Component {
    * Render Accessibility panel content
    */
   render() {
-    const { accessibility, walker, enabled, auditing } = this.props;
+    const { accessibility, walker, fluentBundles, enabled, auditing } = this.props;
 
     if (!enabled) {
       return Description({ accessibility });
@@ -100,7 +105,7 @@ class MainFrame extends Component {
     // Audit is currently running.
     const isAuditing = auditing.length > 0;
 
-    return (
+    return LocalizationProvider({ messages: fluentBundles },
       div({ className: "mainFrame", role: "presentation" },
         Toolbar({ accessibility, walker }),
         isAuditing && AuditProgressOverlay(),
@@ -122,8 +127,10 @@ class MainFrame extends Component {
             }, AccessibilityTree({ walker })),
             endPanel: RightSidebar({ walker }),
             vert: this.useLandscapeMode,
-          })),
-      ));
+          })
+        ),
+      )
+    );
   }
 }
 
