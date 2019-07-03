@@ -1554,8 +1554,7 @@ void ContentParent::ProcessingError(Result aCode, const char* aReason) {
 }
 
 void ContentParent::ActorDestroy(ActorDestroyReason why) {
-  RefPtr<ContentParent> kungFuDeathGrip(mSelfRef.forget());
-  MOZ_RELEASE_ASSERT(kungFuDeathGrip);
+  MOZ_RELEASE_ASSERT(mSelfRef);
 
   if (mForceKillTimer) {
     mForceKillTimer->Cancel();
@@ -1667,16 +1666,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
     }
   }
 
-  // IPDL rules require actors to live on past ActorDestroy, but it
-  // may be that the kungFuDeathGrip above is the last reference to
-  // |this|.  If so, when we go out of scope here, we're deleted and
-  // all hell breaks loose.
-  //
-  // This runnable ensures that a reference to |this| lives on at
-  // least until after the current task finishes running.
-  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-      "DelayedReleaseContentParent", [kungFuDeathGrip] {}));
-
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   nsTArray<ContentParentId> childIDArray =
       cpm->GetAllChildProcessById(this->ChildID());
@@ -1714,6 +1703,8 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   MOZ_DIAGNOSTIC_ASSERT(mGroups.IsEmpty());
 }
+
+void ContentParent::ActorDealloc() { mSelfRef = nullptr; }
 
 bool ContentParent::TryToRecycle() {
   // This life time check should be replaced by a memory health check (memory
@@ -2134,7 +2125,7 @@ void ContentParent::LaunchSubprocessInternal(
     return LaunchPromise::CreateAndReject(err, __func__);
   };
 
-  // See also ActorDestroy.
+  // See also ActorDealloc.
   mSelfRef = this;
 
   // Lifetime note: the GeckoChildProcessHost holds a strong reference
