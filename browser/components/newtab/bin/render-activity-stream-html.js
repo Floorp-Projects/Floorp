@@ -71,7 +71,6 @@ function templateHTML(options) {
     `${options.baseUrl}vendor/react${debugString}.js`,
     `${options.baseUrl}vendor/react-dom${debugString}.js`,
     `${options.baseUrl}vendor/prop-types.js`,
-    `${options.baseUrl}vendor/react-intl.js`,
     `${options.baseUrl}vendor/redux.js`,
     `${options.baseUrl}vendor/react-redux.js`,
     `${options.baseUrl}prerendered/${options.locale}/activity-stream-strings.js`,
