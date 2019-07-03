@@ -2619,17 +2619,12 @@ void BrowserParent::PushFocus(BrowserParent* aBrowserParent) {
   }
   if (!aBrowserParent->GetBrowserBridgeParent()) {
     // top-level Web content
-    if (!sFocusStack->IsEmpty()) {
-      // When a new native window is created, we spin a nested event loop.
-      // As a result, unlike when raising an existing window, we get
-      // PushFocus for content in the new window before we get the PopFocus
-      // for content in the old one. Hence, if the stack isn't empty when
-      // pushing top-level Web content, first pop everything off the stack.
-      LOGBROWSERFOCUS(
-          ("PushFocus for top-level Web content needs to clear the stack %p",
-           aBrowserParent));
-      PopFocus(sFocusStack->ElementAt(0));
-    }
+    // When a new native window is created, we spin a nested event loop.
+    // As a result, unlike when raising an existing window, we get
+    // PushFocus for content in the new window before we get the PopFocus
+    // for content in the old one. Hence, if the stack isn't empty when
+    // pushing top-level Web content, first pop everything off the stack.
+    PopFocusAll();
     MOZ_ASSERT(sFocusStack->IsEmpty());
   } else {
     // out-of-process iframe
@@ -2689,6 +2684,16 @@ void BrowserParent::PopFocus(BrowserParent* aBrowserParent) {
     BrowserParent* focused = GetFocused();
     LOGBROWSERFOCUS(("PopFocus changed focus to %p", focused));
     IMEStateManager::OnFocusMovedBetweenBrowsers(popped, focused);
+  }
+}
+
+/* static */
+void BrowserParent::PopFocusAll() {
+  if (!sFocusStack->IsEmpty()) {
+    LOGBROWSERFOCUS(("PopFocusAll pops items"));
+    PopFocus(sFocusStack->ElementAt(0));
+  } else {
+    LOGBROWSERFOCUS(("PopFocusAll does nothing"));
   }
 }
 
