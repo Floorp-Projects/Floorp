@@ -4052,7 +4052,7 @@ class Document : public nsINode,
     mAllowPaymentRequest = aAllowPaymentRequest;
   }
 
-  FeaturePolicy* Policy() const;
+  mozilla::dom::FeaturePolicy* FeaturePolicy() const;
 
   bool ModuleScriptsEnabled();
 
@@ -4474,7 +4474,7 @@ class Document : public nsINode,
 
   RefPtr<Promise> mReadyForIdle;
 
-  RefPtr<FeaturePolicy> mFeaturePolicy;
+  RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 
   UniquePtr<ResizeObserverController> mResizeObserverController;
 
