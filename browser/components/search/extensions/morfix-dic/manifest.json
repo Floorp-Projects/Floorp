@@ -2,7 +2,7 @@
   "name": "מילון מורפיקס",
   "description": "",
   "manifest_version": 2,
-  "version": "1.0",
+  "version": "1.1",
   "applications": {
     "gecko": {
       "id": "morfix-dic@search.mozilla.org"
@@ -18,9 +18,8 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "מילון מורפיקס",
-      "search_url": "https://milon.morfix.co.il/default.aspx",
-      "search_form": "https://milon.morfix.co.il/",
-      "search_url_get_params": "q={searchTerms}"
+      "search_url": "https://www.morfix.co.il/{searchTerms}",
+      "search_form": "https://www.morfix.co.il/"
     }
   }
 }
