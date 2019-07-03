@@ -138,6 +138,8 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
     CASE_RETURN(TYPE_SPECULATIVE);
     CASE_RETURN(TYPE_INTERNAL_MODULE);
     CASE_RETURN(TYPE_INTERNAL_MODULE_PRELOAD);
+    CASE_RETURN(TYPE_INTERNAL_DTD);
+    CASE_RETURN(TYPE_INTERNAL_FORCE_ALLOWED_DTD);
     default:
       return "<Unknown Type>";
   }
