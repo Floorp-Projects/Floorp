@@ -2,7 +2,7 @@
 
 # Success
 
-`data class Success : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L27)
+`data class Success : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L28)
 
 The JSON was parsed successful.
 

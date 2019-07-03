@@ -20,6 +20,12 @@ Corresponds to values of the "sizes" HTML attribute.
 | [height](height.md) | `val height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Height of the image. |
 | [width](width.md) | `val width: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Width of the image. |
 
+### Functions
+
+| Name | Summary |
+|---|---|
+| [toString](to-string.md) | `fun toString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
 ### Companion Object Properties
 
 | Name | Summary |

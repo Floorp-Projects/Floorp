@@ -2,7 +2,7 @@
 
 # AbstractWebAppShellActivity
 
-`abstract class AbstractWebAppShellActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/AbstractWebAppShellActivity.kt#L24)
+`abstract class AbstractWebAppShellActivity : AppCompatActivity, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/AbstractWebAppShellActivity.kt#L28)
 
 Activity for "standalone" and "fullscreen" web applications.
 
@@ -33,3 +33,9 @@ Activity for "standalone" and "fullscreen" web applications.
 | Name | Summary |
 |---|---|
 | [INTENT_ACTION](-i-n-t-e-n-t_-a-c-t-i-o-n.md) | `const val INTENT_ACTION: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [launchGeckoResult](../../mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md) | `fun <T> CoroutineScope.launchGeckoResult(context: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = EmptyCoroutineContext, start: CoroutineStart = CoroutineStart.DEFAULT, block: suspend CoroutineScope.() -> `[`T`](../../mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md#T)`): `[`GeckoResult`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoResult.html)`<`[`T`](../../mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md#T)`>`<br>Create a GeckoResult from a co-routine. |

@@ -10,7 +10,7 @@ The Configuration class describes how to configure Experiments.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Configuration(httpClient: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`> = lazy { HttpURLConnectionClient() }, kintoEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = ExperimentsUpdater.KINTO_ENDPOINT_DEV)`<br>The Configuration class describes how to configure Experiments. |
+| [&lt;init&gt;](-init-.md) | `Configuration(httpClient: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`> = lazy { HttpURLConnectionClient() }, kintoEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = ExperimentsUpdater.KINTO_ENDPOINT_PROD)`<br>The Configuration class describes how to configure Experiments. |
 
 ### Properties
 
