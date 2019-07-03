@@ -745,8 +745,9 @@ nsresult nsXBLContentSink::CreateElement(
   // nsXBLPrototypeBinding::ReadContentNode.
 
   *aAppendContent = true;
-  RefPtr<nsXULPrototypeElement> prototype =
-      new nsXULPrototypeElement(aNodeInfo);
+  RefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
+
+  prototype->mNodeInfo = aNodeInfo;
 
   AddAttributesToXULPrototype(aAtts, aAttsCount, prototype);
 
