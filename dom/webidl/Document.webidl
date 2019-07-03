@@ -601,10 +601,10 @@ Document implements GeometryUtils;
 Document implements FontFaceSource;
 Document implements DocumentOrShadowRoot;
 
-// https://w3c.github.io/webappsec-feature-policy/#idl-index
+// https://wicg.github.io/feature-policy/#policy
 partial interface Document {
     [SameObject, Pref="dom.security.featurePolicy.webidl.enabled"]
-    readonly attribute FeaturePolicy featurePolicy;
+    readonly attribute Policy policy;
 };
 
 /**

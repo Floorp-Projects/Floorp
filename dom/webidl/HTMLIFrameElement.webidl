@@ -70,10 +70,10 @@ partial interface HTMLIFrameElement {
 HTMLIFrameElement implements MozFrameLoaderOwner;
 HTMLIFrameElement implements BrowserElement;
 
-// https://w3c.github.io/webappsec-feature-policy/#idl-index
+// https://wicg.github.io/feature-policy/#policy
 partial interface HTMLIFrameElement {
   [SameObject, Pref="dom.security.featurePolicy.webidl.enabled"]
-  readonly attribute FeaturePolicy featurePolicy;
+  readonly attribute Policy policy;
 
   [CEReactions, SetterThrows, Pure, Pref="dom.security.featurePolicy.enabled"]
            attribute DOMString allow;
