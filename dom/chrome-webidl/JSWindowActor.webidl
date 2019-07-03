@@ -128,8 +128,8 @@ dictionary WindowActorOptions {
   sequence<DOMString> remoteTypes;
 
   /** This fields are used for configuring individual sides of the actor. */
-  WindowActorSidedOptions parent = {};
-  WindowActorChildOptions child = {};
+  WindowActorSidedOptions parent = null;
+  WindowActorChildOptions child = null;
 };
 
 dictionary WindowActorSidedOptions {
