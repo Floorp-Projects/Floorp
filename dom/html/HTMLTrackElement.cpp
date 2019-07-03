@@ -37,9 +37,9 @@
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"
 
-static mozilla::LazyLogModule gTrackElementLog("nsTrackElement");
-#define LOG(msg, ...)                          \
-  MOZ_LOG(gTrackElementLog, LogLevel::Verbose, \
+extern mozilla::LazyLogModule gTextTrackLog;
+#define LOG(msg, ...)                       \
+  MOZ_LOG(gTextTrackLog, LogLevel::Verbose, \
           ("TextTrackElement=%p, " msg, this, ##__VA_ARGS__))
 
 // Replace the usual NS_IMPL_NS_NEW_HTML_ELEMENT(Track) so
