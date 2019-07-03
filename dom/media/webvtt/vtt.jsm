@@ -923,6 +923,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     const cue = styleBox.cue;
     const isWritingDirectionHorizontal = cue.vertical == "";
     let box = new BoxPosition(styleBox);
+    if (!box.width || !box.height) {
+      LOG(`No way to adjust a box with zero width or height.`);
+      return;
+    }
 
     // Spec 7.2.10, adjust the positions of boxes according to the appropriate
     // steps from the following list. Also, we use offsetHeight/offsetWidth here
@@ -1266,6 +1270,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
             LOG(`cue ${i}, ` + cueBox.getBoxInfoInChars());
           } else {
             LOG(`can not find a proper position to place cue ${i}`);
+            // Clear the display state and clear the reset flag in the cue as well,
+            // which controls whether the task for updating the cue display is
+            // dispatched.
+            cue.displayState = null;
             rootOfCues.removeChild(styleBox.div);
           }
         }
