@@ -14,7 +14,6 @@ scripts:
 
 # bundle: Build all assets for activity stream
   bundle:
-    locales: pontoon-to-json --src $npm_package_config_locales_dir --dest data
     webpack: webpack --config webpack.system-addon.config.js
     css: node-sass content-src/styles -o css
     html: rimraf prerendered && node ./bin/render-activity-stream-html.js
@@ -24,7 +23,6 @@ scripts:
     pre: rimraf $npm_package_config_mc_dir/browser/components/newtab/
     bundle: => bundle
     copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/
-    stringsExport: cp $npm_package_config_locales_dir/$npm_package_config_default_locale/strings.properties $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/chrome/browser/activity-stream/newtab.properties
     fluentExport: cpx "$npm_package_config_locales_dir/*.ftl" $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
@@ -58,7 +56,7 @@ scripts:
 
   testmc:
     lint: =>lint
-    build: =>bundle:webpack && =>bundle:locales
+    build: =>bundle:webpack
     unit: karma start karma.mc.config.js
 
   tddmc: karma start karma.mc.config.js --tdd
@@ -70,9 +68,6 @@ scripts:
     eslint-check: eslint --cache --print-config . | eslint-config-prettier-check
     eslint: eslint --cache --ext=.js,.jsm,.jsx .
     sasslint: sass-lint -v -q
-
-# strings-import: Replace local strings with those from l10n-central
-  strings-import: node ./bin/strings-import.js
 
 # test: Run all tests once
   test: =>testmc
