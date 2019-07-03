@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional DragEventInit eventInitDict)]
+[Constructor(DOMString type, optional DragEventInit eventInitDict = {})]
 interface DragEvent : MouseEvent
 {
   readonly attribute DataTransfer? dataTransfer;

@@ -29,7 +29,7 @@ interface URI;
  *      the path, and will match any string of characters. If no "*" appears,
  *      the URL path must exactly match the pattern path.
  */
-[Constructor(DOMString pattern, optional MatchPatternOptions options),
+[Constructor(DOMString pattern, optional MatchPatternOptions options = {}),
  ChromeOnly, Exposed=Window]
 interface MatchPattern {
   /**
@@ -79,7 +79,7 @@ interface MatchPattern {
  * A set of MatchPattern objects, which implements the MatchPattern API and
  * matches when any of its sub-patterns matches.
  */
-[Constructor(sequence<(DOMString or MatchPattern)> patterns, optional MatchPatternOptions options),
+[Constructor(sequence<(DOMString or MatchPattern)> patterns, optional MatchPatternOptions options = {}),
  ChromeOnly, Exposed=Window]
 interface MatchPatternSet {
   /**

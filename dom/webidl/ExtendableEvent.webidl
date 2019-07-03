@@ -7,7 +7,7 @@
  * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
  */
 
-[Constructor(DOMString type, optional ExtendableEventInit eventInitDict),
+[Constructor(DOMString type, optional ExtendableEventInit eventInitDict = {}),
  Exposed=ServiceWorker]
 interface ExtendableEvent : Event {
   // https://github.com/slightlyoff/ServiceWorker/issues/261
