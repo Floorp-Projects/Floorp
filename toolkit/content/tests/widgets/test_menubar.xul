@@ -14,8 +14,7 @@
 SimpleTest.waitForExplicitFinish();
 function onLoad()
 {
-  SpecialPowers.pushPrefEnv({"set": [
-    ["security.data_uri.unique_opaque_origin", false]]}, runTest);
+  runTest();
 }
 
 function runTest()
