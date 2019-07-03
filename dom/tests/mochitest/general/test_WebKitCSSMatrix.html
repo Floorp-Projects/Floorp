@@ -34,7 +34,7 @@ function CompareMatrix(dm1, dm2)
   }
 
   for (var x = 0; x < m1.length; x++) {
-    if (m1[x] != m2[x]) {
+    if (m1[x] != m2[x] && !(Number.isNaN(m1[x]) && Number.isNaN(m2[x]))) {
       return false;
     }
   }
@@ -130,7 +130,7 @@ test(function() {
 
   assert_true(RoughCompareMatrix(m1r, m2r), "translate should return the same result as DOMMatrixReadOnly.");
   assert_true(CompareMatrix(m1, m3), "translate should not mutate original matrix.");
-}, "Test inverse.");
+}, "Test translate.");
 
 test(function() {
   var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
@@ -305,8 +305,11 @@ test(function() {
 }, "Test skewY.");
 
 test(function() {
-  var m = new WebKitCSSMatrix("matrix(1,0,0,0,0,0)");
-  assert_throws("NotSupportedError", function() { m.inverse(); }, "Inverting an invertible matrix should throw.")
+  var m1 = new WebKitCSSMatrix("matrix(1,0,0,0,0,0)");
+  m1 = m1.inverse();
+
+  var m2 = new DOMMatrix(new Array(16).fill(NaN));
+  assert_true(CompareMatrix(m1, m2), "Inverting an invertible matrix should set all attributes to NaN.")
 }, "Test that inverting an invertible matrix throws.");
 
 test(function() {
