@@ -46,10 +46,7 @@ function receiveMessage(event) {
   SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.data_uri.unique_opaque_origin", true]]},
-  function() {
-    let DATA_URI = `data:text/html,
+  let DATA_URI = `data:text/html,
       <html>
       <head>
         <meta http-equiv="Content-Security-Policy" content="img-src 'self'">
@@ -59,8 +56,8 @@ SpecialPowers.pushPrefEnv(
         <img id="testimg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
       </body>
       </html>`;
-    document.getElementById("testframe").src = DATA_URI;
-  });
+  document.getElementById("testframe").src = DATA_URI;
+
 
 </script>
 </body>

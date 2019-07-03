@@ -4,13 +4,10 @@
 function test() {
   waitForExplicitFinish();
 
-  // data: URI will only inherit principal only when the pref is false.
-  Services.prefs.setBoolPref("security.data_uri.unique_opaque_origin", false);
   // data: URIs will only open at the top level when the pref is false
   //   or the use of system principal but we can't use that to test here.
   Services.prefs.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", false);
   registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("security.data_uri.unique_opaque_origin");
     Services.prefs.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
   });
 
@@ -40,7 +37,7 @@ function startTest() {
 
       // Now load the URL normally
       loadURL(url, 0, artificialPrincipal, function() {
-        ok(browser.contentPrincipal.equals(pagePrincipal), url + " should inherit principal");
+        ok(!browser.contentPrincipal.equals(pagePrincipal), url + " should not inherit principal");
 
         // Now load the URL and disallow inheriting the principal
         let webNav = Ci.nsIWebNavigation;
