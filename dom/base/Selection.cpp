@@ -584,7 +584,7 @@ nsresult Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
     mFrameSelection->mSelectingTableCellMode = tableMode;
 
   *aDidAddRange = true;
-  return AddItem(aRange, aOutIndex);
+  return AddRangesForSelectableNodes(aRange, aOutIndex);
 }
 
 // TODO: Figure out TableSelection::Column and TableSelection::AllCells
@@ -927,8 +927,9 @@ void Selection::UserSelectRangesToAdd(nsRange* aItem,
   }
 }
 
-nsresult Selection::AddItem(nsRange* aItem, int32_t* aOutIndex,
-                            bool aNoStartSelect) {
+nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
+                                                int32_t* aOutIndex,
+                                                bool aNoStartSelect) {
   if (!aItem) return NS_ERROR_NULL_POINTER;
   if (!aItem->IsPositioned()) return NS_ERROR_UNEXPECTED;
 
@@ -2037,7 +2038,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   }
 
   if (!didAddRange) {
-    result = AddItem(range, &rangeIndex);
+    result = AddRangesForSelectableNodes(range, &rangeIndex);
     if (NS_FAILED(result)) {
       aRv.Throw(result);
       return;
@@ -2267,7 +2268,7 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 #endif
 
   int32_t rangeIndex = -1;
-  result = AddItem(range, &rangeIndex);
+  result = AddRangesForSelectableNodes(range, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
@@ -2393,7 +2394,7 @@ nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
   if (NS_FAILED(res)) return res;
 
   int32_t aOutIndex = -1;
-  res = AddItem(aRange, &aOutIndex, !collapsed);
+  res = AddRangesForSelectableNodes(aRange, &aOutIndex, !collapsed);
   if (NS_FAILED(res)) return res;
   SetAnchorFocusRange(aOutIndex);
 
