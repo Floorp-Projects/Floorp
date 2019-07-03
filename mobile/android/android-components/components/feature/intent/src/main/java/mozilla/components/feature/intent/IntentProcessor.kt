@@ -11,6 +11,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.SafeIntent
@@ -52,14 +53,14 @@ class IntentProcessor(
                     this.customTabConfig = CustomTabConfig.createFromIntent(safeIntent, displayMetrics)
                 }
                 sessionManager.add(session)
-                sessionUseCases.loadUrl(url, session)
+                sessionUseCases.loadUrl(url, session, LoadUrlFlags.external())
                 intent.putExtra(ACTIVE_SESSION_ID, session.id)
                 true
             }
 
             else -> {
                 val session = createSession(url, private = isPrivate, source = Source.ACTION_VIEW)
-                sessionUseCases.loadUrl(url, session)
+                sessionUseCases.loadUrl(url, session, LoadUrlFlags.external())
                 true
             }
         }
@@ -80,7 +81,8 @@ class IntentProcessor(
                             url,
                             private = isPrivate,
                             source = Source.ACTION_SEND
-                        )
+                        ),
+                        LoadUrlFlags.external()
                     )
                 } ?: run {
                     searchUseCases.newTabSearch(extraText, Source.ACTION_SEND, openNewTab)

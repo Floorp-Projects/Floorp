@@ -587,6 +587,7 @@ class EngineSessionTest {
     fun `load flags can be selected`() {
         assertEquals(LoadUrlFlags.NONE, LoadUrlFlags.none().value)
         assertEquals(LoadUrlFlags.ALL, LoadUrlFlags.all().value)
+        assertEquals(LoadUrlFlags.EXTERNAL, LoadUrlFlags.external().value)
 
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_CACHE).value))
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY).value))

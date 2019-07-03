@@ -221,6 +221,7 @@ abstract class EngineSession(
 
             fun all() = LoadUrlFlags(ALL)
             fun none() = LoadUrlFlags(NONE)
+            fun external() = LoadUrlFlags(EXTERNAL)
             fun select(vararg types: Int) = LoadUrlFlags(types.sum())
         }
 
