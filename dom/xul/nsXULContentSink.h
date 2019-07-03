@@ -86,8 +86,6 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
 
   nsresult NormalizeAttributeString(const char16_t* aExpatName,
                                     nsAttrName& aName);
-  nsresult CreateElement(mozilla::dom::NodeInfo* aNodeInfo,
-                         nsXULPrototypeElement** aResult);
 
  public:
   enum State { eInProlog, eInDocumentElement, eInScript, eInEpilog };
