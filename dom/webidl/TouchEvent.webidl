@@ -10,7 +10,7 @@ dictionary TouchEventInit : EventModifierInit {
   sequence<Touch> changedTouches = [];
 };
 
-[Constructor(DOMString type, optional TouchEventInit eventInitDict),
+[Constructor(DOMString type, optional TouchEventInit eventInitDict = {}),
  Func="mozilla::dom::TouchEvent::PrefEnabled"]
 interface TouchEvent : UIEvent {
   readonly attribute TouchList touches;

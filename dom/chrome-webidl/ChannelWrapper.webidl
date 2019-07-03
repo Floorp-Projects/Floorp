@@ -149,9 +149,9 @@ interface ChannelWrapper : EventTarget {
    * Returns true if the request matches the given request filter, and the
    * given extension has permission to access it.
    */
-  boolean matches(optional MozRequestFilter filter,
+  boolean matches(optional MozRequestFilter filter = {},
                   optional WebExtensionPolicy? extension = null,
-                  optional MozRequestMatchOptions options);
+                  optional MozRequestMatchOptions options = {});
 
 
   /**

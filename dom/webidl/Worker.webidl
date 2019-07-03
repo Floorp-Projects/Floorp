@@ -12,7 +12,7 @@
  * this document.
  */
 
-[Constructor(USVString scriptURL, optional WorkerOptions options),
+[Constructor(USVString scriptURL, optional WorkerOptions options = {}),
  Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface Worker : EventTarget {
   void terminate();
@@ -20,7 +20,7 @@ interface Worker : EventTarget {
   [Throws]
   void postMessage(any message, sequence<object> transfer);
   [Throws]
-  void postMessage(any message, optional PostMessageOptions aOptions);
+  void postMessage(any message, optional PostMessageOptions aOptions = {});
 
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;

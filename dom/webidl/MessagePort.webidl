@@ -12,7 +12,7 @@ interface MessagePort : EventTarget {
   [Throws]
   void postMessage(any message, sequence<object> transferable);
   [Throws]
-  void postMessage(any message, optional PostMessageOptions options);
+  void postMessage(any message, optional PostMessageOptions options = {});
 
   void start();
   void close();
