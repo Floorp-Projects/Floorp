@@ -58,10 +58,6 @@ const TEST_LOGIN_3 = {
 };
 
 add_task(async function setup() {
-  stubFluentL10n({
-    "count": "count",
-  });
-
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);
@@ -134,10 +130,9 @@ add_task(async function test_empty_login_username_in_list() {
   ok(!loginListItems[0].dataset.guid, "first login-list-item should be the 'new' item");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_3.guid, "login-list-item should have correct guid attribute");
 
-  loginListItems[1].setAttribute("missing-username", "(no username)");
   loginListItems[1].render();
   let loginUsername = loginListItems[1].shadowRoot.querySelector(".username");
-  is(loginUsername.textContent, "(no username)", "login should show missing username text");
+  is(loginUsername.getAttribute("data-l10n-id"), "login-list-item-subtitle-missing-username", "login should show missing username text");
 });
 
 add_task(async function test_populated_list() {
@@ -163,12 +158,12 @@ add_task(async function test_populated_list() {
 add_task(async function test_filtered_list() {
   is(gLoginList.shadowRoot.querySelectorAll("login-list-item:not([hidden])").length, 2, "Both logins should be visible");
   let countSpan = gLoginList.shadowRoot.querySelector(".count");
-  is(countSpan.textContent, "2", "Count should match full list length");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match full list length");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
     detail: "user1",
   }));
-  is(countSpan.textContent, "1", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, "user1", "user1 is expected first");
   ok(!loginListItems[0].hidden, "user1 should remain visible");
@@ -177,7 +172,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "user2",
   }));
-  is(countSpan.textContent, "1", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -185,7 +180,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "user",
   }));
-  is(countSpan.textContent, "2", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match result amount");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -193,7 +188,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "foo",
   }));
-  is(countSpan.textContent, "0", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(loginListItems[1].hidden, "user2 should be hidden");
@@ -201,7 +196,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "",
   }));
-  is(countSpan.textContent, "2", "Count should be reset to full list length");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should be reset to full list length");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -248,13 +243,13 @@ add_task(async function test_login_removed() {
 
 add_task(async function test_login_added_filtered() {
   let countSpan = gLoginList.shadowRoot.querySelector(".count");
-  is(countSpan.textContent, "2", "Count should match full list length");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match full list length");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
     composed: true,
     detail: "user1",
   }));
-  is(countSpan.textContent, "1", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
 
   let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
   gLoginList.loginAdded(newLogin);
@@ -267,7 +262,7 @@ add_task(async function test_login_added_filtered() {
   ok(!loginListItems[0].hidden, "login-list-item1 should be visible");
   ok(loginListItems[1].hidden, "login-list-item2 should be hidden");
   ok(loginListItems[2].hidden, "login-list-item3 should be hidden");
-  is(countSpan.textContent, "1", "Count should remain unchanged");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should remain unchanged");
 });
 
 add_task(async function test_sorted_list() {

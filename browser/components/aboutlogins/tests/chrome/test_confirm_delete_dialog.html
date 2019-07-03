@@ -27,13 +27,6 @@ Test the confirm-delete-dialog component
 
 let cancelButton, confirmButton, gConfirmDeleteDialog;
 add_task(async function setup() {
-  stubFluentL10n({
-    "title": "Confirm Delete",
-    "message": "Are you sure you want to delete this login?",
-    "cancel-button": "Cancel",
-    "confirm-button": "Delete login",
-  });
-
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);
