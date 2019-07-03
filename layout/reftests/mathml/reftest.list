@@ -145,7 +145,7 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-random-if(gtkWidget) == mpadded-7.html mpadded-7-ref.html # bug 1309430
+random-if(gtkWidget) fails-if(geckoview&&webrender) == mpadded-7.html mpadded-7-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == math-display.html math-display-ref.html
@@ -285,11 +285,11 @@ fuzzy-if(d2d,0-7,0-1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482
-fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
-fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
-fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
 == mathvariant-1d.html mathvariant-1d-ref.html
-fails-if(Android||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
+fails-if(Android&&!webrender) fails-if(OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
@@ -354,21 +354,21 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-A-5.html mfrac-A-5
 == mfrac-B-1.html mfrac-B-1-ref.html
 == mfrac-B-2.html mfrac-B-2-3-ref.html
 == mfrac-B-3.html mfrac-B-2-3-ref.html
-== mfrac-B-4.html mfrac-B-4-5-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-781) == mfrac-B-4.html mfrac-B-4-5-ref.html
 == mfrac-B-5.html mfrac-B-4-5-ref.html
-== mfrac-B-6.html mfrac-B-6-7-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-781) == mfrac-B-6.html mfrac-B-6-7-ref.html
 == mfrac-B-7.html mfrac-B-6-7-ref.html
 fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
 == mfrac-C-2.html mfrac-C-2-ref.html
-== mfrac-C-3.html mfrac-C-3-ref.html
-== mfrac-C-4.html mfrac-C-4-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-776) == mfrac-C-3.html mfrac-C-3-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-270) == mfrac-C-4.html mfrac-C-4-ref.html
 fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
 == mfrac-D-2.html mfrac-D-2-ref.html
-== mfrac-D-3.html mfrac-D-3-ref.html
-== mfrac-D-4.html mfrac-D-4-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-776) == mfrac-D-3.html mfrac-D-3-ref.html
+fuzzy-if(geckoview&&webrender,0-198,0-270) == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 == shadow-dom-1.html shadow-dom-1-ref.html
-pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(webrender&&!gtkWidget,0-255,0-260) == font-inflation-1.html font-inflation-1-ref.html
+pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(webrender&&!gtkWidget,0-255,0-324) == font-inflation-1.html font-inflation-1-ref.html
 test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
