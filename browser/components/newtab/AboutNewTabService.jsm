@@ -145,7 +145,6 @@ AboutNewTabService.prototype = {
             `${BASE_URL}vendor/react${debugString}.js`,
             `${BASE_URL}vendor/react-dom${debugString}.js`,
             `${BASE_URL}vendor/prop-types.js`,
-            `${BASE_URL}vendor/react-intl.js`,
             `${BASE_URL}vendor/redux.js`,
             `${BASE_URL}vendor/react-redux.js`,
             `${BASE_URL}prerendered/${this.activityStreamLocale}/activity-stream-strings.js`,
