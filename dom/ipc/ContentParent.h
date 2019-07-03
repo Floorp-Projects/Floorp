@@ -646,7 +646,8 @@ class ContentParent final : public PContentParent,
  protected:
   void OnChannelConnected(int32_t pid) override;
 
-  virtual void ActorDestroy(ActorDestroyReason why) override;
+  void ActorDestroy(ActorDestroyReason why) override;
+  void ActorDealloc() override;
 
   bool ShouldContinueFromReplyTimeout() override;
 
@@ -1214,7 +1215,7 @@ class ContentParent final : public PContentParent,
   static bool ShouldSyncPreference(const char16_t* aData);
 
  private:
-  // Released in ActorDestroy; deliberately not exposed to the CC.
+  // Released in ActorDealloc; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
 
   // If you add strong pointers to cycle collected objects here, be sure to
