@@ -135,11 +135,11 @@ class Raptor(object):
 
         LOG.info("main raptor init, config is: %s" % str(self.config))
 
-        # create results holder
+        # setup the control server
         self.results_handler = RaptorResultsHandler()
+        self.start_control_server()
 
         self.build_browser_profile()
-        self.start_control_server()
 
     @property
     def profile_data_dir(self):
@@ -267,8 +267,9 @@ class Raptor(object):
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
 
-        # add profile dir to our config
+        # share the profile dir with the config and the control server
         self.config['local_profile_dir'] = self.profile.profile
+        self.control_server.user_profile = self.profile
 
     def start_control_server(self):
         self.control_server = RaptorControlServer(self.results_handler, self.debug_mode)
@@ -519,6 +520,7 @@ class RaptorDesktop(Raptor):
     def start_runner_proc(self):
         # launch the browser via our previously-created runner
         self.runner.start()
+
         proc = self.runner.process_handler
         self.output_handler.proc = proc
 
@@ -665,9 +667,10 @@ class RaptorDesktopFirefox(RaptorDesktop):
         # if geckoProfile is enabled, initialize it
         if self.config['gecko_profile'] is True:
             self._init_gecko_profiling(test)
-            # tell the control server the gecko_profile dir; the control server will
-            # receive the actual gecko profiles from the web ext and will write them
-            # to disk; then profiles are picked up by gecko_profile.symbolicate
+            # tell the control server the gecko_profile dir; the control server
+            # will receive the filename of the stored gecko profile from the web
+            # extension, and will move it out of the browser user profile to
+            # this directory; where it is picked-up by gecko_profile.symbolicate
             self.control_server.gecko_profile_dir = self.gecko_profiler.gecko_profile_dir
 
 
