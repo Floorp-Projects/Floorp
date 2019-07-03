@@ -10,7 +10,7 @@
 interface WindowProxy;
 
 [Pref="dom.w3c_pointer_events.enabled",
- Constructor(DOMString type, optional PointerEventInit eventInitDict)]
+ Constructor(DOMString type, optional PointerEventInit eventInitDict = {})]
 interface PointerEvent : MouseEvent
 {
   [NeedsCallerType]

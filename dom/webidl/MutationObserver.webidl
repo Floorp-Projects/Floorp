@@ -40,7 +40,7 @@ interface MutationRecord {
 [Constructor(MutationCallback mutationCallback)]
 interface MutationObserver {
   [Throws]
-  void observe(Node target, optional MutationObserverInit options);
+  void observe(Node target, optional MutationObserverInit options = {});
   void disconnect();
   sequence<MutationRecord> takeRecords();
 

@@ -266,10 +266,10 @@ partial interface HTMLInputElement {
   double getMaximum();
 
   [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
-  void openDateTimePicker(optional DateTimeValue initialValue);
+  void openDateTimePicker(optional DateTimeValue initialValue = {});
 
   [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
-  void updateDateTimePicker(optional DateTimeValue value);
+  void updateDateTimePicker(optional DateTimeValue value = {});
 
   [Pref="dom.forms.datetime", Func="IsChromeOrXBLOrUAWidget"]
   void closeDateTimePicker();

@@ -20,8 +20,8 @@ interface MediaDevices : EventTarget {
   Promise<sequence<MediaDeviceInfo>> enumerateDevices();
 
   [Throws, NeedsCallerType, UseCounter]
-  Promise<MediaStream> getUserMedia(optional MediaStreamConstraints constraints);
+  Promise<MediaStream> getUserMedia(optional MediaStreamConstraints constraints = {});
 
   [SecureContext, Throws, NeedsCallerType, UseCounter]
-  Promise<MediaStream> getDisplayMedia(optional DisplayMediaStreamConstraints constraints);
+  Promise<MediaStream> getDisplayMedia(optional DisplayMediaStreamConstraints constraints = {});
 };
