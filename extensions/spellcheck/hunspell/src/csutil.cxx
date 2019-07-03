@@ -69,6 +69,7 @@
  */
 
 #include <algorithm>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -79,13 +80,6 @@
 #include "atypes.hxx"
 #include "langnum.hxx"
 
-// Unicode character encoding information
-struct unicode_info {
-  unsigned short c;
-  unsigned short cupper;
-  unsigned short clower;
-};
-
 #ifdef _WIN32
 #include <windows.h>
 #include <wchar.h>
@@ -95,7 +89,7 @@ struct unicode_info {
 #include <unicode/uchar.h>
 #else
 #ifndef MOZILLA_CLIENT
-#include "utf_info.cxx"
+#include "utf_info.hxx"
 #define UTF_LST_LEN (sizeof(utf_lst) / (sizeof(unicode_info)))
 #endif
 #endif
@@ -493,20 +487,17 @@ void uniqlist(std::vector<std::string>& list) {
 
 namespace {
 unsigned char cupper(const struct cs_info* csconv, int nIndex) {
-  if (nIndex < 0 || nIndex > 255)
-    return nIndex;
+  assert(nIndex >= 0 && nIndex <= 255);
   return csconv[nIndex].cupper;
 }
 
 unsigned char clower(const struct cs_info* csconv, int nIndex) {
-  if (nIndex < 0 || nIndex > 255)
-    return nIndex;
+  assert(nIndex >= 0 && nIndex <= 255);
   return csconv[nIndex].clower;
 }
 
 unsigned char ccase(const struct cs_info* csconv, int nIndex) {
-  if (nIndex < 0 || nIndex > 255)
-    return nIndex;
+  assert(nIndex >= 0 && nIndex <= 255);
   return csconv[nIndex].ccase;
 }
 }
@@ -2405,6 +2396,7 @@ static struct lang_map lang2enc[] =
     {{"ar", LANG_ar},    {"az", LANG_az},
      {"az_AZ", LANG_az},  // for back-compatibility
      {"bg", LANG_bg},    {"ca", LANG_ca},
+     {"crh", LANG_crh},
      {"cs", LANG_cs},    {"da", LANG_da},
      {"de", LANG_de},    {"el", LANG_el},
      {"en", LANG_en},    {"es", LANG_es},
@@ -2462,7 +2454,7 @@ unsigned short unicodetoupper(unsigned short c, int langnum) {
   // In Azeri and Turkish, I and i dictinct letters:
   // There are a dotless lower case i pair of upper `I',
   // and an upper I with dot pair of lower `i'.
-  if (c == 0x0069 && ((langnum == LANG_az) || (langnum == LANG_tr)))
+  if (c == 0x0069 && ((langnum == LANG_az) || (langnum == LANG_tr) || (langnum == LANG_crh)))
     return 0x0130;
 #ifdef OPENOFFICEORG
   return static_cast<unsigned short>(u_toupper(c));
@@ -2479,7 +2471,7 @@ unsigned short unicodetolower(unsigned short c, int langnum) {
   // In Azeri and Turkish, I and i dictinct letters:
   // There are a dotless lower case i pair of upper `I',
   // and an upper I with dot pair of lower `i'.
-  if (c == 0x0049 && ((langnum == LANG_az) || (langnum == LANG_tr)))
+  if (c == 0x0049 && ((langnum == LANG_az) || (langnum == LANG_tr) || (langnum == LANG_crh)))
     return 0x0131;
 #ifdef OPENOFFICEORG
   return static_cast<unsigned short>(u_tolower(c));
