@@ -54,11 +54,11 @@ dictionary PublicKeyCredentialCreationOptions {
 
     unsigned long                                timeout;
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
-    // FIXME: bug 1493860: should this "= {}" be here?
-    AuthenticatorSelectionCriteria               authenticatorSelection = {};
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticatorSelectionCriteria               authenticatorSelection = null;
     AttestationConveyancePreference              attestation = "none";
-    // FIXME: bug 1493860: should this "= {}" be here?
-    AuthenticationExtensionsClientInputs         extensions = {};
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticationExtensionsClientInputs         extensions = null;
 };
 
 dictionary PublicKeyCredentialEntity {
@@ -104,8 +104,8 @@ dictionary PublicKeyCredentialRequestOptions {
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
     UserVerificationRequirement          userVerification = "preferred";
-    // FIXME: bug 1493860: should this "= {}" be here?
-    AuthenticationExtensionsClientInputs extensions = {};
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticationExtensionsClientInputs extensions = null;
 };
 
 // TODO - Use partial dictionaries when bug 1436329 is fixed.
@@ -137,8 +137,8 @@ dictionary CollectedClientData {
     required DOMString           origin;
     required DOMString           hashAlgorithm;
     DOMString                    tokenBindingId;
-    // FIXME: bug 1493860: should this "= {}" be here?
-    AuthenticationExtensionsClientInputs clientExtensions = {};
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticationExtensionsClientInputs clientExtensions = null;
     AuthenticationExtensionsAuthenticatorInputs authenticatorExtensions;
 };
 
