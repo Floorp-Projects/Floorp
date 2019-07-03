@@ -28,14 +28,15 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_browser
+    implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
+    testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_junit
-    testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_robolectric
 }
 
 apply from: '../../../publish.gradle'

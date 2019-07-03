@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.action
 
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
@@ -25,8 +26,7 @@ class TabListActionTest {
 
         val tab = createTab(url = "https://www.mozilla.org")
 
-        store.dispatch(TabListAction.AddTabAction(tab))
-            .joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals(tab.id, store.state.selectedTabId)
@@ -68,6 +68,56 @@ class TabListActionTest {
 
         assertEquals(1, store.state.tabs.size)
         assertEquals(newTab.id, store.state.selectedTabId)
+    }
+
+    @Test
+    fun `AddTabAction - Specify parent tab`() {
+        val store = BrowserStore()
+
+        val tab1 = createTab("https://www.mozilla.org")
+        val tab2 = createTab("https://www.firefox.com")
+        val tab3 = createTab("https://wiki.mozilla.org", parent = tab1)
+        val tab4 = createTab("https://github.com/mozilla-mobile/android-components", parent = tab2)
+
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab3)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab4)).joinBlocking()
+
+        assertEquals(4, store.state.tabs.size)
+        assertNull(store.state.tabs[0].parentId)
+        assertNull(store.state.tabs[2].parentId)
+        assertEquals(tab1.id, store.state.tabs[1].parentId)
+        assertEquals(tab2.id, store.state.tabs[3].parentId)
+    }
+
+    @Test
+    fun `AddTabAction - Tabs with parent are added after (next to) parent`() {
+        val store = BrowserStore()
+
+        val parent01 = createTab("https://www.mozilla.org")
+        val parent02 = createTab("https://getpocket.com")
+        val tab1 = createTab("https://www.firefox.com")
+        val tab2 = createTab("https://developer.mozilla.org/en-US/")
+        val child001 = createTab("https://www.mozilla.org/en-US/internet-health/", parent = parent01)
+        val child002 = createTab("https://www.mozilla.org/en-US/technology/", parent = parent01)
+        val child003 = createTab("https://getpocket.com/add/", parent = parent02)
+
+        store.dispatch(TabListAction.AddTabAction(parent01)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child001)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(parent02)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child002)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child003)).joinBlocking()
+
+        assertEquals(parent01.id, store.state.tabs[0].id) // ├── parent 1
+        assertEquals(child002.id, store.state.tabs[1].id) // │   ├── child 2
+        assertEquals(child001.id, store.state.tabs[2].id) // │   └── child 1
+        assertEquals(tab1.id, store.state.tabs[3].id) //     ├──tab 1
+        assertEquals(tab2.id, store.state.tabs[4].id) //     ├──tab 2
+        assertEquals(parent02.id, store.state.tabs[5].id) // └── parent 2
+        assertEquals(child003.id, store.state.tabs[6].id) //     └── child 3
     }
 
     @Test
@@ -258,6 +308,116 @@ class TabListActionTest {
         // [(a), b*, c*] -> [b*, c*]
         store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
         assertNull(store.state.selectedTabId)
+    }
+
+    @Test
+    fun `RemoveTabAction - Parent will be selected if child is removed and flag is set to true (default)`() {
+        val store = BrowserStore()
+
+        val parent = createTab("https://www.mozilla.org")
+        val tab1 = createTab("https://www.firefox.com")
+        val tab2 = createTab("https://getpocket.com")
+        val child = createTab("https://www.mozilla.org/en-US/internet-health/", parent = parent)
+
+        store.dispatch(TabListAction.AddTabAction(parent)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child)).joinBlocking()
+
+        store.dispatch(TabListAction.SelectTabAction(child.id)).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabAction(child.id, selectParentIfExists = true)).joinBlocking()
+
+        assertEquals(parent.id, store.state.selectedTabId)
+        assertEquals("https://www.mozilla.org", store.state.selectedTab?.content?.url)
+    }
+
+    @Test
+    fun `RemoveTabAction - Parent will not be selected if child is removed and flag is set to false`() {
+        val store = BrowserStore()
+
+        val parent = createTab("https://www.mozilla.org")
+
+        val tab1 = createTab("https://www.firefox.com")
+        val tab2 = createTab("https://getpocket.com")
+        val child1 = createTab("https://www.mozilla.org/en-US/internet-health/", parent = parent)
+        val child2 = createTab("https://www.mozilla.org/en-US/technology/", parent = parent)
+
+        store.dispatch(TabListAction.AddTabAction(parent)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child2)).joinBlocking()
+
+        store.dispatch(TabListAction.SelectTabAction(child1.id)).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabAction(child1.id, selectParentIfExists = false)).joinBlocking()
+
+        assertEquals(tab1.id, store.state.selectedTabId)
+        assertEquals("https://www.firefox.com", store.state.selectedTab?.content?.url)
+    }
+
+    @Test
+    fun `RemoveTabAction - Providing selectParentIfExists when removing tab without parent has no effect`() {
+        val store = BrowserStore()
+
+        val tab1 = createTab("https://www.firefox.com")
+        val tab2 = createTab("https://getpocket.com")
+        val tab3 = createTab("https://www.mozilla.org/en-US/internet-health/")
+
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab3)).joinBlocking()
+
+        store.dispatch(TabListAction.SelectTabAction(tab3.id)).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabAction(tab3.id, selectParentIfExists = true)).joinBlocking()
+
+        assertEquals(tab2.id, store.state.selectedTabId)
+        assertEquals("https://getpocket.com", store.state.selectedTab?.content?.url)
+    }
+
+    @Test
+    fun `RemoveTabAction - Children are updated when parent is removed`() {
+        val store = BrowserStore()
+
+        val tab0 = createTab("https://www.firefox.com")
+        val tab1 = createTab("https://developer.mozilla.org/en-US/", parent = tab0)
+        val tab2 = createTab("https://www.mozilla.org/en-US/internet-health/", parent = tab1)
+        val tab3 = createTab("https://www.mozilla.org/en-US/technology/", parent = tab2)
+
+        store.dispatch(TabListAction.AddTabAction(tab0)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab2)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab3)).joinBlocking()
+
+        // tab0 <- tab1 <- tab2 <- tab3
+        assertEquals(tab0.id, store.state.tabs[0].id)
+        assertEquals(tab1.id, store.state.tabs[1].id)
+        assertEquals(tab2.id, store.state.tabs[2].id)
+        assertEquals(tab3.id, store.state.tabs[3].id)
+
+        assertNull(store.state.tabs[0].parentId)
+        assertEquals(tab0.id, store.state.tabs[1].parentId)
+        assertEquals(tab1.id, store.state.tabs[2].parentId)
+        assertEquals(tab2.id, store.state.tabs[3].parentId)
+
+        store.dispatch(TabListAction.RemoveTabAction(tab2.id)).joinBlocking()
+
+        // tab0 <- tab1 <- tab3
+        assertEquals(tab0.id, store.state.tabs[0].id)
+        assertEquals(tab1.id, store.state.tabs[1].id)
+        assertEquals(tab3.id, store.state.tabs[2].id)
+
+        assertNull(store.state.tabs[0].parentId)
+        assertEquals(tab0.id, store.state.tabs[1].parentId)
+        assertEquals(tab1.id, store.state.tabs[2].parentId)
+
+        store.dispatch(TabListAction.RemoveTabAction(tab0.id)).joinBlocking()
+
+        // tab1 <- tab3
+        assertEquals(tab1.id, store.state.tabs[0].id)
+        assertEquals(tab3.id, store.state.tabs[1].id)
+
+        assertNull(store.state.tabs[0].parentId)
+        assertEquals(tab1.id, store.state.tabs[1].parentId)
     }
 
     @Test

@@ -18,8 +18,22 @@ internal object TabListReducer {
     fun reduce(state: BrowserState, action: TabListAction): BrowserState {
         return when (action) {
             is TabListAction.AddTabAction -> {
+
+                val updatedTabList = if (action.tab.parentId != null) {
+                    val parentIndex = state.tabs.indexOfFirst { it.id == action.tab.parentId }
+                    if (parentIndex == -1) {
+                        throw IllegalArgumentException("The parent does not exist")
+                    }
+
+                    // Add the child tab next to its parent
+                    val childIndex = parentIndex + 1
+                    state.tabs.subList(0, childIndex) + action.tab + state.tabs.subList(childIndex, state.tabs.size)
+                } else {
+                    state.tabs + action.tab
+                }
+
                 state.copy(
-                    tabs = state.tabs + action.tab,
+                    tabs = updatedTabList,
                     selectedTabId = if (action.select || state.selectedTabId == null) {
                         action.tab.id
                     } else {
@@ -33,16 +47,25 @@ internal object TabListReducer {
             }
 
             is TabListAction.RemoveTabAction -> {
-                val tab = state.findTab(action.tabId)
+                val tabToRemove = state.findTab(action.tabId)
 
-                if (tab == null) {
+                if (tabToRemove == null) {
                     state
                 } else {
-                    val updatedTabList = state.tabs - tab
-                    val updatedSelection = if (state.selectedTabId == tab.id) {
-                        val previousIndex = state.tabs.indexOf(tab)
-                        findNewSelectedTabId(updatedTabList, tab.content.private, previousIndex)
+                    // Remove tab and update child tabs in case their parent was removed
+                    val updatedTabList = (state.tabs - tabToRemove).map {
+                        if (it.parentId == tabToRemove.id) it.copy(parentId = tabToRemove.parentId) else it
+                    }
+
+                    val updatedSelection = if (action.selectParentIfExists && tabToRemove.parentId != null) {
+                        // The parent tab should be selected if one exists
+                        tabToRemove.parentId
+                    } else if (state.selectedTabId == tabToRemove.id) {
+                        // The selected tab was removed and we need to find a new one
+                        val previousIndex = state.tabs.indexOf(tabToRemove)
+                        findNewSelectedTabId(updatedTabList, tabToRemove.content.private, previousIndex)
                     } else {
+                        // The selected tab is not affected and can stay the same
                         state.selectedTabId
                     }
 
