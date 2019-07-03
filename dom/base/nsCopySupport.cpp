@@ -425,7 +425,7 @@ nsresult nsCopySupport::GetTransferableForNode(
   if (NS_WARN_IF(result.Failed())) {
     return result.StealNSResult();
   }
-  selection->AddRangeInternal(*range, aDoc, result);
+  selection->AddRangeAndSelectFramesAndNotifyListeners(*range, aDoc, result);
   if (NS_WARN_IF(result.Failed())) {
     return result.StealNSResult();
   }
