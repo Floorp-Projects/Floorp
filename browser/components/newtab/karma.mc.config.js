@@ -94,7 +94,7 @@ module.exports = function(config) {
             },
             "content-src/components/**/*.jsx": {
               statements: 51.1,
-              lines: 53.6,
+              lines: 52.38,
               functions: 31.2,
               branches: 31.2,
             },

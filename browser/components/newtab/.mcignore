@@ -5,6 +5,7 @@ npm-debug.log
 *.pyc
 *.update.rdf
 .gitignore
+.eslintcache
 
 /.git/
 /data/locales.json

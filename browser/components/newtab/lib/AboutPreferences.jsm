@@ -152,7 +152,6 @@ this.AboutPreferences = class AboutPreferences {
     const getString = message =>
       typeof message !== "object" ? message : message.id;
 
-    
     // Helper to link a UI element to a preference for updating
     const linkPref = (element, name, type) => {
       const fullPref = `browser.newtabpage.activity-stream.${name}`;
@@ -176,7 +175,7 @@ this.AboutPreferences = class AboutPreferences {
     const homeHeader = createAppend("label", contentsGroup)
       .appendChild(document.createElementNS(HTML_NS, "h2"));
     document.l10n.setAttributes(homeHeader, "home-prefs-content-header");
-    
+
     const homeDescription = createAppend("description", contentsGroup);
     document.l10n.setAttributes(homeDescription, "home-prefs-content-description");
 
