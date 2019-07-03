@@ -2291,9 +2291,8 @@ nsresult nsObjectLoadingContent::OpenChannel() {
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
   bool isData;
-  bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
-                           NS_SUCCEEDED(mURI->SchemeIs("data", &isData)) &&
-                           isData;
+  bool isURIUniqueOrigin =
+      NS_SUCCEEDED(mURI->SchemeIs("data", &isData)) && isData;
 
   if (inherit && !isURIUniqueOrigin) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
