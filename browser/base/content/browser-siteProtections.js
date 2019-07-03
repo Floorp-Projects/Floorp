@@ -17,11 +17,6 @@ var gProtectionsHandler = {
     delete this._protectionsIconBox;
     return this._protectionsIconBox = document.getElementById("tracking-protection-icon-animatable-box");
   },
-  get _protectionsPopupMultiView() {
-    delete this._protectionsPopupMultiView;
-    return this._protectionsPopupMultiView =
-      document.getElementById("protections-popup-multiView");
-  },
   get _protectionsPopupMainView() {
     delete this._protectionsPopupMainView;
     return this._protectionsPopupMainView =
@@ -56,21 +51,6 @@ var gProtectionsHandler = {
     delete this._protectionPopupTrackersCounterDescription;
     return this._protectionPopupTrackersCounterDescription =
       document.getElementById("protections-popup-trackers-blocked-counter-description");
-  },
-  get _protectionsPopupSiteNotWorkingTPSwitch() {
-    delete this._protectionsPopupSiteNotWorkingTPSwitch;
-    return this._protectionsPopupSiteNotWorkingTPSwitch =
-      document.getElementById("protections-popup-siteNotWorking-tp-switch");
-  },
-  get _protectionsPopupSendReportLearnMore() {
-    delete this._protectionsPopupSendReportLearnMore;
-    return this._protectionsPopupSendReportLearnMore =
-      document.getElementById("protections-popup-sendReportView-learn-more");
-  },
-  get _protectionsPopupSendReportURL() {
-    delete this._protectionsPopupSendReportURL;
-    return this._protectionsPopupSendReportURL =
-      document.getElementById("protections-popup-sendReportView-collection-url");
   },
   get _protectionsPopupToastTimeout() {
     delete this._protectionsPopupToastTimeout;
@@ -148,6 +128,10 @@ var gProtectionsHandler = {
   },
 
   refreshProtectionsPopup() {
+    // Refresh the state of the TP toggle switch.
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled",
+      !this._protectionsPopup.hasAttribute("hasException"));
+
     let host = gIdentityHandler.getHostForDisplay();
 
     // Push the appropriate strings out to the UI.
@@ -158,10 +142,7 @@ var gProtectionsHandler = {
     let currentlyEnabled =
       !this._protectionsPopup.hasAttribute("hasException");
 
-    for (let tpSwitch of [this._protectionsPopupTPSwitch,
-                          this._protectionsPopupSiteNotWorkingTPSwitch]) {
-      tpSwitch.toggleAttribute("enabled", currentlyEnabled);
-    }
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled", currentlyEnabled);
 
     // Display the breakage link according to the current enable state.
     // The display state of the breakage link will be fixed once the protections
@@ -190,10 +171,7 @@ var gProtectionsHandler = {
     // styling after toggling the TP switch.
     let newExceptionState =
       this._protectionsPopup.toggleAttribute("hasException");
-    for (let tpSwitch of [this._protectionsPopupTPSwitch,
-                          this._protectionsPopupSiteNotWorkingTPSwitch]) {
-      tpSwitch.toggleAttribute("enabled", !newExceptionState);
-    }
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled", !newExceptionState);
 
     // Indicating that we need to show a toast after refreshing the page.
     // And caching the current URI and window ID in order to only show the mini
@@ -270,27 +248,4 @@ var gProtectionsHandler = {
       triggerEvent: event,
     }).catch(Cu.reportError);
   },
-
-  showSiteNotWorkingView() {
-    this._protectionsPopupMultiView.showSubView("protections-popup-siteNotWorkingView");
-  },
-
-  showSendReportView() {
-    // Save this URI to make sure that the user really only submits the location
-    // they see in the report breakage dialog.
-    this.reportURI = gBrowser.currentURI;
-    let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
-    this._protectionsPopupSendReportURL.value = urlWithoutQuery;
-    this._protectionsPopupMultiView.showSubView("protections-popup-sendReportView");
-  },
-
-  onSendReportClicked() {
-    this._protectionsPopup.hidePopup();
-    let comments = document.getElementById(
-      "protections-popup-sendReportView-collection-comments").value;
-    ContentBlocking.submitBreakageReport(this.reportURI, comments);
-  },
 };
-
-let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-gProtectionsHandler._protectionsPopupSendReportLearnMore.href = baseURL + "blocking-breakage";

@@ -971,25 +971,19 @@ var ContentBlocking = {
     this.identityPopupMultiView.goBack();
   },
 
-  onSubmitBreakageReportClicked() {
+  submitBreakageReport() {
     this.identityPopup.hidePopup();
 
-    let comments = document.getElementById(
-      "identity-popup-breakageReportView-collection-comments").value;
-    this.submitBreakageReport(this.reportURI, comments);
-  },
-
-  submitBreakageReport(uri, comments) {
     let reportEndpoint = Services.prefs.getStringPref(this.PREF_REPORT_BREAKAGE_URL);
     if (!reportEndpoint) {
       return;
     }
 
     let formData = new FormData();
-    formData.set("title", uri.host);
+    formData.set("title", this.reportURI.host);
 
     // Leave the ? at the end of the URL to signify that this URL had its query stripped.
-    let urlWithoutQuery = uri.asciiSpec.replace(uri.query, "");
+    let urlWithoutQuery = this.reportURI.asciiSpec.replace(this.reportURI.query, "");
     let body = `Full URL: ${urlWithoutQuery}\n`;
     body += `userAgent: ${navigator.userAgent}\n`;
 
@@ -1005,7 +999,8 @@ var ContentBlocking = {
     body += `${Fingerprinting.PREF_ENABLED}: ${Services.prefs.getBoolPref(Fingerprinting.PREF_ENABLED)}\n`;
     body += `${Cryptomining.PREF_ENABLED}: ${Services.prefs.getBoolPref(Cryptomining.PREF_ENABLED)}\n`;
 
-    body += "\n**Comments**\n" + comments;
+    let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
+    body += "\n**Comments**\n" + comments.value;
 
     formData.set("body", body);
 
