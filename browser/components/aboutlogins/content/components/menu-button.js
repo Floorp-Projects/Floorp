@@ -34,6 +34,7 @@ export default class MenuButton extends ReflectedFluentElement {
   static get reflectedFluentIDs() {
     return [
       "button-title",
+      "menuitem-faq",
       "menuitem-import",
       "menuitem-feedback",
       "menuitem-preferences",
@@ -75,6 +76,7 @@ export default class MenuButton extends ReflectedFluentElement {
         }
         let classList = event.originalTarget.classList;
         if (classList.contains("menuitem-import") ||
+            classList.contains("menuitem-faq") ||
             classList.contains("menuitem-feedback") ||
             classList.contains("menuitem-preferences")) {
           let eventName = event.originalTarget.dataset.eventName;

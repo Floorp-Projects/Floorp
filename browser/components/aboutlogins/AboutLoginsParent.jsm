@@ -29,8 +29,11 @@ const PRIVILEGEDABOUT_PROCESS_ENABLED =
   Services.prefs.getBoolPref(PRIVILEGEDABOUT_PROCESS_PREF, false);
 
 
-const FEEDBACK_URL_PREF = "signon.feedbackURL";
+const FEEDBACK_URL_PREF = "signon.management.page.feedbackURL";
 const FEEDBACK_URL = Services.urlFormatter.formatURLPref(FEEDBACK_URL_PREF);
+
+const FAQ_URL_PREF = "signon.management.page.faqURL";
+const FAQ_URL = Services.prefs.getStringPref(FAQ_URL_PREF);
 
 // When the privileged content process is enabled, we expect about:logins
 // to load in it. Otherwise, it's in a normal web content process.
@@ -111,6 +114,10 @@ var AboutLoginsParent = {
       }
       case "AboutLogins:OpenFeedback": {
         message.target.ownerGlobal.openWebLinkIn(FEEDBACK_URL, "tab", {relatedToCurrent: true});
+        break;
+      }
+      case "AboutLogins:OpenFAQ": {
+        message.target.ownerGlobal.openWebLinkIn(FAQ_URL, "tab", {relatedToCurrent: true});
         break;
       }
       case "AboutLogins:OpenPreferences": {
