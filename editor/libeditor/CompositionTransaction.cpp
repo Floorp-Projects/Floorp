@@ -297,7 +297,8 @@ nsresult CompositionTransaction::SetIMESelection(
     }
 
     IgnoredErrorResult err;
-    selectionOfIME->AddRange(*clauseRange, err);
+    selectionOfIME->AddRangeAndSelectFramesAndNotifyListeners(*clauseRange,
+                                                              err);
     if (err.Failed()) {
       NS_WARNING("Failed to add selection range for a clause of composition");
       break;

@@ -99,8 +99,10 @@ class RestoreSelectionState : public Runnable {
         mFrame->GetConstFrameSelection());
 
     if (mFrame) {
-      // SetSelectionRange leads to Selection::AddRange which flushes Layout -
-      // need to block script to avoid nested PrepareEditor calls (bug 642800).
+      // SetSelectionRange leads to
+      // Selection::AddRangeAndSelectFramesAndNotifyListeners which flushes
+      // Layout - need to block script to avoid nested PrepareEditor calls (bug
+      // 642800).
       nsAutoScriptBlocker scriptBlocker;
       nsTextEditorState::SelectionProperties& properties =
           mTextEditorState->GetSelectionProperties();
