@@ -120,9 +120,11 @@ class UrlbarView {
    *   may be showing stale results.
    */
   get visibleItemCount() {
-    return Array.reduce(this._rows.children, (sum, r) => {
-      return sum + Number(this._isRowVisible(r));
-    }, 0);
+    let sum = 0;
+    for (let row of this._rows.children) {
+      sum += Number(this._isRowVisible(row));
+    }
+    return sum;
   }
 
   /**
