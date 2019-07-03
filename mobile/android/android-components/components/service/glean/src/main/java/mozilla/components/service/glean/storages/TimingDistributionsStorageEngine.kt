@@ -172,7 +172,7 @@ data class TimingDistributionData(
             // something is wrong and we should return null.
             val category = jsonObject.tryGetString("category").orEmpty()
             val name = jsonObject.tryGetString("name") ?: return null
-            val bucketCount = jsonObject.tryGetInt("bucketCount") ?: return null
+            val bucketCount = jsonObject.tryGetInt("bucket_count") ?: return null
             // If 'range' isn't present, JSONException is thrown
             val range = try {
                 val array = jsonObject.getJSONArray("range")
@@ -190,8 +190,13 @@ data class TimingDistributionData(
             } catch (e: org.json.JSONException) {
                 return null
             }
-            val rawHistogramType = jsonObject.tryGetInt("histogramType") ?: return null
-            val histogramType = HistogramType.values().getOrNull(rawHistogramType) ?: return null
+            val rawHistogramType = jsonObject.tryGetString("histogram_type") ?: return null
+            var histogramType: HistogramType
+            try {
+                histogramType = HistogramType.valueOf(rawHistogramType.capitalize())
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
             // Attempt to parse the values map, if it fails then something is wrong and we need to
             // return null.
             val values = try {
@@ -206,8 +211,13 @@ data class TimingDistributionData(
                 return null
             }
             val sum = jsonObject.tryGetLong("sum") ?: return null
-            val timeUnit = TimeUnit.values()[jsonObject.tryGetInt("timeUnit")
-                ?: return null]
+            val rawTimeUnit = jsonObject.tryGetString("time_unit") ?: return null
+            var timeUnit: TimeUnit
+            try {
+                timeUnit = TimeUnit.valueOf(rawTimeUnit.capitalize())
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
 
             return TimingDistributionData(
                 category = category,
@@ -262,12 +272,12 @@ data class TimingDistributionData(
         return JSONObject(mapOf(
             "category" to category,
             "name" to name,
-            "bucketCount" to bucketCount,
+            "bucket_count" to bucketCount,
             "range" to JSONArray(arrayOf(rangeMin, rangeMax)),
-            "histogramType" to histogramType.ordinal,
+            "histogram_type" to histogramType.toString().toLowerCase(),
             "values" to values.mapKeys { "${it.key}" },
             "sum" to sum,
-            "timeUnit" to timeUnit.ordinal
+            "time_unit" to timeUnit.toString().toLowerCase()
         ))
     }
 
