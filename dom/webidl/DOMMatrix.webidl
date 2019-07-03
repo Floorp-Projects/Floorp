@@ -16,6 +16,9 @@
  Serializable]
 interface DOMMatrixReadOnly {
     [NewObject, Throws] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other);
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
+
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     readonly attribute unrestricted double a;
@@ -95,6 +98,9 @@ interface DOMMatrixReadOnly {
  Serializable]
 interface DOMMatrix : DOMMatrixReadOnly {
     [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
+
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     inherit attribute unrestricted double a;

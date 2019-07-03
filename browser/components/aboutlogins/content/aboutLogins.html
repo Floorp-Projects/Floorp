@@ -28,13 +28,15 @@
       <button id="create-login-button" data-l10n-id="create-login-button"></button>
       <menu-button data-l10n-id="menu-button"
                    data-l10n-attrs="button-title,
+                                    menuitem-faq,
                                     menuitem-feedback,
                                     menuitem-import,
                                     menuitem-preferences"></menu-button>
     </header>
     <login-list data-l10n-id="login-list"
                 data-l10n-args='{"count": 0}'
-                data-l10n-attrs="count,
+                data-l10n-attrs="aria-label,
+                                 count,
                                  last-changed-option,
                                  last-used-option,
                                  missing-username,
@@ -79,7 +81,7 @@
         </label>
         <span class="count"></span>
       </div>
-      <ol>
+      <ol role="listbox" tabindex="0">
       </ol>
     </template>
 
@@ -146,15 +148,10 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/menu-button.css">
       <button class="menu-button alternate-button"></button>
       <ul class="menu" role="menu" hidden>
-        <li role="menuitem" class="menuitem windows-only">
-          <button class="menuitem-button menuitem-import alternate-button" data-event-name="AboutLoginsImport"></button>
-        </li>
-        <li role="menuitem" class="menuitem">
-          <button class="menuitem-button menuitem-feedback alternate-button" data-event-name="AboutLoginsOpenFeedback"></button>
-        </li>
-        <li role="menuitem" class="menuitem">
-          <button class="menuitem-button menuitem-preferences alternate-button" data-event-name="AboutLoginsOpenPreferences"></button>
-        </li>
+        <button role="menuitem" class="menuitem-button menuitem-import alternate-button" hidden data-supported-platforms="Win32" data-event-name="AboutLoginsImport"></button>
+        <button role="menuitem" class="menuitem-button menuitem-preferences alternate-button" data-event-name="AboutLoginsOpenPreferences"></button>
+        <button role="menuitem" class="menuitem-button menuitem-feedback alternate-button" data-event-name="AboutLoginsOpenFeedback"></button>
+        <button role="menuitem" class="menuitem-button menuitem-faq alternate-button" data-event-name="AboutLoginsOpenFAQ"></button>
       </ul>
     </template>
 

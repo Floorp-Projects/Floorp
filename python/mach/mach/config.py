@@ -22,7 +22,7 @@ import sys
 import six
 from functools import wraps
 from six.moves.configparser import RawConfigParser, NoSectionError
-from six import string_types as str_type
+from six import string_types
 
 
 class ConfigException(Exception):
@@ -62,7 +62,7 @@ class ConfigType(object):
 class StringType(ConfigType):
     @staticmethod
     def validate(value):
-        if not isinstance(value, str_type):
+        if not isinstance(value, string_types):
             raise TypeError()
 
     @staticmethod
@@ -109,7 +109,7 @@ class PositiveIntegerType(IntegerType):
 class PathType(StringType):
     @staticmethod
     def validate(value):
-        if not isinstance(value, str_type):
+        if not isinstance(value, string_types):
             raise TypeError()
 
     @staticmethod
@@ -337,7 +337,7 @@ class ConfigSettings(collections.Mapping):
             extra -- A dict of additional key/value pairs to add to the
                 setting metadata.
         """
-        if isinstance(type_cls, basestring):
+        if isinstance(type_cls, string_types):
             type_cls = TYPE_CLASSES[type_cls]
 
         meta = {

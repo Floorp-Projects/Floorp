@@ -202,10 +202,10 @@ bool WebGLContext::ValidateStencilParamsForDrawCall() const {
 
 // -
 
-static void GenErrorIllegalUse(const WebGLContext& webgl,
-                               const GLenum useTarget, const uint32_t useId,
-                               const GLenum boundTarget,
-                               const uint32_t boundId) {
+void WebGLContext::GenErrorIllegalUse(const GLenum useTarget,
+                                      const uint32_t useId,
+                                      const GLenum boundTarget,
+                                      const uint32_t boundId) const {
   const auto fnName = [&](const GLenum target, const uint32_t id) {
     auto name = nsCString(EnumString(target).c_str());
     if (id != static_cast<uint32_t>(-1)) {
@@ -215,10 +215,10 @@ static void GenErrorIllegalUse(const WebGLContext& webgl,
   };
   const auto& useName = fnName(useTarget, useId);
   const auto& boundName = fnName(boundTarget, boundId);
-  webgl.GenerateError(LOCAL_GL_INVALID_OPERATION,
-                      "Illegal use of buffer at %s"
-                      " while also bound to %s.",
-                      useName.BeginReading(), boundName.BeginReading());
+  GenerateError(LOCAL_GL_INVALID_OPERATION,
+                "Illegal use of buffer at %s"
+                " while also bound to %s.",
+                useName.BeginReading(), boundName.BeginReading());
 }
 
 bool WebGLContext::ValidateBufferForNonTf(const WebGLBuffer& nonTfBuffer,
@@ -236,7 +236,7 @@ bool WebGLContext::ValidateBufferForNonTf(const WebGLBuffer& nonTfBuffer,
     const auto& tfBuffer = tfAttribs[tfId].mBufferBinding;
     if (&nonTfBuffer == tfBuffer) {
       dupe = true;
-      GenErrorIllegalUse(*this, nonTfTarget, nonTfId,
+      GenErrorIllegalUse(nonTfTarget, nonTfId,
                          LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, tfId);
     }
   }
@@ -285,7 +285,7 @@ bool WebGLContext::ValidateBuffersForTf(
     for (const auto& tf : tfBuffers) {
       if (nonTf && tf.buffer == nonTf) {
         dupe = true;
-        GenErrorIllegalUse(*this, LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, tf.id,
+        GenErrorIllegalUse(LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, tf.id,
                            nonTfTarget, nonTfId);
       }
     }
