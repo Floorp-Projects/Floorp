@@ -6585,13 +6585,13 @@ void nsFrame::SetNextContinuation(nsIFrame*) {
   MOZ_ASSERT(false, "not splittable");
 }
 
-nsIFrame* nsFrame::GetPrevInFlowVirtual() const { return nullptr; }
+nsIFrame* nsFrame::GetPrevInFlow() const { return nullptr; }
 
 void nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow) {
   MOZ_ASSERT(false, "not splittable");
 }
 
-nsIFrame* nsFrame::GetNextInFlowVirtual() const { return nullptr; }
+nsIFrame* nsFrame::GetNextInFlow() const { return nullptr; }
 
 void nsFrame::SetNextInFlow(nsIFrame*) { MOZ_ASSERT(false, "not splittable"); }
 
