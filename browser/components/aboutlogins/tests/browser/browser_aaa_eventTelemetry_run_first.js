@@ -43,7 +43,6 @@ add_task(async function test_telemetry_events() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(".copy-username-button");
-    copyButton = copyButton.shadowRoot.querySelector(".copy-button");
     copyButton.click();
   });
   await waitForTelemetryEventCount(2);
@@ -51,7 +50,6 @@ add_task(async function test_telemetry_events() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(".copy-password-button");
-    copyButton = copyButton.shadowRoot.querySelector(".copy-button");
     copyButton.click();
   });
   await waitForTelemetryEventCount(3);

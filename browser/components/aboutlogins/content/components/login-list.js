@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import LoginListItem from "./login-list-item.js";
-import ReflectedFluentElement from "./reflected-fluent-element.js";
 
 const collator = new Intl.Collator();
 const sortFnOptions = {
@@ -12,7 +11,7 @@ const sortFnOptions = {
   "last-changed": (a, b) => (a.timePasswordChanged < b.timePasswordChanged),
 };
 
-export default class LoginList extends ReflectedFluentElement {
+export default class LoginList extends HTMLElement {
   constructor() {
     super();
     this._logins = [];
@@ -26,10 +25,12 @@ export default class LoginList extends ReflectedFluentElement {
       return;
     }
     let loginListTemplate = document.querySelector("#login-list-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(loginListTemplate.content.cloneNode(true));
+    let shadowRoot = this.attachShadow({mode: "open"});
+    document.l10n.connectRoot(shadowRoot);
+    shadowRoot.appendChild(loginListTemplate.content.cloneNode(true));
 
     this._list = this.shadowRoot.querySelector("ol");
+    this._count = this.shadowRoot.querySelector(".count");
 
     this.render();
 
@@ -38,15 +39,13 @@ export default class LoginList extends ReflectedFluentElement {
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
     this.addEventListener("keydown", this);
-
-    super.connectedCallback();
   }
 
   render() {
     this._list.textContent = "";
 
     if (!this._logins.length) {
-      document.l10n.setAttributes(this, "login-list", {count: 0});
+      document.l10n.setAttributes(this._count, "login-list-count", {count: 0});
       return;
     }
 
@@ -59,7 +58,6 @@ export default class LoginList extends ReflectedFluentElement {
 
     for (let login of this._logins) {
       let listItem = new LoginListItem(login);
-      listItem.setAttribute("missing-username", this.getAttribute("missing-username"));
       if (login.guid == this._selectedGuid) {
         listItem.classList.add("selected");
         listItem.setAttribute("aria-selected", "true");
@@ -69,7 +67,7 @@ export default class LoginList extends ReflectedFluentElement {
     }
 
     let visibleLoginCount = this._applyFilter();
-    document.l10n.setAttributes(this, "login-list", {count: visibleLoginCount});
+    document.l10n.setAttributes(this._count, "login-list-count", {count: visibleLoginCount});
   }
 
   handleEvent(event) {
@@ -99,42 +97,6 @@ export default class LoginList extends ReflectedFluentElement {
         break;
       }
     }
-  }
-
-  static get reflectedFluentIDs() {
-    return ["aria-label",
-            "count",
-            "last-used-option",
-            "last-changed-option",
-            "missing-username",
-            "name-option",
-            "new-login-subtitle",
-            "new-login-title",
-            "sort-label-text"];
-  }
-
-  static get observedAttributes() {
-    return this.reflectedFluentIDs;
-  }
-
-  handleSpecialCaseFluentString(attrName) {
-    switch (attrName) {
-      case "aria-label": {
-        this._list.setAttribute("aria-label", this.getAttribute(attrName));
-        break;
-      }
-      case "missing-username": {
-        break;
-      }
-      case "new-login-subtitle":
-      case "new-login-title": {
-        this._blankLoginListItem.setAttribute(attrName, this.getAttribute(attrName));
-        break;
-      }
-      default:
-        return false;
-    }
-    return true;
   }
 
   /**

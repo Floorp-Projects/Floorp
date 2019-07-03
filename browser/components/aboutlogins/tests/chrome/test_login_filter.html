@@ -29,10 +29,6 @@ Test the login-filter component
 let gLoginFilter;
 let gLoginList;
 add_task(async function setup() {
-  stubFluentL10n({
-    "count": "count",
-  });
-
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);
@@ -113,12 +109,10 @@ add_task(async function test_list_filtered() {
     sendString(testObj.query);
 
     await SimpleTest.promiseWaitForCondition(() => {
-      return gLoginList.hasAttribute("count") &&
-             +gLoginList.getAttribute("count") == testObj.resultExpectedCount;
+      let countElement = gLoginList.shadowRoot.querySelector(".count");
+      return countElement.hasAttribute("data-l10n-args") &&
+             JSON.parse(countElement.getAttribute("data-l10n-args")).count == testObj.resultExpectedCount;
     }, `Waiting for the search result count to update to ${testObj.resultExpectedCount} (tc#${testObj.testCase})`);
-    let count = +gLoginList.getAttribute("count");
-    is(count, testObj.resultExpectedCount,
-       `The login list count should match the expected result (tc#${testObj.testCase})`);
   }
 });
 </script>

@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import ReflectedFluentElement from "./reflected-fluent-element.js";
-
-export default class ConfirmDeleteDialog extends ReflectedFluentElement {
+export default class ConfirmDeleteDialog extends HTMLElement {
   constructor() {
     super();
     this._promise = null;
@@ -15,8 +13,9 @@ export default class ConfirmDeleteDialog extends ReflectedFluentElement {
       return;
     }
     let template = document.querySelector("#confirm-delete-dialog-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(template.content.cloneNode(true));
+    let shadowRoot = this.attachShadow({mode: "open"});
+    document.l10n.connectRoot(shadowRoot);
+    shadowRoot.appendChild(template.content.cloneNode(true));
 
     this._cancelButton = this.shadowRoot.querySelector(".cancel-button");
     this._confirmButton = this.shadowRoot.querySelector(".confirm-button");
@@ -24,21 +23,6 @@ export default class ConfirmDeleteDialog extends ReflectedFluentElement {
     this._message = this.shadowRoot.querySelector(".message");
     this._overlay = this.shadowRoot.querySelector(".overlay");
     this._title = this.shadowRoot.querySelector(".title");
-
-    super.connectedCallback();
-  }
-
-  static get reflectedFluentIDs() {
-    return [
-      "title",
-      "message",
-      "cancel-button",
-      "confirm-button",
-    ];
-  }
-
-  static get observedAttributes() {
-    return this.reflectedFluentIDs;
   }
 
   handleEvent(event) {
