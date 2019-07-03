@@ -264,4 +264,8 @@ var gProtectionsHandler = {
   showSiteNotWorkingView() {
     this._protectionsPopupMultiView.showSubView("protections-popup-siteNotWorkingView");
   },
+
+  showSendReportView() {
+    this._protectionsPopupMultiView.showSubView("protections-popup-sendReportView");
+  },
 };
