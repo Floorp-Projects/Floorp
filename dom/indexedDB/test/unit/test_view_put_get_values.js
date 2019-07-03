@@ -16,11 +16,26 @@ function* testSteps() {
 
   const viewData = { key: 1, view: getRandomView(100000) };
 
-  for (let external of [false, true]) {
-    if (external) {
-      info("Setting data threshold pref");
+  const tests = [
+    {
+      external: false,
+      preprocessing: false,
+    },
+    {
+      external: true,
+      preprocessing: false,
+    },
+    {
+      external: true,
+      preprocessing: true,
+    },
+  ];
 
+  for (let test of tests) {
+    if (test.external) {
       if (this.window) {
+        info("Setting data threshold pref");
+
         SpecialPowers.pushPrefEnv(
           { set: [["dom.indexedDB.dataThreshold", 0]] },
           continueToNextStep
@@ -28,6 +43,20 @@ function* testSteps() {
         yield undefined;
       } else {
         setDataThreshold(0);
+      }
+    }
+
+    if (test.preprocessing) {
+      if (this.window) {
+        info("Setting preprocessing pref");
+
+        SpecialPowers.pushPrefEnv(
+          { set: [["dom.indexedDB.preprocessing", true]] },
+          continueToNextStep
+        );
+        yield undefined;
+      } else {
+        enablePreprocessing();
       }
     }
 
@@ -88,7 +117,7 @@ function* testSteps() {
     getCurrentUsage(grabFileUsageAndContinueHandler);
     let fileUsage = yield undefined;
 
-    if (external) {
+    if (test.external) {
       ok(fileUsage > 0, "File usage is not zero");
     } else {
       ok(fileUsage == 0, "File usage is zero");
@@ -100,6 +129,21 @@ function* testSteps() {
     request.onerror = errorHandler;
     request.onsuccess = continueToNextStepSync;
     yield undefined;
+
+    if (this.window) {
+      info("Resetting prefs");
+
+      SpecialPowers.popPrefEnv(continueToNextStep);
+      yield undefined;
+    } else {
+      if (test.external) {
+        resetDataThreshold();
+      }
+
+      if (test.preprocessing) {
+        resetPreprocessing();
+      }
+    }
   }
 
   finishTest();
