@@ -59,6 +59,7 @@ class App extends Component {
       sidebarVisible: PropTypes.bool.isRequired,
       filterBarDisplayMode:
         PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)]).isRequired,
+      editorFeatureEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -74,6 +75,7 @@ class App extends Component {
     const {
       dispatch,
       webConsoleUI,
+      editorFeatureEnabled,
     } = this.props;
 
     if (
@@ -85,10 +87,13 @@ class App extends Component {
       event.stopPropagation();
     }
 
-    if (event.key.toLowerCase() === "b" && (
-      isMacOS && event.metaKey ||
-      !isMacOS && event.ctrlKey
-    )) {
+    if (
+      editorFeatureEnabled &&
+      event.key.toLowerCase() === "b" && (
+        isMacOS && event.metaKey ||
+        !isMacOS && event.ctrlKey
+      )
+    ) {
       event.stopPropagation();
       event.preventDefault();
       dispatch(actions.editorToggle());
