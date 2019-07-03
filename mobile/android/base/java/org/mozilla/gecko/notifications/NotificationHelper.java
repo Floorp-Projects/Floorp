@@ -285,7 +285,9 @@ public final class NotificationHelper implements BundleEventListener {
                 case CRASH_HANDLER: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
                             mContext.getString(R.string.crash_handler_notifications_channel),
-                            NotificationManager.IMPORTANCE_HIGH);
+                            AppConstants.Versions.feature29Plus ?
+                                    NotificationManager.IMPORTANCE_HIGH :
+                                    NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
 
