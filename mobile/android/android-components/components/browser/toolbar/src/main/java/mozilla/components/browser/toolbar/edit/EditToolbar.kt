@@ -55,7 +55,6 @@ internal class EditToolbar(
         inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
 
         setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_padding))
-        setSelectAllOnFocus(true)
 
         setOnCommitListener {
             // We emit the fact before notifying the listener because otherwise the listener may cause a focus
