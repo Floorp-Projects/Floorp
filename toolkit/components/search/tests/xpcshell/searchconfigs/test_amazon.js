@@ -163,6 +163,7 @@ const test = new SearchConfigTest({
         matches: ["de", "dsb", "hsb"],
       },
     }],
+    searchUrlCode: "tag=firefox-de-21",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.in",
