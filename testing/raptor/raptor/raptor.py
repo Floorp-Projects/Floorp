@@ -719,6 +719,7 @@ class RaptorAndroid(Raptor):
 
         self.remote_test_root = os.path.abspath(os.path.join(os.sep, 'sdcard', 'raptor'))
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
+        self.os_baseline_data = None
 
     def set_reverse_port(self, port):
         tcp_port = "tcp:{}".format(port)
@@ -1046,6 +1047,17 @@ class RaptorAndroid(Raptor):
         # tests will be run warm (i.e. NO browser restart between page-cycles)
         # unless otheriwse specified in the test INI by using 'cold = true'
         try:
+
+            if self.config['power_test']:
+                # gather OS baseline data
+                init_android_power_test(self)
+                LOG.info("Running OS baseline, pausing for 1 minute...")
+                time.sleep(60)
+                finish_android_power_test(self, 'os-baseline', os_baseline=True)
+
+                # initialize for the test
+                init_android_power_test(self)
+
             if test.get('cold', False) is True:
                 self.__run_test_cold(test, timeout)
             else:
@@ -1085,9 +1097,6 @@ class RaptorAndroid(Raptor):
         '''
         LOG.info("test %s is running in cold mode; browser WILL be restarted between "
                  "page cycles" % test['name'])
-
-        if self.config['power_test']:
-            init_android_power_test(self)
 
         for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
 
@@ -1157,8 +1166,6 @@ class RaptorAndroid(Raptor):
     def __run_test_warm(self, test, timeout):
         LOG.info("test %s is running in warm mode; browser will NOT be restarted between "
                  "page cycles" % test['name'])
-        if self.config['power_test']:
-            init_android_power_test(self)
 
         self.run_test_setup(test)
 
