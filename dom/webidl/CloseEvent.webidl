@@ -10,7 +10,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/network.html#closeevent
  */
 
-[Constructor(DOMString type, optional CloseEventInit eventInitDict),LegacyEventInit,
+[Constructor(DOMString type, optional CloseEventInit eventInitDict = {}),LegacyEventInit,
  Exposed=(Window,Worker)]
 interface CloseEvent : Event
 {

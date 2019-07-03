@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional PaymentMethodChangeEventInit eventInitDict),
+[Constructor(DOMString type, optional PaymentMethodChangeEventInit eventInitDict = {}),
  SecureContext,
  Exposed=Window,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
