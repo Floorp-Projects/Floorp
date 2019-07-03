@@ -10,7 +10,7 @@ collection is enabled and to submit Telemetry data.
 
 .. important::
 
-    Every new data collection in Firefox (including hybrid content) needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. They try to reply within a business day.
+    Every new or changed data collection in Firefox (including hybrid content) needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`__ from a Data Steward.
 
 The recorded data will be sent to Mozilla servers by Firefox, if the collection is enabled, with the :doc:`main-ping <../data/main-ping>`.
 
@@ -319,7 +319,7 @@ Data Review
 ===========
 
 Adding the ``hc_telemetry`` permission for a new domain in `browser/app/permissions <https://dxr.mozilla.org/mozilla-central/source/browser/app/permissions>`_
-requires `Data Collection Review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ as we are enabling a new method of data collection.
+requires `Data Collection Review <https://wiki.mozilla.org/Firefox/Data_Collection>`_ as we are enabling a new method of data collection.
 
 Giving a domain permission to use Hybrid Content Telemetry also gives any Extensions running on this domain permission to use Hybrid Content Telemetry.
 If the domain is already on the `list of restricted domains <https://hg.mozilla.org/integration/mozilla-inbound/file/39e131181d44/modules/libpref/init/all.js#l5120>`_
