@@ -54,11 +54,8 @@ class nsSplittableFrame : public nsFrame {
 #endif
 
   // Get the previous/next continuation, only if it is fluid (an "in-flow").
-  nsIFrame* GetPrevInFlow() const;
-  nsIFrame* GetNextInFlow() const;
-
-  nsIFrame* GetPrevInFlowVirtual() const final { return GetPrevInFlow(); }
-  nsIFrame* GetNextInFlowVirtual() const final { return GetNextInFlow(); }
+  nsIFrame* GetPrevInFlow() const final;
+  nsIFrame* GetNextInFlow() const final;
 
   // Set a previous/next fluid continuation.
   void SetPrevInFlow(nsIFrame*) final;
