@@ -22,12 +22,12 @@ AutoProfilerLabel::AutoProfilerLabel(
     const char* aDynamicString MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-  mProfilingStack = sEnter ? sEnter(aLabel, aDynamicString, this) : nullptr;
+  mEntryContext = sEnter ? sEnter(aLabel, aDynamicString, this) : nullptr;
 }
 
 AutoProfilerLabel::~AutoProfilerLabel() {
-  if (sExit && mProfilingStack) {
-    sExit(mProfilingStack);
+  if (sExit && mEntryContext) {
+    sExit(mEntryContext);
   }
 }
 
