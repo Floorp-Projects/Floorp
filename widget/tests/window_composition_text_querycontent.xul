@@ -44,6 +44,8 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
 
 function ok(aCondition, aMessage)
@@ -6058,7 +6060,7 @@ function runIsComposingTest()
 
   // XXX These cases shouldn't occur in actual native key events because we
   //     don't dispatch key events while composition (bug 354358).
-  SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
+  Services.prefs.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
   description = "events before dispatching compositionstart";
   synthesizeKey("KEY_ArrowLeft");
 
@@ -6088,7 +6090,7 @@ function runIsComposingTest()
   description = "events after dispatching compositioncommitasis";
   synthesizeKey("KEY_Enter", {type: "keyup"});
 
-  SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
+  Services.prefs.clearUserPref("dom.keyboardevent.dispatch_during_composition");
 
   textarea.removeEventListener("keydown", eventHandler, true);
   textarea.removeEventListener("keypress", eventHandler, true);
@@ -6386,7 +6388,7 @@ function runNativeLineBreakerTest()
     result[aEvent.type] = aEvent.data;
   }
 
-  SpecialPowers.setBoolPref("dom.compositionevent.allow_control_characters", false);
+  Services.prefs.setBoolPref("dom.compositionevent.allow_control_characters", false);
 
   textarea.addEventListener("compositionupdate", handler, true);
   textarea.addEventListener("compositionend", handler, true);
@@ -6502,7 +6504,7 @@ function runNativeLineBreakerTest()
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
 
-  SpecialPowers.clearUserPref("dom.compositionevent.allow_control_characters");
+  Services.prefs.clearUserPref("dom.compositionevent.allow_control_characters");
 }
 
 function runControlCharTest()
@@ -6564,7 +6566,7 @@ function runControlCharTest()
 
   clearResult();
 
-  SpecialPowers.setBoolPref("dom.compositionevent.allow_control_characters", true);
+  Services.prefs.setBoolPref("dom.compositionevent.allow_control_characters", true);
 
   // input string contains control characters, allowing control characters
   clearResult();
@@ -6592,7 +6594,7 @@ function runControlCharTest()
   is(result.compositionend, data.replace(/\r/g, "\n"), "runControlCharTest: control characters in event.data should not be removed in compositionend event #4");
   is(textarea.value, data.replace(/\r/g, "\n"), "runControlCharTest: control characters should appear in textarea #4");
 
-  SpecialPowers.clearUserPref("dom.compositionevent.allow_control_characters");
+  Services.prefs.clearUserPref("dom.compositionevent.allow_control_characters");
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
