@@ -133,8 +133,9 @@ class nsXULPrototypeNode {
 
 class nsXULPrototypeElement : public nsXULPrototypeNode {
  public:
-  nsXULPrototypeElement()
+  explicit nsXULPrototypeElement(mozilla::dom::NodeInfo* aNodeInfo = nullptr)
       : nsXULPrototypeNode(eType_Element),
+        mNodeInfo(aNodeInfo),
         mNumAttributes(0),
         mHasIdAttribute(false),
         mHasClassAttribute(false),
