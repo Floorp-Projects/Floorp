@@ -1092,6 +1092,13 @@
 
       <toolbaritem id="PanelUI-button"
                    removable="false">
+       <toolbarbutton id="whats-new-menu-button"
+                      class="toolbarbutton-1"
+                      hidden="true"
+                      badged="true"
+                      consumeanchor="PanelUI-button"
+                      onmousedown="PanelUI.showSubView('PanelUI-whatsNew', this, event);"
+                      onkeypress="PanelUI.showSubView('PanelUI-whatsNew', this, event);"/>
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
                        badged="true"
