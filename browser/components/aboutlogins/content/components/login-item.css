@@ -126,6 +126,11 @@
   opacity: 1; /* override common.css fading out disabled buttons */
 }
 
+.copy-button[data-copied]:-moz-focusring {
+  outline-width: 0;
+  box-shadow: none;
+}
+
 .meta-info {
   font-size: smaller;
 }
