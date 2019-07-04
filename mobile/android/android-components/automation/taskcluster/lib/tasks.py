@@ -101,7 +101,7 @@ class TaskBuilder(object):
             command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
         )
 
-    def craft_sign_task(self, build_task_id, artifacts, component_name, is_staging):
+    def craft_sign_task(self, build_task_id, barrier_task_id, artifacts, component_name, is_staging):
         payload = {
             "maxRunTime": 600,
             "upstreamArtifacts": [{
@@ -115,7 +115,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             worker_type='mobile-signing-dep-v1' if is_staging else 'mobile-signing-v1',
             provisioner_id='scriptworker-prov-v1',
-            dependencies=[build_task_id],
+            dependencies=[build_task_id, barrier_task_id],
             routes=[],
             scopes=[
                 "project:mobile:android-components:releng:signing:cert:{}-signing".format("dep" if is_staging else "release"),
@@ -166,7 +166,7 @@ class TaskBuilder(object):
         )
 
     def craft_beetmover_task(
-        self, build_task_id, sign_task_id, wait_on_all_sign_tasks_id, build_artifacts, sign_artifacts, component_name, is_snapshot,
+        self, build_task_id, sign_task_id, build_artifacts, sign_artifacts, component_name, is_snapshot,
             is_staging
     ):
         if is_snapshot:
@@ -222,7 +222,7 @@ class TaskBuilder(object):
         return self._craft_default_task_definition(
             self.beetmover_worker_type,
             'scriptworker-prov-v1',
-            dependencies=[build_task_id, sign_task_id, wait_on_all_sign_tasks_id],
+            dependencies=[build_task_id, sign_task_id],
             routes=[],
             scopes=[
                 "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
