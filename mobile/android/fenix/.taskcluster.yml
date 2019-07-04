@@ -77,8 +77,12 @@ tasks:
           requires: all-completed   # Must be explicit because of Chain of Trust
           retries: 5
           routes:
-            - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
-            - tc-treeherder.v2.fenix.${head_rev}
+            $flatten:
+              - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
+              - $if: 'trust_level == 3'
+                then:
+                  - tc-treeherder.v2.fenix.${head_rev}
+                else: []
           payload:
             maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
             image: mozillamobile/fenix:1.4
