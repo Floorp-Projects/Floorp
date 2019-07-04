@@ -220,6 +220,22 @@ class GeckoProfile(Template):
         return {'gecko-profile': profile}
 
 
+class DisablePgo(TryConfig):
+
+    arguments = [
+        [['--disable-pgo'],
+         {'action': 'store_true',
+          'help': 'Don\'t run PGO builds',
+          }],
+    ]
+
+    def try_config(self, disable_pgo, **kwargs):
+        if disable_pgo:
+            return {
+                'disable-pgo': True,
+            }
+
+
 all_templates = {
     'artifact': Artifact,
     'path': Path,
@@ -227,4 +243,5 @@ all_templates = {
     'rebuild': Rebuild,
     'chemspill-prio': ChemspillPrio,
     'gecko-profile': GeckoProfile,
+    'disable-pgo': DisablePgo,
 }
