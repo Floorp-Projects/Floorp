@@ -1461,7 +1461,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->updateAllGCThresholds(*this, lock);
+        zone->updateAllGCThresholds(*this, GC_NORMAL, lock);
       }
   }
 
@@ -1720,7 +1720,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
     default:
       tunables.resetParameter(key, lock);
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->updateAllGCThresholds(*this, lock);
+        zone->updateAllGCThresholds(*this, GC_NORMAL, lock);
       }
   }
 }
@@ -2167,19 +2167,16 @@ void ZoneHeapThreshold::updateForRemovedArena(
 }
 
 /* static */
-size_t ZoneMallocThreshold::computeZoneTriggerBytes(
-    float growthFactor, size_t lastBytes, const GCSchedulingTunables& tunables,
-    const AutoLockGC& lock) {
-  size_t base = Max(lastBytes, tunables.maxMallocBytes());
-  float trigger = float(base) * growthFactor;
-  return size_t(trigger);
+size_t ZoneMallocThreshold::computeZoneTriggerBytes(float growthFactor,
+                                                    size_t lastBytes,
+                                                    size_t baseBytes,
+                                                    const AutoLockGC& lock) {
+  return size_t(float(Max(lastBytes, baseBytes)) * growthFactor);
 }
 
-void ZoneMallocThreshold::updateAfterGC(size_t lastBytes,
-                                        const GCSchedulingTunables& tunables,
-                                        const GCSchedulingState& state,
+void ZoneMallocThreshold::updateAfterGC(size_t lastBytes, size_t baseBytes,
                                         const AutoLockGC& lock) {
-  gcTriggerBytes_ = computeZoneTriggerBytes(2.0, lastBytes, tunables, lock);
+  gcTriggerBytes_ = computeZoneTriggerBytes(2.0, lastBytes, baseBytes, lock);
 }
 
 MemoryCounter::MemoryCounter()
@@ -5995,7 +5992,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     AutoLockGC lock(rt);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
-    zone->updateAllGCThresholds(*this, lock);
+    zone->updateAllGCThresholds(*this, invocationKind, lock);
     zone->updateAllGCMallocCountersOnGCEnd(lock);
     zone->arenas.unmarkPreMarkedFreeCells();
   }
