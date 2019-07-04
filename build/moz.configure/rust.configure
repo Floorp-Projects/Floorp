@@ -219,7 +219,7 @@ def rust_supported_targets(rustc):
 
 
 @template
-def rust_triple_alias(host_or_target, host_or_target_c_compiler):
+def rust_triple_alias(host_or_target):
     """Template defining the alias used for rustc's --target flag.
     `host_or_target` is either `host` or `target` (the @depends functions
     from init.configure).
@@ -228,8 +228,8 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
 
     host_or_target_str = {host: 'host', target: 'target'}[host_or_target]
 
-    @depends(rustc, host_or_target, host_or_target_c_compiler,
-             rust_supported_targets, arm_target, when=rust_compiler)
+    @depends(rustc, host_or_target, c_compiler, rust_supported_targets,
+             arm_target, when=rust_compiler)
     @checking('for rust %s triplet' % host_or_target_str)
     @imports('os')
     @imports('subprocess')
@@ -324,8 +324,8 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
     return rust_target
 
 
-rust_target_triple = rust_triple_alias(target, c_compiler)
-rust_host_triple = rust_triple_alias(host, host_c_compiler)
+rust_target_triple = rust_triple_alias(target)
+rust_host_triple = rust_triple_alias(host)
 
 
 @depends(host, rust_host_triple, rustc_info.host)
