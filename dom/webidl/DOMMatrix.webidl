@@ -99,8 +99,8 @@ interface DOMMatrixReadOnly {
  LegacyWindowAlias=WebKitCSSMatrix]
 interface DOMMatrix : DOMMatrixReadOnly {
     [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other = {});
-    [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
-    [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
+    [NewObject, Throws] static DOMMatrix fromFloat32Array(Float32Array array32);
+    [NewObject, Throws] static DOMMatrix fromFloat64Array(Float64Array array64);
 
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
