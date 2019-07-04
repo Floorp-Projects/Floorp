@@ -1,0 +1,10 @@
+[
+    {
+        "size": 6175607,
+        "visibility": "public",
+        "digest": "588dc72d7e853e7b3bf51858b1e48445b70564a24e245bd361075ac83e64d65593fdbc87831fd4ea02805cb0442af754178c6011475fb0a6d4a61001fe76523a",
+        "algorithm": "sha512",
+        "filename": "mitm4-linux-firefox-fandom.zip",
+        "unpack": true
+    }
+]

@@ -17,7 +17,7 @@ dictionary UDPOptions {
     boolean        loopback = false;
 };
 
-[Constructor (optional UDPOptions options),
+[Constructor (optional UDPOptions options = {}),
  Pref="dom.udpsocket.enabled",
  ChromeOnly]
 interface UDPSocket : EventTarget {

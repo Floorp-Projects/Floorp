@@ -24,6 +24,10 @@ def java_search_paths(host, path):
     if host.os == 'WINNT':
         for x in get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Development Kit\1.8\JavaHome', get_32_and_64_bit=True):
             return [os.path.join(x[0], 'bin')]
+    if host.os == 'OSX':
+        home = check_cmd_output('/usr/libexec/java_home', '-v', '1.8', onerror=lambda: '').rstrip()
+        if home:
+            return [os.path.join(home, 'bin')]
     return [environ.get('PATH')]
 
 # Finds the given java tool, failing with a custom error message if we can't

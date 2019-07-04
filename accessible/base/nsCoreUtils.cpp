@@ -234,7 +234,7 @@ nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
       selCon->GetSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
 
   selection->RemoveAllRanges(IgnoreErrors());
-  selection->AddRange(*aRange, IgnoreErrors());
+  selection->AddRangeAndSelectFramesAndNotifyListeners(*aRange, IgnoreErrors());
 
   selection->ScrollIntoView(nsISelectionController::SELECTION_ANCHOR_REGION,
                             aVertical, aHorizontal,

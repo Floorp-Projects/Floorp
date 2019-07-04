@@ -445,7 +445,7 @@ class MediaFormatReader final
         // Allow decode errors to be non-fatal, but give up
         // if we have too many, or if warnings should be treated as errors.
         return mNumOfConsecutiveError > mMaxConsecutiveError ||
-               StaticPrefs::MediaPlaybackWarningsAsErrors();
+               StaticPrefs::media_playback_warnings_as_errors();
       } else if (mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
         // If the caller asked for a new decoder we shouldn't treat
         // it as fatal.

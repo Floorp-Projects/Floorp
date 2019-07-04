@@ -21,7 +21,7 @@ WebrtcVideoEncoder* MediaCodecVideoCodec::CreateEncoder(CodecType aCodecType) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   if (aCodecType == CODEC_VP8) {
     if (StaticPrefs::
-            MediaNavigatorHardwareVp8encodeAccelerationRemoteEnabled()) {
+            media_navigator_hardware_vp8_encode_acceleration_remote_enabled()) {
       return new WebrtcMediaCodecVP8VideoRemoteEncoder();
     } else {
       return new WebrtcMediaCodecVP8VideoEncoder();

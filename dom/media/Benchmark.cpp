@@ -66,7 +66,7 @@ uint32_t VP9Benchmark::MediaBenchmarkVp9Fps() {
   if (!ShouldRun()) {
     return 0;
   }
-  return StaticPrefs::MediaBenchmarkVp9Fps();
+  return StaticPrefs::media_benchmark_vp9_fps();
 }
 
 // static
@@ -78,8 +78,8 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
     return false;
   }
   static StaticMutex sMutex;
-  uint32_t decodeFps = StaticPrefs::MediaBenchmarkVp9Fps();
-  uint32_t hadRecentUpdate = StaticPrefs::MediaBenchmarkVp9Versioncheck();
+  uint32_t decodeFps = StaticPrefs::media_benchmark_vp9_fps();
+  uint32_t hadRecentUpdate = StaticPrefs::media_benchmark_vp9_versioncheck();
   bool needBenchmark;
   {
     StaticMutexAutoLock lock(sMutex);
@@ -93,10 +93,11 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
         new BufferMediaResource(sWebMSample, sizeof(sWebMSample)));
     RefPtr<Benchmark> estimiser = new Benchmark(
         demuxer,
-        {StaticPrefs::MediaBenchmarkFrames(),  // frames to measure
+        {StaticPrefs::media_benchmark_frames(),  // frames to measure
          1,  // start benchmarking after decoding this frame.
          8,  // loop after decoding that many frames.
-         TimeDuration::FromMilliseconds(StaticPrefs::MediaBenchmarkTimeout())});
+         TimeDuration::FromMilliseconds(
+             StaticPrefs::media_benchmark_timeout())});
     estimiser->Run()->Then(
         AbstractThread::MainThread(), __func__,
         [](uint32_t aDecodeFps) {
@@ -121,7 +122,7 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
     return aDefault;
   }
 
-  return decodeFps >= StaticPrefs::MediaBenchmarkVp9Threshold();
+  return decodeFps >= StaticPrefs::media_benchmark_vp9_threshold();
 #endif
 }
 

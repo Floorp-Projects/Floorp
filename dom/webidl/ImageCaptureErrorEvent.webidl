@@ -11,7 +11,7 @@
  */
 
 [Pref="dom.imagecapture.enabled",
-Constructor(DOMString type, optional ImageCaptureErrorEventInit imageCaptureErrorInitDict)]
+Constructor(DOMString type, optional ImageCaptureErrorEventInit imageCaptureErrorInitDict = {})]
 interface ImageCaptureErrorEvent : Event {
   readonly attribute ImageCaptureError? imageCaptureError;
 };

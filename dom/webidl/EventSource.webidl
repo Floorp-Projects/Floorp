@@ -12,7 +12,7 @@
  */
 
 [Exposed=(Window,DedicatedWorker,SharedWorker),
- Constructor(USVString url, optional EventSourceInit eventSourceInitDict)]
+ Constructor(USVString url, optional EventSourceInit eventSourceInitDict = {})]
 interface EventSource : EventTarget {
   [Constant]
   readonly attribute DOMString url;

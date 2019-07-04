@@ -2,10 +2,19 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var protectionsPopup = document.getElementById("protections-popup");
+var protectionsPopupMainView =
+  document.getElementById("protections-popup-mainView");
+var protectionsPopupHeader =
+  document.getElementById("protections-popup-mainView-panel-header");
 
-async function openProtectionsPanel() {
+async function openProtectionsPanel(toast) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popupshown");
   let identityBox = document.getElementById("identity-box");
-  EventUtils.synthesizeMouseAtCenter(identityBox, { altKey: true });
+  if (!toast) {
+    EventUtils.synthesizeMouseAtCenter(identityBox, { altKey: true });
+  } else {
+    gProtectionsHandler.showProtectionsPopup({toast});
+  }
+
   await popupShownPromise;
 }

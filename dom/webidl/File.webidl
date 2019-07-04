@@ -11,7 +11,7 @@
 interface nsIFile;
 
 [Constructor(sequence<BlobPart> fileBits,
-             USVString fileName, optional FilePropertyBag options),
+             USVString fileName, optional FilePropertyBag options = {}),
  Exposed=(Window,Worker)]
 interface File : Blob {
   readonly attribute DOMString name;
@@ -50,9 +50,9 @@ partial interface File {
 partial interface File {
   [ChromeOnly, Throws, NeedsCallerType]
   static Promise<File> createFromNsIFile(nsIFile file,
-                                         optional ChromeFilePropertyBag options);
+                                         optional ChromeFilePropertyBag options = {});
 
   [ChromeOnly, Throws, NeedsCallerType]
   static Promise<File> createFromFileName(USVString fileName,
-                                          optional ChromeFilePropertyBag options);
+                                          optional ChromeFilePropertyBag options = {});
 };

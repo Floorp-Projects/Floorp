@@ -12,18 +12,18 @@
 [Deprecated="WebrtcDeprecatedPrefix",
  Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtcicecandidate;1",
- Constructor(optional RTCIceCandidateInit candidateInitDict)]
+ Constructor(optional RTCIceCandidateInit candidateInitDict = {})]
 interface mozRTCIceCandidate : RTCIceCandidate {};
 
 [Deprecated="WebrtcDeprecatedPrefix",
  Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/peerconnection;1",
- Constructor (optional RTCConfiguration configuration,
+ Constructor (optional RTCConfiguration configuration = {},
               optional object? constraints)]
 interface mozRTCPeerConnection : RTCPeerConnection {};
 
 [Deprecated="WebrtcDeprecatedPrefix",
  Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtcsessiondescription;1",
- Constructor(optional RTCSessionDescriptionInit descriptionInitDict)]
+ Constructor(optional RTCSessionDescriptionInit descriptionInitDict = {})]
 interface mozRTCSessionDescription : RTCSessionDescription {};

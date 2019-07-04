@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 
 import os
+import sys
 
 import mozunit
 
@@ -25,9 +26,19 @@ class ProcTestMisc(proctest.ProcTest):
         def timeout_handler():
             self.assertEqual(p.proc.poll(), None)
             p.kill()
+
+        myenv = None
+        # On macosx1014, subprocess fails to find `six` when run with python3.
+        # This ensures that subprocess first looks to sys.path to find `six`.
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1562083
+        if sys.platform == 'darwin' and sys.version_info[0] > 2:
+            myenv = os.environ.copy()
+            myenv['PYTHONPATH'] = ':'.join(sys.path)
+
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
                                            "process_waittimeout.ini"],
                                           cwd=here,
+                                          env=myenv,
                                           onTimeout=(timeout_handler,),
                                           kill_on_timeout=False)
         p.run(timeout=1)

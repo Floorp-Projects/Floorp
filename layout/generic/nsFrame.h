@@ -200,9 +200,9 @@ class nsFrame : public nsBox {
   void SetPrevContinuation(nsIFrame*) override;
   nsIFrame* GetNextContinuation() const override;
   void SetNextContinuation(nsIFrame*) override;
-  nsIFrame* GetPrevInFlowVirtual() const override;
+  nsIFrame* GetPrevInFlow() const override;
   void SetPrevInFlow(nsIFrame*) override;
-  nsIFrame* GetNextInFlowVirtual() const override;
+  nsIFrame* GetNextInFlow() const override;
   void SetNextInFlow(nsIFrame*) override;
 
   nsresult GetSelectionController(nsPresContext* aPresContext,

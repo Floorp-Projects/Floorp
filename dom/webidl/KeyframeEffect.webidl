@@ -26,7 +26,7 @@ dictionary KeyframeEffectOptions : EffectTiming {
  RunConstructorInCallerCompartment,
  Constructor((Element or CSSPseudoElement)? target,
              object? keyframes,
-             optional (unrestricted double or KeyframeEffectOptions) options),
+             optional (unrestricted double or KeyframeEffectOptions) options = {}),
  Constructor(KeyframeEffect source)]
 interface KeyframeEffect : AnimationEffect {
   attribute (Element or CSSPseudoElement)?  target;

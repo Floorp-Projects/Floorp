@@ -24,10 +24,18 @@ let region = Services.prefs.getCharPref("browser.search.region");
 let code = "";
 switch (region) {
   case "US":
-    code = "firefox-b-1-d";
+    if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
+      code = "firefox-b-1-e";
+    } else {
+      code = "firefox-b-1-d";
+    }
     break;
   case "DE":
-    code = "firefox-b-d";
+    if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
+      code = "firefox-b-e";
+    } else {
+      code = "firefox-b-d";
+    }
     break;
 }
 

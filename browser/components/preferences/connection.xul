@@ -64,8 +64,8 @@
               <label data-l10n-id="connection-proxy-http" control="networkProxyHTTP" />
             </hbox>
             <hbox align="center">
-              <textbox id="networkProxyHTTP" flex="1"
-                       preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
+              <html:input id="networkProxyHTTP" type="text" style="-moz-box-flex: 1;"
+                          preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
               <label data-l10n-id="connection-proxy-http-port" control="networkProxyHTTP_Port" />
               <html:input id="networkProxyHTTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535"
                           preference="network.proxy.http_port" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyPort();"/>
@@ -84,8 +84,8 @@
               <label data-l10n-id="connection-proxy-ssl" control="networkProxySSL"/>
             </hbox>
             <hbox align="center">
-              <textbox id="networkProxySSL" flex="1" preference="network.proxy.ssl"
-                       onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
+              <html:input id="networkProxySSL" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ssl"
+                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
               <label data-l10n-id="connection-proxy-ssl-port" control="networkProxySSL_Port" />
               <html:input id="networkProxySSL_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
                           preference="network.proxy.ssl_port" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
@@ -96,8 +96,8 @@
               <label data-l10n-id="connection-proxy-ftp" control="networkProxyFTP"/>
             </hbox>
             <hbox align="center">
-              <textbox id="networkProxyFTP" flex="1" preference="network.proxy.ftp"
-                       onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
+              <html:input id="networkProxyFTP" type="text" style="-moz-box-flex: 1;" preference="network.proxy.ftp"
+                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
               <label data-l10n-id="connection-proxy-ftp-port" control="networkProxyFTP_Port"/>
               <html:input id="networkProxyFTP_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
                           preference="network.proxy.ftp_port" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
@@ -108,8 +108,8 @@
               <label data-l10n-id="connection-proxy-socks" control="networkProxySOCKS"/>
             </hbox>
             <hbox align="center">
-              <textbox id="networkProxySOCKS" flex="1" preference="network.proxy.socks"
-                       onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
+              <html:input id="networkProxySOCKS" type="text" style="-moz-box-flex: 1;" preference="network.proxy.socks"
+                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
               <label data-l10n-id="connection-proxy-socks-port" control="networkProxySOCKS_Port"/>
               <html:input id="networkProxySOCKS_Port" class="proxy-port-input" hidespinbuttons="true" type="number" min="0" max="65535" size="5"
                           preference="network.proxy.socks_port" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
@@ -129,8 +129,8 @@
       </grid>
       <radio value="2" data-l10n-id="connection-proxy-autotype" />
       <hbox class="indent" flex="1" align="center">
-        <textbox id="networkProxyAutoconfigURL" flex="1" preference="network.proxy.autoconfig_url"
-                 oninput="gConnectionsDialog.updateReloadButton();"/>
+        <html:input id="networkProxyAutoconfigURL" type="text" style="-moz-box-flex: 1;" preference="network.proxy.autoconfig_url"
+                    oninput="gConnectionsDialog.updateReloadButton();"/>
         <button id="autoReload" icon="refresh"
                 data-l10n-id="connection-proxy-reload"
                 oncommand="gConnectionsDialog.reloadPAC();"
@@ -142,6 +142,8 @@
   <label data-l10n-id="connection-proxy-noproxy" control="networkProxyNone"/>
   <html:textarea id="networkProxyNone" preference="network.proxy.no_proxies_on" rows="2"/>
   <label control="networkProxyNone" data-l10n-id="connection-proxy-noproxy-desc" />
+  <label id="networkProxyNoneLocalhost" control="networkProxyNone" data-l10n-id="connection-proxy-noproxy-localhost-desc" />
+  <separator class="thin"/>
   <checkbox id="autologinProxy"
             data-l10n-id="connection-proxy-autologin"
             preference="signon.autologin.proxy" />
@@ -177,8 +179,8 @@
                    data-l10n-id="connection-dns-over-https-custom-label"
                    control="networkCustomDnsOverHttpsInput"/>
           </hbox>
-          <textbox id="networkCustomDnsOverHttpsInput" flex="1"
-                   preference="network.trr.custom_uri"/>
+          <html:input id="networkCustomDnsOverHttpsInput" type="text" style="-moz-box-flex: 1;"
+                      preference="network.trr.custom_uri"/>
         </row>
       </rows>
     </grid>

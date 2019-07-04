@@ -23,6 +23,8 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+struct DOMRectInit;
+
 class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~DOMRectReadOnly() {}
@@ -42,6 +44,9 @@ class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<DOMRectReadOnly> FromRect(const GlobalObject& aGlobal,
+                                                    const DOMRectInit& aInit);
 
   static already_AddRefed<DOMRectReadOnly> Constructor(
       const GlobalObject& aGlobal, double aX, double aY, double aWidth,
@@ -92,6 +97,9 @@ class DOMRect final : public DOMRectReadOnly {
       : DOMRectReadOnly(aParent, aX, aY, aWidth, aHeight) {}
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(DOMRect, DOMRectReadOnly)
+
+  static already_AddRefed<DOMRect> FromRect(const GlobalObject& aGlobal,
+                                            const DOMRectInit& aInit);
 
   static already_AddRefed<DOMRect> Constructor(const GlobalObject& aGlobal,
                                                double aX, double aY,

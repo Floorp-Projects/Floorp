@@ -73,6 +73,7 @@ function* test(testDriver) {
   checkHitResult(hitTest(centerOf(target)),
                  APZHitResultFlags.VISIBLE,
                  utils.getViewId(subframe),
+                 utils.getLayersId(),
                  "content covered by a clipped fixed div");
 
   subtestDone();

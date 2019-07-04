@@ -15,109 +15,114 @@ SimpleTest.waitForExplicitFinish();
 
 function setUpSource(contextType, nodeType) {
   // Use contextType to choose offline or real-time context.
-  var context = contextType === 'offline'?
+  const context = contextType == "offline"?
     new OfflineAudioContext(2 , 80920, 44100) : new AudioContext();
-  var buffer = context.createBuffer(2, 80920, context.sampleRate);
-  for (var i = 0; i < 80920; ++i) {
+  const buffer = context.createBuffer(2, 80920, context.sampleRate);
+  for (let i = 0; i < 80920; ++i) {
     buffer.getChannelData(0)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
     buffer.getChannelData(1)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
   }
 
-  var source = context.createBufferSource();
+  const source = context.createBufferSource();
   source.buffer = buffer;
   source.loop = true;
 
   source.start(0);
 
   // nodeType decides which node in graph should be the source of recording.
-  var node;
-  if (nodeType === 'source') {
+  let node;
+  if (nodeType == "source") {
     node = source;
-  } else if (nodeType === 'splitter') {
-    var splitter = context.createChannelSplitter();
+  } else if (nodeType == "splitter") {
+    const splitter = context.createChannelSplitter();
     source.connect(splitter);
     node = splitter;
-  } else if (nodeType == 'destination') {
+  } else if (nodeType == "destination") {
     source.connect(context.destination);
     node = context.destination;
   }
   // Explicitly start offline context.
-  if (contextType === 'offline') {
+  if (contextType == "offline") {
     context.startRendering();
   }
 
   return node;
 }
 
-function testRecord(source, done) {
-  ok(source, 'source node should be ok');
-  var recorder;
-  var didThrow = false;
-  try {
-    recorder = new MediaRecorder(source);
-  } catch (e) {
-    didThrow = true;
+async function testRecord(source, mimeType) {
+  const isOffline = source.context instanceof OfflineAudioContext;
+  const recorder = new MediaRecorder(source, 0, {mimeType});
+  is(recorder.mimeType, mimeType, "Mime type is set");
+
+  recorder.onwarning = () => ok(false, "should not fire onwarning");
+  recorder.onerror = () => ok(false, "should not fire onerror");
+  if (!isOffline) {
+    recorder.onstop = () => ok(false, "should not fire stop yet");
   }
-  ok(!didThrow, 'MediaRecorder(AudioNode) should be visible after pref turned on');
 
-  recorder.onwarning = function() {
-    ok(false, 'should not fire onwarning');
-  };
+  recorder.start(1000);
+  is("recording", recorder.state, "state should become recording after calling start()");
 
-  recorder.onerror = function() {
-    ok(false, 'should not fire onerror');
-  };
-
-  recorder.onstop = function() {
-    is(recorder.state, 'inactive', 'state should become "inactive" after calling stop()');
-    done();
-  };
-
-  recorder.ondataavailable = function (e) {
-    if (recorder.state == 'recording') {
-      is('audio/ogg', recorder.mimeType, 'mimetype should be audio/ogg, not ' + recorder.mimeType);
-      ok(e.data && e.data.size > 0, 'should get data and its length should be > 0');
-      recorder.stop();
-    }
-  };
-
-  try {
-    recorder.start(1000);
-    is('recording', recorder.state, 'state should become "recording" after calling start()');
-  } catch (e) {
-    didThrow = true;
+  const chunks = [];
+  let {data} = await new Promise(r => recorder.ondataavailable = r);
+  is(recorder.state, "recording", "Expected to still be recording");
+  is(data.type, recorder.mimeType, "Blob has recorder mimetype");
+  if (mimeType != "") {
+    is(data.type, mimeType, "Blob has given mimetype");
   }
-  ok(!didThrow, 'start() should succeed');
+  isnot(data.size, 0, "should get data and its length should be > 0");
+  chunks.push(data);
+
+  if (isOffline) {
+    await new Promise(r => recorder.onstop = r);
+    is(recorder.state, "inactive", "Offline context should end by itself");
+  } else {
+    is(recorder.state, "recording", "Expected to still be recording");
+    recorder.stop();
+    ({data} = await new Promise(r => recorder.ondataavailable = r));
+    is(recorder.state, "inactive", "Expected to be inactive after last blob");
+    isnot(data.size, 0, "should get data and its length should be > 0");
+    chunks.push(data);
+
+    await new Promise(r => recorder.onstop = r);
+    is(recorder.state, "inactive", "state should remain inactive after stop event");
+  }
+  return new Blob(chunks, {type: chunks[0].type});
 }
 
-addLoadEvent(function() {
-  var src = setUpSource();
-  var recorder;
-  var didThrow = false;
+addLoadEvent(async function() {
+  const src = setUpSource();
+  let didThrow = false;
   try {
-    recorder = new MediaRecorder(src);
+    new MediaRecorder(src);
   } catch (e) {
     didThrow = true;
   }
-  ok(didThrow, 'MediaRecorder(AudioNode) should be hidden behind a pref');
+  ok(didThrow, "MediaRecorder(AudioNode) should be hidden behind a pref");
 
-  SpecialPowers.pushPrefEnv({"set": [[ 'media.recorder.audio_node.enabled', true ]]},
-    function () {
-      // Test with various context and source node types.
-      var done1 = new Promise(function (resolve, reject) {
-        testRecord(setUpSource('', 'source'), resolve);
-      });
-      var done2 = new Promise(function (resolve, reject) {
-        testRecord(setUpSource('', 'splitter'), resolve);
-      });
-      var done3 = new Promise(function (resolve, reject) {
-        testRecord(setUpSource('offline', 'destination'), resolve);
-      });
-      // Finish test after all is done.
-      Promise.all([done1, done2, done3]).then(
-        function () { SimpleTest.finish(); }
-      );
-    });
+  await SpecialPowers.pushPrefEnv({"set": [
+      ["media.recorder.audio_node.enabled", true],
+    ]});
+
+  // Test with various context and source node types.
+  for (const mimeType of [
+    "audio/ogg",
+    "audio/webm",
+    "video/webm",
+    "",
+  ]) {
+    for (const {context, node} of [
+      {context: "", node: "source"},
+      {context: "", node: "splitter"},
+      {context: "offline", node: "destination"},
+    ]) {
+      info(`Testing recording ${context || "regular"} context and ${node} ` +
+           `node with mimeType '${mimeType}'`);
+      await testRecord(setUpSource(context, node), mimeType);
+    }
+  }
+
+  SimpleTest.finish();
 });
 
 </script>

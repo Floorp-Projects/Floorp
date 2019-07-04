@@ -23,11 +23,6 @@ const INTERMEDIATES_ENABLED_PREF         = "security.remote_settings.intermediat
 const INTERMEDIATES_SIGNER_PREF          = "security.remote_settings.intermediates.signer";
 const LOGLEVEL_PREF                      = "browser.policies.loglevel";
 
-const INTERMEDIATES_ERRORS_TELEMETRY     = "INTERMEDIATE_PRELOADING_ERRORS";
-const INTERMEDIATES_PENDING_TELEMETRY    = "security.intermediate_preloading_num_pending";
-const INTERMEDIATES_PRELOADED_TELEMETRY  = "security.intermediate_preloading_num_preloaded";
-const INTERMEDIATES_UPDATE_MS_TELEMETRY  = "INTERMEDIATE_PRELOADING_UPDATE_TIME_MS";
-
 const ONECRL_BUCKET_PREF     = "services.settings.security.onecrl.bucket";
 const ONECRL_COLLECTION_PREF = "services.settings.security.onecrl.collection";
 const ONECRL_SIGNER_PREF     = "services.settings.security.onecrl.signer";
@@ -220,9 +215,7 @@ const updateCertBlocklist = AppConstants.MOZ_NEW_CERT_STORAGE ?
             item.pubKeyHash);
         }
       } catch (e) {
-        // prevent errors relating to individual blocklist entries from
-        // causing sync to fail. We will accumulate telemetry on these failures in
-        // bug 1254099.
+        // Prevent errors relating to individual blocklist entries from causing sync to fail.
         Cu.reportError(e);
       }
     }
@@ -264,9 +257,7 @@ async function updatePinningList({ data: { current: records } }) {
         }
       }
     } catch (e) {
-      // prevent errors relating to individual preload entries from causing
-      // sync to fail. We will accumulate telemetry for such failures in bug
-      // 1254099.
+      // Prevent errors relating to individual preload entries from causing sync to fail.
       Cu.reportError(e);
     }
   }
@@ -376,8 +367,6 @@ class IntermediatePreloads {
       return;
     }
 
-    TelemetryStopwatch.start(INTERMEDIATES_UPDATE_MS_TELEMETRY);
-
     let toDownload = waiting.slice(0, maxDownloadsPerRun);
     let recordsCertsAndSubjects = [];
     for (let i = 0; i < toDownload.length; i += parallelDownloads) {
@@ -399,8 +388,6 @@ class IntermediatePreloads {
     }).catch((err) => err);
     if (result != Cr.NS_OK) {
       Cu.reportError(`certStorage.addCerts failed: ${result}`);
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToUpdateDB");
       return;
     }
     await col.db.execute(transaction => {
@@ -408,15 +395,6 @@ class IntermediatePreloads {
         transaction.update({ ...record, cert_import_complete: true });
       });
     });
-    const { data: finalCurrent } = await col.list();
-    const finalWaiting = finalCurrent.filter(record => !record.cert_import_complete);
-    const countPreloaded = finalCurrent.length - finalWaiting.length;
-
-    TelemetryStopwatch.finish(INTERMEDIATES_UPDATE_MS_TELEMETRY);
-    Services.telemetry.scalarSet(INTERMEDIATES_PRELOADED_TELEMETRY,
-                                  countPreloaded);
-    Services.telemetry.scalarSet(INTERMEDIATES_PENDING_TELEMETRY,
-                                  finalWaiting.length);
 
     Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated",
                                   "success");
@@ -429,9 +407,6 @@ class IntermediatePreloads {
       await this.updatePreloadedIntermediates();
     } catch (err) {
       log.warn(`Unable to update intermediate preloads: ${err}`);
-
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToObserve");
     }
   }
 
@@ -492,10 +467,6 @@ class IntermediatePreloads {
       log.debug(`Download fetch completed: ${resp.ok} ${resp.status}`);
       if (!resp.ok) {
         Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
-
-        Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-          .add("failedToFetch");
-
         return Promise.reject();
       }
       return resp.arrayBuffer();
@@ -524,28 +495,18 @@ class IntermediatePreloads {
       attachmentData = await this._downloadAttachmentBytes(record);
     } catch (err) {
       Cu.reportError(`Failed to download attachment: ${err}`);
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToDownloadMisc");
       return result;
     }
 
     if (!attachmentData || attachmentData.length == 0) {
       // Bug 1519273 - Log telemetry for these rejections
       log.debug(`Empty attachment. Hash=${hash}`);
-
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("emptyAttachment");
-
       return result;
     }
 
     // check the length
     if (attachmentData.length !== size) {
       log.debug(`Unexpected attachment length. Hash=${hash} Lengths ${attachmentData.length} != ${size}`);
-
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("unexpectedLength");
-
       return result;
     }
 
@@ -554,10 +515,6 @@ class IntermediatePreloads {
     let calculatedHash = getHash(dataAsString);
     if (calculatedHash !== hash) {
       log.warn(`Invalid hash. CalculatedHash=${calculatedHash}, Hash=${hash}, data=${dataAsString}`);
-
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("unexpectedHash");
-
       return result;
     }
     log.debug(`downloaded cert with hash=${hash}, size=${size}`);
@@ -576,12 +533,6 @@ class IntermediatePreloads {
       subjectBase64 = btoa(bytesToString(cert.tbsCertificate.subject._der._bytes));
     } catch (err) {
       Cu.reportError(`Failed to decode cert: ${err}`);
-
-      // Re-purpose the "failedToUpdateNSS" telemetry tag as "failed to
-      // decode preloaded intermediate certificate"
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToUpdateNSS");
-
       return result;
     }
     result.cert = certBase64;
@@ -601,8 +552,6 @@ class IntermediatePreloads {
     }).catch((err) => err);
     if (result != Cr.NS_OK) {
       Cu.reportError(`Failed to remove some intermediate certificates`);
-      Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
-        .add("failedToRemove");
     }
   }
 }

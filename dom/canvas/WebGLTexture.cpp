@@ -635,6 +635,22 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
   return !error;
 }
 
+template <typename T, typename R>
+static R Clamp(const T val, const R min, const R max) {
+  if (val < min) return min;
+  if (val > max) return max;
+  return static_cast<R>(val);
+}
+
+template <typename T, typename A, typename B>
+static void ClampSelf(T* const out, const A min, const B max) {
+  if (*out < min) {
+    *out = T{min};
+  } else if (*out > max) {
+    *out = T{max};
+  }
+}
+
 void WebGLTexture::ClampLevelBaseAndMax() {
   if (!mImmutable) return;
 
@@ -643,10 +659,8 @@ void WebGLTexture::ClampLevelBaseAndMax() {
   //  `[0, levels-1]`, `level_max` is then clamped to the range `
   //  `[level_base, levels-1]`, where `levels` is the parameter passed to
   //   TexStorage* for the texture object."
-  mBaseMipmapLevel =
-      Clamp<uint32_t>(mBaseMipmapLevel, 0, mImmutableLevelCount - 1);
-  mMaxMipmapLevel = Clamp<uint32_t>(mMaxMipmapLevel, mBaseMipmapLevel,
-                                    mImmutableLevelCount - 1);
+  ClampSelf(&mBaseMipmapLevel, 0u, mImmutableLevelCount - 1u);
+  ClampSelf(&mMaxMipmapLevel, mBaseMipmapLevel, mImmutableLevelCount - 1u);
 
   // Note: This means that immutable textures are *always* texture-complete!
 }
@@ -980,17 +994,22 @@ void WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname,
   FloatOrInt clamped = param;
   bool invalidate = true;
   switch (pname) {
-    case LOCAL_GL_TEXTURE_BASE_LEVEL:
+    case LOCAL_GL_TEXTURE_BASE_LEVEL: {
       mBaseMipmapLevel = clamped.i;
       ClampLevelBaseAndMax();
-      clamped = FloatOrInt(GLint(mBaseMipmapLevel));
+      const auto forDriver =
+          Clamp(mBaseMipmapLevel, uint8_t{0}, kMaxLevelCount);
+      clamped = FloatOrInt(forDriver);
       break;
+    }
 
-    case LOCAL_GL_TEXTURE_MAX_LEVEL:
+    case LOCAL_GL_TEXTURE_MAX_LEVEL: {
       mMaxMipmapLevel = clamped.i;
       ClampLevelBaseAndMax();
-      clamped = FloatOrInt(GLint(mMaxMipmapLevel));
+      const auto forDriver = Clamp(mMaxMipmapLevel, uint8_t{0}, kMaxLevelCount);
+      clamped = FloatOrInt(forDriver);
       break;
+    }
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
       mSamplingState.minFilter = clamped.i;

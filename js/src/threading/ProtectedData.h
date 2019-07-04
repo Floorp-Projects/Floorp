@@ -188,6 +188,19 @@ class ProtectedDataZoneArg : public ProtectedData<Check, T> {
   using Base::operator=;
 };
 
+// Intermediate class for protected data whose checks take a JSContext.
+template <typename Check, typename T>
+class ProtectedDataContextArg : public ProtectedData<Check, T> {
+  using Base = ProtectedData<Check, T>;
+
+ public:
+  template <typename... Args>
+  explicit ProtectedDataContextArg(JSContext* cx, Args&&... args)
+      : ProtectedData<Check, T>(Check(cx), std::forward<Args>(args)...) {}
+
+  using Base::operator=;
+};
+
 class CheckUnprotected {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
  public:
@@ -212,9 +225,29 @@ class CheckThreadLocal {
 #endif
 };
 
+class CheckContextLocal {
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
+  JSContext* cx_;
+
+ public:
+  explicit CheckContextLocal(JSContext* cx) : cx_(cx) {}
+
+  void check() const;
+#else
+ public:
+  explicit CheckContextLocal(JSContext* cx) {}
+#endif
+};
+
 // Data which may only be accessed by the thread on which it is created.
 template <typename T>
 using ThreadData = ProtectedDataNoCheckArgs<CheckThreadLocal, T>;
+
+// Data which belongs to a JSContext and should only be accessed from that
+// JSContext's thread. Note that a JSContext may not have a thread currently
+// associated with it and any associated thread may change over time.
+template <typename T>
+using ContextData = ProtectedDataContextArg<CheckContextLocal, T>;
 
 // Enum describing which helper threads (GC tasks or Ion compilations) may
 // access data even though they do not have exclusive access to any zone.

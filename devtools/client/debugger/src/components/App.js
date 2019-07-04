@@ -166,6 +166,7 @@ class App extends Component<Props, State> {
     }
 
     if (shortcutsModalEnabled) {
+      e.preventDefault();
       this.toggleShortcutsModal();
     }
   };

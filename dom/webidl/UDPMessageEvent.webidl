@@ -8,7 +8,7 @@
  */
 
 //Bug 1056444: This interface should be removed after UDPSocket.input/UDPSocket.output are ready.
-[Constructor(DOMString type, optional UDPMessageEventInit eventInitDict),
+[Constructor(DOMString type, optional UDPMessageEventInit eventInitDict = {}),
  Pref="dom.udpsocket.enabled",
  ChromeOnly]
 interface UDPMessageEvent : Event {

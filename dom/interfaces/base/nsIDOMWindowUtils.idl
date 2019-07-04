@@ -2010,6 +2010,8 @@ interface nsIDOMWindowUtils : nsISupports {
   const long DIRECTION_NOT_SET = 2;
 
   void syncFlushCompositor();
+
+  unsigned long long getLayersId();
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]

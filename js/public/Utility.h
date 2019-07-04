@@ -68,12 +68,11 @@ enum ThreadType {
   THREAD_TYPE_ION,           // 3
   THREAD_TYPE_PARSE,         // 4
   THREAD_TYPE_COMPRESS,      // 5
-  THREAD_TYPE_GCHELPER,      // 6
-  THREAD_TYPE_GCPARALLEL,    // 7
-  THREAD_TYPE_PROMISE_TASK,  // 8
-  THREAD_TYPE_ION_FREE,      // 9
-  THREAD_TYPE_WASM_TIER2,    // 10
-  THREAD_TYPE_WORKER,        // 11
+  THREAD_TYPE_GCPARALLEL,    // 6
+  THREAD_TYPE_PROMISE_TASK,  // 7
+  THREAD_TYPE_ION_FREE,      // 8
+  THREAD_TYPE_WASM_TIER2,    // 9
+  THREAD_TYPE_WORKER,        // 10
   THREAD_TYPE_MAX            // Used to check shell function arguments
 };
 

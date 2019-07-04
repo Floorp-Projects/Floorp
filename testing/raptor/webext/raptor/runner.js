@@ -360,15 +360,15 @@ async function stopGeckoProfiling() {
 }
 
 async function getGeckoProfile() {
-  // get the profile and send to control server
-  postToControlServer("status", "retrieving gecko profile");
-  let arrayBuffer = await browser.geckoProfiler.getProfileAsArrayBuffer();
-  let textDecoder = new TextDecoder();
-  let profile = JSON.parse(textDecoder.decode(arrayBuffer));
-  raptorLog(profile);
-  postToControlServer("gecko_profile", [testName, pageCycle, profile]);
-  // stop the profiler; must stop so it clears before next cycle
+  // trigger saving the gecko profile, and send the file name to the control server
+  postToControlServer("status", "saving gecko profile");
+  let fileName = `${testName}_pagecycle_${pageCycle}.profile`;
+  await browser.geckoProfiler.dumpProfileToFile(fileName);
+  postToControlServer("gecko_profile", fileName);
+
+  // must stop the profiler so it clears the buffer before next cycle
   await stopGeckoProfiling();
+
   // resume if we have more pagecycles left
   if (pageCycle + 1 <= pageCycles) {
     await startGeckoProfiling();

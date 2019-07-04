@@ -75,8 +75,9 @@ class APZTestData {
   }
   void RecordHitResult(const ScreenPoint& aPoint,
                        const mozilla::gfx::CompositorHitTestInfo& aResult,
+                       const LayersId& aLayersId,
                        const ViewID& aScrollId) {
-    mHitResults.AppendElement(HitResult{aPoint, aResult, aScrollId});
+    mHitResults.AppendElement(HitResult{aPoint, aResult, aLayersId, aScrollId});
   }
   void RecordAdditionalData(const std::string& aKey,
                             const std::string& aValue) {
@@ -97,6 +98,7 @@ class APZTestData {
   struct HitResult {
     ScreenPoint point;
     mozilla::gfx::CompositorHitTestInfo result;
+    LayersId layersId;
     ViewID scrollId;
   };
 
@@ -197,6 +199,7 @@ struct ParamTraits<mozilla::layers::APZTestData::HitResult> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.point);
     WriteParam(aMsg, aParam.result);
+    WriteParam(aMsg, aParam.layersId);
     WriteParam(aMsg, aParam.scrollId);
   }
 
@@ -204,6 +207,7 @@ struct ParamTraits<mozilla::layers::APZTestData::HitResult> {
                    paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->point) &&
             ReadParam(aMsg, aIter, &aResult->result) &&
+            ReadParam(aMsg, aIter, &aResult->layersId) &&
             ReadParam(aMsg, aIter, &aResult->scrollId));
   }
 };

@@ -250,6 +250,11 @@ class RegisteredThread final {
         if (JSTracerEnabled()) {
           JS::StartTraceLogger(mContext);
         }
+        if (JSAllocationsEnabled()) {
+          // TODO - This probability should not be hardcoded. See Bug 1547284.
+          JS::EnableRecordingAllocations(
+              mContext, profiler_add_js_allocation_marker, 0.01);
+        }
         js::RegisterContextProfilingEventMarker(mContext,
                                                 profiler_add_js_marker);
 
@@ -258,6 +263,9 @@ class RegisteredThread final {
         js::EnableContextProfilingStack(mContext, false);
         if (JSTracerEnabled()) {
           JS::StopTraceLogger(mContext);
+        }
+        if (JSAllocationsEnabled()) {
+          JS::DisableRecordingAllocations(mContext);
         }
       }
     }
@@ -326,11 +334,15 @@ class RegisteredThread final {
   uint32_t mJSFlags;
 
   bool TrackOptimizationsEnabled() {
-    return mJSFlags & uint32_t(JSSamplingFlags::TrackOptimizations);
+    return mJSFlags & uint32_t(JSInstrumentationFlags::TrackOptimizations);
   }
 
   bool JSTracerEnabled() {
-    return mJSFlags & uint32_t(JSSamplingFlags::TraceLogging);
+    return mJSFlags & uint32_t(JSInstrumentationFlags::TraceLogging);
+  }
+
+  bool JSAllocationsEnabled() {
+    return mJSFlags & uint32_t(JSInstrumentationFlags::Allocations);
   }
 };
 

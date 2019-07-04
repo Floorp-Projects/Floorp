@@ -43,6 +43,7 @@
 #include "VTuneProfiler.h"
 
 #include "js/TraceLoggerAPI.h"
+#include "js/ProfilingFrameIterator.h"
 #include "memory_hooks.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
@@ -654,12 +655,17 @@ class ActivePS {
 
   static uint32_t JSFlags(PSLockRef aLock) {
     uint32_t Flags = 0;
-    Flags |= FeatureJS(aLock) ? uint32_t(JSSamplingFlags::StackSampling) : 0;
-    Flags |= FeatureTrackOptimizations(aLock)
-                 ? uint32_t(JSSamplingFlags::TrackOptimizations)
-                 : 0;
     Flags |=
-        FeatureJSTracer(aLock) ? uint32_t(JSSamplingFlags::TraceLogging) : 0;
+        FeatureJS(aLock) ? uint32_t(JSInstrumentationFlags::StackSampling) : 0;
+    Flags |= FeatureTrackOptimizations(aLock)
+                 ? uint32_t(JSInstrumentationFlags::TrackOptimizations)
+                 : 0;
+    Flags |= FeatureJSTracer(aLock)
+                 ? uint32_t(JSInstrumentationFlags::TraceLogging)
+                 : 0;
+    Flags |= FeatureJSAllocations(aLock)
+                 ? uint32_t(JSInstrumentationFlags::Allocations)
+                 : 0;
     return Flags;
   }
 
@@ -1836,14 +1842,35 @@ static void StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter) {
 }
 
 static void StreamCategories(SpliceableJSONWriter& aWriter) {
-  // Same order as ProfilingCategory.
+  // Same order as ProfilingCategory. Format:
+  // [
+  //   {
+  //     name: "Idle",
+  //     color: "transparent",
+  //     subcategories: ["Other"],
+  //   },
+  //   {
+  //     name: "Other",
+  //     color: "grey",
+  //     subcategories: [
+  //       "JSM loading",
+  //       "Subprocess launching",
+  //       "DLL loading"
+  //     ]
+  //   },
+  //   ...
+  // ]
 
 #define CATEGORY_JSON_BEGIN_CATEGORY(name, labelAsString, color) \
   aWriter.Start();                                               \
   aWriter.StringProperty("name", labelAsString);                 \
-  aWriter.StringProperty("color", color);
-#define CATEGORY_JSON_SUBCATEGORY(category, name, labelAsString)
-#define CATEGORY_JSON_END_CATEGORY aWriter.EndObject();
+  aWriter.StringProperty("color", color);                        \
+  aWriter.StartArrayProperty("subcategories");
+#define CATEGORY_JSON_SUBCATEGORY(supercategory, name, labelAsString) \
+  aWriter.StringElement(labelAsString);
+#define CATEGORY_JSON_END_CATEGORY \
+  aWriter.EndArray();              \
+  aWriter.EndObject();
 
   PROFILING_CATEGORY_LIST(CATEGORY_JSON_BEGIN_CATEGORY,
                           CATEGORY_JSON_SUBCATEGORY, CATEGORY_JSON_END_CATEGORY)
@@ -1858,7 +1885,7 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
                                      bool aIsShuttingDown) {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 15);
+  aWriter.IntProperty("version", 16);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
@@ -4008,6 +4035,13 @@ void profiler_add_marker(const char* aMarkerName,
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName) {
   profiler_add_marker(aMarkerName, JS::ProfilingCategoryPair::JS, nullptr);
+}
+
+void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
+  profiler_add_marker(
+      "JS allocation", JS::ProfilingCategoryPair::JS,
+      MakeUnique<JsAllocationMarkerPayload>(TimeStamp::Now(), std::move(info),
+                                            profiler_get_backtrace()));
 }
 
 void profiler_add_network_marker(

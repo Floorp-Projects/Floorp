@@ -10,13 +10,14 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
   <title data-l10n-id="url-classifier-title"></title>
   <link rel="stylesheet" href="chrome://global/content/aboutUrlClassifier.css" type="text/css"/>
   <link rel="localization" href="toolkit/about/url-classifier.ftl"/>
   <script src="chrome://global/content/aboutUrlClassifier.js"></script>
 </head>
 
-<body onload="onLoad()" class="wide-container">
+<body class="wide-container">
   <h1 data-l10n-id="url-classifier-title"></h1>
   <div id="search">
     <h2 class="major-section" data-l10n-id="url-classifier-search-title"></h2>

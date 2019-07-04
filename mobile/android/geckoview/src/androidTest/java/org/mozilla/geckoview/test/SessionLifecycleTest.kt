@@ -15,7 +15,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
-import org.junit.Assume.assumeThat
+import org.junit.Ignore
 
 import android.os.Bundle
 import android.os.Debug
@@ -418,9 +418,8 @@ class SessionLifecycleTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
     }
 
+    @Ignore // Bug 1533934 - disabled createFromParcel on pgo for frequent failures
     @Test fun createFromParcel() {
-        // disable test on pgo for frequent failures #Bug 1533934
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         val session = sessionRule.createOpenSession()
 
         session.toParcel { parcel ->

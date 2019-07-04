@@ -74,7 +74,7 @@ void WMFDecoderModule::Init() {
     // If we're in the content process and the UseGPUDecoder pref is set, it
     // means that we've given up on the GPU process (it's been crashing) so we
     // should disable DXVA
-    sDXVAEnabled = !StaticPrefs::MediaGpuProcessDecoder();
+    sDXVAEnabled = !StaticPrefs::media_gpu_process_decoder();
     // We need to test for VPX in the content process as the GPUDecoderModule
     // directly calls WMFDecoderModule::Supports in the content process.
     // This unnecessary requirement will be fixed in bug 1534815.
@@ -89,7 +89,7 @@ void WMFDecoderModule::Init() {
 
   sDXVAEnabled = sDXVAEnabled && gfx::gfxVars::CanUseHardwareVideoDecoding();
   testForVPx = testForVPx && gfx::gfxVars::CanUseHardwareVideoDecoding();
-  if (testForVPx && StaticPrefs::MediaWmfVp9Enabled()) {
+  if (testForVPx && StaticPrefs::media_wmf_vp9_enabled()) {
     gfx::WMFVPXVideoCrashGuard guard;
     if (!guard.Crashed()) {
       sUsableVPXMFT = CanCreateMFTDecoder(CLSID_WebmMfVpxDec);

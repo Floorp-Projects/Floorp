@@ -936,7 +936,7 @@ bool GPUProcessManager::CreateContentVRManager(
 void GPUProcessManager::CreateContentRemoteDecoderManager(
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PRemoteDecoderManagerChild>* aOutEndpoint) {
-  if (!EnsureGPUReady() || !StaticPrefs::MediaGpuProcessDecoder() ||
+  if (!EnsureGPUReady() || !StaticPrefs::media_gpu_process_decoder() ||
       !mDecodeVideoOnGpuProcess) {
     return;
   }

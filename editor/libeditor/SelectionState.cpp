@@ -81,7 +81,7 @@ nsresult SelectionState::RestoreSelection(Selection* aSel) {
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
 
     ErrorResult rv;
-    aSel->AddRange(*range, rv);
+    aSel->AddRangeAndSelectFramesAndNotifyListeners(*range, rv);
     if (rv.Failed()) {
       return rv.StealNSResult();
     }

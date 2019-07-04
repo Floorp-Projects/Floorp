@@ -23,15 +23,19 @@ namespace dom {
 
 class WeakWorkerRef;
 
-class BodyStreamHolder {
+class BodyStreamHolder : public nsISupports {
  public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(BodyStreamHolder)
 
   virtual void NullifyStream() = 0;
 
   virtual void MarkAsRead() = 0;
 
-  virtual JSObject* ReadableStreamBody() = 0;
+  virtual JSObject* GetReadableStreamBody() = 0;
+
+ protected:
+  virtual ~BodyStreamHolder() = default;
 };
 
 class BodyStream final : public nsIInputStreamCallback,

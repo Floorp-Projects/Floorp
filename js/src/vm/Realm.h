@@ -605,6 +605,7 @@ class JS::Realm : public JS::shadow::Realm {
   const void* addressOfMetadataBuilder() const {
     return &allocationMetadataBuilder_;
   }
+  bool isRecordingAllocations();
   void setAllocationMetadataBuilder(
       const js::AllocationMetadataBuilder* builder);
   void forgetAllocationMetadataBuilder();
@@ -797,8 +798,9 @@ class JS::Realm : public JS::shadow::Realm {
 
   // Recompute the probability with which this realm should record
   // profiling data (stack traces, allocations log, etc.) about each
-  // allocation. We consult the probabilities requested by the Debugger
-  // instances observing us, if any.
+  // allocation. We first consult the JS runtime to see if it is recording
+  // allocations, and if not then check the probabilities requested by the
+  // Debugger instances observing us, if any.
   void chooseAllocationSamplingProbability() {
     savedStacks_.chooseSamplingProbability(this);
   }

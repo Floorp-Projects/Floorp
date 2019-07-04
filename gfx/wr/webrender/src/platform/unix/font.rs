@@ -309,7 +309,7 @@ impl FontContext {
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
-        if !self.faces.contains_key(&font_key) {
+        if !self.faces.contains_key(font_key) {
             let file = FontFile::Data(bytes);
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
@@ -318,7 +318,7 @@ impl FontContext {
     }
 
     pub fn add_native_font(&mut self, font_key: &FontKey, native_font_handle: NativeFontHandle) {
-        if !self.faces.contains_key(&font_key) {
+        if !self.faces.contains_key(font_key) {
             let cstr = CString::new(native_font_handle.path.as_os_str().to_str().unwrap()).unwrap();
             let file = FontFile::Pathname(cstr);
             let index = native_font_handle.index;
@@ -467,41 +467,57 @@ impl FontContext {
             }
         };
 
-        if succeeded(result) {
-            result = unsafe { FT_Load_Glyph(face, glyph.index() as FT_UInt, load_flags as FT_Int32) };
-        };
-
-        if succeeded(result) {
-            let slot = unsafe { (*face).glyph };
-            assert!(slot != ptr::null_mut());
-
-            if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
-                unsafe { FT_GlyphSlot_Embolden(slot) };
-            }
-
-            let format = unsafe { (*slot).format };
-            match format {
-                FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
-                    let y_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
-                    Some((slot, req_size as f32 / y_size as f32))
-                }
-                FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some((slot, scale as f32)),
-                _ => {
-                    error!("Unsupported format");
-                    debug!("format={:?}", format);
-                    None
-                }
-            }
-        } else {
-            error!("Unable to load glyph");
+        if !succeeded(result) {
+            error!("Unable to set glyph size and transform: {}", result);
+            //let raw_error = unsafe { FT_Error_String(result) };
+            //if !raw_error.is_ptr() {
+            //    error!("\tcode {:?}", CStr::from_ptr(raw_error));
+            //}
             debug!(
-                "{} of size {:?} from font {:?}, {:?}",
+                "\t[{}] for size {:?} and scale {:?} from font {:?}",
                 glyph.index(),
-                font.size,
+                req_size,
+                (x_scale, y_scale),
                 font.font_key,
-                result
             );
-            None
+            return None;
+        }
+
+        result = unsafe { FT_Load_Glyph(face, glyph.index() as FT_UInt, load_flags as FT_Int32) };
+        if !succeeded(result) {
+            error!("Unable to load glyph: {}", result);
+            //let raw_error = unsafe { FT_Error_String(result) };
+            //if !raw_error.is_ptr() {
+            //    error!("\tcode {:?}", CStr::from_ptr(raw_error));
+            //}
+            debug!(
+                "\t[{}] with flags {:?} from font {:?}",
+                glyph.index(),
+                load_flags,
+                font.font_key,
+            );
+            return None;
+        }
+
+        let slot = unsafe { (*face).glyph };
+        assert!(slot != ptr::null_mut());
+
+        if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+            unsafe { FT_GlyphSlot_Embolden(slot) };
+        }
+
+        let format = unsafe { (*slot).format };
+        match format {
+            FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
+                let y_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
+                Some((slot, req_size as f32 / y_size as f32))
+            }
+            FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some((slot, scale as f32)),
+            _ => {
+                error!("Unsupported format");
+                debug!("format={:?}", format);
+                None
+            }
         }
     }
 

@@ -171,7 +171,6 @@ struct ImageResource {
     data: CachedImageData,
     descriptor: ImageDescriptor,
     tiling: Option<TileSize>,
-    viewport_tiles: Option<TileRange>,
 }
 
 #[derive(Clone, Debug)]
@@ -851,7 +850,6 @@ impl ResourceCache {
             descriptor,
             data,
             tiling,
-            viewport_tiles: None,
         };
 
         self.resources.image_templates.insert(image_key, resource);
@@ -909,7 +907,6 @@ impl ResourceCache {
             descriptor,
             data,
             tiling,
-            viewport_tiles: image.viewport_tiles,
         };
     }
 
@@ -1245,6 +1242,7 @@ impl ResourceCache {
                         format: template.descriptor.format,
                     };
 
+                    assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height > 0);
                     // TODO: We only track dirty rects for non-tiled blobs but we
                     // should also do it with tiled ones unless we settle for a small
                     // tile size.
@@ -1293,6 +1291,7 @@ impl ResourceCache {
                     template.dirty_rect
                 };
 
+                assert!(template.descriptor.size.width > 0 && template.descriptor.size.height > 0);
                 blob_request_params.push(
                     BlobImageParams {
                         request: BlobImageRequest {
@@ -1901,12 +1900,9 @@ pub fn get_blob_tiling(
 #[cfg(any(feature = "capture", feature = "replay"))]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-enum PlainFontTemplate {
-    Raw {
-        data: String,
-        index: u32,
-    },
-    Native,
+struct PlainFontTemplate {
+    data: String,
+    index: u32,
 }
 
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -2117,13 +2113,24 @@ impl ResourceCache {
                 .map(|(key, template)| {
                     (*key, match *template {
                         FontTemplate::Raw(ref arc, index) => {
-                            PlainFontTemplate::Raw {
+                            PlainFontTemplate {
                                 data: font_paths[&arc.as_ptr()].clone(),
                                 index,
                             }
                         }
-                        FontTemplate::Native(_) => {
-                            PlainFontTemplate::Native
+                        #[cfg(not(target_os = "macos"))]
+                        FontTemplate::Native(ref native) => {
+                            PlainFontTemplate {
+                                data: native.path.to_string_lossy().to_string(),
+                                index: native.index,
+                            }
+                        }
+                        #[cfg(target_os = "macos")]
+                        FontTemplate::Native(ref native) => {
+                            PlainFontTemplate {
+                                data: native.0.postscript_name().to_string(),
+                                index: 0,
+                            }
                         }
                     })
                 })
@@ -2166,8 +2173,7 @@ impl ResourceCache {
         caches: Option<PlainCacheOwn>,
         root: &PathBuf,
     ) -> Vec<PlainExternalImage> {
-        use std::fs::File;
-        use std::io::Read;
+        use std::{fs, path::Path};
 
         info!("loading resource cache");
         //TODO: instead of filling the local path to Arc<data> map as we process
@@ -2207,29 +2213,28 @@ impl ResourceCache {
         info!("\tfont templates...");
         let native_font_replacement = Arc::new(NATIVE_FONT.to_vec());
         for (key, plain_template) in resources.font_templates {
-            let template = match plain_template {
-                PlainFontTemplate::Raw { data, index } => {
-                    let arc = match raw_map.entry(data) {
-                        Entry::Occupied(e) => {
-                            e.get().clone()
-                        }
-                        Entry::Vacant(e) => {
-                            let mut buffer = Vec::new();
-                            File::open(root.join(e.key()))
-                                .expect(&format!("Unable to open {}", e.key()))
-                                .read_to_end(&mut buffer)
-                                .unwrap();
-                            e.insert(Arc::new(buffer))
-                                .clone()
+            let arc = match raw_map.entry(plain_template.data) {
+                Entry::Occupied(e) => {
+                    e.get().clone()
+                }
+                Entry::Vacant(e) => {
+                    let file_path = if Path::new(e.key()).is_absolute() {
+                        PathBuf::from(e.key())
+                    } else {
+                        root.join(e.key())
+                    };
+                    let arc = match fs::read(file_path) {
+                        Ok(buffer) => Arc::new(buffer),
+                        Err(err) => {
+                            error!("Unable to open font template {:?}: {:?}", e.key(), err);
+                            Arc::clone(&native_font_replacement)
                         }
                     };
-                    FontTemplate::Raw(arc, index)
-                }
-                PlainFontTemplate::Native => {
-                    FontTemplate::Raw(native_font_replacement.clone(), 0)
+                    e.insert(arc).clone()
                 }
             };
 
+            let template = FontTemplate::Raw(arc, plain_template.index);
             self.glyph_rasterizer.add_font(key, template.clone());
             res.font_templates.insert(key, template);
         }
@@ -2249,11 +2254,8 @@ impl ResourceCache {
                             e.get().clone()
                         }
                         Entry::Vacant(e) => {
-                            let mut buffer = Vec::new();
-                            File::open(root.join(e.key()))
-                                .expect(&format!("Unable to open {}", e.key()))
-                                .read_to_end(&mut buffer)
-                                .unwrap();
+                            let buffer = fs::read(root.join(e.key()))
+                                .expect(&format!("Unable to open {}", e.key()));
                             e.insert(Arc::new(buffer))
                                 .clone()
                         }
@@ -2266,7 +2268,6 @@ impl ResourceCache {
                 data,
                 descriptor: template.descriptor,
                 tiling: template.tiling,
-                viewport_tiles: None,
             });
         }
 

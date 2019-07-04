@@ -15,6 +15,7 @@ const PrefState = (overrides) => Object.freeze(Object.assign({
   jstermCodeMirror: false,
   groupWarnings: false,
   historyCount: 50,
+  editor: false,
 }, overrides));
 
 function prefs(state = PrefState(), action) {

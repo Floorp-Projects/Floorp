@@ -374,11 +374,11 @@ class RemoteSettingsClient extends EventEmitter {
       let syncResult;
       try {
         // Fetch changes from server, and make sure we overwrite local data.
-        const strategy = Kinto.syncStrategy.SERVER_WINS;
+        const strategy = Kinto.syncStrategy.PULL_ONLY;
         syncResult = await kintoCollection.sync({ remote: gServerURL, strategy, expectedTimestamp });
         if (!syncResult.ok) {
-          // With SERVER_WINS, there cannot be any conflicts, but don't silent it anyway.
-          throw new Error("Synced failed");
+          // With PULL_ONLY, there cannot be any conflicts, but don't silent it anyway.
+          throw new Error("Sync failed");
         }
         // The records imported from the dump should be considered as "created" for the
         // listeners.

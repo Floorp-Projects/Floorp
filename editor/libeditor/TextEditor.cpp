@@ -1153,7 +1153,8 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
     return rv;
   }
   ErrorResult error;
-  SelectionRefPtr()->AddRange(*aReplaceRange, error);
+  SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*aReplaceRange,
+                                                               error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

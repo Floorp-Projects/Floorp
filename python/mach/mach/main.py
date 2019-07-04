@@ -6,7 +6,6 @@
 # (mach). It is packaged as a module because everything is a library.
 
 from __future__ import absolute_import, print_function, unicode_literals
-from collections import Iterable
 
 import argparse
 import codecs
@@ -17,6 +16,9 @@ import os
 import sys
 import traceback
 import uuid
+from collections import Iterable
+
+from six import string_types
 
 from .base import (
     CommandContext,
@@ -27,12 +29,10 @@ from .base import (
     UnrecognizedArgumentError,
     FailedCommandError,
 )
-
+from .config import ConfigSettings
 from .decorators import (
     CommandProvider,
 )
-
-from .config import ConfigSettings
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
@@ -256,11 +256,11 @@ To see more help for a specific command, run:
         if module_name is None:
             # Ensure parent module is present otherwise we'll (likely) get
             # an error due to unknown parent.
-            if b'mach.commands' not in sys.modules:
-                mod = imp.new_module(b'mach.commands')
-                sys.modules[b'mach.commands'] = mod
+            if 'mach.commands' not in sys.modules:
+                mod = imp.new_module('mach.commands')
+                sys.modules['mach.commands'] = mod
 
-            module_name = 'mach.commands.%s' % uuid.uuid4().get_hex()
+            module_name = 'mach.commands.%s' % uuid.uuid4().hex
 
         try:
             imp.load_source(module_name, path)
@@ -339,14 +339,15 @@ To see more help for a specific command, run:
         orig_env = dict(os.environ)
 
         try:
-            if stdin.encoding is None:
-                sys.stdin = codecs.getreader('utf-8')(stdin)
+            if sys.version_info < (3, 0):
+                if stdin.encoding is None:
+                    sys.stdin = codecs.getreader('utf-8')(stdin)
 
-            if stdout.encoding is None:
-                sys.stdout = codecs.getwriter('utf-8')(stdout)
+                if stdout.encoding is None:
+                    sys.stdout = codecs.getwriter('utf-8')(stdout)
 
-            if stderr.encoding is None:
-                sys.stderr = codecs.getwriter('utf-8')(stderr)
+                if stderr.encoding is None:
+                    sys.stderr = codecs.getwriter('utf-8')(stderr)
 
             # Allow invoked processes (which may not have a handle on the
             # original stdout file descriptor) to know if the original stdout
@@ -604,7 +605,7 @@ To see more help for a specific command, run:
 
             machrc, .machrc
         """
-        if isinstance(paths, basestring):
+        if isinstance(paths, string_types):
             paths = [paths]
 
         valid_names = ('machrc', '.machrc')

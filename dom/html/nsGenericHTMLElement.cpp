@@ -1418,7 +1418,21 @@ uint32_t nsGenericHTMLElement::GetDimensionAttrAsUnsignedInt(
     return uint32_t(attrVal->GetDoubleValue());
   }
 
-  return aDefault;
+  // Unfortunately, the set of values that are valid dimensions is not a
+  // superset of values that are valid unsigned ints.  In particular "+100" is
+  // not a valid dimension, but should parse as the unsigned int "100".  So if
+  // we got here and we don't have a valid dimension value, just try re-parsing
+  // the string we have as an integer.
+  nsAutoString val;
+  attrVal->ToString(val);
+  nsContentUtils::ParseHTMLIntegerResultFlags result;
+  int32_t parsedInt = nsContentUtils::ParseHTMLInteger(val, &result);
+  if ((result & nsContentUtils::eParseHTMLInteger_Error) ||
+      parsedInt < 0) {
+    return aDefault;
+  }
+
+  return parsedInt;
 }
 
 void nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
@@ -1611,7 +1625,7 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
   AfterClearForm(aUnbindOrDelete);
 }
 
-Element* nsGenericHTMLFormElement::GetFormElement() { return mForm; }
+HTMLFormElement* nsGenericHTMLFormElement::GetFormElement() { return mForm; }
 
 HTMLFieldSetElement* nsGenericHTMLFormElement::GetFieldSet() {
   return mFieldSet;
@@ -2520,29 +2534,29 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, uint8_t aType)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), aType) {
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    FromParser aFromParser, uint8_t aType)
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), aType),
+      mControlNumber(!!(aFromParser & FROM_PARSER_NETWORK)
+                         ? OwnerDoc()->GetNextControlNumber()
+                         : -1) {
   mStateKey.SetIsVoid(true);
 }
 
-nsresult nsGenericHTMLFormElementWithState::GenerateStateKey() {
+void nsGenericHTMLFormElementWithState::GenerateStateKey() {
   // Keep the key if already computed
   if (!mStateKey.IsVoid()) {
-    return NS_OK;
+    return;
   }
 
   Document* doc = GetUncomposedDoc();
   if (!doc) {
-    return NS_OK;
+    mStateKey.Truncate();
+    return;
   }
 
   // Generate the state key
-  nsresult rv = nsContentUtils::GenerateStateKey(this, doc, mStateKey);
-
-  if (NS_FAILED(rv)) {
-    mStateKey.SetIsVoid(true);
-    return rv;
-  }
+  nsContentUtils::GenerateStateKey(this, doc, mStateKey);
 
   // If the state key is blank, this is anonymous content or for whatever
   // reason we are not supposed to save/restore state: keep it as such.
@@ -2550,7 +2564,6 @@ nsresult nsGenericHTMLFormElementWithState::GenerateStateKey() {
     // Add something unique to content so layout doesn't muck us up.
     mStateKey += "-C";
   }
-  return NS_OK;
 }
 
 PresState* nsGenericHTMLFormElementWithState::GetPrimaryPresState() {
@@ -2598,6 +2611,9 @@ nsGenericHTMLFormElementWithState::GetLayoutHistory(bool aRead) {
 }
 
 bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
+  MOZ_ASSERT(!mStateKey.IsVoid(),
+             "GenerateStateKey must already have been called");
+
   if (mStateKey.IsEmpty()) {
     return false;
   }
@@ -2620,6 +2636,12 @@ bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
 
 void nsGenericHTMLFormElementWithState::NodeInfoChanged(Document* aOldDoc) {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
+
+  // We need to regenerate the state key now we're in a new document.  Clearing
+  // mControlNumber means we stop considering this control to be parser
+  // inserted, and we'll generate a state key based on its position in the
+  // document rather than the order it was inserted into the document.
+  mControlNumber = -1;
   mStateKey.SetIsVoid(true);
 }
 

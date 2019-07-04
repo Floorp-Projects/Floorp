@@ -598,6 +598,7 @@ impl Wrench {
             "T - Save CPU profile to a file",
             "C - Save a capture to captures/wrench/",
             "X - Do a hit test at the current cursor position",
+            "Y - Clear all caches",
         ];
 
         let color_and_offset = [(ColorF::BLACK, 2.0), (ColorF::WHITE, 0.0)];

@@ -5,3 +5,5 @@
 LIBRARY        vrhost.dll
 
 EXPORTS        SampleExport      PRIVATE
+               TestTheManager      PRIVATE
+               TestTheService      PRIVATE

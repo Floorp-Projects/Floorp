@@ -457,41 +457,42 @@ void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
 
 void MediaEncoder::Suspend() {
   RunOnGraph(NS_NewRunnableFunction(
-      "MediaEncoder::Suspend",
+      "MediaEncoder::Suspend (graph)",
       [thread = mEncoderThread, audio = mAudioEncoder, video = mVideoEncoder] {
-        if (audio) {
-          nsresult rv = thread->Dispatch(
-              NewRunnableMethod("AudioTrackEncoder::Suspend", audio,
-                                &AudioTrackEncoder::Suspend));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
-        }
-        if (video) {
-          nsresult rv = thread->Dispatch(NewRunnableMethod<TimeStamp>(
-              "VideoTrackEncoder::Suspend", video, &VideoTrackEncoder::Suspend,
-              TimeStamp::Now()));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
+        if (NS_FAILED(thread->Dispatch(
+                NS_NewRunnableFunction("MediaEncoder::Suspend (encoder)",
+                                       [audio, video, now = TimeStamp::Now()] {
+                                         if (audio) {
+                                           audio->Suspend();
+                                         }
+                                         if (video) {
+                                           video->Suspend(now);
+                                         }
+                                       })))) {
+          // RunOnGraph added an extra async step, and now `thread` has shut
+          // down.
+          return;
         }
       }));
 }
 
 void MediaEncoder::Resume() {
   RunOnGraph(NS_NewRunnableFunction(
-      "MediaEncoder::Resume",
+      "MediaEncoder::Resume (graph)",
       [thread = mEncoderThread, audio = mAudioEncoder, video = mVideoEncoder] {
-        if (audio) {
-          nsresult rv = thread->Dispatch(NewRunnableMethod(
-              "AudioTrackEncoder::Resume", audio, &AudioTrackEncoder::Resume));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
-        }
-        if (video) {
-          nsresult rv = thread->Dispatch(NewRunnableMethod<TimeStamp>(
-              "VideoTrackEncoder::Resume", video, &VideoTrackEncoder::Resume,
-              TimeStamp::Now()));
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
+        if (NS_FAILED(thread->Dispatch(
+                NS_NewRunnableFunction("MediaEncoder::Resume (encoder)",
+                                       [audio, video, now = TimeStamp::Now()] {
+                                         if (audio) {
+                                           audio->Resume();
+                                         }
+                                         if (video) {
+                                           video->Resume(now);
+                                         }
+                                       })))) {
+          // RunOnGraph added an extra async step, and now `thread` has shut
+          // down.
+          return;
         }
       }));
 }
@@ -636,33 +637,76 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
   }
 #ifdef MOZ_WEBM_ENCODER
   else if (MediaEncoder::IsWebMEncoderEnabled() &&
-           (aMIMEType.EqualsLiteral(VIDEO_WEBM) ||
-            (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK))) {
+           aMIMEType.EqualsLiteral(VIDEO_WEBM)) {
     if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK &&
         MediaDecoder::IsOpusEnabled()) {
       audioEncoder = MakeAndAddRef<OpusTrackEncoder>(aTrackRate);
-      NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
-    if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
-      videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
-          driftCompensator, aTrackRate, FrameDroppingMode::ALLOW);
-    } else {
-      videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
-          driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
+    if (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK) {
+      if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
+        videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, FrameDroppingMode::ALLOW);
+      } else {
+        videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
+      }
     }
     writer = MakeUnique<WebMWriter>(aTrackTypes);
-    NS_ENSURE_TRUE(writer, nullptr);
-    NS_ENSURE_TRUE(videoEncoder, nullptr);
+    mimeType = NS_LITERAL_STRING(VIDEO_WEBM);
+  } else if (MediaEncoder::IsWebMEncoderEnabled() &&
+             aMIMEType.EqualsLiteral(AUDIO_WEBM) &&
+             aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
+    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK &&
+        MediaDecoder::IsOpusEnabled()) {
+      audioEncoder = MakeAndAddRef<OpusTrackEncoder>(aTrackRate);
+    }
+    if (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK) {
+      if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
+        videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, FrameDroppingMode::ALLOW);
+      } else {
+        videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
+      }
+      mimeType = NS_LITERAL_STRING(VIDEO_WEBM);
+    } else {
+      mimeType = NS_LITERAL_STRING(AUDIO_WEBM);
+    }
+    writer = MakeUnique<WebMWriter>(aTrackTypes);
+  }
+#endif  // MOZ_WEBM_ENCODER
+  else if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled() &&
+           aMIMEType.EqualsLiteral(AUDIO_OGG) &&
+           aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
+    writer = MakeUnique<OggWriter>();
+    audioEncoder = MakeAndAddRef<OpusTrackEncoder>(aTrackRate);
+    mimeType = NS_LITERAL_STRING(AUDIO_OGG);
+  }
+#ifdef MOZ_WEBM_ENCODER
+  else if (MediaEncoder::IsWebMEncoderEnabled() &&
+           (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK ||
+            !MediaDecoder::IsOggEnabled())) {
+    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK &&
+        MediaDecoder::IsOpusEnabled()) {
+      audioEncoder = MakeAndAddRef<OpusTrackEncoder>(aTrackRate);
+    }
+    if (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK) {
+      if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
+        videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, FrameDroppingMode::ALLOW);
+      } else {
+        videoEncoder = MakeAndAddRef<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, FrameDroppingMode::DISALLOW);
+      }
+    }
+    writer = MakeUnique<WebMWriter>(aTrackTypes);
     mimeType = NS_LITERAL_STRING(VIDEO_WEBM);
   }
 #endif  // MOZ_WEBM_ENCODER
   else if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled() &&
-           (aMIMEType.EqualsLiteral(AUDIO_OGG) ||
-            (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK))) {
+           aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
     writer = MakeUnique<OggWriter>();
     audioEncoder = MakeAndAddRef<OpusTrackEncoder>(aTrackRate);
-    NS_ENSURE_TRUE(writer, nullptr);
-    NS_ENSURE_TRUE(audioEncoder, nullptr);
     mimeType = NS_LITERAL_STRING(AUDIO_OGG);
   } else {
     LOG(LogLevel::Error,
@@ -671,7 +715,8 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
   }
 
   LOG(LogLevel::Info,
-      ("Create encoder result:a[%p](%u bps) v[%p](%u bps) w[%p] mimeType = %s.",
+      ("Create encoder result:a[%p](%u bps) v[%p](%u bps) w[%p] mimeType = "
+       "%s.",
        audioEncoder.get(), aAudioBitrate, videoEncoder.get(), aVideoBitrate,
        writer.get(), NS_ConvertUTF16toUTF8(mimeType).get()));
 
@@ -800,7 +845,8 @@ nsresult MediaEncoder::GetEncodedData(
     }
   }
 
-  // In audio only or video only case, let unavailable track's flag to be true.
+  // In audio only or video only case, let unavailable track's flag to be
+  // true.
   bool isAudioCompleted = !mAudioEncoder || mAudioEncoder->IsEncodingComplete();
   bool isVideoCompleted = !mVideoEncoder || mVideoEncoder->IsEncodingComplete();
   rv = mWriter->GetContainerData(
@@ -990,7 +1036,7 @@ void MediaEncoder::Stop() {
 
 #ifdef MOZ_WEBM_ENCODER
 bool MediaEncoder::IsWebMEncoderEnabled() {
-  return StaticPrefs::MediaEncoderWebMEnabled();
+  return StaticPrefs::media_encoder_webm_enabled();
 }
 #endif
 

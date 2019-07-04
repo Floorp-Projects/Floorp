@@ -46,6 +46,7 @@ function* test(testDriver) {
     hitTest(centerOf(sticky)),
     APZHitResultFlags.VISIBLE,
     utils.getViewId(subframe),
+    utils.getLayersId(),
     "subframe was successfully hit");
 
   subtestDone();

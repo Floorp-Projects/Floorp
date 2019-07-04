@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional EventInit eventInitDict),
+[Constructor(DOMString type, optional EventInit eventInitDict = {}),
  Exposed=(Window,Worker), ProbablyShortLivingWrapper]
 interface Event {
   [Pure]

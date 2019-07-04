@@ -1926,7 +1926,7 @@ server_main(
     for (i = 0; i < certNicknameIndex; i++) {
         if (cert[i] != NULL) {
             const SSLExtraServerCertData ocspData = {
-                ssl_auth_null, NULL, certStatus[i], NULL
+                ssl_auth_null, NULL, certStatus[i], NULL, NULL, NULL
             };
 
             secStatus = SSL_ConfigServerCert(model_sock, cert[i],

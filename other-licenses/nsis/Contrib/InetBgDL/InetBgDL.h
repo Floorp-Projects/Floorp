@@ -2,12 +2,6 @@
 // Copyright (C) Anders Kjersem. Licensed under the zlib/libpng license
 //
 
-#if (defined(_MSC_VER) && !defined(_DEBUG))
-  #pragma comment(linker,"/opt:nowin98")
-  #pragma comment(linker,"/ignore:4078")
-  #pragma comment(linker,"/merge:.rdata=.text")
-#endif
-
 #ifdef UNICODE
 # ifndef _UNICODE
 #    define _UNICODE

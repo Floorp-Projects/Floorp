@@ -25,7 +25,7 @@ dictionary CaretStateChangedEventInit : EventInit {
   DOMString selectedTextContent = "";
 };
 
-[Constructor(DOMString type, optional CaretStateChangedEventInit eventInit),
+[Constructor(DOMString type, optional CaretStateChangedEventInit eventInit = {}),
  ChromeOnly]
 interface CaretStateChangedEvent : Event {
   readonly attribute boolean collapsed;

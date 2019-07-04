@@ -1,6 +1,6 @@
 interface PluginTag;
 
-[Constructor(DOMString type, optional HiddenPluginEventInit eventInit), ChromeOnly]
+[Constructor(DOMString type, optional HiddenPluginEventInit eventInit = {}), ChromeOnly]
 interface HiddenPluginEvent : Event
 {
   readonly attribute PluginTag? tag;

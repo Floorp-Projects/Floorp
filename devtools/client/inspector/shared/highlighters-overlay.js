@@ -533,7 +533,7 @@ class HighlightersOverlay {
 
     if (node.displayType === "subgrid" && await this.canGetParentGridNode()) {
       // Show a translucent highlight of the parent grid container if the given node is
-      // a subgrid.
+      // a subgrid and the parent grid container is not highlighted.
       const parentGridNode = await this.walker.getParentGridNode(node);
       this.subgridToParentMap.set(node, parentGridNode);
       await this.showParentGridHighlighter(parentGridNode);
@@ -588,6 +588,11 @@ class HighlightersOverlay {
    *         The NodeFront of the parent grid container element to highlight.
    */
   async showParentGridHighlighter(node) {
+    if (this.gridHighlighters.has(node)) {
+      // Parent grid container already highlighted.
+      return;
+    }
+
     const highlighter = await this._getGridHighlighter(node, true);
     if (!highlighter) {
       return;
@@ -624,10 +629,23 @@ class HighlightersOverlay {
     this.extraGridHighlighterPool.push(highlighter);
     this.state.grids.delete(node);
 
+    // Given node was a subgrid, remove its entry from the subgridToParentMap and
+    // hide its parent grid container highlight.
     if (this.subgridToParentMap.has(node)) {
       const parentGridNode = this.subgridToParentMap.get(node);
       this.subgridToParentMap.delete(node);
       await this.hideParentGridHighlighter(parentGridNode);
+    }
+
+    // Check if the given node matches any of the subgrid's parent grid container.
+    // Since the subgrid and its parent grid container were previously both highlighted
+    // and the parent grid container (the given node) has just been hidden, show a
+    // translucent highlight of the parent grid container.
+    for (const parentGridNode of this.subgridToParentMap.values()) {
+      if (parentGridNode === node) {
+        await this.showParentGridHighlighter(parentGridNode);
+        break;
+      }
     }
 
     this._toggleRuleViewIcon(node, false, ".ruleview-grid");

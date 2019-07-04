@@ -100,8 +100,10 @@ class ArtifactJob(object):
     trust_domain = 'gecko'
     candidate_trees = [
         'mozilla-central',
+        'integration/autoland',
         'integration/mozilla-inbound',
         'releases/mozilla-beta',
+        'releases/mozilla-release',
     ]
     try_tree = 'try'
 

@@ -93,7 +93,7 @@ def main():
 
     rlock = RLock()
 
-    print 'using result file', options.resultfile
+    print('using result file', options.resultfile)
 
     extensionDir = config.get('extensiondir')
     if not extensionDir or extensionDir == '__EXTENSIONDIR__':

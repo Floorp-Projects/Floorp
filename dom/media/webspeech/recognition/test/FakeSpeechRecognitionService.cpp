@@ -58,7 +58,7 @@ FakeSpeechRecognitionService::Abort() { return NS_OK; }
 NS_IMETHODIMP
 FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
                                       const char16_t* aData) {
-  MOZ_ASSERT(StaticPrefs::MediaWebspeechTextFakeRecognitionService(),
+  MOZ_ASSERT(StaticPrefs::media_webspeech_test_fake_recognition_service(),
              "Got request to fake recognition service event, but "
              "media.webspeech.test.fake_recognition_service is not set");
 

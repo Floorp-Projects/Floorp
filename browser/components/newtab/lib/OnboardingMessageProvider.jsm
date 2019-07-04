@@ -2,44 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-const {Localization} = ChromeUtils.import("resource://gre/modules/Localization.jsm");
+/* globals Localization */
 const {FxAccountsConfig} = ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
 const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
 const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-async function getAddonInfo() {
-  try {
-    let {content, source} = await AttributionCode.getAttrDataAsync();
-    if (!content || source !== "addons.mozilla.org") {
-      return null;
-    }
-    // Attribution data can be double encoded
-    while (content.includes("%")) {
-      try {
-        const result = decodeURIComponent(content);
-        if (result === content) {
-          break;
-        }
-        content = result;
-      } catch (e) {
-        break;
-      }
-    }
-    const [addon] = await AddonRepository.getAddonsByIDs([content]);
-    if (addon.sourceURI.scheme !== "https") {
-      return null;
-    }
-    return {
-      name: addon.name,
-      url: addon.sourceURI.spec,
-      iconURL: addon.icons["64"] || addon.icons["32"],
-    };
-  } catch (e) {
-    Cu.reportError("Failed to get the latest add-on version for Return to AMO");
-    return null;
-  }
-}
 
 const L10N = new Localization([
   "branding/brand.ftl",
@@ -183,20 +150,20 @@ const ONBOARDING_MESSAGES = async () => ([
     utm_term: "trailhead-sync",
     content: {
       className: "syncCohort",
-      title: {property_id: "firstrun_title"},
-      subtitle: {property_id: "firstrun_content"},
+      title: {string_id: "onboarding-sync-welcome-header"},
+      subtitle: {string_id: "onboarding-sync-welcome-content"},
       benefits: [],
       learn: {
-        text: {property_id: "firstrun_learn_more_link"},
+        text: {string_id: "onboarding-sync-welcome-learn-more-link"},
         url: "https://www.mozilla.org/firefox/accounts/",
       },
       form: {
-        title: {property_id: "firstrun_form_header"},
-        text: {property_id: "firstrun_form_sub_header"},
-        email: {property_id: "firstrun_email_input_placeholder"},
-        button: {property_id: "firstrun_continue_to_login"},
+        title: {string_id: "onboarding-sync-form-header"},
+        text: {string_id: "onboarding-sync-form-sub-header"},
+        email: {string_id: "onboarding-sync-form-input"},
+        button: {string_id: "onboarding-sync-form-continue-button"},
       },
-      skipButton: {property_id: "firstrun_skip_login"},
+      skipButton: {string_id: "onboarding-sync-form-skip-login-button"},
     },
   },
   {
@@ -476,7 +443,7 @@ const OnboardingMessageProvider = {
       // that, and update the message accordingly
       if (msg.template === "return_to_amo_overlay") {
         try {
-          const {name, iconURL, url} = await getAddonInfo();
+          const {name, iconURL, url} = await this.getAddonInfo();
           // If we do not have all the data from the AMO api to indicate to the user
           // what they are installing we don't want to show the message
           if (!name || !iconURL || !url) {
@@ -513,6 +480,38 @@ const OnboardingMessageProvider = {
       translatedMessages.push(translatedMessage);
     }
     return translatedMessages;
+  },
+  async getAddonInfo() {
+    try {
+      let {content, source} = await AttributionCode.getAttrDataAsync();
+      if (!content || source !== "addons.mozilla.org") {
+        return null;
+      }
+      // Attribution data can be double encoded
+      while (content.includes("%")) {
+        try {
+          const result = decodeURIComponent(content);
+          if (result === content) {
+            break;
+          }
+          content = result;
+        } catch (e) {
+          break;
+        }
+      }
+      const [addon] = await AddonRepository.getAddonsByIDs([content]);
+      if (addon.sourceURI.scheme !== "https") {
+        return null;
+      }
+      return {
+        name: addon.name,
+        url: addon.sourceURI.spec,
+        iconURL: addon.icons["64"] || addon.icons["32"],
+      };
+    } catch (e) {
+      Cu.reportError("Failed to get the latest add-on version for Return to AMO");
+      return null;
+    }
   },
 };
 this.OnboardingMessageProvider = OnboardingMessageProvider;

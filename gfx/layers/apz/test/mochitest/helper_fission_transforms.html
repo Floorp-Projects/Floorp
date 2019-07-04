@@ -49,7 +49,7 @@ async function* test() {
   ok(iframeResponse, "code_for_oopif_to_run successfully installed");
 
   iframePromise = promiseOneEvent("OOPIF:ClickData", null);
-  synthesizeNativeClick(document.body, 200, 200, function() {
+  synthesizeNativeClick(document.body, 400, 400, function() {
     dump("Finished synthesizing click, waiting for OOPIF message...\n");
   });
   iframeResponse = await iframePromise;
@@ -69,7 +69,7 @@ async function* test() {
     }
     div {
         transform-origin: top left;
-        transform: translateX(200px) rotate(45deg);
+        transform: translateX(400px) scale(2) rotate(45deg);
         width: 500px;
     }
     iframe {

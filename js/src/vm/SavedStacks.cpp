@@ -1798,6 +1798,16 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
 }
 
 void SavedStacks::chooseSamplingProbability(Realm* realm) {
+  {
+    JSRuntime* runtime = realm->runtimeFromMainThread();
+    if (runtime->recordAllocationCallback) {
+      // The runtime is tracking allocations across all realms, in this case
+      // ignore all of the debugger values, and use the runtime's probability.
+      this->setSamplingProbability(runtime->allocationSamplingProbability);
+      return;
+    }
+  }
+
   // Use unbarriered version to prevent triggering read barrier while
   // collecting, this is safe as long as global does not escape.
   GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal();
@@ -1829,6 +1839,10 @@ void SavedStacks::chooseSamplingProbability(Realm* realm) {
   }
   MOZ_ASSERT(foundAnyDebuggers);
 
+  this->setSamplingProbability(probability);
+}
+
+void SavedStacks::setSamplingProbability(double probability) {
   if (!bernoulliSeeded) {
     mozilla::Array<uint64_t, 2> seed;
     GenerateXorShift128PlusSeed(seed);
@@ -1857,6 +1871,23 @@ JSObject* SavedStacks::MetadataBuilder::build(
   if (!Debugger::onLogAllocationSite(cx, obj, frame,
                                      mozilla::TimeStamp::Now())) {
     oomUnsafe.crash("SavedStacksMetadataBuilder");
+  }
+
+  auto recordAllocationCallback =
+      cx->realm()->runtimeFromMainThread()->recordAllocationCallback;
+  if (recordAllocationCallback) {
+    // The following code translates the JS-specific information, into an
+    // RecordAllocationInfo object that can be consumed outside of SpiderMonkey.
+
+    auto node = JS::ubi::Node(obj.get());
+
+    // Pass the non-SpiderMonkey specific information back to the
+    // callback to get it out of the JS engine.
+    recordAllocationCallback(JS::RecordAllocationInfo{
+        node.typeName(), node.jsObjectClassName(), node.descriptiveTypeName(),
+        node.scriptFilename(), JS::ubi::CoarseTypeToString(node.coarseType()),
+        node.size(cx->runtime()->debuggerMallocSizeOf),
+        gc::IsInsideNursery(obj)});
   }
 
   MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());

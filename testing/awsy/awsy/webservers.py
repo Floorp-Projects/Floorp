@@ -37,17 +37,17 @@ class WebServers(object):
                                   docroot=self.docroot))
             try:
                 self.servers[-1].start()
-            except socket.error, error:
+            except socket.error as error:
                 if isinstance(error, socket.error):
                     if error.errno == 98:
-                        print "port %d is in use." % port
+                        print("port {} is in use.").format(port)
                     else:
-                        print "port %d error %s" % (port, error)
+                        print("port {} error {}").format(port, error)
                 elif isinstance(error, str):
-                    print "port %d error %s" % (port, error)
+                    print("port {} error {}").format(port, error)
                 self.servers.pop()
-            except Exception, error:
-                print "port %d error %s" % (port, error)
+            except Exception as error:
+                print("port {} error {}").format(port, error)
                 self.servers.pop()
 
             port += 1

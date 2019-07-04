@@ -9,12 +9,9 @@
   display: none;
 }
 
-#identity-popup {
-  --identity-popup-width: 33rem;
-}
-
+#identity-popup,
 #protections-popup {
-  --protections-popup-width: 33rem;
+  --popup-width: 33rem;
 }
 
 /* This is used by screenshots tests to hide intermittently different
@@ -78,13 +75,22 @@
 }
 
 #identity-popup-mainView {
-  min-width: var(--identity-popup-width);
-  max-width: var(--identity-popup-width);
+  min-width: var(--popup-width);
+  max-width: var(--popup-width);
 }
 
 #protections-popup-mainView {
-  min-width: var(--protections-popup-width);
-  max-width: var(--protections-popup-width);
+  min-width: var(--popup-width);
+  max-width: var(--popup-width);
+}
+
+#protections-popup[toast] #protections-popup-mainView > :not(#protections-popup-mainView-panel-header),
+#protections-popup[toast] #protections-popup-main-header-label {
+  display: none;
+}
+
+#protections-popup[toast] #protections-popup-mainView-panel-header {
+  min-height: 30px;
 }
 
 .identity-popup-section {
@@ -179,9 +185,11 @@
 .identity-popup-content-blocking-list-item > label,
 #identity-popup-mainView-panel-header > label,
 #protections-popup-mainView-panel-header > label,
+#protections-popup-mainView-panel-header > description,
 #identity-popup-trackersView > .panel-header,
 #identity-popup-securityView > .panel-header,
 #identity-popup-breakageReportView > .panel-header,
+#protections-popup-sendReportView > .panel-header,
 #identity-popup-content-blocking-report-breakage,
 .identity-popup-content-blocking-category-label,
 .identity-popup-content-blocking-category-state-label,
@@ -200,7 +208,8 @@
 }
 
 #identity-popup-mainView-panel-header,
-#protections-popup-mainView-panel-header {
+#protections-popup-mainView-panel-header,
+#protections-popup-siteNotWorkingView-footer {
   padding: 4px 1em;
   min-height: 40px;
   -moz-box-pack: center;
@@ -221,14 +230,22 @@
 }
 
 #identity-popup-mainView-panel-header-span,
-#protections-popup-mainView-panel-header-span {
+#protections-popup-mainView-panel-header-span,
+#protections-popup-toast-panel-tp-on-desc,
+#protections-popup-toast-panel-tp-off-desc {
   display: inline-block;
   font-weight: 600;
   text-align: center;
   overflow-wrap: break-word;
   /* This is needed for the overflow-wrap to work correctly.
    * 33em is the panel width, panel-header has 1em padding on each side. */
-  max-width: calc(var(--identity-popup-width) - 2em);
+  max-width: calc(var(--popup-width) - 2em);
+}
+
+#protections-popup-mainView-panel-header-span,
+#protections-popup-toast-panel-tp-on-desc,
+#protections-popup-toast-panel-tp-off-desc {
+  max-width: calc(var(--popup-width) - 2em);
 }
 
 #identity-popup-permissions-content > description,
@@ -251,7 +268,7 @@
   /* This is needed for the overflow-wrap to work correctly.
    * 1em + 2em + 24px is .identity-popup-security-content padding
    * 33em is the panel width */
-  max-width: calc(var(--identity-popup-width) - 3rem - 24px);
+  max-width: calc(var(--popup-width) - 3rem - 24px);
 }
 
 .identity-popup-warning-gray {
@@ -359,33 +376,41 @@ description#identity-popup-content-verifier,
 
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
-#identity-popup-breakageReportView-footer {
+#identity-popup-breakageReportView-footer,
+#protections-popup-sendReportView-footer {
   display: flex;
 }
 
-#identity-popup-breakageReportView-footer > button {
+#identity-popup-breakageReportView-footer > button,
+#protections-popup-sendReportView-footer > button {
   flex: 1;
 }
 
 #identity-popup-breakageReportView-heading,
-#identity-popup-breakageReportView-body {
+#identity-popup-breakageReportView-body,
+#protections-popup-sendReportView-heading,
+#protections-popup-sendReportView-body {
   padding: 16px;
   font-size: 110%;
 }
 
-.identity-popup-breakageReportView-collection-section {
+.identity-popup-breakageReportView-collection-section,
+.protections-popup-sendReportView-collection-section {
   margin-bottom: 16px;
 }
 
-#identity-popup-breakageReportView-body {
+#identity-popup-breakageReportView-body,
+#protections-popup-sendReportView-body {
   border-top: 1px solid var(--panel-separator-color);
 }
 
-#identity-popup-breakageReportView-collection-url {
+#identity-popup-breakageReportView-collection-url,
+#protections-popup-sendReportView-collection-url {
   font: inherit;
 }
 
-#identity-popup-breakageReportView-collection-comments {
+#identity-popup-breakageReportView-collection-comments,
+#protections-popup-sendReportView-collection-comments {
   height: 120px;
 }
 
@@ -533,8 +558,8 @@ description#identity-popup-content-verifier,
 #identity-popup-trackersView-strict-info {
   min-height: 40px;
   /* Limit to full width - margin */
-  max-width: calc(var(--identity-popup-width) - 12px);
-  min-width: calc(var(--identity-popup-width) - 12px);
+  max-width: calc(var(--popup-width) - 12px);
+  min-width: calc(var(--popup-width) - 12px);
   background-color: #45a1ff80;
   margin: 6px;
   text-align: center;
@@ -554,7 +579,7 @@ description#identity-popup-content-verifier,
 #identity-popup-trackersView-strict-info > label {
   overflow-wrap: break-word;
   /* Limit to full width - container margin - container padding - icon width - icon margin */
-  max-width: calc(var(--identity-popup-width) - 12px - 20px - 16px - 10px);
+  max-width: calc(var(--popup-width) - 12px - 20px - 16px - 10px);
 }
 
 /* Content Blocking categories */
@@ -795,13 +820,14 @@ description#identity-popup-content-verifier,
   opacity: 0.8;
 }
 
-#protections-popup-tp-switch-label-box > label {
+#protections-popup-mainView-panel-header > description {
   display: none;
 }
 
-#protections-popup:not([hasException]) #protections-popup-tp-switch-on-header,
-#protections-popup:not([hasException]) #protections-popup-tp-switch-breakage-link,
-#protections-popup[hasException] #protections-popup-tp-switch-off-header {
+#protections-popup:not([hasException]) .protections-popup-tp-switch-on-header,
+#protections-popup[hasException] .protections-popup-tp-switch-off-header,
+#protections-popup:not([hasException])[toast] #protections-popup-toast-panel-tp-on-desc,
+#protections-popup[hasException][toast] #protections-popup-toast-panel-tp-off-desc {
   display: unset;
 }
 
@@ -809,19 +835,33 @@ description#identity-popup-content-verifier,
   padding: 4px;
 }
 
-#protections-popup-tp-switch-label-box,
-#protections-popup-tp-switch-box {
+#protections-popup[hasException] #protections-popup-tp-switch-section {
+  background: repeating-linear-gradient(
+    -56deg,
+    var(--arrowpanel-dimmed),
+    var(--arrowpanel-dimmed) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+#protections-popup-siteNotWorkingView-body,
+.protections-popup-tp-switch-label-box,
+.protections-popup-tp-switch-box {
   padding: 4px 1em;
   min-height: 40px;
   -moz-box-pack: center;
+  /* This is needed in order to make 'position' working for the badge alongside
+     the TP switch toggle.*/
+  position: relative;
 }
 
-#protections-popup-tp-switch-on-header,
-#protections-popup-tp-switch-off-header {
+.protections-popup-tp-switch-on-header,
+.protections-popup-tp-switch-off-header {
   font-weight: 600;
 }
 
-#protections-popup-tp-switch {
+.protections-popup-tp-switch {
   -moz-appearance: none;
   box-sizing: border-box;
   min-width: 26px;
@@ -831,12 +871,12 @@ description#identity-popup-content-verifier,
   margin-top: 4px;
   margin-bottom: 4px;
   margin-inline-start: 1px;
-  margin-inline-end: 7px;
   padding: 2px;
+  padding-inline-end: 0;
   transition: padding .2s ease;
 }
 
-#protections-popup-tp-switch::before {
+.protections-popup-tp-switch::before {
   position: relative;
   display: block;
   content: "";
@@ -846,21 +886,29 @@ description#identity-popup-content-verifier,
   background: white;
 }
 
-#protections-popup-tp-switch[enabled] {
+.protections-popup-tp-switch[enabled] {
   background-color: #0a84ff;
   border: 1px solid #0a84ff;
   /* Push the toggle to the right. */
   padding-inline-start: 12px;
 }
 
-#protections-popup-tp-switch:hover,
-#protections-popup-tp-switch:-moz-focusring {
+.protections-popup-tp-switch:hover,
+.protections-popup-tp-switch:-moz-focusring {
   border: 1px solid var(--panel-separator-color);
 }
 
-#protections-popup-tp-switch[enabled=true]:hover,
-#protections-popup-tp-switch[enabled=true]:-moz-focusring {
+.protections-popup-tp-switch[enabled=true]:hover,
+.protections-popup-tp-switch[enabled=true]:-moz-focusring {
   background-color: #45a1ff;
+}
+
+#protections-popup-siteNotWorkingView-body-issue-list {
+  padding-inline-start: 1em;
+}
+
+#protections-popup-siteNotWorkingView-footer {
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #protections-popup-settings-section {
@@ -896,4 +944,23 @@ description#identity-popup-content-verifier,
   /* This padding is added to align the counter text with the beginning of texts
      in other sections. */
   padding-inline-start: 6px;
+}
+
+#protections-popup-tp-switch[showdotindicator]::after {
+  background: #00B3F4;
+  border: 1px rgba(0,144,237,0.5) solid;
+  content: " ";
+  border-radius: 6px;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 12px;
+  left: calc(1em + 20px);
+  height: 10px;
+  width: 10px;
+}
+
+#protections-popup-tp-switch[showdotindicator]:-moz-locale-dir(rtl)::after {
+  left: unset;
+  right: calc(1em + 20px);
 }

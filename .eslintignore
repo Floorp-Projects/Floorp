@@ -50,7 +50,6 @@ browser/components/pocket/content/panels/js/vendor/**
 # Kept in sync with browser/components/newtab/.eslintignore
 browser/components/newtab/data/
 browser/components/newtab/logs/
-browser/components/newtab/prerendered/
 browser/components/newtab/vendor/
 
 # The only file in browser/locales/ is pre-processed.

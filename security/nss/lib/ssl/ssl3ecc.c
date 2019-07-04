@@ -548,8 +548,8 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
             errCode = PORT_GetError();
             goto alert_loser; /* malformed or unsupported. */
         }
-        rv = ssl_CheckSignatureSchemeConsistency(ss, sigScheme,
-                                                 ss->sec.peerCert);
+        rv = ssl_CheckSignatureSchemeConsistency(
+            ss, sigScheme, &ss->sec.peerCert->subjectPublicKeyInfo);
         if (rv != SECSuccess) {
             errCode = PORT_GetError();
             goto alert_loser;

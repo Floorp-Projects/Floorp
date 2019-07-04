@@ -29,7 +29,7 @@ enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 // [Exposed=(Window,Worker)]
 [Constructor(DOMString family,
              (DOMString or BinaryData) source,
-             optional FontFaceDescriptors descriptors),
+             optional FontFaceDescriptors descriptors = {}),
  Pref="layout.css.font-loading-api.enabled"]
 interface FontFace {
   [SetterThrows] attribute DOMString family;

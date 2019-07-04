@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Do some work for 500ms</title>
+  <script>
+    const milliseconds = 500;
+    const end = Date.now() + milliseconds;
+    window.total = 0;
+    let i = 0;
+    // Do some work for a set amount of time.
+    while (Date.now() < end) {
+      // Do some kind of work that is non-deterministic to guard against optimizations.
+      window.total += Math.random();
+      i++;
+    }
+  </script>
+</head>
+<body>
+  Do some work for 500ms.
+</body>
+</html>

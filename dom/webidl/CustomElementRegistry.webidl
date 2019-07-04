@@ -6,7 +6,7 @@
 interface CustomElementRegistry {
   [CEReactions, Throws, UseCounter]
   void define(DOMString name, CustomElementConstructor functionConstructor,
-              optional ElementDefinitionOptions options);
+              optional ElementDefinitionOptions options = {});
   [ChromeOnly, Throws]
   void setElementCreationCallback(DOMString name, CustomElementCreationCallback callback);
   any get(DOMString name);

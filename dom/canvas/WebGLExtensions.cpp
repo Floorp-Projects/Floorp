@@ -30,13 +30,15 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLExtensionBase, Release)
 
 // -
 
-WebGLExtensionExplicitPresent::WebGLExtensionExplicitPresent(WebGLContext* const webgl)
+WebGLExtensionExplicitPresent::WebGLExtensionExplicitPresent(
+    WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
-bool WebGLExtensionExplicitPresent::IsSupported(const WebGLContext* const webgl) {
-  return StaticPrefs::WebGLDraftExtensionsEnabled();
+bool WebGLExtensionExplicitPresent::IsSupported(
+    const WebGLContext* const webgl) {
+  return StaticPrefs::webgl_enable_draft_extensions();
 }
 
 void WebGLExtensionExplicitPresent::Present() const {
@@ -81,7 +83,9 @@ WebGLExtensionFBORenderMipmap::~WebGLExtensionFBORenderMipmap() = default;
 bool WebGLExtensionFBORenderMipmap::IsSupported(
     const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
-  if (!StaticPrefs::WebGLDraftExtensionsEnabled()) return false;
+  if (!StaticPrefs::webgl_enable_draft_extensions()) {
+    return false;
+  }
 
   const auto& gl = webgl->gl;
   if (!gl->IsGLES()) return true;
@@ -102,7 +106,9 @@ WebGLExtensionMultiview::~WebGLExtensionMultiview() = default;
 
 bool WebGLExtensionMultiview::IsSupported(const WebGLContext* const webgl) {
   if (!webgl->IsWebGL2()) return false;
-  if (!StaticPrefs::WebGLDraftExtensionsEnabled()) return false;
+  if (!StaticPrefs::webgl_enable_draft_extensions()) {
+    return false;
+  }
 
   const auto& gl = webgl->gl;
   return gl->IsSupported(gl::GLFeature::multiview);

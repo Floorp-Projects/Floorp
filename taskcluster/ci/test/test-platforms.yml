@@ -49,6 +49,7 @@ linux64-shippable/opt:
     test-sets:
         - common-tests
         - web-platform-tests
+        - web-platform-tests-wdspec-headless
         - opt-only-tests
         - desktop-screenshot-capture
         - talos
@@ -152,6 +153,7 @@ windows7-32-shippable/opt:
         - windows-talos
         - windows-tests
         - web-platform-tests
+        - web-platform-tests-wdspec-headless
         - raptor-chromium
         - raptor-firefox
 
@@ -221,6 +223,7 @@ windows10-64-shippable/opt:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
+        - web-platform-tests-wdspec-headless
         - raptor-firefox
         - raptor-chromium
         - raptor-profiling
@@ -277,6 +280,7 @@ macosx1014-64-shippable/opt:
         - raptor-firefox
         - raptor-profiling
         - marionette-media-tests
+        - web-platform-tests-wdspec-headless
 
 macosx1014-64/debug:
     build-platform: macosx64-shippable/opt

@@ -1,5 +1,5 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {mountWithIntl} from "test/unit/utils";
+import {mount} from "enzyme";
 import React from "react";
 import {_StartupOverlay as StartupOverlay} from "content-src/asrouter/templates/StartupOverlay/StartupOverlay";
 
@@ -15,7 +15,7 @@ describe("<StartupOverlay>", () => {
     onReady = sandbox.stub();
     onBlock = sandbox.stub();
 
-    wrapper = mountWithIntl(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
+    wrapper = mount(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
   });
 
   afterEach(() => {
@@ -29,7 +29,7 @@ describe("<StartupOverlay>", () => {
 
   it("should call prop.onReady after mount + timeout", async () => {
     const clock = sandbox.useFakeTimers();
-    wrapper = mountWithIntl(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
+    wrapper = mount(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
     wrapper.setState({overlayRemoved: false});
 
     clock.tick(10);

@@ -1,25 +1,24 @@
 import {combineReducers, createStore} from "redux";
 import {INITIAL_STATE, reducers} from "common/Reducers.jsm";
-import {mountWithIntl, shallowWithIntl} from "test/unit/utils";
 import {Section, SectionIntl, _Sections as Sections} from "content-src/components/Sections/Sections";
 import {actionTypes as at} from "common/Actions.jsm";
+import {mount, shallow} from "enzyme";
 import {PlaceholderCard} from "content-src/components/Card/Card";
 import {PocketLoggedInCta} from "content-src/components/PocketLoggedInCta/PocketLoggedInCta";
 import {Provider} from "react-redux";
 import React from "react";
 import {SectionMenu} from "content-src/components/SectionMenu/SectionMenu";
-import {shallow} from "enzyme";
 import {Topics} from "content-src/components/Topics/Topics";
 import {TopSites} from "content-src/components/TopSites/TopSites";
 
 function mountSectionWithProps(props) {
   const store = createStore(combineReducers(reducers), INITIAL_STATE);
-  return mountWithIntl(<Provider store={store}><Section {...props} /></Provider>);
+  return mount(<Provider store={store}><Section {...props} /></Provider>);
 }
 
 function mountSectionIntlWithProps(props) {
   const store = createStore(combineReducers(reducers), INITIAL_STATE);
-  return mountWithIntl(<Provider store={store}><SectionIntl {...props} /></Provider>);
+  return mount(<Provider store={store}><SectionIntl {...props} /></Provider>);
 }
 
 describe("<Sections>", () => {
@@ -103,7 +102,7 @@ describe("<Section>", () => {
       assert.equal(wrapper.find(SectionMenu).length, 1);
     });
     it("should not render a section menu by default", () => {
-      wrapper = shallowWithIntl(<Section {...FAKE_SECTION} />);
+      wrapper = shallow(<Section {...FAKE_SECTION} />);
       assert.equal(wrapper.find(SectionMenu).length, 0);
     });
   });
@@ -113,7 +112,7 @@ describe("<Section>", () => {
     const fakeSite = {link: "http://localhost"};
     function renderWithSites(rows) {
       const store = createStore(combineReducers(reducers), INITIAL_STATE);
-      return mountWithIntl(<Provider store={store}><Section {...FAKE_SECTION} rows={rows} /></Provider>);
+      return mount(<Provider store={store}><Section {...FAKE_SECTION} rows={rows} /></Provider>);
     }
 
     it("should return 2 row of placeholders if realRows is 0", () => {
@@ -147,7 +146,7 @@ describe("<Section>", () => {
         rows: [],
         emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"},
       });
-      wrapper = shallowWithIntl(
+      wrapper = shallow(
         <Section {...FAKE_SECTION} />);
     });
     it("should be shown when rows is empty and initialized is true", () => {
@@ -159,7 +158,7 @@ describe("<Section>", () => {
         rows: [],
         emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"},
       });
-      wrapper = shallowWithIntl(
+      wrapper = shallow(
         <Section {...FAKE_SECTION} />);
       assert.isFalse(wrapper.find(".empty-state").exists());
     });
@@ -276,7 +275,7 @@ describe("<Section>", () => {
     };
 
     function renderSection(props = {}) {
-      return shallowWithIntl(<Section
+      return shallow(<Section
         {...FAKE_TOPSTORIES_SECTION_PROPS}
         {...props} />);
     }

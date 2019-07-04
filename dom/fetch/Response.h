@@ -25,11 +25,10 @@ namespace dom {
 
 class Headers;
 
-class Response final : public nsISupports,
-                       public FetchBody<Response>,
-                       public nsWrapperCache {
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Response)
+class Response final : public FetchBody<Response>, public nsWrapperCache {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Response,
+                                                         FetchBody<Response>)
 
  public:
   Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse,

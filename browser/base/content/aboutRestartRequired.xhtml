@@ -6,6 +6,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
     <title data-l10n-id="restart-required-title"></title>
     <link rel="stylesheet" type="text/css" media="all"
           href="chrome://browser/skin/aboutRestartRequired.css"/>
@@ -33,8 +34,7 @@
       </div>
       <!-- Restart Button -->
       <div id="restartButtonContainer" class="button-container">
-        <button id="restart" data-l10n-id="restart-button-label" class="primary" autocomplete="off"
-                onclick="AboutRestartRequired.restart();"></button>
+        <button id="restart" data-l10n-id="restart-button-label" class="primary" autocomplete="off"></button>
       </div>
     </div>
   </body>

@@ -1531,8 +1531,11 @@ void GeckoEditableSupport::SetInputContext(const InputContext& aContext,
 void GeckoEditableSupport::NotifyIMEContext(const InputContext& aContext,
                                             const InputContextAction& aAction) {
   const bool inPrivateBrowsing = aContext.mInPrivateBrowsing;
+  // isUserAction is used whether opening virtual keyboard. But long press
+  // shouldn't open it.
   const bool isUserAction =
-      aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
+      aAction.mCause != InputContextAction::CAUSE_LONGPRESS &&
+      (aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput);
   const int32_t flags =
       (inPrivateBrowsing ? EditableListener::IME_FLAG_PRIVATE_BROWSING : 0) |
       (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0);

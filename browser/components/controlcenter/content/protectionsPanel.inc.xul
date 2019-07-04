@@ -15,22 +15,31 @@
                   mainViewId="protections-popup-mainView">
     <panelview id="protections-popup-mainView"
                descriptionheightworkaround="true">
-      <vbox id="protections-popup-mainView-panel-header">
-        <label>
+      <hbox id="protections-popup-mainView-panel-header"
+            onclick="gProtectionsHandler.onHeaderClicked(event);">
+        <label id="protections-popup-main-header-label">
           <html:span id="protections-popup-mainView-panel-header-span"/>
         </label>
-      </vbox>
+        <description id="protections-popup-toast-panel-tp-on-desc">Enhanced Tracking Protection is ON for this site</description>
+        <description id="protections-popup-toast-panel-tp-off-desc">Enhanced Tracking Protection is OFF for this site</description>
+      </hbox>
 
       <hbox id="protections-popup-tp-switch-section" class="identity-popup-section">
-        <vbox id="protections-popup-tp-switch-label-box" flex="1">
-          <label id="protections-popup-tp-switch-on-header">Tracking protection is ON for this site</label>
-          <label id="protections-popup-tp-switch-off-header">Tracking protection is OFF for this site</label>
-          <label id="protections-popup-tp-switch-breakage-link" class="text-link">Site not working?</label>
+        <vbox class="protections-popup-tp-switch-label-box" flex="1">
+          <label class="protections-popup-tp-switch-on-header"
+                 hidden="true">Tracking protection is ON for this site</label>
+          <label class="protections-popup-tp-switch-off-header"
+                 hidden="true">Tracking protection is OFF for this site</label>
+          <label id="protections-popup-tp-switch-breakage-link"
+                 class="text-link"
+                 onclick="gProtectionsHandler.showSiteNotWorkingView();"
+                 hidden="true">Site not working?</label>
         </vbox>
-        <vbox id="protections-popup-tp-switch-box">
+        <vbox class="protections-popup-tp-switch-box">
           <toolbarbutton id="protections-popup-tp-switch"
-              enabled="false"
-              oncommand="gProtectionsHandler.onTPSwitchCommand();" />
+                         class="protections-popup-tp-switch"
+                         enabled="false"
+                         oncommand="gProtectionsHandler.onTPSwitchCommand();" />
         </vbox>
       </hbox>
 
@@ -51,6 +60,78 @@
                useoriginprincipal="true"
                href="about:protections">Show Full Report</label>
       </hbox>
+    </panelview>
+
+    <!-- Site Not Working? SubView -->
+    <panelview id="protections-popup-siteNotWorkingView"
+               title="Site Not Working?"
+               descriptionheightworkaround="true"
+               flex="1">
+        <hbox id="protections-popup-siteNotWorkingView-header">
+          <vbox class="protections-popup-tp-switch-label-box" flex="1">
+            <label class="protections-popup-tp-switch-on-header"
+              hidden="true">Tracking protection is ON for this site</label>
+            <label class="protections-popup-tp-switch-off-header"
+              hidden="true">Tracking protection is OFF for this site</label>
+          </vbox>
+          <vbox class="protections-popup-tp-switch-box">
+            <toolbarbutton id="protections-popup-siteNotWorking-tp-switch"
+                           class="protections-popup-tp-switch"
+                           enabled="false"
+                           oncommand="gProtectionsHandler.onTPSwitchCommand();" />
+          </vbox>
+        </hbox>
+        <vbox id="protections-popup-siteNotWorkingView-body" flex="1">
+          <label>Turn off Tracking Protection if you're having issues with:</label>
+          <label>
+            <html:ul id="protections-popup-siteNotWorkingView-body-issue-list">
+              <html:li>Log in fields</html:li>
+              <html:li>Forms</html:li>
+              <html:li>Payments</html:li>
+              <html:li>Comments</html:li>
+              <html:li>Videos</html:li>
+            </html:ul>
+          </label>
+        </vbox>
+        <hbox id="protections-popup-siteNotWorkingView-footer"
+              class="panel-footer">
+          <label id="protections-popup-siteNotWorkingView-siteStillBroken" flex="1">Site Still Broken?</label>
+          <label id="protections-popup-siteNotWorkingView-sendReport"
+            onclick="gProtectionsHandler.showSendReportView();"
+            class="text-link">Send Report</label>
+        </hbox>
+    </panelview>
+
+
+    <!-- Send Report SubView -->
+    <panelview id="protections-popup-sendReportView"
+               title="Send Report"
+               descriptionheightworkaround="true">
+        <vbox id="protections-popup-sendReportView-heading">
+          <description>&contentBlocking.breakageReportView2.description;</description>
+          <label id="protections-popup-sendReportView-learn-more"
+                 is="text-link">&contentBlocking.breakageReportView.learnMore;</label>
+        </vbox>
+        <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
+          <vbox class="protections-popup-sendReportView-collection-section">
+            <label>&contentBlocking.breakageReportView.collection.url.label;</label>
+            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url"/>
+          </vbox>
+          <vbox class="protections-popup-sendReportView-collection-section">
+            <label>&contentBlocking.breakageReportView.collection.comments.label;</label>
+            <html:textarea id="protections-popup-sendReportView-collection-comments"/>
+          </vbox>
+        </vbox>
+        <vbox id="protections-popup-sendReportView-footer"
+              class="panel-footer">
+          <button id="protections-popup-sendReportView-cancel"
+                  label="&contentBlocking.breakageReportView.cancel.label;"
+                  oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"/>
+          <button id="protections-popup-sendReportView-submit"
+                  default="true"
+                  label="&contentBlocking.breakageReportView.sendReport.label;"
+                  oncommand="gProtectionsHandler.onSendReportClicked();"/>
+        </vbox>
     </panelview>
   </panelmultiview>
 </panel>

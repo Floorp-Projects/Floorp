@@ -64,7 +64,7 @@ def setup_virtualenv(target, python_bin=None):
     script_path = os.path.join(here, 'virtualenv-%s' % VERSION_VIRTUALENV,
                                'virtualenv.py')
 
-    print 'Downloading virtualenv %s' % VERSION_VIRTUALENV
+    print('Downloading virtualenv {}'.format(VERSION_VIRTUALENV))
     zip_path = download(URL_VIRTUALENV + VERSION_VIRTUALENV,
                         os.path.join(here, 'virtualenv.zip'))
 
@@ -72,7 +72,7 @@ def setup_virtualenv(target, python_bin=None):
         with zipfile.ZipFile(zip_path, 'r') as f:
             f.extractall(here)
 
-        print 'Creating new virtual environment'
+        print('Creating new virtual environment')
         cmd_args = [sys.executable, script_path, target]
 
         if python_bin:
@@ -187,13 +187,13 @@ def main():
                           '__SYNC_ACCOUNT_PASSPHRASE__': options.sync_passphrase})
 
         if not (options.username and options.password):
-            print '\nFirefox Account credentials not specified.'
+            print('\nFirefox Account credentials not specified.')
         if not (options.sync_username and options.sync_password and options.passphrase):
-            print '\nFirefox Sync account credentials not specified.'
+            print('\nFirefox Sync account credentials not specified.')
 
     # Print the user instructions
-    print usage_message.format(TARGET=target,
-                               BIN_NAME=bin_name)
+    print(usage_message.format(TARGET=target,
+                               BIN_NAME=bin_name))
 
 
 if __name__ == "__main__":

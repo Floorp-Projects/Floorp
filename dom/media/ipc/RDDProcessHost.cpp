@@ -78,7 +78,7 @@ bool RDDProcessHost::WaitForLaunch() {
     return !!mRDDChild;
   }
 
-  int32_t timeoutMs = StaticPrefs::MediaRddProcessStartupTimeoutMs();
+  int32_t timeoutMs = StaticPrefs::media_rdd_process_startup_timeout_ms();
 
   // If one of the following environment variables are set we can
   // effectively ignore the timeout - as we can guarantee the RDD

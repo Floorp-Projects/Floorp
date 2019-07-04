@@ -7,6 +7,9 @@
 
 #include "mozilla/webrender/WebRenderTypes.h"
 
+#include <string>
+#include <sstream>
+
 namespace mozilla {
 namespace layers {
 
@@ -73,6 +76,12 @@ class RenderRootBoundary {
   friend struct IPC::ParamTraits<RenderRootBoundary>;
   // constructor for IPC
   RenderRootBoundary() = default;
+
+  std::string ToString() const {
+    std::stringstream str;
+    str << "childType=" << (int)mChildType << "; id=" << mId;
+    return str.str();
+  }
 
  private:
   wr::RenderRoot mChildType;

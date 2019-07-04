@@ -11,12 +11,15 @@
  */
 
 [Pref="layout.css.DOMQuad.enabled",
- Constructor(optional DOMPointInit p1, optional DOMPointInit p2,
-             optional DOMPointInit p3, optional DOMPointInit p4),
+ Constructor(optional DOMPointInit p1 = {}, optional DOMPointInit p2 = {},
+             optional DOMPointInit p3 = {}, optional DOMPointInit p4 = {}),
  Constructor(DOMRectReadOnly rect),
  Exposed=(Window,Worker),
  Serializable]
 interface DOMQuad {
+    [NewObject] static DOMQuad fromRect(optional DOMRectInit other = {});
+    [NewObject] static DOMQuad fromQuad(optional DOMQuadInit other = {});
+
     [SameObject] readonly attribute DOMPoint p1;
     [SameObject] readonly attribute DOMPoint p2;
     [SameObject] readonly attribute DOMPoint p3;
@@ -27,8 +30,8 @@ interface DOMQuad {
 };
 
 dictionary DOMQuadInit {
-    DOMPointInit p1;
-    DOMPointInit p2;
-    DOMPointInit p3;
-    DOMPointInit p4;
+    DOMPointInit p1 = {};
+    DOMPointInit p2 = {};
+    DOMPointInit p3 = {};
+    DOMPointInit p4 = {};
 };

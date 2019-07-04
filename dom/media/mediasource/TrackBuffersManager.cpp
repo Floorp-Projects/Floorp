@@ -934,7 +934,7 @@ void TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult) {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
 
-  if (NS_FAILED(aResult) && StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+  if (NS_FAILED(aResult) && StaticPrefs::media_playback_warnings_as_errors()) {
     RejectAppend(aResult, __func__);
     return;
   }
@@ -1031,7 +1031,7 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
 
   mDemuxerInitRequest.Complete();
 
-  if (NS_FAILED(aResult) && StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+  if (NS_FAILED(aResult) && StaticPrefs::media_playback_warnings_as_errors()) {
     RejectAppend(aResult, __func__);
     return;
   }

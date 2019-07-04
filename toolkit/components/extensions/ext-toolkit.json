@@ -181,14 +181,6 @@
       ["theme"]
     ]
   },
-  "topSites": {
-    "url": "chrome://extensions/content/parent/ext-topSites.js",
-    "schema": "chrome://extensions/content/schemas/top_sites.json",
-    "scopes": ["addon_parent"],
-    "paths": [
-      ["topSites"]
-    ]
-  },
   "userScripts": {
     "url": "chrome://extensions/content/parent/ext-userScripts.js",
     "schema": "chrome://extensions/content/schemas/user_scripts.json",

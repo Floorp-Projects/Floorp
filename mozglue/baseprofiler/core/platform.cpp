@@ -1497,14 +1497,35 @@ void AppendSharedLibraries(JSONWriter& aWriter) {
 }
 
 static void StreamCategories(SpliceableJSONWriter& aWriter) {
-  // Same order as ProfilingCategory.
+  // Same order as ProfilingCategory. Format:
+  // [
+  //   {
+  //     name: "Idle",
+  //     color: "transparent",
+  //     subcategories: ["Other"],
+  //   },
+  //   {
+  //     name: "Other",
+  //     color: "grey",
+  //     subcategories: [
+  //       "JSM loading",
+  //       "Subprocess launching",
+  //       "DLL loading"
+  //     ]
+  //   },
+  //   ...
+  // ]
 
 #  define CATEGORY_JSON_BEGIN_CATEGORY(name, labelAsString, color) \
     aWriter.Start();                                               \
     aWriter.StringProperty("name", labelAsString);                 \
-    aWriter.StringProperty("color", color);
-#  define CATEGORY_JSON_SUBCATEGORY(category, name, labelAsString)
-#  define CATEGORY_JSON_END_CATEGORY aWriter.EndObject();
+    aWriter.StringProperty("color", color);                        \
+    aWriter.StartArrayProperty("subcategories");
+#  define CATEGORY_JSON_SUBCATEGORY(supercategory, name, labelAsString) \
+    aWriter.StringElement(labelAsString);
+#  define CATEGORY_JSON_END_CATEGORY \
+    aWriter.EndArray();              \
+    aWriter.EndObject();
 
   BASE_PROFILING_CATEGORY_LIST(CATEGORY_JSON_BEGIN_CATEGORY,
                                CATEGORY_JSON_SUBCATEGORY,
@@ -1522,7 +1543,7 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
                                      bool aIsShuttingDown) {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 15);
+  aWriter.IntProperty("version", 16);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -

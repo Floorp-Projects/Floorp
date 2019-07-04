@@ -358,6 +358,7 @@ class WebConsoleWrapper {
       const jstermCodeMirror = prefs.jstermCodeMirror
         && !Services.appinfo.accessibilityEnabled;
       const autocomplete = prefs.autocomplete;
+      const editorFeatureEnabled = prefs.editor;
 
       this.prefsObservers = new Map();
       this.prefsObservers.set(PREFS.UI.MESSAGE_TIMESTAMP, () => {
@@ -381,6 +382,7 @@ class WebConsoleWrapper {
         closeSplitConsole: this.closeSplitConsole.bind(this),
         jstermCodeMirror,
         autocomplete,
+        editorFeatureEnabled,
         hideShowContentMessagesCheckbox: !webConsoleUI.isBrowserConsole,
       });
 

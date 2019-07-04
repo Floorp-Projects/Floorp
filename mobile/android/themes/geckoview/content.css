@@ -83,8 +83,8 @@ xul|scrollbarbutton {
 
 select:not([size]):not([multiple]) > xul|scrollbar,
 select[size="1"] > xul|scrollbar,
-select:not([size]):not([multiple]) xul|scrollbarbutton,
-select[size="1"] xul|scrollbarbutton {
+select:not([size]):not([multiple]) > xul|scrollbar > xul|scrollbarbutton,
+select[size="1"] > xul|scrollbar > xul|scrollbarbutton {
   display: block;
   margin-left: 0;
   min-width: 16px;

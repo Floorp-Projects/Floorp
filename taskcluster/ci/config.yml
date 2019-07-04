@@ -253,7 +253,7 @@ partner-urls:
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/repack-manifests.git'
                             staging: 'git@github.com:moz-releng-automation-stage/repack-manifests.git'
-                    esr60:
+                    esr(60|68):
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/esr-repack-manifests.git'
                             staging: 'git@github.com:moz-releng-automation-stage/esr-repack-manifests.git'
@@ -395,6 +395,11 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
+        succeed:
+            provisioner: built-in
+            implementation: succeed
+            os: none
+            worker-type: succeed
 
 mac-notarization:
     mac-behavior:

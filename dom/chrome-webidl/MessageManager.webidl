@@ -217,7 +217,7 @@ callback interface MessageListener
    * listener's return value is sent back as an array.  |undefined|
    * return values show up as undefined values in the array.
    */
-  any receiveMessage(optional ReceiveMessageArgument argument);
+  any receiveMessage(ReceiveMessageArgument argument);
 };
 
 [ChromeOnly]

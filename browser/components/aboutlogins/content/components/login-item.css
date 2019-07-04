@@ -8,6 +8,15 @@
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
   --reveal-checkbox-opacity-active: 1;
+  --success-color: #00c100;
+}
+
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+@media (prefers-color-scheme: dark) {
+  :host {
+    --success-color: #86DE74;
+  }
+}
 }
 
 :host([data-editing]) .edit-button,
@@ -16,6 +25,8 @@
 :host([data-is-new-login]) copy-to-clipboard-button,
 :host([data-is-new-login]) .open-site-button,
 :host([data-is-new-login]) .meta-info,
+:host([data-is-new-login]) .login-item-title,
+:host(:not([data-is-new-login])) .new-login-title,
 :host(:not([data-editing])) .cancel-button,
 :host(:not([data-editing])) .save-changes-button {
   display: none;
@@ -90,6 +101,17 @@
   margin-bottom: 5px;
 }
 
+.copy-button:not([data-copied]) .copied-button-text,
+.copy-button[data-copied] .copy-button-text {
+  display: none;
+}
+
+.copy-button[data-copied] {
+  color: var(--success-color) !important; /* override common.css */
+  background-color: transparent;
+  opacity: 1; /* override common.css fading out disabled buttons */
+}
+
 .meta-info {
   font-size: smaller;
 }
@@ -128,6 +150,16 @@
 
 .reveal-password-checkbox:checked {
   background-image: url("chrome://browser/content/aboutlogins/icons/hide-password.svg") !important;
+}
+
+.reveal-password-checkbox:-moz-focusring {
+  outline: 2px solid var(--in-content-border-active);
+  /* offset outline to align with 1px border-width set for buttons/menulists above. */
+  outline-offset: -1px;
+  /* Make outline-radius slightly bigger than the border-radius set above,
+   * to make the thicker outline corners look smooth */
+  -moz-outline-radius: 3px;
+  box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {

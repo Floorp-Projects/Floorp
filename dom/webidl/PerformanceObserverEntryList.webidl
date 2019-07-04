@@ -17,7 +17,7 @@ dictionary PerformanceEntryFilterOptions {
 [Pref="dom.enable_performance_observer",
  Exposed=(Window,Worker)]
 interface PerformanceObserverEntryList {
-  PerformanceEntryList getEntries(optional PerformanceEntryFilterOptions filter);
+  PerformanceEntryList getEntries(optional PerformanceEntryFilterOptions filter = {});
   PerformanceEntryList getEntriesByType(DOMString entryType);
   PerformanceEntryList getEntriesByName(DOMString name,
                                         optional DOMString entryType);

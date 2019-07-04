@@ -3,13 +3,10 @@ py2:
     description: Python 2 compatibility check
     include: ['.']
     exclude:
-        - accessible/xpcom/AccEventGen.py
-        - browser
         - build
         - client.py
         - config
         - configure.py
-        - devtools/shared/css/generated/mach_commands.py
         - dom
         - editor
         - gfx
@@ -47,7 +44,6 @@ py2:
         - tools/jprof/split-profile.py
         - tools/lint
         - tools/mach_commands.py
-        - tools/power/mach_commands.py
         - tools/profiler
         - tools/rb
         - tools/update-packaging

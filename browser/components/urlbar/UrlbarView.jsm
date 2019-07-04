@@ -114,6 +114,20 @@ class UrlbarView {
   }
 
   /**
+   * @returns {number}
+   *   The number of visible results in the view.  Note that this may be larger
+   *   than the number of results in the current query context since the view
+   *   may be showing stale results.
+   */
+  get visibleItemCount() {
+    let sum = 0;
+    for (let row of this._rows.children) {
+      sum += Number(this._isRowVisible(row));
+    }
+    return sum;
+  }
+
+  /**
    * Moves the view selection forward or backward.
    *
    * @param {number} amount

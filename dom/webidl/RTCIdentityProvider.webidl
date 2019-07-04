@@ -23,7 +23,7 @@ interface RTCIdentityProviderRegistrar {
   [ChromeOnly, Throws]
   Promise<RTCIdentityAssertionResult>
   generateAssertion(DOMString contents, DOMString origin,
-                    optional RTCIdentityProviderOptions options);
+                    optional RTCIdentityProviderOptions options = {});
   /* Forward to idp.validateAssertion() */
   [ChromeOnly, Throws]
   Promise<RTCIdentityValidationResult>

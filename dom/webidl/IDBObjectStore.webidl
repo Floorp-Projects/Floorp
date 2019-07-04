@@ -46,7 +46,7 @@ interface IDBObjectStore {
     IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
 
     [Throws]
-    IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
+    IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters = {});
 
     [Throws]
     IDBIndex   index (DOMString name);

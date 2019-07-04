@@ -19,9 +19,10 @@ class PrincipalInfo;
 
 namespace dom {
 
-class EmptyBody final : public nsISupports, public FetchBody<EmptyBody> {
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(EmptyBody)
+class EmptyBody final : public FetchBody<EmptyBody> {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(EmptyBody,
+                                                         FetchBody<EmptyBody>)
 
  public:
   static already_AddRefed<EmptyBody> Create(

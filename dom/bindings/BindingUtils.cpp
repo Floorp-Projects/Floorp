@@ -730,7 +730,8 @@ static JSObject* CreateInterfaceObject(
     unsigned ctorNargs, const NamedConstructor* namedConstructors,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
-    bool isChrome, bool defineOnGlobal) {
+    bool isChrome, bool defineOnGlobal,
+    const char* const* legacyWindowAliases) {
   JS::Rooted<JSObject*> constructor(cx);
   MOZ_ASSERT(constructorProto);
   MOZ_ASSERT(constructorClass);
@@ -818,6 +819,14 @@ static JSObject* CreateInterfaceObject(
 
   if (defineOnGlobal && !DefineConstructor(cx, global, name, constructor)) {
     return nullptr;
+  }
+
+  if (legacyWindowAliases && NS_IsMainThread()) {
+    for (; *legacyWindowAliases; ++legacyWindowAliases) {
+      if (!DefineConstructor(cx, global, *legacyWindowAliases, constructor)) {
+        return nullptr;
+      }
+    }
   }
 
   if (namedConstructors) {
@@ -950,7 +959,8 @@ void CreateInterfaceObjects(
     unsigned ctorNargs, const NamedConstructor* namedConstructors,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
-    bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal) {
+    bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
+    const char* const* legacyWindowAliases) {
   MOZ_ASSERT(protoClass || constructorClass, "Need at least one class!");
   MOZ_ASSERT(
       !((properties &&
@@ -1002,7 +1012,7 @@ void CreateInterfaceObjects(
     interface = CreateInterfaceObject(
         cx, global, constructorProto, constructorClass, ctorNargs,
         namedConstructors, proto, properties, chromeOnlyProperties, name,
-        isChrome, defineOnGlobal);
+        isChrome, defineOnGlobal, legacyWindowAliases);
     if (!interface) {
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we

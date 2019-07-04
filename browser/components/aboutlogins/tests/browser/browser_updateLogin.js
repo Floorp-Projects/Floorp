@@ -80,6 +80,9 @@ add_task(async function test_login_item() {
     ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
+    let confirmDeleteDialog = Cu.waiveXrays(content.document.querySelector("confirm-delete-dialog"));
+    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
+    confirmDeleteButton.click();
 
     await ContentTaskUtils.waitForCondition(() => {
       loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item"));

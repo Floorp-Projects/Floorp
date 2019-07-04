@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional MozApplicationEventInit eventInitDict), ChromeOnly]
+[Constructor(DOMString type, optional MozApplicationEventInit eventInitDict = {}), ChromeOnly]
 interface MozApplicationEvent : Event
 {
   readonly attribute DOMApplication? application;

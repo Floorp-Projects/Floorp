@@ -492,6 +492,9 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // for certain mozilla webpages (which are listed in the pref
 // browser.tabs.remote.separatedMozillaDomains).
 pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+// This pref will cause assertions when a remoteType triggers a process switch
+// to a new remoteType it should not be able to trigger.
+pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
 #endif
 
 #ifdef NIGHTLY_BUILD
@@ -1317,6 +1320,9 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 
 pref("trailhead.firstrun.branches", "join-privacy");
 
+// The pref that controls if the What's New panel is enabled.
+pref("browser.messaging-system.whatsNewPanel.enabled", false);
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 
@@ -1738,7 +1744,8 @@ pref("signon.showAutoCompleteFooter", true);
 pref("signon.management.page.enabled", false);
 pref("signon.showAutoCompleteOrigins", true);
 pref("signon.includeOtherSubdomainsInLookup", true);
-pref("signon.feedbackURL",
+pref("signon.management.page.faqURL", "https://lockwise.firefox.com/faq.html");
+pref("signon.management.page.feedbackURL",
      "https://www.surveygizmo.com/s3/5036102/Lockwise-feedback?ver=%VERSION%");
 
 // Enable the "Simplify Page" feature in Print Preview. This feature

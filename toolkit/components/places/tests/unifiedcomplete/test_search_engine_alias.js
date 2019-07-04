@@ -126,7 +126,6 @@ add_task(async function basicGetAndPost() {
       });
     }
   }
-
   await cleanup();
 });
 
@@ -245,6 +244,15 @@ add_task(async function engineWithSuggestions() {
 // When the search is simply "@", the results should be a list of all the "@"
 // alias engines.
 add_task(async function tokenAliasEngines() {
+  await Services.search.init();
+  // Tell the search service we are running in the US.  This also has the
+  // desired side-effect of preventing our geoip lookup.
+  Services.prefs.setCharPref("browser.search.region", "US");
+  Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+
+  Services.search.restoreDefaultEngines();
+  Services.search.resetToOriginalDefaultEngine();
+
   let tokenEngines = [];
   for (let engine of await Services.search.getEngines()) {
     let aliases = [];

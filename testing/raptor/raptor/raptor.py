@@ -112,6 +112,7 @@ class Raptor(object):
         }
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
+        self.raptor_webext = None
         self.control_server = None
         self.playback = None
         self.benchmark = None
@@ -134,11 +135,11 @@ class Raptor(object):
 
         LOG.info("main raptor init, config is: %s" % str(self.config))
 
-        # create results holder
+        # setup the control server
         self.results_handler = RaptorResultsHandler()
+        self.start_control_server()
 
         self.build_browser_profile()
-        self.start_control_server()
 
     @property
     def profile_data_dir(self):
@@ -266,8 +267,9 @@ class Raptor(object):
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
 
-        # add profile dir to our config
+        # share the profile dir with the config and the control server
         self.config['local_profile_dir'] = self.profile.profile
+        self.control_server.user_profile = self.profile
 
     def start_control_server(self):
         self.control_server = RaptorControlServer(self.results_handler, self.debug_mode)
@@ -323,6 +325,10 @@ class Raptor(object):
 
     def remove_raptor_webext(self):
         # remove the raptor webext; as it must be reloaded with each subtest anyway
+        if not self.raptor_webext:
+            LOG.info("raptor webext not installed - not attempting removal")
+            return
+
         LOG.info("removing webext %s" % self.raptor_webext)
         if self.config['app'] in ['firefox', 'geckoview', 'fennec', 'refbrow', 'fenix']:
             self.profile.addons.remove_addon(self.webext_id)
@@ -514,6 +520,7 @@ class RaptorDesktop(Raptor):
     def start_runner_proc(self):
         # launch the browser via our previously-created runner
         self.runner.start()
+
         proc = self.runner.process_handler
         self.output_handler.proc = proc
 
@@ -660,9 +667,10 @@ class RaptorDesktopFirefox(RaptorDesktop):
         # if geckoProfile is enabled, initialize it
         if self.config['gecko_profile'] is True:
             self._init_gecko_profiling(test)
-            # tell the control server the gecko_profile dir; the control server will
-            # receive the actual gecko profiles from the web ext and will write them
-            # to disk; then profiles are picked up by gecko_profile.symbolicate
+            # tell the control server the gecko_profile dir; the control server
+            # will receive the filename of the stored gecko profile from the web
+            # extension, and will move it out of the browser user profile to
+            # this directory; where it is picked-up by gecko_profile.symbolicate
             self.control_server.gecko_profile_dir = self.gecko_profiler.gecko_profile_dir
 
 
@@ -714,6 +722,7 @@ class RaptorAndroid(Raptor):
 
         self.remote_test_root = os.path.abspath(os.path.join(os.sep, 'sdcard', 'raptor'))
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
+        self.os_baseline_data = None
 
     def set_reverse_port(self, port):
         tcp_port = "tcp:{}".format(port)
@@ -1041,6 +1050,17 @@ class RaptorAndroid(Raptor):
         # tests will be run warm (i.e. NO browser restart between page-cycles)
         # unless otheriwse specified in the test INI by using 'cold = true'
         try:
+
+            if self.config['power_test']:
+                # gather OS baseline data
+                init_android_power_test(self)
+                LOG.info("Running OS baseline, pausing for 1 minute...")
+                time.sleep(60)
+                finish_android_power_test(self, 'os-baseline', os_baseline=True)
+
+                # initialize for the test
+                init_android_power_test(self)
+
             if test.get('cold', False) is True:
                 self.__run_test_cold(test, timeout)
             else:
@@ -1080,9 +1100,6 @@ class RaptorAndroid(Raptor):
         '''
         LOG.info("test %s is running in cold mode; browser WILL be restarted between "
                  "page cycles" % test['name'])
-
-        if self.config['power_test']:
-            init_android_power_test(self)
 
         for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
 
@@ -1152,8 +1169,6 @@ class RaptorAndroid(Raptor):
     def __run_test_warm(self, test, timeout):
         LOG.info("test %s is running in warm mode; browser will NOT be restarted between "
                  "page cycles" % test['name'])
-        if self.config['power_test']:
-            init_android_power_test(self)
 
         self.run_test_setup(test)
 

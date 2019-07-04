@@ -49,7 +49,6 @@ DIRS += [
     'osfile',
     'parentalcontrols',
     'passwordmgr',
-    'perf',
     'perfmonitoring',
     'pictureinpicture',
     'places',

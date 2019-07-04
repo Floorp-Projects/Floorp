@@ -12,6 +12,7 @@
 #include "gfxConfig.h"
 #include "gfxContext.h"
 #include "gfxCrashReporterUtils.h"
+#include "gfxEnv.h"
 #include "gfxPattern.h"
 #include "gfxUtils.h"
 #include "MozFramebuffer.h"
@@ -98,8 +99,8 @@ using namespace mozilla::layers;
 
 WebGLContextOptions::WebGLContextOptions() {
   // Set default alpha state based on preference.
-  alpha = !StaticPrefs::WebGLDefaultNoAlpha();
-  antialias = StaticPrefs::WebGLDefaultAntialias();
+  alpha = !StaticPrefs::webgl_default_no_alpha();
+  antialias = StaticPrefs::webgl_default_antialias();
 }
 
 bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
@@ -118,18 +119,18 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
 WebGLContext::WebGLContext()
     : gl(mGL_OnlyClearInDestroyResourcesAndContext)  // const reference
       ,
-      mMaxPerfWarnings(StaticPrefs::WebGLMaxPerfWarnings()),
+      mMaxPerfWarnings(StaticPrefs::webgl_perf_max_warnings()),
       mNumPerfWarnings(0),
       mMaxAcceptableFBStatusInvals(
-          StaticPrefs::WebGLMaxAcceptableFBStatusInvals()),
+          StaticPrefs::webgl_perf_max_acceptable_fb_status_invals()),
       mDataAllocGLCallCount(0),
       mEmptyTFO(0),
       mContextLossHandler(this),
       mNeedsFakeNoAlpha(false),
       mNeedsFakeNoDepth(false),
       mNeedsFakeNoStencil(false),
-      mAllowFBInvalidation(StaticPrefs::WebGLFBInvalidation()),
-      mMsaaSamples((uint8_t)StaticPrefs::WebGLMsaaSamples()) {
+      mAllowFBInvalidation(StaticPrefs::webgl_allow_fb_invalidation()),
+      mMsaaSamples((uint8_t)StaticPrefs::webgl_msaa_samples()) {
   mGeneration = 0;
   mInvalidated = false;
   mCapturedFrameInvalidated = false;
@@ -165,7 +166,7 @@ WebGLContext::WebGLContext()
   mAlreadyWarnedAboutFakeVertexAttrib0 = false;
   mAlreadyWarnedAboutViewportLargerThanDest = false;
 
-  mMaxWarnings = StaticPrefs::WebGLMaxWarningsPerContext();
+  mMaxWarnings = StaticPrefs::webgl_max_warnings_per_context();
   if (mMaxWarnings < -1) {
     GenerateWarning(
         "webgl.max-warnings-per-context size is too large (seems like a "
@@ -289,6 +290,8 @@ void WebGLContext::DestroyResourcesAndContext() {
   gl->MarkDestroyed();
   mGL_OnlyClearInDestroyResourcesAndContext = nullptr;
   MOZ_ASSERT(!gl);
+
+  mDynDGpuManager = nullptr;
 }
 
 void WebGLContext::Invalidate() {
@@ -367,7 +370,7 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
     newOpts.antialias = false;
   }
 
-  if (newOpts.antialias && !StaticPrefs::WebGLForceMSAA()) {
+  if (newOpts.antialias && !StaticPrefs::webgl_msaa_force()) {
     const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
 
     nsCString blocklistId;
@@ -479,13 +482,25 @@ bool WebGLContext::CreateAndInitGL(
 
   if (IsWebGL2()) {
     flags |= gl::CreateContextFlags::PREFER_ES3;
-  } else if (!StaticPrefs::WebGL1AllowCoreProfile()) {
+  } else if (!StaticPrefs::webgl_1_allow_core_profiles()) {
     flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
 
   {
-    bool highPower = false;
-    switch (mOptions.powerPreference) {
+    auto powerPref = mOptions.powerPreference;
+
+    // If "Use hardware acceleration when available" option is disabled:
+    if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+      powerPref = dom::WebGLPowerPreference::Low_power;
+    }
+
+    if (StaticPrefs::webgl_default_low_power() &&
+        powerPref == dom::WebGLPowerPreference::Default) {
+      powerPref = dom::WebGLPowerPreference::Low_power;
+    }
+
+    bool highPower;
+    switch (powerPref) {
       case dom::WebGLPowerPreference::Low_power:
         highPower = false;
         break;
@@ -503,21 +518,12 @@ bool WebGLContext::CreateAndInitGL(
         // - Same origin with root page (try to stem bleeding from WebGL
         // ads/trackers)
       default:
-        highPower = true;
-        if (StaticPrefs::WebGLDefaultLowPower()) {
-          highPower = false;
-        } else if (mCanvasElement && !mCanvasElement->GetParentNode()) {
-          GenerateWarning(
-              "WebGLContextAttributes.powerPreference: 'default' when <canvas>"
-              " has no parent Element defaults to 'low-power'.");
-          highPower = false;
+        highPower = false;
+        mDynDGpuManager = webgl::DynDGpuManager::Get();
+        if (!mDynDGpuManager) {
+          highPower = true;
         }
         break;
-    }
-
-    // If "Use hardware acceleration when available" option is disabled:
-    if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-      highPower = false;
     }
 
     if (highPower) {
@@ -559,12 +565,12 @@ bool WebGLContext::CreateAndInitGL(
   tryNativeGL = false;
   tryANGLE = true;
 
-  if (StaticPrefs::WebGLDisableWGL()) {
+  if (StaticPrefs::webgl_disable_wgl()) {
     tryNativeGL = false;
   }
 
-  if (StaticPrefs::WebGLDisableANGLE() || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL") ||
-      useEGL) {
+  if (StaticPrefs::webgl_disable_angle() ||
+      PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL") || useEGL) {
     tryNativeGL = true;
     tryANGLE = false;
   }
@@ -819,7 +825,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   // pick up the old generation.
   ++mGeneration;
 
-  bool disabled = StaticPrefs::WebGLDisabled();
+  bool disabled = StaticPrefs::webgl_disabled();
 
   // TODO: When we have software webgl support we should use that instead.
   disabled |= gfxPlatform::InSafeMode();
@@ -835,7 +841,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
     return NS_ERROR_FAILURE;
   }
 
-  if (StaticPrefs::WebGLDisableFailIfMajorPerformanceCaveat()) {
+  if (StaticPrefs::webgl_disable_fail_if_major_performance_caveat()) {
     mOptions.failIfMajorPerformanceCaveat = false;
   }
 
@@ -852,7 +858,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   }
 
   // Alright, now let's start trying.
-  bool forceEnabled = StaticPrefs::WebGLForceEnabled();
+  bool forceEnabled = StaticPrefs::webgl_force_enabled();
   ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
   MOZ_ASSERT(!gl);
@@ -984,9 +990,9 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
 }
 
 void WebGLContext::LoseOldestWebGLContextIfLimitExceeded() {
-  const auto maxWebGLContexts = StaticPrefs::WebGLMaxContexts();
+  const auto maxWebGLContexts = StaticPrefs::webgl_max_contexts();
   auto maxWebGLContextsPerPrincipal =
-      StaticPrefs::WebGLMaxContextsPerPrincipal();
+      StaticPrefs::webgl_max_contexts_per_principal();
 
   // maxWebGLContextsPerPrincipal must be less than maxWebGLContexts
   MOZ_ASSERT(maxWebGLContextsPerPrincipal <= maxWebGLContexts);
@@ -1348,7 +1354,7 @@ ScopedPrepForResourceClear::~ScopedPrepForResourceClear() {
 // -
 
 void WebGLContext::OnEndOfFrame() const {
-  if (StaticPrefs::WebGLSpewFrameAllocs()) {
+  if (StaticPrefs::webgl_perf_spew_frame_allocs()) {
     GeneratePerfWarning("[webgl.perf.spew-frame-allocs] %" PRIu64
                         " data allocations this frame.",
                         mDataAllocGLCallCount);
@@ -1397,6 +1403,7 @@ bool WebGLContext::PresentScreenBuffer(GLScreenBuffer* const targetScreen) {
   if (IsContextLost()) return false;
 
   if (!mShouldPresent) return false;
+  ReportActivity();
 
   if (!ValidateAndInitFB(nullptr)) return false;
 
@@ -2406,6 +2413,101 @@ nsresult webgl::AvailabilityRunnable::Run() {
   mWebGL->mAvailabilityRunnable = nullptr;
   return NS_OK;
 }
+
+// ---------------
+
+namespace webgl {
+
+/*static*/
+std::shared_ptr<DynDGpuManager> DynDGpuManager::Get() {
+#ifndef XP_MACOSX
+  if (true) return nullptr;
+#endif
+
+  static std::weak_ptr<DynDGpuManager> sCurrent;
+
+  auto ret = sCurrent.lock();
+  if (!ret) {
+    ret.reset(new DynDGpuManager);
+    sCurrent = ret;
+  }
+  return ret;
+}
+
+DynDGpuManager::DynDGpuManager() : mMutex("DynDGpuManager") {}
+DynDGpuManager::~DynDGpuManager() = default;
+
+void DynDGpuManager::SetState(const MutexAutoLock&, const State newState) {
+  if (gfxEnv::GpuSwitchingSpew()) {
+    printf_stderr(
+        "[MOZ_GPU_SWITCHING_SPEW] DynDGpuManager::SetState(%u -> %u)\n",
+        uint32_t(mState), uint32_t(newState));
+  }
+
+  if (newState == State::Active) {
+    if (!mDGpuContext) {
+      const auto flags = gl::CreateContextFlags::HIGH_POWER;
+      nsCString failureId;
+      mDGpuContext = gl::GLContextProvider::CreateHeadless(flags, &failureId);
+    }
+  } else {
+    mDGpuContext = nullptr;
+  }
+
+  mState = newState;
+}
+
+void DynDGpuManager::ReportActivity(
+    const std::shared_ptr<DynDGpuManager>& strong) {
+  MOZ_ASSERT(strong.get() == this);
+  const MutexAutoLock lock(mMutex);
+
+  if (mActivityThisTick) return;
+  mActivityThisTick = true;
+
+  // Promote!
+  switch (mState) {
+    case State::Inactive:
+      SetState(lock, State::Primed);
+      DispatchTick(strong);  // Initial tick
+      break;
+
+    case State::Primed:
+      SetState(lock, State::Active);
+      break;
+    case State::Active:
+      if (!mDGpuContext) {
+        SetState(lock, State::Active);
+      }
+      break;
+  }
+}
+
+void DynDGpuManager::Tick(const std::shared_ptr<DynDGpuManager>& strong) {
+  MOZ_ASSERT(strong.get() == this);
+  const MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mState != State::Inactive);
+
+  if (!mActivityThisTick) {
+    SetState(lock, State::Inactive);
+    return;
+  }
+  mActivityThisTick = false;  // reset
+
+  DispatchTick(strong);
+}
+
+void DynDGpuManager::DispatchTick(
+    const std::shared_ptr<DynDGpuManager>& strong) {
+  MOZ_ASSERT(strong.get() == this);
+
+  const auto fnTick = [strong]() { strong->Tick(strong); };
+  already_AddRefed<mozilla::Runnable> event =
+      NS_NewRunnableFunction("DynDGpuManager fnWeakTick", fnTick);
+  NS_DelayedDispatchToCurrentThread(std::move(event), TICK_MS);
+}
+
+}  // namespace webgl
 
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM goop

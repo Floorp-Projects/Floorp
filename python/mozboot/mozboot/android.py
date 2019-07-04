@@ -292,15 +292,10 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
     print(output)
 
 
-def suggest_mozconfig(os_name, artifact_mode=False, java_bin_path=None):
+def suggest_mozconfig(os_name, artifact_mode=False):
     moz_state_dir, sdk_path, ndk_path = get_paths(os_name)
 
     extra_lines = []
-    if java_bin_path:
-        extra_lines += [
-            '# With the following java:',
-            'ac_add_options --with-java-bin-path="{}"'.format(java_bin_path),
-        ]
     if extra_lines:
         extra_lines.append('')
 

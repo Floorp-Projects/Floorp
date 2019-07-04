@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2455205,
+    "visibility": "public",
+    "digest": "44f5a9baf7fc27484d9450f6625e9afbbd9f12f2c80c7ebfad8821f2fed69c7744c131f4e18257c77d24e82cf004abd2e761f774b000efb57fb5d15565a01dce",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-ebay.zip",
+    "unpack": true
+  }
+]

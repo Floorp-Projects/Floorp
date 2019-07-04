@@ -15,13 +15,14 @@ namespace mozilla {
  */
 class EbmlComposer {
  public:
-  EbmlComposer();
+  EbmlComposer() = default;
   /*
-   * Assign the parameter which header required.
+   * Assign the parameters which header requires. These can be called multiple
+   * times to change paramter values until GenerateHeader() is called, when this
+   * becomes illegal to call again.
    */
   void SetVideoConfig(uint32_t aWidth, uint32_t aHeight, uint32_t aDisplayWidth,
                       uint32_t aDisplayHeight);
-
   void SetAudioConfig(uint32_t aSampleFreq, uint32_t aChannels);
   /*
    * Set the CodecPrivateData for writing in header.
@@ -30,7 +31,8 @@ class EbmlComposer {
     mCodecPrivateData.AppendElements(aBufs);
   }
   /*
-   * Generate the whole WebM header and output to mBuff.
+   * Generate the whole WebM header with the configured tracks, and make
+   * available to ExtractBuffer. Must only be called once.
    */
   void GenerateHeader();
   /*
@@ -46,38 +48,42 @@ class EbmlComposer {
                      uint32_t aFlag = 0);
 
  private:
-  // Move the metadata data to mClusterCanFlushBuffs.
-  void FinishMetadata();
-  // Close current cluster and move data to mClusterCanFlushBuffs.
+  // Close current cluster and move data to mFinishedClusters. Idempotent.
   void FinishCluster();
-  // The temporary storage for cluster data.
-  nsTArray<nsTArray<uint8_t> > mClusterBuffs;
-  // The storage which contain valid cluster data.
-  nsTArray<nsTArray<uint8_t> > mClusterCanFlushBuffs;
+  // Canonical storage of clusters. Each element in the outer array corresponds
+  // to a cluster. These are never removed, to keep mClusterHeaderIndex
+  // accurate. The payload data in the inner array is however removed. It is
+  // moved to mFinishedClusters as a cluster is finished.
+  nsTArray<nsTArray<uint8_t> > mClusters;
+  // Finished clusters to be flushed out by ExtractBuffer().
+  nsTArray<nsTArray<uint8_t> > mFinishedClusters;
 
-  // Indicate the data types in mClusterBuffs.
-  enum { FLUSH_NONE = 0, FLUSH_METADATA = 1 << 0, FLUSH_CLUSTER = 1 << 1 };
-  uint32_t mFlushState;
-  // Indicate the cluster header index in mClusterBuffs.
-  uint32_t mClusterHeaderIndex;
+  // Metadata has been serialized.
+  bool mMetadataFinished = false;
+  // True if we have an open cluster.
+  bool mWritingCluster = false;
+  // Indicate the current cluster's header index in mClusters.
+  size_t mClusterHeaderIndex = 0;
   // The cluster length position.
-  uint64_t mClusterLengthLoc;
+  uint64_t mClusterLengthLoc = 0;
   // Audio codec specific header data.
   nsTArray<uint8_t> mCodecPrivateData;
   // Codec delay in nanoseconds.
-  uint64_t mCodecDelay;
+  uint64_t mCodecDelay = 0;
 
   // The timecode of the cluster.
-  uint64_t mClusterTimecode;
+  uint64_t mClusterTimecode = 0;
 
   // Video configuration
-  int mWidth;
-  int mHeight;
-  int mDisplayWidth;
-  int mDisplayHeight;
+  int mWidth = 0;
+  int mHeight = 0;
+  int mDisplayWidth = 0;
+  int mDisplayHeight = 0;
+  bool mHasVideo = false;
   // Audio configuration
-  float mSampleFreq;
-  int mChannels;
+  float mSampleFreq = 0;
+  int mChannels = 0;
+  bool mHasAudio = false;
 };
 
 }  // namespace mozilla

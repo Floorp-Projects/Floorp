@@ -670,7 +670,7 @@ function hitTest(point) {
   var data = utils.getCompositorAPZTestData();
   ok(data.hitResults.length >= 1, "Expected at least one hit result in the APZTestData");
   var result = data.hitResults[data.hitResults.length - 1];
-  return { hitInfo: result.hitResult, scrollId: result.scrollId };
+  return { hitInfo: result.hitResult, scrollId: result.scrollId, layersId: result.layersId };
 }
 
 // Returns a canonical stringification of the hitInfo bitfield.
@@ -693,9 +693,10 @@ function hitInfoToString(hitInfo) {
 // Takes an object returned by hitTest, along with the expected values, and
 // asserts that they match. Notably, it uses hitInfoToString to provide a
 // more useful message for the case that the hit info doesn't match
-function checkHitResult(hitResult, expectedHitInfo, expectedScrollId, desc) {
+function checkHitResult(hitResult, expectedHitInfo, expectedScrollId, expectedLayersId, desc) {
   is(hitInfoToString(hitResult.hitInfo), hitInfoToString(expectedHitInfo), desc + " hit info");
   is(hitResult.scrollId, expectedScrollId, desc + " scrollid");
+  is(hitResult.layersId, expectedLayersId, desc + " layersid");
 }
 
 // Symbolic constants used by hitTestScrollbar().
@@ -717,6 +718,7 @@ var LayerState = {
 //     If directions.horizontal is true, the horizontal scrollbar will be tested.
 //     Both may be true in a single call (in which case two tests are performed).
 //   expectedScrollId: The scroll id that is expected to be hit.
+//   expectedLayersId: The layers id that is expected to be hit.
 //   trackLocation: One of ScrollbarTrackLocation.{START, END}.
 //     Determines which end of the scrollbar track is targeted.
 //   expectThumb: Whether the scrollbar thumb is expected to be present
@@ -787,6 +789,7 @@ function hitTestScrollbar(params) {
     checkHitResult(hitTest(verticalScrollbarPoint),
                    expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
                    params.expectedScrollId,
+                   params.expectedLayersId,
                    scrollframeMsg + " - vertical scrollbar");
   }
 
@@ -800,6 +803,7 @@ function hitTestScrollbar(params) {
     checkHitResult(hitTest(horizontalScrollbarPoint),
                    expectedHitInfo,
                    params.expectedScrollId,
+                   params.expectedLayersId,
                    scrollframeMsg + " - horizontal scrollbar");
   }
 }

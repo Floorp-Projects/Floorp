@@ -173,7 +173,7 @@ static void DiscardFramesFromTail(MediaQueue<Type>& aQueue,
 // decoding is suspended.
 static TimeDuration SuspendBackgroundVideoDelay() {
   return TimeDuration::FromMilliseconds(
-      StaticPrefs::MediaSuspendBkgndVideoDelayMs());
+      StaticPrefs::media_suspend_bkgnd_video_delay_ms());
 }
 
 class MediaDecoderStateMachine::StateObject {
@@ -695,7 +695,7 @@ class MediaDecoderStateMachine::DecodingState
       return;
     }
 
-    auto timeout = StaticPrefs::MediaDormantOnPauseTimeoutMs();
+    auto timeout = StaticPrefs::media_dormant_on_pause_timeout_ms();
     if (timeout < 0) {
       // Disabled when timeout is negative.
       return;
@@ -2209,7 +2209,7 @@ void MediaDecoderStateMachine::DecodeMetadataState::OnMetadataRead(
 
   // Check whether the media satisfies the requirement of seamless looing.
   // (Before checking the media is audio only, we need to get metadata first.)
-  mMaster->mSeamlessLoopingAllowed = StaticPrefs::MediaSeamlessLooping() &&
+  mMaster->mSeamlessLoopingAllowed = StaticPrefs::media_seamless_looping() &&
                                      mMaster->HasAudio() &&
                                      !mMaster->HasVideo();
 
@@ -2956,7 +2956,7 @@ void MediaDecoderStateMachine::SetVideoDecodeModeInternal(
       mVideoDecodeSuspended ? 'T' : 'F');
 
   // Should not suspend decoding if we don't turn on the pref.
-  if (!StaticPrefs::MediaSuspendBkgndVideoEnabled() &&
+  if (!StaticPrefs::media_suspend_bkgnd_video_enabled() &&
       aMode == VideoDecodeMode::Suspend) {
     LOG("SetVideoDecodeModeInternal(), early return because preference off and "
         "set to Suspend");

@@ -34,8 +34,6 @@ var gExceptionPaths = [
 
   // https://github.com/mozilla/activity-stream/issues/3053
   "resource://activity-stream/data/content/tippytop/images/",
-  // https://github.com/mozilla/activity-stream/issues/3758
-  "resource://activity-stream/prerendered/",
 
   // browser/extensions/pdfjs/content/build/pdf.js#1999
   "resource://pdf.js/web/images/",
@@ -146,8 +144,6 @@ var whitelist = [
   {file: "resource://gre/modules/Manifest.jsm"},
   // Bug 1351097
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
-  // Bug 1356043
-  {file: "resource://gre/modules/PerfMeasurement.jsm"},
   // Bug 1356045
   {file: "chrome://global/content/test-ipc.xul"},
   // Bug 1378173 (warning: still used by devtools)

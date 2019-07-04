@@ -77,6 +77,53 @@ class Input extends Domain {
     await onEvent;
   }
 
+  async dispatchMouseEvent({
+    type, button, x, y, modifiers, clickCount,
+  }) {
+    if (type == "mousePressed") {
+      type = "mousedown";
+    } else if (type == "mouseReleased") {
+      type = "mouseup";
+    } else if (type == "mouseMoved") {
+      type = "mousemove";
+    } else {
+      throw new Error(`Mouse type is not supported: ${type}`);
+    }
+
+    if (type === "mousedown" && button === "right") {
+      type = "contextmenu";
+    }
+    if (button == undefined || button == "none" || button == "left") {
+      button = 0;
+    } else if (button == "middle") {
+      button = 1;
+    } else if (button == "right") {
+      button = 2;
+    } else if (button == "back") {
+      button = 3;
+    } else if (button == "forward") {
+      button = 4;
+    } else {
+      throw new Error(`Mouse button is not supported: ${button}`);
+    }
+
+    // Gutenberg test packages/e2e-tests/specs/blocks/list.test.js:
+    // "can be created by converting multiple paragraphs"
+    // Works better with EventUtils, in order to make the Shift+Click to work
+    const { browser } = this.session.target;
+    const currentWindow = browser.ownerGlobal;
+    const EventUtils = this._getEventUtils(currentWindow);
+    EventUtils.synthesizeMouse(browser, x, y, {
+      type,
+      button,
+      clickCount: clickCount || 1,
+      altKey: !!(modifiers & 1),
+      ctrlKey: !!(modifiers & 2),
+      metaKey: !!(modifiers & 4),
+      shiftKey: !!(modifiers & 8),
+    });
+  }
+
   /**
    * Memoized EventUtils getter.
    */

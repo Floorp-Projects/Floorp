@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+<head>
+    <script>
+      async function start () {
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        context.scale(64, 64)
+        const recorder = new MediaRecorder(
+          canvas.captureStream(), { videoBitsPerSecond: 16 })
+        recorder.start(100)
+        await new Promise(r => recorder.onstart = r)
+        recorder.pause()
+        document.documentElement.removeAttribute("class")
+      }
+
+      window.addEventListener('load', start)
+    </script>
+</head>
+</html>

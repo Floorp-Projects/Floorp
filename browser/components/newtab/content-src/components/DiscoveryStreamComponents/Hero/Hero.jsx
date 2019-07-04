@@ -105,7 +105,6 @@ export class Hero extends React.PureComponent {
             id={heroRec.id}
             index={heroRec.pos}
             dispatch={this.props.dispatch}
-            intl={this.props.intl}
             url={heroRec.url}
             title={heroRec.title}
             source={heroRec.domain}

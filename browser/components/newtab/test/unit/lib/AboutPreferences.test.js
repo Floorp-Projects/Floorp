@@ -153,6 +153,12 @@ describe("AboutPreferences Feed", () => {
     const testRender = () => instance.renderPreferences({
       document: {
         createXULElement: sandbox.stub().returns(node),
+        l10n: {
+          setAttributes(el, id , args) {
+            el.setAttribute("data-l10n-id", id);
+            el.setAttribute("data-l10n-args", JSON.stringify(args));
+          },
+        },
         createProcessingInstruction: sandbox.stub(),
         createElementNS: sandbox.stub().callsFake((NS, el) => node),
         getElementById: sandbox.stub().returns(node),
@@ -183,42 +189,27 @@ describe("AboutPreferences Feed", () => {
       };
       gHomePane = {toggleRestoreDefaultsBtn: sandbox.stub()};
     });
-    describe("#formatString", () => {
-      it("should fall back to string id if missing", () => {
-        testRender();
-
-        assert.equal(node.textContent, "prefs_home_description");
-      });
-      it("should use provided plain string", () => {
-        strings = {prefs_home_description: "hello"};
+    describe("#getString", () => {
+      it("should not fail if titleString is not provided", () => {
+        prefStructure = [{pref: {}}];
 
         testRender();
-
-        assert.equal(node.textContent, "hello");
+        assert.calledWith(node.setAttribute, "data-l10n-id", sinon.match.typeOf("undefined"));
       });
-      it("should fall back to string object if missing", () => {
-        const titleString = {id: "foo"};
+      it("should return the string id if titleString is just a string", () => {
+        const titleString = "foo";
         prefStructure = [{pref: {titleString}}];
 
         testRender();
-
-        assert.calledWith(node.setAttribute, "label", JSON.stringify(titleString));
+        assert.calledWith(node.setAttribute, "data-l10n-id", titleString);
       });
-      it("should use provided string object id", () => {
-        strings = {foo: "bar"};
-        prefStructure = [{pref: {titleString: {id: "foo"}}}];
+      it("should set id and args if titleString is an object with id and values", () => {
+        const titleString = {id: "foo", values: { provider: "bar"}};
+        prefStructure = [{pref: {titleString}}];
 
         testRender();
-
-        assert.calledWith(node.setAttribute, "label", "bar");
-      });
-      it("should use values in string object", () => {
-        strings = {foo: "l{n}{n}t"};
-        prefStructure = [{pref: {titleString: {id: "foo", values: {n: 3}}}}];
-
-        testRender();
-
-        assert.calledWith(node.setAttribute, "label", "l33t");
+        assert.calledWith(node.setAttribute, "data-l10n-id", titleString.id);
+        assert.calledWith(node.setAttribute, "data-l10n-args", JSON.stringify(titleString.values));
       });
     });
     describe("#linkPref", () => {
@@ -268,11 +259,11 @@ describe("AboutPreferences Feed", () => {
 
         testRender();
 
-        assert.calledWith(node.setAttribute, "label", titleString);
+        assert.calledWith(node.setAttribute, "data-l10n-id", titleString);
       });
       it("should add a link for top stories", () => {
         const href = "https://disclaimer/";
-        prefStructure = [{learnMore: {link: {href}}, id: "topstories", pref: {feed: "feed"}}];
+        prefStructure = [{id: "topstories", pref: {feed: "feed", learnMore: {link: {href}}}}];
 
         testRender();
         assert.calledWith(node.setAttribute, "href", href);
@@ -285,7 +276,7 @@ describe("AboutPreferences Feed", () => {
 
         testRender();
 
-        assert.equal(node.textContent, descString);
+        assert.calledWith(node.setAttribute, "data-l10n-id", descString);
       });
       it("should render rows dropdown with appropriate number", () => {
         prefStructure = [{rowsPref: "row_pref", maxRows: 3, pref: {descString: "foo"}}];
@@ -305,7 +296,7 @@ describe("AboutPreferences Feed", () => {
       it("should render a nested pref", () => {
         testRender();
 
-        assert.calledWith(node.setAttribute, "label", titleString);
+        assert.calledWith(node.setAttribute, "data-l10n-id", titleString);
       });
       it("should add a change event", () => {
         testRender();

@@ -120,7 +120,7 @@ dictionary WebGPUTextureDescriptor {
 
 [Pref="dom.webgpu.enable"]
 interface WebGPUTexture {
-    WebGPUTextureView createTextureView(optional WebGPUTextureViewDescriptor desc);
+    WebGPUTextureView createTextureView(optional WebGPUTextureViewDescriptor desc = {});
 };
 
 // Sampler
@@ -513,7 +513,7 @@ interface WebGPUCommandEncoder {
     void dispatch(u32 x, u32 y, u32 z);
 
     // Render pass commands
-    void beginRenderPass(optional WebGPURenderPassDescriptor descriptor);
+    void beginRenderPass(optional WebGPURenderPassDescriptor descriptor = {});
     void endRenderPass();
 
     void setBlendColor(float r, float g, float b, float a);
@@ -554,7 +554,7 @@ dictionary WebGPUSwapChainDescriptor {
 
 [Pref="dom.webgpu.enable"]
 interface WebGPUSwapChain {
-    void configure(optional WebGPUSwapChainDescriptor descriptor);
+    void configure(optional WebGPUSwapChainDescriptor descriptor = {});
     WebGPUTexture getNextTexture();
     void present();
 };
@@ -580,23 +580,23 @@ interface WebGPUDevice {
     WebGPUExtensions extensions();
     WebGPULimits limits();
 
-    WebGPUBuffer createBuffer(optional WebGPUBufferDescriptor descriptor);
-    WebGPUTexture createTexture(optional WebGPUTextureDescriptor descriptor);
-    WebGPUSampler createSampler(optional WebGPUSamplerDescriptor descriptor);
+    WebGPUBuffer createBuffer(optional WebGPUBufferDescriptor descriptor = {});
+    WebGPUTexture createTexture(optional WebGPUTextureDescriptor descriptor = {});
+    WebGPUSampler createSampler(optional WebGPUSamplerDescriptor descriptor = {});
 
-    WebGPUBindGroupLayout createBindGroupLayout(optional WebGPUBindGroupLayoutDescriptor descriptor);
-    WebGPUPipelineLayout createPipelineLayout(optional WebGPUPipelineLayoutDescriptor descriptor);
-    WebGPUBindGroup createBindGroup(optional WebGPUBindGroupDescriptor descriptor);
+    WebGPUBindGroupLayout createBindGroupLayout(optional WebGPUBindGroupLayoutDescriptor descriptor = {});
+    WebGPUPipelineLayout createPipelineLayout(optional WebGPUPipelineLayoutDescriptor descriptor = {});
+    WebGPUBindGroup createBindGroup(optional WebGPUBindGroupDescriptor descriptor = {});
 
-    WebGPUBlendState createBlendState(optional WebGPUBlendStateDescriptor descriptor);
-    WebGPUDepthStencilState createDepthStencilState(optional WebGPUDepthStencilStateDescriptor descriptor);
-    WebGPUInputState createInputState(optional WebGPUInputStateDescriptor descriptor);
+    WebGPUBlendState createBlendState(optional WebGPUBlendStateDescriptor descriptor = {});
+    WebGPUDepthStencilState createDepthStencilState(optional WebGPUDepthStencilStateDescriptor descriptor = {});
+    WebGPUInputState createInputState(optional WebGPUInputStateDescriptor descriptor = {});
     WebGPUShaderModule createShaderModule(WebGPUShaderModuleDescriptor descriptor);
-    WebGPUAttachmentState createAttachmentState(optional WebGPUAttachmentStateDescriptor descriptor);
+    WebGPUAttachmentState createAttachmentState(optional WebGPUAttachmentStateDescriptor descriptor = {});
     WebGPUComputePipeline createComputePipeline(WebGPUComputePipelineDescriptor descriptor);
     WebGPURenderPipeline createRenderPipeline(WebGPURenderPipelineDescriptor descriptor);
 
-    WebGPUCommandEncoder createCommandEncoder(optional WebGPUCommandEncoderDescriptor descriptor);
+    WebGPUCommandEncoder createCommandEncoder(optional WebGPUCommandEncoderDescriptor descriptor = {});
 
     WebGPUQueue getQueue();
 
@@ -617,7 +617,7 @@ interface WebGPUAdapter {
     WebGPUExtensions extensions();
     //WebGPULimits limits(); Don't expose higher limits for now.
 
-    WebGPUDevice createDevice(optional WebGPUDeviceDescriptor descriptor);
+    WebGPUDevice createDevice(optional WebGPUDeviceDescriptor descriptor = {});
 };
 
 enum WebGPUPowerPreference { "default", "low-power", "high-performance" };
@@ -628,7 +628,7 @@ dictionary WebGPUAdapterDescriptor {
 
 [Pref="dom.webgpu.enable"]
 interface WebGPU {
-    WebGPUAdapter getAdapter(optional WebGPUAdapterDescriptor desc);
+    WebGPUAdapter getAdapter(optional WebGPUAdapterDescriptor desc = {});
 };
 
 // Add a "webgpu" member to Window that contains the global instance of a "WebGPU"

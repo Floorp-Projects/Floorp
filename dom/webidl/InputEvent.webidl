@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional InputEventInit eventInitDict)]
+[Constructor(DOMString type, optional InputEventInit eventInitDict = {})]
 interface InputEvent : UIEvent
 {
   readonly attribute boolean       isComposing;

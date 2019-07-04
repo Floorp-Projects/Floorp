@@ -426,10 +426,12 @@ class StubField {
     MOZ_ASSERT(type != Type::Limit);
     return type < Type::First64BitType;
   }
+
   static bool sizeIsInt64(Type type) {
     MOZ_ASSERT(type != Type::Limit);
     return type >= Type::First64BitType;
   }
+
   static size_t sizeInBytes(Type type) {
     if (sizeIsWord(type)) {
       return sizeof(uintptr_t);
@@ -726,6 +728,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     }
     return offset;
   }
+
   void reuseStubField(FieldOffset offset) {
     MOZ_ASSERT(offset < stubDataSize_ / sizeof(uintptr_t));
     buffer_.writeByte(offset);
@@ -779,14 +782,17 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     }
     return currentInstruction > operandLastUsed_[operandId];
   }
+
   const uint8_t* codeStart() const {
     MOZ_ASSERT(!failed());
     return buffer_.buffer();
   }
+
   const uint8_t* codeEnd() const {
     MOZ_ASSERT(!failed());
     return buffer_.buffer() + buffer_.length();
   }
+
   uint32_t codeLength() const {
     MOZ_ASSERT(!failed());
     return buffer_.length();
@@ -800,76 +806,93 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardIsObject, val);
     return ObjOperandId(val.id());
   }
+
   Int32OperandId guardIsBoolean(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardIsBoolean, val);
     writeOperandId(res);
     return res;
   }
+
   StringOperandId guardIsString(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsString, val);
     return StringOperandId(val.id());
   }
+
   SymbolOperandId guardIsSymbol(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
     return SymbolOperandId(val.id());
   }
+
   BigIntOperandId guardIsBigInt(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsBigInt, val);
     return BigIntOperandId(val.id());
   }
+
   Int32OperandId guardIsInt32(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardIsInt32, val);
     writeOperandId(res);
     return res;
   }
+
   Int32OperandId guardIsInt32Index(ValOperandId val) {
     Int32OperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardIsInt32Index, val);
     writeOperandId(res);
     return res;
   }
+
   void guardIsNumber(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNumber, val);
   }
+
   void guardType(ValOperandId val, ValueType type) {
     writeOpWithOperandId(CacheOp::GuardType, val);
     static_assert(sizeof(type) == sizeof(uint8_t),
                   "JS::ValueType should fit in a byte");
     buffer_.writeByte(uint32_t(type));
   }
+
   void guardIsObjectOrNull(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsObjectOrNull, val);
   }
+
   void guardIsNullOrUndefined(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNullOrUndefined, val);
   }
+
   void guardIsNotNullOrUndefined(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNotNullOrUndefined, val);
   }
+
   void guardIsNull(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNull, val);
   }
+
   void guardIsUndefined(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsUndefined, val);
   }
+
   void guardShape(ObjOperandId obj, Shape* shape) {
     MOZ_ASSERT(shape);
     writeOpWithOperandId(CacheOp::GuardShape, obj);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
   }
+
   void guardShapeForClass(ObjOperandId obj, Shape* shape) {
     // Guard shape to ensure that object class is unchanged. This is true
     // for all shapes.
     guardShape(obj, shape);
   }
+
   void guardShapeForOwnProperties(ObjOperandId obj, Shape* shape) {
     // Guard shape to detect changes to (non-dense) own properties. This
     // also implies |guardShapeForClass|.
     MOZ_ASSERT(shape->getObjectClass()->isNative());
     guardShape(obj, shape);
   }
+
   void guardXrayExpandoShapeAndDefaultProto(ObjOperandId obj,
                                             JSObject* shapeWrapper) {
     assertSameCompartment(shapeWrapper);
@@ -877,6 +900,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(!!shapeWrapper));
     addStubField(uintptr_t(shapeWrapper), StubField::Type::JSObject);
   }
+
   // Guard rhs[slot] == prototypeObject
   void guardFunctionPrototype(ObjOperandId rhs, uint32_t slot,
                               ObjOperandId protoId) {
@@ -884,17 +908,21 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(protoId);
     addStubField(slot, StubField::Type::RawWord);
   }
+
   void guardNoAllocationMetadataBuilder() {
     writeOp(CacheOp::GuardNoAllocationMetadataBuilder);
   }
+
   void guardObjectGroupNotPretenured(ObjectGroup* group) {
     writeOp(CacheOp::GuardObjectGroupNotPretenured);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
+
   void guardFunctionHasJitEntry(ObjOperandId fun, bool isConstructing) {
     writeOpWithOperandId(CacheOp::GuardFunctionHasJitEntry, fun);
     buffer_.writeByte(isConstructing);
   }
+
   void guardNotClassConstructor(ObjOperandId fun) {
     writeOpWithOperandId(CacheOp::GuardNotClassConstructor, fun);
   }
@@ -906,10 +934,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardGroup, obj);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
+
   void guardGroupForProto(ObjOperandId obj, ObjectGroup* group) {
     MOZ_ASSERT(!group->hasUncacheableProto());
     guardGroup(obj, group);
   }
+
   void guardGroupForTypeBarrier(ObjOperandId obj, ObjectGroup* group) {
     // Typesets will always be a super-set of any typesets previously seen
     // for this group. If the type/group of a value being stored to a
@@ -917,67 +947,83 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     // used as well.
     guardGroup(obj, group);
   }
+
   void guardGroupForLayout(ObjOperandId obj, ObjectGroup* group) {
     // NOTE: Comment in guardGroupForTypeBarrier also applies.
     MOZ_ASSERT(IsTypedObjectClass(group->clasp()));
     guardGroup(obj, group);
   }
+
   void guardProto(ObjOperandId obj, JSObject* proto) {
     assertSameCompartment(proto);
     writeOpWithOperandId(CacheOp::GuardProto, obj);
     addStubField(uintptr_t(proto), StubField::Type::JSObject);
   }
+
   void guardClass(ObjOperandId obj, GuardClassKind kind) {
     static_assert(sizeof(GuardClassKind) == sizeof(uint8_t),
                   "GuardClassKind must fit in a byte");
     writeOpWithOperandId(CacheOp::GuardClass, obj);
     buffer_.writeByte(uint32_t(kind));
   }
+
   FieldOffset guardAnyClass(ObjOperandId obj, const Class* clasp) {
     writeOpWithOperandId(CacheOp::GuardAnyClass, obj);
     return addStubField(uintptr_t(clasp), StubField::Type::RawWord);
   }
+
   void guardFunctionIsNative(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardFunctionIsNative, obj);
   }
+
   void guardFunctionIsConstructor(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardFunctionIsConstructor, obj);
   }
+
   void guardSpecificNativeFunction(ObjOperandId obj, JSNative nativeFunc) {
     writeOpWithOperandId(CacheOp::GuardSpecificNativeFunction, obj);
     writePointer(JS_FUNC_TO_DATA_PTR(void*, nativeFunc));
   }
+
   void guardIsNativeObject(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardIsNativeObject, obj);
   }
+
   void guardIsProxy(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardIsProxy, obj);
   }
+
   void guardHasProxyHandler(ObjOperandId obj, const void* handler) {
     writeOpWithOperandId(CacheOp::GuardHasProxyHandler, obj);
     addStubField(uintptr_t(handler), StubField::Type::RawWord);
   }
+
   void guardNotDOMProxy(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardNotDOMProxy, obj);
   }
+
   FieldOffset guardSpecificObject(ObjOperandId obj, JSObject* expected) {
     assertSameCompartment(expected);
     writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
     return addStubField(uintptr_t(expected), StubField::Type::JSObject);
   }
+
   FieldOffset guardSpecificFunction(ObjOperandId obj, JSFunction* expected) {
     // Guard object is a specific function. This implies immutable fields on
     // the JSFunction struct itself are unchanged.
     return guardSpecificObject(obj, expected);
   }
+
   FieldOffset guardSpecificAtom(StringOperandId str, JSAtom* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
     return addStubField(uintptr_t(expected), StubField::Type::String);
   }
+
   void guardSpecificSymbol(SymbolOperandId sym, JS::Symbol* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
     addStubField(uintptr_t(expected), StubField::Type::Symbol);
   }
+
   void guardSpecificInt32Immediate(
       Int32OperandId operand, int32_t expected,
       Assembler::Condition cond = Assembler::Equal) {
@@ -985,10 +1031,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeInt32Immediate(expected);
     buffer_.writeByte(uint32_t(cond));
   }
+
   void guardMagicValue(ValOperandId val, JSWhyMagic magic) {
     writeOpWithOperandId(CacheOp::GuardMagicValue, val);
     buffer_.writeByte(uint32_t(magic));
   }
+
   void guardCompartment(ObjOperandId obj, JSObject* global,
                         JS::Compartment* compartment) {
     assertSameCompartment(global);
@@ -998,12 +1046,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     // Use RawWord, because compartments never move and it can't be GCed.
     addStubField(uintptr_t(compartment), StubField::Type::RawWord);
   }
+
   void guardIsExtensible(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardIsExtensible, obj);
   }
+
   void guardNoDetachedTypedObjects() {
     writeOp(CacheOp::GuardNoDetachedTypedObjects);
   }
+
   void guardFrameHasNoArgumentsObject() {
     writeOp(CacheOp::GuardFrameHasNoArgumentsObject);
   }
@@ -1014,12 +1065,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(res);
     return res;
   }
+
   ValOperandId guardAndGetNumberFromString(StringOperandId str) {
     ValOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetNumberFromString, str);
     writeOperandId(res);
     return res;
   }
+
   ObjOperandId guardAndGetIterator(ObjOperandId obj,
                                    PropertyIteratorObject* iter,
                                    NativeIterator** enumeratorsAddr) {
@@ -1035,6 +1088,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardHasGetterSetter, obj);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
   }
+
   void guardGroupHasUnanalyzedNewScript(ObjectGroup* group) {
     writeOp(CacheOp::GuardGroupHasUnanalyzedNewScript);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
@@ -1043,25 +1097,30 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardIndexIsNonNegative(Int32OperandId index) {
     writeOpWithOperandId(CacheOp::GuardIndexIsNonNegative, index);
   }
+
   void guardIndexGreaterThanDenseInitLength(ObjOperandId obj,
                                             Int32OperandId index) {
     writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseInitLength, obj);
     writeOperandId(index);
   }
+
   void guardIndexGreaterThanDenseCapacity(ObjOperandId obj,
                                           Int32OperandId index) {
     writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseCapacity, obj);
     writeOperandId(index);
   }
+
   void guardIndexGreaterThanArrayLength(ObjOperandId obj,
                                         Int32OperandId index) {
     writeOpWithOperandId(CacheOp::GuardIndexGreaterThanArrayLength, obj);
     writeOperandId(index);
   }
+
   void guardIndexIsValidUpdateOrAdd(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::GuardIndexIsValidUpdateOrAdd, obj);
     writeOperandId(index);
   }
+
   void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
     writeOpWithOperandId(CacheOp::GuardTagNotEqual, lhs);
     writeOperandId(rhs);
@@ -1071,9 +1130,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void loadFrameNumActualArgsResult() {
     writeOp(CacheOp::LoadFrameNumActualArgsResult);
   }
+
   void loadFrameArgumentResult(Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadFrameArgumentResult, index);
   }
+
   void guardNoDenseElements(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardNoDenseElements, obj);
   }
@@ -1085,6 +1146,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(obj), StubField::Type::JSObject);
     return res;
   }
+
   ObjOperandId loadProto(ObjOperandId obj) {
     ObjOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::LoadProto, obj);
@@ -1166,10 +1228,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(res);
     return res;
   }
+
   void guardDOMExpandoMissingOrGuardShape(ValOperandId expando, Shape* shape) {
     writeOpWithOperandId(CacheOp::GuardDOMExpandoMissingOrGuardShape, expando);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
   }
+
   ValOperandId loadDOMExpandoValueGuardGeneration(
       ObjOperandId obj, ExpandoAndGeneration* expandoAndGeneration) {
     ValOperandId res(nextOperandId_++);
@@ -1180,6 +1244,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(res);
     return res;
   }
+
   ValOperandId loadDOMExpandoValueIgnoreGeneration(ObjOperandId obj) {
     ValOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::LoadDOMExpandoValueIgnoreGeneration, obj);
@@ -1192,11 +1257,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(offset, StubField::Type::RawWord);
     writeOperandId(rhs);
   }
+
   void storeDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::StoreDynamicSlot, obj);
     addStubField(offset, StubField::Type::RawWord);
     writeOperandId(rhs);
   }
+
   void addAndStoreFixedSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
                             Shape* newShape, bool changeGroup,
                             ObjectGroup* newGroup) {
@@ -1207,6 +1274,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
     addStubField(uintptr_t(newShape), StubField::Type::Shape);
   }
+
   void addAndStoreDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
                               Shape* newShape, bool changeGroup,
                               ObjectGroup* newGroup) {
@@ -1217,6 +1285,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
     addStubField(uintptr_t(newShape), StubField::Type::Shape);
   }
+
   void allocateAndStoreDynamicSlot(ObjOperandId obj, size_t offset,
                                    ValOperandId rhs, Shape* newShape,
                                    bool changeGroup, ObjectGroup* newGroup,
@@ -1239,6 +1308,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(type));
     writeOperandId(rhs);
   }
+
   void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
                                       TypedThingLayout layout,
                                       Scalar::Type type, ValOperandId rhs) {
@@ -1248,12 +1318,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(type));
     writeOperandId(rhs);
   }
+
   void storeDenseElement(ObjOperandId obj, Int32OperandId index,
                          ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::StoreDenseElement, obj);
     writeOperandId(index);
     writeOperandId(rhs);
   }
+
   void storeTypedElement(ObjOperandId obj, Int32OperandId index,
                          ValOperandId rhs, TypedThingLayout layout,
                          Scalar::Type elementType, bool handleOOB) {
@@ -1264,6 +1336,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(elementType));
     buffer_.writeByte(uint32_t(handleOOB));
   }
+
   void storeDenseElementHole(ObjOperandId obj, Int32OperandId index,
                              ValOperandId rhs, bool handleAdd) {
     writeOpWithOperandId(CacheOp::StoreDenseElementHole, obj);
@@ -1271,13 +1344,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(handleAdd);
   }
+
   void arrayPush(ObjOperandId obj, ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::ArrayPush, obj);
     writeOperandId(rhs);
   }
+
   void arrayJoinResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::ArrayJoinResult, obj);
   }
+
   void callScriptedSetter(ObjOperandId obj, JSFunction* setter,
                           ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
@@ -1285,23 +1361,27 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(cx_->realm() == setter->realm());
   }
+
   void callNativeSetter(ObjOperandId obj, JSFunction* setter,
                         ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::CallNativeSetter, obj);
     addStubField(uintptr_t(setter), StubField::Type::JSObject);
     writeOperandId(rhs);
   }
+
   void callSetArrayLength(ObjOperandId obj, bool strict, ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::CallSetArrayLength, obj);
     buffer_.writeByte(uint32_t(strict));
     writeOperandId(rhs);
   }
+
   void callProxySet(ObjOperandId obj, jsid id, ValOperandId rhs, bool strict) {
     writeOpWithOperandId(CacheOp::CallProxySet, obj);
     writeOperandId(rhs);
     addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
     buffer_.writeByte(uint32_t(strict));
   }
+
   void callProxySetByValue(ObjOperandId obj, ValOperandId id, ValOperandId rhs,
                            bool strict) {
     writeOpWithOperandId(CacheOp::CallProxySetByValue, obj);
@@ -1309,6 +1389,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(strict));
   }
+
   void callAddOrUpdateSparseElementHelper(ObjOperandId obj, Int32OperandId id,
                                           ValOperandId rhs, bool strict) {
     writeOpWithOperandId(CacheOp::CallAddOrUpdateSparseElementHelper, obj);
@@ -1316,30 +1397,35 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(strict));
   }
+
   StringOperandId callInt32ToString(Int32OperandId id) {
     StringOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::CallInt32ToString, id);
     writeOperandId(res);
     return res;
   }
+
   StringOperandId callNumberToString(ValOperandId id) {
     StringOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::CallNumberToString, id);
     writeOperandId(res);
     return res;
   }
+
   StringOperandId booleanToString(Int32OperandId id) {
     StringOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::BooleanToString, id);
     writeOperandId(res);
     return res;
   }
+
   void callScriptedFunction(ObjOperandId calleeId, Int32OperandId argc,
                             CallFlags flags) {
     writeOpWithOperandId(CacheOp::CallScriptedFunction, calleeId);
     writeOperandId(argc);
     writeCallFlags(flags);
   }
+
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
                           HandleFunction calleeFunc, CallFlags flags) {
     writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
@@ -1420,6 +1506,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     reuseStubField(calleeOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
+
   void metaScriptedTemplateObject(JSObject* templateObject,
                                   FieldOffset calleeOffset) {
     writeOp(CacheOp::MetaTwoByte);
@@ -1427,6 +1514,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     reuseStubField(calleeOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
+
   void metaClassTemplateObject(JSObject* templateObject,
                                FieldOffset classOffset) {
     writeOp(CacheOp::MetaTwoByte);
@@ -1434,18 +1522,21 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     reuseStubField(classOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
+
   void megamorphicLoadSlotResult(ObjOperandId obj, PropertyName* name,
                                  bool handleMissing) {
     writeOpWithOperandId(CacheOp::MegamorphicLoadSlotResult, obj);
     addStubField(uintptr_t(name), StubField::Type::String);
     buffer_.writeByte(uint32_t(handleMissing));
   }
+
   void megamorphicLoadSlotByValueResult(ObjOperandId obj, ValOperandId id,
                                         bool handleMissing) {
     writeOpWithOperandId(CacheOp::MegamorphicLoadSlotByValueResult, obj);
     writeOperandId(id);
     buffer_.writeByte(uint32_t(handleMissing));
   }
+
   void megamorphicStoreSlot(ObjOperandId obj, PropertyName* name,
                             ValOperandId rhs, bool needsTypeBarrier) {
     writeOpWithOperandId(CacheOp::MegamorphicStoreSlot, obj);
@@ -1453,6 +1544,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(needsTypeBarrier);
   }
+
   void megamorphicSetElement(ObjOperandId obj, ValOperandId id,
                              ValOperandId rhs, bool strict) {
     writeOpWithOperandId(CacheOp::MegamorphicSetElement, obj);
@@ -1460,6 +1552,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(strict));
   }
+
   void megamorphicHasPropResult(ObjOperandId obj, ValOperandId id,
                                 bool hasOwn) {
     writeOpWithOperandId(CacheOp::MegamorphicHasPropResult, obj);
@@ -1471,18 +1564,22 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::DoubleAddResult, lhsId);
     writeOperandId(rhsId);
   }
+
   void doubleSubResult(ValOperandId lhsId, ValOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleSubResult, lhsId);
     writeOperandId(rhsId);
   }
+
   void doubleMulResult(ValOperandId lhsId, ValOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleMulResult, lhsId);
     writeOperandId(rhsId);
   }
+
   void doubleDivResult(ValOperandId lhsId, ValOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleDivResult, lhsId);
     writeOperandId(rhsId);
   }
+
   void doubleModResult(ValOperandId lhsId, ValOperandId rhsId) {
     writeOpWithOperandId(CacheOp::DoubleModResult, lhsId);
     writeOperandId(rhsId);
@@ -1492,86 +1589,108 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::Int32AddResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32SubResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32SubResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32MulResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32MulResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32DivResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32DivResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32ModResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32ModResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32BitOrResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32BitOrResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32BitXOrResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32BitXorResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32BitAndResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32BitAndResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32LeftShiftResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32LeftShiftResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32RightShiftResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32RightShiftResult, lhs);
     writeOperandId(rhs);
   }
+
   void int32URightShiftResult(Int32OperandId lhs, Int32OperandId rhs,
                               bool allowDouble) {
     writeOpWithOperandId(CacheOp::Int32URightShiftResult, lhs);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(allowDouble));
   }
+
   void int32NotResult(Int32OperandId id) {
     writeOpWithOperandId(CacheOp::Int32NotResult, id);
   }
+
   void int32NegationResult(Int32OperandId id) {
     writeOpWithOperandId(CacheOp::Int32NegationResult, id);
   }
+
   void int32IncResult(Int32OperandId id) {
     writeOpWithOperandId(CacheOp::Int32IncResult, id);
   }
+
   void int32DecResult(Int32OperandId id) {
     writeOpWithOperandId(CacheOp::Int32DecResult, id);
   }
+
   void doubleNegationResult(ValOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleNegationResult, val);
   }
+
   void doubleIncResult(ValOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleIncResult, val);
   }
+
   void doubleDecResult(ValOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleDecResult, val);
   }
+
   void loadBooleanResult(bool val) {
     writeOp(CacheOp::LoadBooleanResult);
     buffer_.writeByte(uint32_t(val));
   }
+
   void loadUndefinedResult() { writeOp(CacheOp::LoadUndefinedResult); }
   void loadStringResult(JSString* str) {
     writeOp(CacheOp::LoadStringResult);
     addStubField(uintptr_t(str), StubField::Type::String);
   }
+
   void loadFixedSlotResult(ObjOperandId obj, size_t offset) {
     writeOpWithOperandId(CacheOp::LoadFixedSlotResult, obj);
     addStubField(offset, StubField::Type::RawWord);
   }
+
   void loadDynamicSlotResult(ObjOperandId obj, size_t offset) {
     writeOpWithOperandId(CacheOp::LoadDynamicSlotResult, obj);
     addStubField(offset, StubField::Type::RawWord);
   }
+
   void loadTypedObjectResult(ObjOperandId obj, uint32_t offset,
                              TypedThingLayout layout, uint32_t typeDescr) {
     MOZ_ASSERT(uint32_t(layout) <= UINT8_MAX);
@@ -1581,46 +1700,57 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(typeDescr);
     addStubField(offset, StubField::Type::RawWord);
   }
+
   void loadInt32ArrayLengthResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
   }
+
   void loadArgumentsObjectLengthResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
   }
+
   void loadFunctionLengthResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadFunctionLengthResult, obj);
   }
+
   void loadArgumentsObjectArgResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadArgumentsObjectArgResult, obj);
     writeOperandId(index);
   }
+
   void loadDenseElementResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadDenseElementResult, obj);
     writeOperandId(index);
   }
+
   void loadDenseElementHoleResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadDenseElementHoleResult, obj);
     writeOperandId(index);
   }
+
   void callGetSparseElementResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::CallGetSparseElementResult, obj);
     writeOperandId(index);
   }
+
   void loadDenseElementExistsResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadDenseElementExistsResult, obj);
     writeOperandId(index);
   }
+
   void loadTypedElementExistsResult(ObjOperandId obj, Int32OperandId index,
                                     TypedThingLayout layout) {
     writeOpWithOperandId(CacheOp::LoadTypedElementExistsResult, obj);
     writeOperandId(index);
     buffer_.writeByte(uint32_t(layout));
   }
+
   void loadDenseElementHoleExistsResult(ObjOperandId obj,
                                         Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadDenseElementHoleExistsResult, obj);
     writeOperandId(index);
   }
+
   void loadTypedElementResult(ObjOperandId obj, Int32OperandId index,
                               TypedThingLayout layout,
                               Scalar::Type elementType) {
@@ -1629,92 +1759,115 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(layout));
     buffer_.writeByte(uint32_t(elementType));
   }
+
   void loadStringLengthResult(StringOperandId str) {
     writeOpWithOperandId(CacheOp::LoadStringLengthResult, str);
   }
+
   void loadStringCharResult(StringOperandId str, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::LoadStringCharResult, str);
     writeOperandId(index);
   }
+
   void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
     buffer_.writeByte(cx_->realm() == getter->realm());
   }
+
   void callScriptedGetterByValueResult(ValOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallScriptedGetterByValueResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
     buffer_.writeByte(cx_->realm() == getter->realm());
   }
+
   void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
   }
+
   void callNativeGetterByValueResult(ValOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallNativeGetterByValueResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
   }
+
   void callProxyGetResult(ObjOperandId obj, jsid id) {
     writeOpWithOperandId(CacheOp::CallProxyGetResult, obj);
     addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
   }
+
   void callProxyGetByValueResult(ObjOperandId obj, ValOperandId idVal) {
     writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
     writeOperandId(idVal);
   }
+
   void callProxyHasPropResult(ObjOperandId obj, ValOperandId idVal,
                               bool hasOwn) {
     writeOpWithOperandId(CacheOp::CallProxyHasPropResult, obj);
     writeOperandId(idVal);
     buffer_.writeByte(uint32_t(hasOwn));
   }
+
   void callObjectHasSparseElementResult(ObjOperandId obj,
                                         Int32OperandId index) {
     writeOpWithOperandId(CacheOp::CallObjectHasSparseElementResult, obj);
     writeOperandId(index);
   }
+
   void callNativeGetElementResult(ObjOperandId obj, Int32OperandId index) {
     writeOpWithOperandId(CacheOp::CallNativeGetElementResult, obj);
     writeOperandId(index);
   }
+
   void callIsSuspendedGeneratorResult(ValOperandId val) {
     writeOpWithOperandId(CacheOp::CallIsSuspendedGeneratorResult, val);
   }
+
   void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
     writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
     addStubField(offset, StubField::Type::RawWord);
   }
+
   void loadEnvironmentDynamicSlotResult(ObjOperandId obj, size_t offset) {
     writeOpWithOperandId(CacheOp::LoadEnvironmentDynamicSlotResult, obj);
     addStubField(offset, StubField::Type::RawWord);
   }
+
   void loadObjectResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
   }
+
   void loadInstanceOfObjectResult(ValOperandId lhs, ObjOperandId protoId,
                                   uint32_t slot) {
     writeOpWithOperandId(CacheOp::LoadInstanceOfObjectResult, lhs);
     writeOperandId(protoId);
   }
+
   void loadTypeOfObjectResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadTypeOfObjectResult, obj);
   }
+
   void loadInt32TruthyResult(ValOperandId integer) {
     writeOpWithOperandId(CacheOp::LoadInt32TruthyResult, integer);
   }
+
   void loadDoubleTruthyResult(ValOperandId dbl) {
     writeOpWithOperandId(CacheOp::LoadDoubleTruthyResult, dbl);
   }
+
   void loadStringTruthyResult(StringOperandId str) {
     writeOpWithOperandId(CacheOp::LoadStringTruthyResult, str);
   }
+
   void loadObjectTruthyResult(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::LoadObjectTruthyResult, obj);
   }
+
   void loadValueResult(const Value& val) {
     writeOp(CacheOp::LoadValueResult);
     addStubField(val.asRawBits(), StubField::Type::Value);
   }
+
   void loadNewObjectFromTemplateResult(JSObject* templateObj) {
     writeOp(CacheOp::LoadNewObjectFromTemplateResult);
     addStubField(uintptr_t(templateObj), StubField::Type::JSObject);
@@ -1725,10 +1878,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeUint32Immediate(id & UINT32_MAX);
     writeUint32Immediate(id >> 32);
   }
+
   void callStringConcatResult(StringOperandId lhs, StringOperandId rhs) {
     writeOpWithOperandId(CacheOp::CallStringConcatResult, lhs);
     writeOperandId(rhs);
   }
+
   void callStringObjectConcatResult(ValOperandId lhs, ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::CallStringObjectConcatResult, lhs);
     writeOperandId(rhs);
@@ -1740,26 +1895,31 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(op));
   }
+
   void compareObjectResult(uint32_t op, ObjOperandId lhs, ObjOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareObjectResult, lhs);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(op));
   }
+
   void compareObjectUndefinedNullResult(uint32_t op, ObjOperandId object) {
     writeOpWithOperandId(CacheOp::CompareObjectUndefinedNullResult, object);
     buffer_.writeByte(uint32_t(op));
   }
+
   void compareSymbolResult(uint32_t op, SymbolOperandId lhs,
                            SymbolOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareSymbolResult, lhs);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(op));
   }
+
   void compareInt32Result(uint32_t op, Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareInt32Result, lhs);
     writeOperandId(rhs);
     buffer_.writeByte(uint32_t(op));
   }
+
   void compareDoubleResult(uint32_t op, ValOperandId lhs, ValOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareDoubleResult, lhs);
     writeOperandId(rhs);
@@ -1770,8 +1930,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOp(CacheOp::CallPrintString);
     writePointer(const_cast<char*>(str));
   }
-  void breakpoint() { writeOp(CacheOp::Breakpoint); }
 
+  void breakpoint() { writeOp(CacheOp::Breakpoint); }
   void typeMonitorResult() { writeOp(CacheOp::TypeMonitorResult); }
   void returnFromIC() { writeOp(CacheOp::ReturnFromIC); }
   void wrapResult() { writeOp(CacheOp::WrapResult); }
@@ -1809,22 +1969,27 @@ class MOZ_RAII CacheIRReader {
   ValueTagOperandId valueTagOperandId() {
     return ValueTagOperandId(buffer_.readByte());
   }
+
   ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
   StringOperandId stringOperandId() {
     return StringOperandId(buffer_.readByte());
   }
+
   SymbolOperandId symbolOperandId() {
     return SymbolOperandId(buffer_.readByte());
   }
+
   Int32OperandId int32OperandId() { return Int32OperandId(buffer_.readByte()); }
 
   uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
   GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
   JSValueType jsValueType() { return JSValueType(buffer_.readByte()); }
   ValueType valueType() { return ValueType(buffer_.readByte()); }
+
   TypedThingLayout typedThingLayout() {
     return TypedThingLayout(buffer_.readByte());
   }
+
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
   uint32_t typeDescrKey() { return buffer_.readByte(); }
   JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
@@ -1841,6 +2006,7 @@ class MOZ_RAII CacheIRReader {
   ReferenceType referenceTypeDescrType() {
     return ReferenceType(buffer_.readByte());
   }
+
   CallFlags callFlags() {
     // See CacheIRWriter::writeCallFlags()
     uint8_t encoded = buffer_.readByte();
@@ -1876,6 +2042,7 @@ class MOZ_RAII CacheIRReader {
     buffer_.seek(pos, 0);
     return false;
   }
+
   bool matchOp(CacheOp op, OperandId id) {
     const uint8_t* pos = buffer_.currentPosition();
     if (readOp() == op && buffer_.readByte() == id.id()) {
@@ -1884,6 +2051,7 @@ class MOZ_RAII CacheIRReader {
     buffer_.seek(pos, 0);
     return false;
   }
+
   bool matchOpEither(CacheOp op1, CacheOp op2) {
     const uint8_t* pos = buffer_.currentPosition();
     CacheOp op = readOp();
@@ -2080,6 +2248,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   bool shouldUnlinkPreliminaryObjectStubs() const {
     return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
   }
+
   bool shouldNotePreliminaryObjectStub() const {
     return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
   }
@@ -2137,10 +2306,12 @@ class MOZ_RAII PropertyTypeCheckInfo {
 
   bool needsTypeBarrier() const { return needsTypeBarrier_; }
   bool isSet() const { return group_ != nullptr; }
+
   ObjectGroup* group() const {
     MOZ_ASSERT(isSet());
     return group_;
   }
+
   jsid id() const {
     MOZ_ASSERT(isSet());
     return id_;
@@ -2179,6 +2350,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
     MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
     return ValOperandId(1);
   }
+
   ValOperandId rhsValueId() const {
     if (cacheKind_ == CacheKind::SetProp) {
       return ValOperandId(1);
@@ -2264,6 +2436,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   bool shouldUnlinkPreliminaryObjectStubs() const {
     return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
   }
+
   bool shouldNotePreliminaryObjectStub() const {
     return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
   }

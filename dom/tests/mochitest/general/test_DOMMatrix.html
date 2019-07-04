@@ -133,7 +133,6 @@ function main()
       testInverseInPlace,
       testTranslateInPlace,
       testScaleInPlace,
-      testScaleNonUniformInPlace,
       testRotateInPlace,
       testRotateFromVectorInPlace,
       testSkewXInPlace,
@@ -386,15 +385,6 @@ function testScaleInPlace()
   m.scaleSelf(0.5);
   roughCmpMatrix(m, [1, 0, 0, 0.5, 120, 100],
     "Unexpected result after scale");
-}
-
-// DOMMatrix scaleNonUniform(in float scaleFactorX, in float scaleFactorY);
-function testScaleNonUniformInPlace()
-{
-  var m = createMatrix(2, 0, 0, 1, 120, 100);
-  m.scaleNonUniformSelf(0.5, -3);
-  roughCmpMatrix(m, [1, 0, 0, -3, 120, 100],
-    "Unexpected result after scaleNonUniform");
 }
 
 // DOMMatrix rotate(in float angle);
@@ -682,7 +672,7 @@ function test3D()
   var m = new DOMMatrix()
   var m2 = new Matrix3D();
 
-  m.translateSelf(2,3,4).scaleNonUniformSelf(1.2, 2.3, 3.4, 0, 0, 0);
+  m.translateSelf(2,3,4).scaleSelf(1.2, 2.3, 3.4, 0, 0, 0);
   m2 = m2.multiply(m2.translate(2,3,4)).multiply(m2.scale(1.2, 2.3, 3.4)).swap();
 
   ok(CompareMatrix(m2, m), "translate + scale in 3d didn't match, expected: " + formatMatrix(m2.m) + ", got: " + formatMatrix(m));
@@ -698,7 +688,7 @@ function testParsing()
 {
   var m = new DOMMatrix("translate(10px, 20px) scale(.5, 2) rotate(45deg)");
   var m2 = new DOMMatrix();
-  m2.translateSelf(10, 20).scaleNonUniformSelf(.5,2).rotateSelf(45);
+  m2.translateSelf(10, 20).scaleSelf(.5,2).rotateSelf(45);
   ok(CompareDOMMatrix(m2, m), "string parsing didn't match");
 
   m = new DOMMatrix();

@@ -46,11 +46,11 @@ function AddCertChain(node, chain) {
  */
 function AddUsage(l10nId) {
   let verifyInfoBox = document.getElementById("verify_info_box");
-  let text = document.createXULElement("textbox");
+  let text = document.createElementNS("http://www.w3.org/1999/xhtml", "input");
   document.l10n.setAttributes(text, l10nId);
   text.setAttribute("data-l10n-attrs", "value");
   text.setAttribute("style", "margin: 2px 5px");
-  text.setAttribute("readonly", "true");
+  text.setAttribute("readonly", "readonly");
   text.setAttribute("class", "scrollfield");
   verifyInfoBox.appendChild(text);
 }

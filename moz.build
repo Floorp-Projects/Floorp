@@ -115,9 +115,6 @@ with Files("**/browser/tools/mozscreenshots/**"):
 with Files("**/devtools/shared/test-helpers/**"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
-with Files("**/toolkit/components/perf/**"):
-    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
-
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',
     'config/emptyvars.mk',

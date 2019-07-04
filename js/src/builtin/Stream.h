@@ -105,10 +105,12 @@ class ReadableStream : public NativeObject {
 
   bool locked() const;
 
-  static MOZ_MUST_USE ReadableStream* create(JSContext* cx,
-                                             HandleObject proto = nullptr);
+  static MOZ_MUST_USE ReadableStream* create(
+      JSContext* cx, void* nsISupportsObject_alreadyAddreffed = nullptr,
+      HandleObject proto = nullptr);
   static ReadableStream* createExternalSourceStream(
       JSContext* cx, JS::ReadableStreamUnderlyingSource* source,
+      void* nsISupportsObject_alreadyAddreffed = nullptr,
       HandleObject proto = nullptr);
 
   static bool constructor(JSContext* cx, unsigned argc, Value* vp);

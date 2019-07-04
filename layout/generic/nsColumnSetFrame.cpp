@@ -437,7 +437,7 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
 
 static void MarkPrincipalChildrenDirty(nsIFrame* aFrame) {
   for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
-    childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+    childFrame->MarkSubtreeDirty();
   }
 }
 
@@ -713,7 +713,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
               ? aReflowInput.mCBReflowInput->ComputedSize(wm)
               : aReflowInput.ComputedSize(wm);
 
-      if (reflowNext) child->AddStateBits(NS_FRAME_IS_DIRTY);
+      if (reflowNext) {
+        child->MarkSubtreeDirty();
+      }
 
       LogicalSize kidCBSize(wm, availSize.ISize(wm), computedSize.BSize(wm));
       ReflowInput kidReflowInput(PresContext(), aReflowInput, child, availSize,
@@ -855,7 +857,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       if (columnCount >= aConfig.mBalanceColCount - 1) {
         // No more columns allowed here. Stop.
         aStatus.SetNextInFlowNeedsReflow();
-        kidNextInFlow->AddStateBits(NS_FRAME_IS_DIRTY);
+        kidNextInFlow->MarkSubtreeDirty();
         // Move any of our leftover columns to our overflow list. Our
         // next-in-flow will eventually pick them up.
         const nsFrameList& continuationColumns =
@@ -901,7 +903,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // Otherwise, when we go to mark dirty bits on |child|'s ancestors we'll
     // bail out immediately, since it'll already have a dirty bit.
     for (; child; child = child->GetNextSibling()) {
-      child->AddStateBits(NS_FRAME_IS_DIRTY);
+      child->MarkSubtreeDirty();
     }
   }
 

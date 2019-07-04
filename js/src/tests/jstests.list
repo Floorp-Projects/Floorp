@@ -394,35 +394,6 @@ skip script test262/intl402/Collator/prototype/compare/compare-function-name.js
 skip script test262/intl402/DateTimeFormat/prototype/format/format-function-name.js
 skip script test262/intl402/NumberFormat/prototype/format/format-function-name.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1340307
-skip script test262/language/module-code/instn-resolve-empty-export.js
-skip script test262/language/module-code/instn-resolve-empty-import.js
-skip script test262/language/module-code/instn-resolve-err-reference.js
-skip script test262/language/module-code/instn-resolve-order-depth.js
-skip script test262/language/module-code/instn-resolve-order-src.js
-skip script test262/language/module-code/parse-err-reference.js
-skip script test262/language/expressions/postfix-increment/target-cover-yieldexpr.js
-skip script test262/language/expressions/postfix-increment/target-newtarget.js
-skip script test262/language/expressions/postfix-increment/target-cover-newtarget.js
-skip script test262/language/expressions/postfix-increment/non-simple.js
-skip script test262/language/expressions/postfix-decrement/target-cover-yieldexpr.js
-skip script test262/language/expressions/postfix-decrement/target-newtarget.js
-skip script test262/language/expressions/postfix-decrement/target-cover-newtarget.js
-skip script test262/language/expressions/postfix-decrement/non-simple.js
-skip script test262/language/expressions/prefix-increment/target-cover-yieldexpr.js
-skip script test262/language/expressions/prefix-increment/target-newtarget.js
-skip script test262/language/expressions/prefix-increment/target-cover-newtarget.js
-skip script test262/language/expressions/prefix-increment/non-simple.js
-skip script test262/language/expressions/prefix-decrement/target-cover-yieldexpr.js
-skip script test262/language/expressions/prefix-decrement/target-newtarget.js
-skip script test262/language/expressions/prefix-decrement/target-cover-newtarget.js
-skip script test262/language/expressions/prefix-decrement/non-simple.js
-skip script test262/language/asi/S7.9_A5.7_T1.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-1-update-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-2-update-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-3-update-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-4-update-expression.js
-
 # Dependent on evalInWorker, setSharedArrayBuffer, and
 # getSharedArrayBuffer, plus the test cases can't actually run in the
 # browser even if that were fixed, https://bugzil.la/1349863
@@ -517,49 +488,6 @@ skip script test262/built-ins/Proxy/construct/return-not-object-throws-null-real
 skip script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
 skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1556818
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-5-lhs-equals-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-12-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-10-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-16-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-14-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-9-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-6-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-13-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-11-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-17-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-8-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-15-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-assignmenttargettype-syntax-error-7-lhs-assignment-operator-assignment-expression.js
-skip script test262/language/expressions/async-function/early-errors-expression-not-simple-assignment-target.js
-skip script test262/language/expressions/async-generator/early-errors-expression-not-simple-assignment-target.js
-skip script test262/language/expressions/await/early-errors-await-not-simple-assignment-target.js
-skip script test262/language/expressions/assignment/non-simple-target.js
-skip script test262/language/expressions/compound-assignment/mod-div-non-simple.js
-skip script test262/language/expressions/compound-assignment/btws-and-non-simple.js
-skip script test262/language/expressions/compound-assignment/left-shift-non-simple.js
-skip script test262/language/expressions/compound-assignment/add-non-simple.js
-skip script test262/language/expressions/compound-assignment/u-right-shift-non-simple.js
-skip script test262/language/expressions/compound-assignment/mult-non-simple.js
-skip script test262/language/expressions/compound-assignment/right-shift-non-simple.js
-skip script test262/language/expressions/compound-assignment/div-non-simple.js
-skip script test262/language/expressions/compound-assignment/btws-or-non-simple.js
-skip script test262/language/expressions/compound-assignment/btws-xor-non-simple.js
-skip script test262/language/expressions/compound-assignment/subtract-non-simple.js
-skip script test262/language/expressions/assignment/target-cover-yieldexpr.js
-skip script test262/language/expressions/assignment/target-newtarget.js
-skip script test262/language/expressions/assignment/target-string.js
-skip script test262/language/expressions/assignment/target-boolean.js
-skip script test262/language/expressions/assignment/target-null.js
-skip script test262/language/expressions/assignment/target-number.js
-skip script test262/language/expressions/assignment/target-cover-newtarget.js
-skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-assignment-expr.js
-skip script test262/language/expressions/this/S11.1.1_A1.js
-skip script test262/language/types/boolean/S8.3_A2.2.js
-skip script test262/language/types/boolean/S8.3_A2.1.js
-skip script test262/language/types/reference/S8.7.2_A1_T1.js
-skip script test262/language/types/reference/S8.7.2_A1_T2.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1560300
 skip script test262/built-ins/Promise/all/invoke-resolve-get-error-close.js

@@ -88,7 +88,7 @@ already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService(
     speechRecognitionService = DEFAULT_RECOGNITION_SERVICE;
   }
 
-  if (StaticPrefs::MediaWebspeechTextFakeRecognitionService()) {
+  if (StaticPrefs::media_webspeech_test_fake_recognition_service()) {
     speechRecognitionServiceCID =
         NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake";
   } else {
@@ -142,7 +142,7 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
       mMaxAlternatives(1) {
   SR_LOG("created SpeechRecognition");
 
-  if (StaticPrefs::MediaWebspeechTestEnable()) {
+  if (StaticPrefs::media_webspeech_test_enable()) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     obs->AddObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC, false);
     obs->AddObserver(this, SPEECH_RECOGNITION_TEST_END_TOPIC, false);
@@ -194,8 +194,8 @@ bool SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal) {
       (speechRecognition == nsIPermissionManager::ALLOW_ACTION);
 
   return (hasPermission ||
-          StaticPrefs::MediaWebspeechRecognitionForceEnable() ||
-          StaticPrefs::MediaWebspeechTestEnable()) &&
+          StaticPrefs::media_webspeech_recognition_force_enable() ||
+          StaticPrefs::media_webspeech_test_enable()) &&
          StaticPrefs::media_webspeech_recognition_enable();
 }
 
@@ -608,7 +608,7 @@ SpeechRecognition::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     obs->RemoveObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC);
     obs->RemoveObserver(this, SPEECH_RECOGNITION_TEST_END_TOPIC);
-  } else if (StaticPrefs::MediaWebspeechTextFakeFsmEvents() &&
+  } else if (StaticPrefs::media_webspeech_test_fake_fsm_events() &&
              !strcmp(aTopic, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC)) {
     ProcessTestEventRequest(aSubject, nsDependentString(aData));
   }
@@ -626,7 +626,7 @@ void SpeechRecognition::ProcessTestEventRequest(nsISupports* aSubject,
         SpeechRecognitionErrorCode::Audio_capture,  // TODO different codes?
         NS_LITERAL_STRING("AUDIO_ERROR test event"));
   } else {
-    NS_ASSERTION(StaticPrefs::MediaWebspeechTextFakeRecognitionService(),
+    NS_ASSERTION(StaticPrefs::media_webspeech_test_fake_recognition_service(),
                  "Got request for fake recognition service event, but "
                  "media.webspeech.test.fake_recognition_service is unset");
 

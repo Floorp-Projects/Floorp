@@ -81,7 +81,7 @@ const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
  *
  * Notice: L10nRegistry is primarily an asynchronous API, but
  * it does provide a synchronous version of it's main method
- * for use by the `LocalizationSync` class.
+ * for use  by the `Localization` class when in `sync` state.
  * This API should be only used in very specialized cases and
  * the uses should be reviewed by the toolkit owner/peer.
  */

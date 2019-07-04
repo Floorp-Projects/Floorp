@@ -66,10 +66,10 @@ var assignment_ops = [
   "*=", "/=", "%=",
 ];
 
-var invalid_strict_funs_referror = assignment_ops.map(op => ("'use strict'\n " + op + " 'not'"));
+var invalid_strict_funs_syntax_error = assignment_ops.map(op => ("'use strict'\n " + op + " 'not'"));
 
 // assignment with string literal as LHS is an early error, therefore we
-// can only test for ReferenceError
-for (var f of invalid_strict_funs_referror) {
-  assertThrowsInstanceOf(function() { Function(f) }, ReferenceError);
+// can only test for SyntaxError
+for (var f of invalid_strict_funs_syntax_error) {
+  assertThrowsInstanceOf(function() { Function(f) }, SyntaxError);
 }

@@ -7023,49 +7023,59 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (aDisplayListBuilder->GetNeedsDisplayListBuild(mRenderRoot) ||
-      !mBuiltWRCommands) {
-    if (aBuilder.GetRenderRoot() == mRenderRoot) {
-      nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, aSc,
-                                                 aManager, aDisplayListBuilder);
-    } else {
-      RefPtr<WebRenderRenderRootData> userData =
-          aManager->CommandBuilder()
-              .CreateOrRecycleWebRenderUserData<WebRenderRenderRootData>(
-                  this, aBuilder.GetRenderRoot());
-      mBoundary = Some(userData->EnsureHasBoundary(mRenderRoot));
 
-      WebRenderCommandBuilder::ScrollDataBoundaryWrapper wrapper(
-          aManager->CommandBuilder(), *mBoundary);
+  // It's important to get the userData here even in the early-return case,
+  // because this has the important side-effect of marking the user data "used"
+  // so it doesn't get discarded at the end of the transaction.
+  RefPtr<WebRenderRenderRootData> userData =
+      aManager->CommandBuilder()
+          .CreateOrRecycleWebRenderUserData<WebRenderRenderRootData>(
+              this, aBuilder.GetRenderRoot());
+  // Technically the next line is redundant but maybe it will stop people who
+  // don't read comments from accidentally moving the above line of code back
+  // down below the early-return.
+  userData->SetUsed(true);
 
-      aBuilder.SetSendSubBuilderDisplayList(mRenderRoot);
-      wr::DisplayListBuilder& builder = aBuilder.SubBuilder(mRenderRoot);
-      wr::IpcResourceUpdateQueue& resources = aResources.SubQueue(mRenderRoot);
-
-      wr::StackingContextParams params;
-      params.clip =
-          wr::WrStackingContextClip::ClipChain(builder.CurrentClipChainId());
-      LayoutDeviceRect rrRect =
-          aDisplayListBuilder->GetRenderRootRect(mRenderRoot);
-      LayoutDevicePoint scOrigin = aSc.GetOrigin();
-      // Subtract the render root rect from this, as it already acts as the
-      // origin for our whole display list in WebRender (via SetDocumentView).
-      // However, we can't simply ignore the value of aSc.GetOrigin(), even
-      // though they will often be the same. This is because there might be
-      // multiple cousin nsDisplayRenderRoots in a tree of nsDisplayItems, and
-      // the RenderRootRect will be the union of their areas.
-      scOrigin.x -= rrRect.x;
-      scOrigin.y -= rrRect.y;
-      StackingContextHelper sc(
-          aManager->CommandBuilder().GetRootStackingContextHelper(mRenderRoot),
-          nullptr, nullptr, nullptr, builder, params,
-          LayoutDeviceRect(scOrigin, LayoutDeviceSize()));
-
-      nsDisplayWrapList::CreateWebRenderCommands(builder, resources, sc,
-                                                 aManager, aDisplayListBuilder);
-    }
-    mBuiltWRCommands = true;
+  if (!aDisplayListBuilder->GetNeedsDisplayListBuild(mRenderRoot) &&
+      mBuiltWRCommands) {
+    return true;
   }
+  if (aBuilder.GetRenderRoot() == mRenderRoot) {
+    nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, aSc,
+                                               aManager, aDisplayListBuilder);
+  } else {
+    mBoundary = Some(userData->EnsureHasBoundary(mRenderRoot));
+
+    WebRenderCommandBuilder::ScrollDataBoundaryWrapper wrapper(
+        aManager->CommandBuilder(), *mBoundary);
+
+    aBuilder.SetSendSubBuilderDisplayList(mRenderRoot);
+    wr::DisplayListBuilder& builder = aBuilder.SubBuilder(mRenderRoot);
+    wr::IpcResourceUpdateQueue& resources = aResources.SubQueue(mRenderRoot);
+
+    wr::StackingContextParams params;
+    params.clip =
+        wr::WrStackingContextClip::ClipChain(builder.CurrentClipChainId());
+    LayoutDeviceRect rrRect =
+        aDisplayListBuilder->GetRenderRootRect(mRenderRoot);
+    LayoutDevicePoint scOrigin = aSc.GetOrigin();
+    // Subtract the render root rect from this, as it already acts as the
+    // origin for our whole display list in WebRender (via SetDocumentView).
+    // However, we can't simply ignore the value of aSc.GetOrigin(), even
+    // though they will often be the same. This is because there might be
+    // multiple cousin nsDisplayRenderRoots in a tree of nsDisplayItems, and
+    // the RenderRootRect will be the union of their areas.
+    scOrigin.x -= rrRect.x;
+    scOrigin.y -= rrRect.y;
+    StackingContextHelper sc(
+        aManager->CommandBuilder().GetRootStackingContextHelper(mRenderRoot),
+        nullptr, nullptr, nullptr, builder, params,
+        LayoutDeviceRect(scOrigin, LayoutDeviceSize()));
+
+    nsDisplayWrapList::CreateWebRenderCommands(builder, resources, sc,
+                                               aManager, aDisplayListBuilder);
+  }
+  mBuiltWRCommands = true;
   return true;
 }
 

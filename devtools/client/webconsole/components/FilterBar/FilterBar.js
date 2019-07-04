@@ -328,9 +328,11 @@ class FilterBar extends Component {
       children.push(dom.div(
         {
           className: "devtools-toolbar split-console-close-button-wrapper",
+          key: "wrapper",
         },
         dom.button({
           id: "split-console-close-button",
+          key: "split-console-close-button",
           className: "devtools-button",
           title: l10n.getStr("webconsole.closeSplitConsoleButton.tooltip"),
           onClick: () => {

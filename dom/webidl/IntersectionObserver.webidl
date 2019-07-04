@@ -26,7 +26,7 @@ interface IntersectionObserverEntry {
 };
 
 [Constructor(IntersectionCallback intersectionCallback,
-             optional IntersectionObserverInit options),
+             optional IntersectionObserverInit options = {}),
  Pref="dom.IntersectionObserver.enabled"]
 interface IntersectionObserver {
   [Constant]

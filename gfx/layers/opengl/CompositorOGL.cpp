@@ -786,6 +786,7 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)mGLContext.get());
+  mGLContext->MakeCurrent();  // DestroyUnused can change the current context!
 #endif
 
   // Default blend function implements "OVER"

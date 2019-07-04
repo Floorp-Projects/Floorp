@@ -19,7 +19,7 @@ dictionary AudioWorkletNodeOptions : AudioNodeOptions {
 };
 
 [SecureContext, Pref="dom.audioworklet.enabled",
- Constructor (BaseAudioContext context, DOMString name, optional AudioWorkletNodeOptions options)]
+ Constructor (BaseAudioContext context, DOMString name, optional AudioWorkletNodeOptions options = {})]
 interface AudioWorkletNode : AudioNode {
     [Throws]
     readonly        attribute AudioParamMap              parameters;

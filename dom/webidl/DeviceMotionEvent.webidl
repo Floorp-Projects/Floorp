@@ -20,7 +20,7 @@ interface DeviceRotationRate {
   readonly attribute double? gamma;
 };
 
-[Pref="device.sensors.motion.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceMotionEventInit eventInitDict)]
+[Pref="device.sensors.motion.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceMotionEventInit eventInitDict = {})]
 interface DeviceMotionEvent : Event {
   readonly attribute DeviceAcceleration? acceleration;
   readonly attribute DeviceAcceleration? accelerationIncludingGravity;
@@ -41,12 +41,12 @@ dictionary DeviceRotationRateInit {
 };
 
 dictionary DeviceMotionEventInit : EventInit {
-  // FIXME: bug 1493860: should this "= null" be here?
-  DeviceAccelerationInit acceleration = null;
-  // FIXME: bug 1493860: should this "= null" be here?
-  DeviceAccelerationInit accelerationIncludingGravity = null;
-  // FIXME: bug 1493860: should this "= null" be here?
-  DeviceRotationRateInit rotationRate = null;
+  // FIXME: bug 1493860: should this "= {}" be here?
+  DeviceAccelerationInit acceleration = {};
+  // FIXME: bug 1493860: should this "= {}" be here?
+  DeviceAccelerationInit accelerationIncludingGravity = {};
+  // FIXME: bug 1493860: should this "= {}" be here?
+  DeviceRotationRateInit rotationRate = {};
   double? interval = null;
 };
 
@@ -55,8 +55,8 @@ partial interface DeviceMotionEvent {
   void initDeviceMotionEvent(DOMString type,
                              optional boolean canBubble = false,
                              optional boolean cancelable = false,
-                             optional DeviceAccelerationInit acceleration,
-                             optional DeviceAccelerationInit accelerationIncludingGravity,
-                             optional DeviceRotationRateInit rotationRate,
+                             optional DeviceAccelerationInit acceleration = {},
+                             optional DeviceAccelerationInit accelerationIncludingGravity = {},
+                             optional DeviceRotationRateInit rotationRate = {},
                              optional double? interval = null);
 };

@@ -168,7 +168,7 @@ class LazyLogModule final {
   explicit constexpr LazyLogModule(const char* aLogName)
       : mLogName(aLogName), mLog(nullptr) {}
 
-  operator LogModule*() {
+  MOZ_NEVER_INLINE_DEBUG operator LogModule*() {
     // NB: The use of an atomic makes the reading and assignment of mLog
     //     thread-safe. There is a small chance that mLog will be set more
     //     than once, but that's okay as it will be set to the same LogModule

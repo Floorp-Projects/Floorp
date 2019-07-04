@@ -41,6 +41,13 @@ typedef struct sslServerCertStr {
     ** timestamps item.
     */
     SECItem signedCertTimestamps;
+
+    /* The delegated credential (DC) to send to clients who indicate support for
+     * the ietf-draft-tls-subcerts extension.
+     */
+    SECItem delegCred;
+    /* The key pair used to sign the handshake when serving a DC. */
+    sslKeyPair *delegCredKeyPair;
 } sslServerCert;
 
 #define SSL_CERT_IS(c, t) ((c)->authTypes & (1 << (t)))

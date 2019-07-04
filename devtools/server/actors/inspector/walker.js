@@ -12,6 +12,9 @@ const {walkerSpec} = require("devtools/shared/specs/inspector");
 const {LongStringActor} = require("devtools/server/actors/string");
 const InspectorUtils = require("InspectorUtils");
 const ReplayInspector = require("devtools/server/actors/replay/inspector");
+const {
+  EXCLUDED_LISTENER,
+} = require("devtools/server/actors/inspector/constants");
 
 loader.lazyRequireGetter(this, "getFrameElement", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isAfterPseudoElement", "devtools/shared/layout/utils", true);
@@ -160,9 +163,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._retainedOrphans = new Set();
 
     this.onNodeInserted = this.onNodeInserted.bind(this);
+    this.onNodeInserted[EXCLUDED_LISTENER] = true;
     this.onNodeRemoved = this.onNodeRemoved.bind(this);
+    this.onNodeRemoved[EXCLUDED_LISTENER] = true;
     this.onAttributeModified = this.onAttributeModified.bind(this);
+    this.onAttributeModified[EXCLUDED_LISTENER] = true;
     this.onNodeRemovedFromDocument = this.onNodeRemovedFromDocument.bind(this);
+    this.onNodeRemovedFromDocument[EXCLUDED_LISTENER] = true;
+
     this.onMutations = this.onMutations.bind(this);
     this.onSlotchange = this.onSlotchange.bind(this);
     this.onShadowrootattached = this.onShadowrootattached.bind(this);

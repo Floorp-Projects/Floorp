@@ -228,7 +228,9 @@ var gURLBarHandler = {
    * binding is only applied before the initial xul layout.
    */
   formatValue() {
-    if (typeof this.textbox.formatValue == "function") {
+    if (this.quantumbar) {
+      this.urlbar.formatValue();
+    } else if (typeof this.textbox.formatValue == "function") {
       this.textbox.formatValue();
     }
   },
@@ -4897,6 +4899,8 @@ var XULBrowserWindow = {
       BookmarkingUI.onLocationChange();
 
       gIdentityHandler.onLocationChange();
+
+      gProtectionsHandler.onLocationChange();
 
       BrowserPageActions.onLocationChange();
 

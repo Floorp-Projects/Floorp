@@ -19,22 +19,3 @@ linux64-cctools-port:
         toolchain-artifact: public/build/cctools.tar.xz
     toolchains:
         - linux64-clang-8
-
-macosx64-cctools-port:
-    description: "cctools-port toolchain build"
-    treeherder:
-        symbol: TM(cctools)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
-    run-on-projects:
-        - trunk
-        - try
-    run:
-        script: build-cctools-port-macosx.sh
-        tooltool-downloads: internal
-        toolchain-artifact: public/build/cctools.tar.bz2
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-node

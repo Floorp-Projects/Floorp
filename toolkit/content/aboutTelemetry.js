@@ -381,7 +381,7 @@ var PingPicker = {
     delete ping.payload.keyedHistograms;
 
     // augment ping payload with event telemetry
-    let eventSnapshot = Telemetry.snapshotEvents(Telemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    let eventSnapshot = Telemetry.snapshotEvents(Telemetry.DATASET_PRERELEASE_CHANNELS, false);
     for (let process of Object.keys(eventSnapshot)) {
       if (process in ping.payload.processes) {
         ping.payload.processes[process].events = eventSnapshot[process].filter(e => !e[1].startsWith("telemetry.test"));

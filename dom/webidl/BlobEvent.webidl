@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional BlobEventInit eventInitDict)]
+[Constructor(DOMString type, optional BlobEventInit eventInitDict = {})]
 interface BlobEvent : Event
 {
   readonly attribute Blob? data;

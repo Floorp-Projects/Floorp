@@ -477,6 +477,7 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
         let requests: Vec<Job> = requests.into_iter().map(|params| {
             let command = &self.blob_commands[&params.request.key];
             let blob = Arc::clone(&command.data);
+            assert!(params.descriptor.rect.size.width > 0 && params.descriptor.rect.size.height  > 0);
             Job {
                 request: params.request,
                 descriptor: params.descriptor,
@@ -522,6 +523,7 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
         DirtyRect::Partial(rect) => Some(rect),
         DirtyRect::All => None,
     };
+    assert!(descriptor.rect.size.width > 0 && descriptor.rect.size.height  > 0);
 
     let result = unsafe {
         if wr_moz2d_render_cb(

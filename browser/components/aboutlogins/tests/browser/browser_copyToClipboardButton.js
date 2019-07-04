@@ -19,8 +19,7 @@ add_task(async function test() {
       loginItem.setLogin(Cu.cloneInto(login, content));
 
       // Lower the timeout for the test.
-      let copyButton = loginItem.shadowRoot.querySelector(".copy-username-button");
-      Object.defineProperty(copyButton.constructor, "BUTTON_RESET_TIMEOUT", {
+      Object.defineProperty(loginItem.constructor, "COPY_BUTTON_RESET_TIMEOUT", {
           configurable: true,
           writable: true,
           value: 1000,
@@ -40,9 +39,8 @@ add_task(async function test() {
         await ContentTask.spawn(browser, testObj, async function(aTestObj) {
           let loginItem = content.document.querySelector("login-item");
           let copyButton = loginItem.shadowRoot.querySelector(aTestObj.copyButtonSelector);
-          let innerButton = copyButton.shadowRoot.querySelector("button");
           info("Clicking 'copy' button");
-          innerButton.click();
+          copyButton.click();
         });
       });
       ok(true, testObj.expectedValue + " is on clipboard now");

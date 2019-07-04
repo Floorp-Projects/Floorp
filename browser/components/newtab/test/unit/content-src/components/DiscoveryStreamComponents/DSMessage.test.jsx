@@ -1,13 +1,13 @@
 import {DSMessage} from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
 import React from "react";
 import {SafeAnchor} from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<DSMessage>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<DSMessage />);
+    wrapper = shallow(<DSMessage />);
   });
 
   it("should render", () => {

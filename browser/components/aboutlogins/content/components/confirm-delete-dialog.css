@@ -1,0 +1,94 @@
+:host {
+  /* these variable values come from about:preferences */
+  --in-content-dialogtitle-background: #f1f1f1;
+  --in-content-dialogtitle-border: #c1c1c1;
+}
+
+.overlay {
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* TODO: this color is used in the about:preferences overlay, but
+           why isn't it declared as a variable? */
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  width: 50%;
+  min-width: 250px;
+  max-width: 500px;
+  height: 40%;
+  min-height: 200px;
+  margin: auto;
+  background: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+}
+
+.title-bar {
+  position: relative;
+  flex: 0 1 auto;
+  text-align: center;
+  background-color: var(--in-content-dialogtitle-background);
+  padding: 5px;
+  border-bottom: 1px solid var(--in-content-dialogtitle-border);
+}
+
+.title {
+  font-size: .9em;
+  line-height: 1.8em;
+  font-weight: 600;
+  -moz-user-select: none;
+  margin: 0;
+}
+
+button.dismiss-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 8px 16px;
+  padding: 0;
+  background: url(chrome://global/skin/icons/close.svg) no-repeat center;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0;
+}
+
+button.dismiss-button:dir(rtl) {
+  right: auto;
+  left: 0;
+}
+
+.content {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.buttons {
+  flex: 0 1 auto;
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttons button {
+  margin: 0;
+}
+
+.content,
+.buttons {
+  margin: 16px;
+}

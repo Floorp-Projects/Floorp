@@ -31,7 +31,7 @@ namespace InspectorUtils {
       unsigned long selectorIndex,
       optional [TreatNullAs=EmptyString] DOMString pseudo = "");
   boolean isInheritedProperty(DOMString property);
-  sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options);
+  sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
   [Throws] sequence<DOMString> getCSSValuesForProperty(DOMString property);
   [Throws] DOMString rgbToColorName(octet r, octet g, octet b);

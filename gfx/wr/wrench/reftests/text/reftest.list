@@ -71,3 +71,4 @@ skip_on(android,emulator) == shadow-image.yaml shadow-solid-ref.yaml  # Fails on
 skip_on(android,emulator) options(disable-aa) == snap-clip.yaml snap-clip-ref.yaml  # Fails on Android emulator
 platform(linux) == perspective-clip.yaml perspective-clip.png
 fuzzy(1,6) options(disable-subpixel) == raster-space-snap.yaml raster-space-snap-ref.yaml
+# == intermediate-transform.yaml intermediate-transform-ref.yaml # fails because of AA inavailable with an intermediate surface
