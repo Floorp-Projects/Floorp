@@ -1,4 +1,4 @@
-import {mountWithIntl} from "test/unit/utils";
+import {mount} from "enzyme";
 import React from "react";
 import {ReturnToAMO} from "content-src/asrouter/templates/ReturnToAMO/ReturnToAMO";
 
@@ -28,7 +28,7 @@ describe("<ReturnToAMO>", () => {
     it("should send an IMPRESSION on mount", () => {
       assert.notCalled(sendUserActionTelemetryStub);
 
-      wrapper = mountWithIntl(<ReturnToAMO onReady={onReady}
+      wrapper = mount(<ReturnToAMO onReady={onReady}
         dispatch={dispatch}
         content={content}
         onBlock={sandbox.stub()}
@@ -46,7 +46,7 @@ describe("<ReturnToAMO>", () => {
 
   describe("mounted", () => {
     beforeEach(() => {
-      wrapper = mountWithIntl(<ReturnToAMO onReady={onReady}
+      wrapper = mount(<ReturnToAMO onReady={onReady}
         dispatch={dispatch}
         content={content}
         onBlock={sandbox.stub()}

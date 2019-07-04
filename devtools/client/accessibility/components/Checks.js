@@ -12,7 +12,6 @@ const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 const List = createFactory(require("devtools/client/shared/components/List").List);
 const ColorContrastCheck =
   createFactory(require("./ColorContrastAccessibility").ColorContrastCheck);
-const TextLabelCheck = createFactory(require("./TextLabelCheck"));
 const { L10N } = require("../utils/l10n");
 
 const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
@@ -38,10 +37,6 @@ class Checks extends Component {
 
   [AUDIT_TYPE.CONTRAST](contrastRatio) {
     return ColorContrastCheck(contrastRatio);
-  }
-
-  [AUDIT_TYPE.TEXT_LABEL](textLabelCheck) {
-    return TextLabelCheck(textLabelCheck);
   }
 
   render() {
