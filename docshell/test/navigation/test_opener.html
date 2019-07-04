@@ -19,11 +19,11 @@ window.onload = function() {
   navigateByForm("window2");
   navigateByHyperlink("window3");
 
-  xpcWaitForFinishedFrames(function() {
-    isNavigated(window0, "Should be able to navigate popup by setting location.");
-    isNavigated(window1, "Should be able to navigate popup by calling window.open.");
-    isNavigated(window2, "Should be able to navigate popup by submitting form.");
-    isNavigated(window3, "Should be able to navigate popup by targeted hyperlink.");
+  xpcWaitForFinishedFrames(async function() {
+    await isNavigated(window0, "Should be able to navigate popup by setting location.");
+    await isNavigated(window1, "Should be able to navigate popup by calling window.open.");
+    await isNavigated(window2, "Should be able to navigate popup by submitting form.");
+    await isNavigated(window3, "Should be able to navigate popup by targeted hyperlink.");
 
     window0.close();
     window1.close();

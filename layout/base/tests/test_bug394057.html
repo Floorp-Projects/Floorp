@@ -63,12 +63,12 @@ if (serifWidth == monospaceWidth) {
 isnot(serifWidth, monospaceWidth,
       "can't find serif and monospace fonts of different width");
 
-SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', serifFonts[serifIdx]]]}, step2);
+SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', serifFonts[serifIdx]]]}).then(step2);
 
 var serifWidthFromPref;
 function step2() {
     serifWidthFromPref = tableElement.offsetWidth;
-    SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', monospaceFonts[monospaceIdx]]]}, step3);
+    SpecialPowers.pushPrefEnv({'set': [['font.name.serif.x-western', monospaceFonts[monospaceIdx]]]}).then(step3);
 }
 var monospaceWidthFromPref;
 function step3() {

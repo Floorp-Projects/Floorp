@@ -24,12 +24,12 @@ SpecialPowers.addPermission("trackingprotection",
                             Ci.nsIPermissionManager.ALLOW_ACTION,
                             { url: "https://allowlisted.example.com" });
 
-function clearPermissions() {
-  SpecialPowers.removePermission("trackingprotection",
-                                 { url: "https://allowlisted.example.com" });
-  ok(!SpecialPowers.testPermission("trackingprotection",
-                                   Ci.nsIPermissionManager.ALLOW_ACTION,
-                                   { url: "https://allowlisted.example.com" }));
+async function clearPermissions() {
+  await SpecialPowers.removePermission("trackingprotection",
+                                       { url: "https://allowlisted.example.com" });
+  ok(!await SpecialPowers.testPermission("trackingprotection",
+                                         Ci.nsIPermissionManager.ALLOW_ACTION,
+                                         { url: "https://allowlisted.example.com" }));
 }
 
 SpecialPowers.pushPrefEnv(
