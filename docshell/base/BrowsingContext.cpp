@@ -16,6 +16,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -88,6 +89,12 @@ LogModule* BrowsingContext::GetLog() { return gBrowsingContextLog; }
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::Get(uint64_t aId) {
   return do_AddRef(sBrowsingContexts->Get(aId));
+}
+
+/* static */
+already_AddRefed<BrowsingContext> BrowsingContext::GetFromWindow(
+    WindowProxyHolder& aProxy) {
+  return do_AddRef(aProxy.get());
 }
 
 CanonicalBrowsingContext* BrowsingContext::Canonical() {
@@ -549,6 +556,45 @@ nsISupports* BrowsingContext::GetParentObject() const {
 JSObject* BrowsingContext::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return BrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+bool BrowsingContext::WriteStructuredClone(JSContext* aCx,
+                                           JSStructuredCloneWriter* aWriter,
+                                           StructuredCloneHolder* aHolder) {
+  return (JS_WriteUint32Pair(aWriter, SCTAG_DOM_BROWSING_CONTEXT, 0) &&
+          JS_WriteUint32Pair(aWriter, uint32_t(Id()), uint32_t(Id() >> 32)));
+}
+
+/* static */
+JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
+                                               JSStructuredCloneReader* aReader,
+                                               StructuredCloneHolder* aHolder) {
+  uint32_t idLow = 0;
+  uint32_t idHigh = 0;
+  if (!JS_ReadUint32Pair(aReader, &idLow, &idHigh)) {
+    return nullptr;
+  }
+  uint64_t id = uint64_t(idHigh) << 32 | idLow;
+
+  // Note: Do this check after reading our ID data. Returning null will abort
+  // the decode operation anyway, but we should at least be as safe as possible.
+  if (NS_WARN_IF(!NS_IsMainThread())) {
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "We shouldn't be trying to decode a BrowsingContext "
+                          "on a background thread.");
+    return nullptr;
+  }
+
+  JS::RootedValue val(aCx, JS::NullValue());
+  // We'll get rooting hazard errors from the RefPtr destructor if it isn't
+  // destroyed before we try to return a raw JSObject*, so create it in its own
+  // scope.
+  if (RefPtr<BrowsingContext> context = Get(id)) {
+    if (!GetOrCreateDOMReflector(aCx, context, &val) || !val.isObject()) {
+      return nullptr;
+    }
+  }
+  return val.toObjectOrNull();
 }
 
 void BrowsingContext::NotifyUserGestureActivation() {
