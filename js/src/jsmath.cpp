@@ -615,18 +615,6 @@ bool js::math_sin(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_sin_impl>(cx, argc, vp);
 }
 
-void js::math_sincos_impl(double x, double* sin, double* cos) {
-  AutoUnsafeCallWithABI unsafe;
-#if defined(HAVE_SINCOS)
-  sincos(x, sin, cos);
-#elif defined(HAVE___SINCOS)
-  __sincos(x, sin, cos);
-#else
-  *sin = js::math_sin_impl(x);
-  *cos = js::math_cos_impl(x);
-#endif
-}
-
 double js::math_sqrt_impl(double x) {
   AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
   return sqrt(x);
