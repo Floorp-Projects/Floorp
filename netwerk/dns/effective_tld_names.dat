@@ -11013,6 +11013,7 @@ cloudera.site
 
 // Cloudflare, Inc. : https://www.cloudflare.com/
 // Submitted by Jake Riesterer <publicsuffixlist@cloudflare.com>
+trycloudflare.com
 workers.dev
 
 // Clovyr : https://clovyr.io
@@ -11894,6 +11895,11 @@ caa.li
 ua.rs
 conf.se
 
+// Handshake : https://handshake.org
+// Submitted by Mike Damm <md@md.vc>
+hs.zone
+hs.run
+
 // Hashbang : https://hashbang.sh
 hashbang.sh
 
@@ -12007,6 +12013,7 @@ ipifony.net
 // Submitted by Kim-Alexander Brodowski <kim.brodowski@iserv.eu>
 mein-iserv.de
 test-iserv.de
+iserv.dev
 
 // I-O DATA DEVICE, INC. : http://www.iodata.com/
 // Submitted by Yuji Minagawa <domains-admin@iodata.jp>
@@ -12394,12 +12401,14 @@ nom.al
 nym.by
 nym.bz
 nom.cl
+nym.ec
 nom.gd
 nom.ge
 nom.gl
 nym.gr
 nom.gt
 nym.gy
+nym.hk
 nom.hn
 nym.ie
 nom.im
@@ -12539,6 +12548,14 @@ protonet.io
 chirurgiens-dentistes-en-france.fr
 byen.site
 
+// pubtls.org: https://www.pubtls.org
+// Submitted by Kor Nielsen <kor@pubtls.org>
+pubtls.org
+
+// Qualifio : https://qualifio.com/
+// Submitted by Xavier De Cock <xdecock@gmail.com>
+qualifioapp.com
+
 // Redstar Consultants : https://www.redstarconsultants.com/
 // Submitted by Jons Slemmer <jons@redstarconsultants.com>
 instantcloud.cn
@@ -12661,6 +12678,10 @@ shiftedit.io
 // Shopblocks : http://www.shopblocks.com/
 // Submitted by Alex Bowers <alex@shopblocks.com>
 myshopblocks.com
+
+// Shopit : https://www.shopitcommerce.com/
+// Submitted by Craig McMahon <craig@shopitcommerce.com>
+shopitsite.com
 
 // Siemens Mobility GmbH
 // Submitted by Oliver Graebner <security@mo-siemens.io>
