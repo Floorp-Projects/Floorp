@@ -714,12 +714,12 @@ class ZoneHeapThreshold : public ZoneThreshold {
 // GC based on malloc data.
 class ZoneMallocThreshold : public ZoneThreshold {
  public:
-  void updateAfterGC(size_t lastBytes, const GCSchedulingTunables& tunables,
-                     const GCSchedulingState& state, const AutoLockGC& lock);
+  void updateAfterGC(size_t lastBytes, size_t baseBytes,
+                     const AutoLockGC& lock);
 
  private:
   static size_t computeZoneTriggerBytes(float growthFactor, size_t lastBytes,
-                                        const GCSchedulingTunables& tunables,
+                                        size_t baseBytes,
                                         const AutoLockGC& lock);
 };
 
@@ -727,9 +727,9 @@ class ZoneMallocThreshold : public ZoneThreshold {
 
 // Counts memory associated with GC things in a zone.
 //
-// In debug builds, this records details of the cell the memory allocations is
-// associated with to check the correctness of the information provided. In opt
-// builds it's just a counter.
+// This records details of the cell the memory allocations is associated with to
+// check the correctness of the information provided. This is not present in opt
+// builds.
 class MemoryTracker {
  public:
   MemoryTracker();

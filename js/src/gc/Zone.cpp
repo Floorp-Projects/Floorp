@@ -36,10 +36,7 @@ ZoneAllocator::ZoneAllocator(JSRuntime* rt)
       zoneSize(&rt->gc.heapSize),
       gcMallocBytes(nullptr) {
   AutoLockGC lock(rt);
-  threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables,
-                          rt->gc.schedulingState, lock);
-  gcMallocThreshold.updateAfterGC(8192, rt->gc.tunables, rt->gc.schedulingState,
-                                  lock);
+  updateAllGCThresholds(rt->gc, GC_NORMAL, lock);
   setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
   jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
 }
@@ -73,11 +70,12 @@ void js::ZoneAllocator::updateAllGCMallocCountersOnGCEnd(
 }
 
 void js::ZoneAllocator::updateAllGCThresholds(GCRuntime& gc,
+                                              JSGCInvocationKind invocationKind,
                                               const js::AutoLockGC& lock) {
-  threshold.updateAfterGC(zoneSize.gcBytes(), GC_NORMAL, gc.tunables,
+  threshold.updateAfterGC(zoneSize.gcBytes(), invocationKind, gc.tunables,
                           gc.schedulingState, lock);
-  gcMallocThreshold.updateAfterGC(gcMallocBytes.gcBytes(), gc.tunables,
-                                  gc.schedulingState, lock);
+  gcMallocThreshold.updateAfterGC(gcMallocBytes.gcBytes(),
+                                  gc.tunables.maxMallocBytes(), lock);
 }
 
 js::gc::TriggerKind js::ZoneAllocator::shouldTriggerGCForTooMuchMalloc() {
