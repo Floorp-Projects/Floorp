@@ -8,13 +8,11 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 
 var EXPORTED_SYMBOLS = ["DateTimePickerChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-
 /**
  * DateTimePickerChild is the communication channel between the input box
  * (content) for date/time input types and its picker (chrome).
  */
-class DateTimePickerChild extends ActorChild {
+class DateTimePickerChild extends JSWindowActorChild {
   /**
    * On init, just listen for the event to open the picker, once the picker is
    * opened, we'll listen for update and close events.
@@ -29,7 +27,7 @@ class DateTimePickerChild extends ActorChild {
    * Cleanup function called when picker is closed.
    */
   close() {
-    this.removeListeners();
+    this.removeListeners(this._inputElement);
     let dateTimeBoxElement = this._inputElement.dateTimeBoxElement;
     if (!dateTimeBoxElement) {
       this._inputElement = null;
@@ -51,25 +49,15 @@ class DateTimePickerChild extends ActorChild {
    * Called after picker is opened to start listening for input box update
    * events.
    */
-  addListeners() {
-    this.mm.addEventListener("MozUpdateDateTimePicker", this);
-    this.mm.addEventListener("MozCloseDateTimePicker", this);
-    this.mm.addEventListener("pagehide", this);
-
-    this.mm.addMessageListener("FormDateTime:PickerValueChanged", this);
-    this.mm.addMessageListener("FormDateTime:PickerClosed", this);
+  addListeners(aElement) {
+    aElement.ownerGlobal.addEventListener("pagehide", this);
   }
 
   /**
    * Stop listeneing for events when picker is closed.
    */
-  removeListeners() {
-    this.mm.removeEventListener("MozUpdateDateTimePicker", this);
-    this.mm.removeEventListener("MozCloseDateTimePicker", this);
-    this.mm.removeEventListener("pagehide", this);
-
-    this.mm.removeMessageListener("FormDateTime:PickerValueChanged", this);
-    this.mm.removeMessageListener("FormDateTime:PickerClosed", this);
+  removeListeners(aElement) {
+    aElement.ownerGlobal.removeEventListener("pagehide", this);
   }
 
   /**
@@ -102,6 +90,10 @@ class DateTimePickerChild extends ActorChild {
         break;
       }
       case "FormDateTime:PickerValueChanged": {
+        if (!this._inputElement) {
+          return;
+        }
+
         let dateTimeBoxElement = this._inputElement.dateTimeBoxElement;
         if (!dateTimeBoxElement) {
           return;
@@ -159,10 +151,10 @@ class DateTimePickerChild extends ActorChild {
             new win.CustomEvent("MozSetDateTimePickerState", { detail: true }));
         }
 
-        this.addListeners();
+        this.addListeners(this._inputElement);
 
         let value = this._inputElement.getDateTimeInputBoxValue();
-        this.mm.sendAsyncMessage("FormDateTime:OpenPicker", {
+        this.sendAsyncMessage("FormDateTime:OpenPicker", {
           rect: this.getBoundingContentRect(this._inputElement),
           dir: this.getComputedDirection(this._inputElement),
           type: this._inputElement.type,
@@ -182,18 +174,18 @@ class DateTimePickerChild extends ActorChild {
       case "MozUpdateDateTimePicker": {
         let value = this._inputElement.getDateTimeInputBoxValue();
         value.type = this._inputElement.type;
-        this.mm.sendAsyncMessage("FormDateTime:UpdatePicker", { value });
+        this.sendAsyncMessage("FormDateTime:UpdatePicker", { value });
         break;
       }
       case "MozCloseDateTimePicker": {
-        this.mm.sendAsyncMessage("FormDateTime:ClosePicker");
+        this.sendAsyncMessage("FormDateTime:ClosePicker", {});
         this.close();
         break;
       }
       case "pagehide": {
         if (this._inputElement &&
             this._inputElement.ownerDocument == aEvent.target) {
-          this.mm.sendAsyncMessage("FormDateTime:ClosePicker");
+          this.sendAsyncMessage("FormDateTime:ClosePicker", {});
           this.close();
         }
         break;
