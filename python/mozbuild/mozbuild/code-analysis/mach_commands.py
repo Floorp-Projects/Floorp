@@ -29,7 +29,6 @@ from mach.main import Mach
 from mozbuild.base import MachCommandBase
 
 from mozbuild.build_commands import Build
-from mozbuild.artifact_commands import PackageFrontend
 
 import mozpack.path as mozpath
 
@@ -1676,6 +1675,8 @@ class StaticAnalysis(MachCommandBase):
         if source:
             return self._get_clang_tools_from_source(source)
 
+        from mozbuild.artifact_commands import PackageFrontend
+
         self._artifact_manager = PackageFrontend(self._mach_context)
 
         if not download_if_needed:
@@ -1783,6 +1784,7 @@ class StaticAnalysis(MachCommandBase):
                                    verbose=verbose,
                                    download_if_needed=download_if_needed)
         os.mkdir(infer_path)
+        from mozbuild.artifact_commands import PackageFrontend
         self._artifact_manager = PackageFrontend(self._mach_context)
         if not download_if_needed:
             return 0
