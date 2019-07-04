@@ -10,7 +10,7 @@ from threading import Timer
 
 from tryselect.cli import BaseTryParser
 from tryselect.tasks import generate_tasks
-from tryselect.push import check_working_directory, push_to_try
+from tryselect.push import check_working_directory, push_to_try, generate_try_task_config
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -48,5 +48,6 @@ def run(update=False, query=None, templates=None, full=False, parameters=None,
         return
 
     msg = "Try Chooser Enhanced ({} tasks selected)".format(len(selected))
-    return push_to_try('chooser', message.format(msg=msg), selected, templates, push=push,
-                       closed_tree=closed_tree)
+    return push_to_try('chooser', message.format(msg=msg),
+                       try_task_config=generate_try_task_config('chooser', selected, templates),
+                       push=push, closed_tree=closed_tree)

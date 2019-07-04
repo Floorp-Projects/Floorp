@@ -20,7 +20,13 @@ def patch_history_path(tmpdir, monkeypatch):
 
 
 def test_try_again(monkeypatch):
-    push.push_to_try('fuzzy', 'Fuzzy message', ['foo', 'bar'], {'artifact': True})
+    push.push_to_try(
+        "fuzzy",
+        "Fuzzy message",
+        try_task_config=push.generate_try_task_config(
+            "fuzzy", ["foo", "bar"], {"artifact": True},
+        ),
+    )
 
     assert os.path.isfile(push.history_path)
     with open(push.history_path, 'r') as fh:
@@ -51,7 +57,14 @@ def test_try_again(monkeypatch):
 def test_no_push_does_not_generate_history(tmpdir):
     assert not os.path.isfile(push.history_path)
 
-    push.push_to_try('fuzzy', 'Fuzzy', ['foo', 'bar'], {'artifact': True}, push=False)
+    push.push_to_try(
+        "fuzzy",
+        "Fuzzy",
+        try_task_config=push.generate_try_task_config(
+            "fuzzy", ["foo", "bar"], {"artifact": True},
+        ),
+        push=False,
+    )
     assert not os.path.isfile(push.history_path)
     assert again.run() == 1
 
