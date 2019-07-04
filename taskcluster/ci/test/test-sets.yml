@@ -320,7 +320,7 @@ macosx1014-64-tests:
     - mochitest
     - mochitest-a11y
     # - mochitest-browser-chrome
-    # - mochitest-chrome
+    - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
     - mochitest-gpu
@@ -347,7 +347,6 @@ macosx1014-64-qr-tests:
 macosx64-tests:
     - gtest
     - mochitest-browser-chrome
-    - mochitest-chrome
     - mochitest-media
     # - mochitest-webgl2-ext test timeouts
 
