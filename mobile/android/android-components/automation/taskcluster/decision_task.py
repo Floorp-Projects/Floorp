@@ -326,7 +326,7 @@ def release(components, is_snapshot, is_staging):
         for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
             other_tasks[taskcluster.slugId()] = craft_function()
 
-    return (build_tasks, wait_on_builds_task_id, sign_tasks, beetmover_tasks, other_tasks)
+    return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
 
 
 if __name__ == "__main__":
