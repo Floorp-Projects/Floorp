@@ -848,11 +848,7 @@ DOMMatrix* DOMMatrix::Scale3dSelf(double aScale, double aOriginX,
 }
 
 DOMMatrix* DOMMatrix::RotateFromVectorSelf(double aX, double aY) {
-  if (aX == 0.0 || aY == 0.0) {
-    return this;
-  }
-
-  const double angle = atan2(aY, aX);
+  const double angle = (aX == 0.0 && aY == 0.0) ? 0 : atan2(aY, aX);
 
   if (fmod(angle, 2 * M_PI) == 0) {
     return this;
