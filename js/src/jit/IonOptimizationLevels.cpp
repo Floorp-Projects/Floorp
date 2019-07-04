@@ -31,6 +31,7 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   rangeAnalysis_ = true;
   reordering_ = true;
   scalarReplacement_ = true;
+  sincos_ = true;
   sink_ = true;
 
   registerAllocator_ = RegisterAllocator_Backtracking;
@@ -72,6 +73,7 @@ void OptimizationInfo::initWasmOptimizationInfo() {
   edgeCaseAnalysis_ = false;
   eliminateRedundantChecks_ = false;
   scalarReplacement_ = false;  // wasm has no objects.
+  sincos_ = false;
   sink_ = false;
 }
 

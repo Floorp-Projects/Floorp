@@ -33,6 +33,8 @@ namespace jit {
   _(AliasSummaries)                        \
   /* Information during GVN */             \
   _(GVN)                                   \
+  /* Information during sincos */          \
+  _(Sincos)                                \
   /* Information during sinking */         \
   _(Sink)                                  \
   /* Information during Range analysis */  \
