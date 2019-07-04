@@ -103,7 +103,6 @@ class TaskBuilder(object):
 
     def craft_sign_task(self, build_task_id, barrier_task_id, artifacts, component_name, is_staging):
         payload = {
-            "maxRunTime": 600,
             "upstreamArtifacts": [{
                 "paths": [artifact["taskcluster_path"] for artifact in artifacts],
                 "formats": ["autograph_gpg"],
@@ -204,7 +203,6 @@ class TaskBuilder(object):
                 },
                 "taskId": sign_task_id,
             }],
-            "maxRunTime": 600,
             "upstreamArtifacts": [{
                 'paths': [artifact['taskcluster_path'] for artifact in build_artifacts],
                 'taskId': build_task_id,
@@ -254,7 +252,6 @@ class TaskBuilder(object):
                 bucket_public_url = 'https://maven.mozilla.org/'
 
         payload = {
-            "maxRunTime": 600,
             "upstreamArtifacts": [{
                 'paths': [artifact],
                 'taskId': build_task_id,
