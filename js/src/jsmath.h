@@ -63,6 +63,8 @@ extern bool math_pow(JSContext* cx, unsigned argc, js::Value* vp);
 extern bool minmax_impl(JSContext* cx, bool max, js::HandleValue a,
                         js::HandleValue b, js::MutableHandleValue res);
 
+extern void math_sincos_impl(double x, double* sin, double* cos);
+
 extern bool math_imul_handle(JSContext* cx, HandleValue lhs, HandleValue rhs,
                              MutableHandleValue res);
 

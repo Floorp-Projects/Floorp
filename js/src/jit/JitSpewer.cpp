@@ -359,6 +359,7 @@ static void PrintHelpAndExit(int status = 0) {
       "  licm          Loop invariant code motion\n"
       "  flac          Fold linear arithmetic constants\n"
       "  eaa           Effective address analysis\n"
+      "  sincos        Replace sin/cos by sincos\n"
       "  sink          Sink transformation\n"
       "  regalloc      Register allocation\n"
       "  inline        Inlining\n"
@@ -446,6 +447,8 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_FLAC);
     } else if (IsFlag(found, "eaa")) {
       EnableChannel(JitSpew_EAA);
+    } else if (IsFlag(found, "sincos")) {
+      EnableChannel(JitSpew_Sincos);
     } else if (IsFlag(found, "sink")) {
       EnableChannel(JitSpew_Sink);
     } else if (IsFlag(found, "regalloc")) {
