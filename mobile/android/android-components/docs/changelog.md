@@ -21,6 +21,9 @@ permalink: /changelog/
 * **concept-engine**, **browser-engine-gecko(-beta/nightly)**, **browser-engine-system**
   * Added `EngineView.release()` to manually release an `EngineSession` that is currently being rendered by the `EngineView`. Usually an app does not need to call `release()` manually since `EngineView` takes care of releasing the `EngineSession` on specific lifecycle events. However sometimes the app wants to release an `EngineSession` to immediately render it on another `EngineView`; e.g. when transforming a Custom Tab into a regular browser tab.
 
+* **browser-session**
+  * ⚠️ **This is a breaking change**: Removed "default session" behavior from `SessionManager`. This feature was never used by any app except the sample browser.
+
 # 2.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v1.0.0...v2.0.0)

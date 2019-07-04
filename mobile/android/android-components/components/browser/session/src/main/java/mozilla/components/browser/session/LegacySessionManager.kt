@@ -20,7 +20,6 @@ import kotlin.math.min
 @Suppress("TooManyFunctions", "LargeClass")
 class LegacySessionManager(
     val engine: Engine,
-    val defaultSession: (() -> Session)? = null,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
     private val values = mutableListOf<Session>()
@@ -307,13 +306,6 @@ class LegacySessionManager(
 
         notifyObservers { onSessionRemoved(session) }
 
-        // NB: we're not explicitly calling notifyObservers here, since adding a session when none
-        // are present will notify observers with onSessionSelected.
-        if (selectedIndex == NO_SELECTION && defaultSession != null) {
-            add(defaultSession.invoke())
-            return
-        }
-
         if (selectionUpdated && selectedIndex != NO_SELECTION) {
             notifyObservers { onSessionSelected(selectedSessionOrThrow) }
         }
@@ -463,18 +455,12 @@ class LegacySessionManager(
         // NB: This callback indicates to observers that either removeSessions or removeAll were
         // invoked, not that the manager is now empty.
         notifyObservers { onAllSessionsRemoved() }
-
-        if (defaultSession != null) {
-            add(defaultSession.invoke())
-        }
     }
 
     /**
      * Removes all sessions including CustomTab sessions.
      */
     fun removeAll() = synchronized(values) {
-        val onlyCustomTabSessionsPresent = values.isNotEmpty() && sessions.isEmpty()
-
         values.forEach { unlink(it) }
         values.clear()
 
@@ -483,11 +469,6 @@ class LegacySessionManager(
         // NB: This callback indicates to observers that either removeSessions or removeAll were
         // invoked, not that the manager is now empty.
         notifyObservers { onAllSessionsRemoved() }
-
-        // Don't create a default session if we only had CustomTab sessions to begin with.
-        if (!onlyCustomTabSessionsPresent && defaultSession != null) {
-            add(defaultSession.invoke())
-        }
     }
 
     /**

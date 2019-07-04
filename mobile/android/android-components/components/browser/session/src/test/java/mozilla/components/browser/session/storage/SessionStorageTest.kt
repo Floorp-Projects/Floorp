@@ -261,7 +261,7 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when all sessions get removed`() {
         runBlocking {
-            val sessionManager = SessionManager(mock(), { Session("https://getpocket.com") })
+            val sessionManager = SessionManager(mock())
             sessionManager.add(Session("https://www.firefox.com"))
             sessionManager.add(Session("https://www.mozilla.org"))
 

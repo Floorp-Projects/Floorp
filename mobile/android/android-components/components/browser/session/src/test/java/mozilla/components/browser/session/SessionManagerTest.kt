@@ -30,37 +30,6 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 
 class SessionManagerTest {
     @Test
-    fun `default session can be specified`() {
-        val manager = SessionManager(mock(), defaultSession = { Session("http://www.mozilla.org") })
-        assertEquals(0, manager.size)
-    }
-
-    @Test
-    fun `default session is used when manager becomes empty`() {
-        val session0 = Session("about:blank")
-        val session1 = Session("http://www.firefox.com")
-
-        val manager = SessionManager(mock(), defaultSession = { session0 })
-
-        manager.add(session1)
-        assertEquals(1, manager.size)
-        assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
-
-        manager.remove(session1)
-        assertEquals(1, manager.size)
-        assertEquals("about:blank", manager.selectedSessionOrThrow.url)
-
-        manager.add(session1)
-        manager.removeAll()
-        assertEquals(1, manager.size)
-        assertEquals("about:blank", manager.selectedSessionOrThrow.url)
-
-        manager.removeSessions()
-        assertEquals(1, manager.size)
-        assertEquals("about:blank", manager.selectedSessionOrThrow.url)
-    }
-
-    @Test
     fun `session can be added`() {
         val manager = SessionManager(mock())
         manager.add(Session("http://getpocket.com"))
@@ -175,74 +144,6 @@ class SessionManagerTest {
         verify(observer).onSessionAdded(session)
         verify(observer).onSessionSelected(session) // First session is selected automatically
         verifyNoMoreInteractions(observer)
-    }
-
-    @Test
-    fun `observer is called when all sessions removed and default session present`() {
-        val session0 = Session("https://www.mozilla.org")
-        val manager = SessionManager(mock(), defaultSession = { session0 })
-        val observer: SessionManager.Observer = mock()
-
-        manager.register(observer)
-
-        manager.removeAll()
-
-        assertEquals(1, manager.size)
-        verify(observer).onSessionAdded(session0)
-        verify(observer).onSessionSelected(session0)
-        verify(observer).onAllSessionsRemoved()
-
-        val observer2: SessionManager.Observer = mock()
-
-        manager.register(observer2)
-
-        manager.removeSessions()
-
-        assertEquals(1, manager.size)
-        verify(observer2).onSessionAdded(session0)
-        verify(observer2).onSessionSelected(session0)
-        verify(observer2).onAllSessionsRemoved()
-    }
-
-    @Test
-    fun `default session not used when all sessions were removed and they were all CustomTab`() {
-        val session1 = Session("https://www.mozilla.org")
-        session1.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
-
-        val manager = SessionManager(mock(), defaultSession = { Session("about:blank") })
-        val observer: SessionManager.Observer = mock()
-
-        manager.add(session1)
-        manager.register(observer)
-
-        manager.removeAll()
-
-        assertEquals(0, manager.size)
-        verify(observer).onAllSessionsRemoved()
-    }
-
-    @Test
-    fun `default session is used when all sessions were removed and they were mixed CustomTab and regular`() {
-        val session1 = Session("https://www.mozilla.org")
-        session1.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
-        val session2 = Session("https://www.firefox.com")
-
-        val session0 = Session("about:blank")
-        val manager = SessionManager(mock(), defaultSession = { session0 })
-        val observer: SessionManager.Observer = mock()
-
-        manager.register(observer)
-
-        manager.add(session1)
-        manager.add(session2)
-        manager.removeAll()
-
-        assertEquals(1, manager.size)
-        assertEquals("about:blank", manager.selectedSessionOrThrow.url)
-
-        verify(observer).onAllSessionsRemoved()
-        verify(observer).onSessionSelected(session0)
-        verify(observer).onSessionAdded(session0)
     }
 
     @Test
@@ -1100,40 +1001,6 @@ class SessionManagerTest {
         // Removing the last regular session should NOT cause a private session to be selected
         manager.remove(regular1)
         assertNull(manager.selectedSession)
-    }
-
-    @Test
-    fun `SessionManager will select default if regular session is removed an no other regular session is left`() {
-        val defaultSession = Session("http://www.mozilla.com")
-        val manager = SessionManager(mock(), defaultSession = { defaultSession })
-        assertNull(manager.selectedSession)
-
-        val regular1 = Session("https://www.getpocket.com", private = false)
-        manager.add(regular1)
-
-        val private1 = Session("https://example.org/private1", private = true)
-        manager.add(private1)
-
-        val private2 = Session("https://example.org/private2", private = true)
-        manager.add(private2)
-
-        val regular2 = Session("https://www.firefox.com", private = false)
-        manager.add(regular2)
-
-        val regular3 = Session("https://www.firefox.org", private = false)
-        manager.add(regular3, selected = true)
-
-        manager.remove(regular3)
-        assertEquals(regular2, manager.selectedSession)
-
-        manager.remove(regular2)
-        assertEquals(regular1, manager.selectedSession)
-
-        // Removing the last regular session should NOT cause a private session to be selected,
-        // but a default session was provided, so it should be selected now.
-        manager.remove(regular1)
-        assertEquals(manager.defaultSession?.invoke(), manager.selectedSession)
-        assertEquals("http://www.mozilla.com", manager.selectedSession?.url)
     }
 
     @Test

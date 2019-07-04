@@ -66,10 +66,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val store by lazy { BrowserStore() }
 
     val sessionManager by lazy {
-        SessionManager(engine,
-            defaultSession = { Session("about:blank") },
-            store = store
-        ).apply {
+        SessionManager(engine, store).apply {
             sessionStorage.restore()?.let { snapshot -> restore(snapshot) }
 
             if (size == 0) {

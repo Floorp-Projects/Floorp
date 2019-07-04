@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.session
 
-import androidx.lifecycle.Transformations.map
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toCustomTabSessionState
 import mozilla.components.browser.session.ext.toTabSessionState
@@ -22,9 +21,8 @@ import mozilla.components.support.base.observer.Observable
 @Suppress("TooManyFunctions")
 class SessionManager(
     val engine: Engine,
-    val defaultSession: (() -> Session)? = null,
     private val store: BrowserStore? = null,
-    private val delegate: LegacySessionManager = LegacySessionManager(engine, defaultSession)
+    private val delegate: LegacySessionManager = LegacySessionManager(engine)
 ) : Observable<SessionManager.Observer> by delegate {
     /**
      * Returns the number of session including CustomTab sessions.
