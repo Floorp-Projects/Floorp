@@ -346,7 +346,6 @@ macosx1014-64-qr-tests:
 
 macosx64-tests:
     - gtest
-    - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-media
