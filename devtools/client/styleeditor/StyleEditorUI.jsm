@@ -708,7 +708,7 @@ StyleEditorUI.prototype = {
     col = col || 0;
 
     const editorPromise = editor.getSourceEditor().then(() => {
-      editor.sourceEditor.setCursor({line: line, ch: col});
+      editor.setCursor(line, col);
       this._styleSheetBoundToSelect = null;
     });
 
