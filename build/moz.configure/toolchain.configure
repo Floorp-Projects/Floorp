@@ -420,9 +420,11 @@ def get_compiler_info(compiler, language):
     # the feature check, so that an unsupported version of clang would have
     # no version number.
     check = dedent('''\
-        #if defined(_MSC_VER) && defined(__clang__) && defined(_MT)
+        #if defined(_MSC_VER)
+        #if defined(__clang__)
         %COMPILER "clang-cl"
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
+        #endif
         #elif defined(__clang__)
         %COMPILER "clang"
         #  if __has_attribute(diagnose_if)
