@@ -18,10 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   gElements.newLoginButton.addEventListener("click", () => {
-    window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
-      detail: {},
-    }));
-
+    window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
     recordTelemetryEvent({object: "new_login", method: "new"});
   });
 
