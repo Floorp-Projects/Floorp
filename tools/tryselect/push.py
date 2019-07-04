@@ -79,16 +79,16 @@ def check_working_directory(push=True):
         sys.exit(1)
 
 
-def generate_try_task_config(method, labels, templates=None):
-    if templates is not None:
-        templates.setdefault('env', {}).update({'TRY_SELECTOR': method})
+def generate_try_task_config(method, labels, try_config=None):
+    try_task_config = try_config or {}
 
-    try_task_config = {
+    templates = try_task_config.setdefault('templates', {})
+    templates.setdefault('env', {}).update({'TRY_SELECTOR': method})
+
+    try_task_config.update({
         'version': 1,
         'tasks': sorted(labels),
-    }
-    if templates:
-        try_task_config['templates'] = templates
+    })
 
     return try_task_config
 

@@ -23,7 +23,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
 
-class Template(object):
+class TryConfig(object):
     __metaclass__ = ABCMeta
 
     def __init__(self):
@@ -37,6 +37,17 @@ class Template(object):
     @abstractproperty
     def arguments(self):
         pass
+
+    @abstractmethod
+    def try_config(self, **kwargs):
+        pass
+
+
+class Template(TryConfig):
+    def try_config(self, **kwargs):
+        context = self.context(**kwargs)
+        if context:
+            return {'templates': context}
 
     @abstractmethod
     def context(self, **kwargs):
