@@ -29,30 +29,19 @@ export default class LoginItem extends HTMLElement {
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginItemTemplate.content.cloneNode(true));
 
-    for (let selector of [
-      ".copy-password-button",
-      ".copy-username-button",
-      ".delete-button",
-      ".edit-button",
-      ".open-site-button",
-      ".reveal-password-checkbox",
-      ".save-changes-button",
-      ".cancel-button",
-    ]) {
-      let button = this.shadowRoot.querySelector(selector);
-      button.addEventListener("click", this);
-    }
-
+    this._cancelButton = this.shadowRoot.querySelector(".cancel-button");
     this._confirmDeleteDialog = document.querySelector("confirm-delete-dialog");
     this._copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
     this._copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._form = this.shadowRoot.querySelector("form");
+    this._openSiteButton = this.shadowRoot.querySelector(".open-site-button");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector("input[name='username']");
     this._passwordInput = this.shadowRoot.querySelector("input[name='password']");
     this._revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
+    this._saveChangesButton = this.shadowRoot.querySelector(".save-changes-button");
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
@@ -61,6 +50,12 @@ export default class LoginItem extends HTMLElement {
     this.render();
 
     this._originInput.addEventListener("blur", this);
+    this._cancelButton.addEventListener("click", this);
+    this._deleteButton.addEventListener("click", this);
+    this._editButton.addEventListener("click", this);
+    this._openSiteButton.addEventListener("click", this);
+    this._originInput.addEventListener("click", this);
+    this._saveChangesButton.addEventListener("click", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
   }
 
@@ -147,7 +142,8 @@ export default class LoginItem extends HTMLElement {
           recordTelemetryEvent({object: "existing_login", method: "edit"});
           return;
         }
-        if (classList.contains("open-site-button")) {
+        if (classList.contains("open-site-button") ||
+            (classList.contains("origin-input") && !this.dataset.editing)) {
           document.dispatchEvent(new CustomEvent("AboutLoginsOpenSite", {
             bubbles: true,
             detail: this._login,
