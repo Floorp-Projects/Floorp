@@ -10,6 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Test editor mode toggle keyboard 
 const EDITOR_PREF = "devtools.webconsole.input.editor";
 
 add_task(async function() {
+  await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", true);
   // Run test with legacy JsTerm
   info("Test legacy JsTerm");

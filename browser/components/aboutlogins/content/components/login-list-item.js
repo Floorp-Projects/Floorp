@@ -21,29 +21,35 @@ export default class LoginListItem extends HTMLElement {
     }
 
     let loginListItemTemplate = document.querySelector("#login-list-item-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(loginListItemTemplate.content.cloneNode(true));
+    let shadowRoot = this.attachShadow({mode: "open"});
+    document.l10n.connectRoot(shadowRoot);
+    shadowRoot.appendChild(loginListItemTemplate.content.cloneNode(true));
 
     this._title = this.shadowRoot.querySelector(".title");
     this._username = this.shadowRoot.querySelector(".username");
     this.setAttribute("role", "option");
 
-    this.render();
-
     this.addEventListener("click", this);
+
+    this.render();
   }
 
   render() {
     if (!this._login.guid) {
       delete this.dataset.guid;
-      this._title.textContent = this.getAttribute("new-login-title");
-      this._username.textContent = this.getAttribute("new-login-subtitle");
+      document.l10n.setAttributes(this._title, "login-list-item-title-new-login");
+      document.l10n.setAttributes(this._username, "login-list-item-subtitle-new-login");
       return;
     }
 
     this.dataset.guid = this._login.guid;
     this._title.textContent = this._login.title;
-    this._username.textContent = this._login.username.trim() || this.getAttribute("missing-username");
+    if (this._login.username.trim()) {
+      this._username.removeAttribute("data-l10n-id");
+      this._username.textContent = this._login.username.trim();
+    } else {
+      document.l10n.setAttributes(this._username, "login-list-item-subtitle-missing-username");
+    }
   }
 
   handleEvent(event) {

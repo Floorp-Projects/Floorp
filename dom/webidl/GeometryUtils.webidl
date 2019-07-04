@@ -24,13 +24,13 @@ dictionary ConvertCoordinateOptions {
 [NoInterfaceObject]
 interface GeometryUtils {
   [Throws, Func="nsINode::HasBoxQuadsSupport", NeedsCallerType]
-  sequence<DOMQuad> getBoxQuads(optional BoxQuadOptions options);
+  sequence<DOMQuad> getBoxQuads(optional BoxQuadOptions options = {});
   [Throws, Pref="layout.css.convertFromNode.enabled", NeedsCallerType]
-  DOMQuad convertQuadFromNode(DOMQuad quad, GeometryNode from, optional ConvertCoordinateOptions options);
+  DOMQuad convertQuadFromNode(DOMQuad quad, GeometryNode from, optional ConvertCoordinateOptions options = {});
   [Throws, Pref="layout.css.convertFromNode.enabled", NeedsCallerType]
-  DOMQuad convertRectFromNode(DOMRectReadOnly rect, GeometryNode from, optional ConvertCoordinateOptions options);
+  DOMQuad convertRectFromNode(DOMRectReadOnly rect, GeometryNode from, optional ConvertCoordinateOptions options = {});
   [Throws, Pref="layout.css.convertFromNode.enabled", NeedsCallerType]
-  DOMPoint convertPointFromNode(DOMPointInit point, GeometryNode from, optional ConvertCoordinateOptions options);
+  DOMPoint convertPointFromNode(DOMPointInit point, GeometryNode from, optional ConvertCoordinateOptions options = {});
 };
 
 // PseudoElement implements GeometryUtils;

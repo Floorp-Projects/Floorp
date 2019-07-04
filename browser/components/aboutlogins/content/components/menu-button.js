@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
-
-export default class MenuButton extends ReflectedFluentElement {
+export default class MenuButton extends HTMLElement {
   connectedCallback() {
     if (this.shadowRoot) {
       return;
     }
 
     let MenuButtonTemplate = document.querySelector("#menu-button-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(MenuButtonTemplate.content.cloneNode(true));
+    let shadowRoot = this.attachShadow({mode: "open"});
+    document.l10n.connectRoot(shadowRoot);
+    shadowRoot.appendChild(MenuButtonTemplate.content.cloneNode(true));
 
     for (let menuitem of this.shadowRoot.querySelectorAll(".menuitem-button[data-supported-platforms]")) {
       let supportedPlatforms = menuitem.dataset.supportedPlatforms.split(",").map(platform => platform.trim());
@@ -27,32 +26,6 @@ export default class MenuButton extends ReflectedFluentElement {
     this.addEventListener("blur", this);
     this._menuButton.addEventListener("click", this);
     this.addEventListener("keydown", this, true);
-
-    super.connectedCallback();
-  }
-
-  static get reflectedFluentIDs() {
-    return [
-      "button-title",
-      "menuitem-faq",
-      "menuitem-import",
-      "menuitem-feedback",
-      "menuitem-preferences",
-    ];
-  }
-
-  static get observedAttributes() {
-    return MenuButton.reflectedFluentIDs;
-  }
-
-  handleSpecialCaseFluentString(attrName) {
-    if (!this.shadowRoot ||
-        attrName != "button-title") {
-      return false;
-    }
-
-    this._menuButton.setAttribute("title", this.getAttribute(attrName));
-    return true;
   }
 
   handleEvent(event) {

@@ -11,7 +11,7 @@
  * related or neighboring rights to this work.
  */
 
-[Constructor(DOMString title, optional NotificationOptions options),
+[Constructor(DOMString title, optional NotificationOptions options = {}),
  Exposed=(Window,Worker),
  Func="mozilla::dom::Notification::PrefEnabled"]
 interface Notification : EventTarget {
@@ -22,7 +22,7 @@ interface Notification : EventTarget {
   static Promise<NotificationPermission> requestPermission(optional NotificationPermissionCallback permissionCallback);
 
   [Throws, Func="mozilla::dom::Notification::IsGetEnabled"]
-  static Promise<sequence<Notification>> get(optional GetNotificationOptions filter);
+  static Promise<sequence<Notification>> get(optional GetNotificationOptions filter = {});
 
   attribute EventHandler onclick;
 
@@ -67,7 +67,7 @@ dictionary NotificationOptions {
   DOMString icon = "";
   boolean requireInteraction = false;
   any data = null;
-  NotificationBehavior mozbehavior = null;
+  NotificationBehavior mozbehavior = {};
 };
 
 dictionary GetNotificationOptions {

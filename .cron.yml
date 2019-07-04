@@ -176,6 +176,9 @@ jobs:
               mozilla-esr60:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
+              mozilla-esr68:
+                  - {weekday: 'Monday', hour: 10, minute: 0}
+                  - {weekday: 'Thursday', hour: 10, minute: 0}
 
     - name: pipfile-update
       job:

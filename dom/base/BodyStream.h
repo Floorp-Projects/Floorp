@@ -32,7 +32,7 @@ class BodyStreamHolder : public nsISupports {
 
   virtual void MarkAsRead() = 0;
 
-  virtual JSObject* ReadableStreamBody() = 0;
+  virtual JSObject* GetReadableStreamBody() = 0;
 
  protected:
   virtual ~BodyStreamHolder() = default;

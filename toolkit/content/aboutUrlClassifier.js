@@ -8,24 +8,19 @@ const UPDATE_BEGIN = "safebrowsing-update-begin";
 const UPDATE_FINISH = "safebrowsing-update-finished";
 const JSLOG_PREF = "browser.safebrowsing.debug";
 
-function unLoad() {
-  window.removeEventListener("unload", unLoad);
-
+window.onunload = function() {
   Search.uninit();
   Provider.uninit();
   Cache.uninit();
   Debug.uninit();
-}
+};
 
-function onLoad() {
-  window.removeEventListener("load", onLoad);
-  window.addEventListener("unload", unLoad);
-
+window.onload = function() {
   Search.init();
   Provider.init();
   Cache.init();
   Debug.init();
-}
+};
 
 /*
  * Search

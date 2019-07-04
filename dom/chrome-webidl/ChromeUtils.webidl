@@ -39,7 +39,7 @@ namespace ChromeUtils {
    *                          `\d+(\-\d+)?\.fxsnapshot`.
    */
   [Throws]
-  DOMString saveHeapSnapshot(optional HeapSnapshotBoundaries boundaries);
+  DOMString saveHeapSnapshot(optional HeapSnapshotBoundaries boundaries = {});
 
   /**
    * This is the same as saveHeapSnapshot, but with a different return value.
@@ -49,7 +49,7 @@ namespace ChromeUtils {
    *                          `.fxsnapshot`.
    */
   [Throws]
-  DOMString saveHeapSnapshotGetId(optional HeapSnapshotBoundaries boundaries);
+  DOMString saveHeapSnapshotGetId(optional HeapSnapshotBoundaries boundaries = {});
 
   /**
    * Deserialize a core dump into a HeapSnapshot.
@@ -168,7 +168,7 @@ partial namespace ChromeUtils {
    * @param originAttrs       The originAttributes from the caller.
    */
   ByteString
-  originAttributesToSuffix(optional OriginAttributesDictionary originAttrs);
+  originAttributesToSuffix(optional OriginAttributesDictionary originAttrs = {});
 
   /**
    * Returns true if the members of |originAttrs| match the provided members
@@ -178,8 +178,8 @@ partial namespace ChromeUtils {
    * @param pattern           The pattern to use for matching.
    */
   boolean
-  originAttributesMatchPattern(optional OriginAttributesDictionary originAttrs,
-                               optional OriginAttributesPatternDictionary pattern);
+  originAttributesMatchPattern(optional OriginAttributesDictionary originAttrs = {},
+                               optional OriginAttributesPatternDictionary pattern = {});
 
   /**
    * Returns an OriginAttributesDictionary with values from the |origin| suffix
@@ -204,14 +204,14 @@ partial namespace ChromeUtils {
    *                          default values.
    */
   OriginAttributesDictionary
-  fillNonDefaultOriginAttributes(optional OriginAttributesDictionary originAttrs);
+  fillNonDefaultOriginAttributes(optional OriginAttributesDictionary originAttrs = {});
 
   /**
    * Returns true if the 2 OriginAttributes are equal.
    */
   boolean
-  isOriginAttributesEqual(optional OriginAttributesDictionary aA,
-                          optional OriginAttributesDictionary aB);
+  isOriginAttributesEqual(optional OriginAttributesDictionary aA = {},
+                          optional OriginAttributesDictionary aB = {});
 
   /**
    * Loads and compiles the script at the given URL and returns an object
@@ -220,7 +220,7 @@ partial namespace ChromeUtils {
    */
   [NewObject]
   Promise<PrecompiledScript>
-  compileScript(DOMString url, optional CompileScriptOptionsDictionary options);
+  compileScript(DOMString url, optional CompileScriptOptionsDictionary options = {});
 
   /**
    * Returns an optimized QueryInterface method which, when called from
@@ -275,7 +275,7 @@ partial namespace ChromeUtils {
    */
   [Throws]
   void idleDispatch(IdleRequestCallback callback,
-                    optional IdleRequestOptions options);
+                    optional IdleRequestOptions options = {});
 
   /**
    * Synchronously loads and evaluates the js file located at
@@ -419,7 +419,7 @@ partial namespace ChromeUtils {
    * See JSWindowActor.webidl for WindowActorOptions fields documentation.
    */
   [ChromeOnly, Throws]
-  void registerWindowActor(DOMString aName, optional WindowActorOptions aOptions);
+  void registerWindowActor(DOMString aName, optional WindowActorOptions aOptions = {});
 
   [ChromeOnly]
   void unregisterWindowActor(DOMString aName);

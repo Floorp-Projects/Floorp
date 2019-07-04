@@ -298,7 +298,7 @@ class BlobBodyStreamHolder final : public BodyStreamHolder {
 
   void MarkAsRead() override {}
 
-  JSObject* ReadableStreamBody() override { return mStream; }
+  JSObject* GetReadableStreamBody() override { return mStream; }
 
   void SetStream(JSObject* aObject) {
     MOZ_ASSERT(aObject);

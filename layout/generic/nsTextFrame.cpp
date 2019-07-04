@@ -4749,7 +4749,7 @@ void nsTextFrame::NotifyNativeAnonymousTextnodeChange(uint32_t aOldLength) {
 
   // This is to avoid making a new Reflow request in CharacterDataChanged:
   for (nsTextFrame* f = this; f; f = f->GetNextContinuation()) {
-    f->AddStateBits(NS_FRAME_IS_DIRTY);
+    f->MarkSubtreeDirty();
     f->mReflowRequestedForCharDataChange = true;
   }
 
@@ -4828,7 +4828,7 @@ nsresult nsTextFrame::CharacterDataChanged(
         // Note: if the parent is a block, we're cheating here because we should
         // be marking our line dirty, but we're not. nsTextFrame::SetLength will
         // do that when it gets called during reflow.
-        textFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        textFrame->MarkSubtreeDirty();
       }
     }
     textFrame->InvalidateFrame();

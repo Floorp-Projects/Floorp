@@ -173,8 +173,8 @@ void nsFileControlFrame::Reflow(nsPresContext* aPresContext,
                           availableISizeForLabel - labelBP, filename)) {
         nsBlockFrame::DidReflow(aPresContext, &aReflowInput);
         aStatus.Reset();
-        labelFrame->AddStateBits(NS_FRAME_IS_DIRTY |
-                                 NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+        labelFrame->MarkSubtreeDirty();
+        labelFrame->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
         mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
         mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
         done = true;

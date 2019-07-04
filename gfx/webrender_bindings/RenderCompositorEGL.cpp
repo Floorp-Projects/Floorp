@@ -94,6 +94,7 @@ bool RenderCompositorEGL::BeginFrame() {
 
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
+  gl()->MakeCurrent();  // DestroyUnused can change the current context!
 #endif
 
   return true;

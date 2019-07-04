@@ -44,5 +44,5 @@ interface MozFrameLoaderOwner {
   void swapFrameLoaders(HTMLIFrameElement aOtherLoaderOwner);
 
   [ChromeOnly, Throws]
-  void changeRemoteness(optional RemotenessOptions aOptions);
+  void changeRemoteness(optional RemotenessOptions aOptions = {});
 };
