@@ -87,13 +87,6 @@ OutputStreamData::OutputStreamData(OutputStreamManager* aManager,
 OutputStreamData::~OutputStreamData() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // During cycle collection, MediaStream can be destroyed and send
-  // its Destroy message before this decoder is destroyed. So we have to
-  // be careful not to send any messages after the Destroy().
-  if (mInputStream->IsDestroyed()) {
-    return;
-  }
-
   // Disconnect any existing port.
   if (mPort) {
     mPort->Destroy();
