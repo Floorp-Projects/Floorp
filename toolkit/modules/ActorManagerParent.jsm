@@ -131,6 +131,23 @@ let ACTORS = {
     allFrames: true,
   },
 
+ DateTimePicker: {
+    parent: {
+      moduleURI: "resource://gre/actors/DateTimePickerParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/DateTimePickerChild.jsm",
+      events: {
+        "MozOpenDateTimePicker": {},
+        "MozUpdateDateTimePicker": {},
+        "MozCloseDateTimePicker": {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   InlineSpellChecker: {
     parent: {
       moduleURI: "resource://gre/actors/InlineSpellCheckerParent.jsm",
@@ -184,6 +201,25 @@ let ACTORS = {
 
     allFrames: true,
   },
+
+  // UAWidgetsDateTimeBox is a _duplicate_ of UAWidgetsChild
+  // that handles only the datetime box widget. The original
+  // intention to port all all UAWidgets to JSWindowActor
+  // at once is blocked by some jUnit tests related to
+  // the video element failing in
+  // mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/MediaElementTest.kt
+  // when running on android API 16 (debug & pgo) platforms.
+  UAWidgetsDateTimeBox: {
+    child: {
+      moduleURI: "resource://gre/actors/UAWidgetsDateTimeBoxChild.jsm",
+      events: {
+        "UAWidgetSetupOrChange": {},
+        "UAWidgetTeardown": {},
+      },
+    },
+
+    allFrames: true,
+  },
 };
 
 let LEGACY_ACTORS = {
@@ -206,15 +242,6 @@ let LEGACY_ACTORS = {
         "ControllerCommands:Do",
         "ControllerCommands:DoWithParams",
       ],
-    },
-  },
-
-  DateTimePicker: {
-    child: {
-      module: "resource://gre/actors/DateTimePickerChild.jsm",
-      events: {
-        "MozOpenDateTimePicker": {},
-      },
     },
   },
 
