@@ -438,10 +438,6 @@ android-hw-arm7-debug-unittests:
     - jsreftest
     - mochitest-media
 
-android-hw-arm7-qr:
-    - crashtest
-    - reftest
-
 android-hw-arm7-raptor:
     - raptor-speedometer-geckoview
     - raptor-speedometer-refbrow
