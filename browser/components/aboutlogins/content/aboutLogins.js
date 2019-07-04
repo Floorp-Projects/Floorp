@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.dispatchEvent(new CustomEvent("AboutLoginsInit", {bubbles: true}));
+
+  gElements.loginFilter.focus();
 }, {once: true});
 
 window.addEventListener("AboutLoginsChromeToContent", event => {
