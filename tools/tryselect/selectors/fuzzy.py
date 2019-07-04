@@ -121,7 +121,9 @@ class FuzzyParser(BaseTryParser):
           }],
     ]
     common_groups = ['push', 'task', 'preset']
-    templates = ['artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile']
+    templates = [
+        'artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile', 'disable-pgo',
+    ]
 
 
 def run_cmd(cmd, cwd=None):
