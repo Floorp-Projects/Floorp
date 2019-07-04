@@ -4,9 +4,13 @@
 
 package mozilla.components.lib.state
 
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.CheckResult
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
@@ -40,6 +44,18 @@ open class Store<S : State, A : Action>(
     private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val scope = CoroutineScope(dispatcher)
     private val subscriptions = mutableSetOf<Subscription<S, A>>()
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        // We want exceptions in the reducer to crash the app and not get silently ignored. Therefore we rethrow the
+        // exception on the main thread.
+        Handler(Looper.getMainLooper()).postAtFrontOfQueue {
+            throw IllegalStateException("Exception while reducing state", throwable)
+        }
+
+        // Once an exception happened we do not want to accept any further actions. So let's cancel the scope which
+        // will cancel all jobs and not accept any new ones.
+        scope.cancel()
+    }
+    private val dispatcherWithExceptionHandler = dispatcher + exceptionHandler
     private var currentState = initialState
 
     /**
@@ -77,7 +93,7 @@ open class Store<S : State, A : Action>(
     /**
      * Dispatch an [Action] to the store in order to trigger a [State] change.
      */
-    fun dispatch(action: A) = scope.launch(dispatcher) {
+    fun dispatch(action: A) = scope.launch(dispatcherWithExceptionHandler) {
         dispatchInternal(action)
     }
 
