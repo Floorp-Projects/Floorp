@@ -22,7 +22,7 @@ class ChooserParser(BaseTryParser):
     templates = ['artifact', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile']
 
 
-def run(update=False, query=None, templates=None, full=False, parameters=None,
+def run(update=False, query=None, try_config=None, full=False, parameters=None,
         save=False, preset=None, mod_presets=False, push=True, message='{msg}',
         closed_tree=False):
     from .app import create_application
@@ -49,5 +49,5 @@ def run(update=False, query=None, templates=None, full=False, parameters=None,
 
     msg = "Try Chooser Enhanced ({} tasks selected)".format(len(selected))
     return push_to_try('chooser', message.format(msg=msg),
-                       try_task_config=generate_try_task_config('chooser', selected, templates),
+                       try_task_config=generate_try_task_config('chooser', selected, try_config),
                        push=push, closed_tree=closed_tree)

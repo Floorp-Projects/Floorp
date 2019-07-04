@@ -219,7 +219,7 @@ def filter_target_task(task):
     return not any(re.search(pattern, task) for pattern in TARGET_TASK_FILTERS)
 
 
-def run(update=False, query=None, intersect_query=None, templates=None, full=False,
+def run(update=False, query=None, intersect_query=None, try_config=None, full=False,
         parameters=None, save_query=False, push=True, message='{msg}',
         test_paths=None, exact=False, closed_tree=False):
     fzf = fzf_bootstrap(update)
@@ -296,5 +296,5 @@ def run(update=False, query=None, intersect_query=None, templates=None, full=Fal
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
     return push_to_try('fuzzy', message.format(msg=msg),
-                       try_task_config=generate_try_task_config('fuzzy', selected, templates),
+                       try_task_config=generate_try_task_config('fuzzy', selected, try_config),
                        push=push, closed_tree=closed_tree)
