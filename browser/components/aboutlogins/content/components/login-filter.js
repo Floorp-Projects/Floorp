@@ -20,6 +20,10 @@ export default class LoginFilter extends HTMLElement {
     this.addEventListener("input", this);
   }
 
+  focus() {
+    this._input.focus();
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "input": {
