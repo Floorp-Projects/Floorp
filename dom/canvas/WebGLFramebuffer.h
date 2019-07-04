@@ -174,7 +174,7 @@ class WebGLFramebuffer final : public nsWrapperCache,
   ////
 
   struct CompletenessInfo final {
-    const WebGLFramebuffer& fb;
+    const WebGLFramebuffer* fb = nullptr;
 
     uint32_t width = 0;
     uint32_t height = 0;
