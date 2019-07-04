@@ -10,18 +10,19 @@
     android:layout_height="match_parent"
     android:clipToPadding="false">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/close_button"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:drawableStart="@drawable/mozac_ic_close"
-        android:drawablePadding="8dp"
         android:text="@string/share_header"
         android:textAppearance="@style/HeaderTextStyle"
         android:textColor="@color/neutral_text"
         android:textSize="20sp"
+        app:icon="@drawable/mozac_ic_close"
+        app:iconPadding="8dp"
+        app:iconTint="@color/neutral_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
