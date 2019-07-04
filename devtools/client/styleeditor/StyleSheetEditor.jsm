@@ -269,8 +269,14 @@ StyleSheetEditor.prototype = {
     }).then((source) => {
       const ruleCount = this.styleSheet.ruleCount;
       if (!this.styleSheet.isOriginalSource) {
-        source = prettifyCSS(source, ruleCount);
+        const { result, mappings } = prettifyCSS(source, ruleCount);
+        source = result;
+        // Store the list of objects with mappings between CSS token positions from the
+        // original source to the prettified source. These will be used when requested to
+        // jump to a specific position within the editor.
+        this._mappings = mappings;
       }
+
       this._state.text = source;
       return source;
     });
@@ -300,6 +306,42 @@ StyleSheetEditor.prototype = {
         throw e;
       }
     });
+  },
+
+  /**
+   * Set the cursor at the given line and column location within the code editor.
+   *
+   * @param {Number} line
+   * @param {Number} column
+   */
+  setCursor(line, column) {
+    const position = this.translateCursorPosition(line, column);
+    this.sourceEditor.setCursor({ line: position.line, ch: position.column });
+  },
+
+  /**
+   * If the stylesheet was automatically prettified, there should be a list of line
+   * and column mappings from the original to the generated source that can be used
+   * to translate the cursor position to the correct location in the prettified source.
+   * If no mappings exist, return the original cursor position unchanged.
+   *
+   * @param  {Number} line
+   * @param  {Numer} column
+   *
+   * @return {Object}
+   */
+  translateCursorPosition(line, column) {
+    if (Array.isArray(this._mappings)) {
+      for (const mapping of this._mappings) {
+        if (mapping.original.line === line && mapping.original.column === column) {
+          line = mapping.generated.line;
+          column = mapping.generated.column;
+          continue;
+        }
+      }
+    }
+
+    return { line, column };
   },
 
   /**
@@ -526,6 +568,11 @@ StyleSheetEditor.prototype = {
 
     this._isUpdating = true;
     this.styleSheet.update(this._state.text, this.transitionsEnabled)
+      .then(() => {
+        // Clear any existing mappings from automatic CSS prettification
+        // because they were likely invalided by manually editing the stylesheet.
+        this._mappings = null;
+      })
       .catch(console.error);
   },
 

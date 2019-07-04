@@ -20,6 +20,10 @@ add_task(async function() {
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
   await testViewSource(hud, toolbox, "\u2018color\u2019");
+
+  info("Selecting the console again");
+  await toolbox.selectTool("webconsole");
+  await testViewSource(hud, toolbox, "\u2018display\u2019");
 });
 
 async function testViewSource(hud, toolbox, text) {
@@ -77,6 +81,11 @@ async function checkCursorPosition(styleEditorUI, editor, line, column) {
   info("wait for source editor to load");
   // Get out of the styleeditor-selected event loop.
   await waitForTick();
+
+  // Get the updated line and column position if the CSS source was prettified.
+  const position = editor.translateCursorPosition(line, column);
+  line = position.line;
+  column = position.column;
 
   is(editor.sourceEditor.getCursor().line, line,
      "correct line is selected");
