@@ -69,7 +69,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             sessionStorage.restore()?.let { snapshot -> restore(snapshot) }
 
             if (size == 0) {
-                add(Session("https://www.mozilla.org"))
+                add(Session("about:blank"))
             }
 
             sessionStorage.autoSave(this)
