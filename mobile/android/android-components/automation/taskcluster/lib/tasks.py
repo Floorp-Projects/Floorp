@@ -310,7 +310,7 @@ class TaskBuilder(object):
             "maxRunTime": 7200,
             "image": "mozillamobile/android-components:1.19",
             "command": [
-                "/bin/bash",
+                "/bin/sh",
                 "--login",
                 "-cx",
                 command
