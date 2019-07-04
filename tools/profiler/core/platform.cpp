@@ -2929,9 +2929,6 @@ void profiler_init(void* aStackTop) {
     }
 #endif
 
-    // Setup support for pushing/popping labels in mozglue.
-    RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
-
     // (Linux-only) We could create CorePS::mLul and read unwind info into it
     // at this point. That would match the lifetime implied by destruction of
     // it in profiler_shutdown() just below. However, that gives a big delay on
@@ -3477,6 +3474,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     }
   }
 
+  // Setup support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(MozGlueLabelEnter, MozGlueLabelExit);
+
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
     tasktracer::StartLogging();
@@ -3616,6 +3616,9 @@ static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
     tasktracer::StopLogging();
   }
 #endif
+
+  // Remove support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(nullptr, nullptr);
 
   // Stop sampling live threads.
   int tid = profiler_current_thread_id();
