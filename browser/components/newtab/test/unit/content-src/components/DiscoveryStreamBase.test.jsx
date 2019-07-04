@@ -1,5 +1,5 @@
 import {_DiscoveryStreamBase as DiscoveryStreamBase, isAllowedCSS} from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
-import {GlobalOverrider, shallowWithIntl} from "test/unit/utils";
+import {GlobalOverrider} from "test/unit/utils";
 import {CardGrid} from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {DSMessage} from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
@@ -8,6 +8,7 @@ import {HorizontalRule} from "content-src/components/DiscoveryStreamComponents/H
 import {List} from "content-src/components/DiscoveryStreamComponents/List/List";
 import {Navigation} from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
 import React from "react";
+import {shallow} from "enzyme";
 import {SectionTitle} from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
 import {TopSites} from "content-src/components/DiscoveryStreamComponents/TopSites/TopSites";
 
@@ -61,7 +62,7 @@ describe("<DiscoveryStreamBase>", () => {
       },
       ...props,
     };
-    return shallowWithIntl(<DiscoveryStreamBase
+    return shallow(<DiscoveryStreamBase
       DiscoveryStream={defaultProps}
       Prefs={{
         values: {
