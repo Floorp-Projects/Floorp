@@ -84,26 +84,6 @@ add_task(async function test_history_no_search_terms() {
         UrlbarTestUtils.getDropMarker(window).click();
         return true;
       },
-      // The following tests must be the last to run because of the pref change.
-      async () => {
-        info("Test opening panel on focus");
-        Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
-        gURLBar.blur();
-        EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});
-        registerCleanupFunction(() => {
-          Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
-        });
-        return UrlbarPrefs.get("quantumbar");
-      },
-      async () => {
-        info("Test opening panel on focus on a page");
-        let selectedBrowser = gBrowser.selectedBrowser;
-        await BrowserTestUtils.loadURI(selectedBrowser, TEST_URL);
-        await BrowserTestUtils.browserLoaded(selectedBrowser);
-        gURLBar.blur();
-        EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});
-        return UrlbarPrefs.get("quantumbar");
-      },
     ]) {
       await do_test(openFn, pickMethod);
     }
