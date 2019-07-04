@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 
 #include "builtin/TypedObjectConstants.h"
+#include "gc/ZoneAllocator.h"
 #include "js/ArrayBuffer.h"
 #include "js/GCHashTable.h"
 #include "vm/JSObject.h"
@@ -606,7 +607,7 @@ inline constexpr bool TypeIsUnsigned<uint32_t>() {
 // and the views that use their storage.
 class InnerViewTable {
  public:
-  typedef Vector<JSObject*, 1, SystemAllocPolicy> ViewVector;
+  typedef Vector<JSObject*, 1, ZoneAllocPolicy> ViewVector;
 
   friend class ArrayBufferObject;
 
@@ -625,9 +626,8 @@ class InnerViewTable {
   // regression. Thus, it is vital that nursery pointers in this map not be held
   // live. Special support is required in the minor GC, implemented in
   // sweepAfterMinorGC.
-  typedef GCHashMap<JSObject*, ViewVector, MovableCellHasher<JSObject*>,
-                    SystemAllocPolicy, MapGCPolicy>
-      Map;
+  using Map = GCHashMap<JSObject*, ViewVector, MovableCellHasher<JSObject*>,
+                        ZoneAllocPolicy, MapGCPolicy>;
 
   // For all objects sharing their storage with some other view, this maps
   // the object to the list of such views. All entries in this map are weak.
@@ -651,7 +651,7 @@ class InnerViewTable {
   void removeViews(ArrayBufferObject* obj);
 
  public:
-  InnerViewTable() : nurseryKeysValid(true) {}
+  explicit InnerViewTable(Zone* zone) : map(zone), nurseryKeysValid(true) {}
 
   // Remove references to dead objects in the table and update table entries
   // to reflect moved objects.
