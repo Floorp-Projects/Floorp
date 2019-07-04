@@ -11,7 +11,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional TransitionEventInit eventInitDict)]
+[Constructor(DOMString type, optional TransitionEventInit eventInitDict = {})]
 interface TransitionEvent : Event {
   readonly attribute DOMString propertyName;
   readonly attribute float     elapsedTime;

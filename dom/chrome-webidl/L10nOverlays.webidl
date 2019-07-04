@@ -17,5 +17,5 @@ namespace L10nOverlays {
   const unsigned short ERROR_NAMED_ELEMENT_TYPE_MISMATCH = 3;
   const unsigned short ERROR_UNKNOWN = 4;
 
-  sequence<L10nOverlaysError>? translateElement(Element element, optional L10nMessage translation);
+  sequence<L10nOverlaysError>? translateElement(Element element, optional L10nMessage translation = {});
 };

@@ -15,7 +15,7 @@ dictionary AudioContextOptions {
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(optional AudioContextOptions contextOptions)]
+ Constructor(optional AudioContextOptions contextOptions = {})]
 interface AudioContext : BaseAudioContext {
 
     // Bug 1324545: readonly        attribute double outputLatency;

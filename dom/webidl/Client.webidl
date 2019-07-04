@@ -25,7 +25,7 @@ interface Client {
   [Throws]
   void postMessage(any message, sequence<object> transfer);
   [Throws]
-  void postMessage(any message, optional PostMessageOptions aOptions);
+  void postMessage(any message, optional PostMessageOptions aOptions = {});
 };
 
 [Exposed=ServiceWorker]

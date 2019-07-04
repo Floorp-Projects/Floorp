@@ -10,7 +10,7 @@ dictionary ScrollViewChangeEventInit : EventInit {
   ScrollState state = "started";
 };
 
-[Constructor(DOMString type, optional ScrollViewChangeEventInit eventInit),
+[Constructor(DOMString type, optional ScrollViewChangeEventInit eventInit = {}),
  ChromeOnly]
 interface ScrollViewChangeEvent : Event {
   readonly attribute ScrollState state;

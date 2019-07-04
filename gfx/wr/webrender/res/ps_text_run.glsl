@@ -18,6 +18,19 @@ varying vec4 vUvClip;
 #define VECS_PER_TEXT_RUN           2
 #define GLYPHS_PER_GPU_BLOCK        2U
 
+#ifdef WR_FEATURE_GLYPH_TRANSFORM
+RectWithSize transform_rect(RectWithSize rect, mat2 transform) {
+    vec2 center = transform * (rect.p0 + rect.size * 0.5);
+    vec2 radius = mat2(abs(transform[0]), abs(transform[1])) * (rect.size * 0.5);
+    return RectWithSize(center - radius, radius * 2.0);
+}
+
+bool rect_inside_rect(RectWithSize little, RectWithSize big) {
+    return all(lessThanEqual(vec4(big.p0, little.p0 + little.size),
+                             vec4(little.p0, big.p0 + big.size)));
+}
+#endif //WR_FEATURE_GLYPH_TRANSFORM
+
 struct Glyph {
     vec2 offset;
 };
@@ -71,7 +84,8 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
                              vec2 snap_bias) {
     // The offset to snap the glyph rect to a device pixel
     vec2 snap_offset = vec2(0.0);
-    mat2 local_transform = mat2(1.0);
+    // Transform from glyph space to local space
+    mat2 glyph_transform_inv = mat2(1.0);
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     bool remove_subpx_offset = true;
@@ -83,27 +97,27 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
         // Be careful to only snap with the transform when in screen raster space.
         switch (raster_space) {
             case RASTER_SCREEN: {
-                // Transform from local space to device space.
+                // Transform from local space to glyph space.
                 float device_scale = task.device_pixel_scale / transform.m[3].w;
-                mat2 device_transform = mat2(transform.m) * device_scale;
+                mat2 glyph_transform = mat2(transform.m) * device_scale;
 
                 // Ensure the transformed text offset does not contain a subpixel translation
                 // such that glyph snapping is stable for equivalent glyph subpixel positions.
-                vec2 device_text_pos = device_transform * text_offset + transform.m[3].xy * device_scale;
+                vec2 device_text_pos = glyph_transform * text_offset + transform.m[3].xy * device_scale;
                 snap_offset = floor(device_text_pos + 0.5) - device_text_pos;
 
                 // Snap the glyph offset to a device pixel, using an appropriate bias depending
                 // on whether subpixel positioning is required.
-                vec2 device_glyph_offset = device_transform * glyph_offset;
+                vec2 device_glyph_offset = glyph_transform * glyph_offset;
                 snap_offset += floor(device_glyph_offset + snap_bias) - device_glyph_offset;
 
-                // Transform from device space back to local space.
-                local_transform = inverse(device_transform);
+                // Transform from glyph space back to local space.
+                glyph_transform_inv = inverse(glyph_transform);
 
 #ifndef WR_FEATURE_GLYPH_TRANSFORM
                 // If not using transformed subpixels, the glyph rect is actually in local space.
                 // So convert the snap offset back to local space.
-                snap_offset = local_transform * snap_offset;
+                snap_offset = glyph_transform_inv * snap_offset;
 #endif
                 break;
             }
@@ -122,7 +136,7 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     // The glyph rect is in device space, so transform it back to local space.
-    RectWithSize local_rect = transform_rect(glyph_rect, local_transform);
+    RectWithSize local_rect = transform_rect(glyph_rect, glyph_transform_inv);
 
     // Select the corner of the glyph's local space rect that we are processing.
     vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
@@ -131,7 +145,7 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
     // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
     // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
     if (rect_inside_rect(local_rect, local_clip_rect)) {
-        local_pos = local_transform * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
+        local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
     }
 #else
     // Select the corner of the glyph rect that we are processing.

@@ -596,8 +596,7 @@ class nsContainerFrame : public nsSplittableFrame {
    */
   static void ReparentFloatsForInlineChild(nsIFrame* aOurBlock,
                                            nsIFrame* aFrame,
-                                           bool aReparentSiblings,
-                                           ReparentingDirection aDirection);
+                                           bool aReparentSiblings);
 
   // ==========================================================================
   /*

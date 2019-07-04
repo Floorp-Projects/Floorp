@@ -12,7 +12,7 @@ For events recorded into Firefox Telemetry we also provide an API that opaquely 
 
 .. important::
 
-    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
+    Every new or changed data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`__ from a Data Steward.
 
 .. _events.serializationformat:
 
