@@ -865,6 +865,7 @@ class UrlbarView {
 
   _on_popupshowing() {
     this.window.addEventListener("resize", this);
+    this._windowOuterWidth = this.window.outerWidth;
   }
 
   _on_popupshown() {
@@ -880,6 +881,14 @@ class UrlbarView {
   }
 
   _on_resize() {
+    if (this._windowOuterWidth == this.window.outerWidth) {
+      // Sometimes a resize event is fired when the window's size doesn't
+      // actually change; at least, browser_tabMatchesInAwesomebar.js triggers
+      // it intermittently, which causes that test to hang or fail.  Ignore
+      // those events.
+      return;
+    }
+
     // Close the popup as it would be wrongly sized. This can
     // happen when using special OS resize functions like Win+Arrow.
     this.close();
