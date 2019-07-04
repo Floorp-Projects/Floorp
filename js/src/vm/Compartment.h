@@ -18,6 +18,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
+#include "gc/ZoneAllocator.h"
 #include "js/UniquePtr.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
@@ -276,12 +277,12 @@ class WrapperMap {
 
   using InnerMap =
       NurseryAwareHashMap<CrossCompartmentKey, JS::Value,
-                          CrossCompartmentKey::Hasher, SystemAllocPolicy>;
-  using OuterMap =
-      GCHashMap<JS::Compartment*, InnerMap, DefaultHasher<JS::Compartment*>,
-                SystemAllocPolicy>;
+                          CrossCompartmentKey::Hasher, ZoneAllocPolicy>;
+  using OuterMap = GCHashMap<JS::Compartment*, InnerMap,
+                             DefaultHasher<JS::Compartment*>, ZoneAllocPolicy>;
 
   OuterMap map;
+  Zone* zone;
 
  public:
   class Enum {
@@ -381,8 +382,8 @@ class WrapperMap {
     Ptr(const InnerMap::Ptr& p, InnerMap& m) : InnerMap::Ptr(p), map(&m) {}
   };
 
-  WrapperMap() {}
-  explicit WrapperMap(size_t aLen) : map(aLen) {}
+  explicit WrapperMap(Zone* zone) : map(zone), zone(zone) {}
+  WrapperMap(Zone* zone, size_t aLen) : map(zone, aLen), zone(zone) {}
 
   bool empty() {
     if (map.empty()) {
@@ -418,7 +419,7 @@ class WrapperMap {
     MOZ_ASSERT(k.is<JSString*>() == !c);
     auto p = map.lookupForAdd(c);
     if (!p) {
-      InnerMap m(InitialInnerMapSize);
+      InnerMap m(zone, InitialInnerMapSize);
       if (!map.add(p, c, std::move(m))) {
         return false;
       }
@@ -485,7 +486,7 @@ class JS::Compartment {
 
   js::WrapperMap crossCompartmentWrappers;
 
-  using RealmVector = js::Vector<JS::Realm*, 1, js::SystemAllocPolicy>;
+  using RealmVector = js::Vector<JS::Realm*, 1, js::ZoneAllocPolicy>;
   RealmVector realms_;
 
  public:

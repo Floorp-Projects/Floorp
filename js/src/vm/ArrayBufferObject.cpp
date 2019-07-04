@@ -1573,7 +1573,7 @@ bool InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer,
       return false;
     }
   } else {
-    if (!map.add(p, buffer, ViewVector())) {
+    if (!map.add(p, buffer, ViewVector(cx->zone()))) {
       ReportOutOfMemory(cx);
       return false;
     }
