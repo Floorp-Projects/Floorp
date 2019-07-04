@@ -49,6 +49,9 @@ class MOZ_RAII AutoProfilerLabel {
  private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   void* mEntryContext;
+  // Number of RegisterProfilerLabelEnterExit calls, to avoid giving an entry
+  // context from one generation to the next.
+  uint32_t mGeneration;
 };
 
 #endif
