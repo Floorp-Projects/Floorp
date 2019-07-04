@@ -139,7 +139,8 @@ function recursiveExpand(node) {
         // Ignore these, see bug 371900 for why people might do this.
         continue;
       }
-      let nodeDesc = node.local;
+      // Ignore dashes in the tag name
+      let nodeDesc = node.local.replace(/-/g, "");
       if (node.attributes.id) {
         nodeDesc += "_" + node.attributes.id.replace(/[^a-z]/gi, "_");
       }
