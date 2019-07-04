@@ -45,6 +45,7 @@
 // #include "memory_hooks.h"
 #  include "mozilla/ArrayUtils.h"
 #  include "mozilla/Atomics.h"
+#  include "mozilla/AutoProfilerLabel.h"
 #  include "mozilla/Printf.h"
 #  include "mozilla/Services.h"
 #  include "mozilla/StackWalk.h"
@@ -2619,6 +2620,24 @@ Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
                                  ActivePS::Capacity(lock).Value()});
 }
 
+// This basically duplicates AutoProfilerLabel's constructor.
+static void* MozGlueBaseLabelEnter(const char* aLabel,
+                                   const char* aDynamicString, void* aSp) {
+  ProfilingStack* profilingStack = AutoProfilerLabel::sProfilingStack.get();
+  if (profilingStack) {
+    profilingStack->pushLabelFrame(aLabel, aDynamicString, aSp,
+                                   ProfilingCategoryPair::OTHER);
+  }
+  return profilingStack;
+}
+
+// This basically duplicates AutoProfilerLabel's destructor.
+static void MozGlueBaseLabelExit(void* sProfilingStack) {
+  if (sProfilingStack) {
+    reinterpret_cast<ProfilingStack*>(sProfilingStack)->pop();
+  }
+}
+
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
@@ -2677,6 +2696,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
       registeredThread->RacyRegisteredThread().ReinitializeOnResume();
     }
   }
+
+  // Setup support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(MozGlueBaseLabelEnter, MozGlueBaseLabelExit);
 
   // At the very end, set up RacyFeatures.
   RacyFeatures::SetActive(ActivePS::Features(aLock));
@@ -2781,6 +2803,9 @@ static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
   // #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   //   mozilla::profiler::install_memory_counter(false);
   // #endif
+
+  // Remove support for pushing/popping labels in mozglue.
+  RegisterProfilerLabelEnterExit(nullptr, nullptr);
 
   // Stop sampling live threads.
   const Vector<LiveProfiledThreadData>& liveProfiledThreads =
