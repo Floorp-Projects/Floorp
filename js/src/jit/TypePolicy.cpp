@@ -601,7 +601,7 @@ template <unsigned Op>
 bool DoublePolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                           MInstruction* def) {
   MDefinition* in = def->getOperand(Op);
-  if (in->type() == MIRType::Double || in->type() == MIRType::SinCosDouble) {
+  if (in->type() == MIRType::Double) {
     return true;
   }
 
