@@ -20,6 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121643
 
 /** Test for Bug 1121643 **/
 
+SimpleTest.requestFlakyTimeout("This test is flaky.");
+
 const InspectorUtils = SpecialPowers.InspectorUtils;
 
 // Given an element id, returns the first font face name encountered.
@@ -53,6 +55,7 @@ let testFontWhitelist = async function(useMono, useSans, useSerif) {
   }
   await SpecialPowers.pushPrefEnv({"set": [["font.system.whitelist",
                                             whitelist.join(", ")]]});
+  await new Promise(resolve => setTimeout(resolve, 2000));
   // If whitelist is empty, then whitelisting is considered disabled
   // and all fonts are allowed.
   info("font whitelist: " + JSON.stringify(whitelist));

@@ -1153,7 +1153,7 @@ SimpleTest.finish = function() {
         SimpleTest._inChaosMode = false;
     }
 
-    var afterCleanup = function() {
+    var afterCleanup = async function() {
         SpecialPowers.removeFiles();
 
         if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
@@ -1179,7 +1179,7 @@ SimpleTest.finish = function() {
                                + "it.)");
         }
 
-        let workers = SpecialPowers.registeredServiceWorkers();
+        let workers = await SpecialPowers.registeredServiceWorkers();
         let promise = null;
         if (SimpleTest._expectingRegisteredServiceWorker) {
             if (workers.length === 0) {

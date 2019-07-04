@@ -7,7 +7,6 @@
 #include "AccessCheck.h"
 
 #include "nsJSPrincipals.h"
-#include "nsDOMWindowList.h"
 #include "nsGlobalWindow.h"
 
 #include "XPCWrapper.h"
