@@ -29,6 +29,8 @@ PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
 # If we see this text inside a pull request title then we will not execute any tasks for this PR.
 SKIP_TASKS_TRIGGER = '[ci skip]'
 
+AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
+HASH_EXTENSIONS = ('', '.sha1', '.md5'))
 
 BUILDER = TaskBuilder(
     task_id=os.environ.get('TASK_ID'),
@@ -285,6 +287,7 @@ def release(components, is_snapshot, is_staging):
     other_tasks = {}
     wait_on_all_signing_task_id = taskcluster.slugId()
 
+
     for component in components:
         build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
@@ -297,21 +300,21 @@ def release(components, is_snapshot, is_staging):
             component=component,
             artifacts=[_to_release_artifact(extension + hash_extension, version, component)
                        for extension, hash_extension in
-                       itertools.product(('.aar', '.pom', '-sources.jar'), ('', '.sha1', '.md5'))]
+                       itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
         )
 
         sign_task_id = taskcluster.slugId()
         sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
             build_task_id, [_to_release_artifact(extension, version, component)
-                            for extension in ('.aar', '.pom', '-sources.jar')],
+                            for extension in AAR_EXTENSIONS],
             component['name'], is_staging,
         )
 
         beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension, version, component)
                                      for extension, hash_extension in
-                                     itertools.product(('.aar', '.pom', '-sources.jar'), ('', '.sha1', '.md5'))]
+                                     itertools.product(AAR_EXTENSIONS, HASH_EXTENSIONS)]
         beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component)
-                                    for extension in ('.aar', '.pom', '-sources.jar')]
+                                    for extension in AAR_EXTENSIONS]
         beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
             build_task_id, sign_task_id, wait_on_all_signing_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
             component['name'], is_snapshot, is_staging
