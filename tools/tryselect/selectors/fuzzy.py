@@ -16,7 +16,7 @@ from mozterm import Terminal
 
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
-from ..push import check_working_directory, push_to_try
+from ..push import check_working_directory, push_to_try, generate_try_task_config
 
 terminal = Terminal()
 
@@ -295,5 +295,6 @@ def run(update=False, query=None, intersect_query=None, templates=None, full=Fal
         args.append("paths={}".format(':'.join(test_paths)))
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
-    return push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
-                       closed_tree=closed_tree)
+    return push_to_try('fuzzy', message.format(msg=msg),
+                       try_task_config=generate_try_task_config('fuzzy', selected, templates),
+                       push=push, closed_tree=closed_tree)

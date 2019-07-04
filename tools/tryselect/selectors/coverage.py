@@ -23,7 +23,7 @@ from mozversioncontrol import get_repository_object
 
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths, resolve_tests_by_suite
-from ..push import push_to_try
+from ..push import push_to_try, generate_try_task_config
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
@@ -378,5 +378,6 @@ def run(templates={}, full=False, parameters=None, push=True, message='{msg}', c
 
     # Build commit message.
     msg = 'try coverage - ' + test_count_message
-    return push_to_try('coverage', message.format(msg=msg), tasks, templates, push=push,
-                       closed_tree=closed_tree)
+    return push_to_try('coverage', message.format(msg=msg),
+                       try_task_config=generate_try_task_config('coverage', tasks, templates),
+                       push=push, closed_tree=closed_tree)
