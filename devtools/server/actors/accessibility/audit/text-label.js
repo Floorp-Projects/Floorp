@@ -288,7 +288,7 @@ const headingRule = function(accessible) {
   }
 
   const content = accessible.DOMNode.textContent && accessible.DOMNode.textContent.trim();
-  return content ? null : { score: FAIL, issue: HEADING_NO_CONTENT };
+  return content ? null : { score: WARNING, issue: HEADING_NO_CONTENT };
 };
 
 /**
