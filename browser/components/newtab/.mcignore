@@ -5,9 +5,9 @@ npm-debug.log
 *.pyc
 *.update.rdf
 .gitignore
+.eslintcache
 
 /.git/
-/data/locales.json
 /dist/
 /logs/
 /node_modules/

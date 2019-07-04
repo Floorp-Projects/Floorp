@@ -5509,7 +5509,7 @@ static void InitOncePrefs() {
         MOZ_ASSERT(sOncePrefRead);                                             \
         StripAtomic<cpp_type> staticPrefValue = id();                          \
         StripAtomic<cpp_type> preferenceValue =                                \
-            PreferencesInternalMethods::GetPref(Get##id##PrefName(),           \
+            PreferencesInternalMethods::GetPref(GetPrefName_##id(),            \
                                                 StripAtomic<cpp_type>(value)); \
         MOZ_ASSERT(                                                            \
             staticPrefValue == preferenceValue,                                \
@@ -5517,7 +5517,7 @@ static void InitOncePrefs() {
             " got initialized. Consider using a `Live` StaticPrefs instead");  \
       };                                                                       \
       gOnceStaticPrefsAntiFootgun->insert(                                     \
-          std::pair<const char*, AntiFootgunCallback>(Get##id##PrefName(),     \
+          std::pair<const char*, AntiFootgunCallback>(GetPrefName_##id(),      \
                                                       std::move(checkPref)));  \
     }
 #else

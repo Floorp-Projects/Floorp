@@ -344,11 +344,14 @@ class UniqueStacks {
 //     "schema":
 //     {
 //       "location": 0,       /* index into stringTable */
-//       "implementation": 1, /* index into stringTable */
-//       "optimizations": 2,  /* arbitrary JSON */
-//       "line": 3,           /* number */
-//       "column": 4,         /* number */
-//       "category": 5        /* number */
+//       "relevantForJS": 1,  /* bool */
+//       "implementation": 2, /* index into stringTable */
+//       "optimizations": 3,  /* arbitrary JSON */
+//       "line": 4,           /* number */
+//       "column": 5,         /* number */
+//       "category": 6        /* index into profile.meta.categories */
+//       "subcategory": 7     /* index into
+//       profile.meta.categories[category].subcategories */
 //     },
 //     "data":
 //     [

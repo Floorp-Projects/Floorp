@@ -1322,11 +1322,11 @@ TEST_P(TlsConnectGeneric, AuthFailImmediate) {
 }
 
 static const SSLExtraServerCertData ServerCertDataRsaPkcs1Decrypt = {
-    ssl_auth_rsa_decrypt, nullptr, nullptr, nullptr};
+    ssl_auth_rsa_decrypt, nullptr, nullptr, nullptr, nullptr, nullptr};
 static const SSLExtraServerCertData ServerCertDataRsaPkcs1Sign = {
-    ssl_auth_rsa_sign, nullptr, nullptr, nullptr};
+    ssl_auth_rsa_sign, nullptr, nullptr, nullptr, nullptr, nullptr};
 static const SSLExtraServerCertData ServerCertDataRsaPss = {
-    ssl_auth_rsa_pss, nullptr, nullptr, nullptr};
+    ssl_auth_rsa_pss, nullptr, nullptr, nullptr, nullptr, nullptr};
 
 // Test RSA cert with usage=[signature, encipherment].
 TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPkcs1SignAndKEX) {

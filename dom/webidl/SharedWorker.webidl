@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(USVString scriptURL, optional (DOMString or WorkerOptions) options)]
+[Constructor(USVString scriptURL, optional (DOMString or WorkerOptions) options = {})]
 interface SharedWorker : EventTarget {
     readonly attribute MessagePort port;
 };

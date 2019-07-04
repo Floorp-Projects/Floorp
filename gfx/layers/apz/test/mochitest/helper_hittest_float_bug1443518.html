@@ -41,6 +41,7 @@ function* test(testDriver) {
     element: document.getElementById("subframe"),
     directions: { horizontal: true },
     expectedScrollId: utils.getViewId(document.scrollingElement),
+    expectedLayersId: utils.getLayersId(),
     trackLocation: ScrollbarTrackLocation.START,
     expectThumb: true,
     layerState: LayerState.INACTIVE,

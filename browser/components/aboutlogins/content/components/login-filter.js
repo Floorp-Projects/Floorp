@@ -3,23 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {recordTelemetryEvent} from "../aboutLoginsUtils.js";
-import ReflectedFluentElement from "./reflected-fluent-element.js";
 
-export default class LoginFilter extends ReflectedFluentElement {
+export default class LoginFilter extends HTMLElement {
   connectedCallback() {
     if (this.shadowRoot) {
       return;
     }
 
     let loginFilterTemplate = document.querySelector("#login-filter-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(loginFilterTemplate.content.cloneNode(true));
+    let shadowRoot = this.attachShadow({mode: "open"});
+    document.l10n.connectRoot(shadowRoot);
+    shadowRoot.appendChild(loginFilterTemplate.content.cloneNode(true));
 
     this._input = this.shadowRoot.querySelector("input");
 
     this.addEventListener("input", this);
-
-    super.connectedCallback();
   }
 
   handleEvent(event) {
@@ -31,14 +29,6 @@ export default class LoginFilter extends ReflectedFluentElement {
     }
   }
 
-  static get reflectedFluentIDs() {
-    return ["placeholder"];
-  }
-
-  static get observedAttributes() {
-    return this.reflectedFluentIDs;
-  }
-
   get value() {
     return this._input.value;
   }
@@ -46,16 +36,6 @@ export default class LoginFilter extends ReflectedFluentElement {
   set value(val) {
     this._input.value = val;
     this._dispatchFilterEvent(val);
-  }
-
-  handleSpecialCaseFluentString(attrName) {
-    if (!this.shadowRoot ||
-        attrName != "placeholder") {
-      return false;
-    }
-
-    this._input.placeholder = this.getAttribute(attrName);
-    return true;
   }
 
   _dispatchFilterEvent(value) {

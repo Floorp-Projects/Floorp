@@ -39,6 +39,8 @@ describe("Downloads Manager", () => {
       refresh: async () => {},
     });
     assert.ok(downloadsManager._downloadItems.has(DOWNLOAD_URL));
+
+    globals.set("NewTabUtils", { blockedLinks: { isBlocked() {} } });
   });
   afterEach(() => {
     downloadsManager._downloadItems.clear();
@@ -199,6 +201,30 @@ describe("Downloads Manager", () => {
       assert.equal(results.length, 2);
       assert.equal(results[0].url, newDownload.source.url);
       assert.equal(results[1].url, nonExistantDownload.source.url);
+    });
+    it("should return only unblocked downloads", async () => {
+      const nonExistantDownload = {
+        source: { url: "https://site.com/nonExistantDownload.pdf" },
+        endTime: Date.now() - 40 * 60 * 60 * 1000,
+        target: { path: "/path/to/nonExistantDownload.pdf", exists: false },
+        succeeded: true,
+        refresh: async () => {},
+      };
+      downloadsManager.onDownloadAdded(newDownload);
+      downloadsManager.onDownloadAdded(nonExistantDownload);
+      globals.set("NewTabUtils", {
+        blockedLinks: {
+          isBlocked: item => item.url === nonExistantDownload.source.url,
+        },
+      });
+
+      const results = await downloadsManager.getDownloads(Infinity, {
+        numItems: 5,
+        onlySucceeded: true,
+      });
+
+      assert.equal(results.length, 1);
+      assert.propertyVal(results[0], "url", newDownload.source.url);
     });
     it("should only return downloads that were successful if specified", async () => {
       const nonSuccessfulDownload = {

@@ -87,7 +87,7 @@ def init_android_power_test(raptor):
 # along with the values from the Screen and Wifi lines.
 
 
-def finish_android_power_test(raptor, test_name):
+def finish_android_power_test(raptor, test_name, os_baseline=False):
     upload_dir = os.getenv("MOZ_UPLOAD_DIR")
     if not upload_dir:
         LOG.critical(
@@ -144,7 +144,7 @@ def finish_android_power_test(raptor, test_name):
 
     batterystats = batterystats.split("\n")
     for line in batterystats:
-        if uid is None:
+        if uid is None and not os_baseline:
             # The proc line containing the Uid and app name appears
             # before the Estimated power line.
             match = re_uid.search(line)
@@ -164,47 +164,55 @@ def finish_android_power_test(raptor, test_name):
             continue
         if full_screen == 0:
             match = re_full_screen.match(line)
-            if match:
+            if match and match.group(1):
                 full_screen += float(match.group(1))
                 continue
         if full_wifi == 0:
             match = re_full_wifi.match(line)
-            if match:
+            if match and match.group(1):
                 full_wifi += float(match.group(1))
                 continue
         if re_power:
             match = re_power.match(line)
             if match:
-                total, breakdown, smear_info = match.groups()
+                ttotal, breakdown, smear_info = match.groups()
+                total += float(ttotal) if ttotal else 0
 
                 cpu_match = re_cpu.match(breakdown)
-                if cpu_match:
+                if cpu_match and cpu_match.group(1):
                     cpu += float(cpu_match.group(1))
 
                 wifi_match = re_wifi.match(breakdown)
-                if wifi_match:
+                if wifi_match and wifi_match.group(1):
                     wifi += float(wifi_match.group(1))
 
                 if smear_info:
                     # Smearing and screen power are only
                     # available on android 8+
                     smear_match = re_smear.match(smear_info)
-                    if smear_match:
+                    if smear_match and smear_match.group(1):
                         smearing += float(smear_match.group(1))
                     screen_match = re_screen.search(line)
-                    if screen_match:
+                    if screen_match and screen_match.group(1):
                         screen += float(screen_match.group(1))
                     prop_match = re_proportional.search(smear_info)
-                    if prop_match:
+                    if prop_match and prop_match.group(1):
                         proportional += float(prop_match.group(1))
         if full_screen and full_wifi and (cpu and wifi and smearing or total):
             # Stop parsing batterystats once we have a full set of data.
-            break
+            # If we are running an OS baseline, stop when we've exhausted
+            # the list of entries.
+            if not os_baseline:
+                break
+            elif line.replace(' ', '') == '':
+                break
 
-    cpu = total if cpu is None else cpu
+    cpu = total if cpu == 0 else cpu
     screen = full_screen if screen == 0 else screen
-    wifi = full_wifi if wifi is None else wifi
+    wifi = full_wifi if wifi == 0 else wifi
 
+    if os_baseline:
+        uid = 'all'
     LOG.info(
         "power data for uid: %s, cpu: %s, wifi: %s, screen: %s, proportional: %s"
         % (uid, cpu, wifi, screen, proportional)
@@ -224,12 +232,18 @@ def finish_android_power_test(raptor, test_name):
         },
     }
 
-    LOG.info("submitting power data via control server directly")
     if major_android_version >= 8:
         power_data['values']['proportional'] = float(proportional)
 
-    raptor.control_server.submit_supporting_data(power_data)
+    if os_baseline:
+        raptor.os_baseline_data = power_data
+    else:
+        LOG.info("submitting power data via control server directly")
 
-    # Generate power bugreport zip
-    LOG.info("generating power bugreport zip")
-    raptor.device.command_output(["bugreport", upload_dir])
+        raptor.control_server.submit_supporting_data(power_data)
+        if raptor.os_baseline_data:
+            raptor.control_server.submit_supporting_data(raptor.os_baseline_data)
+
+        # Generate power bugreport zip
+        LOG.info("generating power bugreport zip")
+        raptor.device.command_output(["bugreport", upload_dir])

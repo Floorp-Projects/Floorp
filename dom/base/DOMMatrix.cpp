@@ -160,6 +160,34 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromMatrix(
   return rval.forget();
 }
 
+already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat32Array(
+    const GlobalObject& aGlobal, const Float32Array& aArray32,
+    ErrorResult& aRv) {
+  aArray32.ComputeLengthAndData();
+
+  const int length = aArray32.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrixReadOnly> obj =
+      new DOMMatrixReadOnly(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aArray32.Data(), length, aRv);
+
+  return obj.forget();
+}
+
+already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat64Array(
+    const GlobalObject& aGlobal, const Float64Array& aArray64,
+    ErrorResult& aRv) {
+  aArray64.ComputeLengthAndData();
+
+  const int length = aArray64.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrixReadOnly> obj =
+      new DOMMatrixReadOnly(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aArray64.Data(), length, aRv);
+
+  return obj.forget();
+}
+
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
     const GlobalObject& aGlobal,
     const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
@@ -246,11 +274,11 @@ already_AddRefed<DOMMatrix> DOMMatrixReadOnly::ScaleNonUniform(
   return retval.forget();
 }
 
-already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Rotate(double aAngle,
-                                                      double aOriginX,
-                                                      double aOriginY) const {
+already_AddRefed<DOMMatrix> DOMMatrixReadOnly::Rotate(
+    double aRotX, const Optional<double>& aRotY,
+    const Optional<double>& aRotZ) const {
   RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
-  retval->RotateSelf(aAngle, aOriginX, aOriginY);
+  retval->RotateSelf(aRotX, aRotY, aRotZ);
 
   return retval.forget();
 }
@@ -593,6 +621,32 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromMatrix(
   return matrix.forget();
 }
 
+already_AddRefed<DOMMatrix> DOMMatrix::FromFloat32Array(
+    const GlobalObject& aGlobal, const Float32Array& aArray32,
+    ErrorResult& aRv) {
+  aArray32.ComputeLengthAndData();
+
+  const int length = aArray32.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aArray32.Data(), length, aRv);
+
+  return obj.forget();
+}
+
+already_AddRefed<DOMMatrix> DOMMatrix::FromFloat64Array(
+    const GlobalObject& aGlobal, const Float64Array& aArray64,
+    ErrorResult& aRv) {
+  aArray64.ComputeLengthAndData();
+
+  const int length = aArray64.Length();
+  const bool is2D = length == 6;
+  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
+  SetDataInMatrix(obj, aArray64.Data(), length, aRv);
+
+  return obj.forget();
+}
+
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv) {
   RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
@@ -656,27 +710,13 @@ static void SetDataInMatrix(DOMMatrixReadOnly* aMatrix, const T* aData,
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
                                                    const Float32Array& aArray32,
                                                    ErrorResult& aRv) {
-  aArray32.ComputeLengthAndData();
-
-  const int length = aArray32.Length();
-  const bool is2D = length == 6;
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
-  SetDataInMatrix(obj, aArray32.Data(), length, aRv);
-
-  return obj.forget();
+  return FromFloat32Array(aGlobal, aArray32, aRv);
 }
 
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(const GlobalObject& aGlobal,
                                                    const Float64Array& aArray64,
                                                    ErrorResult& aRv) {
-  aArray64.ComputeLengthAndData();
-
-  const int length = aArray64.Length();
-  const bool is2D = length == 6;
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), is2D);
-  SetDataInMatrix(obj, aArray64.Data(), length, aRv);
-
-  return obj.forget();
+  return FromFloat64Array(aGlobal, aArray64, aRv);
 }
 
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
@@ -807,40 +847,56 @@ DOMMatrix* DOMMatrix::Scale3dSelf(double aScale, double aOriginX,
   return this;
 }
 
-DOMMatrix* DOMMatrix::ScaleNonUniformSelf(double aScaleX, double aScaleY,
-                                          double aScaleZ, double aOriginX,
-                                          double aOriginY, double aOriginZ) {
-  ScaleSelf(aScaleX, Optional<double>(aScaleY), aScaleZ, aOriginX, aOriginY,
-            aOriginZ);
-
-  return this;
-}
-
 DOMMatrix* DOMMatrix::RotateFromVectorSelf(double aX, double aY) {
   if (aX == 0.0 || aY == 0.0) {
     return this;
   }
 
-  RotateSelf(atan2(aY, aX) / radPerDegree);
+  const double angle = atan2(aY, aX);
+
+  if (fmod(angle, 2 * M_PI) == 0) {
+    return this;
+  }
+
+  if (mMatrix3D) {
+    RotateAxisAngleSelf(0, 0, 1, angle / radPerDegree);
+  } else {
+    *mMatrix2D = mMatrix2D->PreRotate(angle);
+  }
 
   return this;
 }
 
-DOMMatrix* DOMMatrix::RotateSelf(double aAngle, double aOriginX,
-                                 double aOriginY) {
-  if (fmod(aAngle, 360) == 0) {
-    return this;
+DOMMatrix* DOMMatrix::RotateSelf(double aRotX, const Optional<double>& aRotY,
+                                 const Optional<double>& aRotZ) {
+  double rotY;
+  double rotZ;
+  if (!aRotY.WasPassed() && !aRotZ.WasPassed()) {
+    rotZ = aRotX;
+    aRotX = 0;
+    rotY = 0;
+  } else {
+    rotY = aRotY.WasPassed() ? aRotY.Value() : 0;
+    rotZ = aRotZ.WasPassed() ? aRotZ.Value() : 0;
   }
 
-  TranslateSelf(aOriginX, aOriginY);
+  if (aRotX != 0 || rotY != 0) {
+    Ensure3DMatrix();
+  }
 
   if (mMatrix3D) {
-    RotateAxisAngleSelf(0, 0, 1, aAngle);
-  } else {
-    *mMatrix2D = mMatrix2D->PreRotate(aAngle * radPerDegree);
+    if (fmod(rotZ, 360) != 0) {
+      mMatrix3D->RotateZ(rotZ * radPerDegree);
+    }
+    if (fmod(rotY, 360) != 0) {
+      mMatrix3D->RotateY(rotY * radPerDegree);
+    }
+    if (fmod(aRotX, 360) != 0) {
+      mMatrix3D->RotateX(aRotX * radPerDegree);
+    }
+  } else if (fmod(rotZ, 360) != 0) {
+    *mMatrix2D = mMatrix2D->PreRotate(rotZ * radPerDegree);
   }
-
-  TranslateSelf(-aOriginX, -aOriginY);
 
   return this;
 }

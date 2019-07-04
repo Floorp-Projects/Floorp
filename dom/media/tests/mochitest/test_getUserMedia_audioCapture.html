@@ -14,31 +14,24 @@ createHTML({
   visible: true
 });
 
-scriptsReady
-.then(() => FAKE_ENABLED = false)
-.then(() => {
-  runTestWhenReady(function() {
-    // Get an opus file containing a sine wave at maximum amplitude, of duration
-    // `lengthSeconds`, and of frequency `frequency`.
-    function getSineWaveFile(frequency, lengthSeconds, callback) {
-      var chunks = [];
-      var off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
-      var osc = off.createOscillator();
-      var rec = new MediaRecorder(osc);
-      rec.ondataavailable = function(e) {
-        chunks.push(e.data);
-      };
-      rec.onstop = function(e) {
-        var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-        callback(blob);
-      }
-      osc.frequency.value = frequency;
-      osc.start();
-      rec.start();
-      off.startRendering().then(function(buffer) {
-        rec.stop();
-      });
-    }
+// Get an opus file containing a sine wave at maximum amplitude, of duration
+// `lengthSeconds`, and of frequency `frequency`.
+async function getSineWaveFile(frequency, lengthSeconds) {
+  const off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
+  const osc = off.createOscillator();
+  const rec = new MediaRecorder(osc, {mimeType: "audio/ogg; codecs=opus"});
+  osc.frequency.value = frequency;
+  osc.start();
+  rec.start();
+  off.startRendering();
+  const {data} = await new Promise(r => rec.ondataavailable = r);
+  return data;
+}
+
+(async function() {
+  await scriptsReady;
+  FAKE_ENABLED = false;
+  await runTestWhenReady(async function() {
     /**
      * Get two HTMLMediaElements:
      * - One playing a sine tone from a blob (of an opus file created on the fly)
@@ -56,50 +49,49 @@ scriptsReady
      * can check that the spectrum of the capture stream contains three
      * components with a high magnitude.
      */
-    var wavtone = createMediaElement("audio", "WaveTone");
-    var acTone = createMediaElement("audio", "audioContextTone");
-    var ac = new AudioContext();
+    const wavtone = createMediaElement("audio", "WaveTone");
+    const acTone = createMediaElement("audio", "audioContextTone");
+    const ac = new AudioContext();
 
-    var oscThroughMediaElement = ac.createOscillator();
+    const oscThroughMediaElement = ac.createOscillator();
     oscThroughMediaElement.frequency.value = 1000;
-    var oscThroughAudioDestinationNode = ac.createOscillator();
+    const oscThroughAudioDestinationNode = ac.createOscillator();
     oscThroughAudioDestinationNode.frequency.value = 5000;
-    var msDest = ac.createMediaStreamDestination();
+    const msDest = ac.createMediaStreamDestination();
 
     oscThroughMediaElement.connect(msDest);
     oscThroughAudioDestinationNode.connect(ac.destination);
 
     acTone.srcObject = msDest.stream;
 
-    getSineWaveFile(10000, 10, function(blob) {
-      wavtone.src = URL.createObjectURL(blob);
-      oscThroughMediaElement.start();
-      oscThroughAudioDestinationNode.start();
-      wavtone.loop = true;
-      wavtone.play();
-      acTone.play();
-    });
+    const blob = await getSineWaveFile(10000, 10);
+    wavtone.src = URL.createObjectURL(blob);
+    oscThroughMediaElement.start();
+    oscThroughAudioDestinationNode.start();
+    wavtone.loop = true;
+    wavtone.play();
+    acTone.play();
 
-    var constraints = {audio: {mediaSource: "audioCapture"}};
+    const constraints = {audio: {mediaSource: "audioCapture"}};
 
-    return getUserMedia(constraints).then((stream) => {
-      window.grip = stream;
-      var analyser = new AudioStreamAnalyser(ac, stream);
-      analyser.enableDebugCanvas();
-      return analyser.waitForAnalysisSuccess(function(array) {
-        // We want to find three frequency components here, around 1000, 5000
-        // and 10000Hz. Frequency are logarithmic. Also make sure we have low
-        // energy in between, not just a flat white noise.
-        return (array[analyser.binIndexForFrequency(50)]    < 50 &&
-                array[analyser.binIndexForFrequency(1000)]  > 200 &&
-                array[analyser.binIndexForFrequency(2500)]  < 50 &&
-                array[analyser.binIndexForFrequency(5000)]  > 200 &&
-                array[analyser.binIndexForFrequency(7500)]  < 50 &&
-                array[analyser.binIndexForFrequency(10000)] > 200);
-      }).then(finish);
+    const stream = await getUserMedia(constraints);
+    window.grip = stream;
+    const analyser = new AudioStreamAnalyser(ac, stream);
+    analyser.enableDebugCanvas();
+    await analyser.waitForAnalysisSuccess(array => {
+      // We want to find three frequency components here, around 1000, 5000
+      // and 10000Hz. Frequency are logarithmic. Also make sure we have low
+      // energy in between, not just a flat white noise.
+      return (array[analyser.binIndexForFrequency(50)]    < 50 &&
+              array[analyser.binIndexForFrequency(1000)]  > 200 &&
+              array[analyser.binIndexForFrequency(2500)]  < 50 &&
+              array[analyser.binIndexForFrequency(5000)]  > 200 &&
+              array[analyser.binIndexForFrequency(7500)]  < 50 &&
+              array[analyser.binIndexForFrequency(10000)] > 200);
     });
+    finish();
   });
-});
+})();
 
 
 

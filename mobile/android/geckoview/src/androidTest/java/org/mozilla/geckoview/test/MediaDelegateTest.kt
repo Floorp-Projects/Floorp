@@ -11,6 +11,7 @@ import android.util.Log
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Assume.assumeThat
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.Callbacks
@@ -136,6 +137,8 @@ class MediaDelegateTest : BaseSessionTest() {
 
     @GeckoSessionTestRule.WithDevToolsAPI
     @Test fun testDeviceRecordingEventAudioAndVideo() {
+        // disabled test on debug builds Bug 1554189
+        assumeThat(sessionRule.env.isDebugBuild, Matchers.equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 

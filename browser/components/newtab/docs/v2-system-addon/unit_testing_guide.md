@@ -146,8 +146,3 @@ const {mount} = require("enzyme");
 ...
 const wrapper = mount(<Foo />);
 ```
-
-### Rendering localized components
-
-If you need to render a component that contains localized components, use the
-`shallowWithIntl` and `mountWithIntl` functions in `system-addon/test/unit/utils`.

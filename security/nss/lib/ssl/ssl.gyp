@@ -49,6 +49,7 @@
         'tls13hashstate.c',
         'tls13hkdf.c',
         'tls13replay.c',
+        'tls13subcerts.c',
       ],
       'conditions': [
         [ 'OS=="win"', {

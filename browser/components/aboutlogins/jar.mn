@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-  content/browser/aboutlogins/components/copy-to-clipboard-button.css (content/components/copy-to-clipboard-button.css)
-  content/browser/aboutlogins/components/copy-to-clipboard-button.js  (content/components/copy-to-clipboard-button.js)
+  content/browser/aboutlogins/components/confirm-delete-dialog.css      (content/components/confirm-delete-dialog.css)
+  content/browser/aboutlogins/components/confirm-delete-dialog.js       (content/components/confirm-delete-dialog.js)
   content/browser/aboutlogins/components/login-filter.css      (content/components/login-filter.css)
   content/browser/aboutlogins/components/login-filter.js       (content/components/login-filter.js)
   content/browser/aboutlogins/components/login-item.css        (content/components/login-item.css)
@@ -15,11 +15,11 @@ browser.jar:
   content/browser/aboutlogins/components/login-list-item.js    (content/components/login-list-item.js)
   content/browser/aboutlogins/components/menu-button.css       (content/components/menu-button.css)
   content/browser/aboutlogins/components/menu-button.js        (content/components/menu-button.js)
-  content/browser/aboutlogins/components/reflected-fluent-element.js  (content/components/reflected-fluent-element.js)
-  content/browser/aboutlogins/icons/delete.svg  (content/icons/delete.svg)
-  content/browser/aboutlogins/icons/edit.svg    (content/icons/edit.svg)
-  content/browser/aboutlogins/icons/favicon.svg   (content/icons/favicon.svg)
-  content/browser/aboutlogins/icons/feedback.svg  (content/icons/feedback.svg)
+  content/browser/aboutlogins/icons/delete.svg        (content/icons/delete.svg)
+  content/browser/aboutlogins/icons/edit.svg          (content/icons/edit.svg)
+  content/browser/aboutlogins/icons/faq.svg           (content/icons/faq.svg)
+  content/browser/aboutlogins/icons/favicon.svg       (content/icons/favicon.svg)
+  content/browser/aboutlogins/icons/feedback.svg      (content/icons/feedback.svg)
   content/browser/aboutlogins/icons/hide-password.svg (content/icons/hide-password.svg)
   content/browser/aboutlogins/icons/show-password.svg (content/icons/show-password.svg)
   content/browser/aboutlogins/aboutLogins.css   (content/aboutLogins.css)

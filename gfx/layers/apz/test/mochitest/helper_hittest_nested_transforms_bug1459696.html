@@ -68,6 +68,7 @@ function* test(testDriver) {
     hitTest(centerOf(leftPane)),
     APZHitResultFlags.VISIBLE,
     utils.getViewId(leftPane),
+    utils.getLayersId(),
     "left pane was successfully hit");
 
   subtestDone();

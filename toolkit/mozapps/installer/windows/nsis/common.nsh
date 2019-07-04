@@ -5838,36 +5838,28 @@ end:
     Function LeaveOptionsCommon
       Push $R9
 
+      StrCpy $R9 "false"
+
 !ifndef NO_INSTDIR_FROM_REG
       SetShellVarContext all      ; Set SHCTX to HKLM
+
+      ${If} ${IsNativeAMD64}
+      ${OrIf} ${IsNativeARM64}
+        SetRegView 64
+        ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+        SetRegView lastused
+      ${EndIf}
+
+      StrCmp "$R9" "false" +1 finish_get_install_dir
+
+      SetRegView 32
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+      SetRegView lastused
 
       StrCmp "$R9" "false" +1 finish_get_install_dir
 
       SetShellVarContext current  ; Set SHCTX to HKCU
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
-
-      ${If} ${RunningX64}
-      ${OrIf} ${IsNativeARM64}
-        ; In HKCU there is no WOW64 redirection, which means we may have gotten
-        ; the path to a 32-bit install even though we're 64-bit, or vice-versa.
-        ; In that case, just use the default path instead of offering an upgrade.
-        ; But only do that override if the existing install is in Program Files,
-        ; because that's the only place we can be sure is specific
-        ; to either 32 or 64 bit applications.
-        ; The WordFind syntax below searches for the first occurence of the
-        ; "delimiter" (the Program Files path) in the install path and returns
-        ; anything that appears before that. If nothing appears before that,
-        ; then the install is under Program Files (32 or 64).
-!ifdef HAVE_64BIT_BUILD
-        ${WordFind} $R9 $PROGRAMFILES32 "+1{" $0
-!else
-        ${WordFind} $R9 $PROGRAMFILES64 "+1{" $0
-!endif
-        ${If} $0 == ""
-          StrCpy $R9 "false"
-        ${EndIf}
-      ${EndIf}
 
       finish_get_install_dir:
       StrCmp "$R9" "false" +2 +1

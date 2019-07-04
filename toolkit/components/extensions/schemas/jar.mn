@@ -40,7 +40,9 @@ toolkit.jar:
     content/extensions/schemas/telemetry.json
     content/extensions/schemas/test.json
     content/extensions/schemas/theme.json
+#ifndef ANDROID
     content/extensions/schemas/top_sites.json
+#endif
     content/extensions/schemas/types.json
     content/extensions/schemas/user_scripts.json
     content/extensions/schemas/user_scripts_content.json

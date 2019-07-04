@@ -30,7 +30,7 @@ namespace TelemetryStopwatch {
    *          order to avoid measurements errors.
    */
   boolean start(HistogramID histogram, optional object? obj = null,
-                optional TelemetryStopwatchOptions options);
+                optional TelemetryStopwatchOptions options = {});
 
   /**
    * Returns whether a timer associated with a telemetry histogram is currently
@@ -140,7 +140,7 @@ namespace TelemetryStopwatch {
    */
   boolean startKeyed(HistogramID histogram, HistogramKey key,
                      optional object? obj = null,
-                     optional TelemetryStopwatchOptions options);
+                     optional TelemetryStopwatchOptions options = {});
 
   /**
    * Returns whether a timer associated with a telemetry histogram is currently

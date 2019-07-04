@@ -207,7 +207,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
     // the case enough of an edge case, that this is probably better.
     if (kidNeedsReflow && aPresContext->CheckForInterrupt(aDelegatingFrame)) {
       if (aDelegatingFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
-        kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        kidFrame->MarkSubtreeDirty();
       } else {
         kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       }
@@ -351,7 +351,7 @@ void nsAbsoluteContainingBlock::MarkAllFramesDirty() {
 void nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty) {
   for (nsIFrame* kidFrame : mAbsoluteFrames) {
     if (aMarkAllDirty) {
-      kidFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+      kidFrame->MarkSubtreeDirty();
     } else if (FrameDependsOnContainer(kidFrame, true, true)) {
       // Add the weakest flags that will make sure we reflow this frame later
       kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);

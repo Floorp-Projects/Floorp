@@ -282,7 +282,14 @@ pref("devtools.webconsole.sidebarToggle", false);
 // Enable CodeMirror in the JsTerm
 pref("devtools.webconsole.jsterm.codeMirror", true);
 
-// Enable editor mode in the console.
+// Enable editor mode in the console in Nightly builds.
+#if defined(NIGHTLY_BUILD)
+pref("devtools.webconsole.features.editor", true);
+#else
+pref("devtools.webconsole.features.editor", false);
+#endif
+
+// Saved editor mode state in the console.
 pref("devtools.webconsole.input.editor", false);
 
 // Disable the new performance recording panel by default

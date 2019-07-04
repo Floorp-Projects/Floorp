@@ -1,5 +1,5 @@
 Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
-                [-t <x64|x86|...>|--target=<x64|x86|...>]
+                [-t <x64|ia32|...>|--target=<x64|ia32|...>]
                 [--clang|--gcc|--msvc] [--scan-build[=dir]] [--disable-tests]
                 [--pprof] [--asan] [--msan] [--ubsan[=bool,shift,...]
                 [--fuzz[=tls|oss]] [--sancov[=edge|bb|func|...]]
@@ -19,7 +19,7 @@ NSS build tool options:
     -j <n>           run at most <n> concurrent jobs
     --gyp|-g         force a rerun of gyp
     --opt|-o         do an opt build
-    --target|-t      specify target architecture (e.g., x86, x64, aarch64)
+    --target|-t      specify target architecture (e.g., ia32, x64, aarch64)
     --clang          build with clang and clang++
     --gcc            build with gcc and g++
     --msvc           build with MSVC

@@ -1,4 +1,5 @@
-import {GlobalOverrider, mountWithIntl, shallowWithIntl} from "test/unit/utils";
+import {GlobalOverrider} from "test/unit/utils";
+import {mount, shallow} from "enzyme";
 import React from "react";
 import {_Search as Search} from "content-src/components/Search/Search";
 
@@ -18,24 +19,24 @@ describe("<Search>", () => {
   });
 
   it("should render a Search element", () => {
-    const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} />);
+    const wrapper = shallow(<Search {...DEFAULT_PROPS} />);
     assert.ok(wrapper.exists());
   });
   it("should not use a <form> element", () => {
-    const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} />);
+    const wrapper = mount(<Search {...DEFAULT_PROPS} />);
 
     assert.equal(wrapper.find("form").length, 0);
   });
   it("should listen for ContentSearchClient on render", () => {
     const spy = globals.set("addEventListener", sandbox.spy());
 
-    const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} />);
+    const wrapper = mount(<Search {...DEFAULT_PROPS} />);
 
     assert.calledOnce(spy.withArgs("ContentSearchClient", wrapper.instance()));
   });
   it("should stop listening for ContentSearchClient on unmount", () => {
     const spy = globals.set("removeEventListener", sandbox.spy());
-    const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} />);
+    const wrapper = mount(<Search {...DEFAULT_PROPS} />);
     // cache the instance as we can't call this method after unmount is called
     const instance = wrapper.instance();
 
@@ -46,12 +47,12 @@ describe("<Search>", () => {
   it("should add gContentSearchController as a global", () => {
     // current about:home tests need gContentSearchController to exist as a global
     // so let's test it here too to ensure we don't break this behaviour
-    mountWithIntl(<Search {...DEFAULT_PROPS} />);
+    mount(<Search {...DEFAULT_PROPS} />);
     assert.property(window, "gContentSearchController");
     assert.ok(window.gContentSearchController);
   });
   it("should pass along search when clicking the search button", () => {
-    const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} />);
+    const wrapper = mount(<Search {...DEFAULT_PROPS} />);
 
     wrapper.find(".search-button").simulate("click");
 
@@ -64,7 +65,7 @@ describe("<Search>", () => {
       dispatchEvent(new CustomEvent("ContentSearchClient", {detail: {type: "Search"}}));
     };
     const dispatch = sinon.spy();
-    const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} dispatch={dispatch} />);
+    const wrapper = mount(<Search {...DEFAULT_PROPS} dispatch={dispatch} />);
 
     wrapper.find(".search-button").simulate("click");
 
@@ -76,13 +77,13 @@ describe("<Search>", () => {
 
   describe("Search Hand-off", () => {
     it("should render a Search element when hand-off is enabled", () => {
-      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} />);
+      const wrapper = shallow(<Search {...DEFAULT_PROPS} handoffEnabled={true} />);
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".search-handoff-button").length, 1);
     });
     it("should hand-off search when button is clicked", () => {
       const dispatch = sinon.spy();
-      const wrapper = shallowWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      const wrapper = shallow(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
       wrapper.find(".search-handoff-button").simulate("click", {preventDefault: () => {}});
       assert.calledThrice(dispatch);
       assert.calledWith(dispatch, {
@@ -97,7 +98,7 @@ describe("<Search>", () => {
     });
     it("should hand-off search on paste", () => {
       const dispatch = sinon.spy();
-      const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      const wrapper = mount(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
       wrapper.instance()._searchHandoffButton = {contains: () => true};
       wrapper.instance().onSearchHandoffPaste({
         clipboardData: {
@@ -118,7 +119,7 @@ describe("<Search>", () => {
     });
     it("should properly handle drop events", () => {
       const dispatch = sinon.spy();
-      const wrapper = mountWithIntl(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
+      const wrapper = mount(<Search {...DEFAULT_PROPS} handoffEnabled={true} dispatch={dispatch} />);
       const preventDefault = sinon.spy();
       wrapper.find(".fake-editable").simulate("drop", {
         dataTransfer: {getData: () => "dropped text"},

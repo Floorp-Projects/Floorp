@@ -45,6 +45,10 @@ add_task(async function test_login_item() {
 
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
+
+    let confirmDeleteDialog = Cu.waiveXrays(content.document.querySelector("confirm-delete-dialog"));
+    let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
+    confirmButton.click();
   });
   ok(deleteLoginMessageReceived,
      "Clicking the delete button should send the AboutLogins:DeleteLogin messsage");

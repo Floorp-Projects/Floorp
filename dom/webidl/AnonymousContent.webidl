@@ -66,7 +66,7 @@ interface AnonymousContent {
   Animation setAnimationForElement(DOMString elementId,
                                    object? keyframes,
                                    optional UnrestrictedDoubleOrKeyframeAnimationOptions
-                                     options);
+                                     options = {});
 
   /**
    * Accepts a list of (possibly overlapping) DOMRects which describe a shape

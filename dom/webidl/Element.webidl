@@ -164,7 +164,7 @@ dictionary FocusOptions {
 // is fixed, mixin should be used.
 [NoInterfaceObject] interface HTMLOrSVGOrXULElementMixin {
   [Throws]
-  void focus(optional FocusOptions options);
+  void focus(optional FocusOptions options = {});
 };
 
 // http://dev.w3.org/csswg/cssom-view/
@@ -180,7 +180,7 @@ partial interface Element {
   DOMRect getBoundingClientRect();
 
   // scrolling
-  void scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg);
+  void scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
   // None of the CSSOM attributes are [Pure], because they flush
            attribute long scrollTop;   // scroll on setting
            attribute long scrollLeft;  // scroll on setting
@@ -188,11 +188,11 @@ partial interface Element {
   readonly attribute long scrollHeight;
 
   void scroll(unrestricted double x, unrestricted double y);
-  void scroll(optional ScrollToOptions options);
+  void scroll(optional ScrollToOptions options = {});
   void scrollTo(unrestricted double x, unrestricted double y);
-  void scrollTo(optional ScrollToOptions options);
+  void scrollTo(optional ScrollToOptions options = {});
   void scrollBy(unrestricted double x, unrestricted double y);
-  void scrollBy(optional ScrollToOptions options);
+  void scrollBy(optional ScrollToOptions options = {});
   // mozScrollSnap is used by chrome to perform scroll snapping after the
   // user performs actions that may affect scroll position
   // mozScrollSnap is deprecated, to be replaced by a web accessible API, such

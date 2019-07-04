@@ -289,19 +289,19 @@ add_task(async function test_adaptive_mouse() {
   await PlacesUtils.history.clear();
   await bumpScore(url1, "site", {visits: 3, picks: 3}, true);
   await bumpScore(url2, "site", {visits: 3, picks: 1}, true);
-  await promiseAutocompleteResultPopup("");
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  await promiseAutocompleteResultPopup("si");
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.url, url1, "Check first result");
-  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
   Assert.equal(result.url, url2, "Check second result");
 
   info("Same visit count, different picks, invert");
   await PlacesUtils.history.clear();
   await bumpScore(url1, "site", {visits: 3, picks: 1}, true);
   await bumpScore(url2, "site", {visits: 3, picks: 3}, true);
-  await promiseAutocompleteResultPopup("");
-  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.equal(result.url, url2, "Check first result");
+  await promiseAutocompleteResultPopup("si");
   result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.url, url2, "Check first result");
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
   Assert.equal(result.url, url1, "Check second result");
 });

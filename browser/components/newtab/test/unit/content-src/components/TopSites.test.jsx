@@ -1,13 +1,13 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {GlobalOverrider, mountWithIntl, shallowWithIntl} from "test/unit/utils";
+import {GlobalOverrider} from "test/unit/utils";
 import {MIN_CORNER_FAVICON_SIZE, MIN_RICH_FAVICON_SIZE} from "content-src/components/TopSites/TopSitesConstants";
 import {TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW} from "common/Reducers.jsm";
-import {TopSite, TopSiteLink, _TopSiteList as TopSiteList, TopSitePlaceholder} from "content-src/components/TopSites/TopSite";
+import {TopSite, TopSiteLink, TopSiteList, TopSitePlaceholder} from "content-src/components/TopSites/TopSite";
 import {A11yLinkButton} from "content-src/components/A11yLinkButton/A11yLinkButton";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import {SectionMenu} from "content-src/components/SectionMenu/SectionMenu";
-import {shallow} from "enzyme";
+import {mount, shallow} from "enzyme";
 import {TopSiteForm} from "content-src/components/TopSites/TopSiteForm";
 import {TopSiteFormInput} from "content-src/components/TopSites/TopSiteFormInput";
 import {_TopSites as TopSites} from "content-src/components/TopSites/TopSites";
@@ -23,7 +23,6 @@ const DEFAULT_PROPS = {
   TopSitesRows: TOP_SITES_DEFAULT_ROWS,
   topSiteIconType: () => "no_image",
   dispatch() {},
-  intl: {formatMessage: x => x},
   perfSvc,
 };
 
@@ -46,22 +45,22 @@ describe("<TopSites>", () => {
   });
   describe("context menu", () => {
     it("should render a context menu button", () => {
-      const wrapper = mountWithIntl(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
       assert.equal(wrapper.find(".section-top-bar .context-menu-button").length, 1);
     });
     it("should render a section menu when button is clicked", () => {
-      const wrapper = mountWithIntl(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
       const button = wrapper.find(".section-top-bar .context-menu-button");
       assert.equal(wrapper.find(SectionMenu).length, 0);
       button.simulate("click", {preventDefault: () => {}});
       assert.equal(wrapper.find(SectionMenu).length, 1);
     });
     it("should not render a section menu by default", () => {
-      const wrapper = mountWithIntl(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
       assert.equal(wrapper.find(SectionMenu).length, 0);
     });
     it("should pass through the correct menu extraOptions to SectionMenu", () => {
-      const wrapper = mountWithIntl(<TopSites {...DEFAULT_PROPS} />);
+      const wrapper = mount(<TopSites {...DEFAULT_PROPS} />);
       wrapper.find(".section-top-bar .context-menu-button").simulate("click", {preventDefault: () => {}});
       const sectionMenuProps = wrapper.find(SectionMenu).props();
       assert.deepEqual(sectionMenuProps.extraOptions, ["AddTopSite"]);
@@ -548,7 +547,7 @@ describe("<TopSite>", () => {
   });
 
   it("should render a TopSite", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
     assert.ok(wrapper.exists());
   });
 
@@ -556,45 +555,54 @@ describe("<TopSite>", () => {
     link.url = "https://www.foobar.org";
     link.hostname = "foobar";
     link.eTLD = "org";
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
 
     assert.equal(wrapper.find(TopSiteLink).props().title, "foobar");
   });
 
+  it("should parse args for fluent correctly", () => {
+    const title = '"fluent"';
+    link.hostname = title;
+
+    const wrapper = mount(<TopSite link={link} />);
+    const button = wrapper.find("button[data-l10n-id='newtab-menu-content-tooltip']");
+    assert.equal(button.prop("data-l10n-args"), JSON.stringify({title}));
+  });
+
   it("should have .active class, on top-site-outer if context menu is open", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} index={1} activeIndex={1} />);
+    const wrapper = shallow(<TopSite link={link} index={1} activeIndex={1} />);
     wrapper.setState({showContextMenu: true});
 
     assert.equal(wrapper.find(TopSiteLink).props().className.trim(), "active");
   });
   it("should not add .active class, on top-site-outer if context menu is closed", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} index={1} />);
+    const wrapper = shallow(<TopSite link={link} index={1} />);
     wrapper.setState({showContextMenu: false, activeTile: 1});
     assert.equal(wrapper.find(TopSiteLink).props().className, "");
   });
   it("should render a context menu button", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
     assert.equal(wrapper.find(".context-menu-button").length, 1);
   });
   it("should render a link menu when button is clicked", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
     let button = wrapper.find(".context-menu-button");
     assert.equal(wrapper.find(LinkMenu).length, 0);
     button.simulate("click", {preventDefault: () => {}});
     assert.equal(wrapper.find(LinkMenu).length, 1);
   });
   it("should not render a link menu by default", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
     assert.equal(wrapper.find(LinkMenu).length, 0);
   });
   it("should pass onUpdate, site, options, and index to LinkMenu", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
     wrapper.find(".context-menu-button").simulate("click", {preventDefault: () => {}});
     const linkMenuProps = wrapper.find(LinkMenu).props();
     ["onUpdate", "site", "index", "options"].forEach(prop => assert.property(linkMenuProps, prop));
   });
   it("should pass through the correct menu options to LinkMenu", () => {
-    const wrapper = shallowWithIntl(<TopSite link={link} />);
+    const wrapper = shallow(<TopSite link={link} />);
     wrapper.find(".context-menu-button").simulate("click", {preventDefault: () => {}});
     const linkMenuProps = wrapper.find(LinkMenu).props();
     assert.deepEqual(linkMenuProps.options,
@@ -604,7 +612,7 @@ describe("<TopSite>", () => {
   describe("#onLinkClick", () => {
     it("should call dispatch when the link is clicked", () => {
       const dispatch = sinon.stub();
-      const wrapper = shallowWithIntl(<TopSite link={link} index={3} dispatch={dispatch} />);
+      const wrapper = shallow(<TopSite link={link} index={3} dispatch={dispatch} />);
 
       wrapper.find(TopSiteLink).simulate("click", {preventDefault() {}});
 
@@ -612,7 +620,7 @@ describe("<TopSite>", () => {
     });
     it("should dispatch a UserEventAction with the right data", () => {
       const dispatch = sinon.stub();
-      const wrapper = shallowWithIntl(<TopSite link={Object.assign({}, link, {iconType: "rich_icon", isPinned: true})} index={3} dispatch={dispatch} />);
+      const wrapper = shallow(<TopSite link={Object.assign({}, link, {iconType: "rich_icon", isPinned: true})} index={3} dispatch={dispatch} />);
 
       wrapper.find(TopSiteLink).simulate("click", {preventDefault() {}});
 
@@ -634,7 +642,7 @@ describe("<TopSite>", () => {
         hostname: "google",
         label: "@google",
       };
-      const wrapper = shallowWithIntl(<TopSite link={Object.assign({}, link, siteInfo)} index={3} dispatch={dispatch} />);
+      const wrapper = shallow(<TopSite link={Object.assign({}, link, siteInfo)} index={3} dispatch={dispatch} />);
 
       wrapper.find(TopSiteLink).simulate("click", {preventDefault() {}});
 
@@ -650,7 +658,7 @@ describe("<TopSite>", () => {
     });
     it("should dispatch OPEN_LINK with the right data", () => {
       const dispatch = sinon.stub();
-      const wrapper = shallowWithIntl(<TopSite link={Object.assign({}, link, {typedBonus: true})} index={3} dispatch={dispatch} />);
+      const wrapper = shallow(<TopSite link={Object.assign({}, link, {typedBonus: true})} index={3} dispatch={dispatch} />);
 
       wrapper.find(TopSiteLink).simulate("click", {preventDefault() {}});
 
@@ -668,7 +676,7 @@ describe("<TopSiteForm>", () => {
   function setup(props = {}) {
     sandbox = sinon.createSandbox();
     const customProps = Object.assign({}, {onClose: sandbox.spy(), dispatch: sandbox.spy()}, props);
-    wrapper = mountWithIntl(<TopSiteForm {...customProps} />);
+    wrapper = mount(<TopSiteForm {...customProps} />);
   }
 
   describe("validateForm", () => {
@@ -1166,7 +1174,7 @@ describe("<TopSiteList>", () => {
     for (let i = 0; i < TOP_SITES_MAX_SITES_PER_ROW; i++) {
       rows.push({url: `https://foo${i}.com`});
     }
-    const wrapper = mountWithIntl(<TopSiteList {...DEFAULT_PROPS} TopSites={{rows}} TopSitesRows={1} />);
+    const wrapper = mount(<TopSiteList {...DEFAULT_PROPS} TopSites={{rows}} TopSitesRows={1} />);
     assert.lengthOf(wrapper.find("li.hide-for-narrow"), 2);
   });
 });
@@ -1175,7 +1183,7 @@ describe("TopSitePlaceholder", () => {
   it("should dispatch a TOP_SITES_EDIT action when edit-button is clicked", () => {
     const dispatch = sinon.spy();
     const wrapper =
-      shallowWithIntl(<TopSitePlaceholder dispatch={dispatch} index={7} />);
+      shallow(<TopSitePlaceholder dispatch={dispatch} index={7} />);
 
     wrapper.find(".edit-button").first().simulate("click");
 
@@ -1193,7 +1201,7 @@ describe("#TopSiteFormInput", () => {
     beforeEach(() => {
       onChangeStub = sinon.stub();
 
-      wrapper = mountWithIntl(<TopSiteFormInput titleId="newtab-topsites-title-label"
+      wrapper = mount(<TopSiteFormInput titleId="newtab-topsites-title-label"
         placeholderId="newtab-topsites-title-input"
         errorMessageId="newtab-topsites-url-validation"
         onChange={onChangeStub}
@@ -1239,7 +1247,7 @@ describe("#TopSiteFormInput", () => {
     beforeEach(() => {
       onChangeStub = sinon.stub();
 
-      wrapper = mountWithIntl(<TopSiteFormInput titleId="newtab-topsites-title-label"
+      wrapper = mount(<TopSiteFormInput titleId="newtab-topsites-title-label"
         placeholderId="newtab-topsites-title-input"
         onChange={onChangeStub}
         validationError={true}

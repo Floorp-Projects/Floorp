@@ -89,6 +89,9 @@ class gfxEnv final {
   // Very noisy GLContext and GLContextProviderEGL
   DECL_GFX_ENV("MOZ_GL_SPEW", GlSpew);
 
+  //
+  DECL_GFX_ENV("MOZ_GPU_SWITCHING_SPEW", GpuSwitchingSpew);
+
   // Do extra work before and after each GLX call in GLContextProviderGLX
   DECL_GFX_ENV("MOZ_GLX_DEBUG", GlxDebug);
 

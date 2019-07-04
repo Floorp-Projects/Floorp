@@ -199,10 +199,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
     mFetchStreamReader = nullptr;
   }
 
-  JSObject* ReadableStreamBody() override {
-    MOZ_ASSERT(mReadableStreamBody);
-    return mReadableStreamBody;
-  }
+  JSObject* GetReadableStreamBody() override { return mReadableStreamBody; }
 
   void MarkAsRead() override { mBodyUsed = true; }
 

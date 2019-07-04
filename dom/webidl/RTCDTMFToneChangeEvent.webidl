@@ -7,7 +7,7 @@
  * https://www.w3.org/TR/webrtc/#rtcdtmftonechangeevent
  */
 
-[Constructor(DOMString type, optional RTCDTMFToneChangeEventInit eventInitDict)]
+[Constructor(DOMString type, optional RTCDTMFToneChangeEventInit eventInitDict = {})]
 interface RTCDTMFToneChangeEvent : Event {
     readonly attribute DOMString tone;
 };

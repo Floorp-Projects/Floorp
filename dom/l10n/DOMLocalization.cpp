@@ -309,13 +309,54 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
     return nullptr;
   }
 
-  RefPtr<Promise> callbackResult = FormatMessages(cx, l10nKeys, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  if (mIsSync) {
+    nsTArray<JS::Value> jsKeys;
+    SequenceRooter<JS::Value> keysRooter(cx, &jsKeys);
+    for (auto& key : l10nKeys) {
+      JS::RootedValue jsKey(cx);
+      if (!ToJSValue(cx, key, &jsKey)) {
+        aRv.NoteJSContextException(cx);
+        return nullptr;
+      }
+      jsKeys.AppendElement(jsKey);
+    }
 
-  nativeHandler->SetReturnValuePromise(promise);
-  callbackResult->AppendNativeHandler(nativeHandler);
+    nsTArray<JS::Value> messages;
+    SequenceRooter<JS::Value> messagesRooter(cx, &messages);
+    mLocalization->FormatMessagesSync(jsKeys, messages);
+    nsTArray<L10nMessage> l10nData;
+    SequenceRooter<L10nMessage> l10nDataRooter(cx, &l10nData);
+
+    for (auto& msg : messages) {
+      JS::Rooted<JS::Value> rootedMsg(cx);
+      rootedMsg.set(msg);
+      L10nMessage* slotPtr = l10nData.AppendElement(mozilla::fallible);
+      if (!slotPtr) {
+        promise->MaybeRejectWithUndefined();
+        return MaybeWrapPromise(promise);
+      }
+
+      if (!slotPtr->Init(cx, rootedMsg)) {
+        promise->MaybeRejectWithUndefined();
+        return MaybeWrapPromise(promise);
+      }
+    }
+
+    ApplyTranslations(domElements, l10nData, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      promise->MaybeRejectWithUndefined();
+      return MaybeWrapPromise(promise);
+    }
+
+    promise->MaybeResolveWithUndefined();
+  } else {
+    RefPtr<Promise> callbackResult = FormatMessages(cx, l10nKeys, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+    nativeHandler->SetReturnValuePromise(promise);
+    callbackResult->AppendNativeHandler(nativeHandler);
+  }
 
   return MaybeWrapPromise(promise);
 }

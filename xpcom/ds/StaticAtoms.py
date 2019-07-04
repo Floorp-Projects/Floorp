@@ -289,6 +289,7 @@ STATIC_ATOMS = [
     Atom("datal10nargs", "data-l10n-args"),
     Atom("datal10nattrs", "data-l10n-attrs"),
     Atom("datal10nname", "data-l10n-name"),
+    Atom("datal10nsync", "data-l10n-sync"),
     Atom("dataType", "data-type"),
     Atom("dateTime", "date-time"),
     Atom("date", "date"),

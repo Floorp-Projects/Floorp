@@ -32,3 +32,9 @@
 .longDescription:empty {
   display: none;
 }
+
+#locationTextBox {
+  -moz-box-flex: 1;
+  /* This matches the label/description's margin in global.css`*/
+  margin-inline: 6px 5px;
+}

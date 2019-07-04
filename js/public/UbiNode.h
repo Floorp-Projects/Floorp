@@ -509,6 +509,11 @@ enum class CoarseType : uint32_t {
   LAST = DOMNode
 };
 
+/**
+ * Convert a CoarseType enum into a string. The string is statically allocated.
+ */
+JS_PUBLIC_API const char* CoarseTypeToString(CoarseType type);
+
 inline uint32_t CoarseTypeToUint32(CoarseType type) {
   return static_cast<uint32_t>(type);
 }

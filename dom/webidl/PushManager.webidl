@@ -17,20 +17,20 @@ dictionary PushSubscriptionOptionsInit {
 [JSImplementation="@mozilla.org/push/PushManager;1",
  ChromeOnly, Constructor(DOMString scope)]
 interface PushManagerImpl {
-  Promise<PushSubscription>    subscribe(optional PushSubscriptionOptionsInit options);
+  Promise<PushSubscription>    subscribe(optional PushSubscriptionOptionsInit options = {});
   Promise<PushSubscription?>   getSubscription();
-  Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options);
+  Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options = {});
 };
 
 [Exposed=(Window,Worker), Pref="dom.push.enabled",
  ChromeConstructor(DOMString scope)]
 interface PushManager {
   [Throws, UseCounter]
-  Promise<PushSubscription>    subscribe(optional PushSubscriptionOptionsInit options);
+  Promise<PushSubscription>    subscribe(optional PushSubscriptionOptionsInit options = {});
   [Throws]
   Promise<PushSubscription?>   getSubscription();
   [Throws]
-  Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options);
+  Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options = {});
 };
 
 enum PushPermissionState

@@ -273,12 +273,18 @@ class MachBrowsertime(MachCommandBase):
         node_dir = os.path.dirname(self.node_path)
         path = [node_dir] + path
 
-        # Ensure that `/usr/bin/env python` in `visualmetrics.py` finds our
-        # virtualenv Python.
-        path = [os.path.dirname(self.virtualenv_manager.python_path)] + path
-
         append_env = {
             'PATH': os.pathsep.join(path),
+
+            # Bug 1560193: The JS library browsertime uses to execute commands
+            # (execa) will muck up the PATH variable and put the directory that
+            # node is in first in path. If this is globally-installed node,
+            # that means `/usr/bin` will be inserted first which means that we
+            # will get `/usr/bin/python` for `python`.
+            #
+            # Our fork of browsertime supports a `PYTHON` environment variable
+            # that points to the exact python executable to use.
+            'PYTHON': self.virtualenv_manager.python_path,
         }
 
         if path_to_imagemagick:

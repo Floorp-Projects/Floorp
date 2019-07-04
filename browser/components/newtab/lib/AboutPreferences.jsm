@@ -5,7 +5,6 @@
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
@@ -19,7 +18,7 @@ const PREFS_BEFORE_SECTIONS = [
     id: "search",
     pref: {
       feed: "showSearch",
-      titleString: "prefs_search_header",
+      titleString: "home-prefs-search-header",
     },
     icon: "chrome://browser/skin/search-glass.svg",
   },
@@ -27,8 +26,8 @@ const PREFS_BEFORE_SECTIONS = [
     id: "topsites",
     pref: {
       feed: "feeds.topsites",
-      titleString: "settings_pane_topsites_header",
-      descString: "prefs_topsites_description",
+      titleString: "home-prefs-topsites-header",
+      descString: "home-prefs-topsites-description",
     },
     icon: "topsites",
     maxRows: 4,
@@ -41,8 +40,8 @@ const PREFS_AFTER_SECTIONS = [
     id: "snippets",
     pref: {
       feed: "feeds.snippets",
-      titleString: "settings_pane_snippets_header",
-      descString: "prefs_snippets_description",
+      titleString: "home-prefs-snippets-header",
+      descString: "home-prefs-snippets-description",
     },
     icon: "info",
   },
@@ -149,19 +148,9 @@ this.AboutPreferences = class AboutPreferences {
     const createAppend = (tag, parent, options) => parent.appendChild(
       document.createXULElement(tag, options));
 
-    // Helper to get strings and format with values if necessary
-    const formatString = id => {
-      if (typeof id !== "object") {
-        return strings[id] || id;
-      }
-      let string = strings[id.id] || JSON.stringify(id);
-      if (id.values) {
-        Object.entries(id.values).forEach(([key, val]) => {
-          string = string.replace(new RegExp(`{${key}}`, "g"), val);
-        });
-      }
-      return string;
-    };
+    // Helper to get fluentIDs sometimes encase in an object
+    const getString = message =>
+      typeof message !== "object" ? message : message.id;
 
     // Helper to link a UI element to a preference for updating
     const linkPref = (element, name, type) => {
@@ -183,11 +172,12 @@ this.AboutPreferences = class AboutPreferences {
     const contentsGroup = homeGroup.insertAdjacentElement("afterend", homeGroup.cloneNode());
     contentsGroup.id = "homeContentsGroup";
     contentsGroup.setAttribute("data-subcategory", "contents");
-    createAppend("label", contentsGroup)
-      .appendChild(document.createElementNS(HTML_NS, "h2"))
-      .textContent = formatString("prefs_home_header");
-    createAppend("description", contentsGroup)
-      .textContent = formatString("prefs_home_description");
+    const homeHeader = createAppend("label", contentsGroup)
+      .appendChild(document.createElementNS(HTML_NS, "h2"));
+    document.l10n.setAttributes(homeHeader, "home-prefs-content-header");
+
+    const homeDescription = createAppend("description", contentsGroup);
+    document.l10n.setAttributes(homeDescription, "home-prefs-content-description");
 
     // Add preferences for each section
     prefStructure.forEach(sectionData => {
@@ -201,7 +191,7 @@ this.AboutPreferences = class AboutPreferences {
       } = sectionData;
       const {
         feed: name,
-        titleString,
+        titleString = {},
         descString,
         nestedPrefs = [],
       } = prefData || {};
@@ -220,8 +210,9 @@ this.AboutPreferences = class AboutPreferences {
       sectionVbox.setAttribute("data-subcategory", id);
       const checkbox = createAppend("checkbox", sectionVbox);
       checkbox.classList.add("section-checkbox");
-      checkbox.setAttribute("label", formatString(titleString));
       checkbox.setAttribute("src", iconUrl);
+      document.l10n.setAttributes(checkbox, getString(titleString), titleString.values);
+
       linkPref(checkbox, name, "bool");
 
       // Specially add a link for stories
@@ -233,8 +224,8 @@ this.AboutPreferences = class AboutPreferences {
 
         const link = createAppend("label", sponsoredHbox, {is: "text-link"});
         link.classList.add("learn-sponsored");
-        link.setAttribute("href", sectionData.learnMore.link.href);
-        link.textContent = formatString(sectionData.learnMore.link.id);
+        link.setAttribute("href", sectionData.pref.learnMore.link.href);
+        document.l10n.setAttributes(link, sectionData.pref.learnMore.link.id);
       }
 
       // Add more details for the section (e.g., description, more prefs)
@@ -243,7 +234,7 @@ this.AboutPreferences = class AboutPreferences {
       if (descString) {
         const label = createAppend("label", detailVbox);
         label.classList.add("indent");
-        label.textContent = formatString(descString);
+        document.l10n.setAttributes(label, getString(descString));
 
         // Add a rows dropdown if we have a pref to control and a maximum
         if (rowsPref && maxRows) {
@@ -260,9 +251,8 @@ this.AboutPreferences = class AboutPreferences {
           menulist.setAttribute("crop", "none");
           const menupopup = createAppend("menupopup", menulist);
           for (let num = 1; num <= maxRows; num++) {
-            const plurals = formatString({id: "prefs_section_rows_option", values: {num}});
             const item = createAppend("menuitem", menupopup);
-            item.setAttribute("label", PluralForm.get(num, plurals));
+            document.l10n.setAttributes(item, "home-prefs-sections-rows-option", { num });
             item.setAttribute("value", num);
           }
           linkPref(menulist, rowsPref, "int");
@@ -277,7 +267,7 @@ this.AboutPreferences = class AboutPreferences {
       nestedPrefs.forEach(nested => {
         const subcheck = createAppend("checkbox", detailVbox);
         subcheck.classList.add("indent");
-        subcheck.setAttribute("label", formatString(nested.titleString));
+        document.l10n.setAttributes(subcheck, nested.titleString);
         linkPref(subcheck, nested.name, "bool");
         subChecks.push(subcheck);
         subcheck.disabled = !pref._value;

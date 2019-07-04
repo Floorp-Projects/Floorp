@@ -34,14 +34,16 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Localization)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-Localization::Localization(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {}
+Localization::Localization(nsIGlobalObject* aGlobal)
+    : mGlobal(aGlobal), mIsSync(false) {}
 
 void Localization::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
   nsCOMPtr<mozILocalizationJSM> jsm =
       do_ImportModule("resource://gre/modules/Localization.jsm");
   MOZ_RELEASE_ASSERT(jsm);
 
-  Unused << jsm->GetLocalization(aResourceIds, getter_AddRefs(mLocalization));
+  Unused << jsm->GetLocalization(aResourceIds, mIsSync,
+                                 getter_AddRefs(mLocalization));
   MOZ_RELEASE_ASSERT(mLocalization);
 
   RegisterObservers();

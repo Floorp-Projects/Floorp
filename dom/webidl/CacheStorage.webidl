@@ -17,7 +17,7 @@ interface Principal;
  Pref="dom.caches.enabled"]
 interface CacheStorage {
   [NewObject]
-  Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
+  Promise<Response> match(RequestInfo request, optional CacheQueryOptions options = {});
   [NewObject]
   Promise<boolean> has(DOMString cacheName);
   [NewObject]

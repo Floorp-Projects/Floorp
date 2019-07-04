@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional WheelEventInit eventInitDict)]
+[Constructor(DOMString type, optional WheelEventInit eventInitDict = {})]
 interface WheelEvent : MouseEvent
 {
   const unsigned long DOM_DELTA_PIXEL = 0x00;

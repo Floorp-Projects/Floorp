@@ -51,7 +51,8 @@ namespace dom {
 HTMLTextAreaElement::HTMLTextAreaElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), NS_FORM_TEXTAREA),
+    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
+                                        NS_FORM_TEXTAREA),
       mValueChanged(false),
       mLastValueChangeWasInteractive(false),
       mHandlingSelect(false),
@@ -518,10 +519,8 @@ void HTMLTextAreaElement::DoneAddingChildren(bool aHaveNotified) {
     }
 
     if (!mInhibitStateRestoration) {
-      nsresult rv = GenerateStateKey();
-      if (NS_SUCCEEDED(rv)) {
-        RestoreFormControlState();
-      }
+      GenerateStateKey();
+      RestoreFormControlState();
     }
   }
 

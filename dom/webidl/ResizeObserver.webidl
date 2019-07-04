@@ -21,7 +21,7 @@ dictionary ResizeObserverOptions {
  Pref="layout.css.resizeobserver.enabled"]
 interface ResizeObserver {
     [Throws]
-    void observe(Element target, optional ResizeObserverOptions options);
+    void observe(Element target, optional ResizeObserverOptions options = {});
     [Throws]
     void unobserve(Element target);
     void disconnect();

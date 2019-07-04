@@ -2465,7 +2465,7 @@ utf8_to_wstr(char const * str)
 
   std::unique_ptr<wchar_t []> ret(new wchar_t[size]);
   ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret.get(), size);
-  return std::move(ret);
+  return ret;
 }
 
 static com_ptr<IMMDevice>

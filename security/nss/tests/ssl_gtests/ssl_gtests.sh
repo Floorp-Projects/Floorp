@@ -57,6 +57,7 @@ ssl_gtest_certs() {
   make_cert rsa_ca_rsa_pss_chain rsa_ca_rsapss_chain sign
   make_cert ecdh_rsa ecdh_rsa kex
   make_cert dsa dsa sign
+  make_cert delegator_ecdsa256 delegator_p256 sign
 }
 
 ############################## ssl_gtest_init ##########################

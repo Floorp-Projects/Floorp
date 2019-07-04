@@ -35,7 +35,7 @@ add_task(async function test_methods_calling() {
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], generateMessages);
+  ], false, generateMessages);
 
   let values = await l10n.formatValues([{id: "key"}, {id: "key2"}]);
 
@@ -81,7 +81,7 @@ key = { PLATFORM() ->
 
   const l10n = new Localization([
     "/test.ftl",
-  ], generateMessages);
+  ], false, generateMessages);
 
   let values = await l10n.formatValues([{id: "key"}]);
 
@@ -114,7 +114,7 @@ add_task(async function test_add_remove_resourceIds() {
     yield * await L10nRegistry.generateBundles(["en-US"], resIds);
   }
 
-  const l10n = new Localization(["/browser/menu.ftl"], generateMessages);
+  const l10n = new Localization(["/browser/menu.ftl"], false, generateMessages);
 
   let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
 
@@ -137,5 +137,83 @@ add_task(async function test_add_remove_resourceIds() {
 
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;
+  Services.locale.requestedLocales = originalRequested;
+});
+
+add_task(async function test_switch_to_async() {
+  const { L10nRegistry, FileSource } =
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
+
+  const fs = {
+    "/localization/en-US/browser/menu.ftl": "key1 = Value1",
+    "/localization/en-US/toolkit/menu.ftl": "key2 = Value2",
+  };
+  const originalLoad = L10nRegistry.load;
+  const originalLoadSync = L10nRegistry.loadSync;
+  const originalRequested = Services.locale.requestedLocales;
+
+  let syncLoads = 0;
+  let asyncLoads = 0;
+
+  L10nRegistry.load = async function(url) {
+    asyncLoads += 1;
+    return fs[url];
+  };
+
+  L10nRegistry.loadSync = function(url) {
+    syncLoads += 1;
+    return fs[url];
+  };
+
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
+  L10nRegistry.registerSource(source);
+
+  async function* generateMessages(resIds) {
+    yield * await L10nRegistry.generateBundles(["en-US"], resIds);
+  }
+
+  function* generateMessagesSync(resIds) {
+    yield * L10nRegistry.generateBundlesSync(["en-US"], resIds);
+  }
+
+  const l10n = new Localization(["/browser/menu.ftl"], false, generateMessages, generateMessagesSync);
+
+  let values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
+
+  equal(values[0], "Value1");
+  equal(values[1], undefined);
+  equal(syncLoads, 0);
+  equal(asyncLoads, 1);
+
+  l10n.setIsSync(true);
+
+  l10n.addResourceIds(["/toolkit/menu.ftl"]);
+
+  // Nothing happens when we switch, because
+  // the next load is lazy.
+  equal(syncLoads, 0);
+  equal(asyncLoads, 1);
+
+  values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
+  let values2 = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
+
+  deepEqual(values, values2);
+  equal(values[0], "Value1");
+  equal(values[1], "Value2");
+  equal(syncLoads, 1);
+  equal(asyncLoads, 1);
+
+  l10n.removeResourceIds(["/browser/menu.ftl"]);
+
+  values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
+
+  equal(values[0], undefined);
+  equal(values[1], "Value2");
+  equal(syncLoads, 1);
+  equal(asyncLoads, 1);
+
+  L10nRegistry.sources.clear();
+  L10nRegistry.load = originalLoad;
+  L10nRegistry.loadSync = originalLoadSync;
   Services.locale.requestedLocales = originalRequested;
 });

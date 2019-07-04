@@ -8,6 +8,7 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>Test editor toolbar";
 
 add_task(async function() {
+  await pushPref("devtools.webconsole.features.editor", true);
   // Run test with legacy JsTerm
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
   await performTests();

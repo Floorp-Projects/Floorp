@@ -974,7 +974,8 @@ void nsRange::SetSelection(mozilla::dom::Selection* aSelection) {
   // Extra step in case our parent failed to ensure the above
   // invariant.
   if (aSelection && mSelection) {
-    mSelection->RemoveRange(*this, IgnoreErrors());
+    mSelection->RemoveRangeAndUnselectFramesAndNotifyListeners(*this,
+                                                               IgnoreErrors());
   }
 
   mSelection = aSelection;

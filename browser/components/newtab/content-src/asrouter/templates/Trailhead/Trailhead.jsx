@@ -1,5 +1,4 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {injectIntl} from "react-intl";
 import {ModalOverlayWrapper} from "../../components/ModalOverlay/ModalOverlay";
 import {OnboardingCard} from "../OnboardingMessage/OnboardingMessage";
 import React from "react";
@@ -22,7 +21,7 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(", ");
 
-export class _Trailhead extends React.PureComponent {
+export class Trailhead extends React.PureComponent {
   constructor(props) {
     super(props);
     this.closeModal = this.closeModal.bind(this);
@@ -182,13 +181,6 @@ export class _Trailhead extends React.PureComponent {
     this.setState({showCards: true});
   }
 
-  getStringValue(str) {
-    if (str.property_id) {
-      str.value = this.props.intl.formatMessage({id: str.property_id});
-    }
-    return str.value;
-  }
-
   /**
    * Takes in a url as a string or URL object and returns a URL object with the
    * utm_* parameters added to it. If a URL object is passed in, the paraemeters
@@ -233,30 +225,29 @@ export class _Trailhead extends React.PureComponent {
       "trailhead",
       content && content.className,
     ].filter(v => v).join(" ");
+
     return (<>
     {this.state.isModalOpen && content ? <ModalOverlayWrapper innerClassName={innerClassName} onClose={this.closeModal} id="trailheadDialog" headerId="trailheadHeader">
       <div className="trailheadInner">
         <div className="trailheadContent">
           <h1 data-l10n-id={content.title.string_id}
-            id="trailheadHeader">{this.getStringValue(content.title)}</h1>
+            id="trailheadHeader" />
           {content.subtitle &&
-            <p data-l10n-id={content.subtitle.string_id}>{this.getStringValue(content.subtitle)}</p>
+            <p data-l10n-id={content.subtitle.string_id} />
           }
           <ul className="trailheadBenefits">
             {content.benefits.map(item => (
               <li key={item.id} className={item.id}>
-                <h3 data-l10n-id={item.title.string_id}>{this.getStringValue(item.title)}</h3>
-                <p data-l10n-id={item.text.string_id}>{this.getStringValue(item.text)}</p>
+                <h3 data-l10n-id={item.title.string_id} />
+                <p data-l10n-id={item.text.string_id} />
               </li>
             ))}
           </ul>
-          <a className="trailheadLearn" data-l10n-id={content.learn.text.string_id} href={this.addUtmParams(content.learn.url)} target="_blank" rel="noopener noreferrer">
-            {this.getStringValue(content.learn.text)}
-          </a>
+          <a className="trailheadLearn" data-l10n-id={content.learn.text.string_id} href={this.addUtmParams(content.learn.url)} target="_blank" rel="noopener noreferrer" />
         </div>
         <div role="group" aria-labelledby="joinFormHeader" aria-describedby="joinFormBody" className="trailheadForm">
-          <h3 id="joinFormHeader" data-l10n-id={content.form.title.string_id}>{this.getStringValue(content.form.title)}</h3>
-          <p id="joinFormBody" data-l10n-id={content.form.text.string_id}>{this.getStringValue(content.form.text)}</p>
+          <h3 id="joinFormHeader" data-l10n-id={content.form.title.string_id} />
+          <p id="joinFormBody" data-l10n-id={content.form.text.string_id} />
           <form method="get" action={this.props.fxaEndpoint} target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
             <input name="service" type="hidden" value="sync" />
             <input name="action" type="hidden" value="email" />
@@ -272,7 +263,6 @@ export class _Trailhead extends React.PureComponent {
             <p data-l10n-id="onboarding-join-form-email-error" className="error" />
             <input
               data-l10n-id={content.form.email.string_id}
-              placeholder={this.getStringValue(content.form.email)}
               name="email"
               type="email"
               onInvalid={this.onInputInvalid}
@@ -283,9 +273,7 @@ export class _Trailhead extends React.PureComponent {
               <a data-l10n-name="privacy" target="_blank" rel="noopener noreferrer"
                 href={this.addUtmParams("https://accounts.firefox.com/legal/privacy")} />
             </p>
-            <button data-l10n-id={content.form.button.string_id} type="submit">
-              {this.getStringValue(content.form.button)}
-            </button>
+            <button data-l10n-id={content.form.button.string_id} type="submit" />
           </form>
         </div>
       </div>
@@ -293,7 +281,7 @@ export class _Trailhead extends React.PureComponent {
       <button className="trailheadStart"
         data-l10n-id={content.skipButton.string_id}
         onBlur={this.onStartBlur}
-        onClick={this.closeModal}>{this.getStringValue(content.skipButton)}</button>
+        onClick={this.closeModal} />
     </ModalOverlayWrapper> : null}
     {(cards && cards.length) ? <div className={`trailheadCards ${this.state.showCardPanel ? "expanded" : "collapsed"}`}>
       <div className="trailheadCardsInner"
@@ -312,13 +300,10 @@ export class _Trailhead extends React.PureComponent {
         {this.state.showCardPanel &&
           <button
             className="icon icon-dismiss" onClick={this.hideCardPanel}
-            title={props.intl.formatMessage({id: "menu_action_dismiss"})}
-            aria-label={props.intl.formatMessage({id: "menu_action_dismiss"})} />
+            data-l10n-id="onboarding-cards-dismiss" />
         }
       </div>
     </div> : null}
     </>);
   }
 }
-
-export const Trailhead = injectIntl(_Trailhead);

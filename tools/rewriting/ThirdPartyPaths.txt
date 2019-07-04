@@ -68,7 +68,7 @@ media/gmp-clearkey/0.1/openaes/
 media/kiss_fft/
 media/libaom/
 media/libcubeb/
-media/libdav1d/version.h
+media/libdav1d/
 media/libjpeg/
 media/libmkv/
 media/libnestegg/

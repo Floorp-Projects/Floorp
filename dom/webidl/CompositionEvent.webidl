@@ -9,7 +9,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional CompositionEventInit eventInitDict)]
+[Constructor(DOMString type, optional CompositionEventInit eventInitDict = {})]
 interface CompositionEvent : UIEvent
 {
   readonly attribute DOMString? data;

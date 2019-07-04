@@ -12,7 +12,7 @@ For events recorded into Firefox Telemetry we also provide an API that opaquely 
 
 .. important::
 
-    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
+    Every new or changed data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`__ from a Data Steward.
 
 .. _events.serializationformat:
 
@@ -198,7 +198,9 @@ Example:
 
   Services.telemetry.setEventRecordingEnabled(category, enabled);
 
-Event recording is currently disabled by default. Privileged add-ons and Firefox code can enable & disable recording events for specific categories using this function.
+Event recording is currently disabled by default for events registered in Events.yaml.
+Dynamically-registered events (those registered using ``registerEvents()``) are enabled by default, and cannot be disabled.
+Privileged add-ons and Firefox code can enable & disable recording events for specific categories using this function.
 
 Example:
 
@@ -235,7 +237,7 @@ Register new events from add-ons.
   * ``expired`` - *(optional, bool)* Whether this event entry is expired. This allows recording it without error, but it will be discarded. Defaults to false.
 
 For events recorded from add-ons, registration happens at runtime. Any new events must first be registered through this function before they can be recorded.
-The registered categories will automatically be enabled for recording.
+The registered categories will automatically be enabled for recording, and cannot be disabled.
 If a dynamic event uses the same category as a static event, the category will also be enabled upon registration.
 
 After registration, the events can be recorded through the ``recordEvent()`` function. They will be submitted in event pings like static events are, under the ``dynamic`` process.

@@ -67,7 +67,6 @@ export class DSCard extends React.PureComponent {
           id={this.props.id}
           index={this.props.pos}
           dispatch={this.props.dispatch}
-          intl={this.props.intl}
           url={this.props.url}
           title={this.props.title}
           source={this.props.source}

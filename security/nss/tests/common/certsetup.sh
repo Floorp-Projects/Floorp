@@ -46,6 +46,11 @@ make_cert() {
     rsapss_chain) type_args=(-g 1024);sign=(-c rsa_pss_ca);type=rsa;;
     rsa_ca_rsapss_chain) type_args=(-g 1024 --pss-sign);sign=(-c rsa_ca);type=rsa;;
     ecdh_rsa) type_args=(-q nistp256);sign=(-c rsa_ca);type=ec ;;
+    delegator_p256)
+        touch empty.txt
+        type_args=(-q nistp256 --extGeneric 1.3.6.1.4.1.44363.44:not-critical:empty.txt)
+        type=ec
+        ;;
   esac
   msg="create certificate: $@"
   shift 2

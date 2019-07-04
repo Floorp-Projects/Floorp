@@ -10,7 +10,7 @@
  * load/unload and saving/restoring a document from session history.
  */
 
-[Constructor(DOMString type, optional PageTransitionEventInit eventInitDict)]
+[Constructor(DOMString type, optional PageTransitionEventInit eventInitDict = {})]
 interface PageTransitionEvent : Event
 {
   /**

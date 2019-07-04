@@ -8,6 +8,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
 });
 
 const DOWNLOAD_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for downloads changed events
@@ -82,6 +83,14 @@ this.DownloadsManager = class DownloadsManager {
                       .sort((download1, download2) => download1.endTime < download2.endTime);
 
     for (const download of downloads) {
+      // Ignore blocked links, but allow long (data:) uris to avoid high CPU
+      if (
+        download.source.url.length < 10000 &&
+        NewTabUtils.blockedLinks.isBlocked(download.source)
+      ) {
+        continue;
+      }
+
       // Only include downloads where the file still exists
       if (onlyExists) {
         // Refresh download to ensure the 'exists' attribute is up to date

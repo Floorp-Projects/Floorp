@@ -19,16 +19,9 @@ job-defaults:
     description: Sends email to release-drivers telling release was promoted.
     run-on-projects: []
     shipping-phase: promote
-    worker-type: b-linux
+    worker-type: succeed
     worker:
-        implementation: docker-worker
-        os: linux
-        docker-image: "ubuntu:16.10"
-        max-run-time: 600
-        command:
-            - /bin/bash
-            - -c
-            - echo "Dummy task"
+        implementation: succeed
     notifications:
         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"

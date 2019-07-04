@@ -154,7 +154,7 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
   return DefaultAutoplayBehaviour() != nsIAutoplay::ALLOWED &&
          Preferences::GetBool("media.autoplay.block-webaudio", false) &&
-         StaticPrefs::MediaAutoplayUserGesturesNeeded();
+         StaticPrefs::media_autoplay_enabled_user_gestures_needed();
 }
 
 /* static */
@@ -171,9 +171,9 @@ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
 }
 
 static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
-  if (!StaticPrefs::MediaAutoplayUserGesturesNeeded()) {
-  // If element is blessed, it would always be allowed to play().
-  return aElement.IsBlessed() || EventStateManager::IsHandlingUserInput();
+  if (!StaticPrefs::media_autoplay_enabled_user_gestures_needed()) {
+    // If element is blessed, it would always be allowed to play().
+    return aElement.IsBlessed() || EventStateManager::IsHandlingUserInput();
   }
   return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }

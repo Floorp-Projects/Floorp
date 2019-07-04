@@ -870,9 +870,9 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
                                "MediaFormatReader::mTaskQueue",
                                /* aSupportsTailDispatch = */ true)),
       mAudio(this, MediaData::Type::AUDIO_DATA,
-             StaticPrefs::MediaAudioMaxDecodeError()),
+             StaticPrefs::media_audio_max_decode_error()),
       mVideo(this, MediaData::Type::VIDEO_DATA,
-             StaticPrefs::MediaVideoMaxDecodeError()),
+             StaticPrefs::media_video_max_decode_error()),
       mDemuxer(new DemuxerProxy(aDemuxer)),
       mDemuxerInitDone(false),
       mPendingNotifyDataArrived(false),
@@ -1133,7 +1133,7 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
 
-  if (NS_FAILED(aResult) && StaticPrefs::MediaPlaybackWarningsAsErrors()) {
+  if (NS_FAILED(aResult) && StaticPrefs::media_playback_warnings_as_errors()) {
     mMetadataPromise.Reject(aResult, __func__);
     return;
   }
@@ -1332,7 +1332,7 @@ MediaFormatReader::DecoderData& MediaFormatReader::GetDecoderData(
 bool MediaFormatReader::ShouldSkip(TimeUnit aTimeThreshold) {
   MOZ_ASSERT(HasVideo());
 
-  if (!StaticPrefs::MediaDecoderSkipToNextKeyFrameEnabled()) {
+  if (!StaticPrefs::media_decoder_skip_to_next_key_frame_enabled()) {
     return false;
   }
 
@@ -1899,7 +1899,7 @@ void MediaFormatReader::HandleDemuxedSamples(
     nsTArray<RefPtr<MediaRawData>> samples;
     if (decoder.mDecoder) {
       bool recyclable =
-          StaticPrefs::MediaDecoderRecycleEnabled() &&
+          StaticPrefs::media_decoder_recycle_enabled() &&
           decoder.mDecoder->SupportDecoderRecycling() &&
           (*info)->mCrypto.mCryptoScheme ==
               decoder.GetCurrentInfo()->mCrypto.mCryptoScheme &&

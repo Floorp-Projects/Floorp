@@ -128,7 +128,8 @@ enum class ZealMode {
   _(WasmGlobalCell)                        \
   _(WasmResolveResponseClosure)            \
   _(WasmModule)                            \
-  _(WasmTableTable)
+  _(WasmTableTable)                        \
+  _(FileObjectFile)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \

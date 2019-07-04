@@ -17,6 +17,9 @@ const {
 } = require("devtools/shared/layout/utils");
 const Debugger = require("Debugger");
 const ReplayInspector = require("devtools/server/actors/replay/inspector");
+const {
+  EXCLUDED_LISTENER,
+} = require("devtools/server/actors/inspector/constants");
 
 // eslint-disable-next-line
 const JQUERY_LIVE_REGEX = /return typeof \w+.*.event\.triggered[\s\S]*\.event\.(dispatch|handle).*arguments/;
@@ -253,6 +256,7 @@ class MainEventCollector {
    *         An array of unfiltered event listeners or an empty array
    */
   getDOMListeners(node) {
+    let listeners;
     if (typeof node.nodeName !== "undefined" && node.nodeName.toLowerCase() === "html") {
       const winListeners =
         Services.els.getListenerInfoFor(node.ownerGlobal) || [];
@@ -261,9 +265,15 @@ class MainEventCollector {
       const docListeners =
         Services.els.getListenerInfoFor(node.parentNode) || [];
 
-      return [...winListeners, ...docElementListeners, ...docListeners];
+      listeners = [...winListeners, ...docElementListeners, ...docListeners];
+    } else {
+      listeners = Services.els.getListenerInfoFor(node) || [];
     }
-    return Services.els.getListenerInfoFor(node) || [];
+
+    return listeners.filter(listener => {
+      const obj = this.unwrap(listener.listenerObject);
+      return !obj || !obj[EXCLUDED_LISTENER];
+    });
   }
 
   getJQuery(node) {

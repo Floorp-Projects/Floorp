@@ -33,5 +33,5 @@ interface MediaKeys {
   Promise<void> setServerCertificate(BufferSource serverCertificate);
 
   [Pref="media.eme.hdcp-policy-check.enabled", NewObject]
-  Promise<MediaKeyStatus> getStatusForPolicy(optional MediaKeysPolicy policy);
+  Promise<MediaKeyStatus> getStatusForPolicy(optional MediaKeysPolicy policy = {});
 };

@@ -21,12 +21,12 @@ interface Geolocation {
   [Throws, NeedsCallerType]
   void getCurrentPosition(PositionCallback successCallback,
                           optional PositionErrorCallback? errorCallback = null,
-                          optional PositionOptions options);
+                          optional PositionOptions options = {});
 
   [Throws, NeedsCallerType]
   long watchPosition(PositionCallback successCallback,
                      optional PositionErrorCallback? errorCallback = null,
-                     optional PositionOptions options);
+                     optional PositionOptions options = {});
 
   void clearWatch(long watchId);
 };

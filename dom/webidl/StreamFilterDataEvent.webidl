@@ -11,7 +11,7 @@
  * any standard.
  */
 
-[Constructor(DOMString type, optional StreamFilterDataEventInit eventInitDict),
+[Constructor(DOMString type, optional StreamFilterDataEventInit eventInitDict = {}),
  Func="mozilla::extensions::StreamFilter::IsAllowedInContext",
  Exposed=Window]
 interface StreamFilterDataEvent : Event {

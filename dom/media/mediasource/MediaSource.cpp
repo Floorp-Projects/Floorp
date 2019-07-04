@@ -117,11 +117,11 @@ nsresult MediaSource::IsTypeSupported(const nsAString& aType,
   }
   if (mimeType == MEDIAMIMETYPE("video/webm")) {
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
-          StaticPrefs::MediaCapabilitiesEnabled() ||
+          StaticPrefs::media_media_capabilities_enabled() ||
           containerType->ExtendedType().Codecs().Contains(
               NS_LITERAL_STRING("vp8")) ||
 #ifdef MOZ_AV1
-          (StaticPrefs::MediaAv1Enabled() &&
+          (StaticPrefs::media_av1_enabled() &&
            IsAV1CodecString(
                containerType->ExtendedType().Codecs().AsString())) ||
 #endif

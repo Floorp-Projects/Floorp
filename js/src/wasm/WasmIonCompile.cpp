@@ -2862,8 +2862,14 @@ static bool EmitAtomicXchg(FunctionCompiler& f, ValType type,
   return true;
 }
 
-#ifdef ENABLE_WASM_BULKMEM_OPS
 static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
+  // Bulk memory must be available if shared memory is enabled.
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (f.env().sharedMemoryEnabled == Shareable::False) {
+    return f.iter().fail("bulk memory ops disabled");
+  }
+#endif
+
   MDefinition *dst, *src, *len;
   uint32_t dstTableIndex;
   uint32_t srcTableIndex;
@@ -2918,6 +2924,13 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
 }
 
 static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
+  // Bulk memory must be available if shared memory is enabled.
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (f.env().sharedMemoryEnabled == Shareable::False) {
+    return f.iter().fail("bulk memory ops disabled");
+  }
+#endif
+
   uint32_t segIndexVal = 0;
   if (!f.iter().readDataOrElemDrop(isData, &segIndexVal)) {
     return false;
@@ -2950,6 +2963,13 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
 }
 
 static bool EmitMemFill(FunctionCompiler& f) {
+  // Bulk memory must be available if shared memory is enabled.
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (f.env().sharedMemoryEnabled == Shareable::False) {
+    return f.iter().fail("bulk memory ops disabled");
+  }
+#endif
+
   MDefinition *start, *val, *len;
   if (!f.iter().readMemFill(&start, &val, &len)) {
     return false;
@@ -2985,6 +3005,13 @@ static bool EmitMemFill(FunctionCompiler& f) {
 }
 
 static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
+  // Bulk memory must be available if shared memory is enabled.
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (f.env().sharedMemoryEnabled == Shareable::False) {
+    return f.iter().fail("bulk memory ops disabled");
+  }
+#endif
+
   uint32_t segIndexVal = 0, dstTableIndex = 0;
   MDefinition *dstOff, *srcOff, *len;
   if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstTableIndex, &dstOff,
@@ -3035,7 +3062,6 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 
   return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
-#endif  // ENABLE_WASM_BULKMEM_OPS
 
 #ifdef ENABLE_WASM_REFTYPES
 // Note, table.{get,grow,set} on table(funcref) are currently rejected by the
@@ -3782,7 +3808,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(MiscOp::I64TruncUSatF64):
             CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
                                MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
-#ifdef ENABLE_WASM_BULKMEM_OPS
           case uint32_t(MiscOp::MemCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
           case uint32_t(MiscOp::DataDrop):
@@ -3797,7 +3822,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
           case uint32_t(MiscOp::TableInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
-#endif
 #ifdef ENABLE_WASM_REFTYPES
           case uint32_t(MiscOp::TableFill):
             CHECK(EmitTableFill(f));

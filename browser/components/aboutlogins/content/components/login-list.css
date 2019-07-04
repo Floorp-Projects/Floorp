@@ -16,8 +16,6 @@
   padding: 10px 18px;
   border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-info-background);
-  position: sticky;
-  top: 0;
 }
 
 .count {

@@ -28,7 +28,8 @@ add_task(async function test_support_theme_frame() {
                "LWT text color attribute should be set");
 
   let style = window.getComputedStyle(docEl);
-  checkThemeHeaderImage(window, `moz-extension://${extension.uuid}/face.png`);
+  Assert.ok(style.backgroundImage.includes("face.png"),
+            `The backgroundImage should use face.png. Actual value is: ${style.backgroundImage}`);
   Assert.equal(style.backgroundColor, "rgb(" + FRAME_COLOR.join(", ") + ")",
                "Expected correct background color");
   Assert.equal(style.color, "rgb(" + TAB_TEXT_COLOR.join(", ") + ")",

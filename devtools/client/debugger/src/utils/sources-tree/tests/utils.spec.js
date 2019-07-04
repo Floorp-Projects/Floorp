@@ -14,6 +14,7 @@ import {
   isDirectory,
   addToTree,
   isNotJavaScript,
+  getPathWithoutThread,
 } from "../index";
 
 describe("sources tree", () => {
@@ -99,6 +100,48 @@ describe("sources tree", () => {
     it("png file", () => {
       const source = makeMockSource("http://example.com/foo.png");
       expect(isNotJavaScript(source)).toBe(true);
+    });
+  });
+
+  describe("getPathWithoutThread", () => {
+    it("main thread pattern", () => {
+      const path = getPathWithoutThread("server1.conn0.child1/context18");
+      expect(path).toBe("");
+    });
+
+    it("main thread host", () => {
+      const path = getPathWithoutThread(
+        "server1.conn0.child1/context18/dbg-workers.glitch.me"
+      );
+      expect(path).toBe("dbg-workers.glitch.me");
+    });
+
+    it("main thread children", () => {
+      const path = getPathWithoutThread(
+        "server1.conn0.child1/context18/dbg-workers.glitch.me/more"
+      );
+      expect(path).toBe("dbg-workers.glitch.me/more");
+    });
+
+    it("worker thread", () => {
+      const path = getPathWithoutThread(
+        "server1.conn0.child1/workerTarget25/context1"
+      );
+      expect(path).toBe("");
+    });
+
+    it("worker thread with children", () => {
+      const path = getPathWithoutThread(
+        "server1.conn0.child1/workerTarget25/context1/dbg-workers.glitch.me/utils"
+      );
+      expect(path).toBe("dbg-workers.glitch.me/utils");
+    });
+
+    it("worker thread with file named like pattern", () => {
+      const path = getPathWithoutThread(
+        "server1.conn0.child1/workerTarget25/context1/dbg-workers.glitch.me/utils/context38/index.js"
+      );
+      expect(path).toBe("dbg-workers.glitch.me/utils/context38/index.js");
     });
   });
 });

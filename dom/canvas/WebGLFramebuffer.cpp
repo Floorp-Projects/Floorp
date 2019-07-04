@@ -934,13 +934,14 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
 }
 
 WebGLFramebuffer::CompletenessInfo::~CompletenessInfo() {
-  const auto& fb = this->fb;
+  if (!this->fb) return;
+  const auto& fb = *this->fb;
   const auto& webgl = fb.mContext;
   fb.mNumFBStatusInvals++;
   if (fb.mNumFBStatusInvals > webgl->mMaxAcceptableFBStatusInvals) {
     webgl->GeneratePerfWarning(
         "FB was invalidated after being complete %u"
-        " times.",
+        " times. [webgl.perf.max-acceptable-fb-status-invals]",
         uint32_t(fb.mNumFBStatusInvals));
   }
 }
@@ -984,7 +985,7 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
     ResolveAttachmentData();
 
     // Sweet, let's cache that.
-    auto info = CompletenessInfo{*this, UINT32_MAX, UINT32_MAX};
+    auto info = CompletenessInfo{this, UINT32_MAX, UINT32_MAX};
     mCompletenessInfo.ResetInvalidators({});
     mCompletenessInfo.AddInvalidator(*this);
 
@@ -1013,6 +1014,7 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
       info.isMultiview = cur->IsMultiview();
     }
     mCompletenessInfo = Some(std::move(info));
+    info.fb = nullptr;  // Don't trigger the invalidation warning.
     return LOCAL_GL_FRAMEBUFFER_COMPLETE;
   } while (false);
 

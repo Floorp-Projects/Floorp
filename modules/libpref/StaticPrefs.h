@@ -95,8 +95,8 @@ void MaybeInitOncePrefs();
 //       MaybeInitOncePrefs();
 //       return sVarCache_my_pref();
 //     }
-//     inline const char* Getmy_prefPrefName() { return "my.pref"; }
-//     inline int32_t Getmy_prefPrefDefault() { return 99; }
+//     inline const char* GetPrefName_my_pref() { return "my.pref"; }
+//     inline int32_t GetPrefDefault_my_pref() { return 99; }
 //
 // The extern declaration of the variable is necessary for bindgen to see it
 // and generate Rust bindings.
@@ -116,8 +116,8 @@ void MaybeInitOncePrefs();
     MaybeInitOncePrefs();                                        \
     return sVarCache_##id;                                       \
   }                                                              \
-  inline const char* Get##id##PrefName() { return name; }        \
-  inline StripAtomic<cpp_type> Get##id##PrefDefault() { return default_value; }
+  inline const char* GetPrefName_##id() { return name; }         \
+  inline StripAtomic<cpp_type> GetPrefDefault_##id() { return default_value; }
 
 #include "mozilla/StaticPrefList.h"
 #undef PREF

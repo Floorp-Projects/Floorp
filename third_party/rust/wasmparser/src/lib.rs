@@ -24,7 +24,6 @@
 //! a data-structure using this library.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(not(feature = "std"), feature(alloc))]
 
 #[cfg(not(feature = "std"))]
 extern crate hashmap_core;
@@ -66,14 +65,17 @@ pub use primitives::Result;
 pub use primitives::SectionCode;
 pub use primitives::TableType;
 pub use primitives::Type;
+pub use primitives::TypeOrFuncType;
 pub use primitives::V128;
 
 pub use validator::validate;
-pub use validator::OperatorValidatorConfig;
+pub use validator::validate_function_body;
 pub use validator::ValidatingOperatorParser;
 pub use validator::ValidatingParser;
 pub use validator::ValidatingParserConfig;
-pub use validator::WasmModuleResources;
+
+pub use operators_validator::OperatorValidatorConfig;
+pub use operators_validator::WasmModuleResources;
 
 pub use readers::CodeSectionReader;
 pub use readers::Data;
@@ -116,6 +118,7 @@ pub use readers::TypeSectionReader;
 
 mod binary_reader;
 mod limits;
+mod operators_validator;
 mod parser;
 mod primitives;
 mod readers;
@@ -124,7 +127,7 @@ mod validator;
 
 #[cfg(not(feature = "std"))]
 mod std {
-    pub use alloc::{boxed, vec};
+    pub use alloc::{boxed, string, vec};
     pub use core::*;
     pub mod collections {
         pub use hashmap_core::HashSet;

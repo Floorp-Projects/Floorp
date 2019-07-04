@@ -27,7 +27,6 @@ login-filter {
 
 login-list {
   grid-area: logins;
-  overflow: hidden auto;
 }
 
 login-item {

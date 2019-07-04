@@ -1,5 +1,5 @@
-import {mountWithIntl, shallowWithIntl} from "test/unit/utils";
-import {_DSLinkMenu as DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
+import {mount, shallow} from "enzyme";
+import {DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 
@@ -9,7 +9,7 @@ describe("<DSLinkMenu>", () => {
 
   describe("DS link menu actions", () => {
     beforeEach(() => {
-      wrapper = mountWithIntl(<DSLinkMenu />);
+      wrapper = mount(<DSLinkMenu />);
       parentNode = wrapper.getDOMNode().parentNode;
     });
 
@@ -41,7 +41,7 @@ describe("<DSLinkMenu>", () => {
 
     it("Should add last-item to support resized window", async () => {
       const fakeWindow = {scrollMaxX: "20"};
-      wrapper = mountWithIntl(<DSLinkMenu windowObj={fakeWindow} />);
+      wrapper = mount(<DSLinkMenu windowObj={fakeWindow} />);
       parentNode = wrapper.getDOMNode().parentNode;
       wrapper.instance().onMenuShow();
       // Wait for next frame to allow fluent to render strings
@@ -67,6 +67,14 @@ describe("<DSLinkMenu>", () => {
       await new Promise(r => requestAnimationFrame(r));
       assert.calledOnce(add);
     });
+
+    it("should parse args for fluent correctly ", () => {
+      const title = '"fluent"'
+      wrapper = shallow(<DSLinkMenu title={title} />);
+
+      const button = wrapper.find("button[data-l10n-id='newtab-menu-content-tooltip']");
+      assert.equal(button.prop("data-l10n-args"), JSON.stringify({title}));
+    });
   });
 
   describe("DS context menu options", () => {
@@ -75,7 +83,7 @@ describe("<DSLinkMenu>", () => {
     };
 
     beforeEach(() => {
-      wrapper = shallowWithIntl(<DSLinkMenu {...ValidDSLinkMenuProps} />);
+      wrapper = shallow(<DSLinkMenu {...ValidDSLinkMenuProps} />);
     });
 
     it("should render a context menu button", () => {

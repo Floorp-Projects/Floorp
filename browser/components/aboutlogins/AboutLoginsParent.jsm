@@ -9,8 +9,6 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Localization",
-                               "resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "MigrationUtils",
@@ -31,8 +29,11 @@ const PRIVILEGEDABOUT_PROCESS_ENABLED =
   Services.prefs.getBoolPref(PRIVILEGEDABOUT_PROCESS_PREF, false);
 
 
-const FEEDBACK_URL_PREF = "signon.feedbackURL";
+const FEEDBACK_URL_PREF = "signon.management.page.feedbackURL";
 const FEEDBACK_URL = Services.urlFormatter.formatURLPref(FEEDBACK_URL_PREF);
+
+const FAQ_URL_PREF = "signon.management.page.faqURL";
+const FAQ_URL = Services.prefs.getStringPref(FAQ_URL_PREF);
 
 // When the privileged content process is enabled, we expect about:logins
 // to load in it. Otherwise, it's in a normal web content process.
@@ -113,6 +114,10 @@ var AboutLoginsParent = {
       }
       case "AboutLogins:OpenFeedback": {
         message.target.ownerGlobal.openWebLinkIn(FEEDBACK_URL, "tab", {relatedToCurrent: true});
+        break;
+      }
+      case "AboutLogins:OpenFAQ": {
+        message.target.ownerGlobal.openWebLinkIn(FAQ_URL, "tab", {relatedToCurrent: true});
         break;
       }
       case "AboutLogins:OpenPreferences": {
@@ -215,12 +220,10 @@ var AboutLoginsParent = {
   },
 
   async showMasterPasswordLoginNotifications() {
-    if (!this._l10n) {
-      this._l10n = new Localization(["browser/aboutLogins.ftl"]);
-    }
-
-    let messageString = await this._l10n.formatValue("master-password-notification-message");
     for (let subscriber of this._subscriberIterator()) {
+      let MozXULElement = subscriber.ownerGlobal.MozXULElement;
+      MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");
+
       // If there's already an existing notification bar, don't do anything.
       let {gBrowser} = subscriber.ownerGlobal;
       let browser = subscriber;
@@ -233,17 +236,20 @@ var AboutLoginsParent = {
       // Configure the notification bar
       let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
       let iconURL = "chrome://browser/skin/login.svg";
-      let reloadLabel = await this._l10n.formatValue("master-password-reload-button-label");
-      let reloadKey = await this._l10n.formatValue("master-password-reload-button-accesskey");
+
+      let doc = subscriber.ownerDocument;
+      let messageFragment = doc.createDocumentFragment();
+      let message = doc.createElement("span");
+      doc.l10n.setAttributes(message, "master-password-notification-message");
+      messageFragment.appendChild(message);
 
       let buttons = [{
-        label: reloadLabel,
-        accessKey: reloadKey,
+        "l10n-id": "master-password-reload-button",
         popup: null,
         callback() { browser.reload(); },
       }];
 
-      notification = notificationBox.appendNotification(messageString, MASTER_PASSWORD_NOTIFICATION_ID,
+      notification = notificationBox.appendNotification(messageFragment, MASTER_PASSWORD_NOTIFICATION_ID,
                                                         iconURL, priority, buttons);
     }
   },

@@ -2094,6 +2094,10 @@ impl PrimitiveStore {
                         clip_chain.clips_range,
                         if apply_local_clip_rect { "(applied)" } else { "" },
                     );
+                    println!("\tpicture rect {:?} @{:?}",
+                        clip_chain.pic_clip_rect,
+                        clip_chain.pic_spatial_node_index,
+                    );
                 }
 
                 // Check if the clip bounding rect (in pic space) is visible on screen
@@ -2203,6 +2207,9 @@ impl PrimitiveStore {
                 }
 
                 let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.prim_info.len() as u32);
+                if prim_instance.is_chased() {
+                    println!("\tvisible {:?} with {:?}", vis_index, combined_local_clip_rect);
+                }
 
                 frame_state.scratch.prim_info.push(
                     PrimitiveVisibility {
@@ -2828,11 +2835,17 @@ impl PrimitiveStore {
 
                 prim_data.common.may_need_repetition = false;
 
-                // The transform only makes sense for screen space rasterization
-                let relative_transform = frame_context
-                    .clip_scroll_tree
-                    .get_world_transform(prim_instance.spatial_node_index)
-                    .into_transform();
+                // The glyph transform has to match `glyph_transform` in "ps_text_run" shader
+                let transform = frame_context.clip_scroll_tree
+                    .get_world_transform(pic_context.surface_spatial_node_index)
+                    .inverse()
+                    .unwrap()
+                    .into_fast_transform()
+                    .pre_mul(
+                        &frame_context.clip_scroll_tree
+                            .get_world_transform(prim_instance.spatial_node_index)
+                            .into_fast_transform()
+                    );;
                 let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
 
                 let pic = &self.pictures[pic_context.pic_index.0];
@@ -2843,7 +2856,7 @@ impl PrimitiveStore {
                     prim_offset,
                     &prim_data.font,
                     &prim_data.glyphs,
-                    &relative_transform,
+                    &transform.to_transform().with_destination::<_>(),
                     surface,
                     raster_space,
                     pic_context.subpixel_mode,

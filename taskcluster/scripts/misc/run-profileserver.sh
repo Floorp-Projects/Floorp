@@ -6,6 +6,7 @@ echo "running as" $(id)
 
 : NEED_XVFB     ${NEED_XVFB:=false}
 : UPLOAD_PATH   ${UPLOAD_PATH:=$HOME/artifacts}
+export UPLOAD_PATH
 
 ####
 # Taskcluster friendly wrapper for running the profileserver

@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from mozlog.proxy import ProxyLogger
 
 
-class RaptorLogger(ProxyLogger):
+class RaptorLogger():
 
     def __init__(self, component=None):
         self.logger = ProxyLogger(component)

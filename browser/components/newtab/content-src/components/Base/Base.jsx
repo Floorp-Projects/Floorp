@@ -1,5 +1,4 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {addLocaleData, IntlProvider} from "react-intl";
 import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {ASRouterUISurface} from "../../asrouter/asrouter-content";
 import {ConfirmDialog} from "content-src/components/ConfirmDialog/ConfirmDialog";
@@ -15,13 +14,6 @@ const PrefsButton = props => (
     <button className="icon icon-settings" onClick={props.onClick} data-l10n-id="newtab-settings-button" />
   </div>
 );
-
-// Add the locale data for pluralization and relative-time formatting for now,
-// this just uses english locale data. We can make this more sophisticated if
-// more features are needed.
-function addLocaleDataForReactIntl(locale) {
-  addLocaleData([{locale, parentLocale: "en"}]);
-}
 
 // Returns a function will not be continuously triggered when called. The
 // function will be triggered if called again after `wait` milliseconds.
@@ -39,8 +31,6 @@ function debounce(func, wait) {
 
 export class _Base extends React.PureComponent {
   componentWillMount() {
-    const {locale} = this.props;
-    addLocaleDataForReactIntl(locale);
     if (this.props.isFirstrun) {
       global.document.body.classList.add("welcome", "hide-main");
     }
@@ -68,21 +58,21 @@ export class _Base extends React.PureComponent {
 
   render() {
     const {props} = this;
-    const {App, locale, strings} = props;
+    const {App} = props;
     const isDevtoolsEnabled = props.Prefs.values["asrouter.devtoolsEnabled"];
 
     if (!App.initialized) {
       return null;
     }
 
-    return (<IntlProvider locale={locale} messages={strings}>
+    return (
       <ErrorBoundary className="base-content-fallback">
         <React.Fragment>
           <BaseContent {...this.props} />
           {isDevtoolsEnabled ? <ASRouterAdmin /> : null}
         </React.Fragment>
       </ErrorBoundary>
-    </IntlProvider>);
+    );
   }
 }
 

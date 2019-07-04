@@ -1,13 +1,13 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {_Card as Card, PlaceholderCard} from "content-src/components/Card/Card";
 import {combineReducers, createStore} from "redux";
-import {GlobalOverrider, mountWithIntl} from "test/unit/utils";
+import {GlobalOverrider} from "test/unit/utils";
 import {INITIAL_STATE, reducers} from "common/Reducers.jsm";
 import {cardContextTypes} from "content-src/components/Card/types";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import {Provider} from "react-redux";
 import React from "react";
-import {shallow} from "enzyme";
+import {shallow, mount} from "enzyme";
 
 let DEFAULT_PROPS = {
   dispatch: sinon.stub(),
@@ -21,7 +21,6 @@ let DEFAULT_PROPS = {
     image: "http://www.foo.com/img.png",
     guid: 1,
   },
-  intl: {formatMessage: x => x},
   eventSource: "TOP_STORIES",
   shouldSendImpressionStats: true,
   contextMenuOptions: ["Separator"],
@@ -34,7 +33,7 @@ let DEFAULT_BLOB_IMAGE = {
 
 function mountCardWithProps(props) {
   const store = createStore(combineReducers(reducers), INITIAL_STATE);
-  return mountWithIntl(<Provider store={store}><Card {...props} /></Provider>);
+  return mount(<Provider store={store}><Card {...props} /></Provider>);
 }
 
 describe("<Card>", () => {
@@ -54,7 +53,7 @@ describe("<Card>", () => {
 
     // test that pocket cards get a special open_url href
     const pocketLink = Object.assign({}, DEFAULT_PROPS.link, {open_url: "getpocket.com/foo", type: "pocket"});
-    wrapper = mountWithIntl(<Card {...Object.assign({}, DEFAULT_PROPS, {link: pocketLink})} />);
+    wrapper = mount(<Card {...Object.assign({}, DEFAULT_PROPS, {link: pocketLink})} />);
     assert.propertyVal(wrapper.find("a").props(), "href", pocketLink.open_url);
   });
   it("should display a title", () => assert.equal(wrapper.find(".card-title").text(), DEFAULT_PROPS.link.title));
@@ -111,6 +110,15 @@ describe("<Card>", () => {
 
     assert.isTrue(context.childAt(1).hasClass("card-context-label"));
     assert.equal(context.childAt(1).text(), linkWithCustomContext.context);
+  });
+  it("should parse args for fluent correctly", () => {
+    const title = '"fluent"';
+    const link = {...DEFAULT_PROPS.link, title};
+
+    wrapper = shallow(<Card {...DEFAULT_PROPS} link={link} />);
+    let button = wrapper.find("button[data-l10n-id='newtab-menu-content-tooltip']");
+
+    assert.equal(button.prop("data-l10n-args"), JSON.stringify({title}));
   });
   it("should have .active class, on card-outer if context menu is open", () => {
     const button = wrapper.find(".context-menu-button");
@@ -291,7 +299,7 @@ describe("<Card>", () => {
   });
   describe("placeholder=true", () => {
     beforeEach(() => {
-      wrapper = mountWithIntl(<Card placeholder={true} />);
+      wrapper = mount(<Card placeholder={true} />);
     });
     it("should render when placeholder=true", () => {
       assert.ok(wrapper.exists());
@@ -339,7 +347,7 @@ describe("<Card>", () => {
     it("should provide card_type to telemetry info if type is not history", () => {
       const link = Object.assign({}, DEFAULT_PROPS.link);
       link.type = "bookmark";
-      wrapper = mountWithIntl(<Card {...Object.assign({}, DEFAULT_PROPS, {link})} />);
+      wrapper = mount(<Card {...Object.assign({}, DEFAULT_PROPS, {link})} />);
       const card = wrapper.find(".card");
       const event = {altKey: "1", button: "2", ctrlKey: "3", metaKey: "4", shiftKey: "5"};
 
@@ -369,7 +377,7 @@ describe("<Card>", () => {
 
 describe("<PlaceholderCard />", () => {
   it("should render a Card with placeholder=true", () => {
-    const wrapper = mountWithIntl(<Provider store={createStore(combineReducers(reducers), INITIAL_STATE)}><PlaceholderCard /></Provider>);
+    const wrapper = mount(<Provider store={createStore(combineReducers(reducers), INITIAL_STATE)}><PlaceholderCard /></Provider>);
     assert.isTrue(wrapper.find(Card).props().placeholder);
   });
 });

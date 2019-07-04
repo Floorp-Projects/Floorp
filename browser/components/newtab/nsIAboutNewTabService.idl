@@ -50,11 +50,6 @@ interface nsIAboutNewTabService : nsISupports
   readonly attribute bool activityStreamDebug;
 
   /**
-   * Returns the locale of the activity stream interface
-   */
-  readonly attribute ACString activityStreamLocale;
-
-  /**
    * Resets to the default resource and also resets the
    * overridden attribute to false.
    */

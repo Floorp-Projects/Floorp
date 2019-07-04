@@ -757,6 +757,36 @@ typedef PRTime(PR_CALLBACK *SSLTimeFunc)(void *arg);
                          (PRFileDesc * _fd, SSLTimeFunc _f, void *_arg), \
                          (fd, f, arg))
 
+/* Create a delegated credential (DC) for the draft-ietf-tls-subcerts extension
+ * using the given certificate |cert| and its signing key |certPriv| and write
+ * the serialized DC to |out|. The
+ * parameters are:
+ *  - the DC public key |dcPub|;
+ *  - the DC signature scheme |dcCertVerifyAlg|, used to verify the handshake.
+ *  - the DC time-to-live |dcValidFor|, the number of seconds from now for which
+ *    the DC should be valid; and
+ *  - the current time |now|.
+ *
+ *  The signing algorithm used to verify the DC signature is deduced from
+ *  |cert|.
+ *
+ *  It's the caller's responsibility to ensure the input parameters are all
+ *  valid. This procedure is meant primarily for testing; for this purpose it is
+ *  useful to do no validation.
+ */
+#define SSL_DelegateCredential(cert, certPriv, dcPub, dcCertVerifyAlg,        \
+                               dcValidFor, now, out)                          \
+    SSL_EXPERIMENTAL_API("SSL_DelegateCredential",                            \
+                         (const CERTCertificate *_cert,                       \
+                          const SECKEYPrivateKey *_certPriv,                  \
+                          const SECKEYPublicKey *_dcPub,                      \
+                          SSLSignatureScheme _dcCertVerifyAlg,                \
+                          PRUint32 _dcValidFor,                               \
+                          PRTime _now,                                        \
+                          SECItem *_out),                                     \
+                         (cert, certPriv, dcPub, dcCertVerifyAlg, dcValidFor, \
+                          now, out))
+
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
 #define SSL_SetupAntiReplay(a, b, c) SSL_DEPRECATED_EXPERIMENTAL_API

@@ -17,7 +17,7 @@
 //! Build script for the Baldr <-> Cranelift bindings.
 //!
 //! This file is executed by cargo when this crate is built. It generates the
-//! `$OUT_DIR/bindings.rs` file which is then included by `src/baldrapi.rs`.
+//! `$OUT_DIR/bindings.rs` file which is then included by `src/bindings/low_level.rs`.
 
 extern crate bindgen;
 

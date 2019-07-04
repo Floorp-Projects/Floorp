@@ -922,11 +922,12 @@ void gfxPlatform::Init() {
         StaticPrefs::layers_d3d11_force_warp());
     // WebGL prefs
     forcedPrefs.AppendPrintf(
-        "-W%d%d%d%d%d%d%d%d", StaticPrefs::WebGLANGLEForceD3D11(),
-        StaticPrefs::WebGLANGLEForceWARP(), StaticPrefs::WebGLDisabled(),
-        StaticPrefs::WebGLDisableANGLE(), StaticPrefs::WebGLDXGLEnabled(),
-        StaticPrefs::WebGLForceEnabled(),
-        StaticPrefs::WebGLForceLayersReadback(), StaticPrefs::WebGLForceMSAA());
+        "-W%d%d%d%d%d%d%d%d", StaticPrefs::webgl_angle_force_d3d11(),
+        StaticPrefs::webgl_angle_force_warp(), StaticPrefs::webgl_disabled(),
+        StaticPrefs::webgl_disable_angle(), StaticPrefs::webgl_dxgl_enabled(),
+        StaticPrefs::webgl_force_enabled(),
+        StaticPrefs::webgl_force_layers_readback(),
+        StaticPrefs::webgl_msaa_force());
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ",
                              StaticPrefs::gfx_android_rgb16_force(),
@@ -990,7 +991,7 @@ void gfxPlatform::Init() {
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
   Preferences::RegisterCallback(
       FrameRatePrefChanged,
-      nsDependentCString(StaticPrefs::Getlayout_frame_ratePrefName()));
+      nsDependentCString(StaticPrefs::GetPrefName_layout_frame_rate()));
   // Set up the vsync source for the parent process.
   ReInitFrameRate();
 
@@ -2427,7 +2428,7 @@ void gfxPlatform::InitAcceleration() {
           gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                     discardFailureId, &status))) {
     if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
-        StaticPrefs::HardwareVideoDecodingForceEnabled()) {
+        StaticPrefs::media_hardware_video_decoding_force_enabled()) {
       sLayersSupportsHardwareVideoDecoding = true;
     }
   }
@@ -2464,8 +2465,8 @@ void gfxPlatform::InitGPUProcessPrefs() {
                              NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
   } else {
     gpuProc.SetDefaultFromPref(
-        StaticPrefs::Getlayers_gpu_process_enabledPrefName(), true,
-        StaticPrefs::Getlayers_gpu_process_enabledPrefDefault());
+        StaticPrefs::GetPrefName_layers_gpu_process_enabled(), true,
+        StaticPrefs::GetPrefDefault_layers_gpu_process_enabled());
   }
 
   if (StaticPrefs::layers_gpu_process_force_enabled()) {
@@ -3526,8 +3527,8 @@ void gfxPlatform::InitOpenGLConfig() {
 
 #ifdef XP_WIN
   openGLFeature.SetDefaultFromPref(
-      StaticPrefs::Getlayers_prefer_openglPrefName(), true,
-      StaticPrefs::Getlayers_prefer_openglPrefDefault());
+      StaticPrefs::GetPrefName_layers_prefer_opengl(), true,
+      StaticPrefs::GetPrefDefault_layers_prefer_opengl());
 #else
   openGLFeature.EnableByDefault();
 #endif

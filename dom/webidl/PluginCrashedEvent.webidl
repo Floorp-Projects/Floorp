@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional PluginCrashedEventInit eventInitDict), ChromeOnly]
+[Constructor(DOMString type, optional PluginCrashedEventInit eventInitDict = {}), ChromeOnly]
 interface PluginCrashedEvent : Event
 {
   readonly attribute unsigned long pluginID;

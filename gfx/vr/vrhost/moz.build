@@ -5,7 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+  '/gfx/vr/VRShMem.cpp',
   'vrhost.cpp'
+]
+
+LOCAL_INCLUDES += [
+  '/gfx/vr',
+  '/gfx/vr/external_api',
+  '/gfx/vr/service',
+  '/ipc/chromium/src',
 ]
 
 EXPORTS.vrhost = [
@@ -17,6 +25,13 @@ DEFFILE = 'vrhost.def'
 DIRS += [
   'testhost'
 ]
+
+# this is Windows-only for now
+DEFINES['XP_WIN'] = True
+# fixes "lld-link: error: undefined symbol: __imp_moz_xmalloc"
+DEFINES['MOZ_NO_MOZALLOC'] = True
+# fixes "STL code can only be used with infallible ::operator new()"
+DisableStlWrapping()
 
 # Use SharedLibrary to generate the dll
 SharedLibrary('vrhost')

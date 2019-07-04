@@ -223,11 +223,11 @@ D3D11RecycleAllocator::D3D11RecycleAllocator(
     gfx::SurfaceFormat aPreferredFormat)
     : TextureClientRecycleAllocator(aAllocator),
       mDevice(aDevice),
-      mCanUseNV12(StaticPrefs::PDMWMFUseNV12Format() &&
+      mCanUseNV12(StaticPrefs::media_wmf_use_nv12_format() &&
                   gfx::DeviceManagerDx::Get()->CanUseNV12()),
-      mCanUseP010(StaticPrefs::PDMWMFUseNV12Format() &&
+      mCanUseP010(StaticPrefs::media_wmf_use_nv12_format() &&
                   gfx::DeviceManagerDx::Get()->CanUseP010()),
-      mCanUseP016(StaticPrefs::PDMWMFUseNV12Format() &&
+      mCanUseP016(StaticPrefs::media_wmf_use_nv12_format() &&
                   gfx::DeviceManagerDx::Get()->CanUseP016()) {
   SetPreferredSurfaceFormat(aPreferredFormat);
 }
@@ -256,7 +256,7 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
   mImageDevice = device;
 
   TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_DEFAULT;
-  if (StaticPrefs::PDMWMFUseSyncTexture() ||
+  if (StaticPrefs::media_wmf_use_sync_texture() ||
       mDevice == DeviceManagerDx::Get()->GetCompositorDevice()) {
     // If our device is the compositor device, we don't need any synchronization
     // in practice.

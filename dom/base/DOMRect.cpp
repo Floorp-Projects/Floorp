@@ -27,6 +27,13 @@ JSObject* DOMRectReadOnly::WrapObject(JSContext* aCx,
   return DOMRectReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::FromRect(
+    const GlobalObject& aGlobal, const DOMRectInit& aInit) {
+  RefPtr<DOMRectReadOnly> obj = new DOMRectReadOnly(
+      aGlobal.GetAsSupports(), aInit.mX, aInit.mY, aInit.mWidth, aInit.mHeight);
+  return obj.forget();
+}
+
 already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::Constructor(
     const GlobalObject& aGlobal, double aX, double aY, double aWidth,
     double aHeight, ErrorResult& aRv) {
@@ -85,6 +92,13 @@ JSObject* DOMRect::WrapObject(JSContext* aCx,
                               JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(mParent);
   return DOMRect_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+already_AddRefed<DOMRect> DOMRect::FromRect(const GlobalObject& aGlobal,
+                                            const DOMRectInit& aInit) {
+  RefPtr<DOMRect> obj = new DOMRect(aGlobal.GetAsSupports(), aInit.mX, aInit.mY,
+                                    aInit.mWidth, aInit.mHeight);
+  return obj.forget();
 }
 
 already_AddRefed<DOMRect> DOMRect::Constructor(const GlobalObject& aGlobal,

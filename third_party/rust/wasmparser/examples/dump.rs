@@ -19,6 +19,7 @@ fn main() {
     let buf: Vec<u8> = read_wasm(&args[1]).unwrap();
     let mut parser = Parser::new(&buf);
     loop {
+        print!("0x{:08x}\t", parser.current_position());
         let state = parser.read();
         match *state {
             ParserState::ExportSectionEntry {

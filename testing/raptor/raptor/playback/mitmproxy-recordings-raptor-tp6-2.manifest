@@ -1,9 +1,0 @@
-[
-    {
-        "filename": "mitmproxy-recordings-raptor-gdocs.zip",
-        "size": 26179496,
-        "digest": "eb32218815d3c2187807f3a18d6df1657e01a215820deaaa7a035f06d180780ac9652479ac7db1d8cde3728a890521aff2e0a5c4738304966b2a93ce1b7f33bb",
-        "algorithm": "sha512",
-        "unpack": true
-    }
-]

@@ -21,6 +21,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsCycleCollectionNoteChild.h"
@@ -272,6 +273,36 @@ struct BufferAndIndex final {
   uint32_t id = -1;
 };
 
+// -
+
+class DynDGpuManager final {
+  static constexpr uint32_t TICK_MS = 3000;
+
+  enum class State {
+    Inactive,
+    Primed,
+    Active,
+  };
+
+  Mutex mMutex;
+  bool mActivityThisTick = false;
+  State mState = State::Inactive;
+  RefPtr<gl::GLContext> mDGpuContext;
+
+ public:
+  static std::shared_ptr<DynDGpuManager> Get();
+
+  DynDGpuManager();
+  ~DynDGpuManager();
+
+  void ReportActivity(const std::shared_ptr<DynDGpuManager>& strong);
+
+ private:
+  void SetState(const MutexAutoLock&, State);
+  void Tick(const std::shared_ptr<DynDGpuManager>& strong);
+  void DispatchTick(const std::shared_ptr<DynDGpuManager>& strong);
+};
+
 }  // namespace webgl
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,6 +362,18 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
  public:
   // Grab a const reference so we can see changes, but can't make changes.
   const decltype(mGL_OnlyClearInDestroyResourcesAndContext)& gl;
+
+ private:
+  std::shared_ptr<webgl::DynDGpuManager> mDynDGpuManager;
+
+  void ReportActivity() const {
+    if (mDynDGpuManager) {
+      mDynDGpuManager->ReportActivity(mDynDGpuManager);
+    }
+  }
+
+ public:
+  void CheckForInactivity();
 
  protected:
   const uint32_t mMaxPerfWarnings;
@@ -1052,6 +1095,9 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
                                                          GLuint index);
 
   // -
+
+  void GenErrorIllegalUse(GLenum useTarget, uint32_t useId, GLenum boundTarget,
+                          uint32_t boundId) const;
 
   bool ValidateBufferForNonTf(const WebGLBuffer&, GLenum nonTfTarget,
                               uint32_t nonTfId) const;

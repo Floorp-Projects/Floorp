@@ -14,7 +14,7 @@ interface Clients {
   [NewObject]
   Promise<any> get(DOMString id);
   [NewObject]
-  Promise<sequence<Client>> matchAll(optional ClientQueryOptions options);
+  Promise<sequence<Client>> matchAll(optional ClientQueryOptions options = {});
   [NewObject]
   Promise<WindowClient?> openWindow(USVString url);
   [NewObject]

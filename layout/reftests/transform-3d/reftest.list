@@ -11,7 +11,7 @@ fuzzy-if(webrender,0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(cocoaWidget,0-17,0-4) fuzzy-if(skiaContent,0-16,0-286) fuzzy-if(webrender&&winWidget,92-92,240-291) == preserve3d-1a.html preserve3d-1-ref.html
+fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(cocoaWidget,0-17,0-4) fuzzy-if(skiaContent,0-16,0-286) fuzzy-if(webrender&&cocoaWidget,0-200,0-310) fuzzy-if(webrender&&winWidget,0-175,0-250) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html

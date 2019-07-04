@@ -135,7 +135,7 @@ export class _TopSites extends React.PureComponent {
         isFirst={props.isFirst}
         isLast={props.isLast}
         dispatch={props.dispatch}>
-        <TopSiteList TopSites={props.TopSites} TopSitesRows={props.TopSitesRows} dispatch={props.dispatch} intl={props.intl} topSiteIconType={topSiteIconType} />
+        <TopSiteList TopSites={props.TopSites} TopSitesRows={props.TopSitesRows} dispatch={props.dispatch} topSiteIconType={topSiteIconType} />
         <div className="edit-topsites-wrapper">
           {editForm &&
             <div className="edit-topsites">
@@ -144,7 +144,6 @@ export class _TopSites extends React.PureComponent {
                   site={props.TopSites.rows[editForm.index]}
                   onClose={this.onEditFormClose}
                   dispatch={this.props.dispatch}
-                  intl={this.props.intl}
                   {...editForm} />
               </ModalOverlayWrapper>
             </div>

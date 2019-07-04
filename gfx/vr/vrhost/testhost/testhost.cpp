@@ -7,12 +7,22 @@
 #include <windows.h>
 #include "vrhost/vrhostex.h"
 
-int main() {
+int main(int argc, char* argv[], char* envp[]) {
   HINSTANCE hVR = ::LoadLibrary("vrhost.dll");
   if (hVR != nullptr) {
     PFN_SAMPLE lpfnSample = (PFN_SAMPLE)GetProcAddress(hVR, "SampleExport");
     if (lpfnSample != nullptr) {
       lpfnSample();
+    }
+
+    if (strcmp(argv[1], "-testsvc") == 0) {
+      PFN_SAMPLE lpfnService =
+          (PFN_SAMPLE)GetProcAddress(hVR, "TestTheService");
+      lpfnService();
+    } else if (strcmp(argv[1], "-testmgr") == 0) {
+      PFN_SAMPLE lpfnManager =
+          (PFN_SAMPLE)GetProcAddress(hVR, "TestTheManager");
+      lpfnManager();
     }
 
     ::FreeLibrary(hVR);

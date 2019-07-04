@@ -484,7 +484,8 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     OPTIMIZATIONS = 3,
     LINE = 4,
     COLUMN = 5,
-    CATEGORY = 6
+    CATEGORY = 6,
+    SUBCATEGORY = 7
   };
 
   AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
@@ -502,6 +503,7 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     const JS::ProfilingCategoryPairInfo& info =
         JS::GetProfilingCategoryPairInfo(*data.mCategoryPair);
     writer.IntElement(CATEGORY, uint32_t(info.mCategory));
+    writer.IntElement(SUBCATEGORY, info.mSubcategoryIndex);
   }
 }
 
@@ -603,7 +605,8 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
     OPTIMIZATIONS = 3,
     LINE = 4,
     COLUMN = 5,
-    CATEGORY = 6
+    CATEGORY = 6,
+    SUBCATEGORY = 7
   };
 
   AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
@@ -626,6 +629,11 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
                                       aJITFrame);
         });
   }
+
+  const JS::ProfilingCategoryPairInfo& info =
+      JS::GetProfilingCategoryPairInfo(JS::ProfilingCategoryPair::JS);
+  writer.IntElement(CATEGORY, uint32_t(info.mCategory));
+  writer.IntElement(SUBCATEGORY, info.mSubcategoryIndex);
 }
 
 struct CStringWriteFunc : public JSONWriteFunc {

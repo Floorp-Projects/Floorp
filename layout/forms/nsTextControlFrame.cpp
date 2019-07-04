@@ -838,7 +838,8 @@ nsresult nsTextControlFrame::SetSelectionInternal(
     return err.StealNSResult();
   }
 
-  selection->AddRange(*range, err);  // NOTE: can destroy the world
+  selection->AddRangeAndSelectFramesAndNotifyListeners(
+      *range, err);  // NOTE: can destroy the world
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }

@@ -17,6 +17,27 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 namespace mozilla {
 namespace dom {
 
+// BodyStreamHolder
+// ---------------------------------------------------------------------------
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(BodyStreamHolder)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BodyStreamHolder)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BodyStreamHolder)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+// BodyStream
+// ---------------------------------------------------------------------------
+
 class BodyStream::WorkerShutdown final : public WorkerControlRunnable {
  public:
   WorkerShutdown(WorkerPrivate* aWorkerPrivate, RefPtr<BodyStream> aStream)
@@ -86,8 +107,8 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
   }
 
   aRv.MightThrowJSException();
-  JS::Rooted<JSObject*> body(
-      aCx, JS::NewReadableExternalSourceStreamObject(aCx, stream));
+  JS::Rooted<JSObject*> body(aCx, JS::NewReadableExternalSourceStreamObject(
+                                      aCx, stream, aStreamHolder));
   if (!body) {
     aRv.StealExceptionFromJSContext(aCx);
     return;
@@ -324,7 +345,8 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stream(cx, mStreamHolder->ReadableStreamBody());
+  MOZ_DIAGNOSTIC_ASSERT(mStreamHolder->GetReadableStreamBody());
+  JS::Rooted<JSObject*> stream(cx, mStreamHolder->GetReadableStreamBody());
 
   uint64_t size = 0;
   nsresult rv = mInputStream->Available(&size);
@@ -397,9 +419,14 @@ void BodyStream::Close() {
     return;
   }
 
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stream(cx, mStreamHolder->ReadableStreamBody());
-  CloseAndReleaseObjects(cx, lock, stream);
+  JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
+  if (streamObj) {
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JSObject*> stream(cx, streamObj);
+    CloseAndReleaseObjects(cx, lock, stream);
+  } else {
+    ReleaseObjects(lock);
+  }
 }
 
 void BodyStream::CloseAndReleaseObjects(JSContext* aCx,
@@ -436,8 +463,6 @@ void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
     return;
   }
 
-  mState = eClosed;
-
   if (!NS_IsMainThread() && !IsCurrentThreadRunningWorker()) {
     // Let's dispatch a WorkerControlRunnable if the owning thread is a worker.
     if (mWorkerRef) {
@@ -457,11 +482,19 @@ void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
 
   AssertIsOnOwningThread();
 
+  mState = eClosed;
+
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
     }
+  }
+
+  JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
+  if (streamObj) {
+    // Let's inform the JSEngine that we are going to be released.
+    JS::ReadableStreamReleaseCCObject(streamObj);
   }
 
   mWorkerRef = nullptr;

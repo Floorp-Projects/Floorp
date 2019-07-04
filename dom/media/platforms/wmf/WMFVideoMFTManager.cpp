@@ -443,11 +443,11 @@ class CreateDXVAManagerEvent : public Runnable {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     const bool deblacklistingForTelemetry =
         XRE_IsGPUProcess() &&
-        StaticPrefs::PDMWMFDeblacklistingForTelemetryInGPUProcess();
+        StaticPrefs::media_wmf_deblacklisting_for_telemetry_in_gpu_process();
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
-        StaticPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
+        StaticPrefs::media_wmf_dxva_d3d11_enabled() && IsWin8OrLater()) {
       const nsCString& blacklistedDLL = FindD3D11BlacklistedDLL();
       if (!deblacklistingForTelemetry && !blacklistedDLL.IsEmpty()) {
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
@@ -515,7 +515,8 @@ bool WMFVideoMFTManager::InitializeDXVA() {
 }
 
 MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
-  if (mStreamType != H264 || StaticPrefs::PDMWMFAllowUnsupportedResolutions()) {
+  if (mStreamType != H264 ||
+      StaticPrefs::media_wmf_allow_unsupported_resolutions()) {
     return NS_OK;
   }
 
@@ -586,8 +587,8 @@ MediaResult WMFVideoMFTManager::InitInternal() {
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
                     WMFDecoderModule::GetNumDecoderThreads());
     bool lowLatency =
-        (StaticPrefs::PDMWMFLowLatencyEnabled() || IsWin10OrLater()) &&
-        !StaticPrefs::PDMWMFLowLatencyForceDisabled();
+        (StaticPrefs::media_wmf_low_latency_enabled() || IsWin10OrLater()) &&
+        !StaticPrefs::media_mwf_low_latency_force_disabled();
     if (mLowLatency || lowLatency) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
@@ -1150,7 +1151,7 @@ nsCString WMFVideoMFTManager::GetDescriptionName() const {
   bool hw = IsHardwareAccelerated(failureReason);
   return nsPrintfCString("wmf %s video decoder - %s",
                          hw ? "hardware" : "software",
-                         hw ? StaticPrefs::PDMWMFUseNV12Format() &&
+                         hw ? StaticPrefs::media_wmf_use_nv12_format() &&
                                       gfx::DeviceManagerDx::Get()->CanUseNV12()
                                   ? "nv12"
                                   : "rgba32"

@@ -35,11 +35,11 @@ bool RemoteDecoderModule::SupportsMimeType(
   bool supports = false;
 
 #ifdef MOZ_AV1
-  if (StaticPrefs::MediaAv1Enabled()) {
+  if (StaticPrefs::media_av1_enabled()) {
     supports |= AOMDecoder::IsAV1(aMimeType);
   }
 #endif
-  if (StaticPrefs::MediaRddVorbisEnabled()) {
+  if (StaticPrefs::media_rdd_vorbis_enabled()) {
     supports |= VorbisDataDecoder::IsVorbis(aMimeType);
   }
 

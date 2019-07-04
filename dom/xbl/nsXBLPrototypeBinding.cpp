@@ -1013,9 +1013,8 @@ nsresult nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   if (namespaceID == kNameSpaceID_XUL) {
     nsIURI* documentURI = aDocument->GetDocumentURI();
 
-    RefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
-
-    prototype->mNodeInfo = nodeInfo;
+    RefPtr<nsXULPrototypeElement> prototype =
+        new nsXULPrototypeElement(nodeInfo);
 
     nsXULPrototypeAttribute* attrs = nullptr;
     if (attrCount > 0) {

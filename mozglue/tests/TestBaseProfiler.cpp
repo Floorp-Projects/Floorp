@@ -8,6 +8,7 @@
 
 #ifdef MOZ_BASE_PROFILER
 
+#  include "mozilla/leb128iterator.h"
 #  include "mozilla/PowerOfTwo.h"
 
 #  include "mozilla/Attributes.h"
@@ -150,6 +151,105 @@ void TestPowerOfTwo() {
   printf("TestPowerOfTwo done\n");
 }
 
+void TestLEB128() {
+  printf("TestLEB128...\n");
+
+  MOZ_RELEASE_ASSERT(ULEB128MaxSize<uint8_t>() == 2);
+  MOZ_RELEASE_ASSERT(ULEB128MaxSize<uint16_t>() == 3);
+  MOZ_RELEASE_ASSERT(ULEB128MaxSize<uint32_t>() == 5);
+  MOZ_RELEASE_ASSERT(ULEB128MaxSize<uint64_t>() == 10);
+
+  struct TestDataU64 {
+    uint64_t mValue;
+    unsigned mSize;
+    const char* mBytes;
+  };
+  // clang-format off
+  TestDataU64 tests[] = {
+    // Small numbers should keep their normal byte representation.
+    {                  0u,  1, "\0" },
+    {                  1u,  1, "\x01" },
+
+    // 0111 1111 (127, or 0x7F) is the highest number that fits into a single
+    // LEB128 byte. It gets encoded as 0111 1111, note the most significant bit
+    // is off.
+    {               0x7Fu,  1, "\x7F" },
+
+    // Next number: 128, or 0x80.
+    //   Original data representation:  1000 0000
+    //     Broken up into groups of 7:         1  0000000
+    // Padded with 0 (msB) or 1 (lsB):  00000001 10000000
+    //            Byte representation:  0x01     0x80
+    //            Little endian order:  -> 0x80 0x01
+    {               0x80u,  2, "\x80\x01" },
+
+    // Next: 129, or 0x81 (showing that we don't lose low bits.)
+    //   Original data representation:  1000 0001
+    //     Broken up into groups of 7:         1  0000001
+    // Padded with 0 (msB) or 1 (lsB):  00000001 10000001
+    //            Byte representation:  0x01     0x81
+    //            Little endian order:  -> 0x81 0x01
+    {               0x81u,  2, "\x81\x01" },
+
+    // Highest 8-bit number: 255, or 0xFF.
+    //   Original data representation:  1111 1111
+    //     Broken up into groups of 7:         1  1111111
+    // Padded with 0 (msB) or 1 (lsB):  00000001 11111111
+    //            Byte representation:  0x01     0xFF
+    //            Little endian order:  -> 0xFF 0x01
+    {               0xFFu,  2, "\xFF\x01" },
+
+    // Next: 256, or 0x100.
+    //   Original data representation:  1 0000 0000
+    //     Broken up into groups of 7:        10  0000000
+    // Padded with 0 (msB) or 1 (lsB):  00000010 10000000
+    //            Byte representation:  0x10     0x80
+    //            Little endian order:  -> 0x80 0x02
+    {              0x100u,  2, "\x80\x02" },
+
+    // Highest 32-bit number: 0xFFFFFFFF (8 bytes, all bits set).
+    // Original: 1111 1111 1111 1111 1111 1111 1111 1111
+    // Groups:     1111  1111111  1111111  1111111  1111111
+    // Padded: 00001111 11111111 11111111 11111111 11111111
+    // Bytes:  0x0F     0xFF     0xFF     0xFF     0xFF
+    // Little Endian: -> 0xFF 0xFF 0xFF 0xFF 0x0F
+    {         0xFFFFFFFFu,  5, "\xFF\xFF\xFF\xFF\x0F" },
+
+    // Highest 64-bit number: 0xFFFFFFFFFFFFFFFF (16 bytes, all bits set).
+    // 64 bits, that's 9 groups of 7 bits, plus 1 (most significant) bit.
+    { 0xFFFFFFFFFFFFFFFFu, 10, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x01" }
+  };
+  // clang-format on
+
+  for (const TestDataU64& test : tests) {
+    MOZ_RELEASE_ASSERT(ULEB128Size(test.mValue) == test.mSize);
+    // Prepare a buffer that can accomodate the largest-possible LEB128.
+    uint8_t buffer[ULEB128MaxSize<uint64_t>()];
+    // Use a pointer into the buffer as iterator.
+    uint8_t* p = buffer;
+    // And write the LEB128.
+    WriteULEB128(test.mValue, p);
+    // Pointer (iterator) should have advanced just past the expected LEB128
+    // size.
+    MOZ_RELEASE_ASSERT(p == buffer + test.mSize);
+    // Check expected bytes.
+    for (unsigned i = 0; i < test.mSize; ++i) {
+      MOZ_RELEASE_ASSERT(buffer[i] == uint8_t(test.mBytes[i]));
+    }
+    // Move pointer (iterator) back to start of buffer.
+    p = buffer;
+    // And read the LEB128 we wrote above.
+    uint64_t read = ReadULEB128<uint64_t>(p);
+    // Pointer (iterator) should have also advanced just past the expected
+    // LEB128 size.
+    MOZ_RELEASE_ASSERT(p == buffer + test.mSize);
+    // And check the read value.
+    MOZ_RELEASE_ASSERT(read == test.mValue);
+  }
+
+  printf("TestLEB128 done\n");
+}
+
 // Increase the depth, to a maximum (to avoid too-deep recursion).
 static constexpr size_t NextDepth(size_t aDepth) {
   constexpr size_t MAX_DEPTH = 128;
@@ -185,6 +285,7 @@ void TestProfiler() {
   // Test dependencies.
   TestPowerOfTwoMask();
   TestPowerOfTwo();
+  TestLEB128();
 
   {
     printf("profiler_init()...\n");

@@ -129,6 +129,9 @@ class TabMenuStripLayout extends ThemedLinearLayout
             vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
+                    if (!vto.isAlive()) {
+                        return;
+                    }
                     // let's ensure that we are calling this only once
                     vto.removeOnGlobalLayoutListener(this);
                     if (selectedView != null) {

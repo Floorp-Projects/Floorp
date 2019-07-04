@@ -1,4 +1,3 @@
-import {addLocaleData, IntlProvider} from "react-intl";
 import {actionCreators as ac} from "common/Actions.jsm";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {generateBundles} from "./rich-text-strings";
@@ -216,11 +215,6 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   componentWillMount() {
-    if (global.document) {
-      // Add locale data for StartupOverlay because it uses react-intl
-      addLocaleData(global.document.documentElement.lang);
-    }
-
     const endpoint = ASRouterUtils.getPreviewEndpoint();
     if (endpoint && endpoint.theme === "dark") {
       global.window.dispatchEvent(new CustomEvent("LightweightTheme:Set", {detail: {data: NEWTAB_DARK_THEME}}));
@@ -288,12 +282,10 @@ export class ASRouterUISurface extends React.PureComponent {
     if (message.template === "fxa_overlay") {
       global.document.body.classList.add("fxa");
       return (
-        <IntlProvider locale={global.document.documentElement.lang} messages={global.gActivityStreamStrings}>
-          <StartupOverlay
-            onReady={this.triggerOnboarding}
-            onBlock={this.onDismissById(message.id)}
-            dispatch={this.props.dispatch} />
-        </IntlProvider>
+        <StartupOverlay
+          onReady={this.triggerOnboarding}
+          onBlock={this.onDismissById(message.id)}
+          dispatch={this.props.dispatch} />
       );
     } else if (message.template === "return_to_amo_overlay") {
       global.document.body.classList.add("amo");

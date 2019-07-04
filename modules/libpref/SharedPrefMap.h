@@ -480,10 +480,18 @@ class SharedPrefMap {
 
  public:
   // C++ range iterator protocol. begin() and end() return references to the
-  // first and last entries in the array. The begin wrapper can be incremented
-  // until it matches the last element in the array, at which point it becomes
-  // invalid and the iteration is over.
-  Pref begin() const { return UncheckedGetValueAt(0); }
+  // first (non-skippable) and last entries in the array. The begin wrapper
+  // can be incremented until it matches the last element in the array, at which
+  // point it becomes invalid and the iteration is over.
+  Pref begin() const {
+    for (uint32_t aIndex = 0; aIndex < Count(); aIndex++) {
+      Pref pref = UncheckedGetValueAt(aIndex);
+      if (!pref.IsSkippedByIteration()) {
+        return pref;
+      }
+    }
+    return end();
+  }
   Pref end() const { return UncheckedGetValueAt(Count()); }
 
   // A cosmetic helper for range iteration. Returns a reference value from a

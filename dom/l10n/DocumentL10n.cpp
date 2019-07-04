@@ -34,6 +34,11 @@ DocumentL10n::DocumentL10n(Document* aDocument)
       mDocument(aDocument),
       mState(DocumentL10nState::Initialized) {
   mContentSink = do_QueryInterface(aDocument->GetCurrentContentSink());
+
+  Element* elem = mDocument->GetDocumentElement();
+  if (elem) {
+    mIsSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
+  }
 }
 
 void DocumentL10n::Init(nsTArray<nsString>& aResourceIds, ErrorResult& aRv) {
@@ -132,6 +137,14 @@ void DocumentL10n::InitialDocumentTranslationCompleted() {
   // In XUL scenario contentSink is nullptr.
   if (mContentSink) {
     mContentSink->InitialDocumentTranslationCompleted();
+  }
+
+  // If sync was true, we want to change the state of
+  // mozILocalization to async now.
+  if (mIsSync) {
+    mIsSync = false;
+
+    mLocalization->SetIsSync(mIsSync);
   }
 }
 

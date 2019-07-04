@@ -26,7 +26,7 @@ interface PeerConnectionImpl  {
 
   /* JSEP calls */
   [Throws]
-  void createOffer(optional RTCOfferOptions options);
+  void createOffer(optional RTCOfferOptions options = {});
   [Throws]
   void createAnswer();
   [Throws]

@@ -192,8 +192,46 @@ void TestRangeBasedLoops() {
   MOZ_RELEASE_ASSERT(entries == 0);
 }
 
+void TestMove() {
+  using namespace mozilla;
+
+  SmallPointerArray<void> testArray;
+  testArray.AppendElement(PTR1);
+  testArray.AppendElement(PTR2);
+
+  SmallPointerArray<void> moved = std::move(testArray);
+
+  MOZ_RELEASE_ASSERT(testArray.IsEmpty());
+  MOZ_RELEASE_ASSERT(moved.Length() == 2);
+  MOZ_RELEASE_ASSERT(moved[0] == PTR1);
+  MOZ_RELEASE_ASSERT(moved[1] == PTR2);
+
+  // Heap case.
+  moved.AppendElement(PTR3);
+
+  SmallPointerArray<void> another = std::move(moved);
+
+  MOZ_RELEASE_ASSERT(testArray.IsEmpty());
+  MOZ_RELEASE_ASSERT(moved.IsEmpty());
+  MOZ_RELEASE_ASSERT(another.Length() == 3);
+  MOZ_RELEASE_ASSERT(another[0] == PTR1);
+  MOZ_RELEASE_ASSERT(another[1] == PTR2);
+  MOZ_RELEASE_ASSERT(another[2] == PTR3);
+
+  // Move assignment.
+  testArray = std::move(another);
+
+  MOZ_RELEASE_ASSERT(moved.IsEmpty());
+  MOZ_RELEASE_ASSERT(another.IsEmpty());
+  MOZ_RELEASE_ASSERT(testArray.Length() == 3);
+  MOZ_RELEASE_ASSERT(testArray[0] == PTR1);
+  MOZ_RELEASE_ASSERT(testArray[1] == PTR2);
+  MOZ_RELEASE_ASSERT(testArray[2] == PTR3);
+}
+
 int main() {
   TestArrayManipulation();
   TestRangeBasedLoops();
+  TestMove();
   return 0;
 }

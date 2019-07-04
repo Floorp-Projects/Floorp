@@ -47,7 +47,7 @@ AudioSink::AudioSink(AbstractThread* aThread,
       mFramesParsed(0),
       mIsAudioDataAudible(false),
       mAudioQueue(aAudioQueue) {
-  bool resampling = StaticPrefs::MediaResamplingEnabled();
+  bool resampling = StaticPrefs::media_resampling_enabled();
 
   if (resampling) {
     mOutputRate = 48000;
@@ -181,7 +181,7 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   // The layout map used here is already processed by mConverter with
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // StaticPrefs::accessibility_monoaudio_enable() or
-  // StaticPrefs::MediaForcestereoEnabled() is applied.
+  // StaticPrefs::media_forcestereo_enabled() is applied.
   nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate,
                                    aParams.mSink);
   if (NS_FAILED(rv)) {

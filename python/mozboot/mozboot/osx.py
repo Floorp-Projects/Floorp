@@ -380,9 +380,7 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def suggest_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        # Path to java from the homebrew/cask-versions/adoptopenjdk8 cask.
-        android.suggest_mozconfig('macosx', artifact_mode=artifact_mode,
-                                  java_bin_path=JAVA_PATH)
+        android.suggest_mozconfig('macosx', artifact_mode=artifact_mode)
 
     def _ensure_macports_packages(self, packages):
         self.port = self.which('port')

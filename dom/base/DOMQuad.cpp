@@ -36,6 +36,30 @@ JSObject* DOMQuad::WrapObject(JSContext* aCx,
   return DOMQuad_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+already_AddRefed<DOMQuad> DOMQuad::FromRect(const GlobalObject& aGlobal,
+                                            const DOMRectInit& aInit) {
+  nsISupports* parent = aGlobal.GetAsSupports();
+  RefPtr<DOMQuad> obj = new DOMQuad(parent);
+  obj->mPoints[0] = new DOMPoint(parent, aInit.mX, aInit.mY, 0, 1);
+  obj->mPoints[1] =
+      new DOMPoint(parent, aInit.mX + aInit.mWidth, aInit.mY, 0, 1);
+  obj->mPoints[2] = new DOMPoint(parent, aInit.mX + aInit.mWidth,
+                                 aInit.mY + aInit.mHeight, 0, 1);
+  obj->mPoints[3] =
+      new DOMPoint(parent, aInit.mX, aInit.mY + aInit.mHeight, 0, 1);
+  return obj.forget();
+}
+
+already_AddRefed<DOMQuad> DOMQuad::FromQuad(const GlobalObject& aGlobal,
+                                            const DOMQuadInit& aInit) {
+  RefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports());
+  obj->mPoints[0] = DOMPoint::FromPoint(aGlobal, aInit.mP1);
+  obj->mPoints[1] = DOMPoint::FromPoint(aGlobal, aInit.mP2);
+  obj->mPoints[2] = DOMPoint::FromPoint(aGlobal, aInit.mP3);
+  obj->mPoints[3] = DOMPoint::FromPoint(aGlobal, aInit.mP4);
+  return obj.forget();
+}
+
 already_AddRefed<DOMQuad> DOMQuad::Constructor(const GlobalObject& aGlobal,
                                                const DOMPointInit& aP1,
                                                const DOMPointInit& aP2,

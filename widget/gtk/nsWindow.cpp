@@ -1316,7 +1316,24 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     hints = GdkAnchorHints(hints | GDK_ANCHOR_RESIZE);
   }
 
+  // A workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1986
+  // gdk_window_move_to_rect() does not reposition visible windows.
+  static auto sGtkWidgetIsVisible =
+      (gboolean(*)(GtkWidget*))dlsym(RTLD_DEFAULT, "gtk_widget_is_visible");
+
+  bool isWidgetVisible =
+      (sGtkWidgetIsVisible != nullptr) && sGtkWidgetIsVisible(mShell);
+  if (isWidgetVisible) {
+    HideWaylandWindow();
+  }
+
   sGdkWindowMoveToRect(gdkWindow, &rect, rectAnchor, menuAnchor, hints, 0, 0);
+
+  if (isWidgetVisible) {
+    // We show the popup with the same configuration so no need to call
+    // ConfigureWaylandPopupWindows() before gtk_widget_show().
+    gtk_widget_show(mShell);
+  }
 }
 
 void nsWindow::NativeMove() {

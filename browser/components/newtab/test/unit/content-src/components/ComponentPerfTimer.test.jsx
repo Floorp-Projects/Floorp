@@ -15,7 +15,6 @@ let DEFAULT_PROPS = {
   rows: [],
   id: "highlights",
   dispatch() {},
-  intl: {formatMessage: x => x},
   perfSvc,
 };
 

@@ -3601,15 +3601,12 @@ static void AnnotateWMIData() {
 }
 
 static void PR_CALLBACK AnnotateWMIData_ThreadStart(void*) {
-  HRESULT hr = CoInitialize(nullptr);
-
-  if (FAILED(hr)) {
+  mscom::MTARegion mta;
+  if (!mta.IsValid()) {
     return;
   }
 
   AnnotateWMIData();
-
-  CoUninitialize();
 }
 #endif  // XP_WIN
 

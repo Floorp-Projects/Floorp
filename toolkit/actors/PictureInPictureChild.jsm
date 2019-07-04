@@ -340,6 +340,9 @@ class PictureInPictureToggleChild extends ActorChild {
       state.isClickingToggle = true;
       state.clickedElement = Cu.getWeakReference(event.originalTarget);
       event.stopImmediatePropagation();
+
+      Services.telemetry.keyedScalarAdd("pictureinpicture.opened_method", "toggle", 1);
+
       let pipEvent =
         new this.content.CustomEvent("MozTogglePictureInPicture", {
           bubbles: true,
@@ -558,7 +561,7 @@ class PictureInPictureChild extends ActorChild {
       case "pagehide": {
         // The originating video's content document has unloaded,
         // so close Picture-in-Picture.
-        this.closePictureInPicture();
+        this.closePictureInPicture({ reason: "pagehide" });
         break;
       }
       case "play": {
@@ -601,13 +604,17 @@ class PictureInPictureChild extends ActorChild {
    */
   async togglePictureInPicture(video) {
     if (this.inPictureInPicture(video)) {
-      await this.closePictureInPicture();
+      // The only way we could have entered here for the same video is if
+      // we are toggling via the context menu, since we hide the inline
+      // Picture-in-Picture toggle when a video is being displayed in
+      // Picture-in-Picture.
+      await this.closePictureInPicture({ reason: "contextmenu" });
     } else {
       if (this.weakVideo) {
         // There's a pre-existing Picture-in-Picture window for a video
         // in this content process. Send a message to the parent to close
         // the Picture-in-Picture window.
-        await this.closePictureInPicture();
+        await this.closePictureInPicture({ reason: "new-pip" });
       }
 
       gWeakVideo = Cu.getWeakReference(video);
@@ -640,13 +647,14 @@ class PictureInPictureChild extends ActorChild {
    * @resolves {undefined} Once the pre-existing Picture-in-Picture
    * window has unloaded.
    */
-  async closePictureInPicture() {
+  async closePictureInPicture({ reason }) {
     if (this.weakVideo) {
       this.untrackOriginatingVideo(this.weakVideo);
     }
 
     this.mm.sendAsyncMessage("PictureInPicture:Close", {
       browingContextId: this.docShell.browsingContext.id,
+      reason,
     });
 
     if (this.weakPlayerContent) {
@@ -728,7 +736,7 @@ class PictureInPictureChild extends ActorChild {
       // If the video element has gone away before we've had a chance to set up
       // Picture-in-Picture for it, tell the parent to close the Picture-in-Picture
       // window.
-      await this.closePictureInPicture();
+      await this.closePictureInPicture({ reason: "setup-failure" });
       return;
     }
 

@@ -43,7 +43,8 @@ static uint32_t ops = 1000;
 static uint32_t iterations = 2;
 static bool logging = 0;
 static uint32_t sleepPeriodMS = 50;
-static uint32_t slackMS = 30;  // allow this much error
+static uint32_t upperBoundSlackMS = 1200;  // allow this much error
+static uint32_t lowerBoundSlackMS = 60;
 
 template <uint32_t K>
 class Tracker : public nsExpirationTracker<Object, K> {
@@ -124,8 +125,8 @@ class Tracker : public nsExpirationTracker<Object, K> {
     uint32_t timeDiffMS = (now - aObj->mLastUsed) * 1000 / PR_TicksPerSecond();
     // See the comment for NotifyExpired in nsExpirationTracker.h for these
     // bounds
-    uint32_t lowerBoundMS = (K - 1) * periodMS - slackMS;
-    uint32_t upperBoundMS = K * (periodMS + sleepPeriodMS) + slackMS;
+    uint32_t lowerBoundMS = (K - 1) * periodMS - lowerBoundSlackMS;
+    uint32_t upperBoundMS = K * (periodMS + sleepPeriodMS) + upperBoundSlackMS;
     if (logging) {
       printf("Checking: %d-%d = %d [%d,%d]\n", now, aObj->mLastUsed, timeDiffMS,
              lowerBoundMS, upperBoundMS);

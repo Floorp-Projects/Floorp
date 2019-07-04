@@ -6,65 +6,76 @@
 ### being translated as the feature is still in heavy development
 ### and strings are likely to change often.
 
-### Fluent isn't translating elements in the shadow DOM so the translated strings
-### need to be applied to the composed node where they can be moved to the proper
-### descendant after translation.
-
 about-logins-page-title = Logins & Passwords
-
-create-login-button = New Login
 
 login-filter =
   .placeholder = Search Logins
 
+create-login-button = New Login
+
+## The ⋯ menu that is in the top corner of the page
+menu =
+  .title = Open menu
+menu-menuitem-faq = Frequently Asked Questions
+menu-menuitem-feedback = Leave Feedback
+menu-menuitem-import = Import Passwords…
+menu-menuitem-preferences =
+  { PLATFORM() ->
+      [windows] Options
+     *[other] Preferences
+  }
+
+## Login List
 login-list =
-  .count =
-    { $count ->
-        [one] { $count } login
-       *[other] { $count } logins
-    }
-  .last-changed-option = Last Changed
-  .last-used-option = Last Used
-  .missing-username = (no username)
-  .name-option = Name
-  .new-login-subtitle = Enter your login credentials
-  .new-login-title = New Login
-  .sort-label-text = Sort by:
+  .aria-label = Logins matching search query
+login-list-count =
+  { $count ->
+      [one] { $count } login
+     *[other] { $count } logins
+  }
+login-list-last-changed-option = Last Changed
+login-list-last-used-option = Last Used
+login-list-name-option = Name
+login-list-sort-label-text = Sort by:
+login-list-item-title-new-login = New Login
+login-list-item-subtitle-new-login = Enter your login credentials
+login-list-item-subtitle-missing-username = (no username)
 
-login-item =
-  .cancel-button = Cancel
-  .copied-password-button = ✓ Copied!
-  .copied-username-button = ✓ Copied!
-  .copy-password-button = Copy
-  .copy-username-button = Copy
-  .delete-button = Delete
-  .edit-button = Edit
-  .new-login-title = Create New Login
-  .open-site-button = Launch
-  .origin-label = Website Address
-  .origin-placeholder = https://www.example.com
-  .password-hide-title = Hide password
-  .password-label = Password
-  .password-show-title = Show password
-  .save-changes-button = Save Changes
-  .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
-  .time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
-  .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
-  .username-label = Username
-  .username-placeholder = name@example.com
+## Login
+login-item-new-login-title = Create New Login
+login-item-edit-button = Edit
+login-item-delete-button = Delete
+login-item-origin-label = Website Address
+login-item-origin =
+  .placeholder = https://www.example.com
+login-item-open-site-button = Launch
+login-item-username-label = Username
+login-item-username =
+  .placeholder = name@example.com
+login-item-copied-username-button-text = ✔ Copied!
+login-item-copy-username-button-text = Copy
+login-item-password-label = Password
+login-item-password-reveal-checkbox-show =
+  .title = Show password
+login-item-password-reveal-checkbox-hide =
+  .title = Hide password
+login-item-copied-password-button-text = ✔ Copied!
+login-item-copy-password-button-text = Copy
+login-item-save-changes-button = Save Changes
+login-item-cancel-button = Cancel
+login-item-time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
+login-item-time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
+login-item-time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
 
+## Master Password notification
 master-password-notification-message = Please enter your master password to view saved logins & passwords
-# TODO: Not sure how to use formatValue with these as attributes on a single ID
-master-password-reload-button-label = Log in
-# TODO: Not sure how to use formatValue with these as attributes on a single ID
-master-password-reload-button-accesskey = L
+master-password-reload-button =
+  .label = Log in
+  .accesskey = L
 
-menu-button =
-  .button-title = Open menu
-  .menuitem-feedback = Leave Feedback
-  .menuitem-import = Import Passwords…
-  .menuitem-preferences =
-    { PLATFORM() ->
-        [windows] Options
-       *[other] Preferences
-    }
+confirm-delete-dialog-title = Confirm Deletion
+confirm-delete-dialog-message = Are you sure you want to delete this login?
+confirm-delete-dialog-dismiss-button =
+  .title = Cancel
+confirm-delete-dialog-cancel-button = Cancel
+confirm-delete-dialog-confirm-button = Delete login

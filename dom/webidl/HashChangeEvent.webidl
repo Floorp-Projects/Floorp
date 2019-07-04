@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional HashChangeEventInit eventInitDict), LegacyEventInit]
+[Constructor(DOMString type, optional HashChangeEventInit eventInitDict = {}), LegacyEventInit]
 interface HashChangeEvent : Event
 {
   readonly attribute DOMString oldURL;

@@ -1,11 +1,10 @@
 import {Topic, Topics} from "content-src/components/Topics/Topics";
 import React from "react";
 import {shallow} from "enzyme";
-import {shallowWithIntl} from "test/unit/utils";
 
 describe("<Topics>", () => {
   it("should render a Topics element", () => {
-    const wrapper = shallowWithIntl(<Topics topics={[]} />);
+    const wrapper = shallow(<Topics topics={[]} />);
     assert.ok(wrapper.exists());
   });
   it("should render a Topic element for each topic with the right url", () => {

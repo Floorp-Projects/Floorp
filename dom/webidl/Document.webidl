@@ -71,9 +71,9 @@ interface Document : Node {
   // because the DOM element reflectors will be in the content scope,
   // instead of the desired UA Widget scope.
   [CEReactions, NewObject, Throws, Func="IsNotUAWidget"]
-  Element createElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
+  Element createElement(DOMString localName, optional (ElementCreationOptions or DOMString) options = {});
   [CEReactions, NewObject, Throws, Func="IsNotUAWidget"]
-  Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (ElementCreationOptions or DOMString) options);
+  Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (ElementCreationOptions or DOMString) options = {});
   [NewObject]
   DocumentFragment createDocumentFragment();
   [NewObject, Func="IsNotUAWidget"]
@@ -380,7 +380,7 @@ partial interface Document {
   void loadBindingDocument(DOMString documentURL);
   // Creates a new XUL element regardless of the document's default type.
   [CEReactions, NewObject, Throws, Func="IsChromeOrXBL"]
-  Element createXULElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
+  Element createXULElement(DOMString localName, optional (ElementCreationOptions or DOMString) options = {});
   // Wether the document was loaded using a nsXULPrototypeDocument.
   [ChromeOnly]
   readonly attribute boolean loadedFromPrototype;
@@ -430,7 +430,7 @@ partial interface Document {
   // Blocks the initial document parser until the given promise is settled.
   [ChromeOnly, Throws]
   Promise<any> blockParsing(Promise<any> promise,
-                            optional BlockParsingOptions options);
+                            optional BlockParsingOptions options = {});
 
   // like documentURI, except that for error pages, it returns the URI we were
   // trying to load when we hit an error, rather than the error page's own URI.

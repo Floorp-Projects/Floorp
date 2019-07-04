@@ -540,16 +540,16 @@ contexts manually using the `Localization` class:
 
   const { Localization } =
     ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
-  
-  
+
+
   const myL10n = new Localization([
     "branding/brand.ftl",
     "browser/preferences/preferences.ftl"
   ]);
-  
-  
+
+
   let [isDefaultMsg, isNotDefaultMsg] =
-    myL10n.formatValues({id: "is-default"}, {id: "is-not-default"});
+    await myL10n.formatValues({id: "is-default"}, {id: "is-not-default"});
 
 
 .. admonition:: Example
@@ -562,6 +562,32 @@ contexts manually using the `Localization` class:
 
   A developer may create manually a new context with the same resources as the main one,
   but hardcode it to `en-US` and then build the search index using both contexts.
+
+
+By default, all `Localization` contexts are asynchronous. It is possible to create a synchronous
+one by passing an `sync = false` argument to the constructor, or calling the `SetIsSync(bool)` method
+on the class.
+
+
+.. code-block:: javascript
+
+  const { Localization } =
+    ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+
+
+  const myL10n = new Localization([
+    "branding/brand.ftl",
+    "browser/preferences/preferences.ftl"
+  ], false);
+
+
+  let [isDefaultMsg, isNotDefaultMsg] =
+    myL10n.formatValuesSync({id: "is-default"}, {id: "is-not-default"});
+
+
+Synchronous contexts should be always avoided as they require synchronous I/O. If you think your use case
+requires a synchronous localization context, please consult Gecko, Performance and L10n Drivers teams.
+
 
 Designing Localizable APIs
 ==========================

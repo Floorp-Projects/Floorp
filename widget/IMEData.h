@@ -321,6 +321,8 @@ struct InputContextAction final {
     CAUSE_MOUSE,
     // The cause is user's touch operation (implies mouse)
     CAUSE_TOUCH,
+    // The cause is users' long press operation.
+    CAUSE_LONGPRESS,
     // The cause is unknown but it occurs during user input except keyboard
     // input.  E.g., an event handler of a user input event moves focus.
     CAUSE_UNKNOWN_DURING_NON_KEYBOARD_INPUT,
@@ -388,6 +390,7 @@ struct InputContextAction final {
       case CAUSE_KEY:
       case CAUSE_MOUSE:
       case CAUSE_TOUCH:
+      case CAUSE_LONGPRESS:
       case CAUSE_UNKNOWN_DURING_NON_KEYBOARD_INPUT:
       case CAUSE_UNKNOWN_DURING_KEYBOARD_INPUT:
         return true;

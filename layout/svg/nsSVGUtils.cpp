@@ -191,7 +191,7 @@ void nsSVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
   if (aFrame->IsSVGOuterSVGFrame()) {
     outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(aFrame);
   } else {
-    aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+    aFrame->MarkSubtreeDirty();
 
     nsIFrame* f = aFrame->GetParent();
     while (f && !f->IsSVGOuterSVGFrame()) {

@@ -52,6 +52,7 @@ dictionary APZHitResult {
   float screenX;
   float screenY;
   unsigned short hitResult; // combination of the APZHitResultFlags.* flags
+  unsigned long long layersId;
   unsigned long long scrollId;
 };
 

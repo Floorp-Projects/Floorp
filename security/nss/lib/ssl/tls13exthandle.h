@@ -99,5 +99,14 @@ SECStatus tls13_ClientSendPostHandshakeAuthXtn(const sslSocket *ss,
 SECStatus tls13_ServerHandlePostHandshakeAuthXtn(const sslSocket *ss,
                                                  TLSExtensionData *xtnData,
                                                  SECItem *data);
+SECStatus tls13_ClientHandleDelegatedCredentialsXtn(const sslSocket *ss,
+                                                    TLSExtensionData *xtnData,
+                                                    SECItem *data);
+SECStatus tls13_ClientSendDelegatedCredentialsXtn(const sslSocket *ss,
+                                                  TLSExtensionData *xtnData,
+                                                  sslBuffer *buf, PRBool *added);
+SECStatus tls13_ServerHandleDelegatedCredentialsXtn(const sslSocket *ss,
+                                                    TLSExtensionData *xtnData,
+                                                    SECItem *data);
 
 #endif

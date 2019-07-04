@@ -27,8 +27,7 @@ pub const _MAX_WASM_MODULE_SIZE: usize = 1024 * 1024 * 1024; //= 1 GiB
 pub const MAX_WASM_FUNCTION_SIZE: usize = 128 * 1024;
 pub const MAX_WASM_FUNCTION_LOCALS: usize = 50000;
 pub const MAX_WASM_FUNCTION_PARAMS: usize = 1000;
-pub const _MAX_WASM_FUNCTION_MULTI_RETURNS: usize = 1000;
-pub const MAX_WASM_FUNCTION_RETURNS: usize = 1;
+pub const MAX_WASM_FUNCTION_RETURNS: usize = 1000;
 pub const _MAX_WASM_TABLE_SIZE: usize = 10000000;
 pub const MAX_WASM_TABLE_ENTRIES: usize = 10000000;
 pub const MAX_WASM_TABLES: usize = 1;

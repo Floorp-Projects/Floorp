@@ -489,7 +489,7 @@ PromptDelegate.prototype = {
 
   confirm: function(aTitle, aText) {
     // Button 0 is OK.
-    return this.confirmCheck(aTitle, aText) == 0;
+    return this.confirmCheck(aTitle, aText);
   },
 
   confirmCheck: function(aTitle, aText, aCheckMsg, aCheckState) {

@@ -39,7 +39,13 @@
         // change list style type
         var list = getNode("list");
         list.setAttribute("style", "list-style-type: disc;");
-        getComputedStyle(list, "").color; // make style processing sync
+
+        // Flush both the style change and the resulting layout change.
+        // Flushing style on its own is not sufficient, because that can
+        // leave frames marked with NS_FRAME_IS_DIRTY, which will cause
+        // nsTextFrame::GetRenderedText to report the text of a text
+        // frame is empty.
+        list.offsetWidth; // flush layout (which also flushes style)
 
         testName("li_start", kDiscBulletText + "list start");
         testName("li_end", kDiscBulletText + "list end");

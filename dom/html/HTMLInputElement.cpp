@@ -939,7 +939,7 @@ void HTMLInputElement::Shutdown() {
 HTMLInputElement::HTMLInputElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser, FromClone aFromClone)
-    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo),
+    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
                                         kInputDefaultType->value),
       mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
       mAutocompleteInfoState(nsContentUtils::eAutocompleteAttrState_Unknown),
@@ -5891,9 +5891,11 @@ void HTMLInputElement::DoneCreatingElement() {
   // Restore state as needed.  Note that disabled state applies to all control
   // types.
   //
-  bool restoredCheckedState = !mInhibitRestoration &&
-                              NS_SUCCEEDED(GenerateStateKey()) &&
-                              RestoreFormControlState();
+  bool restoredCheckedState = false;
+  if (!mInhibitRestoration) {
+    GenerateStateKey();
+    restoredCheckedState = RestoreFormControlState();
+  }
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED

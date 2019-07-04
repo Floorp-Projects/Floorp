@@ -1690,7 +1690,7 @@ raptor-scn-power-idle-refbrow:
 raptor-scn-power-idle-bg-fenix:
     description: "Raptor idle-browser (backgrounded) power-usage measurement on Fenix"
     try-name: raptor-scn-power-idle-bg-fenix
-    treeherder-symbol: Rap-fenix(idl-bg)
+    treeherder-symbol: Rap-fenix(idlbg-p)
     run-on-projects: ['try']
     e10s: true
     target:
@@ -1715,7 +1715,7 @@ raptor-scn-power-idle-bg-fenix:
 raptor-scn-power-idle-bg-fennec:
     description: "Raptor idle-browser (backgrounded) power-use measurement on Fennec"
     try-name: raptor-scn-power-idle-bg-fennec
-    treeherder-symbol: Rap-fennec(idl-bg)
+    treeherder-symbol: Rap-fennec(idlbg-p)
     target: target.apk
     run-on-projects: ['try']
     tier: 3
@@ -1731,9 +1731,12 @@ raptor-scn-power-idle-bg-fennec:
 raptor-scn-power-idle-bg-geckoview:
     description: "Raptor idle-browser (backgrounded) power-use measurement on GeckoView"
     try-name: raptor-scn-power-idle-bg-geckoview
-    treeherder-symbol: Rap-P(idl-bg)
+    treeherder-symbol: Rap(idlbg-p)
     target: geckoview_example.apk
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects:
+        by-test-platform:
+            android-hw.*/pgo: ['try', 'mozilla-central']
+            default: ['try']
     tier: 3
     max-run-time: 1800
     mozharness:
@@ -1748,7 +1751,7 @@ raptor-scn-power-idle-bg-geckoview:
 raptor-scn-power-idle-bg-refbrow:
     description: "Raptor idle-browser (backgrounded) power-use measurement on Reference Browser"
     try-name: raptor-scn-power-idle-bg-refbrow
-    treeherder-symbol: Rap-refbrow(idl-bg)
+    treeherder-symbol: Rap-refbrow(idlbg-p)
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:

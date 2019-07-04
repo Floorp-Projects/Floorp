@@ -14,7 +14,6 @@ browser.jar:
   res/activity-stream/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
 #endif
   res/activity-stream/vendor/prop-types.js (./vendor/prop-types.js)
-  res/activity-stream/vendor/react-intl.js (./vendor/react-intl.js)
   res/activity-stream/vendor/redux.js (./vendor/redux.js)
   res/activity-stream/vendor/react-redux.js (./vendor/react-redux.js)
   res/activity-stream/data/content/assets/ (./data/content/assets/*)
@@ -27,7 +26,8 @@ browser.jar:
 #else
   res/activity-stream/css/activity-stream.css (./css/activity-stream-linux.css)
 #endif
+  res/activity-stream/prerendered/activity-stream.html (./prerendered/activity-stream.html)
 #ifndef RELEASE_OR_BETA
-  res/activity-stream/prerendered/static/activity-stream-debug.html (./prerendered/static/activity-stream-debug.html)
+  res/activity-stream/prerendered/activity-stream-debug.html (./prerendered/activity-stream-debug.html)
 #endif
-  res/activity-stream/prerendered/ (./prerendered/locales/*)
+  res/activity-stream/prerendered/activity-stream-noscripts.html (./prerendered/activity-stream-noscripts.html)

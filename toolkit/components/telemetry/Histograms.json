@@ -6675,6 +6675,16 @@
                "sendToDevice", "other", "addSearchEngine", "shareURL", "screenshotsMozillaOr"],
     "description": "Count how many times people use items from the main page action button"
   },
+  "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["mconley@mozilla.com", "astevenson@mozilla.com"],
+    "bug_numbers": [1560590],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in seconds) that a Picture-in-Picture window was open."
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com", "chutten@mozilla.com"],
@@ -13608,33 +13618,6 @@
     "n_buckets": 100,
     "bug_numbers": [1341531],
     "description": "Time (ms) for the APZ handled wheel event to dispatch, but before handlers executing."
-  },
-  "INTERMEDIATE_PRELOADING_ERRORS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "70",
-    "kind": "categorical",
-    "labels": ["emptyAttachment",
-               "failedToDownloadMisc",
-               "failedToFetch",
-               "failedToObserve",
-               "failedToRemove",
-               "failedToUpdateNSS",
-               "failedToUpdateDB",
-               "unexpectedHash",
-               "unexpectedLength"],
-    "bug_numbers": [1519273],
-    "description": "Errors occurred during intermediate certificate preloading."
-  },
-  "INTERMEDIATE_PRELOADING_UPDATE_TIME_MS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "70",
-    "kind": "exponential",
-    "high": 180000,
-    "n_buckets": 50,
-    "bug_numbers": [1519273],
-    "description": "Number of milliseconds to update the pre-loaded data, if updated."
   },
   "IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS": {
     "record_in_processes": ["main", "content"],

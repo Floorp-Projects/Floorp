@@ -475,8 +475,10 @@ static MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
 
 ReadableStream* ReadableStream::createExternalSourceStream(
     JSContext* cx, JS::ReadableStreamUnderlyingSource* source,
+    void* nsISupportsObject_alreadyAddreffed /* = nullptr */,
     HandleObject proto /* = nullptr */) {
-  Rooted<ReadableStream*> stream(cx, create(cx, proto));
+  Rooted<ReadableStream*> stream(
+      cx, create(cx, nsISupportsObject_alreadyAddreffed, proto));
   if (!stream) {
     return nullptr;
   }
@@ -536,7 +538,8 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
                                           &proto)) {
     return false;
   }
-  Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx, proto));
+  Rooted<ReadableStream*> stream(cx,
+                                 ReadableStream::create(cx, nullptr, proto));
   if (!stream) {
     return false;
   }
@@ -800,7 +803,9 @@ static const JSFunctionSpec ReadableStream_methods[] = {
 static const JSPropertySpec ReadableStream_properties[] = {
     JS_PSG("locked", ReadableStream_locked, 0), JS_PS_END};
 
-CLASS_SPEC(ReadableStream, 0, SlotCount, 0, 0, JS_NULL_CLASS_OPS);
+CLASS_SPEC(ReadableStream, 0, SlotCount, 0,
+           JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
+           JS_NULL_CLASS_OPS);
 
 /*** 3.3. General readable stream abstract operations ***********************/
 
@@ -853,7 +858,8 @@ MOZ_MUST_USE ReadableStream* CreateReadableStream(
   // Step 4: Let stream be ObjectCreate(the original value of ReadableStream's
   //         prototype property).
   // Step 5: Perform ! InitializeReadableStream(stream).
-  Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx, proto));
+  Rooted<ReadableStream*> stream(cx,
+                                 ReadableStream::create(cx, nullptr, proto));
   if (!stream) {
     return nullptr;
   }
@@ -883,7 +889,9 @@ MOZ_MUST_USE ReadableStream* CreateReadableStream(
  */
 MOZ_MUST_USE /* static */
     ReadableStream*
-    ReadableStream::create(JSContext* cx, HandleObject proto /* = nullptr */) {
+    ReadableStream::create(
+        JSContext* cx, void* nsISupportsObject_alreadyAddreffed /* = nullptr */,
+        HandleObject proto /* = nullptr */) {
   // In the spec, InitializeReadableStream is always passed a newly created
   // ReadableStream object. We instead create it here and return it below.
   Rooted<ReadableStream*> stream(
@@ -891,6 +899,8 @@ MOZ_MUST_USE /* static */
   if (!stream) {
     return nullptr;
   }
+
+  JS_SetPrivate(stream, nsISupportsObject_alreadyAddreffed);
 
   // Step 1: Set stream.[[state]] to "readable".
   stream->initStateBits(Readable);
@@ -4491,6 +4501,7 @@ JS_PUBLIC_API JSObject* JS::NewReadableDefaultStreamObject(
 
 JS_PUBLIC_API JSObject* JS::NewReadableExternalSourceStreamObject(
     JSContext* cx, JS::ReadableStreamUnderlyingSource* underlyingSource,
+    void* nsISupportsObject_alreadyAddreffed /* = nullptr */,
     HandleObject proto /* = nullptr */) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
@@ -4500,8 +4511,8 @@ JS_PUBLIC_API JSObject* JS::NewReadableExternalSourceStreamObject(
              "external underlying source pointers must be aligned");
   cx->check(proto);
 
-  return ReadableStream::createExternalSourceStream(cx, underlyingSource,
-                                                    proto);
+  return ReadableStream::createExternalSourceStream(
+      cx, underlyingSource, nsISupportsObject_alreadyAddreffed, proto);
 }
 
 JS_PUBLIC_API bool JS::IsReadableStream(JSObject* obj) {
@@ -4772,6 +4783,11 @@ JS_PUBLIC_API bool JS::ReadableStreamUpdateDataAvailableFromSource(
   }
 
   return true;
+}
+
+JS_PUBLIC_API void JS::ReadableStreamReleaseCCObject(JSObject* streamObj) {
+  MOZ_ASSERT(JS::IsReadableStream(streamObj));
+  JS_SetPrivate(streamObj, nullptr);
 }
 
 JS_PUBLIC_API bool JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,

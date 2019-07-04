@@ -61,5 +61,5 @@ interface AnimationEffect {
   [BinaryName="getComputedTimingAsDict"]
   ComputedEffectTiming getComputedTiming();
   [Throws]
-  void updateTiming(optional OptionalEffectTiming timing);
+  void updateTiming(optional OptionalEffectTiming timing = {});
 };

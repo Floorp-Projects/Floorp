@@ -14,12 +14,7 @@ ChromeUtils.defineModuleGetter(this, "AboutNewTab",
                                "resource:///modules/AboutNewTab.jsm");
 
 const TOPIC_APP_QUIT = "quit-application-granted";
-const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 const TOPIC_CONTENT_DOCUMENT_INTERACTIVE = "content-document-interactive";
-
-// Automated tests ensure packaged locales are in this list. Copied output of:
-// https://github.com/mozilla/activity-stream/blob/master/bin/render-activity-stream-html.js
-const ACTIVITY_STREAM_BCP47 = "en-US ach an ar ast az be bg bn br bs ca cak crh cs cy da de dsb el en-CA en-GB eo es-AR es-CL es-ES es-MX et eu fa ff fi fr fy-NL ga-IE gd gl gn gu-IN he hi-IN hr hsb hu hy-AM ia id is it ja ja-JP-macos ka kab kk km kn ko lij lo lt ltg lv mk mr ms my nb-NO ne-NP nl nn-NO oc pa-IN pl pt-BR pt-PT rm ro ru si sk sl sq sr sv-SE ta te th tl tr trs uk ur uz vi zh-CN zh-TW".split(" ");
 
 const ABOUT_URL = "about:newtab";
 const BASE_URL = "resource://activity-stream/";
@@ -35,7 +30,6 @@ const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 
 function AboutNewTabService() {
   Services.obs.addObserver(this, TOPIC_APP_QUIT);
-  Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
   Services.prefs.addObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
   if (!IS_RELEASE_OR_BETA) {
     Services.prefs.addObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
@@ -71,7 +65,7 @@ function AboutNewTabService() {
  *
  * When the URL loaded is about:newtab, the default behavior, or when entered in the
  * URL bar, the redirector is hit. The service is then called to return the
- * appropriate activity stream url based on prefs and locales.
+ * appropriate activity stream url based on prefs.
  *
  * NOTE: "about:newtab" will always result in a default newtab page, and never an overridden URL.
  *
@@ -88,7 +82,6 @@ AboutNewTabService.prototype = {
 
   _newTabURL: ABOUT_URL,
   _activityStreamEnabled: false,
-  _activityStreamPath: "",
   _activityStreamDebug: false,
   _privilegedAboutContentProcess: false,
   _overridden: false,
@@ -105,11 +98,9 @@ AboutNewTabService.prototype = {
       case "nsPref:changed":
         if (data === PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS) {
           this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
-          this.updatePrerenderedPath();
           this.notifyChange();
         } else if (!IS_RELEASE_OR_BETA && data === PREF_ACTIVITY_STREAM_DEBUG) {
           this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
-          this.updatePrerenderedPath();
           this.notifyChange();
         }
         break;
@@ -145,10 +136,8 @@ AboutNewTabService.prototype = {
             `${BASE_URL}vendor/react${debugString}.js`,
             `${BASE_URL}vendor/react-dom${debugString}.js`,
             `${BASE_URL}vendor/prop-types.js`,
-            `${BASE_URL}vendor/react-intl.js`,
             `${BASE_URL}vendor/redux.js`,
             `${BASE_URL}vendor/react-redux.js`,
-            `${BASE_URL}prerendered/${this.activityStreamLocale}/activity-stream-strings.js`,
             `${BASE_URL}data/content/activity-stream.bundle.js`,
           ];
 
@@ -174,10 +163,6 @@ AboutNewTabService.prototype = {
         } else if (IS_PRIVILEGED_PROCESS) {
           Services.obs.removeObserver(this, TOPIC_CONTENT_DOCUMENT_INTERACTIVE);
         }
-        break;
-      case TOPIC_LOCALES_CHANGE:
-        this.updatePrerenderedPath();
-        this.notifyChange();
         break;
     }
   },
@@ -210,34 +195,23 @@ AboutNewTabService.prototype = {
     if (!IS_RELEASE_OR_BETA) {
       this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
     }
-    this.updatePrerenderedPath();
     this._newtabURL = ABOUT_URL;
     return true;
-  },
-
-  /**
-   * Figure out what path under prerendered to use based on current state.
-   */
-  updatePrerenderedPath() {
-    // Debug files are specially packaged in a non-localized directory, but with
-    // dynamic script loading, localized debug is supported.
-    this._activityStreamPath = `${this._activityStreamDebug &&
-      !this._privilegedAboutContentProcess ? "static" : this.activityStreamLocale}/`;
   },
 
   /*
    * Returns the default URL.
    *
-   * This URL depends on various activity stream prefs and locales. Overriding
+   * This URL depends on various activity stream prefs. Overriding
    * the newtab page has no effect on the result of this function.
    */
   get defaultURL() {
     // Generate the desired activity stream resource depending on state, e.g.,
-    // resource://activity-stream/prerendered/ar/activity-stream.html
-    // resource://activity-stream/prerendered/static/activity-stream-debug.html
+    // "resource://activity-stream/prerendered/activity-stream.html"
+    // "resource://activity-stream/prerendered/activity-stream-debug.html"
+    // "resource://activity-stream/prerendered/activity-stream-noscripts.html"
     return [
       "resource://activity-stream/prerendered/",
-      this._activityStreamPath,
       "activity-stream",
       // Debug version loads dev scripts but noscripts separately loads scripts
       this._activityStreamDebug && !this._privilegedAboutContentProcess ? "-debug" : "",
@@ -287,21 +261,6 @@ AboutNewTabService.prototype = {
     return this._activityStreamDebug;
   },
 
-  get activityStreamLocale() {
-    // Pick the best available locale to match the app locales
-    return Services.locale.negotiateLanguages(
-      // Fix up incorrect BCP47 that are actually lang tags as a workaround for
-      // bug 1479606 returning the wrong values in the content process
-      Services.locale.appLocalesAsBCP47.map(l => l.replace(/^(ja-JP-mac)$/, "$1os")),
-      ACTIVITY_STREAM_BCP47,
-      // defaultLocale's strings aren't necessarily packaged, but en-US' are
-      "en-US",
-      Services.locale.langNegStrategyLookup
-    // Convert the BCP47 to lang tag, which is what is used in our paths, as a
-    // workaround for bug 1478930 negotiating incorrectly with lang tags
-    )[0].replace(/^(ja-JP-mac)os$/, "$1");
-  },
-
   resetNewTabURL() {
     this._overridden = false;
     this._newTabURL = ABOUT_URL;
@@ -328,7 +287,6 @@ AboutNewTabService.prototype = {
       return;
     }
     Services.obs.removeObserver(this, TOPIC_APP_QUIT);
-    Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
     Services.prefs.removeObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
     if (!IS_RELEASE_OR_BETA) {
       Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);

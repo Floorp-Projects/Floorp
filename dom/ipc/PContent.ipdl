@@ -1297,7 +1297,7 @@ parent:
       nsCString aFeatures,
       float aFullZoom,
       nsString aName,
-      Principal aTriggeringPrincipal,
+      nsIPrincipal aTriggeringPrincipal,
       nsIContentSecurityPolicy aCsp,
       nsIReferrerInfo aReferrerInfo);
 

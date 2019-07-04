@@ -57,10 +57,10 @@ function checkError(code, nonstrictErr, strictErr)
 }
 
 // Parenthesized destructuring patterns don't trigger grammar refinement, so we
-// get the currently-usual ReferenceError for an invalid assignment target, per
+// get the usual SyntaxError for an invalid assignment target, per
 // 12.14.1 second bullet.
-checkError("var a, b; ([a, b]) = [1, 2];", ReferenceError, ReferenceError);
-checkError("var a, b; ({a, b}) = { a: 1, b: 2 };", ReferenceError, ReferenceError);
+checkError("var a, b; ([a, b]) = [1, 2];", SyntaxError, SyntaxError);
+checkError("var a, b; ({a, b}) = { a: 1, b: 2 };", SyntaxError, SyntaxError);
 
 // *Nested* parenthesized destructuring patterns, on the other hand, do trigger
 // grammar refinement.  But subtargets in a destructuring pattern must be
@@ -122,12 +122,8 @@ if (classesEnabled())
   checkError("var a, b; var obj = { x() { [(super[8 + {}] = 'motel')] = [1]; } };", SyntaxError, SyntaxError); // evade constant-folding
 }
 
-// In strict mode, assignment to funcall *immediately* triggers ReferenceError
-// before we can recognize this doesn't even match the destructuring grammar to
-// begin with.  Bleh.  :-(  Probably they should all be made SyntaxError in the
-// specs; see <https://bugs.ecmascript.org/show_bug.cgi?id=4375>.
-checkError("var a, b; [f() = 'ohai', b] = [1, 2];", SyntaxError, ReferenceError);
-checkError("var a, b; [(f()) = 'kthxbai', b] = [1, 2];", SyntaxError, ReferenceError);
+checkError("var a, b; [f() = 'ohai', b] = [1, 2];", SyntaxError, SyntaxError);
+checkError("var a, b; [(f()) = 'kthxbai', b] = [1, 2];", SyntaxError, SyntaxError);
 
 Function("var a, b; ({ a: (a), b} = { a: 1, b: 2 });")();
 Function("var a, b; ({ a: (a) = 5, b} = { a: 1, b: 2 });")();

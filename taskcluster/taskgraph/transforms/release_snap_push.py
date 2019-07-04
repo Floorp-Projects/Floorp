@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
+from taskgraph.util.scriptworker import add_scope_prefix
 
 from voluptuous import Optional, Required
 
@@ -22,7 +23,7 @@ push_snap_description_schema = Schema({
     Required('run-on-projects'): task_description_schema['run-on-projects'],
     Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): object,
-    Required('scopes'): optionally_keyed_by('project', [basestring]),
+    Optional('scopes'): [basestring],
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
     Optional('extra'): task_description_schema['extra'],
@@ -41,11 +42,21 @@ def make_task_description(config, jobs):
 
         job['worker']['upstream-artifacts'] = generate_upstream_artifacts(job['dependencies'])
 
-        resolve_keyed_by(job, 'scopes', item_name=job['name'], project=config.params['project'])
+        resolve_keyed_by(
+            job, 'worker.channel', item_name=job['name'],
+            **{'release-type': config.params['release_type']}
+        )
         resolve_keyed_by(
             job, 'worker-type', item_name=job['name'],
             **{'release-level': config.params.release_level()}
         )
+        if config.params.release_level() == 'production':
+            job.setdefault('scopes', []).append(
+                add_scope_prefix(
+                    config,
+                    "snapcraft:firefox:{}".format(job['worker']['channel'].split('/')[0]),
+                )
+            )
 
         yield job
 

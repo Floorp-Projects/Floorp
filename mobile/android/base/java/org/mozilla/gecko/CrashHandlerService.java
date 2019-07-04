@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
@@ -19,8 +20,6 @@ import java.io.IOException;
 public class CrashHandlerService extends Service {
     private static final String LOGTAG = "CrashHandlerService";
     private static final String ACTION_STOP = "action_stop";
-    // Build.VERSION_CODES.Q placeholder. While Android Q is in Beta it shares API 28 with Android P.
-    private static final int ANDROID_Q = 29;
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
@@ -42,13 +41,11 @@ public class CrashHandlerService extends Service {
             intent.setClass(this, CrashReporterActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            if (AppConstants.Versions.feature29Plus) {
+            if (AppConstants.Versions.feature26Plus) {
                 startCrashHandling(intent);
             } else {
                 startActivity(intent);
-
-                // Avoid ANR due to background limitations on Oreo+
-                System.exit(0);
+                stopSelf();
             }
         }
 
@@ -64,14 +61,14 @@ public class CrashHandlerService extends Service {
      * Call this for any necessary cleanup like removing the foreground notification shown on Android Q+.
      */
     public static void reportingStarted(final Context context) {
-        if (AppConstants.Versions.feature29Plus) {
+        if (AppConstants.Versions.feature26Plus) {
             final Intent intent = new Intent(context, CrashHandlerService.class);
             intent.setAction(ACTION_STOP);
             context.startService(intent);
         }
     }
 
-    @TargetApi(ANDROID_Q)
+    @TargetApi(Build.VERSION_CODES.O)
     private Notification getActivityNotification(final Context context, final Intent activityIntent) {
         final Intent dismissNotificationIntent = new Intent(ACTION_STOP, null, this, this.getClass());
         final PendingIntent dismissNotification = PendingIntent.getService(this, 0, dismissNotificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
@@ -89,12 +86,13 @@ public class CrashHandlerService extends Service {
                 .build();
     }
 
-    @TargetApi(ANDROID_Q)
+    @TargetApi(Build.VERSION_CODES.O)
     private void dismissNotification() {
         stopForeground(Service.STOP_FOREGROUND_REMOVE);
+        stopSelf();
     }
 
-    @TargetApi(ANDROID_Q)
+    @TargetApi(Build.VERSION_CODES.O)
     private void startCrashHandling(final Intent activityIntent) {
         // Piggy-back the SYSTEM_ALERT_WINDOW permission given by the user for the Tab Queue functionality.
         // Otherwise fallback to display a foreground notification, this being the only way we can
@@ -104,7 +102,15 @@ public class CrashHandlerService extends Service {
             startActivity(activityIntent);
         } else {
             final Notification notification = getActivityNotification(this, activityIntent);
+
+            // Android O+ will show a non-intrusive notification (needed for a foreground service)
+            // and then show the crash reporter immediately
+            // Android Q+ will show an intrusive notification which when acted upon by the user will
+            // allow starting the crash reporter. See http://g.co/dev/bgblock
             startForeground(R.id.mediaControlNotification, notification);
+            if (AppConstants.Versions.feature26Plus && AppConstants.Versions.preQ) {
+                startActivity(activityIntent);
+            }
         }
     }
 }

@@ -6,70 +6,78 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<pre id="test">
-</pre>
 <iframe></iframe>
-
 <script type="application/javascript">
+/**
+ * This test is used to ensure that the `audio-playback` notification would be
+ * dispatched correctly when we start playing web audio from a iframe.
+ */
+var expectedNotifications = null;
+const iframe = document.querySelector("iframe");
 
-SimpleTest.waitForExplicitFinish();
+async function startTest() {
+  addObserver();
+  await startLoadingWebAudioInIframe();
+  await reloadIFrame();
+  cleanUpTestAndRemoveObserver();
+}
 
-// playback starts, stops when the page is reloaded, and starts again.
-var expectedNotification = ["active", "inactive-pause", "active"];
-var iframe = null;
-
-var observer = {
+const observer = {
   observe: function(subject, topic, data) {
     is(topic, "audio-playback", "audio-playback received");
-    var expected = expectedNotification.shift();
-    is(data, expected, "This is the right notification");
-    if (expected != "inactive-pause") {
-      runTest();
+    const expected = expectedNotifications.shift();
+    is(data, expected, `"${data}" is the right notification`);
+    if (expectedNotifications.length == 0) {
+      this.resolve();
     }
+  },
+  wait() {
+    return new Promise((resolve) => {
+      info(`Waiting for the notification "${expectedNotifications[0]}"`);
+      this.resolve = resolve;
+    });
   }
 };
 
-var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+const observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                                    .getService(SpecialPowers.Ci.nsIObserverService);
+SimpleTest.waitForExplicitFinish();
+onload = startTest;
 
-var tests = [
-  function() {
-    iframe = document.querySelector("iframe");
-    observerService.addObserver(observer, "audio-playback");
-    ok(true, "Observer set");
-    runTest();
-  },
-
-  function() {
-    iframe.src = "file_webAudioAudible.html";
-  },
-
-  function() {
-    // Reload
-    iframe.src = "file_webAudioAudible.html";
-  },
-  function() {
-    // Wait for the "active" notification, that is expected after the previous
-    // load of "file_webAudioAudible.html".
-    runTest();
-  }
-];
-
-function runTest() {
-  if (!tests.length) {
-    observerService.removeObserver(observer, "audio-playback");
-    ok(true, "Observer removed");
-    SimpleTest.finish();
-    return;
-  }
-
-  var test = tests.shift();
-  test();
+/**
+ * The following are test helper functions.
+ */
+function addObserver() {
+  observerService.addObserver(observer, "audio-playback");
+  ok(true, "Observer set");
 }
 
-onload = runTest;
+async function startLoadingWebAudioInIframe() {
+  info("Load iframe");
+  expectedNotifications = ["active"];
+  iframe.src = "file_webAudioAudible.html";
+  await observer.wait();
+}
 
+async function reloadIFrame() {
+  info("Reload iframe");
+  // As reloading frame would stop previous audio playing in frame, we would
+  // receive "inactive-pause" first.
+  expectedNotifications = ["inactive-pause", "active"];
+  iframe.src = "file_webAudioAudible.html";
+  await observer.wait();
+}
+
+async function cleanUpTestAndRemoveObserver() {
+  info("Cleaning up iframe");
+  expectedNotifications = ["inactive-pause"];
+  iframe.src = null;
+  await observer.wait();
+
+  observerService.removeObserver(observer, "audio-playback");
+  ok(true, "Observer removed");
+  SimpleTest.finish();
+}
 </script>
 </body>
 </html>
-

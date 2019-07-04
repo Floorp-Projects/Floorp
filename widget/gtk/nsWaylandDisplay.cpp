@@ -13,8 +13,21 @@ namespace widget {
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
-bool nsWaylandDisplay::mIsDMABufEnabled;
-bool nsWaylandDisplay::mIsDMABufPrefLoaded;
+bool nsWaylandDisplay::mIsDMABufEnabled = false;
+// -1 mean the pref was not loaded yet
+int nsWaylandDisplay::mIsDMABufPrefState = -1;
+bool nsWaylandDisplay::mIsDMABufConfigured = false;
+
+wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
+  if (!aGdkDisplay) {
+    aGdkDisplay = gdk_display_get_default();
+  }
+
+  // Available as of GTK 3.8+
+  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
+      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+  return sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
+}
 
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
@@ -63,10 +76,7 @@ void WaylandDispatchDisplays() {
 // Get WaylandDisplay for given wl_display and actual calling thread.
 static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
                                                  const StaticMutexAutoLock&) {
-  // Available as of GTK 3.8+
-  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay*))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-  wl_display* waylandDisplay = sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
+  wl_display* waylandDisplay = WaylandDisplayGetWLDisplay(aGdkDisplay);
 
   // Search existing display connections for wl_display:thread combination.
   for (auto& display : gWaylandDisplays) {
@@ -90,6 +100,9 @@ static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
     aGdkDisplay = gdk_display_get_default();
+    if (!aGdkDisplay) {
+      return nullptr;
+    }
   }
 
   StaticMutexAutoLock lock(gWaylandDisplaysMutex);
@@ -293,9 +306,12 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   wl_registry_add_listener(mRegistry, &registry_listener, this);
 
   if (NS_IsMainThread()) {
-    if (!mIsDMABufPrefLoaded) {
-      mIsDMABufPrefLoaded = true;
-      mIsDMABufEnabled =
+    // We can't load the preference from compositor/render thread,
+    // only from main one. So we can't call it directly from
+    // nsWaylandDisplay::IsDMABufEnabled() as it can be called from various
+    // threads.
+    if (mIsDMABufPrefState == -1) {
+      mIsDMABufPrefState =
           Preferences::GetBool("widget.wayland_dmabuf_backend.enabled", false);
     }
     // Use default event queue in main thread operated by Gtk+.
@@ -324,6 +340,46 @@ nsWaylandDisplay::~nsWaylandDisplay() {
     wl_event_queue_destroy(mEventQueue);
     mEventQueue = nullptr;
   }
+}
+
+bool nsWaylandDisplay::IsDMABufEnabled() {
+  if (mIsDMABufConfigured) {
+    return mIsDMABufEnabled;
+  }
+
+  // WaylandDisplayGet() sets mIsDMABufPrefState
+  nsWaylandDisplay* display = WaylandDisplayGet();
+  if (!display) {
+    NS_WARNING("Failed to get nsWaylandDisplay, called too early?");
+    return false;
+  }
+
+  if (nsWaylandDisplay::mIsDMABufPrefState == -1) {
+    MOZ_ASSERT(false,
+               "We're missing nsWaylandDisplay preference configuration!");
+    return false;
+  }
+
+  mIsDMABufConfigured = true;
+  if (!nsWaylandDisplay::mIsDMABufPrefState) {
+    // Disabled by user, just quit.
+    return false;
+  }
+
+  if (!display->ConfigureGbm()) {
+    NS_WARNING("Failed to create GbmDevice, DMABUF/DRM won't be available!");
+    return false;
+  }
+
+  if (!display->GetGbmFormat(/* aHasAlpha */ false) ||
+      !display->GetGbmFormat(/* aHasAlpha */ true)) {
+    NS_WARNING(
+        "Failed to create obtain pixel format, DMABUF/DRM won't be available!");
+    return false;
+  }
+
+  mIsDMABufEnabled = true;
+  return true;
 }
 
 void* nsGbmLib::sGbmLibHandle = nullptr;

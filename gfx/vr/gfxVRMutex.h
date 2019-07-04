@@ -39,10 +39,12 @@ class WaitForMutex {
 
   ~WaitForMutex() {
     if (mHandle && !ReleaseMutex(mHandle)) {
+#  ifdef MOZILLA_INTERNAL_API
       nsAutoCString msg;
       msg.AppendPrintf("WaitForMutex %d ReleaseMutex error \"%lu\".", mHandle,
                        GetLastError());
       NS_WARNING(msg.get());
+#  endif
       MOZ_ASSERT(false, "Failed to release mutex.");
     }
   }

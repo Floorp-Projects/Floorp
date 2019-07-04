@@ -15,7 +15,7 @@ dictionary IDBVersionChangeEventInit : EventInit {
     unsigned long long? newVersion = null;
 };
 
-[Constructor(DOMString type, optional IDBVersionChangeEventInit eventInitDict),
+[Constructor(DOMString type, optional IDBVersionChangeEventInit eventInitDict = {}),
  Exposed=(Window,Worker)]
 interface IDBVersionChangeEvent : Event {
     readonly    attribute unsigned long long  oldVersion;

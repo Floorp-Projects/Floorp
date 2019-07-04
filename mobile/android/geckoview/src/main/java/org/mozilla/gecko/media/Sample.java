@@ -22,6 +22,8 @@ public final class Sample implements Parcelable {
         EOS = new Sample();
         EOS.info.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
     }
+    @WrapForJNI
+    public long session;
 
     public static final int NO_BUFFER = -1;
 
@@ -71,9 +73,10 @@ public final class Sample implements Parcelable {
                       mode);
     }
 
-    public Sample set(final BufferInfo info, final CryptoInfo cryptoInfo) {
+    public Sample set(final BufferInfo info, final CryptoInfo cryptoInfo, final long session) {
         setBufferInfo(info);
         setCryptoInfo(cryptoInfo);
+        this.session = session;
         return this;
     }
 
@@ -144,6 +147,7 @@ public final class Sample implements Parcelable {
             } else {
                 s = new Sample();
             }
+            s.session = in.readLong();
             s.bufferId = in.readInt();
             s.readInfo(in);
             s.readCrypto(in);
@@ -158,6 +162,7 @@ public final class Sample implements Parcelable {
 
     @Override
     public void writeToParcel(final Parcel dest, final int parcelableFlags) {
+        dest.writeLong(session);
         dest.writeInt(bufferId);
         writeInfo(dest);
         writeCrypto(dest);
@@ -206,7 +211,8 @@ public final class Sample implements Parcelable {
         }
 
         StringBuilder str = new StringBuilder();
-        str.append("{ buffer#").append(bufferId).
+        str.append("{ session#:").append(session).
+                append(", buffer#").append(bufferId).
                 append(", info=").
                 append("{ offset=").append(info.offset).
                 append(", size=").append(info.size).

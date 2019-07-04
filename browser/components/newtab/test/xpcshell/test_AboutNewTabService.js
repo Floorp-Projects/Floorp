@@ -29,12 +29,12 @@ let ACTIVITY_STREAM_URL;
 let ACTIVITY_STREAM_DEBUG_URL;
 
 function setExpectedUrlsWithScripts() {
-  ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream.html";
-  ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug.html";
+  ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/activity-stream.html";
+  ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/activity-stream-debug.html";
 }
 
 function setExpectedUrlsWithoutScripts() {
-  ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream-noscripts.html";
+  ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/activity-stream-noscripts.html";
 
   // Debug urls are the same as non-debug because debug scripts load dynamically
   ACTIVITY_STREAM_DEBUG_URL = ACTIVITY_STREAM_URL;
@@ -190,11 +190,6 @@ addTestsWithPrivilegedContentProcessPref(async function test_welcome_url() {
   }
 
   cleanup();
-});
-
-add_task(function test_locale() {
-  Assert.equal(aboutNewTabService.activityStreamLocale, "en-US",
-    "The locale for testing should be en-US");
 });
 
 /**

@@ -11,7 +11,7 @@
  */
 
 [Constructor(DOMString type,
-             optional PaymentRequestUpdateEventInit eventInitDict),
+             optional PaymentRequestUpdateEventInit eventInitDict = {}),
  SecureContext,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface PaymentRequestUpdateEvent : Event {

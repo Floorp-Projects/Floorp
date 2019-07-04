@@ -95,7 +95,7 @@ class BackgroundNoise {
       memset(filter_state, 0, sizeof(filter_state));
       memset(filter, 0, sizeof(filter));
       filter[0] = 4096;
-      mute_factor = 0,
+      mute_factor = 0;
       scale = 20000;
       scale_shift = 24;
     }

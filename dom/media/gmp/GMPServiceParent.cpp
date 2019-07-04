@@ -773,7 +773,7 @@ already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::SelectPluginForAPI(
 RefPtr<GMPParent> CreateGMPParent(AbstractThread* aMainThread) {
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!SandboxInfo::Get().CanSandboxMedia()) {
-    if (!StaticPrefs::MediaGmpInsecureAllow()) {
+    if (!StaticPrefs::media_gmp_insecure_allow()) {
       NS_WARNING("Denying media plugin load due to lack of sandboxing.");
       return nullptr;
     }

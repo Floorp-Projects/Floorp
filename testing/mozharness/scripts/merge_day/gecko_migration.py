@@ -390,6 +390,9 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
         dirs = self.query_abs_dirs()
         self.apply_replacements()
         self.touch_clobber_file(dirs['abs_to_dir'])
+        next_esr_version = self.get_version(dirs['abs_to_dir'])[0]
+        self.bump_version(dirs['abs_to_dir'], next_esr_version, next_esr_version, "", "",
+                          use_config_suffix=True)
 
     def apply_replacements(self):
         dirs = self.query_abs_dirs()

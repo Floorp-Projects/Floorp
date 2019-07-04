@@ -358,7 +358,8 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
       selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (selection) {
     selection->RemoveAllRanges(IgnoreErrors());
-    selection->AddRange(*aRange, IgnoreErrors());
+    selection->AddRangeAndSelectFramesAndNotifyListeners(*aRange,
+                                                         IgnoreErrors());
 
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     if (fm) {

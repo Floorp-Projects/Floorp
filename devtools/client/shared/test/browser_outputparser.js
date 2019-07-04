@@ -3,17 +3,19 @@
 
 "use strict";
 
-const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
 const { CSS_PROPERTIES_DB} = require("devtools/shared/css/properties-db");
 
 add_task(async function() {
+  await pushPref("layout.css.backdrop-filter.enabled", true);
   await addTab("about:blank");
   await performTest();
   gBrowser.removeCurrentTab();
 });
 
 async function performTest() {
+  const OutputParser = require("devtools/client/shared/output-parser");
+
   const [host, , doc] = await createHost("bottom", "data:text/html," +
     "<h1>browser_outputParser.js</h1><div></div>");
 
@@ -33,6 +35,7 @@ async function performTest() {
   testParseCssVar(doc, parser);
   testParseURL(doc, parser);
   testParseFilter(doc, parser);
+  testParseBackdropFilter(doc, parser);
   testParseAngle(doc, parser);
   testParseShape(doc, parser);
   testParseVariable(doc, parser);
@@ -286,6 +289,15 @@ function testParseFilter(doc, parser) {
 
   const swatchCount = frag.querySelectorAll(".test-filterswatch").length;
   is(swatchCount, 1, "filter swatch was created");
+}
+
+function testParseBackdropFilter(doc, parser) {
+  const frag = parser.parseCssProperty("backdrop-filter", "something invalid", {
+    filterSwatchClass: "test-filterswatch",
+  });
+
+  const swatchCount = frag.querySelectorAll(".test-filterswatch").length;
+  is(swatchCount, 1, "filter swatch was created for backdrop-filter");
 }
 
 function testParseAngle(doc, parser) {

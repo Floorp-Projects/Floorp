@@ -42,12 +42,16 @@ class AboutLoginsChild extends ActorChild {
         this.mm.sendAsyncMessage("AboutLogins:DeleteLogin", {login: event.detail});
         break;
       }
-      case "AboutLoginsOpenFeedback": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenFeedback");
-        break;
-      }
       case "AboutLoginsImport": {
         this.mm.sendAsyncMessage("AboutLogins:Import");
+        break;
+      }
+      case "AboutLoginsOpenFAQ": {
+        this.mm.sendAsyncMessage("AboutLogins:OpenFAQ");
+        break;
+      }
+      case "AboutLoginsOpenFeedback": {
+        this.mm.sendAsyncMessage("AboutLogins:OpenFeedback");
         break;
       }
       case "AboutLoginsOpenPreferences": {
