@@ -120,6 +120,7 @@ dependencies {
     implementation project(':browser-icons')
     implementation project(':browser-search')
     implementation project(':browser-session')
+    implementation project(':browser-state')
     implementation project(':browser-tabstray')
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')

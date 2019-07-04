@@ -23,6 +23,7 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -62,9 +63,12 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
+    val store by lazy { BrowserStore() }
+
     val sessionManager by lazy {
         SessionManager(engine,
-                defaultSession = { Session("about:blank") }
+            defaultSession = { Session("about:blank") },
+            store = store
         ).apply {
             sessionStorage.restore()?.let { snapshot -> restore(snapshot) }
 
