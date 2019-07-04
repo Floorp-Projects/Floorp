@@ -8,6 +8,15 @@
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
   --reveal-checkbox-opacity-active: 1;
+  --success-color: #00c100;
+}
+
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+@media (prefers-color-scheme: dark) {
+  :host {
+    --success-color: #86DE74;
+  }
+}
 }
 
 :host([data-editing]) .edit-button,
@@ -16,6 +25,8 @@
 :host([data-is-new-login]) copy-to-clipboard-button,
 :host([data-is-new-login]) .open-site-button,
 :host([data-is-new-login]) .meta-info,
+:host([data-is-new-login]) .login-item-title,
+:host(:not([data-is-new-login])) .new-login-title,
 :host(:not([data-editing])) .cancel-button,
 :host(:not([data-editing])) .save-changes-button {
   display: none;
@@ -88,6 +99,17 @@
   font-size: smaller;
   color: var(--in-content-deemphasized-text);
   margin-bottom: 5px;
+}
+
+.copy-button:not([data-copied]) .copied-button-text,
+.copy-button[data-copied] .copy-button-text {
+  display: none;
+}
+
+.copy-button[data-copied] {
+  color: var(--success-color) !important; /* override common.css */
+  background-color: transparent;
+  opacity: 1; /* override common.css fading out disabled buttons */
 }
 
 .meta-info {

@@ -220,12 +220,10 @@ var AboutLoginsParent = {
   },
 
   async showMasterPasswordLoginNotifications() {
-    if (!this._l10n) {
-      this._l10n = new Localization(["browser/aboutLogins.ftl"]);
-    }
-
-    let messageString = await this._l10n.formatValue("master-password-notification-message");
     for (let subscriber of this._subscriberIterator()) {
+      let MozXULElement = subscriber.ownerGlobal.MozXULElement;
+      MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");
+
       // If there's already an existing notification bar, don't do anything.
       let {gBrowser} = subscriber.ownerGlobal;
       let browser = subscriber;
@@ -238,17 +236,20 @@ var AboutLoginsParent = {
       // Configure the notification bar
       let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
       let iconURL = "chrome://browser/skin/login.svg";
-      let reloadLabel = await this._l10n.formatValue("master-password-reload-button-label");
-      let reloadKey = await this._l10n.formatValue("master-password-reload-button-accesskey");
+
+      let doc = subscriber.ownerDocument;
+      let messageFragment = doc.createDocumentFragment();
+      let message = doc.createElement("span");
+      doc.l10n.setAttributes(message, "master-password-notification-message");
+      messageFragment.appendChild(message);
 
       let buttons = [{
-        label: reloadLabel,
-        accessKey: reloadKey,
+        "l10n-id": "master-password-reload-button",
         popup: null,
         callback() { browser.reload(); },
       }];
 
-      notification = notificationBox.appendNotification(messageString, MASTER_PASSWORD_NOTIFICATION_ID,
+      notification = notificationBox.appendNotification(messageFragment, MASTER_PASSWORD_NOTIFICATION_ID,
                                                         iconURL, priority, buttons);
     }
   },

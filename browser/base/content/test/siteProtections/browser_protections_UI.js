@@ -40,6 +40,22 @@ add_task(async function testToggleSwitch() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testSiteNotWorking() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  await openProtectionsPanel();
+  let viewShownPromise = BrowserTestUtils.waitForEvent(
+    gProtectionsHandler._protectionsPopupMultiView, "ViewShown");
+  document.getElementById("protections-popup-tp-switch-breakage-link").click();
+  let event = await viewShownPromise;
+  is(event.originalTarget.id, "protections-popup-siteNotWorkingView", "Site Not Working? view should be shown");
+  viewShownPromise = BrowserTestUtils.waitForEvent(
+    gProtectionsHandler._protectionsPopupMultiView, "ViewShown");
+  document.getElementById("protections-popup-siteNotWorkingView-sendReport").click();
+  event = await viewShownPromise;
+  is(event.originalTarget.id, "protections-popup-sendReportView", "Send Report view should be shown");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * A test for the protection settings button.
  */

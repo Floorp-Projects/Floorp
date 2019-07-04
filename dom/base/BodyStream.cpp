@@ -345,7 +345,8 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stream(cx, mStreamHolder->ReadableStreamBody());
+  MOZ_DIAGNOSTIC_ASSERT(mStreamHolder->GetReadableStreamBody());
+  JS::Rooted<JSObject*> stream(cx, mStreamHolder->GetReadableStreamBody());
 
   uint64_t size = 0;
   nsresult rv = mInputStream->Available(&size);
@@ -418,9 +419,14 @@ void BodyStream::Close() {
     return;
   }
 
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stream(cx, mStreamHolder->ReadableStreamBody());
-  CloseAndReleaseObjects(cx, lock, stream);
+  JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
+  if (streamObj) {
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JSObject*> stream(cx, streamObj);
+    CloseAndReleaseObjects(cx, lock, stream);
+  } else {
+    ReleaseObjects(lock);
+  }
 }
 
 void BodyStream::CloseAndReleaseObjects(JSContext* aCx,
@@ -485,8 +491,11 @@ void BodyStream::ReleaseObjects(const MutexAutoLock& aProofOfLock) {
     }
   }
 
-  // Let's inform the JSEngine that we are going to be released.
-  JS::ReadableStreamReleaseCCObject(mStreamHolder->ReadableStreamBody());
+  JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
+  if (streamObj) {
+    // Let's inform the JSEngine that we are going to be released.
+    JS::ReadableStreamReleaseCCObject(streamObj);
+  }
 
   mWorkerRef = nullptr;
   mGlobal = nullptr;

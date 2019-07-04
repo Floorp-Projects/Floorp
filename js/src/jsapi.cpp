@@ -1356,10 +1356,8 @@ extern JS_PUBLIC_API const JSStringFinalizer* JS_GetExternalStringFinalizer(
   return str->asExternal().externalFinalizer();
 }
 
-static void SetNativeStackQuotaAndLimit(JSContext* cx, JS::StackKind kind,
-                                        size_t stackSize) {
-  cx->nativeStackQuota[kind] = stackSize;
-
+static void SetNativeStackLimit(JSContext* cx, JS::StackKind kind,
+                                size_t stackSize) {
 #if JS_STACK_GROWTH_DIRECTION > 0
   if (stackSize == 0) {
     cx->nativeStackLimit[kind] = UINTPTR_MAX;
@@ -1395,11 +1393,10 @@ JS_PUBLIC_API void JS_SetNativeStackQuota(JSContext* cx,
     MOZ_ASSERT(untrustedScriptStackSize < trustedScriptStackSize);
   }
 
-  SetNativeStackQuotaAndLimit(cx, JS::StackForSystemCode, systemCodeStackSize);
-  SetNativeStackQuotaAndLimit(cx, JS::StackForTrustedScript,
-                              trustedScriptStackSize);
-  SetNativeStackQuotaAndLimit(cx, JS::StackForUntrustedScript,
-                              untrustedScriptStackSize);
+  SetNativeStackLimit(cx, JS::StackForSystemCode, systemCodeStackSize);
+  SetNativeStackLimit(cx, JS::StackForTrustedScript, trustedScriptStackSize);
+  SetNativeStackLimit(cx, JS::StackForUntrustedScript,
+                      untrustedScriptStackSize);
 
   if (cx->isMainThreadContext()) {
     cx->initJitStackLimit();
