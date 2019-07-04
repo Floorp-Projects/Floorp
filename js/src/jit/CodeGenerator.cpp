@@ -9184,32 +9184,6 @@ void CodeGenerator::visitStringConvertCase(LStringConvertCase* lir) {
   }
 }
 
-void CodeGenerator::visitSinCos(LSinCos* lir) {
-  Register temp = ToRegister(lir->temp());
-  Register params = ToRegister(lir->temp2());
-  FloatRegister input = ToFloatRegister(lir->input());
-  FloatRegister outputSin = ToFloatRegister(lir->outputSin());
-  FloatRegister outputCos = ToFloatRegister(lir->outputCos());
-
-  masm.reserveStack(sizeof(double) * 2);
-  masm.moveStackPtrTo(params);
-
-  masm.setupUnalignedABICall(temp);
-
-  masm.passABIArg(input, MoveOp::DOUBLE);
-  masm.passABIArg(
-      MoveOperand(params, sizeof(double), MoveOperand::EFFECTIVE_ADDRESS),
-      MoveOp::GENERAL);
-  masm.passABIArg(MoveOperand(params, 0, MoveOperand::EFFECTIVE_ADDRESS),
-                  MoveOp::GENERAL);
-
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::math_sincos_impl));
-
-  masm.loadDouble(Address(masm.getStackPointer(), 0), outputCos);
-  masm.loadDouble(Address(masm.getStackPointer(), sizeof(double)), outputSin);
-  masm.freeStack(sizeof(double) * 2);
-}
-
 void CodeGenerator::visitStringSplit(LStringSplit* lir) {
   pushArg(Imm32(INT32_MAX));
   pushArg(ToRegister(lir->separator()));
