@@ -14,8 +14,8 @@ function getTestPlugin(pluginName) {
   return null;
 }
 // Copied from /dom/plugins/test/mochitest/utils.js
-function setTestPluginEnabledState(newEnabledState, pluginName) {
-  var oldEnabledState = SpecialPowers.setTestPluginEnabledState(newEnabledState, pluginName);
+async function setTestPluginEnabledState(newEnabledState, pluginName) {
+  var oldEnabledState = await SpecialPowers.setTestPluginEnabledState(newEnabledState, pluginName);
   if (!oldEnabledState) {
     return;
   }
@@ -26,7 +26,7 @@ function setTestPluginEnabledState(newEnabledState, pluginName) {
     return plugin.enabledState == newEnabledState;
   });
   SimpleTest.registerCleanupFunction(function() {
-    SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
+    return SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
   });
 }
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);

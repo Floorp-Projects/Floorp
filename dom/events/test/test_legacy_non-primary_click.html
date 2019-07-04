@@ -23,30 +23,31 @@ let seenClick = false;
 
 SpecialPowers.pushPrefEnv(
   { set: [[HACK_PREF, document.domain]] },
-  SimpleTest.waitForFocus(() => {
-    // Test seeing the non-primary 'click'
-    document.addEventListener("click", (e) => {
-      ok(true, "Saw 'click' event");
-      seenClick = true;
-    }, { once: true });
-    document.addEventListener("auxclick", (e) => {
-      ok(true, "Saw 'auxclick' event");
-      ok(seenClick, "Saw 'click' event before 'auxclick' event");
-    }, { once: true });
-    synthesizeMouseAtCenter(testEl, { button: 1 });
+  () => {
+    SimpleTest.waitForFocus(() => {
+      // Test seeing the non-primary 'click'
+      document.addEventListener("click", (e) => {
+        ok(true, "Saw 'click' event");
+        seenClick = true;
+      }, { once: true });
+      document.addEventListener("auxclick", (e) => {
+        ok(true, "Saw 'auxclick' event");
+        ok(seenClick, "Saw 'click' event before 'auxclick' event");
+      }, { once: true });
+      synthesizeMouseAtCenter(testEl, { button: 1 });
 
-    // Test preventDefaulting on non-primary 'click'
-    document.addEventListener("click", (e) => {
-      is(e.target, linkEl, "Saw 'click' on link");
-      e.preventDefault();
-      SimpleTest.finish();
-    }, { once: true, capture: true });
-    document.addEventListener("auxclick", (e) => {
-      ok(false, "Shouldn't have got 'auxclick' after preventDefaulting 'click'");
-    }, { once: true });
-    synthesizeMouseAtCenter(linkEl, { button: 1 });
-  })
-);
+      // Test preventDefaulting on non-primary 'click'
+      document.addEventListener("click", (e) => {
+        is(e.target, linkEl, "Saw 'click' on link");
+        e.preventDefault();
+        SimpleTest.finish();
+      }, { once: true, capture: true });
+      document.addEventListener("auxclick", (e) => {
+        ok(false, "Shouldn't have got 'auxclick' after preventDefaulting 'click'");
+      }, { once: true });
+      synthesizeMouseAtCenter(linkEl, { button: 1 });
+    });
+  });
 </script>
 </body>
 </html>
