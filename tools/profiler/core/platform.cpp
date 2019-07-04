@@ -2842,8 +2842,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   const Maybe<double>& aDuration);
 
 // This basically duplicates AutoProfilerLabel's constructor.
-ProfilingStack* MozGlueLabelEnter(const char* aLabel,
-                                  const char* aDynamicString, void* aSp) {
+static void* MozGlueLabelEnter(const char* aLabel, const char* aDynamicString,
+                               void* aSp) {
   ProfilingStack* profilingStack = AutoProfilerLabel::sProfilingStack.get();
   if (profilingStack) {
     profilingStack->pushLabelFrame(aLabel, aDynamicString, aSp,
@@ -2853,9 +2853,9 @@ ProfilingStack* MozGlueLabelEnter(const char* aLabel,
 }
 
 // This basically duplicates AutoProfilerLabel's destructor.
-void MozGlueLabelExit(ProfilingStack* sProfilingStack) {
+static void MozGlueLabelExit(void* sProfilingStack) {
   if (sProfilingStack) {
-    sProfilingStack->pop();
+    reinterpret_cast<ProfilingStack*>(sProfilingStack)->pop();
   }
 }
 
