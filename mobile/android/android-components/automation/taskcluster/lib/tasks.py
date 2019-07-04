@@ -332,6 +332,8 @@ class TaskBuilder(object):
     def _craft_dummy_task(
         self, name, description,  dependencies=None, routes=None, scopes=None,
     ):
+        routes = []
+        scopes = []
         payload = {
             "maxRunTime": 600,
             "image": "alpine",
