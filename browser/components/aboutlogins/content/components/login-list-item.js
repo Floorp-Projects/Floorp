@@ -55,6 +55,10 @@ export default class LoginListItem extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "click": {
+        if (!this._login.guid) {
+          return;
+        }
+
         this.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
           bubbles: true,
           composed: true,
