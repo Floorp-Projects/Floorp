@@ -17,6 +17,12 @@ if CONFIG['OS_TARGET'] != 'Android':
         'VRService.cpp',
         'VRSession.cpp',
     ]
+    # PuppetSession includes MacIOSurface.h which includes Mac headers
+    # which define Size and Points types in the root namespace that
+    # often conflict with our own types.
+    SOURCES += [
+        'PuppetSession.cpp',
+    ]
     include('/ipc/chromium/chromium-config.mozbuild')
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets
@@ -34,7 +40,6 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     # often conflict with our own types.
     SOURCES += [
         'OpenVRSession.cpp',
-        'PuppetSession.cpp',
     ]
 
 FINAL_LIBRARY = 'xul'
