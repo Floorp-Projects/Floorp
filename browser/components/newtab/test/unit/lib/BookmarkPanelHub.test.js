@@ -189,7 +189,7 @@ describe("BookmarkPanelHub", () => {
 
       instance.showMessage(fakeMessage, fakeTarget);
 
-      assert.equal(fakeTarget.document.createElementNS.callCount, 5);
+      assert.equal(fakeTarget.document.createElementNS.callCount, 6);
       assert.calledOnce(fakeTarget.container.appendChild);
       assert.notCalled(fakeL10n.setAttributes);
     });
@@ -198,7 +198,7 @@ describe("BookmarkPanelHub", () => {
 
       instance.showMessage(fakeMessageFluent, fakeTarget);
 
-      assert.equal(fakeTarget.document.createElementNS.callCount, 5);
+      assert.equal(fakeTarget.document.createElementNS.callCount, 6);
       assert.calledOnce(fakeTarget.container.appendChild);
     });
     it("should set l10n attributes", () => {

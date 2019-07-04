@@ -20,8 +20,6 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     --highlighter-bubble-arrow-size: 8px;
 
     --grey-40: #b1b1b3;
-    --red-40: #ff3b6b;
-    --yellow-60: #d7b600;
   }
 
   .accessible-bounds {
@@ -149,34 +147,6 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     border-inline-start: 1px solid #5a6169;
     margin-inline-start: 6px;
     padding-inline-start: 6px;
-  }
-
-  .accessible-infobar-audit .accessible-text-label:before {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    content: "";
-    margin-inline-end: 4px;
-    vertical-align: -2px;
-    background-image: none;
-    background-position: center;
-    background-repeat: no-repeat;
-    -moz-context-properties: fill;
-    fill: currentColor;
-  }
-
-  .accessible-infobar-audit .accessible-text-label.fail:before {
-    background-image: url(chrome://devtools/skin/images/error-small.svg);
-    fill: var(--red-40);
-  }
-
-  .accessible-infobar-audit .accessible-text-label.WARNING:before {
-    background-image: url(chrome://devtools/skin/images/alert-small.svg);
-    fill: var(--yellow-60);
-  }
-
-  .accessible-infobar-audit .accessible-text-label.BEST_PRACTICES:before {
-    background-image: url(chrome://devtools/skin/images/info-small.svg);
   }`);
 
 /**

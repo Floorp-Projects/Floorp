@@ -9,39 +9,13 @@ const { getCurrentZoom, getViewportDimensions } = require("devtools/shared/layou
 const { moveInfobar, createNode } = require("./markup");
 const { truncateString } = require("devtools/shared/inspector/utils");
 
+const { accessibility: { SCORES } } = require("devtools/shared/constants");
+
 const STRINGS_URI = "devtools/shared/locales/accessibility.properties";
 loader.lazyRequireGetter(this, "LocalizationHelper", "devtools/shared/l10n", true);
 DevToolsUtils.defineLazyGetter(this, "L10N", () => new LocalizationHelper(STRINGS_URI));
 
-const {
-  accessibility: {
-    AUDIT_TYPE,
-    ISSUE_TYPE: {
-      [AUDIT_TYPE.TEXT_LABEL]: {
-        AREA_NO_NAME_FROM_ALT,
-        DIALOG_NO_NAME,
-        DOCUMENT_NO_TITLE,
-        EMBED_NO_NAME,
-        FIGURE_NO_NAME,
-        FORM_FIELDSET_NO_NAME,
-        FORM_FIELDSET_NO_NAME_FROM_LEGEND,
-        FORM_NO_NAME,
-        FORM_NO_VISIBLE_NAME,
-        FORM_OPTGROUP_NO_NAME,
-        FORM_OPTGROUP_NO_NAME_FROM_LABEL,
-        FRAME_NO_NAME,
-        HEADING_NO_CONTENT,
-        HEADING_NO_NAME,
-        IFRAME_NO_NAME_FROM_TITLE,
-        IMAGE_NO_NAME,
-        INTERACTIVE_NO_NAME,
-        MATHML_GLYPH_NO_NAME,
-        TOOLBAR_NO_NAME,
-      },
-    },
-    SCORES,
-  },
-} = require("devtools/shared/constants");
+const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
 
 // Max string length for truncating accessible name values.
 const MAX_STRING_LENGTH = 50;
@@ -409,7 +383,6 @@ class Audit {
     // object.
     this.reports = [
       new ContrastRatio(this),
-      new TextLabel(this),
     ];
   }
 
@@ -566,13 +539,13 @@ class ContrastRatio extends AuditReport {
 
   /**
    * Update contrast ratio score infobar markup.
-   * @param  {Object}
-   *         Audit report for a given highlighted accessible.
+   * @param  {Number}
+   *         Contrast ratio for an accessible object being highlighted.
    * @return {Boolean}
    *         True if the contrast ratio markup was updated correctly and infobar audit
    *         block should be visible.
    */
-  update(audit) {
+  update({ [AUDIT_TYPE.CONTRAST]: contrastRatio }) {
     const els = {};
     for (const key of ["label", "min", "max", "error", "separator"]) {
       const el = els[key] = this.getElement(`contrast-ratio-${key}`);
@@ -586,11 +559,6 @@ class ContrastRatio extends AuditReport {
       el.removeAttribute("style");
     }
 
-    if (!audit) {
-      return false;
-    }
-
-    const contrastRatio = audit[AUDIT_TYPE.CONTRAST];
     if (!contrastRatio) {
       return false;
     }
@@ -619,82 +587,6 @@ class ContrastRatio extends AuditReport {
     els.separator.removeAttribute("hidden");
     this._fillAndStyleContrastValue(els.max,
       { value: max, className: scoreMax, color, backgroundColor: backgroundColorMax });
-
-    return true;
-  }
-}
-
-/**
- * Text label audit report that is used to display a problem with text alternatives
- * as part of the inforbar.
- */
-class TextLabel extends AuditReport {
-  /**
-   * A map from text label issues to annotation component properties.
-   */
-  static get ISSUE_TO_INFOBAR_LABEL_MAP() {
-    return {
-      [AREA_NO_NAME_FROM_ALT]: "accessibility.text.label.issue.area",
-      [DIALOG_NO_NAME]: "accessibility.text.label.issue.dialog",
-      [DOCUMENT_NO_TITLE]: "accessibility.text.label.issue.document.title",
-      [EMBED_NO_NAME]: "accessibility.text.label.issue.embed",
-      [FIGURE_NO_NAME]: "accessibility.text.label.issue.figure",
-      [FORM_FIELDSET_NO_NAME]: "accessibility.text.label.issue.fieldset",
-      [FORM_FIELDSET_NO_NAME_FROM_LEGEND]:
-        "accessibility.text.label.issue.fieldset.legend",
-      [FORM_NO_NAME]: "accessibility.text.label.issue.form",
-      [FORM_NO_VISIBLE_NAME]: "accessibility.text.label.issue.form.visible",
-      [FORM_OPTGROUP_NO_NAME]: "accessibility.text.label.issue.optgroup",
-      [FORM_OPTGROUP_NO_NAME_FROM_LABEL]: "accessibility.text.label.issue.optgroup.label",
-      [FRAME_NO_NAME]: "accessibility.text.label.issue.frame",
-      [HEADING_NO_CONTENT]: "accessibility.text.label.issue.heading.content",
-      [HEADING_NO_NAME]: "accessibility.text.label.issue.heading",
-      [IFRAME_NO_NAME_FROM_TITLE]: "accessibility.text.label.issue.iframe",
-      [IMAGE_NO_NAME]: "accessibility.text.label.issue.image",
-      [INTERACTIVE_NO_NAME]: "accessibility.text.label.issue.interactive",
-      [MATHML_GLYPH_NO_NAME]: "accessibility.text.label.issue.glyph",
-      [TOOLBAR_NO_NAME]: "accessibility.text.label.issue.toolbar",
-    };
-  }
-
-  buildMarkup(root) {
-    createNode(this.win, {
-      nodeType: "span",
-      parent: root,
-      attributes: {
-        "class": "text-label",
-        "id": "text-label",
-      },
-      prefix: this.prefix,
-    });
-  }
-
-  /**
-   * Update text label audit infobar markup.
-   * @param  {Object}
-   *         Audit report for a given highlighted accessible.
-   * @return {Boolean}
-   *         True if the text label markup was updated correctly and infobar
-   *         audit block should be visible.
-   */
-  update(audit) {
-    const el = this.getElement("text-label");
-    el.setAttribute("hidden", true);
-    Object.values(SCORES).forEach(className => el.classList.remove(className));
-
-    if (!audit) {
-      return false;
-    }
-
-    const textLabelAudit = audit[AUDIT_TYPE.TEXT_LABEL];
-    if (!textLabelAudit) {
-      return false;
-    }
-
-    const { issue, score } = textLabelAudit;
-    this.setTextContent(el, L10N.getStr(TextLabel.ISSUE_TO_INFOBAR_LABEL_MAP[issue]));
-    el.classList.add(score);
-    el.removeAttribute("hidden");
 
     return true;
   }

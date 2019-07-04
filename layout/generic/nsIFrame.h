@@ -2128,12 +2128,10 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Flow member functions
    */
-  virtual nsIFrame* GetPrevInFlowVirtual() const = 0;
-  nsIFrame* GetPrevInFlow() const { return GetPrevInFlowVirtual(); }
+  virtual nsIFrame* GetPrevInFlow() const = 0;
   virtual void SetPrevInFlow(nsIFrame*) = 0;
 
-  virtual nsIFrame* GetNextInFlowVirtual() const = 0;
-  nsIFrame* GetNextInFlow() const { return GetNextInFlowVirtual(); }
+  virtual nsIFrame* GetNextInFlow() const = 0;
   virtual void SetNextInFlow(nsIFrame*) = 0;
 
   /**

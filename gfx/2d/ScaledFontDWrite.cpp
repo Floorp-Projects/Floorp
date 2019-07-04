@@ -149,12 +149,13 @@ ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace* aFontFace,
 
 already_AddRefed<Path> ScaledFontDWrite::GetPathForGlyphs(
     const GlyphBuffer& aBuffer, const DrawTarget* aTarget) {
-  if (aTarget->GetBackendType() != BackendType::DIRECT2D &&
-      aTarget->GetBackendType() != BackendType::DIRECT2D1_1) {
-    return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
-  }
 
   RefPtr<PathBuilder> pathBuilder = aTarget->CreatePathBuilder();
+
+  if (pathBuilder->GetBackendType() != BackendType::DIRECT2D &&
+      pathBuilder->GetBackendType() != BackendType::DIRECT2D1_1) {
+    return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
+  }
 
   PathBuilderD2D* pathBuilderD2D =
       static_cast<PathBuilderD2D*>(pathBuilder.get());

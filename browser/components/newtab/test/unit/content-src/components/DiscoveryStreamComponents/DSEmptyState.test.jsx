@@ -1,12 +1,12 @@
 import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
 import React from "react";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<DSEmptyState>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<DSEmptyState />);
+    wrapper = shallow(<DSEmptyState />);
   });
 
   it("should render", () => {
@@ -21,19 +21,19 @@ describe("<DSEmptyState>", () => {
   });
 
   it("should render failed state message", () => {
-    wrapper = shallowWithIntl(<DSEmptyState status="failed" />);
+    wrapper = shallow(<DSEmptyState status="failed" />);
     assert.ok(wrapper.find("button.try-again-button").exists());
   });
 
   it("should render waiting state message", () => {
-    wrapper = shallowWithIntl(<DSEmptyState status="waiting" />);
+    wrapper = shallow(<DSEmptyState status="waiting" />);
     assert.ok(wrapper.find("button.try-again-button.waiting").exists());
   });
 
   it("should dispatch DISCOVERY_STREAM_RETRY_FEED on failed state button click", () => {
     const dispatch = sinon.spy();
 
-    wrapper = shallowWithIntl(<DSEmptyState status="failed" dispatch={dispatch} feed={{url: "https://foo.com", data: {}}} />);
+    wrapper = shallow(<DSEmptyState status="failed" dispatch={dispatch} feed={{url: "https://foo.com", data: {}}} />);
     wrapper.find("button.try-again-button").simulate("click");
 
     assert.calledTwice(dispatch);

@@ -123,29 +123,47 @@ with only_when(target_is_osx):
     set_config('MACOSX_DEPLOYMENT_TARGET', macos_target)
     add_old_configure_assignment('MACOSX_DEPLOYMENT_TARGET', macos_target)
 
+
+@depends(host)
+def host_is_osx(host):
+    if host.os == 'OSX':
+        return True
+
+
+with only_when(host_is_osx | target_is_osx):
     # MacOS SDK
     # =========
-
     js_option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
            help='Location of platform SDK to use')
 
-    @depends_if('--with-macos-sdk')
+    @depends('--with-macos-sdk', host)
     @imports(_from='os.path', _import='isdir')
     @imports(_from='biplist', _import='readPlist')
-    def macos_sdk(value):
+    def macos_sdk(sdk, host):
         sdk_min_version = Version('10.11')
         sdk_max_version = Version('10.14')
 
-        if not isdir(value[0]):
+        if sdk:
+            sdk = sdk[0]
+        elif host.os == 'OSX':
+            sdk = check_cmd_output('xcrun', '--show-sdk-path', onerror=lambda: '').rstrip()
+            if not sdk:
+                die('Could not find the macOS SDK. Please use --with-macos-sdk to give '
+                    'the path to a macOS SDK.')
+        else:
+            die('Need a macOS SDK when targeting macOS. Please use --with-macos-sdk '
+                'to give the path to a macOS SDK.')
+
+        if not isdir(sdk):
             die('SDK not found in %s. When using --with-macos-sdk, you must specify a '
                 'valid SDK. SDKs are installed when the optional cross-development '
                 'tools are selected during the Xcode/Developer Tools installation.'
-                % value[0])
-        obj = readPlist(os.path.join(value[0], 'SDKSettings.plist'))
+                % sdk)
+        obj = readPlist(os.path.join(sdk, 'SDKSettings.plist'))
         if not obj:
-            die('Error parsing SDKSettings.plist in the SDK directory: %s' % value[0])
+            die('Error parsing SDKSettings.plist in the SDK directory: %s' % sdk)
         if 'Version' not in obj:
-            die('Error finding Version information in SDKSettings.plist from the SDK: %s' % value[0])
+            die('Error finding Version information in SDKSettings.plist from the SDK: %s' % sdk)
         version = Version(obj['Version'])
         if version < sdk_min_version:
             die('SDK version "%s" is too old. Please upgrade to at least %s. '
@@ -157,10 +175,12 @@ with only_when(target_is_osx):
                 '%s. You may need to point to it using --with-macos-sdk=<path> in '
                 'your mozconfig. Various SDK versions are available from '
                 'https://github.com/phracker/MacOSX-SDKs' % (version, sdk_max_version))
-        return value[0]
+        return sdk
 
     set_config('MACOS_SDK_DIR', macos_sdk)
 
+
+with only_when(target_is_osx):
     with only_when(cross_compiling):
         option('--with-macos-private-frameworks',
                env="MACOS_PRIVATE_FRAMEWORKS_DIR", nargs=1,
@@ -184,49 +204,49 @@ with only_when(target_is_osx):
     set_config('MACOS_PRIVATE_FRAMEWORKS_DIR', macos_private_frameworks)
 
 
-# Xcode state
-# ===========
-
-js_option('--disable-xcode-checks',
-          help='Do not check that Xcode is installed and properly configured')
-
-
-@depends(host, '--disable-xcode-checks')
-def xcode_path(host, xcode_checks):
-    if host.kernel != 'Darwin' or not xcode_checks:
-        return
-
-    # xcode-select -p prints the path to the installed Xcode. It
-    # should exit 0 and return non-empty result if Xcode is installed.
-
-    def bad_xcode_select():
-        die('Could not find installed Xcode; install Xcode from the App '
-            'Store, run it once to perform initial configuration, and then '
-            'try again; in the rare case you wish to build without Xcode '
-            'installed, add the --disable-xcode-checks configure flag')
-
-    xcode_path = check_cmd_output('xcode-select', '--print-path',
-                                  onerror=bad_xcode_select).strip()
-
-    if not xcode_path:
-        bad_xcode_select()
-
-    # Now look for the Command Line Tools.
-    def no_cltools():
-        die('Could not find installed Xcode Command Line Tools; '
-            'run `xcode-select --install` and follow the instructions '
-            'to install them then try again; if you wish to build without '
-            'Xcode Command Line Tools installed, '
-            'add the --disable-xcode-checks configure flag')
-
-    check_cmd_output('pkgutil', '--pkg-info',
-                     'com.apple.pkg.CLTools_Executables',
-                     onerror=no_cltools)
-
-    return xcode_path
+with only_when(host_is_osx):
+    # Xcode state
+    # ===========
+    js_option('--disable-xcode-checks',
+	      help='Do not check that Xcode is installed and properly configured')
 
 
-set_config('XCODE_PATH', xcode_path)
+    @depends(host, '--disable-xcode-checks')
+    def xcode_path(host, xcode_checks):
+	if host.kernel != 'Darwin' or not xcode_checks:
+	    return
+
+	# xcode-select -p prints the path to the installed Xcode. It
+	# should exit 0 and return non-empty result if Xcode is installed.
+
+	def bad_xcode_select():
+	    die('Could not find installed Xcode; install Xcode from the App '
+		'Store, run it once to perform initial configuration, and then '
+		'try again; in the rare case you wish to build without Xcode '
+		'installed, add the --disable-xcode-checks configure flag')
+
+	xcode_path = check_cmd_output('xcode-select', '--print-path',
+				      onerror=bad_xcode_select).strip()
+
+	if not xcode_path:
+	    bad_xcode_select()
+
+	# Now look for the Command Line Tools.
+	def no_cltools():
+	    die('Could not find installed Xcode Command Line Tools; '
+		'run `xcode-select --install` and follow the instructions '
+		'to install them then try again; if you wish to build without '
+		'Xcode Command Line Tools installed, '
+		'add the --disable-xcode-checks configure flag')
+
+	check_cmd_output('pkgutil', '--pkg-info',
+			 'com.apple.pkg.CLTools_Executables',
+			 onerror=no_cltools)
+
+	return xcode_path
+
+
+    set_config('XCODE_PATH', xcode_path)
 
 
 # Compiler wrappers

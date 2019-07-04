@@ -152,7 +152,7 @@ class ContrastAnnotationClass extends Component {
     return (
       LearnMoreLink(
         {
-          className: "accessibility-check-annotation",
+          className: "accessibility-color-contrast-annotation",
           href: A11Y_CONTRAST_LEARN_MORE_LINK,
           learnMoreStringKey: "accessibility.learnMore",
           l10n: L10N,
@@ -178,10 +178,10 @@ class ColorContrastCheck extends Component {
     return (
       div({
         role: "presentation",
-        className: "accessibility-check",
+        className: "accessibility-color-contrast-check",
       },
         h3({
-          className: "accessibility-check-header",
+          className: "accessibility-color-contrast-header",
         }, L10N.getStr("accessibility.contrast.header")),
         ColorContrastAccessibility(this.props),
         !error && ContrastAnnotation(this.props)
