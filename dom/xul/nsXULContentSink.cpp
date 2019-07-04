@@ -66,12 +66,9 @@ XULContentSinkImpl::ContextStack::~ContextStack() {
   }
 }
 
-void XULContentSinkImpl::ContextStack::Push(nsXULPrototypeNode* aNode,
+void XULContentSinkImpl::ContextStack::Push(RefPtr<nsXULPrototypeNode>&& aNode,
                                             State aState) {
-  Entry* entry = new Entry(aNode, aState, mTop);
-
-  mTop = entry;
-
+  mTop = new Entry(std::move(aNode), aState, mTop);
   ++mDepth;
 }
 
@@ -632,7 +629,7 @@ nsresult XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
 
   // Push the element onto the context stack, so that child
   // containers will hook up to us as their parent.
-  mContextStack.Push(element, mState);
+  mContextStack.Push(std::move(element), mState);
 
   mState = eInDocumentElement;
   return NS_OK;
@@ -675,7 +672,7 @@ nsresult XULContentSinkImpl::OpenTag(const char16_t** aAttributes,
 
   // Push the element onto the context stack, so that child
   // containers will hook up to us as their parent.
-  mContextStack.Push(element, mState);
+  mContextStack.Push(std::move(element), mState);
 
   mState = eInDocumentElement;
   return NS_OK;
