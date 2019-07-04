@@ -36,5 +36,6 @@ Describes a combination of flags provided to the engine when loading a URL.
 | Name | Summary |
 |---|---|
 | [all](all.md) | `fun all(): `[`LoadUrlFlags`](./index.md) |
+| [external](external.md) | `fun external(): `[`LoadUrlFlags`](./index.md) |
 | [none](none.md) | `fun none(): `[`LoadUrlFlags`](./index.md) |
 | [select](select.md) | `fun select(vararg types: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`LoadUrlFlags`](./index.md) |

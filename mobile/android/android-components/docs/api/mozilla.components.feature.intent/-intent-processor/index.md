@@ -2,7 +2,7 @@
 
 # IntentProcessor
 
-`class IntentProcessor` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L33)
+`class IntentProcessor` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L34)
 
 Processor for intents which should trigger session-related actions.
 

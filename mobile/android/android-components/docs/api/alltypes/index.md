@@ -299,6 +299,7 @@
 | [mozilla.components.support.base.log.sink.LogSink](../mozilla.components.support.base.log.sink/-log-sink/index.md) |  |
 | [mozilla.components.support.base.log.logger.Logger](../mozilla.components.support.base.log.logger/-logger/index.md) | A wrapper for the Log object providing a more convenient API for logging. |
 | [mozilla.components.service.sync.logins.LoginsStorageException](../mozilla.components.service.sync.logins/-logins-storage-exception.md) | The base class of all errors emitted by logins storage. |
+| [mozilla.components.feature.pwa.ManifestStorage](../mozilla.components.feature.pwa/-manifest-storage/index.md) |  |
 | [kotlin.collections.Map](../mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
 | [kotlin.collections.Map](../mozilla.components.support.ktx.kotlin/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.components.support.android.test.Matchers](../mozilla.components.support.android.test/-matchers/index.md) | A collection of non-domain specific [Matcher](#)s. |
@@ -561,6 +562,8 @@
 | [mozilla.components.feature.pwa.WebAppLauncherActivity](../mozilla.components.feature.pwa/-web-app-launcher-activity/index.md) | This activity is launched by Web App shortcuts on the home screen. |
 | [mozilla.components.concept.engine.manifest.WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) | The web app manifest provides information about an application (such as its name, author, icon, and description). |
 | [mozilla.components.concept.engine.manifest.WebAppManifestParser](../mozilla.components.concept.engine.manifest/-web-app-manifest-parser/index.md) | Parser for constructing a [WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) from JSON. |
+| [mozilla.components.feature.pwa.WebAppShortcutManager](../mozilla.components.feature.pwa/-web-app-shortcut-manager/index.md) |  |
+| [mozilla.components.feature.pwa.WebAppUseCases](../mozilla.components.feature.pwa/-web-app-use-cases/index.md) | These use cases allow for adding a web app or web site to the homescreen. |
 | [mozilla.components.concept.engine.webextension.WebExtension](../mozilla.components.concept.engine.webextension/-web-extension/index.md) | Represents a browser extension based on the WebExtension API: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions |
 | [mozilla.components.support.utils.WebURLFinder](../mozilla.components.support.utils/-web-u-r-l-finder/index.md) | Regular expressions used in this class are taken from Android's Patterns.java. We brought them in to standardize URL matching across Android versions, instead of relying on Android version-dependent built-ins that can vary across Android versions. The original code can be found here: http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/java/android/util/Patterns.java |
 | [mozilla.components.feature.session.WindowFeature](../mozilla.components.feature.session/-window-feature/index.md) | Feature implementation for handling window requests. |
