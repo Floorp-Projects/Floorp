@@ -143,8 +143,10 @@ class nsXULPrototypeElement : public nsXULPrototypeNode {
         mAttributes(nullptr),
         mIsAtom(nullptr) {}
 
+ private:
   virtual ~nsXULPrototypeElement() { Unlink(); }
 
+ public:
   virtual void ReleaseSubtree() override {
     for (int32_t i = mChildren.Length() - 1; i >= 0; i--) {
       if (mChildren[i].get()) mChildren[i]->ReleaseSubtree();
@@ -190,8 +192,11 @@ class XULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode {
  public:
   explicit nsXULPrototypeScript(uint32_t aLineNo);
+
+ private:
   virtual ~nsXULPrototypeScript();
 
+ public:
   virtual nsresult Serialize(
       nsIObjectOutputStream* aStream, nsXULPrototypeDocument* aProtoDoc,
       const nsTArray<RefPtr<mozilla::dom::NodeInfo>>* aNodeInfos) override;
@@ -244,8 +249,10 @@ class nsXULPrototypeText : public nsXULPrototypeNode {
  public:
   nsXULPrototypeText() : nsXULPrototypeNode(eType_Text) {}
 
+ private:
   virtual ~nsXULPrototypeText() {}
 
+ public:
   virtual nsresult Serialize(
       nsIObjectOutputStream* aStream, nsXULPrototypeDocument* aProtoDoc,
       const nsTArray<RefPtr<mozilla::dom::NodeInfo>>* aNodeInfos) override;
@@ -261,8 +268,10 @@ class nsXULPrototypePI : public nsXULPrototypeNode {
  public:
   nsXULPrototypePI() : nsXULPrototypeNode(eType_PI) {}
 
+ private:
   virtual ~nsXULPrototypePI() {}
 
+ public:
   virtual nsresult Serialize(
       nsIObjectOutputStream* aStream, nsXULPrototypeDocument* aProtoDoc,
       const nsTArray<RefPtr<mozilla::dom::NodeInfo>>* aNodeInfos) override;
