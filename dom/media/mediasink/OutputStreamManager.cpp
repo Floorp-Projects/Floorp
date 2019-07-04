@@ -104,6 +104,7 @@ void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
                                 nsIPrincipal* aPrincipal, CORSMode aCORSMode,
                                 bool aAsyncAddTrack) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(mDOMStream);
 
   LOG(LogLevel::Debug, "Adding output %s track with id %d to MediaStream %p%s",
       aType == MediaSegment::AUDIO ? "audio" : "video", aTrackID,
@@ -113,11 +114,11 @@ void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
       mManager, this, aTrackID, aPrincipal, aCORSMode, mAbstractMainThread);
   RefPtr<dom::MediaStreamTrack> track =
       mDOMStream->CreateDOMTrack(aTrackID, aType, source);
-  mTracks.AppendElement(track);
+  mTracks.AppendElement(track.get());
   if (aAsyncAddTrack) {
     GetMainThreadEventTarget()->Dispatch(
         NewRunnableMethod<RefPtr<dom::MediaStreamTrack>>(
-            "DOMMediaStream::AddTrackInternal", mDOMStream,
+            "DOMMediaStream::AddTrackInternal", mDOMStream.get(),
             &DOMMediaStream::AddTrackInternal, track));
   } else {
     mDOMStream->AddTrackInternal(track);
@@ -126,6 +127,7 @@ void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
 
 void OutputStreamData::RemoveTrack(TrackID aTrackID) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(mDOMStream);
 
   LOG(LogLevel::Debug, "Removing output track with id %d from MediaStream %p",
       aTrackID, mDOMStream.get());
@@ -140,7 +142,9 @@ void OutputStreamData::RemoveTrack(TrackID aTrackID) {
 }
 
 void OutputStreamData::SetPrincipal(nsIPrincipal* aPrincipal) {
-  for (const RefPtr<dom::MediaStreamTrack>& track : mTracks) {
+  MOZ_DIAGNOSTIC_ASSERT(mDOMStream);
+  for (const WeakPtr<dom::MediaStreamTrack>& track : mTracks) {
+    MOZ_DIAGNOSTIC_ASSERT(track);
     DecodedStreamTrackSource& source =
         static_cast<DecodedStreamTrackSource&>(track->GetSource());
     source.SetPrincipal(aPrincipal);
@@ -189,6 +193,7 @@ void OutputStreamManager::Remove(DOMMediaStream* aDOMStream) {
 
   LOG(LogLevel::Info, "Removing MediaStream %p", aDOMStream);
 
+  AutoRemoveDestroyedStreams();
   mStreams.ApplyIf(
       aDOMStream, 0, StreamComparator(),
       [&](const UniquePtr<OutputStreamData>& aData) {
@@ -245,8 +250,22 @@ void OutputStreamManager::AddTrack(MediaSegment::Type aType) {
       aType == MediaSegment::AUDIO ? "audio" : "video", id);
 
   mLiveTracks.AppendElement(MakePair(id, aType));
+  AutoRemoveDestroyedStreams();
   for (const auto& data : mStreams) {
     data->AddTrack(id, aType, mPrincipal, mCORSMode, true);
+  }
+}
+
+void OutputStreamManager::AutoRemoveDestroyedStreams() {
+  MOZ_ASSERT(NS_IsMainThread());
+  for (size_t i = mStreams.Length(); i > 0; --i) {
+    const auto& data = mStreams[i - 1];
+    if (!data->mDOMStream || !data->mDOMStream->GetInputStream()) {
+      // If the mDOMStream WeakPtr is now null, mDOMStream has been destructed.
+      // If mDOMStream's input stream is now null, it has been unlinked but not
+      // yet destructed. In both cases we can consider it dead.
+      mStreams.RemoveElementAt(i - 1);
+    }
   }
 }
 
@@ -256,6 +275,7 @@ void OutputStreamManager::RemoveTrack(TrackID aTrackID) {
   LOG(LogLevel::Info, "Removing track with id %d", aTrackID);
   DebugOnly<bool> rv = mLiveTracks.RemoveElement(aTrackID, TrackIDComparator());
   MOZ_ASSERT(rv);
+  AutoRemoveDestroyedStreams();
   for (const auto& data : mStreams) {
     data->RemoveTrack(aTrackID);
   }
@@ -273,6 +293,7 @@ void OutputStreamManager::Disconnect() {
   MOZ_ASSERT(NS_IsMainThread());
   RemoveTracks();
   MOZ_ASSERT(mLiveTracks.IsEmpty());
+  AutoRemoveDestroyedStreams();
   nsTArray<RefPtr<DOMMediaStream>> domStreams(mStreams.Length());
   for (const auto& data : mStreams) {
     domStreams.AppendElement(data->mDOMStream);
@@ -296,6 +317,7 @@ void OutputStreamManager::SetPrincipal(nsIPrincipal* aPrincipal) {
   nsCOMPtr<nsIPrincipal> principal = mPrincipal;
   if (nsContentUtils::CombineResourcePrincipals(&principal, aPrincipal)) {
     mPrincipal = principal;
+    AutoRemoveDestroyedStreams();
     for (const UniquePtr<OutputStreamData>& data : mStreams) {
       data->SetPrincipal(mPrincipal);
     }
