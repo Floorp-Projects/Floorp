@@ -574,13 +574,13 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == overflow-visible-image.html overflow-visible-image-ref.html
 
 # Shadow DOM id tracking.
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR

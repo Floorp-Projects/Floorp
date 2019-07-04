@@ -304,6 +304,6 @@ load 1533891.html
 pref(gfx.omta.background-color,true) load 1533968.html
 load 1541126.html
 load 1545177.html
-load 1546255.html
+skip-if(geckoview&&webrender) load 1546255.html # Bug 1563020 for GV+WR
 pref(layout.css.resizeobserver.enabled,true) load 1552911.html
 load 1562361.html
