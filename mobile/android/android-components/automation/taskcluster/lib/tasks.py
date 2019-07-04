@@ -73,11 +73,10 @@ class TaskBuilder(object):
         )
 
     def craft_barrier_task(self, dependencies):
-        return self._craft_build_ish_task(
+        return self._craft_dummy_task(
             name='Android Components - Barrier task to wait on other tasks to complete',
             description='Dummy tasks that ensures all other tasks are correctly done before publishing them',
             dependencies=dependencies,
-            command="exit 0"
         )
 
     def craft_detekt_task(self):
@@ -317,6 +316,31 @@ class TaskBuilder(object):
                 command
             ],
             "artifacts": artifacts,
+        }
+
+        return self._craft_default_task_definition(
+            self.build_worker_type,
+            'aws-provisioner-v1',
+            dependencies,
+            routes,
+            scopes,
+            name,
+            description,
+            payload
+        )
+
+    def _craft_dummy_task(
+        self, name, description, command, dependencies=None, routes=None, scopes=[],
+    ):
+        payload = {
+            "maxRunTime": 600,
+            "image": "alpine",
+            "command": [
+                "/bin/bash",
+                "--login",
+                "-cx",
+                "echo \"Dummy task\""
+            ],
         }
 
         return self._craft_default_task_definition(
