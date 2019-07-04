@@ -29,7 +29,6 @@ const {
         FORM_FIELDSET_NO_NAME_FROM_LEGEND,
         FORM_NO_NAME,
         FORM_NO_VISIBLE_NAME,
-        FORM_OPTGROUP_NO_NAME,
         FORM_OPTGROUP_NO_NAME_FROM_LABEL,
         FRAME_NO_NAME,
         HEADING_NO_CONTENT,
@@ -122,15 +121,6 @@ const ISSUE_TO_ANNOTATION_MAP = {
   [FORM_NO_VISIBLE_NAME]: {
     href: A11Y_TEXT_LABEL_LINKS.FORM_NO_VISIBLE_NAME,
     l10nId: "accessibility-text-label-issue-form-visible",
-  },
-  [FORM_OPTGROUP_NO_NAME]: {
-    href: A11Y_TEXT_LABEL_LINKS.FORM_OPTGROUP_NO_NAME,
-    l10nId: "accessibility-text-label-issue-optgroup",
-    args: {
-      get code() {
-        return ReactDOM.code({}, "optgroup");
-      },
-    },
   },
   [FORM_OPTGROUP_NO_NAME_FROM_LABEL]: {
     href: A11Y_TEXT_LABEL_LINKS.FORM_OPTGROUP_NO_NAME_FROM_LABEL,

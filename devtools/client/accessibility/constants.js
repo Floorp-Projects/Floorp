@@ -17,7 +17,6 @@ const {
         FORM_FIELDSET_NO_NAME_FROM_LEGEND,
         FORM_NO_NAME,
         FORM_NO_VISIBLE_NAME,
-        FORM_OPTGROUP_NO_NAME,
         FORM_OPTGROUP_NO_NAME_FROM_LABEL,
         FRAME_NO_NAME,
         HEADING_NO_CONTENT,
@@ -128,7 +127,6 @@ const A11Y_TEXT_LABEL_LINK_IDS = {
     "Use_legend_element_to_provide_a_name_for_form_element_groups",
   [FORM_NO_NAME]: "Form_elements_must_have_a_name",
   [FORM_NO_VISIBLE_NAME]: "Form_elements_should_have_a_visible_text_label",
-  [FORM_OPTGROUP_NO_NAME]: "Groupings_of_options_must_have_a_name",
   [FORM_OPTGROUP_NO_NAME_FROM_LABEL]:
     "Use_label_attribute_to_provide_a_name_for_groupings_of_options",
   [FRAME_NO_NAME]: "Frames_must_have_a_name",
