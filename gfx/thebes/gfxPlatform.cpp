@@ -2611,44 +2611,55 @@ static bool CalculateWrQualifiedPrefValue() {
   return Preferences::GetBool(WR_ROLLOUT_PREF, WR_ROLLOUT_PREF_DEFAULTVALUE);
 }
 
+static void HardwareTooOldForWR(FeatureState& aFeature) {
+  aFeature.Disable(
+      FeatureStatus::BlockedDeviceTooOld, "Device too old",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
+}
+
 static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
     int32_t aDeviceId) {
-  if (aDeviceId < 0x6c0) {
-    // 0x6c0 is the lowest Fermi device id. Unfortunately some Tesla
-    // devices that don't support D3D 10.1 have higher deviceIDs. They
-    // will be included, but blocked by ANGLE.
-    aFeature.Disable(
-        FeatureStatus::BlockedDeviceTooOld, "Device too old",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
+  // 0x6c0 is the lowest Fermi device id. Unfortunately some Tesla
+  // devices that don't support D3D 10.1 have higher deviceIDs. They
+  // will be included, but blocked by ANGLE.
+  bool supported = aDeviceId >= 0x6c0;
+
+  if (!supported) {
+    HardwareTooOldForWR(aFeature);
+    return;
   }
+
+  // Any additional Nvidia checks go here
 }
 
 static void UpdateWRQualificationForAMD(FeatureState& aFeature,
     int32_t aDeviceId) {
   // AMD deviceIDs are not very well ordered. This
   // condition is based off the information in gpu-db
-  if ((aDeviceId >= 0x6600 && aDeviceId < 0x66b0) ||
+  bool supported =
+      (aDeviceId >= 0x6600 && aDeviceId < 0x66b0) ||
       (aDeviceId >= 0x6700 && aDeviceId < 0x6720) ||
       (aDeviceId >= 0x6780 && aDeviceId < 0x6840) ||
       (aDeviceId >= 0x6860 && aDeviceId < 0x6880) ||
       (aDeviceId >= 0x6900 && aDeviceId < 0x6a00) ||
       (aDeviceId == 0x7300) ||
       (aDeviceId >= 0x9830 && aDeviceId < 0x9870) ||
-      (aDeviceId >= 0x9900 && aDeviceId < 0x9a00)) {
-    // we have a desktop CAYMAN, SI, CIK, VI, or GFX9 device
-    // so treat the device as qualified unless it is not Windows
-    // and not nightly.
-#if !defined(XP_WIN) && !defined(NIGHTLY_BUILD)
-    aFeature.Disable(
-        FeatureStatus::BlockedReleaseChannelAMD,
-        "Release channel and AMD",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_AMD"));
-#endif  // !XPWIN && !NIGHTLY_BUILD
-  } else {
-    aFeature.Disable(
-        FeatureStatus::BlockedDeviceTooOld, "Device too old",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
+      (aDeviceId >= 0x9900 && aDeviceId < 0x9a00);
+
+  if (!supported) {
+    HardwareTooOldForWR(aFeature);
+    return;
   }
+
+  // we have a desktop CAYMAN, SI, CIK, VI, or GFX9 device
+  // so treat the device as qualified unless it is not Windows
+  // and not nightly.
+#if !defined(XP_WIN) && !defined(NIGHTLY_BUILD)
+  aFeature.Disable(
+      FeatureStatus::BlockedReleaseChannelAMD,
+      "Release channel and AMD",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_AMD"));
+#endif  // !XPWIN && !NIGHTLY_BUILD
 }
 
 static void UpdateWRQualificationForIntel(FeatureState& aFeature,
@@ -2743,35 +2754,34 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
       break;
     }
   }
-  if (supported) {
+  if (!supported) {
+    HardwareTooOldForWR(aFeature);
+    return;
+  }
+
 #ifdef MOZ_WIDGET_GTK
-    // Performance is not great on 4k screens with WebRender + Linux.
-    // Disable it for now if it is too large.
-    const int32_t kMaxPixelsLinux = 3440 * 1440;  // UWQHD
-    if (aScreenPixels > kMaxPixelsLinux) {
-      aFeature.Disable(
-          FeatureStatus::BlockedScreenTooLarge, "Screen size too large",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_TOO_LARGE"));
-    } else if (aScreenPixels <= 0) {
-      aFeature.Disable(
-          FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
-    } else {
+  // Performance is not great on 4k screens with WebRender + Linux.
+  // Disable it for now if it is too large.
+  const int32_t kMaxPixelsLinux = 3440 * 1440;  // UWQHD
+  if (aScreenPixels > kMaxPixelsLinux) {
+    aFeature.Disable(
+        FeatureStatus::BlockedScreenTooLarge, "Screen size too large",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_TOO_LARGE"));
+  } else if (aScreenPixels <= 0) {
+    aFeature.Disable(
+        FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
+  } else {
 #endif  // MOZ_WIDGET_GTK
 #ifndef NIGHTLY_BUILD
-      aFeature.Disable(
-          FeatureStatus::BlockedReleaseChannelIntel,
-          "Release channel and Intel",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_INTEL"));
+    aFeature.Disable(
+        FeatureStatus::BlockedReleaseChannelIntel,
+        "Release channel and Intel",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_INTEL"));
 #endif  // !NIGHTLY_BUILD
 #ifdef MOZ_WIDGET_GTK
-    }
-#endif  // MOZ_WIDGET_GTK
-  } else {
-    aFeature.Disable(
-        FeatureStatus::BlockedDeviceTooOld, "Device too old",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
   }
+#endif  // MOZ_WIDGET_GTK
 }
 
 static FeatureState& WebRenderHardwareQualificationStatus(
@@ -2834,9 +2844,14 @@ static FeatureState& WebRenderHardwareQualificationStatus(
         NS_LITERAL_CSTRING("FEATURE_FAILURE_UNSUPPORTED_VENDOR"));
   }
 
+  if (!featureWebRenderQualified.IsEnabled()) {
+    // One of the checks above failed, early exit
+    return featureWebRenderQualified;
+  }
+
   // We leave checking the battery for last because we would like to know
   // which users were denied WebRender only because they have a battery.
-  if (featureWebRenderQualified.IsEnabled() && aHasBattery) {
+  if (aHasBattery) {
     // For AMD/Intel devices, if we have a battery, ignore it if the
     // screen is small enough. Note that we always check for a battery
     // with NVIDIA because we do not have a limited/curated set of devices
