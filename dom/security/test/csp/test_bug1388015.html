@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Bug 1388015 - Test if Firefox respect Port in Wildcard Host </title>
+    <meta http-equiv="Content-Security-Policy" content="img-src https://*:443">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+    <img alt="Should be Blocked">
+    <script class="testbody" type="text/javascript">
+        SimpleTest.waitForExplicitFinish();
+
+        let image = document.querySelector("img");
+
+        Promise.race([
+            new Promise((res) => {
+                window.addEventListener("securitypolicyviolation", () => res(true), {once:true});
+            }),
+            new Promise((res) => {
+                image.addEventListener("load", () => res(false),{once:true});
+            })])
+        .then((result) => {
+                ok(result, " CSP did block Image with wildcard and mismatched Port");
+        })
+        .then(()=> Promise.race([
+            new Promise((res) => {
+                window.addEventListener("securitypolicyviolation", () => res(false), {once:true});
+            }),
+            new Promise((res) => {
+                image.addEventListener("load", () => res(true),{once:true});
+                requestIdleCallback(()=>{
+                    image.src = "https://example.com:443/tests/dom/security/test/csp/file_dummy_pixel.png"
+                })
+            })]))
+        .then((result) => {
+                ok(result, " CSP did load the Image with wildcard and  matching Port");
+                SimpleTest.finish();
+        })
+        image.src = "file_dummy_pixel.png" // mochi.test:8888
+    </script>
+</body>
+</html>
