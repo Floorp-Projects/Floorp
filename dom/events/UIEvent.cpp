@@ -134,34 +134,6 @@ void UIEvent::InitUIEvent(const nsAString& typeArg, bool canBubbleArg,
   mView = viewArg ? viewArg->GetOuterWindow() : nullptr;
 }
 
-int32_t UIEvent::PageX() const {
-  if (mEvent->mFlags.mIsPositionless) {
-    return 0;
-  }
-
-  if (mPrivateDataDuplicated) {
-    return mPagePoint.x;
-  }
-
-  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                              mClientPoint)
-      .x;
-}
-
-int32_t UIEvent::PageY() const {
-  if (mEvent->mFlags.mIsPositionless) {
-    return 0;
-  }
-
-  if (mPrivateDataDuplicated) {
-    return mPagePoint.y;
-  }
-
-  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                              mClientPoint)
-      .y;
-}
-
 already_AddRefed<nsINode> UIEvent::GetRangeParent() {
   if (NS_WARN_IF(!mPresContext)) {
     return nullptr;

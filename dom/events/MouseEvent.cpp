@@ -242,6 +242,34 @@ int32_t MouseEvent::ScreenY(CallerType aCallerType) {
   return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).y;
 }
 
+int32_t MouseEvent::PageX() const {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
+  if (mPrivateDataDuplicated) {
+    return mPagePoint.x;
+  }
+
+  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
+                              mClientPoint)
+      .x;
+}
+
+int32_t MouseEvent::PageY() const {
+  if (mEvent->mFlags.mIsPositionless) {
+    return 0;
+  }
+
+  if (mPrivateDataDuplicated) {
+    return mPagePoint.y;
+  }
+
+  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
+                              mClientPoint)
+      .y;
+}
+
 int32_t MouseEvent::ClientX() {
   if (mEvent->mFlags.mIsPositionless) {
     return 0;
