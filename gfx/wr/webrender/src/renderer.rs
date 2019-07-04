@@ -4397,8 +4397,6 @@ impl Renderer {
         stats: &mut RendererStats,
         clear_framebuffer: bool,
     ) {
-        // These markers seem to crash a lot on Android, see bug 1559834
-        #[cfg(not(target_os = "android"))]
         let _gm = self.gpu_profile.start_marker("tile frame draw");
 
         if frame.passes.is_empty() {
@@ -4412,9 +4410,8 @@ impl Renderer {
 
         self.bind_frame_data(frame);
 
-        for (_pass_index, pass) in frame.passes.iter_mut().enumerate() {
-            #[cfg(not(target_os = "android"))]
-            let _gm = self.gpu_profile.start_marker(&format!("pass {}", _pass_index));
+        for (pass_index, pass) in frame.passes.iter_mut().enumerate() {
+            let _gm = self.gpu_profile.start_marker(&format!("pass {}", pass_index));
 
             self.texture_resolver.bind(
                 &TextureSource::PrevPassAlpha,

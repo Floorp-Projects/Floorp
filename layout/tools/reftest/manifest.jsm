@@ -122,9 +122,8 @@ function ReadManifest(aURL, aFilter)
         var chaosMode = false;
         var wrCapture = { test: false, ref: false };
         var nonSkipUsed = false;
-        var noAutoFuzz = false;
 
-        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|test-pref|ref-pref|fuzzy|chaos-mode|wr-capture|wr-capture-ref|noautofuzz)/)) {
+        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|test-pref|ref-pref|fuzzy|chaos-mode|wr-capture|wr-capture-ref)/)) {
             var item = items.shift();
             var stat;
             var cond;
@@ -212,9 +211,6 @@ function ReadManifest(aURL, aFilter)
             } else if (item == "wr-capture-ref") {
                 cond = false;
                 wrCapture.ref = true;
-            } else if (item == "noautofuzz") {
-                cond = false;
-                noAutoFuzz = true;
             } else {
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": unexpected item " + item;
             }
@@ -320,8 +316,7 @@ function ReadManifest(aURL, aFilter)
                           url1: items[1],
                           url2: null,
                           chaosMode: chaosMode,
-                          wrCapture: wrCapture,
-                          noAutoFuzz: noAutoFuzz }, aFilter);
+                          wrCapture: wrCapture }, aFilter);
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL || items[0] == TYPE_PRINT) {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to " + items[0];
@@ -369,8 +364,7 @@ function ReadManifest(aURL, aFilter)
                           url1: items[1],
                           url2: items[2],
                           chaosMode: chaosMode,
-                          wrCapture: wrCapture,
-                          noAutoFuzz: noAutoFuzz }, aFilter);
+                          wrCapture: wrCapture }, aFilter);
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": unknown test type " + items[0];
         }
