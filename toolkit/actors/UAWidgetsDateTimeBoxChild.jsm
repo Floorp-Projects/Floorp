@@ -4,22 +4,15 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["UAWidgetsChild"];
+var EXPORTED_SYMBOLS = ["UAWidgetsDateTimeBoxChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const HANDLED_ELEMENTS = [
-  "video",
-  "audio",
-  "embed",
-  "object",
-  "marquee",
-];
+const HANDLED_ELEMENTS = ["input"];
 
-class UAWidgetsChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+class UAWidgetsDateTimeBoxChild extends JSWindowActorChild {
+  constructor() {
+    super();
 
     this.widgets = new WeakMap();
     this.prefsCache = new Map();
@@ -62,23 +55,9 @@ class UAWidgetsChild extends ActorChild {
     let widgetName;
     let prefKeys = [];
     switch (aElement.localName) {
-      case "video":
-      case "audio":
-        uri = "chrome://global/content/elements/videocontrols.js";
-        widgetName = "VideoControlsWidget";
-        prefKeys = [
-          "media.videocontrols.picture-in-picture.video-toggle.enabled",
-          "media.videocontrols.picture-in-picture.video-toggle.always-show",
-        ];
-        break;
-      case "embed":
-      case "object":
-        uri = "chrome://global/content/elements/pluginProblem.js";
-        widgetName = "PluginProblemWidget";
-        break;
-      case "marquee":
-        uri = "chrome://global/content/elements/marquee.js";
-        widgetName = "MarqueeWidget";
+      case "input":
+        uri = "chrome://global/content/elements/datetimebox.js";
+        widgetName = "DateTimeBoxWidget";
         break;
     }
 
