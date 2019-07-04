@@ -536,11 +536,16 @@ async function loadManifestFromWebManifest(aPackage) {
 async function readRecommendationStates(aPackage, aAddonID) {
   let recommendationData;
   try {
-    recommendationData = JSON.parse(await aPackage.readString("mozilla-recommendation.json"));
+    recommendationData = await aPackage.readString("mozilla-recommendation.json");
   } catch (e) {
-    if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
-      logger.warn("Failed to parse recommendation", e);
-    }
+    // Ignore I/O errors.
+    return null;
+  }
+
+  try {
+    recommendationData = JSON.parse(recommendationData);
+  } catch (e) {
+    logger.warn("Failed to parse recommendation", e);
   }
 
   if (recommendationData) {
@@ -632,7 +637,7 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
     }
   }
 
-  if (addon.type === "extension" && !addon.location.isBuiltin) {
+  if (addon.type === "extension" && !aLocation.isBuiltin && !aLocation.isTemporary) {
     addon.recommendationState = await readRecommendationStates(aPackage, addon.id);
   }
 

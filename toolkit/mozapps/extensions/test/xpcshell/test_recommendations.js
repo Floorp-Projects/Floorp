@@ -102,6 +102,31 @@ add_task(async function test_temporary() {
   await addon.uninstall();
 });
 
+// Tests that unpacked temporary add-ons are not recommended.
+add_task(async function test_temporary_directory() {
+  const id = "temporary-dir@test.web.extension";
+  let files = ExtensionTestCommon.generateFiles({
+    manifest: {
+      applications: {gecko: {id}},
+    },
+    files: {
+      [RECOMMENDATION_FILE_NAME]: {
+        addon_id: id,
+        states: ["recommended"],
+        validity: {not_before, not_after},
+      },
+    },
+  });
+  let extDir = await AddonTestUtils.promiseWriteFilesToExtension(gTmpD.path, id, files, true);
+
+  let addon = await XPIInstall.installTemporaryAddon(extDir);
+
+  ok(!addon.isRecommended, "The add-on is not recommended");
+
+  await addon.uninstall();
+  extDir.remove(true);
+});
+
 add_task(async function test_builtin() {
   const id = "builtin@test.web.extension";
   let extension = await installBuiltinExtension({
