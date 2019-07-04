@@ -28,19 +28,20 @@ class TaskBuilder(object):
 
     def craft_build_task(self, module_name, gradle_tasks, subtitle='', run_coverage=False,
                          is_snapshot=False, component=None, artifacts=None):
-        if is_snapshot:
-            # TODO: DELETE once bug 1558795 is fixed in early Q3
-            taskcluster_artifacts = {} if component is None else {
-                component['artifact']: {
-                    'type': 'file',
-                    'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
-                    'path': component['path']
+        taskcluster_artifacts = {}
+        # component is not None when this is a release build, in which case artifacts is defined too
+        if component is not None:
+            if is_snapshot:
+                # TODO: DELETE once bug 1558795 is fixed in early Q3
+                taskcluster_artifacts = {
+                    component['artifact']: {
+                        'type': 'file',
+                        'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
+                        'path': component['path']
+                    }
                 }
-            }
-        else:
-            taskcluster_artifacts = {}
-            # component is not None when this is a release build, in which case artifacts is defined too
-            if component is not None:
+            else:
+                # component is not None when this is a release build, in which case artifacts is defined too
                 taskcluster_artifacts = {
                     artifact['taskcluster_path']: {
                         'type': 'file',
