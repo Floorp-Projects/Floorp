@@ -12,7 +12,7 @@ default-preferences pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,
 == no-scalable-with-minimum-scale.html no-scalable-with-minimum-scale-ref.html
 == clamped-by-default-minimum-scale.html initial-scale-0_25-ref.html
 
-skip-if(!Android) == position-fixed-on-minimum-scale-size.html position-fixed-on-minimum-scale-size-ref.html
+skip-if(!Android) fails-if(geckoview&&webrender) == position-fixed-on-minimum-scale-size.html position-fixed-on-minimum-scale-size-ref.html
 == position-fixed-out-of-view.html about:blank
 
 # Skip below tests on Windows (bug 1516322) on Webrender (bug 1520096)
