@@ -219,6 +219,23 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
+def _to_release_artifact(extension, version, component):
+    artifact_filename = '{}-{}{}'.format(component['name'], version, extension)
+
+    return {
+        'taskcluster_path': 'public/build/{}'.format(artifact_filename),
+        'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
+            os.path.abspath(component['path']),
+            component['name'],
+            version, artifact_filename),
+        'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
+            component['name'],
+            version,
+            artifact_filename,
+        )
+    }
+
+
 # TODO: DELETE once bug 1558795 is fixed in early Q3
 def release_snapshot(components, is_snapshot, is_staging):
     version = components_version()
@@ -269,22 +286,6 @@ def release(components, is_snapshot, is_staging):
     wait_on_all_signing_task_id = taskcluster.slugId()
 
     for component in components:
-        def _to_release_artifact(extension):
-            artifact_filename = '{}-{}{}'.format(component['name'], version, extension)
-
-            return {
-                'taskcluster_path': 'public/build/{}'.format(artifact_filename),
-                'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
-                    os.path.abspath(component['path']),
-                    component['name'],
-                    version, artifact_filename),
-                'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
-                    component['name'],
-                    version,
-                    artifact_filename,
-                )
-            }
-
         build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(component)
         build_tasks[build_task_id] = BUILDER.craft_build_task(
@@ -294,22 +295,22 @@ def release(components, is_snapshot, is_staging):
             run_coverage=False,
             is_snapshot=is_snapshot,
             component=component,
-            artifacts=[_to_release_artifact(extension + hash_extension)
+            artifacts=[_to_release_artifact(extension + hash_extension, version, component)
                        for extension, hash_extension in
                        itertools.product(('.aar', '.pom', '-sources.jar'), ('', '.sha1', '.md5'))]
         )
 
         sign_task_id = taskcluster.slugId()
         sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
-            build_task_id, [_to_release_artifact(extension)
+            build_task_id, [_to_release_artifact(extension, version, component)
                             for extension in ('.aar', '.pom', '-sources.jar')],
             component['name'], is_staging,
         )
 
-        beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension)
+        beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension, version, component)
                                      for extension, hash_extension in
                                      itertools.product(('.aar', '.pom', '-sources.jar'), ('', '.sha1', '.md5'))]
-        beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc')
+        beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc', version, component)
                                     for extension in ('.aar', '.pom', '-sources.jar')]
         beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
             build_task_id, sign_task_id, wait_on_all_signing_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
