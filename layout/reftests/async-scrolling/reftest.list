@@ -5,7 +5,7 @@ skip-if(!asyncPan) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
 skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-1.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
-fuzzy(0-1,0-246) fuzzy-if(skiaContent,0-2,0-170) fuzzy-if(browserIsRemote&&d2d,0-59,0-187) fuzzy-if(webrender,41-41,166-166) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
+fuzzy(0-1,0-246) fuzzy-if(skiaContent,0-2,0-170) fuzzy-if(browserIsRemote&&d2d,0-59,0-187) fuzzy-if(webrender,41-41,166-168) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 # Passing the test below without WebRender would require implementing CSS filters in the Gecko compositor.
 fails-if(!webrender) skip-if(!asyncPan) fuzzy-if(webrender&&gtkWidget,0-1,0-87) fuzzy-if(webrender&&!gtkWidget,0-1,0-3951) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html # bug 1454794 for webrender fuzziness
@@ -53,7 +53,7 @@ fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) skip-if(!asyn
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,0-6,0-4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
-fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
+fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) fails-if(geckoview&&webrender) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-3.html perspective-scrolling-3-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
@@ -72,10 +72,10 @@ fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.
 fuzzy-if(Android,0-6,0-4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 fuzzy-if(Android,0-2,0-4) skip-if(!asyncPan) == curtain-effect-1.html curtain-effect-1-ref.html
 fuzzy-if(Android,0-1,0-4) skip-if(!asyncPan) == transformed-1.html transformed-1-ref.html
-fuzzy-if(Android,2-2,4-4) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-1.html position-sticky-transformed-in-scrollframe-1-ref.html
-fuzzy-if(Android,3-3,4-4) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-2.html position-sticky-transformed-in-scrollframe-2-ref.html
-fuzzy-if(Android,3-3,4-4) skip-if(!asyncPan) == position-sticky-in-transformed-scrollframe-1.html position-sticky-in-transformed-scrollframe-ref.html
-fuzzy-if(Android,3-3,4-4) skip-if(!asyncPan) == position-sticky-in-transformed-scrollframe-2.html position-sticky-in-transformed-scrollframe-ref.html
+fuzzy-if(Android&&!webrender,2-2,4-4) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-1.html position-sticky-transformed-in-scrollframe-1-ref.html
+fuzzy-if(Android&&!webrender,3-3,4-4) skip-if(!asyncPan) == position-sticky-transformed-in-scrollframe-2.html position-sticky-transformed-in-scrollframe-2-ref.html
+fuzzy-if(Android&&!webrender,3-3,4-4) skip-if(!asyncPan) == position-sticky-in-transformed-scrollframe-1.html position-sticky-in-transformed-scrollframe-ref.html
+fuzzy-if(Android&&!webrender,3-3,4-4) skip-if(!asyncPan) == position-sticky-in-transformed-scrollframe-2.html position-sticky-in-transformed-scrollframe-ref.html
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in
@@ -83,17 +83,17 @@ fuzzy-if(Android,3-3,4-4) skip-if(!asyncPan) == position-sticky-in-transformed-s
 # checkerboarding to occur
 default-preferences pref(layers.low-precision-buffer,false)
 skip-if(!asyncPan) == checkerboard-1.html checkerboard-1-ref.html
-skip-if(!asyncPan) == checkerboard-2.html checkerboard-2-ref.html
-skip-if(!asyncPan) == checkerboard-3.html checkerboard-3-ref.html
+skip-if(!asyncPan) fails-if(geckoview&&webrender) == checkerboard-2.html checkerboard-2-ref.html
+skip-if(!asyncPan) fails-if(geckoview&&webrender) == checkerboard-3.html checkerboard-3-ref.html
 default-preferences
 
-skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-1.html position-fixed-async-zoom-1-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) fails-if(geckoview&&webrender) == position-fixed-async-zoom-1.html position-fixed-async-zoom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-2.html position-fixed-async-zoom-2-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-3.html position-fixed-async-zoom-3-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-4.html position-fixed-async-zoom-4-ref.html
-skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-1.html position-sticky-async-zoom-1-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) fails-if(geckoview&&webrender) == position-sticky-async-zoom-1.html position-sticky-async-zoom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-2.html position-sticky-async-zoom-2-ref.html
 
 # for this test, apz.allow_zooming is needed to ensure we take the containerless scrolling codepath that creates
 # an async zoom container (since we are testing a regression in that codepath)
-skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-fixed-bottom-1.html dynamic-toolbar-fixed-bottom-1-ref.html
+skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) fails-if(geckoview&&webrender) == dynamic-toolbar-fixed-bottom-1.html dynamic-toolbar-fixed-bottom-1-ref.html
