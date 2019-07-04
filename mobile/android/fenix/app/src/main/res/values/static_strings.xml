@@ -14,6 +14,9 @@
         %1$s is produced by Mozilla.
     </string>
 
+    <string name="intent_extra_toolbar_color" translatable="false">android.support.customtabs.extra.TOOLBAR_COLOR</string>
+    <string name="intent_extra_session" translatable="false">android.support.customtabs.extra.SESSION</string>
+    <string name="intent_extra_auth" translatable="false">support.customtabs.extra.AUTH</string>
 
     <!-- 1.0.1 strings -->
     <!-- Bookmark deletion confirmation -->

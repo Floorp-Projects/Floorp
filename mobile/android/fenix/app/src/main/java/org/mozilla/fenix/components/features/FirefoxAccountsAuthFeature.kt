@@ -46,7 +46,7 @@ class FirefoxAccountsAuthFeature(
             // UI to the user.
             // It's possible that the underlying problem will go away by the time the tab actually
             // loads, resulting in a confusing experience.
-            val intent = SupportUtils.createCustomTabIntent(context, authUrl)
+            val intent = SupportUtils.createAuthCustomTabIntent(context, authUrl)
             context.startActivity(intent)
         }
     }

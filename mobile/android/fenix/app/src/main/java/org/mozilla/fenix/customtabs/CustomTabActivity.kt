@@ -6,6 +6,6 @@ package org.mozilla.fenix.customtabs
 
 import org.mozilla.fenix.HomeActivity
 
-class CustomTabActivity : HomeActivity() {
+open class CustomTabActivity : HomeActivity() {
     override val isCustomTab = true
 }

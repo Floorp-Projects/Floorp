@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools" package="org.mozilla.fenix">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="org.mozilla.fenix">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -14,53 +15,67 @@
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
-            android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:supportsRtl="true"
-            android:name=".FenixApplication"
-            android:theme="@style/NormalTheme"
-            android:usesCleartextTraffic="true"
-            tools:ignore="UnusedAttribute">
-        <activity android:name=".HomeActivity"
-                  android:launchMode="singleTask"
-                  android:windowSoftInputMode="adjustResize"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout">
+        android:name=".FenixApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/NormalTheme"
+        android:usesCleartextTraffic="true"
+        tools:ignore="UnusedAttribute">
+        <activity
+            android:name=".HomeActivity"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".customtabs.CustomTabActivity"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
-                  android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
-                  android:exported="false"
-                  android:taskAffinity=""
-                  android:persistableMode="persistNever"
-                  android:autoRemoveFromRecents="false"
-                  android:label="@string/app_name" />
+        <activity
+            android:name=".customtabs.CustomTabActivity"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:persistableMode="persistNever"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+
+        <activity
+            android:name=".customtabs.AuthCustomTabActivity"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
 
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="http" />
                 <data android:scheme="https" />
             </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:mimeType="text/html"/>
-                <data android:mimeType="text/plain"/>
-                <data android:mimeType="application/xhtml+xml"/>
+                <data android:mimeType="text/html" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/xhtml+xml" />
             </intent-filter>
 
             <intent-filter>
@@ -76,17 +91,18 @@
 
             <meta-data
                 android:name="com.android.systemui.action_assist_icon"
-                android:resource="@mipmap/ic_launcher"/>
+                android:resource="@mipmap/ic_launcher" />
         </activity>
 
-        <activity android:name=".browser.BrowserPerformanceTestActivity"
-                  android:exported="${isRaptorEnabled}"
-                  android:enabled="${isRaptorEnabled}"/>
+        <activity
+            android:name=".browser.BrowserPerformanceTestActivity"
+            android:enabled="${isRaptorEnabled}"
+            android:exported="${isRaptorEnabled}" />
 
         <service
-                android:name=".customtabs.CustomTabsService"
-                android:exported="true"
-                tools:ignore="ExportedService">
+            android:name=".customtabs.CustomTabsService"
+            android:exported="true"
+            tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
