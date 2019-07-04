@@ -109,6 +109,13 @@ devtools/server/**
 devtools/shared/**
 devtools/startup/**
 
+# Ignore CORS fixtures which require specific resource hashes.
+dom/security/test/sri/script*
+
+# Ignore other DOM fixtures with funky chars.
+dom/base/test/file_bug687859-charset.js
+dom/base/test/file_bug687859-inherit.js
+
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.prettierignore
 devtools/client/debugger/src/workers/parser/tests/fixtures/functionNames.js

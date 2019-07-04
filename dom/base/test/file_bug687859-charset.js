@@ -1,1 +1,1 @@
-var stringFromCharsetScript = "ï¿½";
+var stringFromCharsetScript = "¡";

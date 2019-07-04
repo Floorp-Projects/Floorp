@@ -1,6 +1,5 @@
 function baz() {}
 function bar() {}
-function foo() {
-  bar();
-}
+function foo() { bar() }
 foo();
+
