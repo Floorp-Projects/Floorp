@@ -55,8 +55,6 @@ accessibility-text-label-issue-image = Content with images must be labeled. <a>L
 
 accessibility-text-label-issue-interactive = Interactive elements must be labeled. <a>Learn more</a>
 
-accessibility-text-label-issue-optgroup = <code>optgroup</code> elements must be labeled. <a>Learn more</a>
-
 accessibility-text-label-issue-optgroup-label = Use <code>label</code> attribute to label <span>optgroup</span> elements. <a>Learn more</a>
 
 accessibility-text-label-issue-toolbar = Toolbars must be labeled when there is more than one toolbar. <a>Learn more</a>
