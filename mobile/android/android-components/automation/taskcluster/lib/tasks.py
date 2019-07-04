@@ -386,4 +386,3 @@ def schedule_task_graph(ordered_groups_of_tasks):
                 'task': queue.task(task_id),
             }
     return full_task_graph
-
