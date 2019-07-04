@@ -30,7 +30,7 @@ PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
 SKIP_TASKS_TRIGGER = '[ci skip]'
 
 AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
-HASH_EXTENSIONS = ('', '.sha1', '.md5'))
+HASH_EXTENSIONS = ('', '.sha1', '.md5')
 
 BUILDER = TaskBuilder(
     task_id=os.environ.get('TASK_ID'),
