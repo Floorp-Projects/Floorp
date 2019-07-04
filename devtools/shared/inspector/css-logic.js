@@ -177,8 +177,28 @@ function getLineCountInComments(text) {
  * Prettify minified CSS text.
  * This prettifies CSS code where there is no indentation in usual places while
  * keeping original indentation as-is elsewhere.
- * @param string text The CSS source to prettify.
- * @return string Prettified CSS source
+ *
+ * Returns an object with the resulting prettified source and a list of mappings of
+ * token positions between the original and the prettified source. Each single mapping
+ * is an object that looks like this:
+ *
+ * {
+ *  original: {line: {Number}, column: {Number}},
+ *  generated: {line: {Number}, column: {Number}},
+ * }
+ *
+ * @param  {String} text
+ *         The CSS source to prettify.
+ * @param  {Number} ruleCount
+ *         The number of CSS rules expected in the CSS source.
+ *
+ * @return {Object}
+ *         Object with the prettified source and source mappings.
+ *          {
+ *            result: {String}  // Prettified source
+ *            mappings: {Array} // List of objects with mappings for lines and columns
+ *                              // between the original source and prettified source
+ *          }
  */
 /* eslint-disable complexity */
 function prettifyCSS(text, ruleCount) {
@@ -200,7 +220,7 @@ function prettifyCSS(text, ruleCount) {
   // don't attempt to prettify if there's more than one line per rule, excluding comments.
   const lineCount = text.split("\n").length - 1 - getLineCountInComments(text);
   if (ruleCount !== null && lineCount >= ruleCount) {
-    return originalText;
+    return { result: originalText, mappings: [] };
   }
 
   // We reformat the text using a simple state machine.  The
@@ -219,6 +239,12 @@ function prettifyCSS(text, ruleCount) {
   let indent = "";
   let indentLevel = 0;
   const tokens = getCSSLexer(text);
+  // List of mappings of token positions from original source to prettified source.
+  const mappings = [];
+  // Line and column offsets used to shift the token positions after prettyfication.
+  let lineOffset = 0;
+  let columnOffset = 0;
+  let indentOffset = 0;
   let result = "";
   let pushbackToken = undefined;
 
@@ -284,6 +310,21 @@ function prettifyCSS(text, ruleCount) {
         break;
       }
 
+      const line = tokens.lineNumber;
+      const column = tokens.columnNumber;
+      mappings.push({
+        original: {
+          line,
+          column,
+        },
+        generated: {
+          line: lineOffset + line,
+          column: columnOffset,
+        },
+      });
+      // Shift the column offset for the next token by the current token's length.
+      columnOffset += token.endOffset - token.startOffset;
+
       if (token.tokenType === "at") {
         isInAtRuleDefinition = true;
       }
@@ -346,6 +387,7 @@ function prettifyCSS(text, ruleCount) {
         result = result + indent + text.substring(startIndex, endIndex);
         if (isCloseBrace) {
           result += prettifyCSS.LINE_SEPARATOR;
+          lineOffset = lineOffset + 1;
         }
       }
     }
@@ -361,8 +403,10 @@ function prettifyCSS(text, ruleCount) {
 
       if (tabPrefs.indentWithTabs) {
         indent = TAB_CHARS.repeat(indentLevel);
+        indentOffset = 4 * indentLevel;
       } else {
         indent = SPACE_CHARS.repeat(indentLevel);
+        indentOffset = 1 * indentLevel;
       }
       result = result + indent + "}";
     }
@@ -374,12 +418,15 @@ function prettifyCSS(text, ruleCount) {
     if (token.tokenType === "symbol" && token.text === "{") {
       if (!lastWasWS) {
         result += " ";
+        columnOffset++;
       }
       result += "{";
       if (tabPrefs.indentWithTabs) {
         indent = TAB_CHARS.repeat(++indentLevel);
+        indentOffset = 4 * indentLevel;
       } else {
         indent = SPACE_CHARS.repeat(++indentLevel);
+        indentOffset = 1 * indentLevel;
       }
     }
 
@@ -392,11 +439,15 @@ function prettifyCSS(text, ruleCount) {
     // the text.
     if (pushbackToken && token && token.tokenType === "whitespace" &&
         /\n/g.test(text.substring(token.startOffset, token.endOffset))) {
-      return originalText;
+      return { result: originalText, mappings: [] };
     }
 
     // Finally time for that newline.
     result = result + prettifyCSS.LINE_SEPARATOR;
+
+    // Update line and column offsets for the new line.
+    lineOffset = lineOffset + 1;
+    columnOffset = 0 + indentOffset;
 
     // Maybe we hit EOF.
     if (!pushbackToken) {
@@ -404,7 +455,7 @@ function prettifyCSS(text, ruleCount) {
     }
   }
 
-  return result;
+  return { result, mappings };
 }
 /* eslint-enable complexity */
 
