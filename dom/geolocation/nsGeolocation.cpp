@@ -1228,53 +1228,23 @@ void Geolocation::NotifyAllowedRequest(nsGeolocationRequest* aRequest) {
   }
 }
 
-bool Geolocation::RegisterRequestWithPromptImpl(
-    nsGeolocationRequest* aRequest) {
+bool Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request) {
   nsIEventTarget* target = MainThreadTarget(this);
-  ContentPermissionRequestBase::PromptResult pr = aRequest->CheckPromptPrefs();
+  ContentPermissionRequestBase::PromptResult pr = request->CheckPromptPrefs();
   if (pr == ContentPermissionRequestBase::PromptResult::Granted) {
-    aRequest->RequestDelayedTask(target,
-                                 nsGeolocationRequest::DelayedTaskType::Allow);
+    request->RequestDelayedTask(target,
+                                nsGeolocationRequest::DelayedTaskType::Allow);
     return true;
   }
   if (pr == ContentPermissionRequestBase::PromptResult::Denied) {
-    aRequest->RequestDelayedTask(target,
-                                 nsGeolocationRequest::DelayedTaskType::Deny);
+    request->RequestDelayedTask(target,
+                                nsGeolocationRequest::DelayedTaskType::Deny);
     return true;
   }
 
-  aRequest->RequestDelayedTask(target,
-                               nsGeolocationRequest::DelayedTaskType::Request);
+  request->RequestDelayedTask(target,
+                              nsGeolocationRequest::DelayedTaskType::Request);
   return true;
-}
-
-bool Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request) {
-#ifdef MOZ_WIDGET_COCOA
-  RefPtr<Geolocation> self = this;
-  RefPtr<nsGeolocationRequest> req = request;
-  nsCOMPtr<nsISerialEventTarget> serialTarget =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
-  ContentChild* cpc = ContentChild::GetSingleton();
-  cpc->SendGetGeoSysPermission()->Then(
-      serialTarget, __func__,
-      [req, self](bool aSysPermIsGranted) {
-        if (!aSysPermIsGranted) {
-          nsIEventTarget* target = MainThreadTarget(self);
-          req->RequestDelayedTask(
-              target, nsGeolocationRequest::DelayedTaskType::Deny);
-        } else {
-          self->RegisterRequestWithPromptImpl(req);
-        }
-      },
-      [req, self](mozilla::ipc::ResponseRejectReason aReason) {
-        nsIEventTarget* target = MainThreadTarget(self);
-        req->RequestDelayedTask(
-            target, nsGeolocationRequest::DelayedTaskType::Deny);
-      });
-  return true;
-#else
-  return RegisterRequestWithPromptImpl(request);
-#endif
 }
 
 JSObject* Geolocation::WrapObject(JSContext* aCtx,
