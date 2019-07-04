@@ -23,10 +23,10 @@ interface nsITouchBarHelper : nsISupports
   readonly attribute AString activeTitle;
 
   /**
-   * Returns all available Touch Bar Inputs in an nsIArray
+   * Returns the layout for the Touch Bar in an nsIArray
    * of nsITouchBarInput objects.
    */
-  attribute nsIArray allItems;
+  attribute nsIArray layout;
 
   /**
    * Returns the requested TouchBarInput.
