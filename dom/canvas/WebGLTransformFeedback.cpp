@@ -7,6 +7,7 @@
 
 #include "GLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
+#include "mozilla/IntegerRange.h"
 #include "WebGL2Context.h"
 #include "WebGLProgram.h"
 
@@ -71,6 +72,16 @@ void WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode) {
           " feedback index %u.",
           (uint32_t)i);
       return;
+    }
+
+    for (const auto iBound : IntegerRange(mIndexedBindings.size())) {
+      const auto& bound = mIndexedBindings[iBound].mBufferBinding.get();
+      if (iBound != i && buffer == bound) {
+        mContext->GenErrorIllegalUse(
+            LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<uint32_t>(i),
+            LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER, static_cast<uint32_t>(iBound));
+        return;
+      }
     }
 
     const size_t vertCapacity = buffer->ByteLength() / 4 / componentsPerVert;

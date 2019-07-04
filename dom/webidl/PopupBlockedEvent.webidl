@@ -5,7 +5,7 @@
  */
 interface URI;
 
-[Constructor(DOMString type, optional PopupBlockedEventInit eventInitDict)]
+[Constructor(DOMString type, optional PopupBlockedEventInit eventInitDict = {})]
 interface PopupBlockedEvent : Event
 {
   readonly attribute Window? requestingWindow;

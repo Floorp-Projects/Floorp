@@ -30,15 +30,13 @@
   box-shadow: var(--shadow-10);
   min-width: max-content;
   list-style-type: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .menu:dir(rtl) {
   right: auto;
   left: 0;
-}
-
-.menuitem {
-  display: flex;
 }
 
 .menuitem-button {
@@ -52,8 +50,9 @@
   border-radius: 0;
   /* Override common.inc.css box-shadow on these buttons */
   box-shadow: none !important;
-  flex-grow: 1;
   text-align: start;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .menuitem-button:dir(rtl) {
@@ -72,6 +71,6 @@
   background-image: url("chrome://browser/content/aboutlogins/icons/feedback.svg");
 }
 
-:host(:not(.Win32)) .windows-only {
-  display: none;
+.menuitem-faq {
+  background-image: url("chrome://browser/content/aboutlogins/icons/faq.svg");
 }

@@ -54,7 +54,8 @@
         'tls_filter.cc',
         'tls_hkdf_unittest.cc',
         'tls_esni_unittest.cc',
-        'tls_protect.cc'
+        'tls_protect.cc',
+        'tls_subcerts_unittest.cc'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',

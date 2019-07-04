@@ -2,7 +2,7 @@ import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {mount} from "enzyme";
 import {OnboardingMessageProvider} from "lib/OnboardingMessageProvider.jsm";
 import React from "react";
-import {_Trailhead as Trailhead} from "content-src/asrouter/templates/Trailhead/Trailhead";
+import {Trailhead} from "content-src/asrouter/templates/Trailhead/Trailhead";
 
 const CARDS = [{
   content: {

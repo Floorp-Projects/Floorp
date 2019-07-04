@@ -7,7 +7,7 @@
  * https://webaudio.github.io/web-midi-api/
  */
 
-[Constructor(DOMString type, optional MIDIMessageEventInit eventInitDict),
+[Constructor(DOMString type, optional MIDIMessageEventInit eventInitDict = {}),
  SecureContext,
  Pref="dom.webmidi.enabled"]
 interface MIDIMessageEvent : Event

@@ -555,6 +555,8 @@ void BrowserParent::AddWindowListeners() {
       if (eventTarget) {
         eventTarget->AddEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
                                       this, false, false);
+        eventTarget->AddEventListener(NS_LITERAL_STRING("fullscreenchange"),
+                                      this, false, false);
       }
     }
   }
@@ -567,6 +569,8 @@ void BrowserParent::RemoveWindowListeners() {
     nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
     if (eventTarget) {
       eventTarget->RemoveEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
+                                       this, false);
+      eventTarget->RemoveEventListener(NS_LITERAL_STRING("fullscreenchange"),
                                        this, false);
     }
   }
@@ -2735,17 +2739,12 @@ void BrowserParent::PushFocus(BrowserParent* aBrowserParent) {
   }
   if (!aBrowserParent->GetBrowserBridgeParent()) {
     // top-level Web content
-    if (!sFocusStack->IsEmpty()) {
-      // When a new native window is created, we spin a nested event loop.
-      // As a result, unlike when raising an existing window, we get
-      // PushFocus for content in the new window before we get the PopFocus
-      // for content in the old one. Hence, if the stack isn't empty when
-      // pushing top-level Web content, first pop everything off the stack.
-      LOGBROWSERFOCUS(
-          ("PushFocus for top-level Web content needs to clear the stack %p",
-           aBrowserParent));
-      PopFocus(sFocusStack->ElementAt(0));
-    }
+    // When a new native window is created, we spin a nested event loop.
+    // As a result, unlike when raising an existing window, we get
+    // PushFocus for content in the new window before we get the PopFocus
+    // for content in the old one. Hence, if the stack isn't empty when
+    // pushing top-level Web content, first pop everything off the stack.
+    PopFocusAll();
     MOZ_ASSERT(sFocusStack->IsEmpty());
   } else {
     // out-of-process iframe
@@ -2805,6 +2804,16 @@ void BrowserParent::PopFocus(BrowserParent* aBrowserParent) {
     BrowserParent* focused = GetFocused();
     LOGBROWSERFOCUS(("PopFocus changed focus to %p", focused));
     IMEStateManager::OnFocusMovedBetweenBrowsers(popped, focused);
+  }
+}
+
+/* static */
+void BrowserParent::PopFocusAll() {
+  if (!sFocusStack->IsEmpty()) {
+    LOGBROWSERFOCUS(("PopFocusAll pops items"));
+    PopFocus(sFocusStack->ElementAt(0));
+  } else {
+    LOGBROWSERFOCUS(("PopFocusAll does nothing"));
   }
 }
 
@@ -3437,12 +3446,16 @@ bool BrowserParent::DeallocPPaymentRequestParent(
 }
 
 nsresult BrowserParent::HandleEvent(Event* aEvent) {
+  if (mIsDestroyed) {
+    return NS_OK;
+  }
+
   nsAutoString eventType;
   aEvent->GetType(eventType);
-
-  if (eventType.EqualsLiteral("MozUpdateWindowPos") && !mIsDestroyed) {
-    // This event is sent when the widget moved.  Therefore we only update
-    // the position.
+  if (eventType.EqualsLiteral("MozUpdateWindowPos")
+      || eventType.EqualsLiteral("fullscreenchange")) {
+    // Events that signify the window moving are used to update the position
+    // and notify the BrowserChild.
     return UpdatePosition();
   }
   return NS_OK;

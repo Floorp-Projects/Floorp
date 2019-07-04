@@ -504,6 +504,7 @@ linux-rusttests/debug:
 
 linux-devedition-nightly/opt:
     description: "Linux32 devedition Nightly"
+    use-pgo: linux-shippable/opt
     attributes:
         nightly: true
         enable-full-crashsymbols: true

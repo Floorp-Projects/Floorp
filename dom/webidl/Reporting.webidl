@@ -18,7 +18,7 @@ interface Report {
   readonly attribute ReportBody? body;
 };
 
-[Constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options),
+[Constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options = {}),
  Pref="dom.reporting.enabled"]
 interface ReportingObserver {
   void observe();

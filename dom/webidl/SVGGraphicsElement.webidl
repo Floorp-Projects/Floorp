@@ -24,7 +24,7 @@ interface SVGGraphicsElement : SVGElement {
   readonly attribute SVGElement? farthestViewportElement;
 
   [NewObject, Throws]
-  SVGRect getBBox(optional SVGBoundingBoxOptions aOptions);
+  SVGRect getBBox(optional SVGBoundingBoxOptions aOptions = {});
   // Not implemented
   // SVGRect getStrokeBBox();
   SVGMatrix? getCTM();

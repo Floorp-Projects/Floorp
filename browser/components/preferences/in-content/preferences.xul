@@ -26,6 +26,7 @@
 
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/branding/brandings.ftl"/>
     <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
     <html:link rel="localization" href="browser/preferences/preferences.ftl"/>
     <!-- Used by fontbuilder.js -->

@@ -8,7 +8,7 @@ import imp
 import os
 import re
 import sys
-from make_dafsa import words_to_cxx
+from make_dafsa import words_to_cxx, words_to_bin
 
 """
 Processes a file containing effective TLD data.  See the following URL for a
@@ -98,11 +98,12 @@ class EffectiveTLDEntry:
 # DO EVERYTHING #
 #################
 
-def main(output, effective_tld_filename):
+def main(output, effective_tld_filename, output_format="cxx"):
   """
   effective_tld_filename is the effective TLD file to parse.
-  A C++ array of a binary representation of a DAFSA representing the
-  eTLD file is then printed to output.
+  based on the output format, either a C++ array of a binary representation
+  of a DAFSA representing the eTLD file is then printed to standard output
+  or a binary file is written to disk.
   """
 
   def typeEnum(etld):
@@ -123,7 +124,26 @@ def main(output, effective_tld_filename):
     for etld in getEffectiveTLDs(effective_tld_filename):
       yield "%s%d" % (etld.domain(), typeEnum(etld))
 
-  output.write(words_to_cxx(dafsa_words()))
+  """ words_to_bin() returns a bytes while words_to_cxx() returns string """
+  if output_format == "bin":
+    if sys.version_info[0] >= 3:
+      output = output.buffer
+    output.write(words_to_bin(dafsa_words()))
+  else:
+    output.write(words_to_cxx(dafsa_words()))
+
+
 
 if __name__ == '__main__':
-    main(sys.stdout, sys.argv[1])
+    """
+    This program can output the DAFSA in two formats:
+    as C++ code that will be included and compiled at build time 
+    or as a binary file that will be published in Remote Settings.
+    
+    Flags for format options:
+    "cxx" -> C++ array [default]
+    "bin" -> Binary file
+    """
+
+    output_format = "bin" if "--bin" in sys.argv else "cxx"
+    main(sys.stdout, sys.argv[1], output_format=output_format)

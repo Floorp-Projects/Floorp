@@ -625,13 +625,12 @@ void APZCTreeManager::UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
 }
 
 void APZCTreeManager::UpdateHitTestingTree(
-    const WebRenderScrollDataWrapper& aScrollWrapper,
-    bool aIsFirstPaint, WRRootId aOriginatingWrRootId,
-    uint32_t aPaintSequenceNumber) {
+    const WebRenderScrollDataWrapper& aScrollWrapper, bool aIsFirstPaint,
+    WRRootId aOriginatingWrRootId, uint32_t aPaintSequenceNumber) {
   AssertOnUpdaterThread();
 
-  UpdateHitTestingTreeImpl(aScrollWrapper, aIsFirstPaint,
-                           aOriginatingWrRootId, aPaintSequenceNumber);
+  UpdateHitTestingTreeImpl(aScrollWrapper, aIsFirstPaint, aOriginatingWrRootId,
+                           aPaintSequenceNumber);
 }
 
 void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
@@ -1315,7 +1314,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
           auto it = mTestData.find(guid.mLayersId);
           MOZ_ASSERT(it != mTestData.end());
           it->second->RecordHitResult(mouseInput.mOrigin, hitResult,
-                                      guid.mScrollId);
+                                      guid.mLayersId, guid.mScrollId);
         }
 
         TargetConfirmationFlags confFlags{hitResult};
@@ -3273,7 +3272,8 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
     // to the root of the tree. For now, aiming for separation
     // of concerns rather than minimum number of multiplications.
     ForEachNode<ReverseIterator>(
-        mRootNode.get(), [&](HitTestingTreeNode* aNode) {
+        mRootNode.get(),
+        [&](HitTestingTreeNode* aNode) {
           bool atAncestor = (aAncestor && aNode->GetApzc() == aAncestor);
           MOZ_ASSERT(!(underAncestor && atAncestor));
           underAncestor |= atAncestor;
@@ -3282,11 +3282,15 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
           }
           LayersId layersId = aNode->GetLayersId();
           HitTestingTreeNode* parent = aNode->GetParent();
-          if (!parent || layersId != parent->GetLayersId()) {
+          if (!parent) {
             messages.AppendElement(
-                MatrixMessage(aNode->GetTransformToGecko(), layersId));
+                MatrixMessage(LayerToScreenMatrix4x4(), layersId));
+          } else if (layersId != parent->GetLayersId()) {
+            messages.AppendElement(
+                MatrixMessage(parent->GetTransformToGecko(), layersId));
           }
-        }, [&](HitTestingTreeNode* aNode) {
+        },
+        [&](HitTestingTreeNode* aNode) {
           bool atAncestor = (aAncestor && aNode->GetApzc() == aAncestor);
           if (atAncestor) {
             MOZ_ASSERT(underAncestor);

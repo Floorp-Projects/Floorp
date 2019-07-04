@@ -1310,7 +1310,7 @@ class _ASRouter {
 
     // Clear and refresh Attribution, and then fetch the messages again to update
     AttributionCode._clearCache();
-    AttributionCode.getAttrDataAsync();
+    await AttributionCode.getAttrDataAsync();
     this._updateMessageProviders();
     await this.loadMessagesFromAllProviders();
   }

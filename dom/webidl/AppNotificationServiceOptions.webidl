@@ -15,5 +15,5 @@ dictionary AppNotificationServiceOptions {
   DOMString lang = "";
   DOMString tag = "";
   DOMString data = "";
-  NotificationBehavior mozbehavior = null;
+  NotificationBehavior mozbehavior = {};
 };

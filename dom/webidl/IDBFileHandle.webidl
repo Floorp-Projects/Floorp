@@ -19,7 +19,7 @@ interface IDBFileHandle : EventTarget
   attribute unsigned long long? location;
 
   [Throws]
-  IDBFileRequest? getMetadata(optional IDBFileMetadataParameters parameters);
+  IDBFileRequest? getMetadata(optional IDBFileMetadataParameters parameters = {});
   [Throws]
   IDBFileRequest? readAsArrayBuffer(unsigned long long size);
   [Throws]

@@ -13,6 +13,14 @@ const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,lockaspectratio,resizabl
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 
 /**
+ * If closing the Picture-in-Picture player window occurred for a reason that
+ * we can easily detect (user clicked on the close button, originating tab unloaded,
+ * user clicked on the unpip button), that will be stashed in gCloseReasons so that
+ * we can note it in Telemetry when the window finally unloads.
+ */
+let gCloseReasons = new WeakMap();
+
+/**
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
@@ -32,7 +40,8 @@ var PictureInPicture = {
         /**
          * Content has requested that its Picture in Picture window go away.
          */
-        this.closePipWindow();
+        let reason = aMessage.data.reason;
+        this.closePipWindow({ reason });
         break;
       }
       case "PictureInPicture:Playing": {
@@ -56,7 +65,7 @@ var PictureInPicture = {
     let gBrowser = this.browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(this.browser);
     gBrowser.selectedTab = tab;
-    await this.closePipWindow();
+    await this.closePipWindow({ reason: "unpip" });
   },
 
   /**
@@ -73,7 +82,7 @@ var PictureInPicture = {
   /**
    * Find and close any pre-existing Picture in Picture windows.
    */
-  async closePipWindow() {
+  async closePipWindow({ reason }) {
     // This uses an enumerator, but there really should only be one of
     // these things.
     for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
@@ -83,6 +92,7 @@ var PictureInPicture = {
       let closedPromise = new Promise(resolve => {
         win.addEventListener("unload", resolve, {once: true});
       });
+      gCloseReasons.set(win, reason);
       win.close();
       await closedPromise;
     }
@@ -110,7 +120,7 @@ var PictureInPicture = {
    */
   async handlePictureInPictureRequest(browser, videoData) {
     // If there's a pre-existing PiP window, close it first.
-    await this.closePipWindow();
+    await this.closePipWindow({ reason: "new-pip" });
 
     let parentWin = browser.ownerGlobal;
     this.browser = browser;
@@ -130,7 +140,12 @@ var PictureInPicture = {
    * unload event has been called in player.js, cleanup our preserved
    * browser object.
    */
-  unload() {
+  unload(window) {
+    TelemetryStopwatch.finish("FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION", window);
+
+    let reason = gCloseReasons.get(window) || "other";
+    Services.telemetry.keyedScalarAdd("pictureinpicture.closed_method", reason, 1);
+
     this.clearPipTabIcon();
     delete this.weakPipControls;
     delete this.browser;
@@ -220,6 +235,10 @@ var PictureInPicture = {
 
     let pipWindow =
       Services.ww.openWindow(parentWin, PLAYER_URI, null, features, null);
+
+    TelemetryStopwatch.start("FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION", pipWindow, {
+      inSeconds: true,
+    });
 
     return new Promise(resolve => {
       pipWindow.addEventListener("load", () => {

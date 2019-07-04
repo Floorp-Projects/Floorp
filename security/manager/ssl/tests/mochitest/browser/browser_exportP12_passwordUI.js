@@ -80,7 +80,7 @@ function openSetP12PasswordDialog() {
 add_task(async function testFocus() {
   let [win] = await openSetP12PasswordDialog();
   Assert.equal(win.document.activeElement,
-               win.document.getElementById("pw1").inputField,
+               win.document.getElementById("pw1"),
                "First password textbox should have focus");
   await BrowserTestUtils.closeWindow(win);
 });

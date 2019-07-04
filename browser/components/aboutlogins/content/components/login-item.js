@@ -3,9 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {recordTelemetryEvent} from "../aboutLoginsUtils.js";
-import ReflectedFluentElement from "./reflected-fluent-element.js";
 
-export default class LoginItem extends ReflectedFluentElement {
+export default class LoginItem extends HTMLElement {
+  /**
+   * The number of milliseconds to display the "Copied" success message
+   * before reverting to the normal "Copy" button.
+   */
+  static get COPY_BUTTON_RESET_TIMEOUT() {
+    return 5000;
+  }
+
   constructor() {
     super();
     this._login = {};
@@ -18,13 +25,17 @@ export default class LoginItem extends ReflectedFluentElement {
     }
 
     let loginItemTemplate = document.querySelector("#login-item-template");
-    this.attachShadow({mode: "open"})
-        .appendChild(loginItemTemplate.content.cloneNode(true));
+    let shadowRoot = this.attachShadow({mode: "open"});
+    document.l10n.connectRoot(shadowRoot);
+    shadowRoot.appendChild(loginItemTemplate.content.cloneNode(true));
 
     for (let selector of [
+      ".copy-password-button",
+      ".copy-username-button",
       ".delete-button",
       ".edit-button",
       ".open-site-button",
+      ".reveal-password-checkbox",
       ".save-changes-button",
       ".cancel-button",
     ]) {
@@ -32,6 +43,7 @@ export default class LoginItem extends ReflectedFluentElement {
       button.addEventListener("click", this);
     }
 
+    this._confirmDeleteDialog = document.querySelector("confirm-delete-dialog");
     this._copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
     this._copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
@@ -41,98 +53,23 @@ export default class LoginItem extends ReflectedFluentElement {
     this._usernameInput = this.shadowRoot.querySelector("input[name='username']");
     this._passwordInput = this.shadowRoot.querySelector("input[name='password']");
     this._revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
-    this._title = this.shadowRoot.querySelector(".title");
-
-    this._copyUsernameButton.relatedInput = this._usernameInput;
-    this._copyPasswordButton.relatedInput = this._passwordInput;
+    this._title = this.shadowRoot.querySelector(".login-item-title");
+    this._timeCreated = this.shadowRoot.querySelector(".time-created");
+    this._timeChanged = this.shadowRoot.querySelector(".time-changed");
+    this._timeUsed = this.shadowRoot.querySelector(".time-used");
 
     this.render();
 
     this._originInput.addEventListener("blur", this);
-    this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
-
-    super.connectedCallback();
-  }
-
-  static get reflectedFluentIDs() {
-    return [
-      "cancel-button",
-      "copied-password-button",
-      "copied-username-button",
-      "copy-password-button",
-      "copy-username-button",
-      "delete-button",
-      "edit-button",
-      "new-login-title",
-      "open-site-button",
-      "origin-label",
-      "origin-placeholder",
-      "password-hide-title",
-      "password-label",
-      "password-show-title",
-      "save-changes-button",
-      "time-created",
-      "time-changed",
-      "time-used",
-      "username-label",
-      "username-placeholder",
-    ];
-  }
-
-  static get observedAttributes() {
-    return this.reflectedFluentIDs;
-  }
-
-  handleSpecialCaseFluentString(attrName) {
-    switch (attrName) {
-      case "copied-password-button":
-      case "copy-password-button": {
-        let newAttrName = attrName.substr(0, attrName.indexOf("-")) + "-button-text";
-        this._copyPasswordButton.setAttribute(newAttrName, this.getAttribute(attrName));
-        break;
-      }
-      case "copied-username-button":
-      case "copy-username-button": {
-        let newAttrName = attrName.substr(0, attrName.indexOf("-")) + "-button-text";
-        this._copyUsernameButton.setAttribute(newAttrName, this.getAttribute(attrName));
-        break;
-      }
-      case "new-login-title": {
-        this._title.setAttribute(attrName, this.getAttribute(attrName));
-        if (!this._login.title) {
-          this._title.textContent = this.getAttribute(attrName);
-        }
-        break;
-      }
-      case "origin-placeholder": {
-        this._originInput.setAttribute("placeholder", this.getAttribute(attrName));
-        break;
-      }
-      case "password-hide-title":
-      case "password-show-title": {
-        this._updatePasswordRevealState();
-        break;
-      }
-      case "username-placeholder": {
-        this._usernameInput.setAttribute("placeholder", this.getAttribute(attrName));
-        break;
-      }
-      default:
-        return false;
-    }
-    return true;
   }
 
   render() {
-    let l10nArgs = {
-      timeCreated: this._login.timeCreated || "",
-      timeChanged: this._login.timePasswordChanged || "",
-      timeUsed: this._login.timeLastUsed || "",
-    };
-    document.l10n.setAttributes(this, "login-item", l10nArgs);
+    document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {timeCreated: this._login.timeCreated || ""});
+    document.l10n.setAttributes(this._timeChanged, "login-item-time-changed", {timeChanged: this._login.timePasswordChanged || ""});
+    document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {timeUsed: this._login.timeLastUsed || ""});
 
-    this._title.textContent = this._login.title || this._title.getAttribute("new-login-title");
+    this._title.textContent = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
     this._usernameInput.defaultValue = this._login.username || "";
     this._passwordInput.defaultValue = this._login.password || "";
@@ -157,7 +94,7 @@ export default class LoginItem extends ReflectedFluentElement {
         break;
       }
       case "click": {
-        let classList = event.target.classList;
+        let classList = event.currentTarget.classList;
         if (classList.contains("reveal-password-checkbox")) {
           this._updatePasswordRevealState();
 
@@ -184,13 +121,24 @@ export default class LoginItem extends ReflectedFluentElement {
           });
           return;
         }
-        if (classList.contains("delete-button")) {
-          document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
-            bubbles: true,
-            detail: this._login,
-          }));
+        if (classList.contains("copy-password-button") ||
+            classList.contains("copy-username-button")) {
+          let copyButton = event.currentTarget;
+          copyButton.disabled = true;
+          let propertyToCopy = copyButton.dataset.copyLoginProperty;
+          navigator.clipboard.writeText(this._login[propertyToCopy]).then(() => {
+            copyButton.dataset.copied = true;
+            setTimeout(() => {
+              copyButton.disabled = false;
+              delete copyButton.dataset.copied;
+            }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
+          }, () => copyButton.disabled = false);
 
-          recordTelemetryEvent({object: "existing_login", method: "delete"});
+          recordTelemetryEvent({object: copyButton.dataset.telemetryObject, method: "copy"});
+          return;
+        }
+        if (classList.contains("delete-button")) {
+          this.confirmDelete();
           return;
         }
         if (classList.contains("edit-button")) {
@@ -236,6 +184,21 @@ export default class LoginItem extends ReflectedFluentElement {
   }
 
   /**
+   * Toggles the confirm delete dialog, completing the deletion if the user
+   * agrees.
+   */
+  confirmDelete() {
+    const dialog = document.querySelector("confirm-delete-dialog");
+    dialog.show().then(() => {
+      document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
+        bubbles: true,
+        detail: this._login,
+      }));
+      recordTelemetryEvent({object: "existing_login", method: "delete"});
+    }, () => {});
+  }
+
+  /**
    * @param {login} login The login that should be displayed. The login object is
    *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
    */
@@ -253,6 +216,7 @@ export default class LoginItem extends ReflectedFluentElement {
 
     this._revealCheckbox.checked = false;
 
+    this._editButton.focus();
     this.render();
   }
 
@@ -364,24 +328,28 @@ export default class LoginItem extends ReflectedFluentElement {
 
     this._deleteButton.disabled = this.dataset.isNewLogin;
     this._editButton.disabled = shouldEdit;
-    this._originInput.readOnly = !this.dataset.isNewLogin;
+    let inputTabIndex = !shouldEdit ? -1 : 0;
+    this._originInput.readOnly = !shouldEdit;
+    this._originInput.tabIndex = inputTabIndex;
     this._usernameInput.readOnly = !shouldEdit;
+    this._usernameInput.tabIndex = inputTabIndex;
     this._passwordInput.readOnly = !shouldEdit;
+    this._passwordInput.tabIndex = inputTabIndex;
     if (shouldEdit) {
       this.dataset.editing = true;
+      this._originInput.focus();
     } else {
       delete this.dataset.editing;
     }
   }
 
   _updatePasswordRevealState() {
-    let labelAttr = this._revealCheckbox.checked ? "password-show-title"
-                                                 : "password-hide-title";
-    this._revealCheckbox.setAttribute("aria-label", this.getAttribute(labelAttr));
-    this._revealCheckbox.setAttribute("title", this.getAttribute(labelAttr));
+    let titleId = this._revealCheckbox.checked ? "login-item-password-reveal-checkbox-hide"
+                                               : "login-item-password-reveal-checkbox-show";
+    document.l10n.setAttributes(this._revealCheckbox, titleId);
 
     let {checked} = this._revealCheckbox;
-    let inputType = checked ? "type" : "password";
+    let inputType = checked ? "text" : "password";
     this._passwordInput.setAttribute("type", inputType);
   }
 }

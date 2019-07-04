@@ -53,6 +53,7 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'VRManager.cpp',
     'VRPuppetCommandBuffer.cpp',
+    'VRShMem.cpp'
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':

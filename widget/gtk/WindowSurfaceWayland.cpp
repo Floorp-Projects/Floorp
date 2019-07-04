@@ -377,7 +377,7 @@ void WindowBackBuffer::Attach(wl_surface* aSurface) {
 
   wl_surface_attach(aSurface, GetWlBuffer(), 0, 0);
   wl_surface_commit(aSurface);
-  wl_display_flush(GetWaylandDisplay()->GetDisplay());
+  wl_display_flush(WaylandDisplayGetWLDisplay());
   SetAttached();
 }
 
@@ -532,10 +532,8 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
 
 bool WindowSurfaceWayland::UseDMABufBackend() {
   if (!mUseDMABufInitialized) {
-    if (WaylandDMABufSurface::IsAvailable()) {
-      mUseDMABuf = nsWaylandDisplay::IsDMABufEnabled();
-      LOGWAYLAND(("%s DMABuf state %d\n", __PRETTY_FUNCTION__, mUseDMABuf));
-    }
+    mUseDMABuf = nsWaylandDisplay::IsDMABufEnabled();
+    LOGWAYLAND(("%s DMABuf state %d\n", __PRETTY_FUNCTION__, mUseDMABuf));
     mUseDMABufInitialized = true;
   }
   return mUseDMABuf;

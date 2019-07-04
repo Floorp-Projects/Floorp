@@ -474,6 +474,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         mRunningState(RunningState::Idling) {
     MOZ_ASSERT(NS_IsMainThread());
 
+    aRecorder->GetMimeType(mMimeType);
     mMaxMemory = Preferences::GetUint("media.recorder.max_memory",
                                       MAX_ALLOW_MEMORY_BUFFER);
     mLastBlobTimeStamp = TimeStamp::Now();
@@ -950,9 +951,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // At this stage, the API doesn't allow UA to choose the output mimeType
     // format.
 
-    mEncoder = MediaEncoder::CreateEncoder(
-        mEncoderThread, NS_LITERAL_STRING(""), audioBitrate, videoBitrate,
-        aTrackTypes, aTrackRate);
+    mEncoder =
+        MediaEncoder::CreateEncoder(mEncoderThread, mMimeType, audioBitrate,
+                                    videoBitrate, aTrackTypes, aTrackRate);
 
     if (!mEncoder) {
       LOG(LogLevel::Error, ("Session.InitEncoder !mEncoder %p", this));

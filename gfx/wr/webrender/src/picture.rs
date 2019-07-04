@@ -1606,7 +1606,7 @@ pub struct OrderedPictureChild {
 
 /// Defines the grouping key for a cluster of primitives in a picture.
 /// In future this will also contain spatial grouping details.
-#[derive(Hash, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
 struct PrimitiveClusterKey {
     /// Grouping primitives by spatial node ensures that we can calculate a local
     /// bounding volume for the cluster, and then transform that by the spatial
@@ -1788,6 +1788,10 @@ impl PrimitiveList {
                     index
                 }
             );
+
+            if prim_instance.is_chased() {
+                println!("\tcluster {} with {:?}", cluster_index, key);
+            }
 
             // Pictures don't have a known static local bounding rect (they are
             // calculated during the picture traversal dynamically). If not

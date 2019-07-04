@@ -51,9 +51,7 @@ web-platform-tests:
     - web-platform-tests-reftests
     - web-platform-tests-wdspec
 
-web-platform-tests-headless:
-    - web-platform-tests-headless
-    - web-platform-tests-reftests-headless
+web-platform-tests-wdspec-headless:
     - web-platform-tests-wdspec-headless
 
 opt-only-tests:

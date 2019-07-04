@@ -21,16 +21,9 @@ job-defaults:
     description: Sends email to release-drivers telling release was shipped.
     run-on-projects: []
     shipping-phase: ship
-    worker-type: b-linux
+    worker-type: succeed
     worker:
-        implementation: docker-worker
-        os: linux
-        docker-image: "ubuntu:16.10"
-        max-run-time: 600
-        command:
-            - /bin/bash
-            - -c
-            - echo "Dummy task"
+        implementation: succeed
     notifications:
         emails:
             by-project:

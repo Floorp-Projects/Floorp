@@ -133,3 +133,11 @@ export function getRelativePath(url: string) {
   path.shift();
   return path.join("/");
 }
+
+export function getPathWithoutThread(path: string) {
+  const pathParts = path.split(/(context\d+?\/)/).splice(2);
+  if (pathParts && pathParts.length > 0) {
+    return pathParts.join("");
+  }
+  return "";
+}

@@ -125,6 +125,7 @@ class ContextMenuChild extends JSWindowActorChild {
                 }
                 break;
               case "pictureinpicture":
+                Services.telemetry.keyedScalarAdd("pictureinpicture.opened_method", "contextmenu", 1);
                 let event = new this.contentWindow.CustomEvent("MozTogglePictureInPicture", {
                   bubbles: true,
                 }, this.contentWindow);

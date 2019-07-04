@@ -55,7 +55,7 @@
         test.step(() => assert_equals(event.colno, 11));
         break;
       case 6:
-        test.step(() => assert_true(event.error instanceof ReferenceError));
+        test.step(() => assert_true(event.error instanceof SyntaxError));
         test.step(() => assert_true(event.filename.endsWith("/module_eval_error.js")));
         test.step(() => assert_equals(event.lineno, 3));
         test.step(() => assert_equals(event.colno, 0));

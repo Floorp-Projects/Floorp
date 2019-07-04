@@ -20,7 +20,7 @@ callback PerformanceObserverCallback = void (PerformanceObserverEntryList entrie
  Constructor(PerformanceObserverCallback callback),
  Exposed=(Window,Worker)]
 interface PerformanceObserver {
-    [Throws] void observe(optional PerformanceObserverInit options);
+    [Throws] void observe(optional PerformanceObserverInit options = {});
     void disconnect();
     PerformanceEntryList takeRecords();
     static readonly attribute object supportedEntryTypes;

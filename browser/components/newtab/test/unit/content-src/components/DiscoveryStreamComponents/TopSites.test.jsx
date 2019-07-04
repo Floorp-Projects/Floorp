@@ -1,6 +1,6 @@
 import {combineReducers, createStore} from "redux";
 import {INITIAL_STATE, reducers, TOP_SITES_DEFAULT_ROWS} from "common/Reducers.jsm";
-import {mountWithIntl} from "test/unit/utils";
+import {mount} from "enzyme";
 import {TopSites as OldTopSites} from "content-src/components/TopSites/TopSites";
 import {Provider} from "react-redux";
 import React from "react";
@@ -13,7 +13,7 @@ describe("Discovery Stream <TopSites>", () => {
   beforeEach(() => {
     INITIAL_STATE.Prefs.values.topSitesRows = TOP_SITES_DEFAULT_ROWS;
     store = createStore(combineReducers(reducers), INITIAL_STATE);
-    wrapper = mountWithIntl(<Provider store={store}><TopSites /></Provider>);
+    wrapper = mount(<Provider store={store}><TopSites /></Provider>);
   });
 
   afterEach(() => {
@@ -39,7 +39,7 @@ describe("Discovery Stream <TopSites>", () => {
       let DEFAULT_PROPS = {
         header: {title: "test"},
       };
-      wrapper = mountWithIntl(<Provider store={store}><TopSites {...DEFAULT_PROPS} /></Provider>);
+      wrapper = mount(<Provider store={store}><TopSites {...DEFAULT_PROPS} /></Provider>);
       const oldTopSites = wrapper.find(OldTopSites);
       assert.equal(oldTopSites.props().title, "test");
     });

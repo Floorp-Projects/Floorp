@@ -35,7 +35,7 @@ nsresult nsBox::BeginXULLayout(nsBoxLayoutState& aState) {
     // does this too).
     nsIFrame* box;
     for (box = GetChildXULBox(this); box; box = GetNextXULBox(box))
-      box->AddStateBits(NS_FRAME_IS_DIRTY);
+      box->MarkSubtreeDirty();
   }
 
   // Another copy-over from ReflowInput.

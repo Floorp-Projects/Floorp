@@ -13,7 +13,7 @@ dictionary ServerSocketOptions {
   TCPSocketBinaryType binaryType = "string";
 };
 
-[Constructor(unsigned short port, optional ServerSocketOptions options, optional unsigned short backlog = 0),
+[Constructor(unsigned short port, optional ServerSocketOptions options = {}, optional unsigned short backlog = 0),
  Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
  Exposed=Window]
 interface TCPServerSocket : EventTarget {

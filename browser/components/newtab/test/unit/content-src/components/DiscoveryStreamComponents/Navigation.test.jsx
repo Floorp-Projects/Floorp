@@ -1,13 +1,13 @@
 import {Navigation, Topic} from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
 import React from "react";
 import {SafeAnchor} from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<Navigation>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<Navigation header={{}} />);
+    wrapper = shallow(<Navigation header={{}} />);
   });
 
   it("should render", () => {
@@ -36,7 +36,7 @@ describe("<Topic>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<Topic url="https://foo.com" name="foo" />);
+    wrapper = shallow(<Topic url="https://foo.com" name="foo" />);
   });
 
   it("should render", () => {

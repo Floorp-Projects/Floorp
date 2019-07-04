@@ -1,12 +1,12 @@
 import {HorizontalRule} from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
 import React from "react";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<HorizontalRule>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<HorizontalRule />);
+    wrapper = shallow(<HorizontalRule />);
   });
 
   it("should render", () => {

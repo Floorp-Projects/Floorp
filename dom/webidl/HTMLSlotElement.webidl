@@ -14,8 +14,8 @@
 [Exposed=Window, HTMLConstructor]
 interface HTMLSlotElement : HTMLElement {
   [CEReactions, SetterThrows] attribute DOMString name;
-  sequence<Node> assignedNodes(optional AssignedNodesOptions options);
-  sequence<Element> assignedElements(optional AssignedNodesOptions options);
+  sequence<Node> assignedNodes(optional AssignedNodesOptions options = {});
+  sequence<Element> assignedElements(optional AssignedNodesOptions options = {});
 };
 
 dictionary AssignedNodesOptions {

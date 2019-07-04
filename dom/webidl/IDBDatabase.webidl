@@ -18,7 +18,7 @@ interface IDBDatabase : EventTarget {
     readonly    attribute DOMStringList      objectStoreNames;
 
     [Throws]
-    IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters);
+    IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters = {});
 
     [Throws]
     void           deleteObjectStore (DOMString name);

@@ -326,7 +326,8 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     OPTIMIZATIONS = 3,
     LINE = 4,
     COLUMN = 5,
-    CATEGORY = 6
+    CATEGORY = 6,
+    SUBCATEGORY = 7
   };
 
   AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
@@ -344,6 +345,7 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     const ProfilingCategoryPairInfo& info =
         GetProfilingCategoryPairInfo(*data.mCategoryPair);
     writer.IntElement(CATEGORY, uint32_t(info.mCategory));
+    writer.IntElement(SUBCATEGORY, info.mSubcategoryIndex);
   }
 }
 

@@ -54,8 +54,15 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
       return nullptr;
     }
 
+    // The RDD process will never use hardware decoding since it's
+    // sandboxed, so don't bother trying to create a sync object.
+    TextureFactoryIdentifier ident = aIdentifier;
+    if (XRE_IsRDDProcess()) {
+      ident.mSyncHandle = 0;
+    }
+
     RefPtr<KnowsCompositorVideo> knowsCompositor = new KnowsCompositorVideo();
-    knowsCompositor->IdentifyTextureHost(aIdentifier);
+    knowsCompositor->IdentifyTextureHost(ident);
     return knowsCompositor.forget();
   }
 
@@ -279,11 +286,10 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     : RemoteDecoderParent(aParent, aManagerTaskQueue, aDecodeTaskQueue),
       mVideoInfo(aVideoInfo) {
   if (aIdentifier) {
-    // Check to see if we have a direct PVideoBridge connection to the destination
-    // process specified in aIdentifier, and create a KnowsCompositor representing
-    // that connection if so.
-    // If this fails, then we fall back to returning the decoded frames directly
-    // via Output().
+    // Check to see if we have a direct PVideoBridge connection to the
+    // destination process specified in aIdentifier, and create a
+    // KnowsCompositor representing that connection if so. If this fails, then
+    // we fall back to returning the decoded frames directly via Output().
     mKnowsCompositor =
         KnowsCompositorVideo::TryCreateForIdentifier(*aIdentifier);
   }
@@ -316,7 +322,7 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
 
 #ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(params.mConfig.mMimeType)) {
-    if (StaticPrefs::MediaAv1UseDav1d()) {
+    if (StaticPrefs::media_av1_use_dav1d()) {
       mDecoder = new DAV1DDecoder(params);
     } else {
       mDecoder = new AOMDecoder(params);

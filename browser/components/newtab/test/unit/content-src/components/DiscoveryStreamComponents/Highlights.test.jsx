@@ -1,7 +1,7 @@
 import {combineReducers, createStore} from "redux";
 import {INITIAL_STATE, reducers} from "common/Reducers.jsm";
 import {Highlights} from "content-src/components/DiscoveryStreamComponents/Highlights/Highlights";
-import {mountWithIntl} from "test/unit/utils";
+import {mount} from "enzyme";
 import {Provider} from "react-redux";
 import React from "react";
 
@@ -15,7 +15,7 @@ describe("Discovery Stream <Highlights>", () => {
   it("should render nothing with no highlights data", () => {
     const store = createStore(combineReducers(reducers), {...INITIAL_STATE});
 
-    wrapper = mountWithIntl(<Provider store={store}><Highlights /></Provider>);
+    wrapper = mount(<Provider store={store}><Highlights /></Provider>);
 
     assert.ok(wrapper.isEmptyRender());
   });
@@ -26,7 +26,7 @@ describe("Discovery Stream <Highlights>", () => {
       Sections: [{id: "highlights", enabled: true}],
     });
 
-    wrapper = mountWithIntl(<Provider store={store}><Highlights /></Provider>);
+    wrapper = mount(<Provider store={store}><Highlights /></Provider>);
 
     assert.lengthOf(wrapper.find(".ds-highlights"), 1);
   });

@@ -668,8 +668,6 @@ uint32_t AndroidBridge::GetScreenOrientation() {
 
   int16_t orientation = GeckoAppShell::GetScreenOrientation();
 
-  if (!orientation) return hal::eScreenOrientation_None;
-
   return static_cast<hal::ScreenOrientation>(orientation);
 }
 

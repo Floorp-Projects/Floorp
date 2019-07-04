@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.gamepad.non_standard_events.enabled",
- Constructor(DOMString type, optional GamepadButtonEventInit eventInitDict)]
+ Constructor(DOMString type, optional GamepadButtonEventInit eventInitDict = {})]
 interface GamepadButtonEvent : GamepadEvent
 {
   readonly attribute unsigned long button;

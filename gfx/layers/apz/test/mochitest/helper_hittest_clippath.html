@@ -44,28 +44,35 @@ function* test(testDriver) {
 
   var rootViewId = utils.getViewId(document.scrollingElement);
   var iframeViewId = subutils.getViewId(subscroller);
+  var layersId = utils.getLayersId();
+  is(subutils.getLayersId(), layersId, "iframe is not OOP");
 
   checkHitResult(hitTest({ x: 10, y: 10 }),
       APZHitResultFlags.VISIBLE,
       iframeViewId,
+      layersId,
       "(simple) uninteresting point inside the iframe");
   checkHitResult(hitTest({ x: 500, y: 10 }),
       APZHitResultFlags.VISIBLE,
       rootViewId,
+      layersId,
       "(simple) uninteresting point in the root scroller");
   checkHitResult(hitTest({ x: 110, y: 110 }),
       APZHitResultFlags.VISIBLE,
       iframeViewId,
+      layersId,
       "(simple) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
   checkHitResult(hitTest({ x: 160, y: 160 }),
       config.isWebRender ? APZHitResultFlags.VISIBLE
                          : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
       config.isWebRender ? iframeViewId : rootViewId,
+      layersId,
       "(simple) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
   checkHitResult(hitTest({ x: 300, y: 200 }),
       config.isWebRender ? APZHitResultFlags.VISIBLE
                          : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
       rootViewId,
+      layersId,
       "(simple) point inside the clip shape of the overlaying div");
 
   // Now we turn the "simple" clip-path that WR can handle into a more complex
@@ -77,22 +84,27 @@ function* test(testDriver) {
   checkHitResult(hitTest({ x: 10, y: 10 }),
       APZHitResultFlags.VISIBLE,
       iframeViewId,
+      layersId,
       "(complex) uninteresting point inside the iframe");
   checkHitResult(hitTest({ x: 500, y: 10 }),
       APZHitResultFlags.VISIBLE,
       rootViewId,
+      layersId,
       "(complex) uninteresting point in the root scroller");
   checkHitResult(hitTest({ x: 110, y: 110 }),
       APZHitResultFlags.VISIBLE,
       iframeViewId,
+      layersId,
       "(complex) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
   checkHitResult(hitTest({ x: 160, y: 160 }),
       APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
       rootViewId,
+      layersId,
       "(complex) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
   checkHitResult(hitTest({ x: 300, y: 200 }),
       APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
       rootViewId,
+      layersId,
       "(complex) point inside the clip shape of the overlaying div");
 }
 

@@ -39,7 +39,7 @@ interface Node : EventTarget {
   [Pure]
   readonly attribute Document? ownerDocument;
   [Pure]
-  Node getRootNode(optional GetRootNodeOptions options);
+  Node getRootNode(optional GetRootNodeOptions options = {});
   [Pure]
   readonly attribute Node? parentNode;
   [Pure]

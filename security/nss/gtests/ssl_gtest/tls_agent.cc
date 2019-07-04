@@ -47,6 +47,7 @@ const std::string TlsAgent::kServerEcdsa521 = "ecdsa521";
 const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa";
 const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
 const std::string TlsAgent::kServerDsa = "dsa";
+const std::string TlsAgent::kDelegatorEcdsa256 = "delegator_ecdsa256";
 
 static const uint8_t kCannedTls13ServerHello[] = {
     0x03, 0x03, 0x9c, 0xbc, 0x14, 0x9b, 0x0e, 0x2e, 0xfa, 0x0d, 0xf3,
@@ -135,6 +136,59 @@ void TlsAgent::SetState(State s) {
   if (!priv->get()) return false;
 
   return true;
+}
+
+// Loads a key pair from the certificate identified by |id|.
+/*static*/ bool TlsAgent::LoadKeyPairFromCert(const std::string& name,
+                                              ScopedSECKEYPublicKey* pub,
+                                              ScopedSECKEYPrivateKey* priv) {
+  ScopedCERTCertificate cert;
+  if (!TlsAgent::LoadCertificate(name, &cert, priv)) {
+    return false;
+  }
+
+  pub->reset(SECKEY_ExtractPublicKey(&cert->subjectPublicKeyInfo));
+  if (!pub->get()) {
+    return false;
+  }
+
+  return true;
+}
+
+void TlsAgent::DelegateCredential(const std::string& name,
+                                  const ScopedSECKEYPublicKey& dc_pub,
+                                  SSLSignatureScheme dc_cert_verify_alg,
+                                  PRUint32 dc_valid_for, PRTime now,
+                                  SECItem* dc) {
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey certPriv;
+  EXPECT_TRUE(TlsAgent::LoadCertificate(name, &cert, &certPriv));
+  EXPECT_EQ(SECSuccess,
+            SSL_DelegateCredential(cert.get(), certPriv.get(), dc_pub.get(),
+                                   dc_cert_verify_alg, dc_valid_for, now, dc));
+}
+
+void TlsAgent::EnableDelegatedCredentials() {
+  ASSERT_TRUE(EnsureTlsSetup());
+  SetOption(SSL_ENABLE_DELEGATED_CREDENTIALS, PR_TRUE);
+}
+
+void TlsAgent::AddDelegatedCredential(const std::string& dc_name,
+                                      SSLSignatureScheme dc_cert_verify_alg,
+                                      PRUint32 dc_valid_for, PRTime now) {
+  ASSERT_TRUE(EnsureTlsSetup());
+
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  EXPECT_TRUE(TlsAgent::LoadKeyPairFromCert(dc_name, &pub, &priv));
+
+  StackSECItem dc;
+  TlsAgent::DelegateCredential(name_, pub, dc_cert_verify_alg, dc_valid_for,
+                               now, &dc);
+
+  SSLExtraServerCertData extra_data = {ssl_auth_null, nullptr, nullptr,
+                                       nullptr,       &dc,     priv.get()};
+  EXPECT_TRUE(ConfigServerCert(name_, true, &extra_data));
 }
 
 bool TlsAgent::ConfigServerCert(const std::string& id, bool updateKeyBits,
@@ -316,6 +370,10 @@ bool TlsAgent::GetPeerChainLength(size_t* count) {
 
 void TlsAgent::CheckCipherSuite(uint16_t suite) {
   EXPECT_EQ(csinfo_.cipherSuite, suite);
+}
+
+void TlsAgent::CheckPeerDelegCred(bool expected) {
+  EXPECT_EQ(expected, info_.peerDelegCred);
 }
 
 void TlsAgent::RequestClientAuth(bool requireAuth) {

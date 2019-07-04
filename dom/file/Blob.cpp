@@ -283,10 +283,11 @@ already_AddRefed<Promise> Blob::ConsumeBody(
 
 namespace {
 
-class BlobBodyStreamHolder final : public nsISupports, public BodyStreamHolder {
+class BlobBodyStreamHolder final : public BodyStreamHolder {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BlobBodyStreamHolder)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(BlobBodyStreamHolder,
+                                                         BodyStreamHolder)
 
   BlobBodyStreamHolder() { mozilla::HoldJSObjects(this); }
 
@@ -297,7 +298,7 @@ class BlobBodyStreamHolder final : public nsISupports, public BodyStreamHolder {
 
   void MarkAsRead() override {}
 
-  JSObject* ReadableStreamBody() override { return mStream; }
+  JSObject* GetReadableStreamBody() override { return mStream; }
 
   void SetStream(JSObject* aObject) {
     MOZ_ASSERT(aObject);
@@ -313,22 +314,25 @@ class BlobBodyStreamHolder final : public nsISupports, public BodyStreamHolder {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BlobBodyStreamHolder)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BlobBodyStreamHolder)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BlobBodyStreamHolder)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(BlobBodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BlobBodyStreamHolder,
+                                               BodyStreamHolder)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStream)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BlobBodyStreamHolder)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BlobBodyStreamHolder,
+                                                  BodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(BlobBodyStreamHolder)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(BlobBodyStreamHolder)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BlobBodyStreamHolder,
+                                                BodyStreamHolder)
+  tmp->mStream = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_ADDREF_INHERITED(BlobBodyStreamHolder, BodyStreamHolder)
+NS_IMPL_RELEASE_INHERITED(BlobBodyStreamHolder, BodyStreamHolder)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BlobBodyStreamHolder)
+NS_INTERFACE_MAP_END_INHERITING(BodyStreamHolder)
 
 }  // anonymous namespace
 

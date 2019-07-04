@@ -13,8 +13,6 @@ const filesToVendor = {
   "react/umd/react.development.js": "react-dev.js",
   "react-dom/umd/react-dom.production.min.js": "react-dom.js",
   "react-dom/umd/react-dom.development.js": "react-dom-dev.js",
-  "react-intl/LICENSE.md": "REACT_INTL_LICENSE",
-  "react-intl/dist/react-intl.min.js": "react-intl.js",
   "react-redux/LICENSE.md": "REACT_REDUX_LICENSE",
   "react-redux/dist/react-redux.min.js": "react-redux.js",
 };

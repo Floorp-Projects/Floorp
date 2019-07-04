@@ -2999,7 +2999,8 @@ void EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
     if (NS_WARN_IF(aError.Failed())) {
       return;
     }
-    range.mSelection->AddRange(*newRange, aError);
+    range.mSelection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
+                                                                aError);
     if (NS_WARN_IF(aError.Failed())) {
       return;
     }
@@ -3165,7 +3166,7 @@ nsresult EditorBase::DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
     }
 
     ErrorResult err;
-    range.mSelection->AddRange(*newRange, err);
+    range.mSelection->AddRangeAndSelectFramesAndNotifyListeners(*newRange, err);
     if (NS_WARN_IF(err.Failed())) {
       return err.StealNSResult();
     }
@@ -4219,7 +4220,7 @@ nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
   }
 
   ErrorResult err;
-  SelectionRefPtr()->AddRange(*range, err);
+  SelectionRefPtr()->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
   NS_WARNING_ASSERTION(!err.Failed(), "Failed to add range to Selection");
   return err.StealNSResult();
 }

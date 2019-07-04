@@ -40,11 +40,6 @@ using namespace js::wasm;
 #  else
 #    define WASM_GC_OP(code) break
 #  endif
-#  ifdef ENABLE_WASM_BULKMEM_OPS
-#    define WASM_BULK_OP(code) return code
-#  else
-#    define WASM_BULK_OP(code) break
-#  endif
 
 OpKind wasm::Classify(OpBytes op) {
   switch (Op(op.b0)) {
@@ -287,15 +282,15 @@ OpKind wasm::Classify(OpBytes op) {
           return OpKind::Conversion;
         case MiscOp::MemCopy:
         case MiscOp::TableCopy:
-          WASM_BULK_OP(OpKind::MemOrTableCopy);
+          return OpKind::MemOrTableCopy;
         case MiscOp::DataDrop:
         case MiscOp::ElemDrop:
-          WASM_BULK_OP(OpKind::DataOrElemDrop);
+          return OpKind::DataOrElemDrop;
         case MiscOp::MemFill:
-          WASM_BULK_OP(OpKind::MemFill);
+          return OpKind::MemFill;
         case MiscOp::MemInit:
         case MiscOp::TableInit:
-          WASM_BULK_OP(OpKind::MemOrTableInit);
+          return OpKind::MemOrTableInit;
         case MiscOp::TableFill:
           WASM_REF_OP(OpKind::TableFill);
         case MiscOp::TableGrow:
@@ -445,7 +440,6 @@ OpKind wasm::Classify(OpBytes op) {
 }
 
 #  undef WASM_GC_OP
-#  undef WASM_BULK_OP
 #  undef WASM_REF_OP
 
 #endif

@@ -84,7 +84,7 @@ typedef OfflineResourceList ApplicationCache;
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
   void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
-  void postMessage(any message, optional WindowPostMessageOptions options);
+  void postMessage(any message, optional WindowPostMessageOptions options = {});
 
   // also has obsolete members
 };
@@ -171,11 +171,11 @@ partial interface Window {
 
   // viewport scrolling
   void scroll(unrestricted double x, unrestricted double y);
-  void scroll(optional ScrollToOptions options);
+  void scroll(optional ScrollToOptions options = {});
   void scrollTo(unrestricted double x, unrestricted double y);
-  void scrollTo(optional ScrollToOptions options);
+  void scrollTo(optional ScrollToOptions options = {});
   void scrollBy(unrestricted double x, unrestricted double y);
-  void scrollBy(optional ScrollToOptions options);
+  void scrollBy(optional ScrollToOptions options = {});
   // mozScrollSnap is used by chrome to perform scroll snapping after the
   // user performs actions that may affect scroll position
   // mozScrollSnap is deprecated, to be replaced by a web accessible API, such
@@ -243,12 +243,12 @@ partial interface Window {
   /**
    * Method for scrolling this window by a number of lines.
    */
-  void                      scrollByLines(long numLines, optional ScrollOptions options);
+  void                      scrollByLines(long numLines, optional ScrollOptions options = {});
 
   /**
    * Method for scrolling this window by a number of pages.
    */
-  void                      scrollByPages(long numPages, optional ScrollOptions options);
+  void                      scrollByPages(long numPages, optional ScrollOptions options = {});
 
   /**
    * Method for sizing this window to the content in the window.
@@ -547,7 +547,7 @@ Window implements WindowOrWorkerGlobalScope;
 partial interface Window {
   [Throws, Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
   unsigned long requestIdleCallback(IdleRequestCallback callback,
-                                    optional IdleRequestOptions options);
+                                    optional IdleRequestOptions options = {});
   [Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
   void          cancelIdleCallback(unsigned long handle);
 };

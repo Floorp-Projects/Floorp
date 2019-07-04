@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Should not load CORS vtt file when server doesn't respond with correct CORS header</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video preload="none" crossorigin="anonymous">
+  <track src="http://example.com/tests/dom/media/test/video.sjs?name=tests/dom/media/test/basic.vtt&type=text/vtt" kind="subtitles" id="default" default>
+</video>
+<script type="text/javascript">
+/**
+ * This test is used to ensure that we shouldn't load CORS resource if server
+ * doesn't respond with correct CORS header. In this situation, loading should
+ * be expected to fail.
+ */
+async function runTest() {
+  await waitUntiTrackLoadError();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+/**
+ * The following are test helper functions.
+ */
+async function waitUntiTrackLoadError() {
+  const trackElement = document.getElementById("default");
+  if (trackElement.readyState != 3) {
+    info(`wait until receiving error event`);
+    await once(trackElement, "error");
+  }
+  is(trackElement.readyState, 3, "Track::ReadyState should be set to ERROR.");
+  is(trackElement.track.cues.length, 0, "Cue list length should be 0.");
+}
+</script>
+</body>
+</html>

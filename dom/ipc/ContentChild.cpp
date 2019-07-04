@@ -924,7 +924,7 @@ nsresult ContentChild::ProvideWindowCommon(
     Unused << SendCreateWindowInDifferentProcess(
         aTabOpener, aChromeFlags, aCalledFromJS, aPositionSpecified,
         aSizeSpecified, uriToLoad, features, fullZoom, name,
-        Principal(triggeringPrincipal), csp, referrerInfo);
+        triggeringPrincipal, csp, referrerInfo);
 
     // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
     // the window open as far as it is concerned.

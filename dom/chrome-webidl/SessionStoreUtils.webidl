@@ -85,7 +85,7 @@ namespace SessionStoreUtils {
    * @param frame (DOMWindow)
    * @param value (object, see collectScrollPosition())
    */
-  void restoreScrollPosition(Window frame, optional CollectedData data);
+  void restoreScrollPosition(Window frame, optional CollectedData data = {});
 
   /**
    * Collect form data for a given |frame| *not* including any subframes.
@@ -110,7 +110,7 @@ namespace SessionStoreUtils {
    */
   CollectedData? collectFormData(WindowProxy window);
 
-  boolean restoreFormData(Document document, optional CollectedData data);
+  boolean restoreFormData(Document document, optional CollectedData data = {});
 
   /**
    * Updates all sessionStorage "super cookies"

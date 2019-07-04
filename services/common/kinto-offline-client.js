@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.5.0 - 1eae474
+ * Version 12.6.0 - f14a3e6
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -1459,11 +1459,12 @@ function markSynced(record) {
  * @param  {IDBTransactionProxy} transaction The transaction handler.
  * @param  {Object}              remote      The remote change object to import.
  * @param  {Array<String>}       localFields The list of fields that remain local.
+ * @param  {String}              strategy    The {@link Collection.strategy}.
  * @return {Object}
  */
 
 
-function importChange(transaction, remote, localFields) {
+function importChange(transaction, remote, localFields, strategy) {
   const local = transaction.get(remote.id);
 
   if (!local) {
@@ -1482,14 +1483,35 @@ function importChange(transaction, remote, localFields) {
       type: "created",
       data: synced
     };
-  } // Compare local and remote, ignoring local fields.
+  } // Apply remote changes on local record.
 
-
-  const isIdentical = recordsEqual(local, remote, localFields); // Apply remote changes on local record.
 
   const synced = { ...local,
     ...markSynced(remote)
-  }; // Detect or ignore conflicts if record has also been modified locally.
+  }; // With pull only, we don't need to compare records since we override them.
+
+  if (strategy === Collection.strategy.PULL_ONLY) {
+    if (remote.deleted) {
+      transaction.delete(remote.id);
+      return {
+        type: "deleted",
+        data: local
+      };
+    }
+
+    transaction.update(synced);
+    return {
+      type: "updated",
+      data: {
+        old: local,
+        new: synced
+      }
+    };
+  } // With other sync strategies, we detect conflicts,
+  // by comparing local and remote, ignoring local fields.
+
+
+  const isIdentical = recordsEqual(local, remote, localFields); // Detect or ignore conflicts if record has also been modified locally.
 
   if (local._status !== "synced") {
     // Locally deleted, unsynced: scheduled for remote deletion.
@@ -1678,6 +1700,7 @@ class Collection {
     return {
       CLIENT_WINS: "client_wins",
       SERVER_WINS: "server_wins",
+      PULL_ONLY: "pull_only",
       MANUAL: "manual"
     };
   }
@@ -1874,11 +1897,11 @@ class Collection {
       return reject("Record is not an object.");
     }
 
-    if ((options.synced || options.useRecordId) && !record.hasOwnProperty("id")) {
+    if ((options.synced || options.useRecordId) && !Object.prototype.hasOwnProperty.call(record, "id")) {
       return reject("Missing required Id; synced and useRecordId options require one");
     }
 
-    if (!options.synced && !options.useRecordId && record.hasOwnProperty("id")) {
+    if (!options.synced && !options.useRecordId && Object.prototype.hasOwnProperty.call(record, "id")) {
       return reject("Extraneous Id; can't create a record having one set.");
     }
 
@@ -1926,7 +1949,7 @@ class Collection {
       return Promise.reject(new Error("Record is not an object."));
     }
 
-    if (!record.hasOwnProperty("id")) {
+    if (!Object.prototype.hasOwnProperty.call(record, "id")) {
       return Promise.reject(new Error("Cannot update a record missing id."));
     }
 
@@ -1954,7 +1977,7 @@ class Collection {
       return Promise.reject(new Error("Record is not an object."));
     }
 
-    if (!record.hasOwnProperty("id")) {
+    if (!Object.prototype.hasOwnProperty.call(record, "id")) {
       return Promise.reject(new Error("Cannot update a record missing id."));
     }
 
@@ -2112,7 +2135,7 @@ class Collection {
         } = await this.db.execute(transaction => {
           const imports = slice.map(remote => {
             // Store remote change into local database.
-            return importChange(transaction, remote, this.localFields);
+            return importChange(transaction, remote, this.localFields, strategy);
           });
           const conflicts = imports.filter(i => i.type === "conflicts").map(i => i.data);
 
@@ -2432,7 +2455,10 @@ class Collection {
     if (!options.exclude && localSynced && serverChanged && emptyCollection) {
       const e = new ServerWasFlushedError(localSynced, unquoted, "Server has been flushed. Client Side Timestamp: " + localSynced + " Server Side Timestamp: " + unquoted);
       throw e;
-    }
+    } // Atomic updates are not sensible here because unquoted is not
+    // computed as a function of syncResultObject.lastModified.
+    // eslint-disable-next-line require-atomic-updates
+
 
     syncResultObject.lastModified = unquoted; // Decode incoming changes.
 
@@ -2463,7 +2489,7 @@ class Collection {
       return record => {
         const result = hook(payload, this);
         const resultThenable = result && typeof result.then === "function";
-        const resultChanges = result && result.hasOwnProperty("changes");
+        const resultChanges = result && Object.prototype.hasOwnProperty.call(result, "changes");
 
         if (!(resultThenable || resultChanges)) {
           throw new Error(`Invalid return value for hook: ${JSON.stringify(result)} has no 'then()' or 'changes' properties`);
@@ -2688,39 +2714,42 @@ class Collection {
       await this.pullChanges(client, result, options);
       const {
         lastModified
-      } = result; // Fetch local changes
+      } = result;
 
-      const toSync = await this.gatherLocalChanges(); // Publish local changes and pull local resolutions
+      if (options.strategy != Collection.strategy.PULL_ONLY) {
+        // Fetch local changes
+        const toSync = await this.gatherLocalChanges(); // Publish local changes and pull local resolutions
 
-      await this.pushChanges(client, toSync, result, options); // Publish local resolution of push conflicts to server (on CLIENT_WINS)
+        await this.pushChanges(client, toSync, result, options); // Publish local resolution of push conflicts to server (on CLIENT_WINS)
 
-      const resolvedUnsynced = result.resolved.filter(r => r._status !== "synced");
+        const resolvedUnsynced = result.resolved.filter(r => r._status !== "synced");
 
-      if (resolvedUnsynced.length > 0) {
-        const resolvedEncoded = await Promise.all(resolvedUnsynced.map(resolution => {
-          let record = resolution.accepted;
+        if (resolvedUnsynced.length > 0) {
+          const resolvedEncoded = await Promise.all(resolvedUnsynced.map(resolution => {
+            let record = resolution.accepted;
 
-          if (record === null) {
-            record = {
-              id: resolution.id,
-              _status: resolution._status
-            };
-          }
+            if (record === null) {
+              record = {
+                id: resolution.id,
+                _status: resolution._status
+              };
+            }
 
-          return this._encodeRecord("remote", record);
-        }));
-        await this.pushChanges(client, resolvedEncoded, result, options);
-      } // Perform a last pull to catch changes that occured after the last pull,
-      // while local changes were pushed. Do not do it nothing was pushed.
+            return this._encodeRecord("remote", record);
+          }));
+          await this.pushChanges(client, resolvedEncoded, result, options);
+        } // Perform a last pull to catch changes that occured after the last pull,
+        // while local changes were pushed. Do not do it nothing was pushed.
 
 
-      if (result.published.length > 0) {
-        // Avoid redownloading our own changes during the last pull.
-        const pullOpts = { ...options,
-          lastModified,
-          exclude: result.published
-        };
-        await this.pullChanges(client, result, pullOpts);
+        if (result.published.length > 0) {
+          // Avoid redownloading our own changes during the last pull.
+          const pullOpts = { ...options,
+            lastModified,
+            exclude: result.published
+          };
+          await this.pullChanges(client, result, pullOpts);
+        }
       } // Don't persist lastModified value if any conflict or error occured
 
 
@@ -2775,7 +2804,7 @@ class Collection {
     }
 
     for (const record of records) {
-      if (!record.hasOwnProperty("id") || !this.idSchema.validate(record.id)) {
+      if (!Object.prototype.hasOwnProperty.call(record, "id") || !this.idSchema.validate(record.id)) {
         throw new Error("Record has invalid ID: " + JSON.stringify(record));
       }
 
@@ -3032,7 +3061,7 @@ class CollectionTransaction {
       throw new Error("Record is not an object.");
     }
 
-    if (!record.hasOwnProperty("id")) {
+    if (!Object.prototype.hasOwnProperty.call(record, "id")) {
       throw new Error("Cannot create a record missing id");
     }
 
@@ -3073,7 +3102,7 @@ class CollectionTransaction {
       throw new Error("Record is not an object.");
     }
 
-    if (!record.hasOwnProperty("id")) {
+    if (!Object.prototype.hasOwnProperty.call(record, "id")) {
       throw new Error("Cannot update a record missing id.");
     }
 
@@ -3153,7 +3182,7 @@ class CollectionTransaction {
       throw new Error("Record is not an object.");
     }
 
-    if (!record.hasOwnProperty("id")) {
+    if (!Object.prototype.hasOwnProperty.call(record, "id")) {
       throw new Error("Cannot update a record missing id.");
     }
 
@@ -3266,7 +3295,7 @@ function filterObject(filters, entry) {
       return value.some(candidate => candidate === entry[filter]);
     } else if (typeof value === "object") {
       return filterObject(value, entry[filter]);
-    } else if (!entry.hasOwnProperty(filter)) {
+    } else if (!Object.prototype.hasOwnProperty.call(entry, filter)) {
       console.error(`The property ${filter} does not exist`);
       return false;
     }
@@ -3381,7 +3410,7 @@ function makeNestedObjectFromArr(arr, val, nestedFiltersObj) {
   return arr.reduce((acc, cv, i) => {
     if (i === last) {
       return acc[cv] = val;
-    } else if (acc.hasOwnProperty(cv)) {
+    } else if (Object.prototype.hasOwnProperty.call(acc, cv)) {
       return acc[cv];
     } else {
       return acc[cv] = {};

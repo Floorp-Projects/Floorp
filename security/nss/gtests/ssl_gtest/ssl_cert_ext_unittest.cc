@@ -64,8 +64,8 @@ static const uint8_t kSctValue[] = {0x01, 0x23, 0x45, 0x67, 0x89};
 static const SECItem kSctItem = {siBuffer, const_cast<uint8_t*>(kSctValue),
                                  sizeof(kSctValue)};
 static const DataBuffer kSctBuffer(kSctValue, sizeof(kSctValue));
-static const SSLExtraServerCertData kExtraSctData = {ssl_auth_null, nullptr,
-                                                     nullptr, &kSctItem};
+static const SSLExtraServerCertData kExtraSctData = {
+    ssl_auth_null, nullptr, nullptr, &kSctItem, nullptr, nullptr};
 
 // Test timestamps extraction during a successful handshake.
 TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsLegacy) {
@@ -147,8 +147,8 @@ static const SECItem kOcspItems[] = {
     {siBuffer, const_cast<uint8_t*>(kOcspValue2), sizeof(kOcspValue2)}};
 static const SECItemArray kOcspResponses = {const_cast<SECItem*>(kOcspItems),
                                             PR_ARRAY_SIZE(kOcspItems)};
-const static SSLExtraServerCertData kOcspExtraData = {ssl_auth_null, nullptr,
-                                                      &kOcspResponses, nullptr};
+const static SSLExtraServerCertData kOcspExtraData = {
+    ssl_auth_null, nullptr, &kOcspResponses, nullptr, nullptr, nullptr};
 
 TEST_P(TlsConnectGeneric, NoOcsp) {
   EnsureTlsSetup();
@@ -224,7 +224,7 @@ TEST_P(TlsConnectGeneric, OcspHugeSuccess) {
   const SECItemArray hugeOcspResponses = {const_cast<SECItem*>(hugeOcspItems),
                                           PR_ARRAY_SIZE(hugeOcspItems)};
   const SSLExtraServerCertData hugeOcspExtraData = {
-      ssl_auth_null, nullptr, &hugeOcspResponses, nullptr};
+      ssl_auth_null, nullptr, &hugeOcspResponses, nullptr, nullptr, nullptr};
 
   // The value should be available during the AuthCertificateCallback
   client_->SetAuthCertificateCallback([&](TlsAgent* agent, bool checksig,

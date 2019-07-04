@@ -221,6 +221,7 @@ const PREFS_CONFIG = new Map([
   ["discoverystream.config", {
     title: "Configuration for the new pocket new tab",
     getValue: ({geo, locale}) => {
+      // XXX hardcoded_layout only works for en-*, so fix before adding locales
       const locales = ({
         "US": ["en-CA", "en-GB", "en-US", "en-ZA"],
         "CA": ["en-CA", "en-GB", "en-US", "en-ZA"],

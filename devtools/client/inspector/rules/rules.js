@@ -139,6 +139,7 @@ function CssRuleView(inspector, document, store) {
   this.pseudoClassToggle = doc.getElementById("pseudo-class-panel-toggle");
   this.classPanel = doc.getElementById("ruleview-class-panel");
   this.classToggle = doc.getElementById("class-panel-toggle");
+  this.printSimulationButton = doc.getElementById("print-simulation-toggle");
 
   this._initPrintSimulation();
 
@@ -347,8 +348,6 @@ CssRuleView.prototype = {
     // - Not debugging content document.
     if (await this.target.actorHasMethod("emulation", "getIsPrintSimulationEnabled") &&
         !this.target.chrome) {
-      this.printSimulationButton =
-        this.styleDocument.getElementById("print-simulation-toggle");
       this.printSimulationButton.removeAttribute("hidden");
 
       this.printSimulationButton.addEventListener("click", this._onTogglePrintSimulation);

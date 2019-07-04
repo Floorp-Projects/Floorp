@@ -35,5 +35,5 @@ rustc-dist-toolchain:
         arguments: ['rustc']
         toolchain-artifact: public/build/rustc-dist-toolchain.tar.xz
     toolchains:
-        - linux64-rust-macos-1.36
+        - linux64-rust-macos-1.35
         - linux64-sccache

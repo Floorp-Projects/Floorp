@@ -1247,13 +1247,13 @@ RefPtr<SetCDMPromise> MediaDecoder::SetCDMProxy(CDMProxy* aProxy) {
                                        &MediaFormatReader::SetCDMProxy, aProxy);
 }
 
-bool MediaDecoder::IsOpusEnabled() { return StaticPrefs::MediaOpusEnabled(); }
+bool MediaDecoder::IsOpusEnabled() { return StaticPrefs::media_opus_enabled(); }
 
-bool MediaDecoder::IsOggEnabled() { return StaticPrefs::MediaOggEnabled(); }
+bool MediaDecoder::IsOggEnabled() { return StaticPrefs::media_ogg_enabled(); }
 
-bool MediaDecoder::IsWaveEnabled() { return StaticPrefs::MediaWaveEnabled(); }
+bool MediaDecoder::IsWaveEnabled() { return StaticPrefs::media_wave_enabled(); }
 
-bool MediaDecoder::IsWebMEnabled() { return StaticPrefs::MediaWebMEnabled(); }
+bool MediaDecoder::IsWebMEnabled() { return StaticPrefs::media_webm_enabled(); }
 
 NS_IMETHODIMP
 MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,

@@ -5,13 +5,14 @@
 from __future__ import unicode_literals
 
 import os
-from cStringIO import StringIO
+from io import StringIO
+
+from mozunit import main
+from six import string_types
 
 from mach.base import CommandContext
 from mach.registrar import Registrar
 from mach.test.common import TestBase
-
-from mozunit import main
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -26,7 +27,7 @@ class TestDispatcher(TestBase):
             mach.settings.register_provider(provider)
 
         if config:
-            if isinstance(config, basestring):
+            if isinstance(config, string_types):
                 config = StringIO(config)
             mach.settings.load_fps([config])
 

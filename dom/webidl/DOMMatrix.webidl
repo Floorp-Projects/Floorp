@@ -15,7 +15,10 @@
  Exposed=(Window,Worker),
  Serializable]
 interface DOMMatrixReadOnly {
-    [NewObject, Throws] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other);
+    [NewObject, Throws] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other = {});
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
+
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     readonly attribute unrestricted double a;
@@ -58,18 +61,18 @@ interface DOMMatrixReadOnly {
                       optional unrestricted double originX = 0,
                       optional unrestricted double originY = 0,
                       optional unrestricted double originZ = 0);
-    DOMMatrix rotate(unrestricted double angle,
-                     optional unrestricted double originX = 0,
-                     optional unrestricted double originY = 0);
-    DOMMatrix rotateFromVector(unrestricted double x,
-                               unrestricted double y);
-    DOMMatrix rotateAxisAngle(unrestricted double x,
-                              unrestricted double y,
-                              unrestricted double z,
-                              unrestricted double angle);
+    [NewObject] DOMMatrix rotate(optional unrestricted double rotX = 0,
+                                 optional unrestricted double rotY,
+                                 optional unrestricted double rotZ);
+    [NewObject] DOMMatrix rotateFromVector(optional unrestricted double x = 0,
+                                           optional unrestricted double y = 0);
+    [NewObject] DOMMatrix rotateAxisAngle(optional unrestricted double x = 0,
+                                          optional unrestricted double y = 0,
+                                          optional unrestricted double z = 0,
+                                          optional unrestricted double angle = 0);
     DOMMatrix skewX(optional unrestricted double sx = 0);
     DOMMatrix skewY(optional unrestricted double sy = 0);
-    [NewObject, Throws] DOMMatrix multiply(optional DOMMatrixInit other);
+    [NewObject, Throws] DOMMatrix multiply(optional DOMMatrixInit other = {});
     DOMMatrix flipX();
     DOMMatrix flipY();
     DOMMatrix inverse();
@@ -77,7 +80,7 @@ interface DOMMatrixReadOnly {
     // Helper methods
     readonly attribute boolean is2D;
     readonly attribute boolean isIdentity;
-    DOMPoint                   transformPoint(optional DOMPointInit point);
+    DOMPoint                   transformPoint(optional DOMPointInit point = {});
     [Throws] Float32Array      toFloat32Array();
     [Throws] Float64Array      toFloat64Array();
     [Exposed=Window]           stringifier;
@@ -92,9 +95,13 @@ interface DOMMatrixReadOnly {
  Constructor(Float64Array array64),
  Constructor(sequence<unrestricted double> numberSequence),
  Exposed=(Window,Worker),
- Serializable]
+ Serializable,
+ LegacyWindowAlias=WebKitCSSMatrix]
 interface DOMMatrix : DOMMatrixReadOnly {
-    [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
+    [NewObject, Throws] static DOMMatrix fromMatrix(optional DOMMatrixInit other = {});
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
+    [NewObject, Throws] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
+
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     inherit attribute unrestricted double a;
@@ -122,8 +129,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     inherit attribute unrestricted double m44;
 
     // Mutable transform methods
-    [Throws] DOMMatrix multiplySelf(optional DOMMatrixInit other);
-    [Throws] DOMMatrix preMultiplySelf(optional DOMMatrixInit other);
+    [Throws] DOMMatrix multiplySelf(optional DOMMatrixInit other = {});
+    [Throws] DOMMatrix preMultiplySelf(optional DOMMatrixInit other = {});
     DOMMatrix translateSelf(optional unrestricted double tx = 0,
                             optional unrestricted double ty = 0,
                             optional unrestricted double tz = 0);
@@ -137,21 +144,15 @@ interface DOMMatrix : DOMMatrixReadOnly {
                           optional unrestricted double originX = 0,
                           optional unrestricted double originY = 0,
                           optional unrestricted double originZ = 0);
-    DOMMatrix scaleNonUniformSelf(unrestricted double scaleX,
-                                  optional unrestricted double scaleY = 1,
-                                  optional unrestricted double scaleZ = 1,
-                                  optional unrestricted double originX = 0,
-                                  optional unrestricted double originY = 0,
-                                  optional unrestricted double originZ = 0);
-    DOMMatrix rotateSelf(unrestricted double angle,
-                         optional unrestricted double originX = 0,
-                         optional unrestricted double originY = 0);
-    DOMMatrix rotateFromVectorSelf(unrestricted double x,
-                                  unrestricted double y);
-    DOMMatrix rotateAxisAngleSelf(unrestricted double x,
-                                  unrestricted double y,
-                                  unrestricted double z,
-                                  unrestricted double angle);
+    DOMMatrix rotateSelf(optional unrestricted double rotX = 0,
+                         optional unrestricted double rotY,
+                         optional unrestricted double rotZ);
+    DOMMatrix rotateFromVectorSelf(optional unrestricted double x = 0,
+                                   optional unrestricted double y = 0);
+    DOMMatrix rotateAxisAngleSelf(optional unrestricted double x = 0,
+                                  optional unrestricted double y = 0,
+                                  optional unrestricted double z = 0,
+                                  optional unrestricted double angle = 0);
     DOMMatrix skewXSelf(optional unrestricted double sx = 0);
     DOMMatrix skewYSelf(optional unrestricted double sy = 0);
     DOMMatrix invertSelf();

@@ -51,7 +51,7 @@ interface IntlUtils {
    */
   [Throws]
   DisplayNameResult getDisplayNames(sequence<DOMString> locales,
-                                    optional DisplayNameOptions options);
+                                    optional DisplayNameOptions options = {});
 
   /**
    * Helper function to retrieve useful information about a locale.

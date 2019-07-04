@@ -524,5 +524,22 @@ void SetConstructUbiNodeForDOMObjectCallback(JSContext* cx,
   cx->runtime()->constructUbiNodeForDOMObjectCallback = callback;
 }
 
+JS_PUBLIC_API const char* CoarseTypeToString(CoarseType type) {
+  switch (type) {
+    case CoarseType::Other:
+      return "Other";
+    case CoarseType::Object:
+      return "Object";
+    case CoarseType::Script:
+      return "Script";
+    case CoarseType::String:
+      return "String";
+    case CoarseType::DOMNode:
+      return "DOMNode";
+    default:
+      return "Unknown";
+  }
+};
+
 }  // namespace ubi
 }  // namespace JS

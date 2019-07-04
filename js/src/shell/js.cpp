@@ -107,7 +107,6 @@
 #include "js/SweepingAPI.h"
 #include "js/Warnings.h"  // JS::SetWarningReporter
 #include "js/Wrapper.h"
-#include "perf/jsperf.h"
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
@@ -9902,9 +9901,6 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
       return nullptr;
     }
     if (!JS_DefineDebuggerObject(cx, glob)) {
-      return nullptr;
-    }
-    if (!JS::RegisterPerfMeasurement(cx, glob)) {
       return nullptr;
     }
     if (!JS_DefineFunctionsWithHelp(cx, glob, shell_functions) ||

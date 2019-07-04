@@ -261,6 +261,12 @@ DeviceResetReason:
     Reason why a DirectX device has been reset, Windows only.
   type: string
 
+DOMFissionEnabled:
+  description: >
+    Set to 1 when DOM fission is enabled, and subframes are potentially loaded
+    in a separate process.
+  type: boolean
+
 DOMIPCEnabled:
   description: >
     Set to 1 when a tab is running in a content process
@@ -471,6 +477,11 @@ IsGarbageCollecting:
 IsWayland:
   description: >
     If true then the Wayland windowing system was in use.
+  type: boolean
+
+IsWaylandDRM:
+  description: >
+    If true then the Wayland DRM backend was in use.
   type: boolean
 
 JavaStackTrace:

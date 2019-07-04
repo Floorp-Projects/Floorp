@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the confirm-delete-dialog component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the confirm-delete-dialog component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/confirm-delete-dialog.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the confirm-delete-dialog component **/
+
+let cancelButton, confirmButton, gConfirmDeleteDialog;
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  importDependencies(templateFrame, displayEl);
+
+  gConfirmDeleteDialog = document.createElement("confirm-delete-dialog");
+  displayEl.appendChild(gConfirmDeleteDialog);
+  ok(gConfirmDeleteDialog, "The dialog should exist");
+
+  cancelButton = gConfirmDeleteDialog.shadowRoot.querySelector(".cancel-button");
+  confirmButton = gConfirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
+  ok(cancelButton, "The cancel button should exist");
+  ok(confirmButton, "The confirm button should exist");
+});
+
+add_task(async function test_escape_key_to_cancel() {
+  gConfirmDeleteDialog.show();
+  ok(!gConfirmDeleteDialog.hidden, "The dialog should be visible");
+  sendKey("ESCAPE");
+  ok(gConfirmDeleteDialog.hidden, "The dialog should be hidden after hitting Escape");
+  gConfirmDeleteDialog.hide();
+});
+
+add_task(async function test_initial_focus() {
+  gConfirmDeleteDialog.show();
+  ok(!gConfirmDeleteDialog.hidden, "The dialog should be visible");
+  is(gConfirmDeleteDialog.shadowRoot.activeElement, cancelButton,
+     "After initially opening the dialog, the cancel button should be focused");
+  gConfirmDeleteDialog.hide();
+});
+
+add_task(async function test_tab_focus() {
+  gConfirmDeleteDialog.show();
+  ok(!gConfirmDeleteDialog.hidden, "The dialog should be visible");
+  sendKey("TAB");
+  is(gConfirmDeleteDialog.shadowRoot.activeElement, confirmButton,
+     "After opening the dialog and tabbing once, the confirm delete button should be focused");
+  gConfirmDeleteDialog.hide();
+});
+
+add_task(async function test_enter_key_to_cancel() {
+  let showPromise = gConfirmDeleteDialog.show();
+  ok(!gConfirmDeleteDialog.hidden, "The dialog should be visible");
+  sendKey("RETURN");
+  try {
+    await showPromise;
+    ok(false, "The dialog Promise should not resolve after hitting Return with the cancel button focused");
+  } catch (ex) {
+    ok(true, "The dialog Promise should reject after hitting Return with the cancel button focused");
+  }
+});
+
+add_task(async function test_enter_key_to_confirm() {
+  let showPromise = gConfirmDeleteDialog.show();
+  ok(!gConfirmDeleteDialog.hidden, "The dialog should be visible");
+  sendKey("TAB");
+  sendKey("RETURN");
+  try {
+    await showPromise;
+    ok(true, "The dialog Promise should resolve after hitting Return with the confirm button focused");
+  } catch (ex) {
+    ok(false, "The dialog Promise should not reject after hitting Return with the confirm button focused");
+  }
+});
+</script>
+</body>
+</html>

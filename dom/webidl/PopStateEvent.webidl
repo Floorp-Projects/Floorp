@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional PopStateEventInit eventInitDict)]
+[Constructor(DOMString type, optional PopStateEventInit eventInitDict = {})]
 interface PopStateEvent : Event
 {
   readonly attribute any state;

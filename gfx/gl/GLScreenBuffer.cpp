@@ -66,11 +66,11 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
   const bool useANGLE = compositorConnection->GetCompositorUseANGLE();
 
   const bool useGl =
-      !StaticPrefs::WebGLForceLayersReadback() &&
+      !StaticPrefs::webgl_force_layers_readback() &&
       (backend == layers::LayersBackend::LAYERS_OPENGL ||
        (backend == layers::LayersBackend::LAYERS_WR && !useANGLE));
   const bool useD3D =
-      !StaticPrefs::WebGLForceLayersReadback() &&
+      !StaticPrefs::webgl_force_layers_readback() &&
       (backend == layers::LayersBackend::LAYERS_D3D11 ||
        (backend == layers::LayersBackend::LAYERS_WR && useANGLE));
 
@@ -85,7 +85,7 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
     factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel,
                                                    mFlags);
 #elif defined(MOZ_WIDGET_ANDROID)
-    if (XRE_IsParentProcess() && !StaticPrefs::WebGLSurfaceTextureEnabled()) {
+    if (XRE_IsParentProcess() && !StaticPrefs::webgl_enable_surface_texture()) {
       factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
     } else {
       factory =
@@ -114,7 +114,7 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
           SurfaceFactory_ANGLEShareHandle::Create(gl, caps, ipcChannel, flags);
     }
 
-    if (!factory && StaticPrefs::WebGLDXGLEnabled()) {
+    if (!factory && StaticPrefs::webgl_dxgl_enabled()) {
       factory =
           SurfaceFactory_D3D11Interop::Create(gl, caps, ipcChannel, flags);
     }

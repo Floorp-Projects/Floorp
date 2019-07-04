@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {angleUtils} = require("devtools/client/shared/css-angle");
 const {colorUtils} = require("devtools/shared/css/color");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
@@ -30,6 +31,9 @@ const COLOR_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
                                 "-moz-repeating-radial-gradient", "drop-shadow"];
 // Functions that accept a shape argument.
 const BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
+
+const BACKDROP_FILTER_ENABLED =
+  Services.prefs.getBoolPref("layout.css.backdrop-filter.enabled");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -89,7 +93,8 @@ OutputParser.prototype = {
 
     options.expectCubicBezier = this.supportsType(name, "timing-function");
     options.expectDisplay = name === "display";
-    options.expectFilter = name === "filter";
+    options.expectFilter = name === "filter" ||
+                           (BACKDROP_FILTER_ENABLED && name === "backdrop-filter");
     options.expectShape = name === "clip-path" || name === "shape-outside";
     options.expectFont = name === "font-family";
     options.supportsColor = this.supportsType(name, "color") ||

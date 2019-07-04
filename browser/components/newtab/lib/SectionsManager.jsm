@@ -19,13 +19,19 @@ const BUILT_IN_SECTIONS = {
   "feeds.section.topstories": options => ({
     id: "topstories",
     pref: {
-      titleString: {id: "header_recommended_by", values: {provider: options.provider_name}},
-      descString: {id: "prefs_topstories_description2"},
+      titleString: {id: "home-prefs-recommended-by-header", values: {provider: options.provider_name} },
+      descString: {id: "home-prefs-recommended-by-description"},
       nestedPrefs: options.show_spocs ? [{
         name: "showSponsored",
-        titleString: "prefs_topstories_options_sponsored_label",
+        titleString: "home-prefs-recommended-by-option-sponsored-stories",
         icon: "icon-info",
       }] : [],
+      learnMore: {
+        link: {
+          href: "https://getpocket.com/firefox/new_tab_learn_more",
+          id: "home-prefs-recommended-by-learn-more",
+        },
+      },
     },
     shouldHidePref: options.hidden,
     eventSource: "TOP_STORIES",
@@ -35,7 +41,6 @@ const BUILT_IN_SECTIONS = {
       link: {
         href: "https://getpocket.com/firefox/new_tab_learn_more",
         message: {id: "newtab-pocket-how-it-works"},
-        id: "pocket_how_it_works",
       },
     },
     privacyNoticeURL: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
@@ -53,20 +58,20 @@ const BUILT_IN_SECTIONS = {
   "feeds.section.highlights": options => ({
     id: "highlights",
     pref: {
-      titleString: {id: "settings_pane_highlights_header"},
-      descString: {id: "prefs_highlights_description"},
+      titleString: {id: "home-prefs-highlights-header"},
+      descString: {id: "home-prefs-highlights-description"},
       nestedPrefs: [{
         name: "section.highlights.includeVisited",
-        titleString: "prefs_highlights_options_visited_label",
+        titleString: "home-prefs-highlights-option-visited-pages",
       }, {
         name: "section.highlights.includeBookmarks",
-        titleString: "settings_pane_highlights_options_bookmarks",
+        titleString: "home-prefs-highlights-options-bookmarks",
       }, {
         name: "section.highlights.includeDownloads",
-        titleString: "prefs_highlights_options_download_label",
+        titleString: "home-prefs-highlights-option-most-recent-download",
       }, {
         name: "section.highlights.includePocket",
-        titleString: "prefs_highlights_options_pocket_label",
+        titleString: "home-prefs-highlights-option-saved-to-pocket",
       }],
     },
     shouldHidePref:  false,

@@ -10,6 +10,7 @@
 #define mozilla_SmallPointerArray_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/PodOperations.h"
 
 #include <algorithm>
 #include <iterator>
@@ -19,7 +20,7 @@
 namespace mozilla {
 
 // Array class for situations where a small number of NON-NULL elements (<= 2)
-// is expected, a large number of elements must be accomodated if necessary,
+// is expected, a large number of elements must be accommodated if necessary,
 // and the size of the class must be minimal. Typical vector implementations
 // will fulfill the first two requirements by simply adding inline storage
 // alongside the rest of their member variables. While this strategy works,
@@ -47,6 +48,17 @@ class SmallPointerArray {
     if (!first()) {
       delete maybeVector();
     }
+  }
+
+  SmallPointerArray(SmallPointerArray&& aOther) {
+    PodCopy(mArray, aOther.mArray, 2);
+    aOther.mArray[0].mValue = nullptr;
+    aOther.mArray[1].mVector = nullptr;
+  }
+
+  SmallPointerArray& operator=(SmallPointerArray&& aOther) {
+    std::swap(mArray, aOther.mArray);
+    return *this;
   }
 
   void Clear() {
@@ -159,6 +171,8 @@ class SmallPointerArray {
 
     return 0;
   }
+
+  bool IsEmpty() const { return Length() == 0; }
 
   T* ElementAt(size_t aIndex) const {
     MOZ_ASSERT(aIndex < Length());

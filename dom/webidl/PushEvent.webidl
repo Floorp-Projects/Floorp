@@ -7,7 +7,7 @@
  * https://w3c.github.io/push-api/
  */
 
-[Constructor(DOMString type, optional PushEventInit eventInitDict),
+[Constructor(DOMString type, optional PushEventInit eventInitDict = {}),
  Pref="dom.push.enabled",
  Exposed=ServiceWorker]
 interface PushEvent : ExtendableEvent {

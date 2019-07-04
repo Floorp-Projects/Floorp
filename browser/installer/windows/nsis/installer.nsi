@@ -153,6 +153,11 @@ ShowInstDetails nevershow
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
 !define MUI_WELCOMEFINISHPAGE_BITMAP wizWatermark.bmp
+; By default MUI_BGCOLOR is hardcoded to FFFFFF, which is only correct if the
+; Windows theme or high-contrast mode hasn't changed it, so we need to
+; override that with GetSysColor(COLOR_WINDOW) (this string ends up getting
+; passed to SetCtlColors, which uses this custom syntax to mean that).
+!define MUI_BGCOLOR SYSCLR:WINDOW
 
 ; Use a right to left header image when the language is right to left
 !ifdef ${AB_CD}_rtl
@@ -166,6 +171,7 @@ ShowInstDetails nevershow
  */
 ; Welcome Page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE preWelcome
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW showWelcome
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE leaveWelcome
 !insertmacro MUI_PAGE_WELCOME
 
@@ -203,6 +209,7 @@ Page custom preSummary leaveSummary
 !define MUI_FINISHPAGE_RUN_FUNCTION LaunchApp
 !define MUI_FINISHPAGE_RUN_TEXT $(LAUNCH_TEXT)
 !define MUI_PAGE_CUSTOMFUNCTION_PRE preFinish
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW showFinish
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE postFinish
 !insertmacro MUI_PAGE_FINISH
 
@@ -1152,6 +1159,17 @@ Function preWelcome
   Pop $IntroPhaseStart
 FunctionEnd
 
+Function showWelcome
+  ; The welcome and finish pages don't get the correct colors for their labels
+  ; like the other pages do, presumably because they're built by filling in an
+  ; InstallOptions .ini file instead of from a dialog resource like the others.
+  ; Field 2 is the header and Field 3 is the body text.
+  ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 2" "HWND"
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+  ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 3" "HWND"
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+FunctionEnd
+
 Function leaveWelcome
   ; Bring back the header bitmap for the next pages.
   GetDlgItem $0 $HWNDPARENT 1046
@@ -1161,6 +1179,13 @@ FunctionEnd
 Function preOptions
   System::Call "kernel32::GetTickCount()l .s"
   Pop $OptionsPhaseStart
+
+  ; The header and subheader on the wizard pages don't get the correct text
+  ; color by default for some reason, even though the other controls do.
+  GetDlgItem $0 $HWNDPARENT 1037
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+  GetDlgItem $0 $HWNDPARENT 1038
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
 
   StrCpy $PageName "Options"
   ${If} ${FileExists} "$EXEDIR\core\distribution\modern-header.bmp"
@@ -1517,6 +1542,20 @@ Function preFinish
   ; We don't want the header bitmap showing on the finish page.
   GetDlgItem $0 $HWNDPARENT 1046
   ShowWindow $0 ${SW_HIDE}
+FunctionEnd
+
+Function showFinish
+  ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 2" "HWND"
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+
+  ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 3" "HWND"
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
+
+  ; Field 4 is the launch checkbox. Since it's a checkbox, we need to
+  ; clear the theme from it before we can set its background color.
+  ReadINIStr $0 "$PLUGINSDIR\ioSpecial.ini" "Field 4" "HWND"
+  System::Call 'uxtheme::SetWindowTheme(i $0, w " ", w " ")'
+  SetCtlColors $0 SYSCLR:WINDOWTEXT SYSCLR:WINDOW
 FunctionEnd
 
 Function postFinish

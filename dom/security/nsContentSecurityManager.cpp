@@ -826,10 +826,14 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
   }
 
   // FIXME The discovery feature in about:addons uses the SystemPrincpal.
-  // We should remove this exception with bug 1544011.
+  // We should remove the exception for AMO with bug 1544011.
+  // We should remove the exception for Firefox Accounts with bug 1561310.
   static nsAutoCString sDiscoveryPrePath;
-  static bool recvdPrefValue = false;
-  if (!recvdPrefValue) {
+#  ifdef ANDROID
+  static nsAutoCString sFxaSPrePath;
+#  endif
+  static bool recvdPrefValues = false;
+  if (!recvdPrefValues) {
     nsAutoCString discoveryURLString;
     Preferences::GetCString("extensions.webservice.discoverURL",
                             discoveryURLString);
@@ -840,14 +844,29 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
     if (discoveryURL) {
       discoveryURL->GetPrePath(sDiscoveryPrePath);
     }
-    recvdPrefValue = true;
+#  ifdef ANDROID
+    nsAutoCString fxaURLString;
+    Preferences::GetCString("identity.fxaccounts.remote.webchannel.uri",
+                            fxaURLString);
+    nsCOMPtr<nsIURI> fxaURL;
+    NS_NewURI(getter_AddRefs(fxaURL), fxaURLString);
+    if (fxaURL) {
+      fxaURL->GetPrePath(sFxaSPrePath);
+    }
+#  endif
+    recvdPrefValues = true;
   }
   nsAutoCString requestedPrePath;
   finalURI->GetPrePath(requestedPrePath);
+
   if (requestedPrePath.Equals(sDiscoveryPrePath)) {
     return;
   }
-
+#  ifdef ANDROID
+  if (requestedPrePath.Equals(sFxaSPrePath)) {
+    return;
+  }
+#  endif
   if (xpc::AreNonLocalConnectionsDisabled()) {
     bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
         "security.disallow_non_local_systemprincipal_in_tests");

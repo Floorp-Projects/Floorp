@@ -32,7 +32,7 @@ ChromiumCDMParent::ChromiumCDMParent(GMPContentParent* aContentParent,
                                      uint32_t aPluginId)
     : mPluginId(aPluginId),
       mContentParent(aContentParent),
-      mVideoShmemLimit(StaticPrefs::MediaEmeChromiumApiVideoShmems()) {
+      mVideoShmemLimit(StaticPrefs::media_eme_chromium_api_video_shmems()) {
   GMP_LOG(
       "ChromiumCDMParent::ChromiumCDMParent(this=%p, contentParent=%p, id=%u)",
       this, aContentParent, aPluginId);

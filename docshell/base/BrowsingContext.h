@@ -380,6 +380,9 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   bool IsActive() const;
 
+  // Removes the context from its group and sets mIsDetached to true.
+  void Unregister();
+
   friend class ::nsOuterWindowProxy;
   friend class ::nsGlobalWindowOuter;
   // Update the window proxy object that corresponds to this browsing context.
@@ -461,6 +464,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // process? This may be true with a null mDocShell after the Window has been
   // closed.
   bool mIsInProcess : 1;
+
+  // Has this browsing context been discarded? BrowsingContexts should
+  // only be discarded once.
+  bool mIsDiscarded : 1;
 };
 
 /**

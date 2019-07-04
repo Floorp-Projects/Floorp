@@ -388,7 +388,7 @@ impl RenderTaskGraph {
     }
 
     pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, not(feature = "replay")))]
         debug_assert_eq!(self.frame_id, id.frame_id);
         RenderTaskAddress(id.index as u16)
     }
@@ -414,7 +414,7 @@ impl RenderTaskGraph {
 impl ops::Index<RenderTaskId> for RenderTaskGraph {
     type Output = RenderTask;
     fn index(&self, id: RenderTaskId) -> &RenderTask {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, not(feature = "replay")))]
         debug_assert_eq!(self.frame_id, id.frame_id);
         &self.tasks[id.index as usize]
     }
@@ -422,7 +422,7 @@ impl ops::Index<RenderTaskId> for RenderTaskGraph {
 
 impl ops::IndexMut<RenderTaskId> for RenderTaskGraph {
     fn index_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, not(feature = "replay")))]
         debug_assert_eq!(self.frame_id, id.frame_id);
         &mut self.tasks[id.index as usize]
     }

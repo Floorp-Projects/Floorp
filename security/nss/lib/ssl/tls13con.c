@@ -24,6 +24,7 @@
 #include "tls13esni.h"
 #include "tls13exthandle.h"
 #include "tls13hashstate.h"
+#include "tls13subcerts.h"
 
 static SECStatus tls13_SetCipherSpec(sslSocket *ss, PRUint16 epoch,
                                      SSLSecretDirection install,
@@ -1589,6 +1590,20 @@ tls13_SelectServerCert(sslSocket *ss)
         if (rv == SECSuccess) {
             /* Found one. */
             ss->sec.serverCert = cert;
+
+            /* If we can use a delegated credential (DC) for authentication in
+             * the current handshake, then commit to using it now. We'll send a
+             * DC as an extension and use the DC private key to sign the
+             * handshake.
+             *
+             * This sets the signature scheme to be the signature scheme
+             * indicated by the DC.
+             */
+            rv = tls13_MaybeSetDelegatedCredential(ss);
+            if (rv != SECSuccess) {
+                return SECFailure; /* Failure indicates an internal error. */
+            }
+
             ss->sec.authType = ss->ssl3.hs.kea_def_mutable.authKeyType =
                 ssl_SignatureSchemeToAuthType(ss->ssl3.hs.signatureScheme);
             ss->sec.authKeyBits = cert->serverKeyBits;
@@ -2620,7 +2635,14 @@ tls13_SendEncryptedServerSequence(sslSocket *ss)
             return SECFailure; /* error code is set. */
         }
 
-        svrPrivKey = ss->sec.serverCert->serverKeyPair->privKey;
+        if (tls13_IsSigningWithDelegatedCredential(ss)) {
+            SSL_TRC(3, ("%d: TLS13[%d]: Signing with delegated credential",
+                        SSL_GETPID(), ss->fd));
+            svrPrivKey = ss->sec.serverCert->delegCredKeyPair->privKey;
+        } else {
+            svrPrivKey = ss->sec.serverCert->serverKeyPair->privKey;
+        }
+
         rv = tls13_SendCertificateVerify(ss, svrPrivKey);
         if (rv != SECSuccess) {
             return SECFailure; /* err code is set. */
@@ -4120,6 +4142,8 @@ done:
 SECStatus
 tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
+    sslDelegatedCredential *dc = ss->xtnData.peerDelegCred;
+    CERTSubjectPublicKeyInfo *spki = NULL;
     SECItem signed_hash = { siBuffer, NULL, 0 };
     SECStatus rv;
     SSLSignatureScheme sigScheme;
@@ -4159,7 +4183,38 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
         return SECFailure;
     }
 
-    rv = ssl_CheckSignatureSchemeConsistency(ss, sigScheme, ss->sec.peerCert);
+    /* Set the |spki| used to verify the handshake. When verifying with a
+     * delegated credential (DC), this corresponds to the DC public key;
+     * otherwise it correspond to the public key of the peer's end-entity
+     * certificate.
+     */
+    if (tls13_IsVerifyingWithDelegatedCredential(ss)) {
+        /* DelegatedCredential.cred.expected_cert_verify_algorithm is expected
+         * to match CertificateVerify.scheme.
+         */
+        if (sigScheme != dc->expectedCertVerifyAlg) {
+            FATAL_ERROR(ss, SSL_ERROR_DC_CERT_VERIFY_ALG_MISMATCH, illegal_parameter);
+            return SECFailure;
+        }
+
+        /* Verify the DC has three steps: (1) use the peer's end-entity
+         * certificate to verify DelegatedCredential.signature, (2) check that
+         * the certificate has the correct key usage, and (3) check that the DC
+         * hasn't expired.
+         */
+        rv = tls13_VerifyDelegatedCredential(ss, dc);
+        if (rv != SECSuccess) { /* Calls FATAL_ERROR() */
+            return SECFailure;
+        }
+
+        SSL_TRC(3, ("%d: TLS13[%d]: Verifying with delegated credential",
+                    SSL_GETPID(), ss->fd));
+        spki = dc->spki;
+    } else {
+        spki = &ss->sec.peerCert->subjectPublicKeyInfo;
+    }
+
+    rv = ssl_CheckSignatureSchemeConsistency(ss, sigScheme, spki);
     if (rv != SECSuccess) {
         /* Error set already */
         FATAL_ERROR(ss, PORT_GetError(), illegal_parameter);
@@ -4184,7 +4239,8 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
         return SECFailure;
     }
 
-    rv = ssl3_VerifySignedHashes(ss, sigScheme, &tbsHash, &signed_hash);
+    rv = ssl3_VerifySignedHashesWithSpki(
+        ss, spki, sigScheme, &tbsHash, &signed_hash);
     if (rv != SECSuccess) {
         FATAL_ERROR(ss, PORT_GetError(), decrypt_error);
         return SECFailure;
@@ -5138,6 +5194,7 @@ static const struct {
                                          certificate) },
     { ssl_cert_status_xtn, _M3(client_hello, certificate_request,
                                certificate) },
+    { ssl_delegated_credentials_xtn, _M2(client_hello, certificate) },
     { ssl_tls13_cookie_xtn, _M2(client_hello, hello_retry_request) },
     { ssl_tls13_certificate_authorities_xtn, _M1(certificate_request) },
     { ssl_tls13_supported_versions_xtn, _M3(client_hello, server_hello,

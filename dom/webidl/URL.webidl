@@ -12,7 +12,8 @@
  */
 
 [Constructor(USVString url, optional USVString base),
- Exposed=(Window,Worker,WorkerDebugger)]
+ Exposed=(Window,Worker,WorkerDebugger),
+ LegacyWindowAlias=webkitURL]
 interface URL {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute USVString href;

@@ -971,19 +971,25 @@ var ContentBlocking = {
     this.identityPopupMultiView.goBack();
   },
 
-  submitBreakageReport() {
+  onSubmitBreakageReportClicked() {
     this.identityPopup.hidePopup();
 
+    let comments = document.getElementById(
+      "identity-popup-breakageReportView-collection-comments");
+    this.submitBreakageReport(this.reportURI, comments);
+  },
+
+  submitBreakageReport(uri, commentsTextarea) {
     let reportEndpoint = Services.prefs.getStringPref(this.PREF_REPORT_BREAKAGE_URL);
     if (!reportEndpoint) {
       return;
     }
 
     let formData = new FormData();
-    formData.set("title", this.reportURI.host);
+    formData.set("title", uri.host);
 
     // Leave the ? at the end of the URL to signify that this URL had its query stripped.
-    let urlWithoutQuery = this.reportURI.asciiSpec.replace(this.reportURI.query, "");
+    let urlWithoutQuery = uri.asciiSpec.replace(uri.query, "");
     let body = `Full URL: ${urlWithoutQuery}\n`;
     body += `userAgent: ${navigator.userAgent}\n`;
 
@@ -995,12 +1001,12 @@ var ContentBlocking = {
     body += `network.http.referer.defaultPolicy.pbmode: ${Services.prefs.getIntPref("network.http.referer.defaultPolicy.pbmode")}\n`;
     body += `${ThirdPartyCookies.PREF_ENABLED}: ${Services.prefs.getIntPref(ThirdPartyCookies.PREF_ENABLED)}\n`;
     body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref("network.cookie.lifetimePolicy")}\n`;
+    body += `privacy.annotate_channels.strict_list.enabled: ${Services.prefs.getBoolPref("privacy.annotate_channels.strict_list.enabled")}\n`;
     body += `privacy.restrict3rdpartystorage.expiration: ${Services.prefs.getIntPref("privacy.restrict3rdpartystorage.expiration")}\n`;
     body += `${Fingerprinting.PREF_ENABLED}: ${Services.prefs.getBoolPref(Fingerprinting.PREF_ENABLED)}\n`;
     body += `${Cryptomining.PREF_ENABLED}: ${Services.prefs.getBoolPref(Cryptomining.PREF_ENABLED)}\n`;
 
-    let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
-    body += "\n**Comments**\n" + comments.value;
+    body += "\n**Comments**\n" + commentsTextarea.value;
 
     formData.set("body", body);
 
@@ -1024,7 +1030,7 @@ var ContentBlocking = {
         Cu.reportError(`Content Blocking report to ${reportEndpoint} failed with status ${response.status}`);
       } else {
         // Clear the textarea value when the report is submitted
-        comments.value = "";
+        commentsTextarea.value = "";
       }
     }).catch(Cu.reportError);
   },

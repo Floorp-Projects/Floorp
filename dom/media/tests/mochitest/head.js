@@ -423,8 +423,7 @@ function setupEnvironment() {
       ['media.getusermedia.audiocapture.enabled', true],
       ['media.getusermedia.screensharing.enabled', true],
       ['media.getusermedia.window.focus_source.enabled', false],
-      ['media.recorder.audio_node.enabled', true],
-      ['media.webaudio.audiocontextoptions-samplerate.enabled', true]
+      ['media.recorder.audio_node.enabled', true]
     ]
   };
 

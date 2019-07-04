@@ -43,7 +43,6 @@ add_task(async function test_telemetry_events() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(".copy-username-button");
-    copyButton = copyButton.shadowRoot.querySelector(".copy-button");
     copyButton.click();
   });
   await waitForTelemetryEventCount(2);
@@ -51,7 +50,6 @@ add_task(async function test_telemetry_events() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(".copy-password-button");
-    copyButton = copyButton.shadowRoot.querySelector(".copy-button");
     copyButton.click();
   });
   await waitForTelemetryEventCount(3);
@@ -108,6 +106,9 @@ add_task(async function test_telemetry_events() {
     let loginItem = content.document.querySelector("login-item");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
+    let confirmDeleteDialog = content.document.querySelector("confirm-delete-dialog");
+    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
+    confirmDeleteButton.click();
   });
   await waitForTelemetryEventCount(10);
 

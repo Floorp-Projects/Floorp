@@ -76,7 +76,7 @@ namespace console {
   const boolean IS_NATIVE_CONSOLE = true;
 
   [ChromeOnly, NewObject]
-  ConsoleInstance createInstance(optional ConsoleInstanceOptions options);
+  ConsoleInstance createInstance(optional ConsoleInstanceOptions options = {});
 };
 
 // This is used to propagate console events to the observers.

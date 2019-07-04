@@ -32,7 +32,7 @@ interface PeerConnectionObserver
   void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate, DOMString ufrag);
 
   /* Stats callbacks */
-  void onGetStatsSuccess(optional RTCStatsReportInternal report);
+  void onGetStatsSuccess(optional RTCStatsReportInternal report = {});
   void onGetStatsError(DOMString message);
 
   /* Data channel callbacks */

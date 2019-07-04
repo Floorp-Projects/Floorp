@@ -21,6 +21,11 @@ body {
   margin: auto;
 }
 
+/* The comment at the top of aboutMemory.xhtml explains this font choice. */
+pre {
+  font-family: Fira Mono, DejaVu Sans Mono, Liberation Mono, monospace;
+}
+
 div.ancillary {
   margin: 0.5em 0;
   -moz-user-select: none;

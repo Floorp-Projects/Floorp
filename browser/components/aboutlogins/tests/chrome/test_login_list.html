@@ -7,6 +7,7 @@ Test the login-list component
   <meta charset="utf-8">
   <title>Test the login-list component</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
   <script src="aboutlogins_common.js"></script>
 
@@ -57,10 +58,6 @@ const TEST_LOGIN_3 = {
 };
 
 add_task(async function setup() {
-  stubFluentL10n({
-    "count": "count",
-  });
-
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);
@@ -74,17 +71,68 @@ add_task(async function test_empty_list() {
   is(gLoginList.textContent, "", "Initially empty");
 });
 
+add_task(async function test_keyboard_navigation() {
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2, TEST_LOGIN_3]);
+
+  while (document.activeElement != gLoginList) {
+    sendKey("TAB");
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  sendKey("TAB");
+  sendKey("TAB");
+  let loginSort = gLoginList.shadowRoot.querySelector("#login-sort");
+  await SimpleTest.promiseWaitForCondition(() => loginSort == gLoginList.shadowRoot.activeElement,
+    "waiting for login-sort to get focus");
+  ok(loginSort == gLoginList.shadowRoot.activeElement, "#login-sort should be focused after tabbing to it");
+
+  sendKey("TAB");
+  let ol = gLoginList.shadowRoot.querySelector("ol");
+  await SimpleTest.promiseWaitForCondition(() => ol.matches(":focus"),
+    "waiting for 'ol' to get focus");
+  ok(ol.matches(":focus"), "'ol' should be focused after tabbing to it");
+
+  for (let [keyFwd, keyRev] of [["LEFT", "RIGHT"], ["DOWN", "UP"]]) {
+    sendKey(keyFwd);
+    await SimpleTest.promiseWaitForCondition(() => ol.getAttribute("aria-activedescendant") == ol.children[1].id,
+      `waiting for second item in list to get focused (${keyFwd})`);
+    ok(ol.children[1].classList.contains("keyboard-selected"), `second item should be marked as keyboard-selected (${keyFwd})`);
+
+    sendKey(keyRev);
+    await SimpleTest.promiseWaitForCondition(() => ol.getAttribute("aria-activedescendant") == ol.children[0].id,
+      `waiting for first item in list to get focused (${keyRev})`);
+    ok(ol.children[0].classList.contains("keyboard-selected"), `first item should be marked as keyboard-selected (${keyRev})`);
+  }
+
+  sendKey("DOWN");
+  await SimpleTest.promiseWaitForCondition(() => ol.getAttribute("aria-activedescendant") == ol.children[1].id,
+    `waiting for second item in list to get focused (DOWN)`);
+  ok(ol.children[1].classList.contains("keyboard-selected"), `second item should be marked as keyboard-selected (DOWN)`);
+  let selectedGuid = ol.children[1].dataset.guid;
+
+  let loginSelectedEvent = null;
+  gLoginList.addEventListener("AboutLoginsLoginSelected", event => loginSelectedEvent = event, {once: true});
+  sendKey("RETURN");
+  is(ol.querySelector(".selected").dataset.guid, selectedGuid, "item should be marked as selected");
+  ok(loginSelectedEvent, "AboutLoginsLoginSelected event should be dispatched on pressing Enter");
+  is(loginSelectedEvent.detail.guid, selectedGuid, "event should have expected login attached");
+});
+
 add_task(async function test_empty_login_username_in_list() {
+  // Clear the selection so the 'new' login will be in the list too.
+  window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
+    detail: {},
+  }));
+
   gLoginList.setLogins([TEST_LOGIN_3]);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems.length, 2, "A blank login and the one stored login should be displayed");
   ok(!loginListItems[0].dataset.guid, "first login-list-item should be the 'new' item");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_3.guid, "login-list-item should have correct guid attribute");
 
-  loginListItems[1].setAttribute("missing-username", "(no username)");
   loginListItems[1].render();
   let loginUsername = loginListItems[1].shadowRoot.querySelector(".username");
-  is(loginUsername.textContent, "(no username)", "login should show missing username text");
+  is(loginUsername.getAttribute("data-l10n-id"), "login-list-item-subtitle-missing-username", "login should show missing username text");
 });
 
 add_task(async function test_populated_list() {
@@ -110,12 +158,12 @@ add_task(async function test_populated_list() {
 add_task(async function test_filtered_list() {
   is(gLoginList.shadowRoot.querySelectorAll("login-list-item:not([hidden])").length, 2, "Both logins should be visible");
   let countSpan = gLoginList.shadowRoot.querySelector(".count");
-  is(countSpan.textContent, "2", "Count should match full list length");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match full list length");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
     detail: "user1",
   }));
-  is(countSpan.textContent, "1", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
   let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, "user1", "user1 is expected first");
   ok(!loginListItems[0].hidden, "user1 should remain visible");
@@ -124,7 +172,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "user2",
   }));
-  is(countSpan.textContent, "1", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -132,7 +180,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "user",
   }));
-  is(countSpan.textContent, "2", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match result amount");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -140,7 +188,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "foo",
   }));
-  is(countSpan.textContent, "0", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(loginListItems[1].hidden, "user2 should be hidden");
@@ -148,7 +196,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "",
   }));
-  is(countSpan.textContent, "2", "Count should be reset to full list length");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should be reset to full list length");
   loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -195,13 +243,13 @@ add_task(async function test_login_removed() {
 
 add_task(async function test_login_added_filtered() {
   let countSpan = gLoginList.shadowRoot.querySelector(".count");
-  is(countSpan.textContent, "2", "Count should match full list length");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match full list length");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     bubbles: true,
     composed: true,
     detail: "user1",
   }));
-  is(countSpan.textContent, "1", "Count should match result amount");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
 
   let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
   gLoginList.loginAdded(newLogin);
@@ -214,7 +262,7 @@ add_task(async function test_login_added_filtered() {
   ok(!loginListItems[0].hidden, "login-list-item1 should be visible");
   ok(loginListItems[1].hidden, "login-list-item2 should be hidden");
   ok(loginListItems[2].hidden, "login-list-item3 should be hidden");
-  is(countSpan.textContent, "1", "Count should remain unchanged");
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should remain unchanged");
 });
 
 add_task(async function test_sorted_list() {

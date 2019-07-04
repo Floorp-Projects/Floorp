@@ -474,7 +474,7 @@ def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
     def filter(task):
         # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
         # uploaded
-        return task.kind == 'beetmover-geckoview'
+        return task.kind in ('beetmover-geckoview', 'upload-symbols')
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 

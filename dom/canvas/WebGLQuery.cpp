@@ -116,7 +116,7 @@ void WebGLQuery::GetQueryParameter(GLenum pname,
 
   // We must usually wait for an event loop before the query can be available.
   const bool canBeAvailable =
-      (mCanBeAvailable || StaticPrefs::WebGLImmediateQueries());
+      (mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
     if (pname == LOCAL_GL_QUERY_RESULT_AVAILABLE) {
       retval.set(JS::BooleanValue(false));

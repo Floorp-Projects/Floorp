@@ -11,7 +11,7 @@ dictionary TestInterfaceJSUnionableDictionary {
 
 [JSImplementation="@mozilla.org/dom/test-interface-js;1",
  Pref="dom.expose_test_interfaces",
- Constructor(optional any anyArg, optional object objectArg, optional TestInterfaceJSDictionary dictionaryArg)]
+ Constructor(optional any anyArg, optional object objectArg, optional TestInterfaceJSDictionary dictionaryArg = {})]
 interface TestInterfaceJS : EventTarget {
   readonly attribute any anyArg;
   readonly attribute object objectArg;
@@ -19,12 +19,12 @@ interface TestInterfaceJS : EventTarget {
   attribute any anyAttr;
   attribute object objectAttr;
   TestInterfaceJSDictionary getDictionaryAttr();
-  void setDictionaryAttr(optional TestInterfaceJSDictionary dict);
+  void setDictionaryAttr(optional TestInterfaceJSDictionary dict = {});
   any pingPongAny(any arg);
   object pingPongObject(object obj);
   any pingPongObjectOrString((object or DOMString) objOrString);
-  TestInterfaceJSDictionary pingPongDictionary(optional TestInterfaceJSDictionary dict);
-  long pingPongDictionaryOrLong(optional (TestInterfaceJSUnionableDictionary or long) dictOrLong);
+  TestInterfaceJSDictionary pingPongDictionary(optional TestInterfaceJSDictionary dict = {});
+  long pingPongDictionaryOrLong(optional (TestInterfaceJSUnionableDictionary or long) dictOrLong = {});
   DOMString pingPongRecord(record<DOMString, any> rec);
   long objectSequenceLength(sequence<object> seq);
   long anySequenceLength(sequence<any> seq);

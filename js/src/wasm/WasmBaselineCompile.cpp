@@ -6855,17 +6855,18 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   void emitAtomicXchg64(MemoryAccessDesc* access, ValType type,
                         WantResult wantResult);
-#ifdef ENABLE_WASM_BULKMEM_OPS
+  MOZ_MUST_USE bool bulkmemOpsEnabled();
   MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
   MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
   MOZ_MUST_USE bool emitMemFill();
   MOZ_MUST_USE bool emitMemOrTableInit(bool isMem);
-#endif
+#ifdef ENABLE_WASM_REFTYPES
   MOZ_MUST_USE bool emitTableFill();
   MOZ_MUST_USE bool emitTableGet();
   MOZ_MUST_USE bool emitTableGrow();
   MOZ_MUST_USE bool emitTableSet();
   MOZ_MUST_USE bool emitTableSize();
+#endif
   MOZ_MUST_USE bool emitStructNew();
   MOZ_MUST_USE bool emitStructGet();
   MOZ_MUST_USE bool emitStructSet();
@@ -10198,8 +10199,21 @@ bool BaseCompiler::emitWake() {
   return emitInstanceCall(lineOrBytecode, SASigWake);
 }
 
-#ifdef ENABLE_WASM_BULKMEM_OPS
+// Bulk memory must be available if shared memory is enabled.
+bool BaseCompiler::bulkmemOpsEnabled() {
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (env_.sharedMemoryEnabled == Shareable::False) {
+    return iter_.fail("bulk memory ops disabled");
+  }
+#endif
+  return true;
+}
+
 bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
+  if (!bulkmemOpsEnabled()) {
+    return false;
+  }
+
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t dstMemOrTableIndex = 0;
@@ -10234,6 +10248,10 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
 }
 
 bool BaseCompiler::emitDataOrElemDrop(bool isData) {
+  if (!bulkmemOpsEnabled()) {
+    return false;
+  }
+
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t segIndex = 0;
@@ -10254,6 +10272,10 @@ bool BaseCompiler::emitDataOrElemDrop(bool isData) {
 }
 
 bool BaseCompiler::emitMemFill() {
+  if (!bulkmemOpsEnabled()) {
+    return false;
+  }
+
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Nothing nothing;
@@ -10270,6 +10292,10 @@ bool BaseCompiler::emitMemFill() {
 }
 
 bool BaseCompiler::emitMemOrTableInit(bool isMem) {
+  if (!bulkmemOpsEnabled()) {
+    return false;
+  }
+
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t segIndex = 0;
@@ -10300,8 +10326,8 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
 
   return true;
 }
-#endif
 
+#ifdef ENABLE_WASM_REFTYPES
 MOZ_MUST_USE
 bool BaseCompiler::emitTableFill() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
@@ -10397,6 +10423,7 @@ bool BaseCompiler::emitTableSize() {
   pushI32(tableIndex);
   return emitInstanceCall(lineOrBytecode, SASigTableSize);
 }
+#endif
 
 bool BaseCompiler::emitStructNew() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
@@ -11515,7 +11542,6 @@ bool BaseCompiler::emitBody() {
                 emitTruncateF64ToI64<TRUNC_UNSIGNED | TRUNC_SATURATING>,
                 ValType::F64, ValType::I64));
 #endif
-#ifdef ENABLE_WASM_BULKMEM_OPS
           case uint32_t(MiscOp::MemCopy):
             CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/true));
           case uint32_t(MiscOp::DataDrop):
@@ -11530,7 +11556,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/false));
           case uint32_t(MiscOp::TableInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
-#endif  // ENABLE_WASM_BULKMEM_OPS
 #ifdef ENABLE_WASM_REFTYPES
           case uint32_t(MiscOp::TableFill):
             CHECK_NEXT(emitTableFill());

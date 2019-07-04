@@ -21,7 +21,7 @@
 //
 // This file is input to Rust's bindgen, so as to create primitive APIs for the
 // Cranelift pipeline to access compilation metadata. The actual Rust API then
-// wraps these primitive APIs.  See src/baldrdash.rs.
+// wraps these primitive APIs.  See src/bindings/mod.rs.
 //
 // This file can be included in SpiderMonkey's C++ code, where all the prefixes
 // must be obeyed.  The purpose of the prefixes is to avoid type confusion.  See

@@ -12,7 +12,7 @@
 
 [Func="Document::IsWebAnimationsEnabled",
  Constructor(DOMString type,
-             optional AnimationPlaybackEventInit eventInitDict)]
+             optional AnimationPlaybackEventInit eventInitDict = {})]
 interface AnimationPlaybackEvent : Event {
   readonly attribute double? currentTime;
   readonly attribute double? timelineTime;

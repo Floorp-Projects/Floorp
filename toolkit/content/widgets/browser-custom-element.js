@@ -1203,8 +1203,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     // Make sure that any open select is closed.
     if (this.hasAttribute("selectmenulist")) {
       let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-      if (menulist) {
-        let resourcePath = "resource://gre/modules/SelectParentHelper.jsm";
+      if (menulist && menulist.open) {
+        let resourcePath = "resource://gre/actors/SelectParent.jsm";
         let {SelectParentHelper} = ChromeUtils.import(resourcePath);
         SelectParentHelper.hide(menulist, this);
       }

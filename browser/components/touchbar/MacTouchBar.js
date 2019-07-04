@@ -9,7 +9,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  Localization: "resource://gre/modules/Localization.jsm",
 });
 
 /**

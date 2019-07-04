@@ -3,14 +3,14 @@ import {actionCreators as ac} from "common/Actions.jsm";
 import {DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
 import {SafeAnchor} from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<DSCard>", () => {
   let wrapper;
   let sandbox;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<DSCard />);
+    wrapper = shallow(<DSCard />);
     sandbox = sinon.createSandbox();
   });
 
@@ -47,7 +47,7 @@ describe("<DSCard>", () => {
 
     beforeEach(() => {
       dispatch = sandbox.stub();
-      wrapper = shallowWithIntl(<DSCard dispatch={dispatch} />);
+      wrapper = shallow(<DSCard dispatch={dispatch} />);
     });
 
     it("should call dispatch with the correct events", () => {
@@ -97,7 +97,7 @@ describe("<DSCard>", () => {
 
 describe("<PlaceholderDSCard> component", () => {
   it("should have placeholder prop", () => {
-    const wrapper = shallowWithIntl(<PlaceholderDSCard />);
+    const wrapper = shallow(<PlaceholderDSCard />);
     const card = wrapper.find(DSCard);
     assert.lengthOf(card, 1);
 
@@ -106,13 +106,13 @@ describe("<PlaceholderDSCard> component", () => {
   });
 
   it("should contain placeholder div", () => {
-    const wrapper = shallowWithIntl(<DSCard placeholder={true} />);
+    const wrapper = shallow(<DSCard placeholder={true} />);
     const card = wrapper.find("div.ds-card.placeholder");
     assert.lengthOf(card, 1);
   });
 
   it("should not be clickable", () => {
-    const wrapper = shallowWithIntl(<DSCard placeholder={true} />);
+    const wrapper = shallow(<DSCard placeholder={true} />);
     const anchor = wrapper.find("SafeAnchor.ds-card-link");
     assert.lengthOf(anchor, 1);
 
@@ -121,7 +121,7 @@ describe("<PlaceholderDSCard> component", () => {
   });
 
   it("should not have context menu", () => {
-    const wrapper = shallowWithIntl(<DSCard placeholder={true} />);
+    const wrapper = shallow(<DSCard placeholder={true} />);
     const linkMenu = wrapper.find(DSLinkMenu);
     assert.lengthOf(linkMenu, 0);
   });

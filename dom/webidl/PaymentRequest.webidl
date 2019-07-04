@@ -103,7 +103,7 @@ dictionary PaymentOptions {
 };
 
 [Constructor(sequence<PaymentMethodData> methodData, PaymentDetailsInit details,
-             optional PaymentOptions options),
+             optional PaymentOptions options = {}),
  SecureContext,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface PaymentRequest : EventTarget {

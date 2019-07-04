@@ -2000,7 +2000,7 @@ bool BytecodeEmitter::emitCallIncDec(UnaryNode* incDec) {
 
   // The increment/decrement has no side effects, so proceed to throw for
   // invalid assignment target.
-  return emitUint16Operand(JSOP_THROWMSG, JSMSG_BAD_LEFTSIDE_OF_ASS);
+  return emitUint16Operand(JSOP_THROWMSG, JSMSG_ASSIGN_TO_CALL);
 }
 
 bool BytecodeEmitter::emitDouble(double d) {
@@ -4248,7 +4248,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
 
       // Assignment to function calls is forbidden, but we have to make the
       // call first.  Now we can throw.
-      if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_BAD_LEFTSIDE_OF_ASS)) {
+      if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ASSIGN_TO_CALL)) {
         return false;
       }
 

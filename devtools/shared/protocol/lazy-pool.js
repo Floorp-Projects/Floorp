@@ -228,4 +228,3 @@ LazyActor.prototype = {
     return instance;
   },
 };
-

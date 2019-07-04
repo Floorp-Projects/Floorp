@@ -310,6 +310,22 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  */
 #define SSL_ENABLE_POST_HANDSHAKE_AUTH 39
 
+/* Enables the delegated credentials extension (draft-ietf-tls-subcerts). When
+ * enabled, a client that supports TLS 1.3 will indicate willingness to
+ * negotiate a delegated credential (DC).
+ *
+ * If support is indicated, the peer may use a DC to authenticate itself. The DC
+ * is sent as an extension to the peer's end-entity certificate; the end-entity
+ * certificate is used to verify the DC, which in turn is used to verify the
+ * handshake. DCs effectively extend the certificate chain by one, but only
+ * within the context of TLS. Once issued, DCs can't be revoked; in order to
+ * mitigate the damage in case the secret key is compromised, the DC is only
+ * valid for a short time (days, hours, or even minutes).
+ *
+ * This library implements draft-03 of the protocol spec.
+ */
+#define SSL_ENABLE_DELEGATED_CREDENTIALS 40
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRIntn on);

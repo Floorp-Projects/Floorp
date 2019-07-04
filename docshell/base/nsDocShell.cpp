@@ -1567,7 +1567,13 @@ nsDocShell::GetUseRemoteSubframes(bool* aUseRemoteSubframes) {
 
 NS_IMETHODIMP
 nsDocShell::SetRemoteSubframes(bool aUseRemoteSubframes) {
-  // Should we annotate crash reports like in aUseRemoteTabs?
+  static bool annotated = false;
+
+  if (aUseRemoteSubframes && !annotated) {
+    annotated = true;
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::DOMFissionEnabled,
+                                       true);
+  }
 
   // Don't allow non-remote tabs with remote subframes.
   if (NS_WARN_IF(aUseRemoteSubframes && !mUseRemoteTabs)) {
@@ -8301,19 +8307,22 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
 
   if (DocGroup::TryToLoadIframesInBackground()) {
     if ((!mContentViewer || GetDocument()->IsInitialDocument()) && IsFrame()) {
-      // At this point, we know we just created a new iframe document based on the
-      // response from the server, and we check if it's a cross-domain iframe
+      // At this point, we know we just created a new iframe document based on
+      // the response from the server, and we check if it's a cross-domain
+      // iframe
 
       RefPtr<Document> newDoc = viewer->GetDocument();
 
       RefPtr<nsDocShell> parent = GetParentDocshell();
-      nsCOMPtr<nsIPrincipal> parentPrincipal = parent->GetDocument()->NodePrincipal();
+      nsCOMPtr<nsIPrincipal> parentPrincipal =
+          parent->GetDocument()->NodePrincipal();
       nsCOMPtr<nsIPrincipal> thisPrincipal = newDoc->NodePrincipal();
 
       SiteIdentifier parentSite;
       SiteIdentifier thisSite;
 
-      nsresult rv = BasePrincipal::Cast(parentPrincipal)->GetSiteIdentifier(parentSite);
+      nsresult rv =
+          BasePrincipal::Cast(parentPrincipal)->GetSiteIdentifier(parentSite);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = BasePrincipal::Cast(thisPrincipal)->GetSiteIdentifier(thisSite);
@@ -8323,9 +8332,12 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
 #ifdef MOZ_GECKO_PROFILER
         nsCOMPtr<nsIURI> prinURI;
         thisPrincipal->GetURI(getter_AddRefs(prinURI));
-        nsPrintfCString marker("Iframe loaded in background: %s", prinURI->GetSpecOrDefault().get());
+        nsPrintfCString marker("Iframe loaded in background: %s",
+                               prinURI->GetSpecOrDefault().get());
         TimeStamp now = TimeStamp::Now();
-        profiler_add_text_marker("Background Iframe", marker, JS::ProfilingCategoryPair::DOM, now, now, Nothing(), Nothing());
+        profiler_add_text_marker("Background Iframe", marker,
+                                 JS::ProfilingCategoryPair::DOM, now, now,
+                                 Nothing(), Nothing());
 #endif
         SetBackgroundLoadIframe();
       }
@@ -8335,9 +8347,9 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
   NS_ENSURE_SUCCESS(Embed(viewer, "", nullptr), NS_ERROR_FAILURE);
 
   if (TreatAsBackgroundLoad()) {
-    nsCOMPtr<nsIRunnable> triggerParentCheckDocShell = NewRunnableMethod(
-        "nsDocShell::TriggerParentCheckDocShellIsEmpty", this,
-        &nsDocShell::TriggerParentCheckDocShellIsEmpty);
+    nsCOMPtr<nsIRunnable> triggerParentCheckDocShell =
+        NewRunnableMethod("nsDocShell::TriggerParentCheckDocShellIsEmpty", this,
+                          &nsDocShell::TriggerParentCheckDocShellIsEmpty);
     nsresult rv = NS_DispatchToCurrentThread(triggerParentCheckDocShell);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -10599,6 +10611,19 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
   MaybeCreateInitialClientSource();
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+  LoadInfo* li = static_cast<LoadInfo*>(loadInfo.get());
+  if (loadInfo->GetExternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_DOCUMENT) {
+    li->UpdateBrowsingContextID(mBrowsingContext->Id());
+  } else if (loadInfo->GetExternalContentPolicyType() ==
+             nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    li->UpdateFrameBrowsingContextID(mBrowsingContext->Id());
+  }
+  // TODO: more attributes need to be updated on the LoadInfo (bug 1561706)
 
   // Since we are loading a document we need to make sure the proper reserved
   // and initial client data is stored on the nsILoadInfo.  The

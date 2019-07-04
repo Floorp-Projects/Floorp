@@ -111,6 +111,19 @@ struct TLSExtensionDataStr {
     /* Pointer into |ss->esniKeys->keyShares| */
     TLS13KeyShareEntry *peerEsniShare;
     PRUint8 esniNonce[TLS13_ESNI_NONCE_SIZE];
+
+    /* Delegated credentials.
+     *
+     * The delegated credential sent by the peer. Set by
+     * |tls13_ReadDelegatedCredential|.
+     */
+    sslDelegatedCredential *peerDelegCred;
+    /* Whether the peer requested a delegated credential. */
+    PRBool peerRequestedDelegCred;
+    /* Whether the host is committed to using a delegated credential. Set by
+     * |tls13_MaybeSetDelegatedCredential|.
+     */
+    PRBool sendingDelegCredToPeer;
 };
 
 typedef struct TLSExtensionStr {

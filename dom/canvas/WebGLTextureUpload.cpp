@@ -328,7 +328,7 @@ UniquePtr<webgl::TexUnpackBlob> WebGLContext::FromDomElem(
   uint32_t elemWidth = 0;
   uint32_t elemHeight = 0;
   layers::Image* layersImage = nullptr;
-  if (!StaticPrefs::WebGLDisableDOMBlitUploads() && sfer.mLayersImage) {
+  if (!StaticPrefs::webgl_disable_DOM_blit_uploads() && sfer.mLayersImage) {
     layersImage = sfer.mLayersImage;
     elemWidth = layersImage->GetSize().width;
     elemHeight = layersImage->GetSize().height;

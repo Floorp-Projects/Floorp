@@ -1,13 +1,13 @@
 import {CardGrid} from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import {DSCard} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
 import React from "react";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<CardGrid>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<CardGrid />);
+    wrapper = shallow(<CardGrid />);
   });
 
   it("should render an empty div", () => {

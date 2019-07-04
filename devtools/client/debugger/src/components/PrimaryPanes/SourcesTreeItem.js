@@ -30,7 +30,7 @@ import {
   isUrlExtension,
   shouldBlackbox,
 } from "../../utils/source";
-import { isDirectory } from "../../utils/sources-tree";
+import { isDirectory, getPathWithoutThread } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
 import { downloadFile } from "../../utils/utils";
@@ -296,7 +296,9 @@ class SourceTreeItem extends Component<Props, State> {
       return item.name;
     }
 
-    return item.type === "source" ? unescape(item.contents.url) : "";
+    return item.type === "source"
+      ? unescape(item.contents.url)
+      : getPathWithoutThread(item.path);
   }
 
   render() {

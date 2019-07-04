@@ -613,6 +613,11 @@ void Realm::clearTables() {
   varNames_.clear();
 }
 
+// Check to see if this individual realm is recording allocations. Debuggers or
+// runtimes can try and record allocations, so this method can check to see if
+// any initialization is needed.
+bool Realm::isRecordingAllocations() { return !!allocationMetadataBuilder_; }
+
 void Realm::setAllocationMetadataBuilder(
     const js::AllocationMetadataBuilder* builder) {
   // Clear any jitcode in the runtime, which behaves differently depending on

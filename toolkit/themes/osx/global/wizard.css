@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 wizard {
   padding: 14px;
@@ -38,6 +39,11 @@ wizard[branded="true"] .wizard-header-icon {
   list-style-image: url("chrome://branding/content/icon48.png");
 }
 
+wizardpage > html|input {
+  /* This matches the label/description in global.css`*/
+  margin-inline: 6px 5px;
+}
+
 .wizard-page-box {
   padding: 15px 23px;
   -moz-appearance: dialog;
@@ -55,4 +61,3 @@ wizard[branded="true"] .wizard-header-icon {
 .wizard-button {
   font: menu !important;
 }
-

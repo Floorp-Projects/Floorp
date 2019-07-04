@@ -73,6 +73,7 @@ public class AppConstants {
         public static final boolean preN = MAX_SDK_VERSION < 24 || (MIN_SDK_VERSION < 24 && Build.VERSION.SDK_INT < 24);
         public static final boolean N = Build.VERSION.SDK_INT == 24 || Build.VERSION.SDK_INT == 25;
         public static final boolean preO = MAX_SDK_VERSION < 26 || (MIN_SDK_VERSION < 26 && Build.VERSION.SDK_INT < 26);
+        public static final boolean preQ = MAX_SDK_VERSION < 29 || (MIN_SDK_VERSION < 29 && Build.VERSION.SDK_INT < 29);
     }
 
     /**

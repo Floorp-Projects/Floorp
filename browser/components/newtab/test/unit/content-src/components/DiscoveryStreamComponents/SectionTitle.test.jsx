@@ -1,12 +1,12 @@
 import React from "react";
 import {SectionTitle} from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
-import {shallowWithIntl} from "test/unit/utils";
+import {shallow} from "enzyme";
 
 describe("<SectionTitle>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowWithIntl(<SectionTitle header={{}} />);
+    wrapper = shallow(<SectionTitle header={{}} />);
   });
 
   it("should render", () => {

@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported asyncElementRendered, importDependencies, stubFluentL10n */
+/* exported asyncElementRendered, importDependencies */
 
 /**
  * A helper to await on while waiting for an asynchronous rendering of a Custom
@@ -25,18 +25,24 @@ function importDependencies(templateFrame, destinationEl) {
   }
 }
 
-function stubFluentL10n(argsMap) {
-  Object.defineProperty(document, "l10n", {
-    configurable: true,
-    writable: true,
-    value: {
-      setAttributes(element, id, args) {
-        element.setAttribute("data-l10n-id", id);
-        for (let attrName of Object.keys(argsMap)) {
-          let varName = argsMap[attrName];
-          element.setAttribute(attrName, args[varName]);
-        }
-      },
+Object.defineProperty(document, "l10n", {
+  configurable: true,
+  writable: true,
+  value: {
+    connectRoot() {
     },
-  });
-}
+    translateElements() {
+      return Promise.resolve();
+    },
+    getAttributes(element) {
+      return {
+        id: element.getAttribute("data-l10n-id"),
+        args: JSON.parse(element.getAttribute("data-l10n-args")),
+      };
+    },
+    setAttributes(element, id, args) {
+      element.setAttribute("data-l10n-id", id);
+      element.setAttribute("data-l10n-args", JSON.stringify(args));
+    },
+  },
+});

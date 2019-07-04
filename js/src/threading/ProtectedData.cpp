@@ -46,6 +46,14 @@ void CheckThreadLocal::check() const {
   MOZ_ASSERT(id == ThisThread::GetId());
 }
 
+void CheckContextLocal::check() const {
+  JSContext* cx = TlsContext.get();
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT_IF(cx->isMainThreadContext(),
+                CurrentThreadCanAccessRuntime(cx->runtime()));
+  MOZ_ASSERT(cx_ == cx);
+}
+
 template <AllowedHelperThread Helper>
 void CheckMainThread<Helper>::check() const {
   if (OnHelperThread<Helper>()) {

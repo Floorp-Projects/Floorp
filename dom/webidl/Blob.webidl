@@ -13,7 +13,7 @@
 typedef (BufferSource or Blob or USVString) BlobPart;
 
 [Constructor(optional sequence<BlobPart> blobParts,
-             optional BlobPropertyBag options),
+             optional BlobPropertyBag options = {}),
  Exposed=(Window,Worker)]
 interface Blob {
 

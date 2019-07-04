@@ -20,13 +20,6 @@ job-template:
     description: Dummy task to deal with max_dependencies
     run-on-projects: []
     shipping-phase: promote
-    worker-type: b-linux
+    worker-type: succeed
     worker:
-        implementation: docker-worker
-        os: linux
-        docker-image: "ubuntu:16.10"
-        max-run-time: 600
-        command:
-            - /bin/bash
-            - -c
-            - echo "Dummy task"
+        implementation: succeed

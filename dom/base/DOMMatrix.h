@@ -60,6 +60,14 @@ class DOMMatrixReadOnly : public nsWrapperCache {
       const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
       ErrorResult& aRv);
 
+  static already_AddRefed<DOMMatrixReadOnly> FromFloat32Array(
+      const GlobalObject& aGlobal, const Float32Array& aArray32,
+      ErrorResult& aRv);
+
+  static already_AddRefed<DOMMatrixReadOnly> FromFloat64Array(
+      const GlobalObject& aGlobal, const Float64Array& aArray64,
+      ErrorResult& aRv);
+
   static already_AddRefed<DOMMatrixReadOnly> Constructor(
       const GlobalObject& aGlobal,
       const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
@@ -171,8 +179,9 @@ class DOMMatrixReadOnly : public nsWrapperCache {
                                       double aOriginZ = 0) const;
   already_AddRefed<DOMMatrix> ScaleNonUniform(double aScaleX,
                                               double aScaleY) const;
-  already_AddRefed<DOMMatrix> Rotate(double aAngle, double aOriginX = 0,
-                                     double aOriginY = 0) const;
+  already_AddRefed<DOMMatrix> Rotate(double aRotX,
+                                     const Optional<double>& aRotY,
+                                     const Optional<double>& aRotZ) const;
   already_AddRefed<DOMMatrix> RotateFromVector(double aX, double aY) const;
   already_AddRefed<DOMMatrix> RotateAxisAngle(double aX, double aY, double aZ,
                                               double aAngle) const;
@@ -248,6 +257,14 @@ class DOMMatrix : public DOMMatrixReadOnly {
       const GlobalObject& aGlobal, const DOMMatrixInit& aMatrixInit,
       ErrorResult& aRv);
 
+  static already_AddRefed<DOMMatrix> FromFloat32Array(
+      const GlobalObject& aGlobal, const Float32Array& aArray32,
+      ErrorResult& aRv);
+
+  static already_AddRefed<DOMMatrix> FromFloat64Array(
+      const GlobalObject& aGlobal, const Float64Array& aArray64,
+      ErrorResult& aRv);
+
   static already_AddRefed<DOMMatrix> Constructor(const GlobalObject& aGlobal,
                                                  ErrorResult& aRv);
   static already_AddRefed<DOMMatrix> Constructor(
@@ -281,11 +298,8 @@ class DOMMatrix : public DOMMatrixReadOnly {
                        double aOriginZ);
   DOMMatrix* Scale3dSelf(double aScale, double aOriginX = 0,
                          double aOriginY = 0, double aOriginZ = 0);
-  DOMMatrix* ScaleNonUniformSelf(double aScaleX, double aScaleY = 1,
-                                 double aScaleZ = 1, double aOriginX = 0,
-                                 double aOriginY = 0, double aOriginZ = 0);
-  DOMMatrix* RotateSelf(double aAngle, double aOriginX = 0,
-                        double aOriginY = 0);
+  DOMMatrix* RotateSelf(double aRotX, const Optional<double>& aRotY,
+                        const Optional<double>& aRotZ);
   DOMMatrix* RotateFromVectorSelf(double aX, double aY);
   DOMMatrix* RotateAxisAngleSelf(double aX, double aY, double aZ,
                                  double aAngle);

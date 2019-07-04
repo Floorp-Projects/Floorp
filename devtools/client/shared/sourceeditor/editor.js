@@ -145,6 +145,7 @@ function Editor(config) {
     cssProperties: null,
     // Set to true to prevent the search addon to be activated.
     disableSearchAddon: false,
+    maxHighlightLength: 1000,
   };
 
   // Additional shortcuts.

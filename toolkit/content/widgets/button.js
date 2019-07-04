@@ -232,8 +232,8 @@
     static get buttonFragment() {
       let frag = document.importNode(MozXULElement.parseXULToFragment(`
         <hbox class="box-inherit button-box" align="center" pack="center" flex="1" anonid="button-box">
-          <image class="button-icon"></image>
-          <label class="button-text"></label>
+          <image class="button-icon"/>
+          <label class="button-text"/>
         </hbox>`), true);
       Object.defineProperty(this, "buttonFragment", {value: frag});
       return frag;
@@ -243,10 +243,10 @@
       let frag = document.importNode(MozXULElement.parseXULToFragment(`
         <hbox class="box-inherit button-box" align="center" pack="center" flex="1">
           <hbox class="box-inherit" align="center" pack="center" flex="1">
-            <image class="button-icon"></image>
-            <label class="button-text"></label>
+            <image class="button-icon"/>
+            <label class="button-text"/>
           </hbox>
-          <dropmarker class="button-menu-dropmarker"></dropmarker>
+          <dropmarker class="button-menu-dropmarker"/>
         </hbox>`), true);
       Object.defineProperty(this, "menuFragment", {value: frag});
       return frag;

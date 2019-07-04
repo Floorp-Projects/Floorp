@@ -337,7 +337,7 @@ void nsSVGForeignObjectFrame::ReflowSVG() {
   // Fully mark our kid dirty so that it gets resized if necessary
   // (NS_FRAME_HAS_DIRTY_CHILDREN isn't enough in that case):
   nsIFrame* kid = PrincipalChildList().FirstChild();
-  kid->AddStateBits(NS_FRAME_IS_DIRTY);
+  kid->MarkSubtreeDirty();
 
   // Make sure to not allow interrupts if we're not being reflown as a root:
   nsPresContext::InterruptPreventer noInterrupts(PresContext());

@@ -46,7 +46,7 @@ add_task(async function test_accented_works() {
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], generateMessages);
+  ], false, generateMessages);
   l10n.registerObservers();
 
   {
@@ -108,7 +108,7 @@ add_task(async function test_unavailable_strategy_works() {
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], generateMessages);
+  ], false, generateMessages);
   l10n.registerObservers();
 
   {

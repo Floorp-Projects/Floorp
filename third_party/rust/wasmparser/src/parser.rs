@@ -269,8 +269,12 @@ impl<'a> Parser<'a> {
                 .original_position();
         }
         match self.section_reader {
-            ParserSectionReader::CodeSectionReader(ref reader) => return reader.original_position(),
-            ParserSectionReader::DataSectionReader(ref reader) => return reader.original_position(),
+            ParserSectionReader::CodeSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::DataSectionReader(ref reader) => {
+                return reader.original_position()
+            }
             ParserSectionReader::ElementSectionReader(ref reader) => {
                 return reader.original_position();
             }
@@ -292,8 +296,12 @@ impl<'a> Parser<'a> {
             ParserSectionReader::TableSectionReader(ref reader) => {
                 return reader.original_position();
             }
-            ParserSectionReader::TypeSectionReader(ref reader) => return reader.original_position(),
-            ParserSectionReader::NameSectionReader(ref reader) => return reader.original_position(),
+            ParserSectionReader::TypeSectionReader(ref reader) => {
+                return reader.original_position()
+            }
+            ParserSectionReader::NameSectionReader(ref reader) => {
+                return reader.original_position()
+            }
             ParserSectionReader::LinkingSectionReader(ref reader) => {
                 return reader.original_position();
             }

@@ -1,9 +1,10 @@
 import {ASRouterUISurface, ASRouterUtils} from "content-src/asrouter/asrouter-content";
-import {GlobalOverrider, mountWithIntl} from "test/unit/utils";
+import {GlobalOverrider} from "test/unit/utils";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {FAKE_LOCAL_MESSAGES} from "./constants";
 import {OnboardingMessageProvider} from "lib/OnboardingMessageProvider.jsm";
 import React from "react";
+import {mount} from "enzyme";
 import {Trailhead} from "../../../content-src/asrouter/templates/Trailhead/Trailhead";
 
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
@@ -88,7 +89,7 @@ describe("ASRouterUISurface", () => {
 
     sandbox.stub(ASRouterUtils, "sendTelemetry");
 
-    wrapper = mountWithIntl(<ASRouterUISurface document={fakeDocument} />);
+    wrapper = mount(<ASRouterUISurface document={fakeDocument} />);
   });
 
   afterEach(() => {
@@ -153,7 +154,7 @@ describe("ASRouterUISurface", () => {
     const stub = sandbox.stub(window, "dispatchEvent");
     sandbox.stub(ASRouterUtils, "getPreviewEndpoint").returns({theme: "dark"});
 
-    wrapper = mountWithIntl(<ASRouterUISurface document={fakeDocument} />);
+    wrapper = mount(<ASRouterUISurface document={fakeDocument} />);
 
     assert.calledOnce(stub);
     assert.property(stub.firstCall.args[0].detail.data, "ntp_background");

@@ -11,17 +11,17 @@
   border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
-/* [hidden] isn't applying to elements in Shadow DOM. */
-:host([hidden]) {
-  display: none;
-}
-
 :host(:hover) {
   background-color: var(--in-content-box-background-hover);
 }
 
 :host(:hover:active) {
   background-color: var(--in-content-box-background-active);
+}
+
+:host(.keyboard-selected) {
+  border-inline-start-color: var(--in-content-border-active-shadow);
+  background-color: var(--in-content-box-background-odd);
 }
 
 :host(.selected) {

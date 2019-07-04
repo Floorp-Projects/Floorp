@@ -470,30 +470,6 @@ security:
     release_channel_collection: opt-out
     record_in_processes:
       - main
-  intermediate_preloading_num_preloaded:
-    bug_numbers:
-      - 1519273
-    description: >
-      Number of intermediate certificates pre-loaded.
-    expires: "70"
-    kind: uint
-    notification_emails:
-      - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
-    record_in_processes:
-      - main
-  intermediate_preloading_num_pending:
-    bug_numbers:
-      - 1519273
-    description: >
-      Number of intermediate certificates pending pre-load.
-    expires: "70"
-    kind: uint
-    notification_emails:
-      - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
-    record_in_processes:
-      - main
   client_cert:
     bug_numbers:
       - 1255120
@@ -579,6 +555,43 @@ sandbox:
     notification_emails:
       - bowen@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - main
+    operating_systems:
+      - "windows"
+
+pictureinpicture:
+  opened_method:
+    bug_numbers:
+      - 1560590
+    description: >
+      The number of times a Picture-in-Picture window was opened, per trigger
+      mechanism (e.g.: the video toggle, the context menu).
+    expires: "74"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - content
+    operating_systems:
+      - "windows"
+  closed_method:
+    bug_numbers:
+      - 1560590
+    description: >
+      The number of times a Picture-in-Picture window was closed, per trigger
+      mechanism (e.g.: the close button, the unpip button, originating tab going away,
+      process shutdown, etc).
+    expires: "74"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - mconley@mozilla.com
+      - astevenson@mozilla.com
+    release_channel_collection: opt-in
     record_in_processes:
       - main
     operating_systems:
