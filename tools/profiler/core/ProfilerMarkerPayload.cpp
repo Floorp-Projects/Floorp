@@ -305,9 +305,6 @@ void JsAllocationMarkerPayload::StreamPayload(
   if (mClassName) {
     aWriter.StringProperty("className", mClassName.get());
   }
-  if (mScriptFilename) {
-    aWriter.StringProperty("scriptFilename", mScriptFilename.get());
-  }
   if (mTypeName) {
     aWriter.StringProperty("typeName",
                            NS_ConvertUTF16toUTF8(mTypeName.get()).get());
