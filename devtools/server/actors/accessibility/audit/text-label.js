@@ -190,7 +190,7 @@ const formGroupingRule = function(accessible) {
         isVisible(label));
 
       return hasNameFromLegend ? null : {
-        score: FAIL,
+        score: WARNING,
         issue: FORM_FIELDSET_NO_NAME_FROM_LEGEND,
       };
     default:
