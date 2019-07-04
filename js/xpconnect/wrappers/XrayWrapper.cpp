@@ -25,6 +25,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/XrayExpandoClass.h"
 #include "nsGlobalWindow.h"
 
