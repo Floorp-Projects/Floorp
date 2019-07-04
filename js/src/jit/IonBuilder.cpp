@@ -8999,15 +8999,15 @@ AbortReasonOr<Ok> IonBuilder::getElemTryTypedArray(bool* emitted,
     return Ok();
   }
 
-  // Don't generate a fast path if this pc has seen negative
-  // or floating-point indexes accessed which will not appear
-  // to be extra indexed properties.
+  // Don't generate a fast path if this pc has seen floating-point
+  // indexes accessed to avoid repeated bailouts. Unlike
+  // getElemTryDense, we still generate a fast path if we have seen
+  // negative indices. We expect code to occasionally generate
+  // negative indices by accident, but not to use negative indices
+  // intentionally, because typed arrays always return undefined for
+  // negative indices. See Bug 1535031.
   if (inspector->hasSeenNonIntegerIndex(pc)) {
     trackOptimizationOutcome(TrackedOutcome::ArraySeenNonIntegerIndex);
-    return Ok();
-  }
-  if (inspector->hasSeenNegativeIndexGetElement(pc)) {
-    trackOptimizationOutcome(TrackedOutcome::ArraySeenNegativeIndex);
     return Ok();
   }
 
