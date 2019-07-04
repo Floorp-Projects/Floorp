@@ -136,7 +136,7 @@ class Raptor(object):
         LOG.info("main raptor init, config is: %s" % str(self.config))
 
         # setup the control server
-        self.results_handler = RaptorResultsHandler()
+        self.results_handler = RaptorResultsHandler(self.config)
         self.start_control_server()
 
         self.build_browser_profile()
@@ -185,7 +185,6 @@ class Raptor(object):
                 self.run_test(test, timeout=int(test.get('page_timeout')))
 
             return self.process_results(test_names)
-
         finally:
             self.clean_up()
 
