@@ -336,7 +336,7 @@ class TaskBuilder(object):
             "maxRunTime": 600,
             "image": "alpine",
             "command": [
-                "/bin/bash",
+                "/bin/sh",
                 "--login",
                 "-cx",
                 "echo \"Dummy task\""
