@@ -9,7 +9,9 @@ async function run_test() {
     return;
   }
   const STATE_AFTER_STAGE = gIsServiceTest ? STATE_APPLIED_SVC : STATE_APPLIED;
-  const STATE_AFTER_RUNUPDATE = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
+  const STATE_AFTER_RUNUPDATE = gIsServiceTest
+    ? STATE_PENDING_SVC
+    : STATE_PENDING;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
@@ -26,9 +28,9 @@ async function run_test() {
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
-  checkUpdateLogContains(ERR_MOVE_DESTDIR_7 + "\n" +
-                         STATE_FAILED_WRITE_ERROR + "\n" +
-                         CALL_QUIT);
+  checkUpdateLogContains(
+    ERR_MOVE_DESTDIR_7 + "\n" + STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT
+  );
   await waitForUpdateXMLFiles();
   checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   checkCallbackLog();

@@ -7,16 +7,25 @@
 var gManagerWindow;
 var gCategoryUtilities;
 
-var gProvider = {
-};
+var gProvider = {};
 
 var gTypes = [
-  new AddonManagerPrivate.AddonType("type1", null, "Type 1",
-                                    AddonManager.VIEW_TYPE_LIST, 4500),
+  new AddonManagerPrivate.AddonType(
+    "type1",
+    null,
+    "Type 1",
+    AddonManager.VIEW_TYPE_LIST,
+    4500
+  ),
   new AddonManagerPrivate.AddonType("missing1", null, "Missing 1"),
-  new AddonManagerPrivate.AddonType("type2", null, "Type 1",
-                                    AddonManager.VIEW_TYPE_LIST, 5100,
-                                    AddonManager.TYPE_UI_HIDE_EMPTY),
+  new AddonManagerPrivate.AddonType(
+    "type2",
+    null,
+    "Type 1",
+    AddonManager.VIEW_TYPE_LIST,
+    5100,
+    AddonManager.TYPE_UI_HIDE_EMPTY
+  ),
   {
     id: "type3",
     name: "Type 3",
@@ -66,10 +75,16 @@ add_test(async function() {
   ok(gCategoryUtilities.get("type2"), "Type 2 should be present");
   ok(!gCategoryUtilities.get("missing1", true), "Missing 1 should be absent");
 
-  is(gCategoryUtilities.get("type1").previousSibling.getAttribute("value"),
-     "addons://list/extension", "Type 1 should be in the right place");
-  is(gCategoryUtilities.get("type2").previousSibling.getAttribute("value"),
-     "addons://list/theme", "Type 2 should be in the right place");
+  is(
+    gCategoryUtilities.get("type1").previousSibling.getAttribute("value"),
+    "addons://list/extension",
+    "Type 1 should be in the right place"
+  );
+  is(
+    gCategoryUtilities.get("type2").previousSibling.getAttribute("value"),
+    "addons://list/theme",
+    "Type 2 should be in the right place"
+  );
 
   ok(gCategoryUtilities.isTypeVisible("type1"), "Type 1 should be visible");
   ok(!gCategoryUtilities.isTypeVisible("type2"), "Type 2 should be hidden");
@@ -92,7 +107,11 @@ add_test(async function() {
   ok(!gCategoryUtilities.get("type2", true), "Type 2 should be absent");
   ok(!gCategoryUtilities.get("missing1", true), "Missing 1 should be absent");
 
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be back to the default view"
+  );
 
   close_manager(gManagerWindow, run_next_test);
 });
@@ -113,10 +132,16 @@ add_test(async function() {
   ok(gCategoryUtilities.get("type2"), "Type 2 should be present");
   ok(!gCategoryUtilities.get("missing1", true), "Missing 1 should be absent");
 
-  is(gCategoryUtilities.get("type1").previousSibling.getAttribute("value"),
-     "addons://list/extension", "Type 1 should be in the right place");
-  is(gCategoryUtilities.get("type2").previousSibling.getAttribute("value"),
-     "addons://list/theme", "Type 2 should be in the right place");
+  is(
+    gCategoryUtilities.get("type1").previousSibling.getAttribute("value"),
+    "addons://list/extension",
+    "Type 1 should be in the right place"
+  );
+  is(
+    gCategoryUtilities.get("type2").previousSibling.getAttribute("value"),
+    "addons://list/theme",
+    "Type 2 should be in the right place"
+  );
 
   ok(gCategoryUtilities.isTypeVisible("type1"), "Type 1 should be visible");
   ok(!gCategoryUtilities.isTypeVisible("type2"), "Type 2 should be hidden");
@@ -131,7 +156,11 @@ add_test(async function() {
   await gCategoryUtilities.openType("plugin");
   go_back(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "type1", "Should be showing the custom view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "type1",
+    "Should be showing the custom view"
+  );
   check_state(true, true);
 
   AddonManagerPrivate.unregisterProvider(gProvider);
@@ -140,27 +169,47 @@ add_test(async function() {
   ok(!gCategoryUtilities.get("type2", true), "Type 2 should be absent");
   ok(!gCategoryUtilities.get("missing1", true), "Missing 1 should be absent");
 
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be back to the default view"
+  );
   check_state(true, true);
 
   go_back(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be showing the extension view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be showing the extension view"
+  );
   check_state(false, true);
 
   go_forward(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be back to the default view"
+  );
   check_state(true, true);
 
   go_forward(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "plugin", "Should be back to the plugins view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "plugin",
+    "Should be back to the plugins view"
+  );
   check_state(true, false);
 
   go_back(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be back to the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be back to the default view"
+  );
   check_state(true, true);
 
   close_manager(gManagerWindow, run_next_test);
@@ -186,7 +235,11 @@ add_test(async function() {
   go_back(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be back to the first view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be back to the first view"
+  );
   check_state(false, true);
 
   close_manager(gManagerWindow, run_next_test);
@@ -209,7 +262,11 @@ add_test(async function() {
   await wait_for_view_load(gManagerWindow);
   go_back(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be back to the extension view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be back to the extension view"
+  );
 
   AddonManagerPrivate.unregisterProvider(gProvider);
 
@@ -218,7 +275,11 @@ add_test(async function() {
   go_forward(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "plugin", "Should be back to the plugin view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "plugin",
+    "Should be back to the plugin view"
+  );
   check_state(true, false);
 
   close_manager(gManagerWindow, run_next_test);
@@ -232,7 +293,11 @@ add_test(async function() {
   let aWindow = await open_manager("addons://list/type1");
   gManagerWindow = aWindow;
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "type1", "Should be at the custom view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "type1",
+    "Should be at the custom view"
+  );
 
   ok(gCategoryUtilities.get("type1"), "Type 1 should be present");
   ok(gCategoryUtilities.isTypeVisible("type1"), "Type 1 should be visible");
@@ -245,7 +310,11 @@ add_test(async function() {
   go_back(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be at the default view"
+  );
   check_state(false, true);
 
   close_manager(gManagerWindow, run_next_test);
@@ -267,7 +336,11 @@ add_test(async function() {
   go_back(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be at the extension view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be at the extension view"
+  );
 
   AddonManagerPrivate.unregisterProvider(gProvider);
 
@@ -276,7 +349,11 @@ add_test(async function() {
   go_forward(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be at the default view"
+  );
   check_state(true, false);
 
   close_manager(gManagerWindow, run_next_test);
@@ -303,7 +380,11 @@ add_test(async function() {
   go_back(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be back to the first view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be back to the first view"
+  );
   check_state(false, true);
 
   close_manager(gManagerWindow, run_next_test);
@@ -329,7 +410,11 @@ add_test(async function() {
   await wait_for_view_load(gManagerWindow);
   go_back(gManagerWindow);
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be back to the extension view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be back to the extension view"
+  );
 
   AddonManagerPrivate.unregisterProvider(gProvider);
 
@@ -338,7 +423,11 @@ add_test(async function() {
   go_forward(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "plugin", "Should be back to the plugin view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "plugin",
+    "Should be back to the plugin view"
+  );
   check_state(true, false);
 
   close_manager(gManagerWindow, run_next_test);
@@ -352,7 +441,11 @@ add_test(async function() {
   let aWindow = await open_manager("addons://list/type1");
   gManagerWindow = aWindow;
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "type1", "Should be at the custom view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "type1",
+    "Should be at the custom view"
+  );
 
   ok(gCategoryUtilities.get("type1"), "Type 1 should be present");
   ok(gCategoryUtilities.isTypeVisible("type1"), "Type 1 should be visible");
@@ -366,7 +459,11 @@ add_test(async function() {
   go_back(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be at the default view"
+  );
   check_state(false, true);
 
   close_manager(gManagerWindow, run_next_test);
@@ -392,7 +489,11 @@ add_test(async function() {
   go_back(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "extension", "Should be at the extension view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "extension",
+    "Should be at the extension view"
+  );
 
   AddonManagerPrivate.unregisterProvider(gProvider);
 
@@ -401,7 +502,11 @@ add_test(async function() {
   go_forward(gManagerWindow);
 
   await wait_for_view_load(gManagerWindow);
-  is(gCategoryUtilities.selectedCategory, "discover", "Should be at the default view");
+  is(
+    gCategoryUtilities.selectedCategory,
+    "discover",
+    "Should be at the default view"
+  );
   check_state(true, false);
 
   close_manager(gManagerWindow, run_next_test);

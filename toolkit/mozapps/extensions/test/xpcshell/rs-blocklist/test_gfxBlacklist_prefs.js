@@ -67,8 +67,10 @@ async function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    Assert.equal(Services.prefs.getIntPref("gfx.blacklist.direct2d"),
-                 Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+    Assert.equal(
+      Services.prefs.getIntPref("gfx.blacklist.direct2d"),
+      Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION
+    );
 
     Services.obs.removeObserver(blacklistAdded, "blocklist-data-gfxItems");
     Services.obs.addObserver(blacklistRemoved, "blocklist-data-gfxItems");
@@ -76,10 +78,7 @@ async function run_test() {
       {
         os: "WINNT 6.1",
         vendor: "0xabcd",
-        devices: [
-          "0x2783",
-          "0x2782",
-        ],
+        devices: ["0x2783", "0x2782"],
         feature: " DIRECT2D ",
         featureStatus: " BLOCKED_DRIVER_VERSION ",
         driverVersion: " 8.52.322.2202 ",
@@ -88,11 +87,7 @@ async function run_test() {
       {
         os: "WINNT 6.0",
         vendor: "0xdcba",
-        devices: [
-          "0x2783",
-          "0x1234",
-          "0x2782",
-        ],
+        devices: ["0x2783", "0x1234", "0x2782"],
         feature: " DIRECT3D_9_LAYERS ",
         featureStatus: " BLOCKED_DRIVER_VERSION ",
         driverVersion: " 8.52.322.2202 ",

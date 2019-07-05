@@ -15,8 +15,8 @@ const initialSetup = {
     distroDir.leafName = "empty";
   },
   initialState: [
-    { isUpgrade: false, version: null},
-    { isUpgrade: true, version: "2.0"},
+    { isUpgrade: false, version: null },
+    { isUpgrade: true, version: "2.0" },
   ],
 };
 
@@ -26,13 +26,20 @@ add_task(async function test_systems_update_uninstall_check() {
   await setupSystemAddonConditions(initialSetup, distroDir);
 
   let updateXML = buildSystemAddonUpdates([
-    { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi",
-      xpi: await getSystemAddonXPI(2, "3.0") },
+    {
+      id: "system2@tests.mozilla.org",
+      version: "3.0",
+      path: "system2_3.xpi",
+      xpi: await getSystemAddonXPI(2, "3.0"),
+    },
   ]);
 
-  const listener = (msg, {method, params, reason}) => {
+  const listener = (msg, { method, params, reason }) => {
     if (params.id === "system2@tests.mozilla.org" && method === "uninstall") {
-      Assert.ok(false, "Should not see uninstall call for system2@tests.mozilla.org");
+      Assert.ok(
+        false,
+        "Should not see uninstall call for system2@tests.mozilla.org"
+      );
     }
   };
 

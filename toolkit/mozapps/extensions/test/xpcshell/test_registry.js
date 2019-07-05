@@ -6,9 +6,12 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 // Enable loading extensions from the user and system scopes
-Services.prefs.setIntPref("extensions.enabledScopes",
-                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER +
-                          AddonManager.SCOPE_SYSTEM);
+Services.prefs.setIntPref(
+  "extensions.enabledScopes",
+  AddonManager.SCOPE_PROFILE +
+    AddonManager.SCOPE_USER +
+    AddonManager.SCOPE_SYSTEM
+);
 
 const ID1 = "addon1@tests.mozilla.org";
 const ID2 = "addon2@tests.mozilla.org";
@@ -18,11 +21,11 @@ let registry;
 
 add_task(async function setup() {
   xpi1 = await createTempWebExtensionFile({
-    manifest: {applications: {gecko: {id: ID1}}},
+    manifest: { applications: { gecko: { id: ID1 } } },
   });
 
   xpi2 = await createTempWebExtensionFile({
-    manifest: {applications: {gecko: {id: ID2}}},
+    manifest: { applications: { gecko: { id: ID2 } } },
   });
 
   registry = new MockRegistry();
@@ -33,12 +36,18 @@ add_task(async function setup() {
 
 // Tests whether basic registry install works
 add_task(async function test_1() {
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID1, xpi1.path);
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID2, xpi2.path);
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID1,
+    xpi1.path
+  );
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID2,
+    xpi2.path
+  );
 
   await promiseStartupManager();
 
@@ -56,12 +65,18 @@ add_task(async function test_1() {
 
 // Tests whether uninstalling from the registry works
 add_task(async function test_2() {
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID1, null);
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID2, null);
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID1,
+    null
+  );
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID2,
+    null
+  );
 
   await promiseRestartManager();
 
@@ -72,12 +87,18 @@ add_task(async function test_2() {
 
 // Checks that the ID in the registry must match that in the install manifest
 add_task(async function test_3() {
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID1, xpi2.path);
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID2, xpi1.path);
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID1,
+    xpi2.path
+  );
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID2,
+    xpi1.path
+  );
 
   await promiseRestartManager();
 
@@ -91,27 +112,42 @@ add_task(async function test_4() {
   // Restarting with bad items in the registry should not force an EM restart
   await promiseRestartManager();
 
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID1, null);
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID2, null);
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID1,
+    null
+  );
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID2,
+    null
+  );
 
   await promiseRestartManager();
 
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID1, xpi1.path);
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID1,
+    xpi1.path
+  );
 
   await promiseShutdownManager();
 
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID1, null);
-  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                    ID2, xpi1.path);
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID1,
+    null
+  );
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+    ID2,
+    xpi1.path
+  );
   xpi2.copyTo(xpi1.parent, xpi1.leafName);
 
   await promiseStartupManager();

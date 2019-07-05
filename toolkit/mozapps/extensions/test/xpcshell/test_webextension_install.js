@@ -1,11 +1,11 @@
-
 let profileDir;
 add_task(async function setup() {
   profileDir = gProfD.clone();
   profileDir.append("extensions");
 
-  if (!profileDir.exists())
+  if (!profileDir.exists()) {
     profileDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  }
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   await promiseStartupManager();
@@ -44,9 +44,11 @@ add_task(async function test_implicit_id_temp() {
 
   // The sourceURI of a temporary installed addon should be equal to the
   // file url of the installed xpi file.
-  equal(addon.sourceURI && addon.sourceURI.spec,
-        Services.io.newFileURI(xpifile).spec,
-        "SourceURI of the add-on has the expected value");
+  equal(
+    addon.sourceURI && addon.sourceURI.spec,
+    Services.io.newFileURI(xpifile).spec,
+    "SourceURI of the add-on has the expected value"
+  );
 
   await addon.uninstall();
 });
@@ -63,23 +65,30 @@ add_task(async function test_invalid_extension_install_errors() {
     },
     description: "extension with an invalid 'matches' value",
     manifest_version: 2,
-    content_scripts: [{
-      "matches": "*://*.foo.com/*",
-      "js": ["content.js"],
-    }],
+    content_scripts: [
+      {
+        matches: "*://*.foo.com/*",
+        js: ["content.js"],
+      },
+    ],
     version: "1.0",
   };
 
-  const addonDir = await promiseWriteWebManifestForExtension(manifest, gTmpD,
-                                                "the-addon-sub-dir");
+  const addonDir = await promiseWriteWebManifestForExtension(
+    manifest,
+    gTmpD,
+    "the-addon-sub-dir"
+  );
 
   await Assert.rejects(
     AddonManager.installTemporaryAddon(addonDir),
     err => {
-      return err.additionalErrors.length == 1 &&
-             err.additionalErrors[0] ==
-              `Reading manifest: Error processing content_scripts.0.matches: ` +
-              `Expected array instead of "*://*.foo.com/*"`;
+      return (
+        err.additionalErrors.length == 1 &&
+        err.additionalErrors[0] ==
+          `Reading manifest: Error processing content_scripts.0.matches: ` +
+            `Expected array instead of "*://*.foo.com/*"`
+      );
     },
     "Exception has the proper additionalErrors details"
   );
@@ -99,27 +108,41 @@ add_task(async function test_unsigned_no_id_temp_install() {
     version: "1.0",
   };
 
-  const addonDir = await promiseWriteWebManifestForExtension(manifest, gTmpD,
-                                                "the-addon-sub-dir");
+  const addonDir = await promiseWriteWebManifestForExtension(
+    manifest,
+    gTmpD,
+    "the-addon-sub-dir"
+  );
   const testDate = new Date();
   const addon = await AddonManager.installTemporaryAddon(addonDir);
 
   ok(addon.id, "ID should have been auto-generated");
-  ok(Math.abs(addon.installDate - testDate) < 10000, "addon has an expected installDate");
-  ok(Math.abs(addon.updateDate - testDate) < 10000, "addon has an expected updateDate");
+  ok(
+    Math.abs(addon.installDate - testDate) < 10000,
+    "addon has an expected installDate"
+  );
+  ok(
+    Math.abs(addon.updateDate - testDate) < 10000,
+    "addon has an expected updateDate"
+  );
 
   // The sourceURI of a temporary installed addon should be equal to the
   // file url of the installed source dir.
-  equal(addon.sourceURI && addon.sourceURI.spec,
-        Services.io.newFileURI(addonDir).spec,
-        "SourceURI of the add-on has the expected value");
+  equal(
+    addon.sourceURI && addon.sourceURI.spec,
+    Services.io.newFileURI(addonDir).spec,
+    "SourceURI of the add-on has the expected value"
+  );
 
   // Install the same directory again, as if re-installing or reloading.
   const secondAddon = await AddonManager.installTemporaryAddon(addonDir);
   // The IDs should be the same.
   equal(secondAddon.id, addon.id, "Reinstalled add-on has the expected ID");
-  equal(secondAddon.installDate.valueOf(), addon.installDate.valueOf(),
-        "Reloaded add-on has the expected installDate.");
+  equal(
+    secondAddon.installDate.valueOf(),
+    addon.installDate.valueOf(),
+    "Reloaded add-on has the expected installDate."
+  );
 
   await secondAddon.uninstall();
   Services.obs.notifyObservers(addonDir, "flush-cache-entry");
@@ -202,7 +225,8 @@ add_task(async function test_two_ids() {
 
   let manifest = {
     name: "two id test",
-    description: "test a web extension with ids in both applications and browser_specific_settings",
+    description:
+      "test a web extension with ids in both applications and browser_specific_settings",
     manifest_version: 2,
     version: "1.0",
 
@@ -262,11 +286,15 @@ add_task(async function test_strict_min_max() {
     useAddonManager: "temporary",
   });
 
-  let expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
-                               "add-on minVersion: 1. add-on maxVersion: 1.");
-  await Assert.rejects(extension.startup(),
-                       expectedMsg,
-                       "Install rejects when specified maxVersion is not valid");
+  let expectedMsg = new RegExp(
+    "Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+      "add-on minVersion: 1. add-on maxVersion: 1."
+  );
+  await Assert.rejects(
+    extension.startup(),
+    expectedMsg,
+    "Install rejects when specified maxVersion is not valid"
+  );
 
   let addon = await promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
@@ -288,11 +316,15 @@ add_task(async function test_strict_min_max() {
     useAddonManager: "temporary",
   });
 
-  expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
-                           "add-on minVersion: 2. add-on maxVersion: 2.");
-  await Assert.rejects(extension.startup(),
-                       expectedMsg,
-                       "Install rejects when specified minVersion is not valid");
+  expectedMsg = new RegExp(
+    "Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+      "add-on minVersion: 2. add-on maxVersion: 2."
+  );
+  await Assert.rejects(
+    extension.startup(),
+    expectedMsg,
+    "Install rejects when specified minVersion is not valid"
+  );
 
   addon = await promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
@@ -314,11 +346,15 @@ add_task(async function test_strict_min_max() {
     useAddonManager: "temporary",
   });
 
-  expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
-                           "add-on minVersion: 2. add-on maxVersion: 1.");
-  await Assert.rejects(extension.startup(),
-                       expectedMsg,
-                       "Install rejects when specified minVersion and maxVersion are not valid");
+  expectedMsg = new RegExp(
+    "Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+      "add-on minVersion: 2. add-on maxVersion: 1."
+  );
+  await Assert.rejects(
+    extension.startup(),
+    expectedMsg,
+    "Install rejects when specified minVersion and maxVersion are not valid"
+  );
 
   addon = await promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
@@ -339,11 +375,15 @@ add_task(async function test_strict_min_max() {
     useAddonManager: "temporary",
   });
 
-  expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version\. " +
-                           "add-on minVersion: 2\.");
-  await Assert.rejects(extension.startup(),
-                       expectedMsg,
-                       "Install rejects when specified minVersion and maxVersion are not valid");
+  expectedMsg = new RegExp(
+    "Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+      "add-on minVersion: 2."
+  );
+  await Assert.rejects(
+    extension.startup(),
+    expectedMsg,
+    "Install rejects when specified minVersion and maxVersion are not valid"
+  );
 
   addon = await promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
@@ -364,11 +404,15 @@ add_task(async function test_strict_min_max() {
     useAddonManager: "temporary",
   });
 
-  expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version\. " +
-                           "add-on maxVersion: 1\.");
-  await Assert.rejects(extension.startup(),
-                       expectedMsg,
-                       "Install rejects when specified minVersion and maxVersion are not valid");
+  expectedMsg = new RegExp(
+    "Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+      "add-on maxVersion: 1."
+  );
+  await Assert.rejects(
+    extension.startup(),
+    expectedMsg,
+    "Install rejects when specified minVersion and maxVersion are not valid"
+  );
 
   addon = await promiseAddonByID(addonId);
   equal(addon, null, "Add-on is not installed");
@@ -469,7 +513,8 @@ add_task(async function test_strict_min_max() {
     await Assert.rejects(
       minStarExtension.startup(),
       /The use of '\*' in strict_min_version is invalid/,
-      "loading an extension with a * in strict_min_version throws an exception");
+      "loading an extension with a * in strict_min_version throws an exception"
+    );
 
     let minStarAddon = await promiseAddonByID(newId);
     equal(minStarAddon, null, "Add-on is not installed");
@@ -515,7 +560,7 @@ add_task(async function test_permissions_prompt() {
     permissions: ["tabs", "storage", "https://*.example.com/*", "<all_urls>"],
   };
 
-  let xpi = ExtensionTestCommon.generateXPI({manifest});
+  let xpi = ExtensionTestCommon.generateXPI({ manifest });
 
   let install = await AddonManager.getInstallForFile(xpi);
 
@@ -528,11 +573,23 @@ add_task(async function test_permissions_prompt() {
   await install.install();
 
   notEqual(perminfo, undefined, "Permission handler was invoked");
-  equal(perminfo.existingAddon, null, "Permission info does not include an existing addon");
+  equal(
+    perminfo.existingAddon,
+    null,
+    "Permission info does not include an existing addon"
+  );
   notEqual(perminfo.addon, null, "Permission info includes the new addon");
   let perms = perminfo.addon.userPermissions;
-  deepEqual(perms.permissions, ["tabs", "storage"], "API permissions are correct");
-  deepEqual(perms.origins, ["https://*.example.com/*", "<all_urls>"], "Host permissions are correct");
+  deepEqual(
+    perms.permissions,
+    ["tabs", "storage"],
+    "API permissions are correct"
+  );
+  deepEqual(
+    perms.origins,
+    ["https://*.example.com/*", "<all_urls>"],
+    "Host permissions are correct"
+  );
 
   let addon = await promiseAddonByID(perminfo.addon.id);
   notEqual(addon, null, "Extension was installed");
@@ -552,7 +609,7 @@ add_task(async function test_permissions_prompt_cancel() {
     permissions: ["webRequestBlocking"],
   };
 
-  let xpi = ExtensionTestCommon.generateXPI({manifest});
+  let xpi = ExtensionTestCommon.generateXPI({ manifest });
 
   let install = await AddonManager.getInstallForFile(xpi);
 
@@ -578,10 +635,11 @@ add_task(async function test_non_gecko_bss_install() {
 
   const manifest = {
     name: "MS Edge and unknown browser test",
-    description: "extension with bss properties for 'edge', and 'unknown_browser'",
+    description:
+      "extension with bss properties for 'edge', and 'unknown_browser'",
     manifest_version: 2,
     version: "1.0",
-    applications: {gecko: {id: ID}},
+    applications: { gecko: { id: ID } },
     browser_specific_settings: {
       edge: {
         browser_action_next_to_addressbar: true,

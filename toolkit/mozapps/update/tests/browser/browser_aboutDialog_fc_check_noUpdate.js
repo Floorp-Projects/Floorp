@@ -6,7 +6,7 @@
 // Test for About Dialog foreground check for updates
 // with no update available.
 add_task(async function aboutDialog_foregroundCheck_noUpdate() {
-  let params = {queryString: "&noUpdates=1"};
+  let params = { queryString: "&noUpdates=1" };
   await runAboutDialogUpdateTest(params, [
     {
       panelId: "checkingForUpdates",

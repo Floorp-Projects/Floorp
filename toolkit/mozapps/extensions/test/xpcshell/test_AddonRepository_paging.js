@@ -1,4 +1,3 @@
-
 // Test that AMO api results that are returned in muliple pages are
 // properly handled.
 add_task(async function test_paged_api() {
@@ -14,10 +13,18 @@ add_task(async function test_paged_api() {
     results: [],
   };
 
-  function name(n) { return `Addon ${n}`; }
-  function id(n) { return `test${n}@tests.mozilla.org`; }
-  function summary(n) { return `Summary for addon ${n}`; }
-  function description(n) { return `Description for addon ${n}`; }
+  function name(n) {
+    return `Addon ${n}`;
+  }
+  function id(n) {
+    return `test${n}@tests.mozilla.org`;
+  }
+  function summary(n) {
+    return `Summary for addon ${n}`;
+  }
+  function description(n) {
+    return `Description for addon ${n}`;
+  }
 
   testserver.registerPathHandler("/empty", (request, response) => {
     response.setHeader("content-type", "application/json");
@@ -25,12 +32,15 @@ add_task(async function test_paged_api() {
   });
 
   testserver.registerPrefixHandler("/addons/", (request, response) => {
-    let [page ] = /\d+/.exec(request.path);
+    let [page] = /\d+/.exec(request.path);
     page = page ? parseInt(page, 10) : 0;
     page = Math.min(page, MAX_ADDON);
 
     let result = {
-      next: (page == MAX_ADDON) ? null : `http://localhost:${PORT}/addons/${page + 1}`,
+      next:
+        page == MAX_ADDON
+          ? null
+          : `http://localhost:${PORT}/addons/${page + 1}`,
       results: [
         {
           name: name(page),
@@ -46,15 +56,21 @@ add_task(async function test_paged_api() {
     response.write(JSON.stringify(result));
   });
 
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, `http://localhost:${PORT}/addons/0`);
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, `http://localhost:${PORT}/empty`);
+  Services.prefs.setCharPref(
+    PREF_GETADDONS_BYIDS,
+    `http://localhost:${PORT}/addons/0`
+  );
+  Services.prefs.setCharPref(
+    PREF_COMPAT_OVERRIDES,
+    `http://localhost:${PORT}/empty`
+  );
 
   await promiseStartupManager();
 
   for (let i = 0; i <= MAX_ADDON; i++) {
     await promiseInstallWebExtension({
       manifest: {
-        applications: {gecko: {id: id(i)}},
+        applications: { gecko: { id: id(i) } },
       },
     });
   }

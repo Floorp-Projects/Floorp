@@ -12,8 +12,9 @@ function mockAddonProvider(name) {
     startup() {
       this.hasStarted = true;
       startupOrder.push(this.name);
-      if (this.startupCallback)
+      if (this.startupCallback) {
         this.startupCallback();
+      }
     },
     getAddonByID(id, callback) {
       if (!this.hasStarted) {
@@ -46,6 +47,13 @@ add_task(async function unsafeProviderStartup() {
     promiseStartupManager();
   });
 
-  equal(startupOrder.join(","), ["Mock1", "Mock2"].join(","), "Mock providers should have hasStarted in expected order");
-  ok(!secondProvider.unsafeAccess, "Second registered mock provider should not have been accessed unsafely");
+  equal(
+    startupOrder.join(","),
+    ["Mock1", "Mock2"].join(","),
+    "Mock providers should have hasStarted in expected order"
+  );
+  ok(
+    !secondProvider.unsafeAccess,
+    "Second registered mock provider should not have been accessed unsafely"
+  );
 });

@@ -11,7 +11,7 @@ const ID3 = "addon3@tests.mozilla.org";
 async function createWebExtension(details) {
   let options = {
     manifest: {
-      applications: {gecko: {id: details.id}},
+      applications: { gecko: { id: details.id } },
 
       name: details.name,
 
@@ -20,7 +20,7 @@ async function createWebExtension(details) {
   };
 
   if (details.iconURL) {
-    options.manifest.icons = {"64": details.iconURL};
+    options.manifest.icons = { "64": details.iconURL };
   }
 
   let xpi = AddonTestUtils.createTempWebExtensionFile(options);
@@ -58,13 +58,17 @@ add_task(async function test_sideloading() {
 
   sideloaded.sort((a, b) => a.id.localeCompare(b.id));
 
-  deepEqual(sideloaded.map(a => a.id),
-            [ID1, ID2, ID3],
-            "Got the correct sideload add-ons");
+  deepEqual(
+    sideloaded.map(a => a.id),
+    [ID1, ID2, ID3],
+    "Got the correct sideload add-ons"
+  );
 
-  deepEqual(sideloaded.map(a => a.userDisabled),
-            [true, true, true],
-            "All sideloaded add-ons are disabled");
+  deepEqual(
+    sideloaded.map(a => a.userDisabled),
+    [true, true, true],
+    "All sideloaded add-ons are disabled"
+  );
 });
 
 add_task(async function test_getNewSideload_on_invalid_extension() {
@@ -72,14 +76,17 @@ add_task(async function test_getNewSideload_on_invalid_extension() {
 
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
-      applications: {gecko: {id: "@invalid-extension"}},
+      applications: { gecko: { id: "@invalid-extension" } },
       name: "Invalid Extension",
     },
   });
 
   // Create an invalid sideload by creating a file name that doesn't match the
   // actual extension id.
-  await OS.File.copy(xpi.path, OS.Path.join(destDir.path, "@wrong-extension-filename.xpi"));
+  await OS.File.copy(
+    xpi.path,
+    OS.Path.join(destDir.path, "@wrong-extension-filename.xpi")
+  );
 
   // Verify that getNewSideloads does not reject or throw when one of the sideloaded extensions
   // is invalid.
@@ -87,18 +94,24 @@ add_task(async function test_getNewSideload_on_invalid_extension() {
 
   const sideloadsInfo = newSideloads
     .sort((a, b) => a.id.localeCompare(b.id))
-    .map(({id, seen, userDisabled, permissions}) => {
+    .map(({ id, seen, userDisabled, permissions }) => {
       return {
-        id, seen, userDisabled,
+        id,
+        seen,
+        userDisabled,
         canEnable: Boolean(permissions & AddonManager.PERM_CAN_ENABLE),
       };
     });
 
-  const expectedInfo = {seen: false, userDisabled: true, canEnable: true};
+  const expectedInfo = { seen: false, userDisabled: true, canEnable: true };
 
-  Assert.deepEqual(sideloadsInfo, [
-    {id: ID1, ...expectedInfo},
-    {id: ID2, ...expectedInfo},
-    {id: ID3, ...expectedInfo},
-  ], "Got the expected sideloaded extensions");
+  Assert.deepEqual(
+    sideloadsInfo,
+    [
+      { id: ID1, ...expectedInfo },
+      { id: ID2, ...expectedInfo },
+      { id: ID3, ...expectedInfo },
+    ],
+    "Got the expected sideloaded extensions"
+  );
 });

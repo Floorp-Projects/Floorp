@@ -25,7 +25,7 @@ add_task(async function() {
       manifest: {
         name: "Test",
         version: `${n}.0`,
-        applications: {gecko: {id: ID}},
+        applications: { gecko: { id: ID } },
       },
     });
   }
@@ -64,7 +64,9 @@ add_task(async function() {
 
 // Sideloading an add-on in the systemwide location should mark it as unseen
 add_task(async function() {
-  let savedStartupScanScopes = Services.prefs.getIntPref("extensions.startupScanScopes");
+  let savedStartupScanScopes = Services.prefs.getIntPref(
+    "extensions.startupScanScopes"
+  );
   Services.prefs.setIntPref("extensions.startupScanScopes", 0);
 
   let systemParentDir = gTmpD.clone();
@@ -99,7 +101,10 @@ add_task(async function() {
   Services.obs.notifyObservers(path, "flush-cache-entry");
   path.remove(true);
 
-  Services.prefs.setIntPref("extensions.startupScanScopes", savedStartupScanScopes);
+  Services.prefs.setIntPref(
+    "extensions.startupScanScopes",
+    savedStartupScanScopes
+  );
 });
 
 // Sideloading an add-on in the profile should mark it as unseen and it should
@@ -163,7 +168,9 @@ add_task(async function() {
   // Updating through the API shouldn't change the state
   let install = await promiseInstallFile(XPIS[2]);
   Assert.equal(install.state, AddonManager.STATE_INSTALLED);
-  Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  Assert.ok(
+    !hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL)
+  );
 
   addon = install.addon;
   Assert.ok(addon.foreignInstall);
@@ -245,7 +252,9 @@ add_task(async function() {
   // Updating through the API shouldn't change the state
   let install = await promiseInstallFile(XPIS[2]);
   Assert.equal(install.state, AddonManager.STATE_INSTALLED);
-  Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  Assert.ok(
+    !hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL)
+  );
 
   addon = install.addon;
   Assert.ok(addon.foreignInstall);
@@ -261,4 +270,3 @@ add_task(async function() {
   await addon.uninstall();
   await promiseShutdownManager();
 });
-

@@ -31,11 +31,13 @@ function promiseInstallPostponed(addonID1, addonID2) {
         AddonManager.removeInstallListener(listener);
         reject("extension installation should not have failed");
       },
-      onInstallEnded: (install) => {
+      onInstallEnded: install => {
         AddonManager.removeInstallListener(listener);
-        reject(`extension installation should not have ended for ${install.addon.id}`);
+        reject(
+          `extension installation should not have ended for ${install.addon.id}`
+        );
       },
-      onInstallPostponed: (install) => {
+      onInstallPostponed: install => {
         seen.push(install.addon.id);
         if (seen.includes(addonID1) && seen.includes(addonID2)) {
           AddonManager.removeInstallListener(listener);
@@ -57,15 +59,18 @@ function promiseInstallResumed(addonID1, addonID2) {
         AddonManager.removeInstallListener(listener);
         reject("extension installation should not have failed");
       },
-      onInstallEnded: (install) => {
+      onInstallEnded: install => {
         seenEnded.push(install.addon.id);
-        if ((seenEnded.includes(addonID1) && seenEnded.includes(addonID2)) &&
-            (seenPostponed.includes(addonID1) && seenPostponed.includes(addonID2))) {
+        if (
+          seenEnded.includes(addonID1) &&
+          seenEnded.includes(addonID2) &&
+          (seenPostponed.includes(addonID1) && seenPostponed.includes(addonID2))
+        ) {
           AddonManager.removeInstallListener(listener);
           resolve();
         }
       },
-      onInstallPostponed: (install) => {
+      onInstallPostponed: install => {
         seenPostponed.push(install.addon.id);
       },
     };
@@ -82,7 +87,7 @@ function promiseInstallDeferred(addonID1, addonID2) {
         AddonManager.removeInstallListener(listener);
         reject("extension installation should not have failed");
       },
-      onInstallEnded: (install) => {
+      onInstallEnded: install => {
         seenEnded.push(install.addon.id);
         if (seenEnded.includes(addonID1) && seenEnded.includes(addonID2)) {
           AddonManager.removeInstallListener(listener);
@@ -118,7 +123,7 @@ add_task(async function() {
 
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: IGNORE_ID}},
+      applications: { gecko: { id: IGNORE_ID } },
     },
   });
   xpi.copyTo(distroDir, `${IGNORE_ID}.xpi`);
@@ -127,24 +132,29 @@ add_task(async function() {
   let xpi2 = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: IGNORE_ID}},
+      applications: { gecko: { id: IGNORE_ID } },
     },
   });
 
-  await overrideBuiltIns({ "system": [IGNORE_ID, NORMAL_ID] });
+  await overrideBuiltIns({ system: [IGNORE_ID, NORMAL_ID] });
 
   let extension = ExtensionTestUtils.expectExtension(IGNORE_ID);
 
-  await Promise.all([
-    promiseStartupManager(),
-    extension.awaitStartup(),
-  ]);
+  await Promise.all([promiseStartupManager(), extension.awaitStartup()]);
 
   let updateList = [
-    { id: IGNORE_ID, version: "2.0",
-      path: "system_delay_ignore_2.xpi", xpi: xpi2 },
-    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi",
-      xpi: await getSystemAddonXPI(1, "2.0") },
+    {
+      id: IGNORE_ID,
+      version: "2.0",
+      path: "system_delay_ignore_2.xpi",
+      xpi: xpi2,
+    },
+    {
+      id: NORMAL_ID,
+      version: "2.0",
+      path: "system1_2.xpi",
+      xpi: await getSystemAddonXPI(1, "2.0"),
+    },
   ];
 
   await Promise.all([
@@ -172,10 +182,7 @@ add_task(async function() {
   Assert.equal(addon_postponed.type, "extension");
 
   // restarting allows upgrades to proceed
-  await Promise.all([
-    promiseRestartManager(),
-    extension.awaitStartup(),
-  ]);
+  await Promise.all([promiseRestartManager(), extension.awaitStartup()]);
 
   let addon_upgraded = await promiseAddonByID(IGNORE_ID);
   Assert.notEqual(addon_upgraded, null);
@@ -219,7 +226,7 @@ add_task(async function() {
 
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: COMPLETE_ID}},
+      applications: { gecko: { id: COMPLETE_ID } },
     },
   });
   xpi.copyTo(distroDir, `${COMPLETE_ID}.xpi`);
@@ -228,24 +235,29 @@ add_task(async function() {
   let xpi2 = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: COMPLETE_ID}},
+      applications: { gecko: { id: COMPLETE_ID } },
     },
   });
 
-  await overrideBuiltIns({ "system": [COMPLETE_ID, NORMAL_ID] });
+  await overrideBuiltIns({ system: [COMPLETE_ID, NORMAL_ID] });
 
   let extension = ExtensionTestUtils.expectExtension(COMPLETE_ID);
 
-  await Promise.all([
-    promiseStartupManager(),
-    extension.awaitStartup(),
-  ]);
+  await Promise.all([promiseStartupManager(), extension.awaitStartup()]);
 
   let updateList = [
-    { id: COMPLETE_ID, version: "2.0",
-      path: "system_delay_complete_2.xpi", xpi: xpi2 },
-    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi",
-      xpi: await getSystemAddonXPI(1, "2.0") },
+    {
+      id: COMPLETE_ID,
+      version: "2.0",
+      path: "system_delay_complete_2.xpi",
+      xpi: xpi2,
+    },
+    {
+      id: NORMAL_ID,
+      version: "2.0",
+      path: "system1_2.xpi",
+      xpi: await getSystemAddonXPI(1, "2.0"),
+    },
   ];
 
   // initial state
@@ -292,10 +304,7 @@ add_task(async function() {
   Assert.equal(addon_allowed.type, "extension");
 
   // restarting changes nothing
-  await Promise.all([
-    promiseRestartManager(),
-    extension.awaitStartup(),
-  ]);
+  await Promise.all([promiseRestartManager(), extension.awaitStartup()]);
 
   let addon_upgraded = await promiseAddonByID(COMPLETE_ID);
   Assert.notEqual(addon_upgraded, null);
@@ -340,7 +349,7 @@ add_task(async function() {
     background: delayBackground,
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: DEFER_ID}},
+      applications: { gecko: { id: DEFER_ID } },
     },
   });
   xpi.copyTo(distroDir, `${DEFER_ID}.xpi`);
@@ -349,24 +358,29 @@ add_task(async function() {
   let xpi2 = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: DEFER_ID}},
+      applications: { gecko: { id: DEFER_ID } },
     },
   });
 
-  await overrideBuiltIns({ "system": [DEFER_ID, NORMAL_ID] });
+  await overrideBuiltIns({ system: [DEFER_ID, NORMAL_ID] });
 
   let extension = ExtensionTestUtils.expectExtension(DEFER_ID);
 
-  await Promise.all([
-    promiseStartupManager(),
-    extension.awaitStartup(),
-  ]);
+  await Promise.all([promiseStartupManager(), extension.awaitStartup()]);
 
   let updateList = [
-    { id: DEFER_ID, version: "2.0",
-      path: "system_delay_defer_2.xpi", xpi: xpi2 },
-    { id: NORMAL_ID, version: "2.0", path: "system1_2.xpi",
-      xpi: await getSystemAddonXPI(1, "2.0") },
+    {
+      id: DEFER_ID,
+      version: "2.0",
+      path: "system_delay_defer_2.xpi",
+      xpi: xpi2,
+    },
+    {
+      id: NORMAL_ID,
+      version: "2.0",
+      path: "system1_2.xpi",
+      xpi: await getSystemAddonXPI(1, "2.0"),
+    },
   ];
 
   await Promise.all([
@@ -452,7 +466,7 @@ add_task(async function() {
     background: delayBackground,
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: DEFER2_ID}},
+      applications: { gecko: { id: DEFER2_ID } },
     },
   });
   xpi.copyTo(distroDir, `${DEFER2_ID}.xpi`);
@@ -460,18 +474,21 @@ add_task(async function() {
   xpi = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: DEFER2_ID}},
+      applications: { gecko: { id: DEFER2_ID } },
     },
   });
   updateList.push({
-    id: DEFER2_ID, version: "2.0", path: "system_delay_defer_2.xpi", xpi,
+    id: DEFER2_ID,
+    version: "2.0",
+    path: "system_delay_defer_2.xpi",
+    xpi,
   });
 
   xpi = await createTempWebExtensionFile({
     background: delayBackground,
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: DEFER_ALSO_ID}},
+      applications: { gecko: { id: DEFER_ALSO_ID } },
     },
   });
   xpi.copyTo(distroDir, `${DEFER_ALSO_ID}.xpi`);
@@ -479,14 +496,17 @@ add_task(async function() {
   xpi = await createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: DEFER_ALSO_ID}},
+      applications: { gecko: { id: DEFER_ALSO_ID } },
     },
   });
   updateList.push({
-    id: DEFER_ALSO_ID, version: "2.0", path: "system_delay_defer_also_2.xpi", xpi,
+    id: DEFER_ALSO_ID,
+    version: "2.0",
+    path: "system_delay_defer_also_2.xpi",
+    xpi,
   });
 
-  await overrideBuiltIns({ "system": [DEFER2_ID, DEFER_ALSO_ID] });
+  await overrideBuiltIns({ system: [DEFER2_ID, DEFER_ALSO_ID] });
 
   let extension1 = ExtensionTestUtils.expectExtension(DEFER2_ID);
   let extension2 = ExtensionTestUtils.expectExtension(DEFER_ALSO_ID);

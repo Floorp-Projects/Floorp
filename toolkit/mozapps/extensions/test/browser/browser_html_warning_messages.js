@@ -6,16 +6,21 @@
 
 let gProvider;
 const {
-  STATE_BLOCKED, STATE_OUTDATED, STATE_SOFTBLOCKED, STATE_VULNERABLE_NO_UPDATE,
+  STATE_BLOCKED,
+  STATE_OUTDATED,
+  STATE_SOFTBLOCKED,
+  STATE_VULNERABLE_NO_UPDATE,
   STATE_VULNERABLE_UPDATE_AVAILABLE,
 } = Ci.nsIBlocklistService;
 
-const brandBundle =
-  Services.strings.createBundle("chrome://branding/locale/brand.properties");
+const brandBundle = Services.strings.createBundle(
+  "chrome://branding/locale/brand.properties"
+);
 const appName = brandBundle.GetStringFromName("brandShortName");
 const appVersion = Services.appinfo.version;
 const SUPPORT_URL = Services.urlFormatter.formatURL(
-  Services.prefs.getStringPref("app.support.baseURL"));
+  Services.prefs.getStringPref("app.support.baseURL")
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -32,12 +37,15 @@ async function checkMessageState(id, addonType, expected) {
     if (!expected) {
       ok(messageBar.hidden, "message is hidden");
     } else {
-      let {linkText, linkUrl, text, type} = expected;
+      let { linkText, linkUrl, text, type } = expected;
 
       ok(!messageBar.hidden, "message is visible");
       is(messageBar.getAttribute("type"), type, "message has the right type");
-      is(messageBar.querySelector("span").textContent,
-         text, "message has the right text");
+      is(
+        messageBar.querySelector("span").textContent,
+        text,
+        "message has the right text"
+      );
 
       let link = messageBar.querySelector("button");
       if (linkUrl) {
@@ -76,7 +84,7 @@ async function checkMessageState(id, addonType, expected) {
 add_task(async function testNoMessageExtension() {
   let id = "no-message@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {applications: {gecko: {id}}},
+    manifest: { applications: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -88,13 +96,15 @@ add_task(async function testNoMessageExtension() {
 
 add_task(async function testNoMessageLangpack() {
   let id = "no-message@mochi.test";
-  gProvider.createAddons([{
-    appDisabled: true,
-    id,
-    name: "Signed Langpack",
-    signedState: AddonManager.SIGNEDSTATE_SIGNED,
-    type: "locale",
-  }]);
+  gProvider.createAddons([
+    {
+      appDisabled: true,
+      id,
+      name: "Signed Langpack",
+      signedState: AddonManager.SIGNEDSTATE_SIGNED,
+      type: "locale",
+    },
+  ]);
 
   await checkMessageState(id, "locale", null);
 });
@@ -102,14 +112,16 @@ add_task(async function testNoMessageLangpack() {
 add_task(async function testBlocked() {
   let id = "blocked@mochi.test";
   let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([{
-    appDisabled: true,
-    blocklistState: STATE_BLOCKED,
-    blocklistURL: linkUrl,
-    id,
-    isActive: false,
-    name: "Blocked",
-  }]);
+  gProvider.createAddons([
+    {
+      appDisabled: true,
+      blocklistState: STATE_BLOCKED,
+      blocklistURL: linkUrl,
+      id,
+      isActive: false,
+      name: "Blocked",
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "More Information",
     linkUrl,
@@ -124,17 +136,20 @@ add_task(async function testUnsignedDisabled() {
   });
 
   let id = "unsigned@mochi.test";
-  gProvider.createAddons([{
-    appDisabled: true,
-    id,
-    name: "Unsigned",
-    signedState: AddonManager.SIGNEDSTATE_MISSING,
-  }]);
+  gProvider.createAddons([
+    {
+      appDisabled: true,
+      id,
+      name: "Unsigned",
+      signedState: AddonManager.SIGNEDSTATE_MISSING,
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
     text:
-      "Unsigned could not be verified for use in " + appName +
+      "Unsigned could not be verified for use in " +
+      appName +
       " and has been disabled.",
     type: "error",
   });
@@ -144,18 +159,21 @@ add_task(async function testUnsignedDisabled() {
 
 add_task(async function testUnsignedLangpackDisabled() {
   let id = "unsigned-langpack@mochi.test";
-  gProvider.createAddons([{
-    appDisabled: true,
-    id,
-    name: "Unsigned",
-    signedState: AddonManager.SIGNEDSTATE_MISSING,
-    type: "locale",
-  }]);
+  gProvider.createAddons([
+    {
+      appDisabled: true,
+      id,
+      name: "Unsigned",
+      signedState: AddonManager.SIGNEDSTATE_MISSING,
+      type: "locale",
+    },
+  ]);
   await checkMessageState(id, "locale", {
     linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
     text:
-      "Unsigned could not be verified for use in " + appName +
+      "Unsigned could not be verified for use in " +
+      appName +
       " and has been disabled.",
     type: "error",
   });
@@ -163,13 +181,15 @@ add_task(async function testUnsignedLangpackDisabled() {
 
 add_task(async function testIncompatible() {
   let id = "incompatible@mochi.test";
-  gProvider.createAddons([{
-    appDisabled: true,
-    id,
-    isActive: false,
-    isCompatible: false,
-    name: "Incompatible",
-  }]);
+  gProvider.createAddons([
+    {
+      appDisabled: true,
+      id,
+      isActive: false,
+      isCompatible: false,
+      name: "Incompatible",
+    },
+  ]);
   await checkMessageState(id, "extension", {
     text:
       "Incompatible is incompatible with " + appName + " " + appVersion + ".",
@@ -179,16 +199,19 @@ add_task(async function testIncompatible() {
 
 add_task(async function testUnsignedEnabled() {
   let id = "unsigned-allowed@mochi.test";
-  gProvider.createAddons([{
-    id,
-    name: "Unsigned",
-    signedState: AddonManager.SIGNEDSTATE_MISSING,
-  }]);
+  gProvider.createAddons([
+    {
+      id,
+      name: "Unsigned",
+      signedState: AddonManager.SIGNEDSTATE_MISSING,
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
     text:
-      "Unsigned could not be verified for use in " + appName +
+      "Unsigned could not be verified for use in " +
+      appName +
       ". Proceed with caution.",
     type: "warning",
   });
@@ -200,17 +223,20 @@ add_task(async function testUnsignedLangpackEnabled() {
   });
 
   let id = "unsigned-allowed-langpack@mochi.test";
-  gProvider.createAddons([{
-    id,
-    name: "Unsigned Langpack",
-    signedState: AddonManager.SIGNEDSTATE_MISSING,
-    type: "locale",
-  }]);
+  gProvider.createAddons([
+    {
+      id,
+      name: "Unsigned Langpack",
+      signedState: AddonManager.SIGNEDSTATE_MISSING,
+      type: "locale",
+    },
+  ]);
   await checkMessageState(id, "locale", {
     linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
     text:
-      "Unsigned Langpack could not be verified for use in " + appName +
+      "Unsigned Langpack could not be verified for use in " +
+      appName +
       ". Proceed with caution.",
     type: "warning",
   });
@@ -221,14 +247,16 @@ add_task(async function testUnsignedLangpackEnabled() {
 add_task(async function testSoftBlocked() {
   let id = "softblocked@mochi.test";
   let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([{
-    appDisabled: true,
-    blocklistState: STATE_SOFTBLOCKED,
-    blocklistURL: linkUrl,
-    id,
-    isActive: false,
-    name: "Soft Blocked",
-  }]);
+  gProvider.createAddons([
+    {
+      appDisabled: true,
+      blocklistState: STATE_SOFTBLOCKED,
+      blocklistURL: linkUrl,
+      id,
+      isActive: false,
+      name: "Soft Blocked",
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "More Information",
     linkUrl,
@@ -240,12 +268,14 @@ add_task(async function testSoftBlocked() {
 add_task(async function testOutdated() {
   let id = "outdated@mochi.test";
   let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([{
-    blocklistState: STATE_OUTDATED,
-    blocklistURL: linkUrl,
-    id,
-    name: "Outdated",
-  }]);
+  gProvider.createAddons([
+    {
+      blocklistState: STATE_OUTDATED,
+      blocklistURL: linkUrl,
+      id,
+      name: "Outdated",
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "Update Now",
     linkUrl,
@@ -257,12 +287,14 @@ add_task(async function testOutdated() {
 add_task(async function testVulnerableUpdate() {
   let id = "vulnerable-update@mochi.test";
   let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([{
-    blocklistState: STATE_VULNERABLE_UPDATE_AVAILABLE,
-    blocklistURL: linkUrl,
-    id,
-    name: "Vulnerable Update",
-  }]);
+  gProvider.createAddons([
+    {
+      blocklistState: STATE_VULNERABLE_UPDATE_AVAILABLE,
+      blocklistURL: linkUrl,
+      id,
+      name: "Vulnerable Update",
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "Update Now",
     linkUrl,
@@ -274,12 +306,14 @@ add_task(async function testVulnerableUpdate() {
 add_task(async function testVulnerableNoUpdate() {
   let id = "vulnerable-no-update@mochi.test";
   let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([{
-    blocklistState: STATE_VULNERABLE_NO_UPDATE,
-    blocklistURL: linkUrl,
-    id,
-    name: "Vulnerable No Update",
-  }]);
+  gProvider.createAddons([
+    {
+      blocklistState: STATE_VULNERABLE_NO_UPDATE,
+      blocklistURL: linkUrl,
+      id,
+      name: "Vulnerable No Update",
+    },
+  ]);
   await checkMessageState(id, "extension", {
     linkText: "More Information",
     linkUrl,
@@ -290,14 +324,16 @@ add_task(async function testVulnerableNoUpdate() {
 
 add_task(async function testPluginInstalling() {
   let id = "plugin-installing@mochi.test";
-  gProvider.createAddons([{
-    id,
-    isActive: true,
-    isGMPlugin: true,
-    isInstalled: false,
-    name: "Plugin Installing",
-    type: "plugin",
-  }]);
+  gProvider.createAddons([
+    {
+      id,
+      isActive: true,
+      isGMPlugin: true,
+      isInstalled: false,
+      name: "Plugin Installing",
+      type: "plugin",
+    },
+  ]);
   await checkMessageState(id, "plugin", {
     text: "Plugin Installing will be installed shortly.",
     type: "warning",

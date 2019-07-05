@@ -21,11 +21,13 @@ add_task(async function run_test_1() {
   install.cancel();
 });
 
-
 // Checks that a corrupt file shows an error
 add_task(async function run_test_2() {
   let xpi = AddonTestUtils.allocTempXPIFile();
-  await OS.File.writeAtomic(xpi.path, new TextEncoder().encode("this is not a zip file"));
+  await OS.File.writeAtomic(
+    xpi.path,
+    new TextEncoder().encode("this is not a zip file")
+  );
 
   let install = await AddonManager.getInstallForFile(xpi);
   Assert.notEqual(install, null);
@@ -46,7 +48,7 @@ add_task(async function run_test_3() {
 add_task(async function run_test_4() {
   let xpi = await createTempWebExtensionFile({});
   let url = Services.io.newFileURI(xpi).spec;
-  let install = await AddonManager.getInstallForURL(url, {hash: "sha1:foo"});
+  let install = await AddonManager.getInstallForURL(url, { hash: "sha1:foo" });
   Assert.notEqual(install, null);
   Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   Assert.equal(install.error, AddonManager.ERROR_INCORRECT_HASH);
@@ -66,7 +68,7 @@ add_task(async function run_test_5() {
 add_task(async function run_test_6() {
   let xpi = await createTempWebExtensionFile({
     manifest: {
-      applications: {gecko: {id: "invalid"}},
+      applications: { gecko: { id: "invalid" } },
     },
   });
   let install = await AddonManager.getInstallForFile(xpi);

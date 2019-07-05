@@ -18,41 +18,57 @@ SpecialPowers.pushPrefEnv({
 async function runTest(installer) {
   let mgrWindow = await open_manager("addons://list/extension");
 
-  let {addon, id} = await installer();
+  let { addon, id } = await installer();
   isnot(addon, null, "Extension is installed");
 
   let element = get_addon_element(mgrWindow, id);
   element.parentNode.ensureElementIsVisible(element);
 
-  let button = mgrWindow.document.getAnonymousElementByAttribute(element, "anonid", "preferences-btn");
+  let button = mgrWindow.document.getAnonymousElementByAttribute(
+    element,
+    "anonid",
+    "preferences-btn"
+  );
   is_element_visible(button, "Preferences button should be visible");
 
-  EventUtils.synthesizeMouseAtCenter(button, {clickCount: 1}, mgrWindow);
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, mgrWindow);
 
-  await TestUtils.topicObserved(AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
-                                (subject, data) => data == id);
+  await TestUtils.topicObserved(
+    AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+    (subject, data) => data == id
+  );
 
-  is(mgrWindow.gViewController.currentViewId,
-     `addons://detail/${encodeURIComponent(id)}/preferences`,
-     "Current view should scroll to preferences");
+  is(
+    mgrWindow.gViewController.currentViewId,
+    `addons://detail/${encodeURIComponent(id)}/preferences`,
+    "Current view should scroll to preferences"
+  );
 
-  var browser = mgrWindow.document.querySelector("#detail-grid > rows > stack > .inline-options-browser");
+  var browser = mgrWindow.document.querySelector(
+    "#detail-grid > rows > stack > .inline-options-browser"
+  );
   ok(browser, "Grid should have a browser descendant");
   is(browser.localName, "browser", "Grid should have a browser descendant");
 
   var rows = browser.parentNode;
 
-  await ContentTask.spawn(browser, element.mAddon.optionsURL,
-                          async url => {
-    await ContentTaskUtils.waitForCondition(() =>
-      content.location.href == url,
-      "Browser has the expected options URL loaded");
+  await ContentTask.spawn(browser, element.mAddon.optionsURL, async url => {
+    await ContentTaskUtils.waitForCondition(
+      () => content.location.href == url,
+      "Browser has the expected options URL loaded"
+    );
   });
 
-  is(browser.clientWidth, browser.parentNode.clientWidth,
-     "Browser should be the same width as its direct parent");
-  is(browser.clientWidth, rows.clientWidth,
-     "Browser should be the same width as its rows ancestor");
+  is(
+    browser.clientWidth,
+    browser.parentNode.clientWidth,
+    "Browser should be the same width as its direct parent"
+  );
+  is(
+    browser.clientWidth,
+    rows.clientWidth,
+    "Browser should be the same width as its rows ancestor"
+  );
 
   button = mgrWindow.document.getElementById("detail-prefs-btn");
   is_element_hidden(button, "Preferences button should not be visible");
@@ -63,7 +79,10 @@ async function runTest(installer) {
 }
 
 function promiseWebExtensionStartup() {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm",
+    null
+  );
 
   return new Promise(resolve => {
     let listener = (event, extension) => {
@@ -87,7 +106,7 @@ add_task(async function test_options_signed() {
     ]);
     let addon = await promiseAddonByID(ID);
 
-    return {addon, id: ID};
+    return { addon, id: ID };
   });
 });
 
@@ -100,6 +119,6 @@ add_task(async function test_options_temporary() {
     ]);
     isnot(addon, null, "Extension is installed (temporarily)");
 
-    return {addon, id: addon.id};
+    return { addon, id: addon.id };
   });
 });

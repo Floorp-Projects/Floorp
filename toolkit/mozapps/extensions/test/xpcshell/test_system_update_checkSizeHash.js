@@ -22,11 +22,11 @@ const TEST_CONDITIONS = {
       distroDir.leafName = "empty";
     },
     initialState: [
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
     ],
   },
   // Runs tests with default system add-ons installed
@@ -36,11 +36,11 @@ const TEST_CONDITIONS = {
       distroDir.leafName = "prefilled";
     },
     initialState: [
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: "2.0"},
-      { isUpgrade: false, version: "2.0"},
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: "2.0" },
+      { isUpgrade: false, version: "2.0" },
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
     ],
   },
 
@@ -51,11 +51,11 @@ const TEST_CONDITIONS = {
       distroDir.leafName = "empty";
     },
     initialState: [
-      { isUpgrade: false, version: null},
-      { isUpgrade: true, version: "2.0"},
-      { isUpgrade: true, version: "2.0"},
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
+      { isUpgrade: false, version: null },
+      { isUpgrade: true, version: "2.0" },
+      { isUpgrade: true, version: "2.0" },
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
     ],
   },
 
@@ -66,11 +66,11 @@ const TEST_CONDITIONS = {
       distroDir.leafName = "hidden";
     },
     initialState: [
-      { isUpgrade: false, version: "1.0"},
-      { isUpgrade: true, version: "2.0"},
-      { isUpgrade: true, version: "2.0"},
-      { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null},
+      { isUpgrade: false, version: "1.0" },
+      { isUpgrade: true, version: "2.0" },
+      { isUpgrade: true, version: "2.0" },
+      { isUpgrade: false, version: null },
+      { isUpgrade: false, version: null },
     ],
   },
 };
@@ -91,35 +91,35 @@ const TESTS = {
   // Correct sizes and hashes should work
   checkSizeHash: {
     // updateList is populated in setup()
-    updateList: [ ],
+    updateList: [],
     finalState: {
       blank: [
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "1.0" },
       ],
       withAppSet: [
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "1.0" },
       ],
       withProfileSet: [
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "1.0" },
       ],
       withBothSets: [
-        { isUpgrade: false, version: "1.0"},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: true, version: "3.0"},
-        { isUpgrade: false, version: null},
-        { isUpgrade: true, version: "1.0"},
+        { isUpgrade: false, version: "1.0" },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: true, version: "3.0" },
+        { isUpgrade: false, version: null },
+        { isUpgrade: true, version: "1.0" },
       ],
     },
   },
@@ -129,7 +129,7 @@ add_task(async function setup() {
   await initSystemAddonDirs();
 
   // Initialise the profile
-  await overrideBuiltIns({ "system": [] });
+  await overrideBuiltIns({ system: [] });
   await promiseStartupManager();
   await promiseShutdownManager();
 
@@ -149,7 +149,9 @@ add_task(async function setup() {
     id: "system3@tests.mozilla.org",
     version: "3.0",
     path: "system3_3.xpi",
-    xpi, hashFunction, hashValue,
+    xpi,
+    hashFunction,
+    hashValue,
   });
 
   xpi = await getSystemAddonXPI(5, "1.0");
@@ -159,19 +161,21 @@ add_task(async function setup() {
     version: "1.0",
     path: "system5_1.xpi",
     size: xpi.fileSize,
-    xpi, hashFunction, hashValue,
+    xpi,
+    hashFunction,
+    hashValue,
   });
 });
 
 add_task(async function() {
   for (let setupName of Object.keys(TEST_CONDITIONS)) {
     for (let testName of Object.keys(TESTS)) {
-        info("Running test " + setupName + " " + testName);
+      info("Running test " + setupName + " " + testName);
 
-        let setup = TEST_CONDITIONS[setupName];
-        let test = TESTS[testName];
+      let setup = TEST_CONDITIONS[setupName];
+      let test = TESTS[testName];
 
-        await execSystemAddonTest(setupName, setup, test, distroDir);
+      await execSystemAddonTest(setupName, setup, test, distroDir);
     }
   }
 });

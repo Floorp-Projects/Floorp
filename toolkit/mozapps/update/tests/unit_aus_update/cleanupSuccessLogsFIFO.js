@@ -8,7 +8,7 @@ async function run_test() {
 
   debugDump("testing update logs are first in first out deleted");
 
-  let patchProps = {state: STATE_PENDING};
+  let patchProps = { state: STATE_PENDING };
   let patches = getLocalPatchString(patchProps);
   let updates = getLocalUpdateString({}, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
@@ -25,10 +25,15 @@ async function run_test() {
 
   standardInit();
 
-  Assert.ok(!gUpdateManager.activeUpdate,
-            "there should not be an active update");
-  Assert.equal(gUpdateManager.updateCount, 1,
-               "the update manager update count" + MSG_SHOULD_EQUAL);
+  Assert.ok(
+    !gUpdateManager.activeUpdate,
+    "there should not be an active update"
+  );
+  Assert.equal(
+    gUpdateManager.updateCount,
+    1,
+    "the update manager update count" + MSG_SHOULD_EQUAL
+  );
   await waitForUpdateXMLFiles();
 
   log = getUpdateDirFile(FILE_UPDATE_LOG);
@@ -36,13 +41,19 @@ async function run_test() {
 
   log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  Assert.equal(readFile(log), "Last Update Log",
-               "the last update log contents" + MSG_SHOULD_EQUAL);
+  Assert.equal(
+    readFile(log),
+    "Last Update Log",
+    "the last update log contents" + MSG_SHOULD_EQUAL
+  );
 
   log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
   Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  Assert.equal(readFile(log), "Backup Update Log",
-               "the backup update log contents" + MSG_SHOULD_EQUAL);
+  Assert.equal(
+    readFile(log),
+    "Backup Update Log",
+    "the backup update log contents" + MSG_SHOULD_EQUAL
+  );
 
   let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);

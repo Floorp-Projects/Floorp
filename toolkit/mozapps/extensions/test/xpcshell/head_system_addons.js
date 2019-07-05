@@ -1,23 +1,25 @@
-
 /* import-globals-from head_addons.js */
 
-const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
-const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
-const PREF_SYSTEM_ADDON_UPDATE_ENABLED = "extensions.systemAddon.update.enabled";
+const PREF_SYSTEM_ADDON_SET = "extensions.systemAddonSet";
+const PREF_SYSTEM_ADDON_UPDATE_URL = "extensions.systemAddon.update.url";
+const PREF_SYSTEM_ADDON_UPDATE_ENABLED =
+  "extensions.systemAddon.update.enabled";
 
 // See bug 1507255
 Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
 
 function root(server) {
-  let {primaryScheme, primaryHost, primaryPort} = server.identity;
+  let { primaryScheme, primaryHost, primaryPort } = server.identity;
   return `${primaryScheme}://${primaryHost}:${primaryPort}/data`;
 }
 
 XPCOMUtils.defineLazyGetter(this, "testserver", () => {
   let server = new HttpServer();
   server.start();
-  Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL,
-                             `${root(server)}/update.xml`);
+  Services.prefs.setCharPref(
+    PREF_SYSTEM_ADDON_UPDATE_URL,
+    `${root(server)}/update.xml`
+  );
   return server;
 });
 
@@ -38,13 +40,19 @@ async function serveSystemUpdate(xml, perform_update) {
 async function installSystemAddons(xml, waitIDs = []) {
   info("Triggering system add-on update check.");
 
-  await serveSystemUpdate(xml, async function() {
-    let { XPIProvider } = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm");
-    await Promise.all([
-      XPIProvider.updateSystemAddons(),
-      ...waitIDs.map(id => promiseWebExtensionStartup(id)),
-    ]);
-  }, testserver);
+  await serveSystemUpdate(
+    xml,
+    async function() {
+      let { XPIProvider } = ChromeUtils.import(
+        "resource://gre/modules/addons/XPIProvider.jsm"
+      );
+      await Promise.all([
+        XPIProvider.updateSystemAddons(),
+        ...waitIDs.map(id => promiseWebExtensionStartup(id)),
+      ]);
+    },
+    testserver
+  );
 }
 
 // Runs a full add-on update check which will in some cases do a system add-on
@@ -52,18 +60,25 @@ async function installSystemAddons(xml, waitIDs = []) {
 async function updateAllSystemAddons(xml) {
   info("Triggering full add-on update check.");
 
-  await serveSystemUpdate(xml, function() {
-    return new Promise(resolve => {
-      Services.obs.addObserver(function observer() {
-        Services.obs.removeObserver(observer, "addons-background-update-complete");
+  await serveSystemUpdate(
+    xml,
+    function() {
+      return new Promise(resolve => {
+        Services.obs.addObserver(function observer() {
+          Services.obs.removeObserver(
+            observer,
+            "addons-background-update-complete"
+          );
 
-        resolve();
-      }, "addons-background-update-complete");
+          resolve();
+        }, "addons-background-update-complete");
 
-      // Trigger the background update timer handler
-      gInternalManager.notify(null);
-    });
-  }, testserver);
+        // Trigger the background update timer handler
+        gInternalManager.notify(null);
+      });
+    },
+    testserver
+  );
 }
 
 // Builds an update.xml file for an update check based on the data passed.
@@ -76,11 +91,15 @@ function buildSystemAddonUpdates(addons) {
         testserver.registerFile(`/data/${addon.path}`, addon.xpi);
       }
 
-      xml += `    <addon id="${addon.id}" URL="${root(testserver)}/${addon.path}" version="${addon.version}"`;
-      if (addon.hashFunction)
+      xml += `    <addon id="${addon.id}" URL="${root(testserver)}/${
+        addon.path
+      }" version="${addon.version}"`;
+      if (addon.hashFunction) {
         xml += ` hashFunction="${addon.hashFunction}"`;
-      if (addon.hashValue)
+      }
+      if (addon.hashValue) {
         xml += ` hashValue="${addon.hashValue}"`;
+      }
       xml += `/>\n`;
     }
     xml += `  </addons>\n`;
@@ -94,30 +113,41 @@ let _systemXPIs = new Map();
 function getSystemAddonXPI(num, version) {
   let key = `${num}:${version}`;
   if (!_systemXPIs.has(key)) {
-    _systemXPIs.set(key, AddonTestUtils.createTempWebExtensionFile({
-      manifest: {
-        name: `System Add-on ${num}`,
-        version,
-        applications: {
-          gecko: {
-            id: `system${num}@tests.mozilla.org`,
+    _systemXPIs.set(
+      key,
+      AddonTestUtils.createTempWebExtensionFile({
+        manifest: {
+          name: `System Add-on ${num}`,
+          version,
+          applications: {
+            gecko: {
+              id: `system${num}@tests.mozilla.org`,
+            },
           },
         },
-      },
-    }));
+      })
+    );
   }
   return _systemXPIs.get(key);
 }
 
 async function initSystemAddonDirs() {
-  let hiddenSystemAddonDir = FileUtils.getDir("ProfD", ["sysfeatures", "hidden"], true);
+  let hiddenSystemAddonDir = FileUtils.getDir(
+    "ProfD",
+    ["sysfeatures", "hidden"],
+    true
+  );
   let system1_1 = await getSystemAddonXPI(1, "1.0");
   system1_1.copyTo(hiddenSystemAddonDir, "system1@tests.mozilla.org.xpi");
 
   let system2_1 = await getSystemAddonXPI(2, "1.0");
   system2_1.copyTo(hiddenSystemAddonDir, "system2@tests.mozilla.org.xpi");
 
-  let prefilledSystemAddonDir = FileUtils.getDir("ProfD", ["sysfeatures", "prefilled"], true);
+  let prefilledSystemAddonDir = FileUtils.getDir(
+    "ProfD",
+    ["sysfeatures", "prefilled"],
+    true
+  );
   let system2_2 = await getSystemAddonXPI(2, "2.0");
   system2_2.copyTo(prefilledSystemAddonDir, "system2@tests.mozilla.org.xpi");
   let system3_2 = await getSystemAddonXPI(3, "2.0");
@@ -141,8 +171,9 @@ function getCurrentSystemAddonUpdatesDir() {
 function clearSystemAddonUpdatesDir() {
   const updatesDir = FileUtils.getDir("ProfD", ["features"], false);
   // Delete any existing directories
-  if (updatesDir.exists())
+  if (updatesDir.exists()) {
     updatesDir.remove(true);
+  }
 
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
 }
@@ -163,21 +194,32 @@ async function buildPrefilledUpdatesDir() {
   xpi.copyTo(dir, "system3@tests.mozilla.org.xpi");
 
   // Mark these in the past so the startup file scan notices when files have changed properly
-  FileUtils.getFile("ProfD", ["features", "prefilled", "system2@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
-  FileUtils.getFile("ProfD", ["features", "prefilled", "system3@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
+  FileUtils.getFile("ProfD", [
+    "features",
+    "prefilled",
+    "system2@tests.mozilla.org.xpi",
+  ]).lastModifiedTime -= 10000;
+  FileUtils.getFile("ProfD", [
+    "features",
+    "prefilled",
+    "system3@tests.mozilla.org.xpi",
+  ]).lastModifiedTime -= 10000;
 
-  Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify({
-    schema: 1,
-    directory: dir.leafName,
-    addons: {
-      "system2@tests.mozilla.org": {
-        version: "2.0",
+  Services.prefs.setCharPref(
+    PREF_SYSTEM_ADDON_SET,
+    JSON.stringify({
+      schema: 1,
+      directory: dir.leafName,
+      addons: {
+        "system2@tests.mozilla.org": {
+          version: "2.0",
+        },
+        "system3@tests.mozilla.org": {
+          version: "2.0",
+        },
       },
-      "system3@tests.mozilla.org": {
-        version: "2.0",
-      },
-    },
-  }));
+    })
+  );
 }
 
 /**
@@ -273,7 +315,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
   distroDir.leafName = "empty";
 
   let updateList = [];
-  await overrideBuiltIns({ "system": updateList });
+  await overrideBuiltIns({ system: updateList });
   await promiseStartupManager();
   await promiseShutdownManager();
 
@@ -287,15 +329,14 @@ async function setupSystemAddonConditions(setup, distroDir) {
       updateList = ["system2@tests.mozilla.org", "system3@tests.mozilla.org"];
     }
   }
-  await overrideBuiltIns({ "system": updateList });
+  await overrideBuiltIns({ system: updateList });
 
   let startupPromises = setup.initialState.map((item, i) =>
-    item.version ? promiseWebExtensionStartup(`system${i + 1}@tests.mozilla.org`)
-      : null);
-  await Promise.all([
-    promiseStartupManager(),
-    ...startupPromises,
-  ]);
+    item.version
+      ? promiseWebExtensionStartup(`system${i + 1}@tests.mozilla.org`)
+      : null
+  );
+  await Promise.all([promiseStartupManager(), ...startupPromises]);
 
   // Make sure the initial state is correct
   info("Checking initial state.");
@@ -310,7 +351,12 @@ async function setupSystemAddonConditions(setup, distroDir) {
  * @param {Boolean} alreadyUpgraded - whether a restartless upgrade has already been performed.
  * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
  */
-async function verifySystemAddonState(initialState, finalState = undefined, alreadyUpgraded = false, distroDir) {
+async function verifySystemAddonState(
+  initialState,
+  finalState = undefined,
+  alreadyUpgraded = false,
+  distroDir
+) {
   let expectedDirs = 0;
 
   // If the initial state was using the profile set then that directory will
@@ -351,7 +397,7 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
       updateList = ["system2@tests.mozilla.org", "system3@tests.mozilla.org"];
     }
   }
-  await overrideBuiltIns({ "system": updateList });
+  await overrideBuiltIns({ system: updateList });
   await promiseStartupManager();
   await checkInstalledSystemAddons(finalState, distroDir);
 }
@@ -400,9 +446,19 @@ async function execSystemAddonTest(setupName, setup, test, distroDir) {
   // some tests have a different expected combination of default
   // and updated add-ons.
   if (test.finalState && setupName in test.finalState) {
-    await verifySystemAddonState(setup.initialState, test.finalState[setupName], false, distroDir);
+    await verifySystemAddonState(
+      setup.initialState,
+      test.finalState[setupName],
+      false,
+      distroDir
+    );
   } else {
-    await verifySystemAddonState(setup.initialState, undefined, false, distroDir);
+    await verifySystemAddonState(
+      setup.initialState,
+      undefined,
+      false,
+      distroDir
+    );
   }
 
   await promiseShutdownManager();

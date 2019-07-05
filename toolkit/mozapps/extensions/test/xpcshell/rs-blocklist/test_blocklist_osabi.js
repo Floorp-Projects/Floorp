@@ -51,7 +51,7 @@ const ADDONS = [
   {
     id: "test_bug393285_5@tests.mozilla.org",
     name: "extension 5",
-      version: "1.0",
+    version: "1.0",
 
     // Not blocklisted because we are a different OS
     notBlocklisted: [["2", "1.9"]],
@@ -139,11 +139,11 @@ const BLOCKLIST_DATA = [
   },
   {
     guid: "test_bug393285_3a@tests.mozilla.org",
-    versionRange: [{maxVersion: "1.0", minVersion: "1.0"}],
+    versionRange: [{ maxVersion: "1.0", minVersion: "1.0" }],
   },
   {
     guid: "test_bug393285_3b@tests.mozilla.org",
-    versionRange: [{maxVersion: "1.0", minVersion: "1.0"}],
+    versionRange: [{ maxVersion: "1.0", minVersion: "1.0" }],
   },
   {
     guid: "test_bug393285_4@tests.mozilla.org",
@@ -226,35 +226,46 @@ add_task(async function setup() {
       manifest: {
         name: addon.name,
         version: addon.version,
-        applications: {gecko: {id: addon.id}},
+        applications: { gecko: { id: addon.id } },
       },
     });
   }
 
   let addons = await getAddons(ADDON_IDS);
   for (let id of ADDON_IDS) {
-    equal(addons.get(id).blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-          `Add-on ${id} should not initially be blocked`);
+    equal(
+      addons.get(id).blocklistState,
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      `Add-on ${id} should not initially be blocked`
+    );
   }
 });
 
 add_task(async function test_1() {
-  await AddonTestUtils.loadBlocklistRawData({extensions: BLOCKLIST_DATA});
+  await AddonTestUtils.loadBlocklistRawData({ extensions: BLOCKLIST_DATA });
 
   let addons = await getAddons(ADDON_IDS);
   async function isBlocklisted(addon, appVer, toolkitVer) {
-    let state = await Blocklist.getAddonBlocklistState(addon, appVer, toolkitVer);
+    let state = await Blocklist.getAddonBlocklistState(
+      addon,
+      appVer,
+      toolkitVer
+    );
     return state != Services.blocklist.STATE_NOT_BLOCKED;
   }
   for (let addon of ADDONS) {
-    let {id} = addon;
+    let { id } = addon;
     for (let blocklisted of addon.blocklisted || []) {
-      ok(await isBlocklisted(addons.get(id), ...blocklisted),
-         `Add-on ${id} should be blocklisted in app/platform version ${blocklisted}`);
+      ok(
+        await isBlocklisted(addons.get(id), ...blocklisted),
+        `Add-on ${id} should be blocklisted in app/platform version ${blocklisted}`
+      );
     }
     for (let notBlocklisted of addon.notBlocklisted || []) {
-      ok(!(await isBlocklisted(addons.get(id), ...notBlocklisted)),
-         `Add-on ${id} should not be blocklisted in app/platform version ${notBlocklisted}`);
+      ok(
+        !(await isBlocklisted(addons.get(id), ...notBlocklisted)),
+        `Add-on ${id} should not be blocklisted in app/platform version ${notBlocklisted}`
+      );
     }
   }
 });

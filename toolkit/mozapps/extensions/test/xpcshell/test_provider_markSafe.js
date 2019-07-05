@@ -6,8 +6,9 @@ function mockAddonProvider(name) {
     apiAccessed: false,
 
     startup() {
-      if (this.markSafe)
+      if (this.markSafe) {
         AddonManagerPrivate.markProviderSafe(this);
+      }
 
       AddonManager.isInstallEnabled("made-up-mimetype");
     },
