@@ -48,7 +48,8 @@ class BiquadFilterNode final : public AudioNode {
 
   void GetFrequencyResponse(const Float32Array& aFrequencyHz,
                             const Float32Array& aMagResponse,
-                            const Float32Array& aPhaseResponse);
+                            const Float32Array& aPhaseResponse,
+                            ErrorResult& aRv);
 
   const char* NodeType() const override { return "BiquadFilterNode"; }
 
