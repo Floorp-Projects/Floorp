@@ -17,9 +17,9 @@ function load_test_vacuum_component() {
   // This is a lazy check, there could be more participants than just this test
   // we just mind that the test exists though.
   const EXPECTED_ENTRIES = ["vacuumParticipant"];
-  let {catMan} = Services;
+  let { catMan } = Services;
   let found = false;
-  for (let {data: entry} of catMan.enumerateCategory(CATEGORY_NAME)) {
+  for (let { data: entry } of catMan.enumerateCategory(CATEGORY_NAME)) {
     print("Check if the found category entry (" + entry + ") is expected.");
     if (EXPECTED_ENTRIES.includes(entry)) {
       print("Check that only one test entry exists.");
@@ -76,9 +76,10 @@ function run_test() {
 }
 
 const TESTS = [
-
   function test_common_vacuum() {
-    print("\n*** Test that a VACUUM correctly happens and all notifications are fired.");
+    print(
+      "\n*** Test that a VACUUM correctly happens and all notifications are fired."
+    );
     // Wait for VACUUM begin.
     let beginVacuumReceived = false;
     Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
@@ -118,8 +119,10 @@ const TESTS = [
 
   function test_skipped_if_recent_vacuum() {
     print("\n*** Test that a VACUUM is skipped if it was run recently.");
-    Services.prefs.setIntPref("storage.vacuum.last.testVacuum.sqlite",
-                              parseInt(Date.now() / 1000));
+    Services.prefs.setIntPref(
+      "storage.vacuum.last.testVacuum.sqlite",
+      parseInt(Date.now() / 1000)
+    );
 
     // Wait for VACUUM begin.
     let vacuumObserver = {
@@ -162,7 +165,9 @@ const TESTS = [
   },
 
   function test_skipped_optout_vacuum() {
-    print("\n*** Test that a VACUUM is skipped if the participant wants to opt-out.");
+    print(
+      "\n*** Test that a VACUUM is skipped if the participant wants to opt-out."
+    );
     Services.obs.notifyObservers(null, "test-options", "opt-out");
 
     // Wait for VACUUM begin.
@@ -307,8 +312,10 @@ function run_next_test() {
     do_test_finished();
   } else {
     // Set last VACUUM to a date in the past.
-    Services.prefs.setIntPref("storage.vacuum.last.testVacuum.sqlite",
-                              parseInt(Date.now() / 1000 - 31 * 86400));
+    Services.prefs.setIntPref(
+      "storage.vacuum.last.testVacuum.sqlite",
+      parseInt(Date.now() / 1000 - 31 * 86400)
+    );
     executeSoon(TESTS.shift());
   }
 }
