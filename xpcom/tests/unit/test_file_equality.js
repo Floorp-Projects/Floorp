@@ -6,7 +6,7 @@
 
 var LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   test_normalized_vs_non_normalized();
@@ -17,8 +17,9 @@ function test_normalized_vs_non_normalized() {
   var tmp1 = Services.dirsvc.get("TmpD", Ci.nsIFile);
   var exists = tmp1.exists();
   Assert.ok(exists);
-  if (!exists)
+  if (!exists) {
     return;
+  }
 
   // the test logic below assumes we're starting with a normalized path, but the
   // default location on macos is a symbolic link, so resolve it before starting

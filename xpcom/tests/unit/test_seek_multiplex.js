@@ -8,21 +8,25 @@ const data = "0123456789";
 const count = 10;
 
 function test_multiplex_streams() {
-  var MultiplexStream = CC("@mozilla.org/io/multiplex-input-stream;1",
-                           "nsIMultiplexInputStream");
+  var MultiplexStream = CC(
+    "@mozilla.org/io/multiplex-input-stream;1",
+    "nsIMultiplexInputStream"
+  );
   Assert.equal(1, 1);
 
   var multiplex = new MultiplexStream();
   for (var i = 0; i < count; ++i) {
-    let s = Cc["@mozilla.org/io/string-input-stream;1"]
-              .createInstance(Ci.nsIStringInputStream);
+    let s = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+      Ci.nsIStringInputStream
+    );
     s.setData(data, data.length);
 
     multiplex.appendStream(s);
   }
   var seekable = multiplex.QueryInterface(Ci.nsISeekableStream);
-  var sis = Cc["@mozilla.org/scriptableinputstream;1"]
-              .createInstance(Ci.nsIScriptableInputStream);
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(seekable);
   // Read some data.
   var readData = sis.read(20);
@@ -125,20 +129,24 @@ function test_multiplex_streams() {
 function test_multiplex_bug797871() {
   var data2 = "1234567890123456789012345678901234567890";
 
-  var MultiplexStream = CC("@mozilla.org/io/multiplex-input-stream;1",
-                           "nsIMultiplexInputStream");
+  var MultiplexStream = CC(
+    "@mozilla.org/io/multiplex-input-stream;1",
+    "nsIMultiplexInputStream"
+  );
   Assert.equal(1, 1);
 
   var multiplex = new MultiplexStream();
-  let s = Cc["@mozilla.org/io/string-input-stream;1"]
-            .createInstance(Ci.nsIStringInputStream);
+  let s = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   s.setData(data2, data2.length);
 
   multiplex.appendStream(s);
 
   var seekable = multiplex.QueryInterface(Ci.nsISeekableStream);
-  var sis = Cc["@mozilla.org/scriptableinputstream;1"]
-              .createInstance(Ci.nsIScriptableInputStream);
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(seekable);
 
   seekable.seek(Ci.nsISeekableStream.NS_SEEK_SET, 8);

@@ -45,7 +45,6 @@ module.exports = {
   "overrides": [{
       "files": [
         "devtools/**",
-        "xpcom/**",
         "xpfe/**",
       ],
       "rules": {

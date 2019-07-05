@@ -40,7 +40,6 @@ toolkit/components/telemetry/datareporting-prefs.js
 toolkit/components/telemetry/healthreport-prefs.js
 
 # Ignore all top-level directories for now.
-xpcom/**
 xpfe/**
 
 # Ignore all devtools directories for now, except the debugger.
