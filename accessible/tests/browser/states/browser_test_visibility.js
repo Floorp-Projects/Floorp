@@ -6,8 +6,10 @@
 
 /* import-globals-from ../../mochitest/role.js */
 /* import-globals-from ../../mochitest/states.js */
-loadScripts({ name: "role.js", dir: MOCHITESTS_DIR },
-            { name: "states.js", dir: MOCHITESTS_DIR });
+loadScripts(
+  { name: "role.js", dir: MOCHITESTS_DIR },
+  { name: "states.js", dir: MOCHITESTS_DIR }
+);
 
 async function runTest(browser, accDoc) {
   let getAcc = id => findAccessibleChildByID(accDoc, id);
@@ -38,11 +40,13 @@ async function runTest(browser, accDoc) {
   BrowserTestUtils.removeTab(newTab);
 }
 
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <div id="div" style="border:2px solid blue; width: 500px; height: 110vh;"></div>
   <input id="input_scrolledoff">
   <ul style="border:2px solid red; width: 100px; height: 50px; overflow: auto;">
     <li id="li_first">item1</li><li>item2</li><li>item3</li>
     <li>item4</li><li>item5</li><li id="li_last">item6</li>
-  </ul>`, runTest
+  </ul>`,
+  runTest
 );
