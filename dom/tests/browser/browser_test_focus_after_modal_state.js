@@ -31,18 +31,23 @@ add_task(async function() {
   // Focus on editable iframe.
   await BrowserTestUtils.synthesizeMouseAtCenter("#edit", {}, browser);
   await ContentTask.spawn(browser, null, async function() {
-    is(content.document.activeElement, content.document.getElementById("edit"),
-       "Focus should be on iframe element");
+    is(
+      content.document.activeElement,
+      content.document.getElementById("edit"),
+      "Focus should be on iframe element"
+    );
   });
 
   await ContentTask.spawn(browser, null, async function() {
-    content.document.getElementById("edit").contentDocument.addEventListener(
-      "focus", function(event) {
+    content.document
+      .getElementById("edit")
+      .contentDocument.addEventListener("focus", function(event) {
         sendAsyncMessage("Test:FocusReceived");
       });
 
-    content.document.getElementById("edit").contentDocument.addEventListener(
-      "blur", function(event) {
+    content.document
+      .getElementById("edit")
+      .contentDocument.addEventListener("blur", function(event) {
         sendAsyncMessage("Test:BlurReceived");
       });
   });
@@ -59,11 +64,17 @@ add_task(async function() {
   await dialogShown;
   await Promise.all([waitForBlur, waitForFocus]);
   await ContentTask.spawn(browser, null, async function() {
-    is(content.document.activeElement, content.document.getElementById("edit"),
-       "Focus should be back on iframe element");
+    is(
+      content.document.activeElement,
+      content.document.getElementById("edit"),
+      "Focus should be back on iframe element"
+    );
   });
-  is(lastMessageReceived, "Test:FocusReceived",
-     "Should receive blur and then focus event");
+  is(
+    lastMessageReceived,
+    "Test:FocusReceived",
+    "Should receive blur and then focus event"
+  );
 
   BrowserTestUtils.removeTab(tab);
 });

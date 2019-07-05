@@ -22,7 +22,10 @@ function runTestQueue(queue) {
   var test = queue.shift();
 
   function runNext() {
-    iframe.removeEventListener("mozbrowserdocumentfirstpaint", documentfirstpainthandler);
+    iframe.removeEventListener(
+      "mozbrowserdocumentfirstpaint",
+      documentfirstpainthandler
+    );
     iframe.removeEventListener("mozbrowserloadend", loadendhandler);
     runTestQueue(queue);
   }
@@ -42,7 +45,10 @@ function runTestQueue(queue) {
     }
   }
 
-  iframe.addEventListener("mozbrowserdocumentfirstpaint", documentfirstpainthandler);
+  iframe.addEventListener(
+    "mozbrowserdocumentfirstpaint",
+    documentfirstpainthandler
+  );
   iframe.addEventListener("mozbrowserloadend", loadendhandler);
 
   test();

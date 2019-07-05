@@ -4,11 +4,11 @@
  */
 
 var gURL = "http://example.org/tests/dom/workers/test/bug1063538.sjs";
-var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+var xhr = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
 var progressFired = false;
 
 xhr.onloadend = function(e) {
-  postMessage({type: 'finish', progressFired: progressFired });
+  postMessage({ type: "finish", progressFired: progressFired });
   self.close();
 };
 
@@ -22,4 +22,4 @@ xhr.onprogress = function(e) {
 onmessage = function(e) {
   xhr.open("GET", gURL, true);
   xhr.send();
-}
+};

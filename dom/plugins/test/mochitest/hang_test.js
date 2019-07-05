@@ -1,5 +1,6 @@
-
-const {parseKeyValuePairsFromFile} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+const { parseKeyValuePairsFromFile } = ChromeUtils.import(
+  "resource://gre/modules/KeyValueParser.jsm"
+);
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var success = false;
@@ -13,8 +14,8 @@ var testObserver = {
     ok(true, "Observer fired");
     is(topic, "plugin-crashed", "Checking correct topic");
     is(data, null, "Checking null data");
-    ok((subject instanceof Ci.nsIPropertyBag2), "got Propbag");
-    ok((subject instanceof Ci.nsIWritablePropertyBag2), "got writable Propbag");
+    ok(subject instanceof Ci.nsIPropertyBag2, "got Propbag");
+    ok(subject instanceof Ci.nsIWritablePropertyBag2, "got writable Propbag");
 
     var pluginId = subject.getPropertyAsAString("pluginDumpID");
     isnot(pluginId, "", "got a non-empty plugin crash id");
@@ -34,7 +35,10 @@ var testObserver = {
 
     // check additional dumps
 
-    ok("additional_minidumps" in extraData, "got field for additional minidumps");
+    ok(
+      "additional_minidumps" in extraData,
+      "got field for additional minidumps"
+    );
     let additionalDumps = extraData.additional_minidumps.split(",");
     ok(additionalDumps.includes("browser"), "browser in additional_minidumps");
 
@@ -55,9 +59,11 @@ var testObserver = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIObserver",
+    "nsISupportsWeakReference",
+  ]),
 };
-
 
 function onPluginCrashed(aEvent) {
   ok(true, "Plugin crashed notification received");
@@ -65,10 +71,16 @@ function onPluginCrashed(aEvent) {
   is(aEvent.type, "PluginCrashed", "event is correct type");
 
   var pluginElement = document.getElementById("plugin1");
-  is(pluginElement, aEvent.target, "Plugin crashed event target is plugin element");
+  is(
+    pluginElement,
+    aEvent.target,
+    "Plugin crashed event target is plugin element"
+  );
 
-  ok(aEvent instanceof PluginCrashedEvent,
-     "plugin crashed event has the right interface");
+  ok(
+    aEvent instanceof PluginCrashedEvent,
+    "plugin crashed event has the right interface"
+  );
 
   is(typeof aEvent.pluginDumpID, "string", "pluginDumpID is correct type");
   isnot(aEvent.pluginDumpID, "", "got a non-empty dump ID");
@@ -78,8 +90,15 @@ function onPluginCrashed(aEvent) {
   isnot(aEvent.pluginFilename, "", "got a non-empty filename");
   // The app itself may or may not have decided to submit the report, so
   // allow either true or false here.
-  ok("submittedCrashReport" in aEvent, "submittedCrashReport is a property of event");
-  is(typeof aEvent.submittedCrashReport, "boolean", "submittedCrashReport is correct type");
+  ok(
+    "submittedCrashReport" in aEvent,
+    "submittedCrashReport is a property of event"
+  );
+  is(
+    typeof aEvent.submittedCrashReport,
+    "boolean",
+    "submittedCrashReport is correct type"
+  );
 
   Services.obs.removeObserver(testObserver, "plugin-crashed");
 

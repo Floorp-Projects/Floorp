@@ -13,42 +13,38 @@ onmessage = function(event) {
 
   let status = false;
   try {
-    if ((URL instanceof Object)) {
+    if (URL instanceof Object) {
       status = true;
     }
-  } catch (e) {
-  }
+  } catch (e) {}
 
-  postMessage({type: "status", status, msg: "URL object:" + URL});
+  postMessage({ type: "status", status, msg: "URL object:" + URL });
 
   status = false;
   var blob = null;
   try {
     blob = new Blob([]);
     status = true;
-  } catch (e) {
-  }
+  } catch (e) {}
 
-  postMessage({type: "status", status, msg: "Blob:" + blob});
+  postMessage({ type: "status", status, msg: "Blob:" + blob });
 
   status = false;
   let url = null;
   try {
     url = URL.createObjectURL(blob);
     status = true;
-  } catch (e) {
-  }
+  } catch (e) {}
 
-  postMessage({type: "status", status, msg: "Blob URL:" + url});
+  postMessage({ type: "status", status, msg: "Blob URL:" + url });
 
   status = false;
   try {
     URL.revokeObjectURL(url);
     status = true;
-  } catch (e) {
-  }
+  } catch (e) {}
 
-  postMessage({type: "status", status, msg: "Blob Revoke URL"});
+  postMessage({ type: "status", status, msg: "Blob Revoke URL" });
 
   status = false;
   url = null;
@@ -58,18 +54,21 @@ onmessage = function(event) {
     status = true;
   }
 
-  postMessage({type: "status", status, msg: "CreateObjectURL should fail if the arg is not a blob"});
+  postMessage({
+    type: "status",
+    status,
+    msg: "CreateObjectURL should fail if the arg is not a blob",
+  });
 
   status = false;
   url = null;
   try {
     url = URL.createObjectURL(blob);
     status = true;
-  } catch (e) {
-  }
+  } catch (e) {}
 
-  postMessage({type: "status", status, msg: "Blob URL2:" + url});
-  postMessage({type: "url", url});
+  postMessage({ type: "status", status, msg: "Blob URL2:" + url });
+  postMessage({ type: "url", url });
 
   status = false;
   try {
@@ -78,16 +77,22 @@ onmessage = function(event) {
     status = true;
   }
 
-  postMessage({type: "status", status, msg: "Exception wanted" });
+  postMessage({ type: "status", status, msg: "Exception wanted" });
 
   blob = new Blob([123]);
   var uri = URL.createObjectURL(blob);
-  postMessage({type: "status", status: !!uri,
-               msg: "The URI has been generated from the blob"});
+  postMessage({
+    type: "status",
+    status: !!uri,
+    msg: "The URI has been generated from the blob",
+  });
 
   var u = new URL(uri);
-  postMessage({type: "status", status: u.origin == "http://mochi.test:8888",
-               msg: "The URL generated from a blob URI has an origin."});
+  postMessage({
+    type: "status",
+    status: u.origin == "http://mochi.test:8888",
+    msg: "The URL generated from a blob URI has an origin.",
+  });
 
-  postMessage({type: "finish" });
+  postMessage({ type: "finish" });
 };

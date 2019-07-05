@@ -4,5 +4,5 @@
  */
 "use strict";
 
-var b = new Blob(['123'], { type: 'foo/bar'});
-console.log({ msg: 'consoleAndBlobs', blob: b });
+var b = new Blob(["123"], { type: "foo/bar" });
+console.log({ msg: "consoleAndBlobs", blob: b });

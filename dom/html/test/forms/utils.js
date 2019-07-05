@@ -18,4 +18,3 @@ function simulateUserClicksResetButton(inputElement) {
 function isDesktopUserAgent(navigator) {
   return !/Mobile|Tablet/.test(navigator.userAgent);
 }
-

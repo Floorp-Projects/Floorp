@@ -5,8 +5,7 @@
 
 var disableWorkerTest = "SimpleDB doesn't work in workers yet";
 
-async function testSteps()
-{
+async function testSteps() {
   const name = "data";
   const bufferSize = 100;
 
@@ -36,7 +35,7 @@ async function testSteps()
     request = database2.open(name);
     await requestFinished(request);
     ok(false, "Should have thrown!");
-  } catch(ex) {
+  } catch (ex) {
     ok(request.resultCode == NS_ERROR_STORAGE_BUSY, "Good result code.");
   }
 

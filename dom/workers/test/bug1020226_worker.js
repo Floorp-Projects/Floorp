@@ -8,5 +8,5 @@ var p = new Promise(function(resolve, reject) {
   // HoldWorker() is attempted, which fails, which used to result in
   // multiple calls to the error reporter, one after the worker's context had
   // been GCed.
-  while (true);
+  while (true) {}
 });

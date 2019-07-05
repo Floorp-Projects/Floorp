@@ -1,2 +1,2 @@
 const LOADED = true;
-parent.postMessage({result: 'script-allowed'}, "*");
+parent.postMessage({ result: "script-allowed" }, "*");

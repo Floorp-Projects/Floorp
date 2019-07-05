@@ -1,8 +1,12 @@
 document.domain = "example.org";
-function $(str) { return document.getElementById(str); }
+function $(str) {
+  return document.getElementById(str);
+}
 function hookLoad(str) {
-  $(str).onload = function() { window.parent.parent.postMessage('end', '*'); };
-  window.parent.parent.postMessage('start', '*');
+  $(str).onload = function() {
+    window.parent.parent.postMessage("end", "*");
+  };
+  window.parent.parent.postMessage("start", "*");
 }
 window.onload = function() {
   hookLoad("w");

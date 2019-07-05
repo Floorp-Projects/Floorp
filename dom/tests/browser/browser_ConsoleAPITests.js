@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
+const TEST_URI =
+  "http://example.com/browser/dom/tests/browser/test-console-api.html";
 
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
@@ -63,7 +64,7 @@ function spawnWithObserver(browser, observerFunc, func) {
     "  };",
     "  Services.obs.addObserver(ConsoleObserver, 'console-api-log-event', false);",
     // Call the initialization function (if present)
-    func ? ("(" + func.toString() + ")();") : "",
+    func ? "(" + func.toString() + ")();" : "",
     "});",
   ].join("\n");
 
@@ -111,38 +112,52 @@ function testConsoleData(aMessageObject) {
   ok(aMessageObject.arguments, "we have arguments");
 
   switch (gLevel) {
-  case "trace": {
-    is(aMessageObject.arguments.length, 0, "arguments.length matches");
-    is(aMessageObject.stacktrace.toSource(), gArgs.toSource(),
-       "stack trace is correct");
-    break;
-  }
-  case "count": {
-    is(aMessageObject.counter.label, gArgs[0].label, "label matches");
-    is(aMessageObject.counter.count, gArgs[0].count, "count matches");
-    break;
-  }
-  default: {
-    is(aMessageObject.arguments.length, gArgs.length, "arguments.length matches");
-    gArgs.forEach(function(a, i) {
-      // Waive Xray so that we don't get messed up by Xray ToString.
-      //
-      // It'd be nice to just use XPCNativeWrapper.unwrap here, but there are
-      // a number of dumb reasons we can't. See bug 868675.
-      var arg = aMessageObject.arguments[i];
-      if (Cu.isXrayWrapper(arg))
-        arg = arg.wrappedJSObject;
-      is(arg, a, "correct arg " + i);
-    });
-
-    if (gStyle) {
-      is(aMessageObject.styles.length, gStyle.length, "styles.length matches");
-      is(aMessageObject.styles + "", gStyle + "", "styles match");
-    } else {
-      ok(!aMessageObject.styles || aMessageObject.styles.length === 0,
-         "styles match");
+    case "trace": {
+      is(aMessageObject.arguments.length, 0, "arguments.length matches");
+      is(
+        aMessageObject.stacktrace.toSource(),
+        gArgs.toSource(),
+        "stack trace is correct"
+      );
+      break;
     }
-  }
+    case "count": {
+      is(aMessageObject.counter.label, gArgs[0].label, "label matches");
+      is(aMessageObject.counter.count, gArgs[0].count, "count matches");
+      break;
+    }
+    default: {
+      is(
+        aMessageObject.arguments.length,
+        gArgs.length,
+        "arguments.length matches"
+      );
+      gArgs.forEach(function(a, i) {
+        // Waive Xray so that we don't get messed up by Xray ToString.
+        //
+        // It'd be nice to just use XPCNativeWrapper.unwrap here, but there are
+        // a number of dumb reasons we can't. See bug 868675.
+        var arg = aMessageObject.arguments[i];
+        if (Cu.isXrayWrapper(arg)) {
+          arg = arg.wrappedJSObject;
+        }
+        is(arg, a, "correct arg " + i);
+      });
+
+      if (gStyle) {
+        is(
+          aMessageObject.styles.length,
+          gStyle.length,
+          "styles.length matches"
+        );
+        is(aMessageObject.styles + "", gStyle + "", "styles match");
+      } else {
+        ok(
+          !aMessageObject.styles || aMessageObject.styles.length === 0,
+          "styles match"
+        );
+      }
+    }
   }
 }
 
@@ -156,28 +171,36 @@ async function observeConsoleTest(browser) {
     win.console.info("arg", "extra arg");
 
     expect("warn", "Lesson 1: PI is approximately equal to 3");
-    win.console.warn("Lesson %d: %s is approximately equal to %1.0f",
-                     1,
-                     "PI",
-                     3.14159);
+    win.console.warn(
+      "Lesson %d: %s is approximately equal to %1.0f",
+      1,
+      "PI",
+      3.14159
+    );
 
     expect("warn", "Lesson 1: PI is approximately equal to 3.14");
-    win.console.warn("Lesson %d: %s is approximately equal to %1.2f",
-                     1,
-                     "PI",
-                     3.14159);
+    win.console.warn(
+      "Lesson %d: %s is approximately equal to %1.2f",
+      1,
+      "PI",
+      3.14159
+    );
 
     expect("warn", "Lesson 1: PI is approximately equal to 3.141590");
-    win.console.warn("Lesson %d: %s is approximately equal to %f",
-                     1,
-                     "PI",
-                     3.14159);
+    win.console.warn(
+      "Lesson %d: %s is approximately equal to %f",
+      1,
+      "PI",
+      3.14159
+    );
 
     expect("warn", "Lesson 1: PI is approximately equal to 3.1415900");
-    win.console.warn("Lesson %d: %s is approximately equal to %0.7f",
-                     1,
-                     "PI",
-                     3.14159);
+    win.console.warn(
+      "Lesson %d: %s is approximately equal to %0.7f",
+      1,
+      "PI",
+      3.14159
+    );
 
     expect("log", "%d, %s, %l");
     win.console.log("%d, %s, %l");
@@ -216,12 +239,24 @@ async function observeConsoleTest(browser) {
     let obj4 = { d: 4 };
     expect("warn", "foobar", obj4, "test", "bazbazstr", "last");
     gStyle = [null, null, null, "color:blue;", "color:red"];
-    win.console.warn("foobar%Otest%cbazbaz%s%clast", obj4, gStyle[3], "str", gStyle[4]);
+    win.console.warn(
+      "foobar%Otest%cbazbaz%s%clast",
+      obj4,
+      gStyle[3],
+      "str",
+      gStyle[4]
+    );
 
     let obj3 = { c: 3 };
     expect("info", "foobar", "bazbaz", obj3, "%comg", "color:yellow");
     gStyle = [null, "color:pink;"];
-    win.console.info("foobar%cbazbaz", gStyle[1], obj3, "%comg", "color:yellow");
+    win.console.info(
+      "foobar%cbazbaz",
+      gStyle[1],
+      obj3,
+      "%comg",
+      "color:yellow"
+    );
 
     gStyle = null;
     let obj2 = { b: 2 };
@@ -258,8 +293,11 @@ function testTraceConsoleData(aMessageObject) {
   is(gLevel, "trace", "gLevel should be trace");
   is(aMessageObject.arguments.length, 0, "arguments.length matches");
   dump(aMessageObject.stacktrace.toSource() + "\n" + gArgs.toSource() + "\n");
-  is(aMessageObject.stacktrace.toSource(), gArgs.toSource(),
-     "stack trace is correct");
+  is(
+    aMessageObject.stacktrace.toSource(),
+    gArgs.toSource(),
+    "stack trace is correct"
+  );
   resolve();
 }
 
@@ -269,10 +307,30 @@ async function startTraceTest(browser) {
     dump("Observer attached\n");
     gLevel = "trace";
     gArgs = [
-      {columnNumber: 9, filename: TEST_URI, functionName: "window.foobar585956c", lineNumber: 6},
-      {columnNumber: 16, filename: TEST_URI, functionName: "foobar585956b", lineNumber: 11},
-      {columnNumber: 16, filename: TEST_URI, functionName: "foobar585956a", lineNumber: 15},
-      {columnNumber: 1, filename: TEST_URI, functionName: "onclick", lineNumber: 1},
+      {
+        columnNumber: 9,
+        filename: TEST_URI,
+        functionName: "window.foobar585956c",
+        lineNumber: 6,
+      },
+      {
+        columnNumber: 16,
+        filename: TEST_URI,
+        functionName: "foobar585956b",
+        lineNumber: 11,
+      },
+      {
+        columnNumber: 16,
+        filename: TEST_URI,
+        functionName: "foobar585956a",
+        lineNumber: 15,
+      },
+      {
+        columnNumber: 1,
+        filename: TEST_URI,
+        functionName: "onclick",
+        lineNumber: 1,
+      },
     ];
   });
 
@@ -289,8 +347,16 @@ function testLocationData(aMessageObject) {
 
   is(aMessageObject.filename, gArgs[0].filename, "filename matches");
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
-  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
-  is(aMessageObject.arguments.length, gArgs[0].arguments.length, "arguments.length matches");
+  is(
+    aMessageObject.functionName,
+    gArgs[0].functionName,
+    "functionName matches"
+  );
+  is(
+    aMessageObject.arguments.length,
+    gArgs[0].arguments.length,
+    "arguments.length matches"
+  );
   gArgs[0].arguments.forEach(function(a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
@@ -302,7 +368,12 @@ async function startLocationTest(browser) {
   await spawnWithObserver(browser, testLocationData, function(opts) {
     gLevel = "log";
     gArgs = [
-      {filename: TEST_URI, functionName: "foobar646025", arguments: ["omg", "o", "d"], lineNumber: 19},
+      {
+        filename: TEST_URI,
+        functionName: "foobar646025",
+        arguments: ["omg", "o", "d"],
+        lineNumber: 19,
+      },
     ];
   });
 
@@ -330,18 +401,26 @@ function testConsoleGroup(aMessageObject) {
   let messageWindow = Services.wm.getOuterWindowWithId(aMessageObject.ID);
   is(messageWindow, gWindow, "found correct window by window ID");
 
-  ok(aMessageObject.level == "group" ||
-     aMessageObject.level == "groupCollapsed" ||
-     aMessageObject.level == "groupEnd",
-     "expected level received");
+  ok(
+    aMessageObject.level == "group" ||
+      aMessageObject.level == "groupCollapsed" ||
+      aMessageObject.level == "groupEnd",
+    "expected level received"
+  );
 
   is(aMessageObject.functionName, "testGroups", "functionName matches");
-  ok(aMessageObject.lineNumber >= 46 && aMessageObject.lineNumber <= 50,
-     "lineNumber matches");
+  ok(
+    aMessageObject.lineNumber >= 46 && aMessageObject.lineNumber <= 50,
+    "lineNumber matches"
+  );
   if (aMessageObject.level == "groupCollapsed") {
     is(aMessageObject.groupName, "a group", "groupCollapsed groupName matches");
     is(aMessageObject.arguments[0], "a", "groupCollapsed arguments[0] matches");
-    is(aMessageObject.arguments[1], "group", "groupCollapsed arguments[0] matches");
+    is(
+      aMessageObject.arguments[1],
+      "group",
+      "groupCollapsed arguments[0] matches"
+    );
   } else if (aMessageObject.level == "group") {
     is(aMessageObject.groupName, "b group", "group groupName matches");
     is(aMessageObject.arguments[0], "b", "group arguments[0] matches");
@@ -370,7 +449,11 @@ function testConsoleTime(aMessageObject) {
 
   is(aMessageObject.filename, gArgs[0].filename, "filename matches");
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
-  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  is(
+    aMessageObject.functionName,
+    gArgs[0].functionName,
+    "functionName matches"
+  );
   is(aMessageObject.timer.name, gArgs[0].timer.name, "timer.name matches");
 
   gArgs[0].arguments.forEach(function(a, i) {
@@ -384,9 +467,12 @@ async function startTimeTest(browser) {
   await spawnWithObserver(browser, testConsoleTime, function(opts) {
     gLevel = "time";
     gArgs = [
-      {filename: TEST_URI, lineNumber: 23, functionName: "startTimer",
-       arguments: ["foo"],
-       timer: { name: "foo" },
+      {
+        filename: TEST_URI,
+        lineNumber: 23,
+        functionName: "startTimer",
+        arguments: ["foo"],
+        timer: { name: "foo" },
       },
     ];
   });
@@ -404,10 +490,22 @@ function testConsoleTimeEnd(aMessageObject) {
 
   is(aMessageObject.filename, gArgs[0].filename, "filename matches");
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
-  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
-  is(aMessageObject.arguments.length, gArgs[0].arguments.length, "arguments.length matches");
+  is(
+    aMessageObject.functionName,
+    gArgs[0].functionName,
+    "functionName matches"
+  );
+  is(
+    aMessageObject.arguments.length,
+    gArgs[0].arguments.length,
+    "arguments.length matches"
+  );
   is(aMessageObject.timer.name, gArgs[0].timer.name, "timer name matches");
-  is(typeof aMessageObject.timer.duration, "number", "timer duration is a number");
+  is(
+    typeof aMessageObject.timer.duration,
+    "number",
+    "timer duration is a number"
+  );
   info("timer duration: " + aMessageObject.timer.duration);
   ok(aMessageObject.timer.duration >= 0, "timer duration is positive");
 
@@ -422,9 +520,12 @@ async function startTimeEndTest(browser) {
   await spawnWithObserver(browser, testConsoleTimeEnd, function(opts) {
     gLevel = "timeEnd";
     gArgs = [
-      {filename: TEST_URI, lineNumber: 27, functionName: "stopTimer",
-       arguments: ["foo"],
-       timer: { name: "foo" },
+      {
+        filename: TEST_URI,
+        lineNumber: 27,
+        functionName: "stopTimer",
+        arguments: ["foo"],
+        timer: { name: "foo" },
       },
     ];
   });
@@ -441,7 +542,11 @@ function testConsoleTimeStamp(aMessageObject) {
 
   is(aMessageObject.filename, gArgs[0].filename, "filename matches");
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
-  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  is(
+    aMessageObject.functionName,
+    gArgs[0].functionName,
+    "functionName matches"
+  );
   ok(aMessageObject.timeStamp > 0, "timeStamp is a positive value");
 
   gArgs[0].arguments.forEach(function(a, i) {
@@ -455,8 +560,11 @@ async function startTimeStampTest(browser) {
   await spawnWithObserver(browser, testConsoleTimeStamp, function() {
     gLevel = "timeStamp";
     gArgs = [
-      {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
-       arguments: ["!!!"],
+      {
+        filename: TEST_URI,
+        lineNumber: 58,
+        functionName: "timeStamp",
+        arguments: ["!!!"],
       },
     ];
   });
@@ -473,7 +581,11 @@ function testEmptyConsoleTimeStamp(aMessageObject) {
 
   is(aMessageObject.filename, gArgs[0].filename, "filename matches");
   is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
-  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  is(
+    aMessageObject.functionName,
+    gArgs[0].functionName,
+    "functionName matches"
+  );
   ok(aMessageObject.timeStamp > 0, "timeStamp is a positive value");
   is(aMessageObject.arguments.length, 0, "we don't have arguments");
 
@@ -484,8 +596,11 @@ async function startEmptyTimeStampTest(browser) {
   await spawnWithObserver(browser, testEmptyConsoleTimeStamp, function() {
     gLevel = "timeStamp";
     gArgs = [
-      {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
-       arguments: [],
+      {
+        filename: TEST_URI,
+        lineNumber: 58,
+        functionName: "timeStamp",
+        arguments: [],
       },
     ];
   });
@@ -498,15 +613,19 @@ function testEmptyTimer(aMessageObject) {
   let messageWindow = Services.wm.getOuterWindowWithId(aMessageObject.ID);
   is(messageWindow, gWindow, "found correct window by window ID");
 
-  ok(aMessageObject.level == "time" || aMessageObject.level == "timeEnd",
-     "expected level received");
+  ok(
+    aMessageObject.level == "time" || aMessageObject.level == "timeEnd",
+    "expected level received"
+  );
   is(aMessageObject.arguments.length, 1, "we have the default argument");
   is(aMessageObject.arguments[0], "default", "we have the default argument");
   ok(aMessageObject.timer, "we have a timer");
 
   is(aMessageObject.functionName, "namelessTimer", "functionName matches");
-  ok(aMessageObject.lineNumber == 31 || aMessageObject.lineNumber == 32,
-     "lineNumber matches");
+  ok(
+    aMessageObject.lineNumber == 31 || aMessageObject.lineNumber == 32,
+    "lineNumber matches"
+  );
 
   resolve();
 }

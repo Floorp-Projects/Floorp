@@ -5,7 +5,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 function TestInterfaceJSMaplike() {}
 
@@ -14,7 +16,9 @@ TestInterfaceJSMaplike.prototype = {
   contractID: "@mozilla.org/dom/test-interface-js-maplike;1",
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 
-  init(win) { this._win = win; },
+  init(win) {
+    this._win = win;
+  },
 
   __init() {},
 

@@ -23,10 +23,13 @@ function runTest() {
       document.body.appendChild(f.detail.frameElement);
     });
 
-    e.detail.frameElement.addEventListener("mozbrowsershowmodalprompt", function(f) {
-      ok(true, "Got alert from second window.");
-      SimpleTest.finish();
-    });
+    e.detail.frameElement.addEventListener(
+      "mozbrowsershowmodalprompt",
+      function(f) {
+        ok(true, "Got alert from second window.");
+        SimpleTest.finish();
+      }
+    );
 
     document.body.appendChild(e.detail.frameElement);
   });
@@ -37,7 +40,8 @@ function runTest() {
   //
   // which calls alert().
 
-  iframe.src = "http://example.org/tests/dom/browser-element/mochitest/file_browserElement_OpenWindowDifferentOrigin.html?1";
+  iframe.src =
+    "http://example.org/tests/dom/browser-element/mochitest/file_browserElement_OpenWindowDifferentOrigin.html?1";
   document.body.appendChild(iframe);
 }
 

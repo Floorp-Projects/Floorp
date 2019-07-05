@@ -6,4 +6,4 @@ onmessage = function(event) {
   xhr.open("GET", event.data, false);
   xhr.send();
   postMessage("done");
-}
+};

@@ -7,10 +7,10 @@ var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name = this.window ?
-    window.location.pathname : "test_maximal_serialized_object_size.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_maximal_serialized_object_size.js";
   const megaBytes = 1024 * 1024;
   const kMessageOverhead = 1; // in MB
   const kMaxIpcMessageSize = 20; // in MB
@@ -23,8 +23,13 @@ function* testSteps()
 
   if (this.window) {
     SpecialPowers.pushPrefEnv(
-      { "set": [["dom.indexedDB.maxSerializedMsgSize",
-                 kMaxIpcMessageSize * megaBytes ]],
+      {
+        set: [
+          [
+            "dom.indexedDB.maxSerializedMsgSize",
+            kMaxIpcMessageSize * megaBytes,
+          ],
+        ],
       },
       continueToNextStep
     );
@@ -45,7 +50,11 @@ function* testSteps()
 
   let objectStore = db.createObjectStore("test store", { keyPath: "id" });
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
-  is(db.objectStoreNames.item(0), objectStore.name, "Correct object store name");
+  is(
+    db.objectStoreNames.item(0),
+    objectStore.name,
+    "Correct object store name"
+  );
 
   function testTooLargeError(aOperation, aObject) {
     try {
@@ -55,15 +64,19 @@ function* testSteps()
       ok(e instanceof DOMException, "got a DOM exception");
       is(e.name, "UnknownError", "correct error");
       ok(!!e.message, "Error message: " + e.message);
-      ok(e.message.startsWith("The serialized value is too large"),
-         "Correct error message prefix.");
+      ok(
+        e.message.startsWith("The serialized value is too large"),
+        "Correct error message prefix."
+      );
     }
   }
 
   info("Verify IDBObjectStore.add() - object is too large");
   testTooLargeError("add", { id: 1, data: chunks });
 
-  info("Verify IDBObjectStore.add() - object size is closed to the maximal size.");
+  info(
+    "Verify IDBObjectStore.add() - object size is closed to the maximal size."
+  );
   chunks.length = chunks.length - 1;
   let request = objectStore.add({ id: 1, data: chunks });
   request.onerror = errorHandler;

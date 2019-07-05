@@ -18,18 +18,34 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
 
-  await EventUtils.synthesizeAndWaitKey("d", {repeat: 3});
+  await EventUtils.synthesizeAndWaitKey("d", { repeat: 3 });
 
   await ContentTask.spawn(browser, null, async function() {
-    is(content.document.body.getAttribute("data-down"), "2", "Correct number of events");
-    is(content.document.body.getAttribute("data-press"), "2", "Correct number of events");
+    is(
+      content.document.body.getAttribute("data-down"),
+      "2",
+      "Correct number of events"
+    );
+    is(
+      content.document.body.getAttribute("data-press"),
+      "2",
+      "Correct number of events"
+    );
   });
 
-  await EventUtils.synthesizeAndWaitKey("p", {repeat: 3});
+  await EventUtils.synthesizeAndWaitKey("p", { repeat: 3 });
 
   await ContentTask.spawn(browser, null, async function() {
-    is(content.document.body.getAttribute("data-down"), "4", "Correct number of events");
-    is(content.document.body.getAttribute("data-press"), "4", "Correct number of events");
+    is(
+      content.document.body.getAttribute("data-down"),
+      "4",
+      "Correct number of events"
+    );
+    is(
+      content.document.body.getAttribute("data-press"),
+      "4",
+      "Correct number of events"
+    );
   });
 
   gBrowser.removeCurrentTab();

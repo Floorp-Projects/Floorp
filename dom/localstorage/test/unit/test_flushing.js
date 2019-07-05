@@ -12,8 +12,9 @@
 async function testSteps() {
   const principal1 = getPrincipal("http://example1.com");
 
-  const usageFile1 =
-    getRelativeFile("storage/default/http+++example1.com/ls/usage");
+  const usageFile1 = getRelativeFile(
+    "storage/default/http+++example1.com/ls/usage"
+  );
 
   const principal2 = getPrincipal("http://example2.com");
 
@@ -52,8 +53,12 @@ async function testSteps() {
   // The flush for second principal shouldn't be affected by failed flush for
   // first principal.
 
-  info("Sleeping for " + flushSleepTimeSec + " seconds to let all flushes " +
-       "finish");
+  info(
+    "Sleeping for " +
+      flushSleepTimeSec +
+      " seconds to let all flushes " +
+      "finish"
+  );
 
   await new Promise(function(resolve) {
     setTimeout(resolve, flushSleepTimeSec * 1000);

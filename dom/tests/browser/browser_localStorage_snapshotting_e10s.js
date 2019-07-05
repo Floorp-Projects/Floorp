@@ -5,15 +5,20 @@ const HELPER_PAGE_ORIGIN = "http://example.com/";
 /* import-globals-from helper_localStorage_e10s.js */
 
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "/helper_localStorage_e10s.js",
-                                    this);
+Services.scriptloader.loadSubScript(
+  testDir + "/helper_localStorage_e10s.js",
+  this
+);
 
 function clearOrigin() {
-  let principal =
-    Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
-      HELPER_PAGE_ORIGIN);
-  let request =
-    Services.qms.clearStoragesForPrincipal(principal, "default", "ls");
+  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    HELPER_PAGE_ORIGIN
+  );
+  let request = Services.qms.clearStoragesForPrincipal(
+    principal,
+    "default",
+    "ls"
+  );
   let promise = new Promise(resolve => {
     request.callback = () => {
       resolve();
@@ -23,13 +28,13 @@ function clearOrigin() {
 }
 
 async function applyMutations(knownTab, mutations) {
-  await ContentTask.spawn(
-    knownTab.tab.linkedBrowser,
-    mutations,
-    function(mutations) {
-      return content.wrappedJSObject.applyMutations(Cu.cloneInto(mutations,
-                                                                 content));
-    });
+  await ContentTask.spawn(knownTab.tab.linkedBrowser, mutations, function(
+    mutations
+  ) {
+    return content.wrappedJSObject.applyMutations(
+      Cu.cloneInto(mutations, content)
+    );
+  });
 }
 
 async function verifyState(knownTab, expectedState) {
@@ -38,7 +43,8 @@ async function verifyState(knownTab, expectedState) {
     {},
     function() {
       return content.wrappedJSObject.getState();
-    });
+    }
+  );
 
   for (let [expectedKey, expectedValue] of Object.entries(expectedState)) {
     ok(actualState.hasOwnProperty(expectedKey), "key present: " + expectedKey);
@@ -57,26 +63,21 @@ async function getKeys(knownTab) {
     null,
     function() {
       return content.wrappedJSObject.getKeys();
-    });
+    }
+  );
   return keys;
 }
 
 async function beginExplicitSnapshot(knownTab) {
-  await ContentTask.spawn(
-    knownTab.tab.linkedBrowser,
-    null,
-    function() {
-      return content.wrappedJSObject.beginExplicitSnapshot();
-    });
+  await ContentTask.spawn(knownTab.tab.linkedBrowser, null, function() {
+    return content.wrappedJSObject.beginExplicitSnapshot();
+  });
 }
 
 async function endExplicitSnapshot(knownTab) {
-  await ContentTask.spawn(
-    knownTab.tab.linkedBrowser,
-    null,
-    function() {
-      return content.wrappedJSObject.endExplicitSnapshot();
-    });
+  await ContentTask.spawn(knownTab.tab.linkedBrowser, null, function() {
+    return content.wrappedJSObject.endExplicitSnapshot();
+  });
 }
 
 // We spin up a ton of child processes.
@@ -105,14 +106,26 @@ add_task(async function() {
 
   // - Open tabs.  Don't configure any of them yet.
   const knownTabs = new KnownTabs();
-  const writerTab1 = await openTestTabInOwnProcess(HELPER_PAGE_URL, "writer1",
-    knownTabs);
-  const writerTab2 = await openTestTabInOwnProcess(HELPER_PAGE_URL, "writer2",
-    knownTabs);
-  const readerTab1 = await openTestTabInOwnProcess(HELPER_PAGE_URL, "reader1",
-    knownTabs);
-  const readerTab2 = await openTestTabInOwnProcess(HELPER_PAGE_URL, "reader2",
-    knownTabs);
+  const writerTab1 = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "writer1",
+    knownTabs
+  );
+  const writerTab2 = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "writer2",
+    knownTabs
+  );
+  const readerTab1 = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "reader1",
+    knownTabs
+  );
+  const readerTab2 = await openTestTabInOwnProcess(
+    HELPER_PAGE_URL,
+    "reader2",
+    knownTabs
+  );
 
   const initialMutations = [
     [null, null],
@@ -202,9 +215,7 @@ add_task(async function() {
     info("Setting prefill value to " + prefillValue);
 
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["dom.storage.snapshot_prefill", prefillValue],
-      ],
+      set: [["dom.storage.snapshot_prefill", prefillValue]],
     });
 
     const gradualPrefillValues = [
@@ -237,9 +248,7 @@ add_task(async function() {
       info("Setting gradual prefill value to " + gradualPrefillValue);
 
       await SpecialPowers.pushPrefEnv({
-        set: [
-          ["dom.storage.snapshot_gradual_prefill", gradualPrefillValue],
-        ],
+        set: [["dom.storage.snapshot_gradual_prefill", gradualPrefillValue]],
       });
 
       info("Stage 1");
@@ -346,8 +355,7 @@ add_task(async function() {
         [null, null],
       ];
 
-      const setRemoveClearState1 = {
-      };
+      const setRemoveClearState1 = {};
 
       const setRemoveClearMutations2 = [
         ["key8", null],
@@ -355,8 +363,7 @@ add_task(async function() {
         [null, null],
       ];
 
-      const setRemoveClearState2 = {
-      };
+      const setRemoveClearState2 = {};
 
       // This is very similar to previous stage except that in addition to
       // set/remove, the clear operation is involved too.

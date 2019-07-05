@@ -10,14 +10,13 @@
  * those files aren't managed by QuotaManager.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const allowListFiles = [
     ".dot-file",
     "desktop.ini",
     "Desktop.ini",
     "Thumbs.db",
-    "thumbs.db"
+    "thumbs.db",
   ];
 
   for (let allowListFile of allowListFiles) {
@@ -27,10 +26,11 @@ async function testSteps()
 
     for (let dir of ["persistenceType dir", "origin dir"]) {
       let dirPath =
-        dir == "persistenceType dir" ? "storage/default/"
-                                     : "storage/default/http+++example.com/";
-        let file = getRelativeFile(dirPath + allowListFile);
-        file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
+        dir == "persistenceType dir"
+          ? "storage/default/"
+          : "storage/default/http+++example.com/";
+      let file = getRelativeFile(dirPath + allowListFile);
+      file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
     }
 
     info("Initializing an origin");

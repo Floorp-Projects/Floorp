@@ -19,8 +19,10 @@
  * notification with the headers, so there are two ways to produce
  */
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-const { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Downloads } = ChromeUtils.import(
+  "resource://gre/modules/Downloads.jsm"
+);
 
 /**
  * Clear the downloads list so other tests don't see our byproducts.
@@ -63,19 +65,16 @@ async function performCanceledDownload(tab, path) {
   // Trigger the download.
   info(`triggering download of "${path}"`);
   /* eslint-disable no-shadow */
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    path,
-    function(path) {
-      // Put a Promise in place that we can wait on for stream closure.
-      content.wrappedJSObject.trackStreamClosure(path);
-      // Create the link and trigger the download.
-      const link = content.document.createElement('a');
-      link.href = path;
-      link.download = path;
-      content.document.body.appendChild(link);
-      link.click();
-    });
+  await ContentTask.spawn(tab.linkedBrowser, path, function(path) {
+    // Put a Promise in place that we can wait on for stream closure.
+    content.wrappedJSObject.trackStreamClosure(path);
+    // Create the link and trigger the download.
+    const link = content.document.createElement("a");
+    link.href = path;
+    link.download = path;
+    content.document.body.appendChild(link);
+    link.click();
+  });
   /* eslint-enable no-shadow */
 
   // Wait for the cancelation to have been triggered.
@@ -86,12 +85,9 @@ async function performCanceledDownload(tab, path) {
   // Wait for confirmation that the stream stopped.
   info(`wait for the ${path} stream to close.`);
   /* eslint-disable no-shadow */
-  const why = await ContentTask.spawn(
-    tab.linkedBrowser,
-    path,
-    function(path) {
-      return content.wrappedJSObject.streamClosed[path].promise;
-    });
+  const why = await ContentTask.spawn(tab.linkedBrowser, path, function(path) {
+    return content.wrappedJSObject.streamClosed[path].promise;
+  });
   /* eslint-enable no-shadow */
   is(why.why, "canceled", "Ensure the stream canceled instead of timing out.");
   // Note that for the "sw-stream-download" case, we end up with a bogus
@@ -101,24 +97,27 @@ async function performCanceledDownload(tab, path) {
   info(`Cancellation reason: ${why.message} after ${why.ticks} ticks`);
 }
 
-const gTestRoot = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content/", "http://mochi.test:8888/");
-
+const gTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://mochi.test:8888/"
+);
 
 const PAGE_URL = `${gTestRoot}download_canceled/page_download_canceled.html`;
 
 add_task(async function interruptedDownloads() {
-  await SpecialPowers.pushPrefEnv({'set': [
-    ['dom.serviceWorkers.enabled', true],
-    ['dom.serviceWorkers.exemptFromPerDomainMax', true],
-    ['dom.serviceWorkers.testing.enabled', true],
-    ["javascript.options.streams", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+      ["javascript.options.streams", true],
+    ],
+  });
 
   // Open the tab
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: PAGE_URL
+    opening: PAGE_URL,
   });
 
   // Wait for it to become controlled.  Check that it was a promise that
@@ -129,7 +128,8 @@ add_task(async function interruptedDownloads() {
     function() {
       // This is a promise set up by the page during load, and we are post-load.
       return content.wrappedJSObject.controlled;
-    });
+    }
+  );
   is(controlled, "controlled", "page became controlled");
 
   // Download a pass-through fetch stream.
@@ -139,12 +139,9 @@ add_task(async function interruptedDownloads() {
   await performCanceledDownload(tab, "sw-stream-download");
 
   // Cleanup
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    null,
-    function() {
-      return content.wrappedJSObject.registration.unregister();
-    });
+  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+    return content.wrappedJSObject.registration.unregister();
+  });
   BrowserTestUtils.removeTab(tab);
   await clearDownloads();
 });

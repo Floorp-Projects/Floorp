@@ -3,8 +3,8 @@ var EXPORTED_SYMBOLS = ["checkFromJSM"];
 function checkFromJSM(ok, is, finish) {
   let worker = new ChromeWorker("jsm_url_worker.js");
   worker.onmessage = function(event) {
-   if (event.data.type == "finish") {
-     finish();
+    if (event.data.type == "finish") {
+      finish();
     } else if (event.data.type == "url") {
       URL.revokeObjectURL(event.data.url);
     } else if (event.data.type == "status") {

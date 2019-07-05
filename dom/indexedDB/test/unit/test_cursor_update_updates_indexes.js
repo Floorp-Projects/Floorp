@@ -5,20 +5,32 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const START_DATA = "hi";
   const END_DATA = "bye";
   const objectStoreInfo = [
-    { name: "1", options: { keyPath: null }, key: 1,
-      entry: { data: START_DATA } },
-    { name: "2", options: { keyPath: "foo" },
-      entry: { foo: 1, data: START_DATA } },
-    { name: "3", options: { keyPath: null, autoIncrement: true },
-      entry: { data: START_DATA } },
-    { name: "4", options: { keyPath: "foo", autoIncrement: true },
-      entry: { data: START_DATA } },
+    {
+      name: "1",
+      options: { keyPath: null },
+      key: 1,
+      entry: { data: START_DATA },
+    },
+    {
+      name: "2",
+      options: { keyPath: "foo" },
+      entry: { foo: 1, data: START_DATA },
+    },
+    {
+      name: "3",
+      options: { keyPath: null, autoIncrement: true },
+      entry: { data: START_DATA },
+    },
+    {
+      name: "4",
+      options: { keyPath: "foo", autoIncrement: true },
+      entry: { data: START_DATA },
+    },
   ];
 
   for (let i = 0; i < objectStoreInfo.length; i++) {
@@ -35,19 +47,21 @@ function* testSteps()
     let db = event.target.result;
 
     ok(true, "2");
-    let objectStore = info.hasOwnProperty("options") ?
-                      db.createObjectStore(info.name, info.options) :
-                      db.createObjectStore(info.name);
+    let objectStore = info.hasOwnProperty("options")
+      ? db.createObjectStore(info.name, info.options)
+      : db.createObjectStore(info.name);
 
     // Create the indexes on 'data' on the object store.
-    let index = objectStore.createIndex("data_index", "data",
-                                        { unique: false });
-    let uniqueIndex = objectStore.createIndex("unique_data_index", "data",
-                                              { unique: true });
+    let index = objectStore.createIndex("data_index", "data", {
+      unique: false,
+    });
+    let uniqueIndex = objectStore.createIndex("unique_data_index", "data", {
+      unique: true,
+    });
     // Populate the object store with one entry of data.
-    request = info.hasOwnProperty("key") ?
-              objectStore.add(info.entry, info.key) :
-              objectStore.add(info.entry);
+    request = info.hasOwnProperty("key")
+      ? objectStore.add(info.entry, info.key)
+      : objectStore.add(info.entry);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
@@ -75,8 +89,11 @@ function* testSteps()
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
     ok(true, "6");
-    is(obj.data, event.target.result.data,
-                  "Non-unique index was properly updated.");
+    is(
+      obj.data,
+      event.target.result.data,
+      "Non-unique index was properly updated."
+    );
 
     request = uniqueIndex.get(END_DATA);
     request.onerror = errorHandler;
@@ -84,8 +101,11 @@ function* testSteps()
     event = yield undefined;
 
     ok(true, "7");
-    is(obj.data, event.target.result.data,
-                  "Unique index was properly updated.");
+    is(
+      obj.data,
+      event.target.result.data,
+      "Unique index was properly updated."
+    );
 
     // Wait for success
     yield undefined;

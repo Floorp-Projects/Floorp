@@ -5,29 +5,34 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const origins = [
     {
-      oldPath: "storage/permanent/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
-      newPath: "storage/permanent/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
+      oldPath:
+        "storage/permanent/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
+      newPath:
+        "storage/permanent/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
       url: "moz-extension://8ea6d31b-917c-431f-a204-15b95e904d4f",
-      persistence: "persistent"
+      persistence: "persistent",
     },
 
     {
-      oldPath: "storage/temporary/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
-      newPath: "storage/temporary/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
+      oldPath:
+        "storage/temporary/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
+      newPath:
+        "storage/temporary/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
       url: "moz-extension://8ea6d31b-917c-431f-a204-15b95e904d4f",
-      persistence: "temporary"
+      persistence: "temporary",
     },
 
     {
-      oldPath: "storage/default/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
-      newPath: "storage/default/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
+      oldPath:
+        "storage/default/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f^addonId=indexedDB-test%40kmaglione.mozilla.com",
+      newPath:
+        "storage/default/moz-extension+++8ea6d31b-917c-431f-a204-15b95e904d4f",
       url: "moz-extension://8ea6d31b-917c-431f-a204-15b95e904d4f",
-      persistence: "default"
-    }
+      persistence: "default",
+    },
   ];
 
   const metadataFileName = ".metadata-v2";
@@ -107,14 +112,15 @@ function* testSteps()
 
     info("Verifying blobs differ");
 
-    ok(!compareBuffers(metadataBuffer, metadataBuffers.shift()),
-       "Metadata differ");
+    ok(
+      !compareBuffers(metadataBuffer, metadataBuffers.shift()),
+      "Metadata differ"
+    );
 
     info("Initializing origin");
 
     let principal = getPrincipal(origin.url);
-    request =
-      initOrigin(principal, origin.persistence, continueToNextStepSync);
+    request = initOrigin(principal, origin.persistence, continueToNextStepSync);
     yield undefined;
 
     ok(request.resultCode == NS_OK, "Initialization succeeded");

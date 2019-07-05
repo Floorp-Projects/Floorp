@@ -9,12 +9,11 @@ const IDC_NOFUTURE = 1003;
 // Windows constants
 const WM_CLOSE = 0x0010;
 const WM_COMMAND = 0x0111;
-const BM_GETCHECK = 0x00F0;
-const BM_SETCHECK = 0x00F1;
+const BM_GETCHECK = 0x00f0;
+const BM_SETCHECK = 0x00f1;
 const BN_CLICKED = 0;
 const BST_CHECKED = 1;
 
 // Test-specific constants
 const EPSILON_MS = 1000;
 const STALL_DURATION = 2;
-

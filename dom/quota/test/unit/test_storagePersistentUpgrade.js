@@ -5,23 +5,22 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const origins = [
     {
       oldPath: "indexedDB/http+++www.mozilla.org",
-      newPath: "storage/default/http+++www.mozilla.org", 
+      newPath: "storage/default/http+++www.mozilla.org",
       url: "http://www.mozilla.org",
-      persistence: "default"
+      persistence: "default",
     },
 
     {
-      oldPath: "indexedDB/1007+f+app+++system.gaiamobile.org"
+      oldPath: "indexedDB/1007+f+app+++system.gaiamobile.org",
     },
 
     {
-      oldPath: "indexedDB/1007+t+https+++developer.cdn.mozilla.net"
-    }
+      oldPath: "indexedDB/1007+t+https+++developer.cdn.mozilla.net",
+    },
   ];
 
   // Test upgrade from FF 25 (no storage/persistent directory).
@@ -69,8 +68,11 @@ function* testSteps()
       info("Initializing origin");
 
       let principal = getPrincipal(origin.url);
-      request =
-        initOrigin(principal, origin.persistence, continueToNextStepSync);
+      request = initOrigin(
+        principal,
+        origin.persistence,
+        continueToNextStepSync
+      );
       yield undefined;
 
       ok(request.resultCode == NS_OK, "Initialization succeeded");

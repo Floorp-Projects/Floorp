@@ -11,7 +11,9 @@
 var EXPORTED_SYMBOLS = ["ReceiverStateMachine"]; // jshint ignore:line
 
 /* globals State, CommandType */
-const {CommandType, State} = ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
+const { CommandType, State } = ChromeUtils.import(
+  "resource://gre/modules/presentation/StateMachineHelper.jsm"
+);
 
 const DEBUG = false;
 function debug(str) {
@@ -49,8 +51,7 @@ var handlers = [
         stateMachine._notifyDisconnected(command.reason);
         break;
       case CommandType.LAUNCH:
-        stateMachine._notifyLaunch(command.presentationId,
-                                   command.url);
+        stateMachine._notifyLaunch(command.presentationId, command.url);
         stateMachine._sendCommand({
           type: CommandType.LAUNCH_ACK,
           presentationId: command.presentationId,
@@ -67,8 +68,7 @@ var handlers = [
         stateMachine._notifyChannelDescriptor(command);
         break;
       case CommandType.RECONNECT:
-        stateMachine._notifyReconnect(command.presentationId,
-                                      command.url);
+        stateMachine._notifyReconnect(command.presentationId, command.url);
         stateMachine._sendCommand({
           type: CommandType.RECONNECT_ACK,
           presentationId: command.presentationId,
@@ -192,7 +192,8 @@ ReceiverStateMachine.prototype = {
         }
         break;
       default:
-        DEBUG && debug("unexpected channel close: " + reason + ", " + isByRemote); // jshint ignore:line
+        DEBUG &&
+          debug("unexpected channel close: " + reason + ", " + isByRemote); // jshint ignore:line
         break;
     }
   },
@@ -232,4 +233,3 @@ ReceiverStateMachine.prototype = {
     }
   },
 };
-

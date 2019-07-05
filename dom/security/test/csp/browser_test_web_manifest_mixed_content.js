@@ -5,9 +5,9 @@
  */
 /*globals Cu, ok*/
 "use strict";
-const {
-  ManifestObtainer
-} = ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm");
+const { ManifestObtainer } = ChromeUtils.import(
+  "resource://gre/modules/ManifestObtainer.jsm"
+);
 const path = "/tests/dom/security/test/csp/";
 const mixedContent = `${path}file_web_manifest_mixed_content.html`;
 const server = `${path}file_testserver.sjs`;
@@ -24,22 +24,26 @@ const tests = [
     },
     run(error) {
       // Check reason for error.
-      const check = /NetworkError when attempting to fetch resource/.test(error.message);
+      const check = /NetworkError when attempting to fetch resource/.test(
+        error.message
+      );
       ok(check, this.expected);
-    }
-  }
+    },
+  },
 ];
 
 //jscs:disable
 add_task(async function() {
   //jscs:enable
-  const testPromises = tests.map((test) => {
+  const testPromises = tests.map(test => {
     const tabOptions = {
       gBrowser,
       url: test.tabURL,
       skipAnimation: true,
     };
-    return BrowserTestUtils.withNewTab(tabOptions, (browser) => testObtainingManifest(browser, test));
+    return BrowserTestUtils.withNewTab(tabOptions, browser =>
+      testObtainingManifest(browser, test)
+    );
   });
   await Promise.all(testPromises);
 });

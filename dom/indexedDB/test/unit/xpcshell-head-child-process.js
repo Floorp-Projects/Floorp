@@ -4,7 +4,9 @@
  */
 
 function run_test() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
 
   const INDEXEDDB_HEAD_FILE = "xpcshell-head-parent-process.js";
   const INDEXEDDB_PREF_EXPERIMENTAL = "dom.indexedDB.experimental";
@@ -18,7 +20,6 @@ function run_test() {
   // This is defined globally via xpcshell.
   /* global _HEAD_FILES */
   _HEAD_FILES.push(do_get_file(INDEXEDDB_HEAD_FILE).path.replace(/\\/g, "/"));
-
 
   Services.prefs.setBoolPref(INDEXEDDB_PREF_EXPERIMENTAL, true);
 

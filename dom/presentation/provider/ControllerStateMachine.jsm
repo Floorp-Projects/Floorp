@@ -11,7 +11,9 @@
 var EXPORTED_SYMBOLS = ["ControllerStateMachine"]; // jshint ignore:line
 
 /* globals State, CommandType */
-const {CommandType, State} = ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
+const { CommandType, State } = ChromeUtils.import(
+  "resource://gre/modules/presentation/StateMachineHelper.jsm"
+);
 
 const DEBUG = false;
 function debug(str) {
@@ -193,7 +195,8 @@ ControllerStateMachine.prototype = {
         }
         break;
       default:
-        DEBUG && debug("unexpected channel close: " + reason + ", " + isByRemote); // jshint ignore:line
+        DEBUG &&
+          debug("unexpected channel close: " + reason + ", " + isByRemote); // jshint ignore:line
         break;
     }
   },
@@ -234,4 +237,3 @@ ControllerStateMachine.prototype = {
     }
   },
 };
-

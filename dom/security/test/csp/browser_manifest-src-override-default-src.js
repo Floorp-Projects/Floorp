@@ -4,9 +4,9 @@
  */
 /*globals Cu, is, ok*/
 "use strict";
-const {
-  ManifestObtainer
-} = ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm");
+const { ManifestObtainer } = ChromeUtils.import(
+  "resource://gre/modules/ManifestObtainer.jsm"
+);
 const path = "/tests/dom/security/test/csp/";
 const testFile = `${path}file_web_manifest.html`;
 const mixedContentFile = `${path}file_web_manifest_mixed_content.html`;
@@ -22,12 +22,15 @@ const tests = [
       const url = new URL(defaultURL);
       url.searchParams.append("file", testFile);
       url.searchParams.append("cors", "*");
-      url.searchParams.append("csp", "default-src http://elsewhere.com; manifest-src http://example.org");
+      url.searchParams.append(
+        "csp",
+        "default-src http://elsewhere.com; manifest-src http://example.org"
+      );
       return url.href;
     },
     run(manifest) {
       is(manifest.name, "loaded", this.expected);
-    }
+    },
   },
   // Check interaction with default-src none,
   // CSP allows fetching manifest from example.org, so manifest should load.
@@ -37,40 +40,50 @@ const tests = [
       const url = new URL(mixedURL);
       url.searchParams.append("file", mixedContentFile);
       url.searchParams.append("cors", "http://test:80");
-      url.searchParams.append("csp", "default-src 'self'; manifest-src http://test:80");
+      url.searchParams.append(
+        "csp",
+        "default-src 'self'; manifest-src http://test:80"
+      );
       return url.href;
     },
     run(manifest) {
       is(manifest.name, "loaded", this.expected);
-    }
+    },
   },
 ];
 
 //jscs:disable
 add_task(async function() {
   //jscs:enable
-  const testPromises = tests.map((test) => {
+  const testPromises = tests.map(test => {
     const tabOptions = {
       gBrowser,
       url: test.tabURL,
       skipAnimation: true,
     };
-    return BrowserTestUtils.withNewTab(tabOptions, (browser) => testObtainingManifest(browser, test));
+    return BrowserTestUtils.withNewTab(tabOptions, browser =>
+      testObtainingManifest(browser, test)
+    );
   });
   await Promise.all(testPromises);
 });
 
 async function testObtainingManifest(aBrowser, aTest) {
   const expectsBlocked = aTest.expected.includes("block");
-  const observer = (expectsBlocked) ? createNetObserver(aTest) : null;
+  const observer = expectsBlocked ? createNetObserver(aTest) : null;
   // Expect an exception (from promise rejection) if there a content policy
   // that is violated.
   try {
     const manifest = await ManifestObtainer.browserObtainManifest(aBrowser);
     aTest.run(manifest);
   } catch (e) {
-    const wasBlocked = e.message.includes("NetworkError when attempting to fetch resource");
-    ok(wasBlocked,`Expected promise rejection obtaining ${aTest.tabURL}: ${e.message}`);
+    const wasBlocked = e.message.includes(
+      "NetworkError when attempting to fetch resource"
+    );
+    ok(
+      wasBlocked,
+      `Expected promise rejection obtaining ${aTest.tabURL}: ${e.message}`
+    );
     if (observer) {
       await observer.untilFinished;
     }
@@ -82,7 +95,7 @@ async function testObtainingManifest(aBrowser, aTest) {
 function createNetObserver(test) {
   let finishedTest;
   let success = false;
-  const finished = new Promise((resolver) => {
+  const finished = new Promise(resolver => {
     finishedTest = resolver;
   });
   const timeoutId = setTimeout(() => {
@@ -92,7 +105,7 @@ function createNetObserver(test) {
     }
   }, 1000);
   var observer = {
-    get untilFinished(){
+    get untilFinished() {
       return finished;
     },
     observe(subject, topic) {

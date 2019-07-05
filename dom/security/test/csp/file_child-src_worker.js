@@ -1,4 +1,3 @@
 onmessage = function(e) {
-  postMessage('worker');
+  postMessage("worker");
 };
-

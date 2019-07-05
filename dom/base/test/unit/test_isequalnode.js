@@ -39,13 +39,11 @@ function test_isEqualNode_setAttribute() {
 
   check_eq_nodes(node1, node2);
 
-
   node1.setAttribute("bar", "baz");
   check_neq_nodes(node1, node2);
 
   node2.setAttribute("bar", "baz");
   check_eq_nodes(node1, node2);
-
 
   // the null namespace is equivalent to no namespace -- section 1.3.3
   // (XML Namespaces) of DOM 3 Core
@@ -54,7 +52,6 @@ function test_isEqualNode_setAttribute() {
 
   node2.setAttribute("quux", "17");
   check_eq_nodes(node1, node2);
-
 
   node2.setAttributeNS("http://mozilla.org/", "seamonkey", "rheet");
   check_neq_nodes(node1, node2);
@@ -119,30 +116,30 @@ function test_isEqualNode_clones() {
 }
 
 function test_isEqualNode_variety() {
-  const nodes =
-    [
-      doc.createElement("foo"),
-      doc.createElementNS("http://example.com/", "foo"),
-      doc.createElementNS("http://example.org/", "foo"),
-      doc.createElementNS("http://example.com/", "FOO"),
-      doc.createAttribute("foo", "href='biz'"),
-      doc.createAttributeNS("http://example.com/", "foo", "href='biz'"),
-      doc.createTextNode("foo"),
-      doc.createTextNode("   "),
-      doc.createTextNode("    "),
-      doc.createComment("foo"),
-      doc.createProcessingInstruction("foo", "href='biz'"),
-      doc.implementation.createDocumentType("foo", "href='biz'", ""),
-      doc.implementation.createDocument("http://example.com/", "foo", null),
-      doc.createDocumentFragment(),
-    ];
+  const nodes = [
+    doc.createElement("foo"),
+    doc.createElementNS("http://example.com/", "foo"),
+    doc.createElementNS("http://example.org/", "foo"),
+    doc.createElementNS("http://example.com/", "FOO"),
+    doc.createAttribute("foo", "href='biz'"),
+    doc.createAttributeNS("http://example.com/", "foo", "href='biz'"),
+    doc.createTextNode("foo"),
+    doc.createTextNode("   "),
+    doc.createTextNode("    "),
+    doc.createComment("foo"),
+    doc.createProcessingInstruction("foo", "href='biz'"),
+    doc.implementation.createDocumentType("foo", "href='biz'", ""),
+    doc.implementation.createDocument("http://example.com/", "foo", null),
+    doc.createDocumentFragment(),
+  ];
 
   for (var i = 0; i < nodes.length; i++) {
     for (var j = i; j < nodes.length; j++) {
-      if (i == j)
+      if (i == j) {
         check_eq_nodes(nodes[i], nodes[j]);
-      else
+      } else {
         check_neq_nodes(nodes[i], nodes[j]);
+      }
     }
   }
 }
@@ -172,10 +169,12 @@ function test_isEqualNode_normalization() {
   check_eq_nodes(node1, node2);
 
   // reset
-  while (node1.hasChildNodes())
+  while (node1.hasChildNodes()) {
     node1.removeChild(node1.childNodes.item(0));
-  while (node2.hasChildNodes())
+  }
+  while (node2.hasChildNodes()) {
     node2.removeChild(node2.childNodes.item(0));
+  }
 
   // attribute normalization testing
 
@@ -353,12 +352,8 @@ function test_isEqualNode_null() {
 function test_isEqualNode_wholeDoc() {
   doc = ParseFile("isequalnode_data.xml");
   var doc2 = ParseFile("isequalnode_data.xml");
-  var tw1 =
-    doc.createTreeWalker(doc, NodeFilter.SHOW_ALL,
-                         null);
-  var tw2 =
-    doc2.createTreeWalker(doc2, NodeFilter.SHOW_ALL,
-                          null);
+  var tw1 = doc.createTreeWalker(doc, NodeFilter.SHOW_ALL, null);
+  var tw2 = doc2.createTreeWalker(doc2, NodeFilter.SHOW_ALL, null);
   do {
     check_eq_nodes(tw1.currentNode, tw2.currentNode);
     tw1.nextNode();
@@ -381,26 +376,33 @@ function equality_check_kids(parentId, areEqual) {
   var kid1 = parent.childNodes.item(1);
   var kid2 = parent.childNodes.item(3);
 
-  if (areEqual)
+  if (areEqual) {
     check_eq_nodes(kid1, kid2);
-  else
+  } else {
     check_neq_nodes(kid1, kid2);
+  }
 }
 
 function check_eq_nodes(n1, n2) {
-  if (n1 && !n1.isEqualNode(n2))
+  if (n1 && !n1.isEqualNode(n2)) {
     do_throw(n1 + " should be equal to " + n2);
-  if (n2 && !n2.isEqualNode(n1))
+  }
+  if (n2 && !n2.isEqualNode(n1)) {
     do_throw(n2 + " should be equal to " + n1);
-  if (!n1 && !n2)
+  }
+  if (!n1 && !n2) {
     do_throw("nodes both null!");
+  }
 }
 
 function check_neq_nodes(n1, n2) {
-  if (n1 && n1.isEqualNode(n2))
+  if (n1 && n1.isEqualNode(n2)) {
     do_throw(n1 + " should not be equal to " + n2);
-  if (n2 && n2.isEqualNode(n1))
+  }
+  if (n2 && n2.isEqualNode(n1)) {
     do_throw(n2 + " should not be equal to " + n1);
-  if (!n1 && !n2)
+  }
+  if (!n1 && !n2) {
     do_throw("n1 and n2 both null!");
+  }
 }

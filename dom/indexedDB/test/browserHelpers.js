@@ -10,39 +10,33 @@ var testGenerator = testSteps();
 
 var testResult;
 
-function runTest()
-{
+function runTest() {
   testGenerator.next();
 }
 
-function finishTestNow()
-{
+function finishTestNow() {
   if (testGenerator) {
     testGenerator.return();
     testGenerator = undefined;
   }
 }
 
-function finishTest()
-{
+function finishTest() {
   setTimeout(finishTestNow, 0);
   setTimeout(() => {
     window.parent.postMessage(testResult, "*");
   }, 0);
 }
 
-function grabEventAndContinueHandler(event)
-{
+function grabEventAndContinueHandler(event) {
   testGenerator.next(event);
 }
 
-function errorHandler(event)
-{
+function errorHandler(event) {
   throw new Error("indexedDB error, code " + event.target.error.name);
 }
 
-function continueToNextStep()
-{
+function continueToNextStep() {
   SimpleTest.executeSoon(function() {
     testGenerator.next();
   });

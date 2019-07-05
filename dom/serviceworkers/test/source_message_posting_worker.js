@@ -8,7 +8,7 @@ onmessage = function(e) {
   }
 
   // The client should be a window client
-  if (e.source instanceof  WindowClient) {
+  if (e.source instanceof WindowClient) {
     e.source.postMessage(e.data);
   } else {
     e.source.postMessage("ERROR. source is not a window client.");

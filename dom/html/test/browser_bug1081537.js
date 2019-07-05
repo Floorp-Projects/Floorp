@@ -2,8 +2,8 @@
 // addon-scope paths here.
 var ifr;
 function test() {
-  ifr = document.createXULElement('iframe');
-  document.getElementById('main-window').appendChild(ifr);
+  ifr = document.createXULElement("iframe");
+  document.getElementById("main-window").appendChild(ifr);
   is(ifr.contentDocument.nodePrincipal.origin, "[System Principal]");
   ifr.contentDocument.open();
   ok(true, "Didn't throw");

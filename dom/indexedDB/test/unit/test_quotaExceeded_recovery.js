@@ -7,11 +7,11 @@ var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const spec = "http://foo.com";
-  const name =
-    this.window ? window.location.pathname : "test_quotaExceeded_recovery";
+  const name = this.window
+    ? window.location.pathname
+    : "test_quotaExceeded_recovery";
   const objectStoreName = "foo";
 
   const android = mozinfo.os == "android";
@@ -77,8 +77,7 @@ function* testSteps()
 
       let trans = db.transaction(objectStoreName, "readwrite");
       request = trans.objectStore(objectStoreName).add(obj);
-      request.onerror = function(event)
-      {
+      request.onerror = function(event) {
         event.stopPropagation();
       };
 

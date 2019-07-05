@@ -4,10 +4,12 @@
 
 "use strict";
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-																		true]]});
+SpecialPowers.pushPrefEnv({
+  set: [["security.allow_eval_with_system_principal", true]],
+});
 
-const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
+const PAGE =
+  "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
 /**
  * Returns a Promise that resolves when it sees a pageshow and
@@ -25,7 +27,7 @@ const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20pag
  * @returns Promise
  */
 function prepareForVisibilityEvents(browser, expectedOrder) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let order = [];
 
     let rmvHide, rmvShow;
@@ -45,21 +47,31 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
       }
     };
 
-    let eventListener = (type) => {
+    let eventListener = type => {
       order.push(type);
       checkSatisfied();
     };
 
-    let checkFn = (e) => e.persisted;
+    let checkFn = e => e.persisted;
 
-    rmvHide = BrowserTestUtils.addContentEventListener(browser, "pagehide",
-                                                       () => eventListener("pagehide"),
-                                                       {}, checkFn,
-                                                       false, false);
-    rmvShow = BrowserTestUtils.addContentEventListener(browser, "pageshow",
-                                                       () => eventListener("pageshow"),
-                                                       {}, checkFn,
-                                                       false, false);
+    rmvHide = BrowserTestUtils.addContentEventListener(
+      browser,
+      "pagehide",
+      () => eventListener("pagehide"),
+      {},
+      checkFn,
+      false,
+      false
+    );
+    rmvShow = BrowserTestUtils.addContentEventListener(
+      browser,
+      "pageshow",
+      () => eventListener("pageshow"),
+      {},
+      checkFn,
+      false,
+      false
+    );
   });
 }
 
@@ -95,7 +107,7 @@ add_task(async function test_swap_frameloader_pagevisibility_events() {
 
   // Wait for that initial browser to show its pageshow event if it hasn't
   // happened so that we don't confuse it with the other expected events.
-  await ContentTask.spawn(emptyBrowser, {}, async() => {
+  await ContentTask.spawn(emptyBrowser, {}, async () => {
     if (content.document.visibilityState === "hidden") {
       info("waiting for hidden emptyBrowser to pageshow");
       await ContentTaskUtils.waitForEvent(content, "pageshow", {});
@@ -104,8 +116,10 @@ add_task(async function test_swap_frameloader_pagevisibility_events() {
 
   // The empty tab we just added show now fire a pagehide as its replaced,
   // and a pageshow once the swap is finished.
-  let emptyBrowserPromise =
-    prepareForVisibilityEvents(emptyBrowser, ["pagehide", "pageshow"]);
+  let emptyBrowserPromise = prepareForVisibilityEvents(emptyBrowser, [
+    "pagehide",
+    "pageshow",
+  ]);
 
   gBrowser.swapBrowsersAndCloseOther(newTab, newWindow.gBrowser.selectedTab);
 

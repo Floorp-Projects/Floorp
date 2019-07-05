@@ -1,6 +1,5 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var httpserver = null;
 var geolocation = null;
@@ -31,8 +30,10 @@ function run_test() {
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/geo", geoHandler);
   httpserver.start(-1);
-  Services.prefs.setCharPref("geo.wifi.uri", "http://localhost:" +
-                             httpserver.identity.primaryPort + "/geo");
+  Services.prefs.setCharPref(
+    "geo.wifi.uri",
+    "http://localhost:" + httpserver.identity.primaryPort + "/geo"
+  );
   Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   Services.prefs.setBoolPref("geo.wifi.scan", false);
 

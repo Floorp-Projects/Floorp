@@ -8,15 +8,21 @@ declTest("getActor with mismatch", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(parent, "WindowGlobalParent should have value.");
-    Assert.throws(() => parent.getActor("Test"),
-          /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
+    Assert.throws(
+      () => parent.getActor("Test"),
+      /NS_ERROR_NOT_AVAILABLE/,
+      "Should throw if it doesn't match."
+    );
 
     await ContentTask.spawn(browser, {}, async function() {
       let child = content.window.getWindowGlobalChild();
       ok(child, "WindowGlobalChild should have value.");
 
-      Assert.throws(() => child.getActor("Test"),
-        /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/,
+        "Should throw if it doesn't match."
+      );
     });
   },
 });
@@ -70,8 +76,11 @@ declTest("getActor with iframe mismatch", {
 
       is(content.window.frames.length, 1, "There should be an iframe.");
       let child = frame.contentWindow.window.getWindowGlobalChild();
-      Assert.throws(() => child.getActor("Test"),
-        /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/,
+        "Should throw if it doesn't match."
+      );
     });
   },
 });
@@ -97,14 +106,20 @@ declTest("getActor with remoteType mismatch", {
 
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    Assert.throws(() => parent.getActor("Test"),
-          /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
+    Assert.throws(
+      () => parent.getActor("Test"),
+      /NS_ERROR_NOT_AVAILABLE/,
+      "Should throw if its remoteTypes don't match."
+    );
 
     await ContentTask.spawn(browser, {}, async function() {
       let child = content.window.getWindowGlobalChild();
       ok(child, "WindowGlobalChild should have value.");
-      Assert.throws(() => child.getActor("Test"),
-          /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/,
+        "Should throw if its remoteTypes don't match."
+      );
     });
   },
 });
@@ -119,8 +134,11 @@ declTest("getActor without allFrames", {
       content.document.body.appendChild(frame);
       is(content.window.frames.length, 1, "There should be an iframe.");
       let child = frame.contentWindow.window.getWindowGlobalChild();
-      Assert.throws(() => child.getActor("Test"),
-          /NS_ERROR_NOT_AVAILABLE/, "Should throw if allFrames is false.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/,
+        "Should throw if allFrames is false."
+      );
     });
   },
 });
@@ -146,9 +164,10 @@ declTest("getActor without includeChrome", {
 
   async test(_browser, win) {
     let parent = win.docShell.browsingContext.currentWindowGlobal;
-    SimpleTest.doesThrow(() =>
-      parent.getActor("Test"),
-      "Should throw if includeChrome is false.");
+    SimpleTest.doesThrow(
+      () => parent.getActor("Test"),
+      "Should throw if includeChrome is false."
+    );
   },
 });
 

@@ -6,12 +6,12 @@
 var testGenerator = testSteps();
 
 function* testSteps() {
-  const dbName = this.window ?
-                 window.location.pathname :
-                 "test_transaction_error";
+  const dbName = this.window
+    ? window.location.pathname
+    : "test_transaction_error";
   const dbVersion = 1;
   const objectStoreName = "foo";
-  const data = { };
+  const data = {};
   const dataKey = 1;
   const expectedError = "ConstraintError";
 
@@ -59,8 +59,11 @@ function* testSteps() {
   is(event.type, "error", "Got an error event");
   is(event.target, request, "Error event targeted request");
   is(event.currentTarget, request, "Got request error first");
-  is(event.currentTarget.error.name, expectedError,
-     "Request has correct error");
+  is(
+    event.currentTarget.error.name,
+    expectedError,
+    "Request has correct error"
+  );
   event.preventDefault();
 
   event = yield undefined;
@@ -74,8 +77,11 @@ function* testSteps() {
 
   is(event.type, "complete", "Got a complete event");
   is(event.target, transaction, "Complete event targeted transaction");
-  is(event.currentTarget, transaction,
-     "Complete event only targeted transaction");
+  is(
+    event.currentTarget,
+    transaction,
+    "Complete event only targeted transaction"
+  );
   is(event.currentTarget.error, null, "Transaction has null error");
 
   // Try again without preventDefault().
@@ -96,8 +102,11 @@ function* testSteps() {
   is(event.type, "error", "Got an error event");
   is(event.target, request, "Error event targeted request");
   is(event.currentTarget, request, "Got request error first");
-  is(event.currentTarget.error.name, expectedError,
-     "Request has correct error");
+  is(
+    event.currentTarget.error.name,
+    expectedError,
+    "Request has correct error"
+  );
 
   event = yield undefined;
 
@@ -110,10 +119,12 @@ function* testSteps() {
 
   is(event.type, "abort", "Got an abort event");
   is(event.target, transaction, "Abort event targeted transaction");
-  is(event.currentTarget, transaction,
-     "Abort event only targeted transaction");
-  is(event.currentTarget.error.name, expectedError,
-     "Transaction has correct error");
+  is(event.currentTarget, transaction, "Abort event only targeted transaction");
+  is(
+    event.currentTarget.error.name,
+    expectedError,
+    "Transaction has correct error"
+  );
 
   finishTest();
 }

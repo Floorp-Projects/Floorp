@@ -135,8 +135,10 @@ async function testSteps() {
     for (let gradualPrefillValue of gradualPrefillValues) {
       info("Setting gradual prefill value to " + gradualPrefillValue);
 
-      Services.prefs.setIntPref("dom.storage.snapshot_gradual_prefill",
-                                gradualPrefillValue);
+      Services.prefs.setIntPref(
+        "dom.storage.snapshot_gradual_prefill",
+        gradualPrefillValue
+      );
 
       info("Getting storage");
 

@@ -29,48 +29,61 @@ function expectAbortError(aResult) {
 }
 
 function verifyAnonymizedCertificate(attestationObject) {
-  return webAuthnDecodeCBORAttestation(attestationObject)
-    .then(({fmt, attStmt}) => {
+  return webAuthnDecodeCBORAttestation(attestationObject).then(
+    ({ fmt, attStmt }) => {
       is("none", fmt, "Is a None Attestation");
-      is("object", typeof(attStmt), "attStmt is a map");
+      is("object", typeof attStmt, "attStmt is a map");
       is(0, Object.keys(attStmt).length, "attStmt is empty");
-    });
+    }
+  );
 }
 
 function verifyDirectCertificate(attestationObject) {
-  return webAuthnDecodeCBORAttestation(attestationObject)
-    .then(({fmt, attStmt}) => {
+  return webAuthnDecodeCBORAttestation(attestationObject).then(
+    ({ fmt, attStmt }) => {
       is("fido-u2f", fmt, "Is a FIDO U2F Attestation");
-      is("object", typeof(attStmt), "attStmt is a map");
+      is("object", typeof attStmt, "attStmt is a map");
       ok(attStmt.hasOwnProperty("x5c"), "attStmt.x5c exists");
       ok(attStmt.hasOwnProperty("sig"), "attStmt.sig exists");
-    });
+    }
+  );
 }
 
 function promiseWebAuthnRegister(tab, attestation = "indirect") {
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(tab.linkedBrowser, [attestation],
+  return ContentTask.spawn(
+    tab.linkedBrowser,
+    [attestation],
     ([attestation]) => {
       const cose_alg_ECDSA_w_SHA256 = -7;
 
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
-      let pubKeyCredParams = [{
-        type: "public-key",
-        alg: cose_alg_ECDSA_w_SHA256
-      }];
+      let pubKeyCredParams = [
+        {
+          type: "public-key",
+          alg: cose_alg_ECDSA_w_SHA256,
+        },
+      ];
 
       let publicKey = {
-        rp: {id: content.document.domain, name: "none", icon: "none"},
-        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        rp: { id: content.document.domain, name: "none", icon: "none" },
+        user: {
+          id: new Uint8Array(),
+          name: "none",
+          icon: "none",
+          displayName: "none",
+        },
         pubKeyCredParams,
         attestation,
-        challenge
+        challenge,
       };
 
-      return content.navigator.credentials.create({publicKey})
+      return content.navigator.credentials
+        .create({ publicKey })
         .then(cred => cred.response.attestationObject);
-    });
+    }
+  );
   /* eslint-enable no-shadow */
 }
 
@@ -82,7 +95,7 @@ function promiseWebAuthnSign(tab) {
     let credential = {
       id: key_handle,
       type: "public-key",
-      transports: ["usb"]
+      transports: ["usb"],
     };
 
     let publicKey = {
@@ -91,19 +104,19 @@ function promiseWebAuthnSign(tab) {
       allowCredentials: [credential],
     };
 
-    return content.navigator.credentials.get({publicKey});
+    return content.navigator.credentials.get({ publicKey });
   });
 }
 
 add_task(async function test_setup_usbtoken() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       ["security.webauth.u2f", false],
       ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", false],
       ["security.webauth.webauthn_enable_android_fido2", false],
-      ["security.webauth.webauthn_enable_usbtoken", true]
-    ]
+      ["security.webauth.webauthn_enable_usbtoken", true],
+    ],
   });
 });
 
@@ -116,7 +129,7 @@ add_task(async function test_register() {
   let request = promiseWebAuthnRegister(tab)
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
-    .then(() => active = false);
+    .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register");
 
   // Cancel the request.
@@ -137,7 +150,7 @@ add_task(async function test_sign() {
   let request = promiseWebAuthnSign(tab)
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
-    .then(() => active = false);
+    .then(() => (active = false));
   await promiseNotification("webauthn-prompt-sign");
 
   // Cancel the request.
@@ -156,8 +169,9 @@ add_task(async function test_register_direct_cancel() {
   // Request a new credential with direct attestation and wait for the prompt.
   let active = true;
   let promise = promiseWebAuthnRegister(tab, "direct")
-    .then(arrivingHereIsBad).catch(expectAbortError)
-    .then(() => active = false);
+    .then(arrivingHereIsBad)
+    .catch(expectAbortError)
+    .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register-direct");
 
   // Cancel the request.
@@ -171,13 +185,13 @@ add_task(async function test_register_direct_cancel() {
 
 add_task(async function test_setup_softtoken() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       ["security.webauth.u2f", false],
       ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", true],
-      ["security.webauth.webauthn_enable_usbtoken", false]
-    ]
-  })
+      ["security.webauth.webauthn_enable_usbtoken", false],
+    ],
+  });
 });
 
 add_task(async function test_register_direct_proceed() {

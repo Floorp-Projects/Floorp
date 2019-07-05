@@ -57,7 +57,8 @@ var NotificationTest = (function() {
     var map = new Map();
     var set = new Set();
     map.set("test", 42);
-    set.add(4); set.add(2);
+    set.add(4);
+    set.add(2);
 
     return {
       primitives: {
@@ -90,11 +91,17 @@ var NotificationTest = (function() {
     },
 
     allowNotifications() {
-      return SpecialPowers.setBoolPref("notification.prompt.testing.allow", true);
+      return SpecialPowers.setBoolPref(
+        "notification.prompt.testing.allow",
+        true
+      );
     },
 
     denyNotifications() {
-      return SpecialPowers.setBoolPref("notification.prompt.testing.allow", false);
+      return SpecialPowers.setBoolPref(
+        "notification.prompt.testing.allow",
+        false
+      );
     },
 
     clickNotification(notification) {
@@ -102,11 +109,13 @@ var NotificationTest = (function() {
     },
 
     fireCloseEvent(title) {
-      window.dispatchEvent(new CustomEvent("mock-notification-close-event", {
-        detail: {
-          title,
-        },
-      }));
+      window.dispatchEvent(
+        new CustomEvent("mock-notification-close-event", {
+          detail: {
+            title,
+          },
+        })
+      );
     },
 
     info,
@@ -114,16 +123,17 @@ var NotificationTest = (function() {
     customDataMatches(dataObj) {
       var url = "http://www.domain.com";
       try {
-        return (JSON.stringify(dataObj.primitives) ===
-                JSON.stringify(fakeCustomData.primitives)) &&
-               (dataObj.date.toDateString() ===
-                fakeCustomData.date.toDateString()) &&
-               (dataObj.regexp.exec(url)[0].substr(7) === "www") &&
-               (new Int16Array(dataObj.arrayBuffer)[0] === 42) &&
-               (JSON.stringify(dataObj.imageData.data) ===
-                JSON.stringify(fakeCustomData.imageData.data)) &&
-               (dataObj.map.get("test") == 42) &&
-               (dataObj.set.has(4) && dataObj.set.has(2));
+        return (
+          JSON.stringify(dataObj.primitives) ===
+            JSON.stringify(fakeCustomData.primitives) &&
+          dataObj.date.toDateString() === fakeCustomData.date.toDateString() &&
+          dataObj.regexp.exec(url)[0].substr(7) === "www" &&
+          new Int16Array(dataObj.arrayBuffer)[0] === 42 &&
+          JSON.stringify(dataObj.imageData.data) ===
+            JSON.stringify(fakeCustomData.imageData.data) &&
+          dataObj.map.get("test") == 42 &&
+          (dataObj.set.has(4) && dataObj.set.has(2))
+        );
       } catch (e) {
         return false;
       }
