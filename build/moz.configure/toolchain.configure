@@ -1781,6 +1781,44 @@ add_old_configure_assignment('MOZ_HARDENING_LDFLAGS', security_hardening_cflags.
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
 add_old_configure_assignment('MOZ_HARDENING_LDFLAGS_JS', security_hardening_cflags.js_ldflags)
 
+
+# Frame pointers
+# ==============================================================
+@depends(c_compiler)
+def frame_pointer_flags(compiler):
+    if compiler.type == 'clang-cl':
+        return namespace(
+            enable=['-Oy-'],
+            disable=['-Oy'],
+        )
+    return namespace(
+        enable=['-fno-omit-frame-pointer', '-funwind-tables'],
+        disable=['-fomit-frame-pointer', '-funwind-tables'],
+    )
+
+
+@depends(moz_optimize.optimize, moz_debug, target,
+         '--enable-memory-sanitizer', '--enable-address-sanitizer',
+         '--enable-undefined-sanitizer')
+def frame_pointer_default(optimize, debug, target, msan, asan, ubsan):
+    return bool(not optimize or debug or msan or asan or ubsan or \
+        (target.os == 'WINNT' and target.cpu in ('x86', 'aarch64')))
+
+
+js_option('--enable-frame-pointers', default=frame_pointer_default,
+          help='{Enable|Disable} frame pointers')
+
+
+@depends('--enable-frame-pointers', frame_pointer_flags)
+def frame_pointer_flags(enable, flags):
+    if enable:
+        return flags.enable
+    return flags.disable
+
+
+set_config('MOZ_FRAMEPTR_FLAGS', frame_pointer_flags)
+
+
 # nasm detection
 # ==============================================================
 nasm = check_prog('NASM', ['nasm'], allow_missing=True, paths=toolchain_search_path)
@@ -1943,8 +1981,8 @@ def rustc_opt_level(opt_level_option, moz_optimize):
         return '1' if moz_optimize.optimize else '0'
 
 
-@depends(rustc_opt_level, debug_rust, '--enable-debug-symbols')
-def rust_compile_flags(opt_level, debug_rust, debug_symbols):
+@depends(rustc_opt_level, debug_rust, '--enable-debug-symbols', '--enable-frame-pointers')
+def rust_compile_flags(opt_level, debug_rust, debug_symbols, frame_pointers):
     # Cargo currently supports only two interesting profiles for building:
     # development and release. Those map (roughly) to --enable-debug and
     # --disable-debug in Gecko, respectively.
@@ -1977,6 +2015,8 @@ def rust_compile_flags(opt_level, debug_rust, debug_symbols):
                     ('yes' if debug_assertions else 'no'))
     if debug_info is not None:
         opts.append('debuginfo=%s' % debug_info)
+    if frame_pointers:
+        opts.append('force-frame-pointers=yes')
 
     flags = []
     for opt in opts:
@@ -2498,39 +2538,3 @@ ar = check_prog('AR', ar_config.names, paths=toolchain_search_path)
 add_old_configure_assignment('AR', ar)
 
 set_config('AR_FLAGS', ar_config.flags)
-
-# Frame pointers
-# ==============================================================
-@depends(c_compiler)
-def frame_pointer_flags(compiler):
-    if compiler.type == 'clang-cl':
-        return namespace(
-            enable=['-Oy-'],
-            disable=['-Oy'],
-        )
-    return namespace(
-        enable=['-fno-omit-frame-pointer', '-funwind-tables'],
-        disable=['-fomit-frame-pointer', '-funwind-tables'],
-    )
-
-
-@depends(moz_optimize.optimize, moz_debug, target,
-         '--enable-memory-sanitizer', '--enable-address-sanitizer',
-         '--enable-undefined-sanitizer')
-def frame_pointer_default(optimize, debug, target, msan, asan, ubsan):
-    return bool(not optimize or debug or msan or asan or ubsan or \
-        (target.os == 'WINNT' and target.cpu in ('x86', 'aarch64')))
-
-
-js_option('--enable-frame-pointers', default=frame_pointer_default,
-          help='{Enable|Disable} frame pointers')
-
-
-@depends('--enable-frame-pointers', frame_pointer_flags)
-def frame_pointer_flags(enable, flags):
-    if enable:
-        return flags.enable
-    return flags.disable
-
-
-set_config('MOZ_FRAMEPTR_FLAGS', frame_pointer_flags)
