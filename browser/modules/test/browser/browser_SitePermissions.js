@@ -14,7 +14,13 @@ add_task(async function testTempAllowThrows() {
 
   await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
     Assert.throws(function() {
-      SitePermissions.set(uri, id, SitePermissions.ALLOW, SitePermissions.SCOPE_TEMPORARY, browser);
+      SitePermissions.set(
+        uri,
+        id,
+        SitePermissions.ALLOW,
+        SitePermissions.SCOPE_TEMPORARY,
+        browser
+      );
     }, /'Block' is the only permission we can save temporarily on a browser/);
   });
 });
@@ -30,12 +36,19 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
   SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
   SitePermissions.set(uri, "cookie", SitePermissions.ALLOW_COOKIES_FOR_SESSION);
   SitePermissions.set(uri, "popup", SitePermissions.BLOCK);
-  SitePermissions.set(uri, "geo", SitePermissions.ALLOW, SitePermissions.SCOPE_SESSION);
+  SitePermissions.set(
+    uri,
+    "geo",
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_SESSION
+  );
   SitePermissions.set(uri, "shortcuts", SitePermissions.ALLOW);
 
-  let permissions = SitePermissions.getAllPermissionDetailsForBrowser(tab.linkedBrowser);
+  let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
+    tab.linkedBrowser
+  );
 
-  let camera = permissions.find(({id}) => id === "camera");
+  let camera = permissions.find(({ id }) => id === "camera");
   Assert.deepEqual(camera, {
     id: "camera",
     label: "Use the Camera",
@@ -45,12 +58,14 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   // Check that removed permissions (State.UNKNOWN) are skipped.
   SitePermissions.remove(uri, "camera");
-  permissions = SitePermissions.getAllPermissionDetailsForBrowser(tab.linkedBrowser);
+  permissions = SitePermissions.getAllPermissionDetailsForBrowser(
+    tab.linkedBrowser
+  );
 
-  camera = permissions.find(({id}) => id === "camera");
+  camera = permissions.find(({ id }) => id === "camera");
   Assert.equal(camera, undefined);
 
-  let cookie = permissions.find(({id}) => id === "cookie");
+  let cookie = permissions.find(({ id }) => id === "cookie");
   Assert.deepEqual(cookie, {
     id: "cookie",
     label: "Set Cookies",
@@ -58,7 +73,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_PERSISTENT,
   });
 
-  let popup = permissions.find(({id}) => id === "popup");
+  let popup = permissions.find(({ id }) => id === "popup");
   Assert.deepEqual(popup, {
     id: "popup",
     label: "Open Pop-up Windows",
@@ -66,7 +81,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_PERSISTENT,
   });
 
-  let geo = permissions.find(({id}) => id === "geo");
+  let geo = permissions.find(({ id }) => id === "geo");
   Assert.deepEqual(geo, {
     id: "geo",
     label: "Access Your Location",
@@ -74,7 +89,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
     scope: SitePermissions.SCOPE_SESSION,
   });
 
-  let shortcuts = permissions.find(({id}) => id === "shortcuts");
+  let shortcuts = permissions.find(({ id }) => id === "shortcuts");
   Assert.deepEqual(shortcuts, {
     id: "shortcuts",
     label: "Override Keyboard Shortcuts",

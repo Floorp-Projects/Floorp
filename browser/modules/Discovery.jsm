@@ -1,19 +1,25 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
- "use strict";
+"use strict";
 
-var EXPORTED_SYMBOLS = [
-  "Discovery",
-];
+var EXPORTED_SYMBOLS = ["Discovery"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ClientID",
-                               "resource://gre/modules/ClientID.jsm");
-ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
-                               "resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ClientID",
+  "resource://gre/modules/ClientID.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextualIdentityService",
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 const RECOMMENDATION_ENABLED = "browser.discovery.enabled";
 const TELEMETRY_ENABLED = "datareporting.healthreport.uploadEnabled";
@@ -41,25 +47,43 @@ const Discovery = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gRecommendationEnabled",
-                                      RECOMMENDATION_ENABLED, false,
-                                      Discovery.update);
-XPCOMUtils.defineLazyPreferenceGetter(this, "gTelemetryEnabled",
-                                      TELEMETRY_ENABLED, false,
-                                      Discovery.update);
-XPCOMUtils.defineLazyPreferenceGetter(this, "gCachedClientID",
-                                      "toolkit.telemetry.cachedClientID", "",
-                                      Discovery.reset);
-XPCOMUtils.defineLazyPreferenceGetter(this, "gContainersEnabled",
-                                      "browser.discovery.containers.enabled", false,
-                                      Discovery.reset);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gRecommendationEnabled",
+  RECOMMENDATION_ENABLED,
+  false,
+  Discovery.update
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gTelemetryEnabled",
+  TELEMETRY_ENABLED,
+  false,
+  Discovery.update
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gCachedClientID",
+  "toolkit.telemetry.cachedClientID",
+  "",
+  Discovery.reset
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gContainersEnabled",
+  "browser.discovery.containers.enabled",
+  false,
+  Discovery.reset
+);
 
 Services.obs.addObserver(Discovery.update, "contextual-identity-created");
 
 const DiscoveryInternal = {
   get sites() {
     delete this.sites;
-    this.sites = Services.prefs.getCharPref("browser.discovery.sites", "").split(",");
+    this.sites = Services.prefs
+      .getCharPref("browser.discovery.sites", "")
+      .split(",");
     return this.sites;
   },
 
@@ -79,8 +103,10 @@ const DiscoveryInternal = {
       for (let site of this.sites) {
         Services.cookies.remove(site, TAAR_COOKIE_NAME, "/", false, {});
         ContextualIdentityService.getPublicIdentities().forEach(identity => {
-          let {userContextId} = identity;
-          Services.cookies.remove(site, TAAR_COOKIE_NAME, "/", false, {userContextId});
+          let { userContextId } = identity;
+          Services.cookies.remove(site, TAAR_COOKIE_NAME, "/", false, {
+            userContextId,
+          });
         });
       }
     }
@@ -98,20 +124,32 @@ const DiscoveryInternal = {
         // This cookie gets tied down as much as possible.  Specifically,
         // SameSite, Secure, HttpOnly and non-PrivateBrowsing.
         for (let userContextId of this.getContextualIDs()) {
-          let originAttributes = {privateBrowsingId: 0};
+          let originAttributes = { privateBrowsingId: 0 };
           if (userContextId > 0) {
             originAttributes.userContextId = userContextId;
           }
-          if (Services.cookies.cookieExists(site, "/", TAAR_COOKIE_NAME, originAttributes)) {
+          if (
+            Services.cookies.cookieExists(
+              site,
+              "/",
+              TAAR_COOKIE_NAME,
+              originAttributes
+            )
+          ) {
             continue;
           }
-          Services.cookies.add(site, "/", TAAR_COOKIE_NAME, id,
-                              true, // secure
-                              true, // httpOnly
-                              true, // session
-                              Date.now(),
-                              originAttributes,
-                              Ci.nsICookie.SAMESITE_LAX);
+          Services.cookies.add(
+            site,
+            "/",
+            TAAR_COOKIE_NAME,
+            id,
+            true, // secure
+            true, // httpOnly
+            true, // session
+            Date.now(),
+            originAttributes,
+            Ci.nsICookie.SAMESITE_LAX
+          );
         }
       }
     }

@@ -4,8 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PanelMultiView",
-                               "resource:///modules/PanelMultiView.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PanelMultiView",
+  "resource:///modules/PanelMultiView.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["TabsPanel"];
 
@@ -20,7 +23,7 @@ function setAttributes(element, attrs) {
 }
 
 class TabsListBase {
-  constructor({className, filterFn, insertBefore, containerNode}) {
+  constructor({ className, filterFn, insertBefore, containerNode }) {
     this.className = className;
     this.filterFn = filterFn;
     this.insertBefore = insertBefore;
@@ -214,7 +217,7 @@ class TabsPanel extends TabsListBase {
   }
 
   _createRow(tab) {
-    let {doc} = this;
+    let { doc } = this;
     let row = doc.createXULElement("toolbaritem");
     row.setAttribute("class", "all-tabs-item");
     if (this.className) {
@@ -225,7 +228,10 @@ class TabsPanel extends TabsListBase {
     this.tabToElement.set(tab, row);
 
     let button = doc.createXULElement("toolbarbutton");
-    button.setAttribute("class", "all-tabs-button subviewbutton subviewbutton-iconic");
+    button.setAttribute(
+      "class",
+      "all-tabs-button subviewbutton subviewbutton-iconic"
+    );
     button.setAttribute("flex", "1");
     button.setAttribute("crop", "right");
     button.tab = tab;
@@ -234,7 +240,9 @@ class TabsPanel extends TabsListBase {
 
     let secondaryButton = doc.createXULElement("toolbarbutton");
     secondaryButton.setAttribute(
-      "class", "all-tabs-secondary-button subviewbutton subviewbutton-iconic");
+      "class",
+      "all-tabs-secondary-button subviewbutton subviewbutton-iconic"
+    );
     secondaryButton.setAttribute("closemenu", "none");
     secondaryButton.setAttribute("toggle-mute", "true");
     secondaryButton.tab = tab;
@@ -246,7 +254,7 @@ class TabsPanel extends TabsListBase {
   }
 
   _setRowAttributes(row, tab) {
-    setAttributes(row, {selected: tab.selected});
+    setAttributes(row, { selected: tab.selected });
 
     let busy = tab.getAttribute("busy");
     let button = row.firstElementChild;
@@ -270,15 +278,22 @@ class TabsPanel extends TabsListBase {
 
   _setImageAttributes(row, tab) {
     let button = row.firstElementChild;
-    let image = this.doc.getAnonymousElementByAttribute(
-      button, "class", "toolbarbutton-icon") ||
+    let image =
       this.doc.getAnonymousElementByAttribute(
-        button, "class", "toolbarbutton-icon tab-throbber-tabslist");
+        button,
+        "class",
+        "toolbarbutton-icon"
+      ) ||
+      this.doc.getAnonymousElementByAttribute(
+        button,
+        "class",
+        "toolbarbutton-icon tab-throbber-tabslist"
+      );
 
     if (image) {
       let busy = tab.getAttribute("busy");
       let progress = tab.getAttribute("progress");
-      setAttributes(image, {busy, progress});
+      setAttributes(image, { busy, progress });
       if (busy) {
         image.classList.add("tab-throbber-tabslist");
       } else {
