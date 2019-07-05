@@ -6,20 +6,26 @@ add_task(async function test_BrowsingContext_structured_clone() {
   let frame = browser.document.createElement("iframe");
   browser.document.body.appendChild(frame);
 
-  let {browsingContext} = frame;
+  let { browsingContext } = frame;
 
-  let sch = new StructuredCloneHolder({browsingContext});
+  let sch = new StructuredCloneHolder({ browsingContext });
 
   let deserialize = () => sch.deserialize({}, true);
 
   // Check that decoding a live browsing context produces the correct
   // object.
-  equal(deserialize().browsingContext, browsingContext,
-        "Got correct browsing context from StructuredClone deserialize");
+  equal(
+    deserialize().browsingContext,
+    browsingContext,
+    "Got correct browsing context from StructuredClone deserialize"
+  );
 
   // Check that decoding a second time still succeeds.
-  equal(deserialize().browsingContext, browsingContext,
-        "Got correct browsing context from second StructuredClone deserialize");
+  equal(
+    deserialize().browsingContext,
+    browsingContext,
+    "Got correct browsing context from second StructuredClone deserialize"
+  );
 
   // Destroy the browsing context and make sure that the decode fails
   // with a DataCloneError.
@@ -57,6 +63,9 @@ add_task(async function test_BrowsingContext_structured_clone() {
   // OK. We can be fairly confident that the BrowsingContext object
   // stored in our structured clone data has been destroyed. Make sure
   // that attempting to decode it again leads to the appropriate error.
-  Assert.throws(deserialize, e => e.name === "DataCloneError",
-                "Should get a DataCloneError when trying to decode a dead BrowsingContext");
+  Assert.throws(
+    deserialize,
+    e => e.name === "DataCloneError",
+    "Should get a DataCloneError when trying to decode a dead BrowsingContext"
+  );
 });

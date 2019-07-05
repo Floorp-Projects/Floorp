@@ -1,7 +1,6 @@
 /* eslint-env mozilla/frame-script */
 
-function SHistoryListener() {
-}
+function SHistoryListener() {}
 
 SHistoryListener.prototype = {
   retval: true,
@@ -26,14 +25,15 @@ SHistoryListener.prototype = {
 
   OnHistoryReplaceEntry() {},
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsISHistoryListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 let testAPI = {
   shistory: null,
-  listeners: [ new SHistoryListener(),
-               new SHistoryListener() ],
+  listeners: [new SHistoryListener(), new SHistoryListener()],
 
   init() {
     this.shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
@@ -51,8 +51,10 @@ let testAPI = {
   },
 
   getListenerStatus() {
-    sendAsyncMessage("bug422543:getListenerStatus:return",
-                     this.listeners.map(l => l.last));
+    sendAsyncMessage(
+      "bug422543:getListenerStatus:return",
+      this.listeners.map(l => l.last)
+    );
   },
 
   resetListeners() {
@@ -75,10 +77,20 @@ let testAPI = {
   },
 };
 
-addMessageListener("bug422543:cleanup", () => { testAPI.cleanup(); });
-addMessageListener("bug422543:getListenerStatus", () => { testAPI.getListenerStatus(); });
-addMessageListener("bug422543:notifyReload", () => { testAPI.notifyReload(); });
-addMessageListener("bug422543:resetListeners", () => { testAPI.resetListeners(); });
-addMessageListener("bug422543:setRetval", (msg) => { testAPI.setRetval(msg.data); });
+addMessageListener("bug422543:cleanup", () => {
+  testAPI.cleanup();
+});
+addMessageListener("bug422543:getListenerStatus", () => {
+  testAPI.getListenerStatus();
+});
+addMessageListener("bug422543:notifyReload", () => {
+  testAPI.notifyReload();
+});
+addMessageListener("bug422543:resetListeners", () => {
+  testAPI.resetListeners();
+});
+addMessageListener("bug422543:setRetval", msg => {
+  testAPI.setRetval(msg.data);
+});
 
 testAPI.init();
