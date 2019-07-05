@@ -6,9 +6,11 @@
 
 // see http://mxr.mozilla.org/mozilla-central/source/services/sync/Weave.js#76
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const rph = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+const rph = Services.io
+  .getProtocolHandler("resource")
+  .QueryInterface(Ci.nsIResProtocolHandler);
 
 function endsWith(str, end) {
   return str.slice(-end.length) == end;
@@ -30,7 +32,9 @@ function dir_entries(baseDir, subpath, ext) {
   while (enumerator.hasMoreElements()) {
     var file = enumerator.nextFile;
     if (file.isDirectory()) {
-      entries = entries.concat(dir_entries(dir, file.leafName, ext).map(p => subpath + "/" + p));
+      entries = entries.concat(
+        dir_entries(dir, file.leafName, ext).map(p => subpath + "/" + p)
+      );
     } else if (endsWith(file.leafName, ext)) {
       entries.push(subpath + "/" + file.leafName);
     }
@@ -41,19 +45,21 @@ function dir_entries(baseDir, subpath, ext) {
 function get_modules_under(uri) {
   if (uri instanceof Ci.nsIJARURI) {
     let jar = uri.QueryInterface(Ci.nsIJARURI);
-    let jarReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    let jarReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+      Ci.nsIZipReader
+    );
     let file = jar.JARFile.QueryInterface(Ci.nsIFileURL);
     jarReader.open(file.file);
     let entries = jar_entries(jarReader, "components/*.js")
-                  .concat(jar_entries(jarReader, "modules/*.js"))
-                  .concat(jar_entries(jarReader, "modules/*.jsm"));
+      .concat(jar_entries(jarReader, "modules/*.js"))
+      .concat(jar_entries(jarReader, "modules/*.jsm"));
     jarReader.close();
     return entries;
   } else if (uri instanceof Ci.nsIFileURL) {
     let file = uri.QueryInterface(Ci.nsIFileURL);
     return dir_entries(file.file, "components", ".js")
-           .concat(dir_entries(file.file, "modules", ".js"))
-           .concat(dir_entries(file.file, "modules", ".jsm"));
+      .concat(dir_entries(file.file, "modules", ".js"))
+      .concat(dir_entries(file.file, "modules", ".jsm"));
   }
   throw new Error("Expected a nsIJARURI or nsIFileURL");
 }

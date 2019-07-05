@@ -5,32 +5,42 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 const PREFS = {
-  "pluginFlashBlockingCheckbox":
-    { pref: "plugins.flashBlock.enabled", invert: false },
-  "pluginEnableProtectedModeCheckbox":
-    { pref: "dom.ipc.plugins.flash.disable-protected-mode", invert: true },
+  pluginFlashBlockingCheckbox: {
+    pref: "plugins.flashBlock.enabled",
+    invert: false,
+  },
+  pluginEnableProtectedModeCheckbox: {
+    pref: "dom.ipc.plugins.flash.disable-protected-mode",
+    invert: true,
+  },
 };
 
 async function renderPluginMetadata(id) {
   let plugin = await AddonManager.getAddonByID(id);
-  if (!plugin)
+  if (!plugin) {
     return;
+  }
 
   let libLabel = document.getElementById("pluginLibraries");
   libLabel.textContent = plugin.pluginLibraries.join(", ");
 
-  let typeLabel = document.getElementById("pluginMimeTypes"), types = [];
+  let typeLabel = document.getElementById("pluginMimeTypes"),
+    types = [];
   for (let type of plugin.pluginMimeTypes) {
-    let extras = [type.description.trim(), type.suffixes].
-                 filter(x => x).join(": ");
+    let extras = [type.description.trim(), type.suffixes]
+      .filter(x => x)
+      .join(": ");
     types.push(type.type + (extras ? " (" + extras + ")" : ""));
   }
   typeLabel.textContent = types.join(",\n");
   let showProtectedModePref = canDisableFlashProtectedMode(plugin);
-  document.getElementById("pluginEnableProtectedMode")
+  document
+    .getElementById("pluginEnableProtectedMode")
     .setAttribute("collapsed", showProtectedModePref ? "" : "true");
 }
 
@@ -48,8 +58,10 @@ function init() {
     var prefVal = Services.prefs.getBoolPref(PREFS[id].pref);
     checkbox.checked = PREFS[id].invert ? !prefVal : prefVal;
     checkbox.addEventListener("command", () => {
-      Services.prefs.setBoolPref(PREFS[id].pref,
-                                 PREFS[id].invert ? !checkbox.checked : checkbox.checked);
+      Services.prefs.setBoolPref(
+        PREFS[id].pref,
+        PREFS[id].invert ? !checkbox.checked : checkbox.checked
+      );
     });
   }
 }

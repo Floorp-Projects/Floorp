@@ -17,12 +17,15 @@ async function run_test() {
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   await setupUpdaterTest(FILE_COMPLETE_MAR, null, "", false);
-  let patchProps = {state: STATE_AFTER_STAGE};
+  let patchProps = { state: STATE_AFTER_STAGE };
   let patches = getLocalPatchString(patchProps);
-  let updateProps = {appVersion: "0.9"};
+  let updateProps = { appVersion: "0.9" };
   let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  getUpdateDirFile(FILE_UPDATE_LOG).create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  getUpdateDirFile(FILE_UPDATE_LOG).create(
+    Ci.nsIFile.NORMAL_FILE_TYPE,
+    PERMS_FILE
+  );
   writeStatusFile(STATE_AFTER_STAGE);
   // Create the version file with an older version to simulate installing a new
   // version of the application while there is an update that has been staged.
@@ -34,24 +37,28 @@ async function run_test() {
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
-                     ERR_OLDER_VERSION_OR_SAME_BUILD, 1);
+  checkUpdateManager(
+    STATE_NONE,
+    false,
+    STATE_FAILED,
+    ERR_OLDER_VERSION_OR_SAME_BUILD,
+    1
+  );
 
   let updatesDir = getUpdateDirFile(DIR_PATCH);
-  Assert.ok(updatesDir.exists(),
-            MSG_SHOULD_EXIST + getMsgPath(updatesDir.path));
+  Assert.ok(
+    updatesDir.exists(),
+    MSG_SHOULD_EXIST + getMsgPath(updatesDir.path)
+  );
 
   let log = getUpdateDirFile(FILE_UPDATE_LOG);
-  Assert.ok(!log.exists(),
-            MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
   log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
-  Assert.ok(log.exists(),
-            MSG_SHOULD_EXIST + getMsgPath(log.path));
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST + getMsgPath(log.path));
 
   log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
-  Assert.ok(!log.exists(),
-            MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
   waitForFilesInUse();
 }

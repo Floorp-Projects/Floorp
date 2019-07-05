@@ -5,10 +5,12 @@
 // Test startup and restart when no add-ons are installed
 // bug 944006
 
-
 // Load XPI Provider to get schema version ID
-var XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
-const {DB_SCHEMA} = XPIScope.XPIInternal;
+var XPIScope = ChromeUtils.import(
+  "resource://gre/modules/addons/XPIProvider.jsm",
+  null
+);
+const { DB_SCHEMA } = XPIScope.XPIInternal;
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -23,7 +25,10 @@ function checkPending() {
 
 // Make sure all our extension state is empty/nonexistent
 function check_empty_state() {
-  Assert.equal(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
+  Assert.equal(
+    Services.prefs.getIntPref("extensions.databaseSchema"),
+    DB_SCHEMA
+  );
   checkPending();
 }
 
@@ -68,6 +73,9 @@ add_task(async function upgrade_schema_version() {
   Services.prefs.setIntPref("extensions.databaseSchema", 1);
 
   await promiseStartupManager();
-  Assert.equal(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
+  Assert.equal(
+    Services.prefs.getIntPref("extensions.databaseSchema"),
+    DB_SCHEMA
+  );
   check_empty_state();
 });

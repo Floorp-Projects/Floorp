@@ -1,4 +1,6 @@
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 let gManagerWindow;
 let gCategoryUtilities;
@@ -20,7 +22,8 @@ function imageBufferFromDataURI(encodedImageData) {
   let decodedImageData = atob(encodedImageData);
   return Uint8Array.from(decodedImageData, byte => byte.charCodeAt(0)).buffer;
 }
-const img = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
+const img =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
 const imageBuffer = imageBufferFromDataURI(img);
 
 const id = "theme@mochi.test";
@@ -31,7 +34,7 @@ function getThemeData(_id = id, manifest = {}, files = {}) {
   return {
     "manifest.json": {
       applications: {
-        gecko: {id: _id},
+        gecko: { id: _id },
       },
       manifest_version: 2,
       name: "atheme",
@@ -65,11 +68,22 @@ add_task(async function testThemePreviewShown() {
   let item = doc.querySelector(`richlistitem[value="${id}"]`);
 
   await BrowserTestUtils.waitForCondition(
-    () => item.getAttribute("status") == "installed" && item.getAttribute("previewURL"),
-    "Wait for the item to update to installed");
+    () =>
+      item.getAttribute("status") == "installed" &&
+      item.getAttribute("previewURL"),
+    "Wait for the item to update to installed"
+  );
 
-  is(item.getAttribute("previewURL"), previewURL, "The previewURL is set on the item");
-  let image = doc.getAnonymousElementByAttribute(item, "anonid", "theme-screenshot");
+  is(
+    item.getAttribute("previewURL"),
+    previewURL,
+    "The previewURL is set on the item"
+  );
+  let image = doc.getAnonymousElementByAttribute(
+    item,
+    "anonid",
+    "theme-screenshot"
+  );
   is(image.src, previewURL, "The previewURL is set on the image src");
 
   item.click();
@@ -83,7 +97,7 @@ add_task(async function testThemePreviewShown() {
   await AddonTestUtils.promiseInstallXPI({
     "manifest.json": {
       applications: {
-        gecko: {id: extensionId},
+        gecko: { id: extensionId },
       },
       manifest_version: 2,
       name: "anextension",
@@ -115,10 +129,18 @@ add_task(async function testThemeOrdering() {
   // Install themes before loading the manager, if it's open they'll sort by install date.
   let themeId = id => id + "@mochi.test";
   let themeIds = [themeId(5), themeId(6), themeId(7), themeId(8)];
-  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(6), {name: "BBB"}));
-  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(7), {name: "CCC"}));
-  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(5), {name: "AAA"}, {previewURL: ""}));
-  await AddonTestUtils.promiseInstallXPI(getThemeData(themeId(8), {name: "DDD"}));
+  await AddonTestUtils.promiseInstallXPI(
+    getThemeData(themeId(6), { name: "BBB" })
+  );
+  await AddonTestUtils.promiseInstallXPI(
+    getThemeData(themeId(7), { name: "CCC" })
+  );
+  await AddonTestUtils.promiseInstallXPI(
+    getThemeData(themeId(5), { name: "AAA" }, { previewURL: "" })
+  );
+  await AddonTestUtils.promiseInstallXPI(
+    getThemeData(themeId(8), { name: "DDD" })
+  );
 
   // Enable a theme to make sure it's first.
   let addon = await AddonManager.getAddonByID(themeId(8));
@@ -138,14 +160,20 @@ add_task(async function testThemeOrdering() {
     idOrder,
     [
       themeId(8), // The active theme first.
-      themeId(6), themeId(7), // With previews, ordered by name.
+      themeId(6),
+      themeId(7), // With previews, ordered by name.
       themeId(5), // The theme without a preview last.
     ],
-    "Themes are ordered by enabled, previews, then name");
+    "Themes are ordered by enabled, previews, then name"
+  );
 
   // Ensure allow in private mode badge is hidden for themes.
   for (let item of list.itemChildren) {
-    let badge = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "privateBrowsing");
+    let badge = gManagerWindow.document.getAnonymousElementByAttribute(
+      item,
+      "anonid",
+      "privateBrowsing"
+    );
     is_element_hidden(badge, `private browsing badge is hidden`);
   }
 

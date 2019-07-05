@@ -31,7 +31,7 @@
 class NamedDeckButton extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({mode: "open"});
+    this.attachShadow({ mode: "open" });
     // Include styles inline to avoid a FOUC.
     let style = document.createElement("style");
     style.textContent = `
@@ -72,11 +72,11 @@ class NamedDeckButton extends HTMLElement {
 
   connectedCallback() {
     this.setSelectedFromDeck();
-    document.addEventListener("view-changed", this, {capture: true});
+    document.addEventListener("view-changed", this, { capture: true });
   }
 
   disconnectedCallback() {
-    document.removeEventListener("view-changed", this, {capture: true});
+    document.removeEventListener("view-changed", this, { capture: true });
   }
 
   get deckId() {
@@ -95,7 +95,7 @@ class NamedDeckButton extends HTMLElement {
     if (e.type == "view-changed" && e.target.id == this.deckId) {
       this.setSelectedFromDeck();
     } else if (e.type == "click") {
-      let {deck} = this;
+      let { deck } = this;
       if (deck) {
         deck.selectedViewName = this.name;
       }
@@ -115,7 +115,7 @@ class NamedDeckButton extends HTMLElement {
   }
 
   setSelectedFromDeck() {
-    let {deck} = this;
+    let { deck } = this;
     this.selected = deck && deck.selectedViewName == this.name;
   }
 }
@@ -154,7 +154,7 @@ class NamedDeck extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({mode: "open"});
+    this.attachShadow({ mode: "open" });
 
     // Create a slot for the visible content.
     let selectedSlot = document.createElement("slot");
@@ -178,7 +178,7 @@ class NamedDeck extends HTMLElement {
         this.selectedViewName = firstView.getAttribute("name");
       }
     }
-    this.observer.observe(this, {childList: true});
+    this.observer.observe(this, { childList: true });
   }
 
   disconnectedCallback() {
@@ -208,7 +208,7 @@ class NamedDeck extends HTMLElement {
    * is shown.
    */
   _setSelectedViewAttributes() {
-    let {selectedViewName} = this;
+    let { selectedViewName } = this;
     for (let view of this.children) {
       if (view.getAttribute("name") == selectedViewName) {
         view.slot = "selected";

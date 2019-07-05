@@ -10,7 +10,8 @@ async function loadDetail(aWindow, id) {
   if (aWindow.useHtmlViews) {
     let browser = await aWindow.getHtmlBrowser();
     let card = browser.contentDocument.querySelector(
-      `addon-card[addon-id="${id}"]`);
+      `addon-card[addon-id="${id}"]`
+    );
     EventUtils.synthesizeMouseAtCenter(card, {}, browser.contentWindow);
   } else {
     let card = aWindow.document.querySelector(`.addon.card[value="${id}"]`);
@@ -27,7 +28,7 @@ async function checkCompatibility(hboxSelector, buttonSelector) {
 
   let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {applications: {gecko: {id}}},
+    manifest: { applications: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -38,11 +39,23 @@ async function checkCompatibility(hboxSelector, buttonSelector) {
 
   function checkMessage(visible) {
     if (visible) {
-      is_element_visible(hbox, "Check Compatibility warning hbox should be visible");
-      is_element_visible(button, "Check Compatibility warning button should be visible");
+      is_element_visible(
+        hbox,
+        "Check Compatibility warning hbox should be visible"
+      );
+      is_element_visible(
+        button,
+        "Check Compatibility warning button should be visible"
+      );
     } else {
-      is_element_hidden(hbox, "Check Compatibility warning hbox should be hidden");
-      is_element_hidden(button, "Check Compatibility warning button should be hidden");
+      is_element_hidden(
+        hbox,
+        "Check Compatibility warning hbox should be hidden"
+      );
+      is_element_hidden(
+        button,
+        "Check Compatibility warning button should be hidden"
+      );
     }
   }
 
@@ -63,8 +76,12 @@ async function checkCompatibility(hboxSelector, buttonSelector) {
 
   // Check the button works.
   info("Clicking 'Enable' button");
-  EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
-  is(AddonManager.checkCompatibility, true, "Check Compatibility pref should be cleared");
+  EventUtils.synthesizeMouse(button, 2, 2, {}, aWindow);
+  is(
+    AddonManager.checkCompatibility,
+    true,
+    "Check Compatibility pref should be cleared"
+  );
   checkMessage(false);
 
   await close_manager(aWindow);
@@ -80,7 +97,7 @@ async function checkSecurity(hboxSelector, buttonSelector) {
 
   let id = "test-security@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {applications: {gecko: {id}}},
+    manifest: { applications: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -91,11 +108,23 @@ async function checkSecurity(hboxSelector, buttonSelector) {
 
   function checkMessage(visible) {
     if (visible) {
-      is_element_visible(hbox, "Check Update Security warning hbox should be visible");
-      is_element_visible(button, "Check Update Security warning button should be visible");
+      is_element_visible(
+        hbox,
+        "Check Update Security warning hbox should be visible"
+      );
+      is_element_visible(
+        button,
+        "Check Update Security warning button should be visible"
+      );
     } else {
-      is_element_hidden(hbox, "Check Update Security warning hbox should be hidden");
-      is_element_hidden(button, "Check Update Security warning button should be hidden");
+      is_element_hidden(
+        hbox,
+        "Check Update Security warning hbox should be hidden"
+      );
+      is_element_hidden(
+        button,
+        "Check Update Security warning button should be hidden"
+      );
     }
   }
 
@@ -116,8 +145,12 @@ async function checkSecurity(hboxSelector, buttonSelector) {
 
   // Check the button works.
   info("Clicking 'Enable' button");
-  EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
-  is(Services.prefs.prefHasUserValue(pref), false, "Check Update Security pref should be cleared");
+  EventUtils.synthesizeMouse(button, 2, 2, {}, aWindow);
+  is(
+    Services.prefs.prefHasUserValue(pref),
+    false,
+    "Check Update Security pref should be cleared"
+  );
   checkMessage(false);
 
   await close_manager(aWindow);
@@ -129,7 +162,7 @@ async function checkSafeMode(hboxSelector) {
 
   let id = "test-safemode@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {applications: {gecko: {id}}},
+    manifest: { applications: { gecko: { id } } },
     useAddonManager: "temporary",
   });
   await extension.startup();
@@ -139,7 +172,10 @@ async function checkSafeMode(hboxSelector) {
 
   function checkMessage(visible) {
     if (visible) {
-      is_element_visible(hbox, "Check safe mode warning hbox should be visible");
+      is_element_visible(
+        hbox,
+        "Check safe mode warning hbox should be visible"
+      );
     } else {
       is_element_hidden(hbox, "Check safe mode warning hbox should be hidden");
     }
@@ -149,7 +185,9 @@ async function checkSafeMode(hboxSelector) {
   checkMessage(false);
 
   // Mock safe mode by setting the page attribute.
-  aWindow.document.getElementById("addons-page").setAttribute("warning", "safemode");
+  aWindow.document
+    .getElementById("addons-page")
+    .setAttribute("warning", "safemode");
 
   // Check detail view.
   await loadDetail(aWindow, id);
@@ -172,7 +210,8 @@ add_task(async function testCompatCheckXUL() {
   });
   await checkCompatibility(
     "#list-view hbox.global-warning-checkcompatibility",
-    "#list-view button.global-warning-checkcompatibility");
+    "#list-view button.global-warning-checkcompatibility"
+  );
   // No popPrefEnv because of bug 1557397.
 });
 
@@ -182,7 +221,8 @@ add_task(async function testCompatCheckHTML() {
   });
   await checkCompatibility(
     "#html-view .global-warning-checkcompatibility",
-    "#html-view .global-warning-checkcompatibility button");
+    "#html-view .global-warning-checkcompatibility button"
+  );
   // No popPrefEnv because of bug 1557397.
 });
 
@@ -192,7 +232,8 @@ add_task(async function testSecurityCheckXUL() {
   });
   await checkSecurity(
     "#list-view hbox.global-warning-updatesecurity",
-    "#list-view button.global-warning-updatesecurity");
+    "#list-view button.global-warning-updatesecurity"
+  );
   // No popPrefEnv because of bug 1557397.
 });
 
@@ -202,7 +243,8 @@ add_task(async function testSecurityCheckHTML() {
   });
   await checkSecurity(
     "#html-view .global-warning-updatesecurity",
-    "#html-view .global-warning-updatesecurity button");
+    "#html-view .global-warning-updatesecurity button"
+  );
   // No popPrefEnv because of bug 1557397.
 });
 
