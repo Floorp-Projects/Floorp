@@ -13,13 +13,16 @@ add_task(async () => {
     options: {
       startWithLastProfile: true,
     },
-    profiles: [{
-      name: "Profile1",
-      path: "../data/test",
-    }, {
-      name: "Profile2",
-      path: "Path2",
-    }],
+    profiles: [
+      {
+        name: "Profile1",
+        path: "../data/test",
+      },
+      {
+        name: "Profile2",
+        path: "Path2",
+      },
+    ],
     installs: {
       [hash]: {
         default: "test",
@@ -35,10 +38,21 @@ add_task(async () => {
   let service = getProfileService();
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  Assert.equal(profile.name, "Profile1", "Should have selected the expected profile");
-  Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
+  Assert.equal(
+    profile.name,
+    "Profile1",
+    "Should have selected the expected profile"
+  );
+  Assert.ok(
+    !service.createdAlternateProfile,
+    "Should not have created an alternate profile."
+  );
 
-  Assert.equal(profile.name, service.defaultProfile.name, "Should have selected the right default.");
+  Assert.equal(
+    profile.name,
+    service.defaultProfile.name,
+    "Should have selected the right default."
+  );
 
   service.flush();
   checkProfileService();
