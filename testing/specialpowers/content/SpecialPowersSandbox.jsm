@@ -12,8 +12,11 @@
 
 var EXPORTED_SYMBOLS = ["SpecialPowersSandbox"];
 
-ChromeUtils.defineModuleGetter(this, "Assert",
-                               "resource://testing-common/Assert.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Assert",
+  "resource://testing-common/Assert.jsm"
+);
 
 class SpecialPowersSandbox {
   constructor(name, reportCallback, opts = {}) {
@@ -22,9 +25,13 @@ class SpecialPowersSandbox {
 
     this._Assert = null;
 
-    this.sandbox = Cu.Sandbox(Cu.getGlobalForObject({}),
-                              Object.assign({wantGlobalProperties: ["ChromeUtils"]},
-                                            opts.sandboxOptions));
+    this.sandbox = Cu.Sandbox(
+      Cu.getGlobalForObject({}),
+      Object.assign(
+        { wantGlobalProperties: ["ChromeUtils"] },
+        opts.sandboxOptions
+      )
+    );
 
     for (let prop of ["assert", "Assert"]) {
       Object.defineProperty(this.sandbox, prop, {
@@ -56,16 +63,22 @@ class SpecialPowersSandbox {
   report(err, name, stack) {
     let diag;
     if (err) {
-      diag = `got ${uneval(err.actual)}, expected ${uneval(err.expected)} ` +
-              `(operator ${err.operator})`;
+      diag =
+        `got ${uneval(err.actual)}, expected ${uneval(err.expected)} ` +
+        `(operator ${err.operator})`;
     }
 
-    this.reportCallback({name, diag, passed: !err, stack});
+    this.reportCallback({ name, diag, passed: !err, stack });
   }
 
   execute(task, args, caller) {
-    let func = Cu.evalInSandbox(`(${task})`, this.sandbox, undefined,
-                                caller.filename, caller.lineNumber);
+    let func = Cu.evalInSandbox(
+      `(${task})`,
+      this.sandbox,
+      undefined,
+      caller.filename,
+      caller.lineNumber
+    );
     return func(...args);
   }
 }

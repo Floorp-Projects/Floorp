@@ -5,13 +5,15 @@
 /** Provides functionality for creating and sending DOM events. */
 this.event = {};
 
-"use strict";
+("use strict");
 /* global content, is */
 /* eslint-disable no-restricted-globals */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {element} = ChromeUtils.import("chrome://marionette/content/element.js");
+const { element } = ChromeUtils.import(
+  "chrome://marionette/content/element.js"
+);
 
 const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
@@ -67,8 +69,11 @@ event.DoubleClickTracker = {
     event.DoubleClickTracker.cancelTimer();
   },
   startTimer() {
-    dblclickTimer.initWithCallback(event.DoubleClickTracker.resetClick,
-        DBLCLICK_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+    dblclickTimer.initWithCallback(
+      event.DoubleClickTracker.resetClick,
+      DBLCLICK_INTERVAL,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
   },
   cancelTimer() {
     dblclickTimer.cancel();
@@ -127,7 +132,11 @@ event.parseModifiers_ = function(modifiers) {
 event.synthesizeMouse = function(element, offsetX, offsetY, opts, win) {
   let rect = element.getBoundingClientRect();
   event.synthesizeMouseAtPoint(
-      rect.left + offsetX, rect.top + offsetY, opts, win);
+    rect.left + offsetX,
+    rect.top + offsetY,
+    opts,
+    win
+  );
 };
 
 /*
@@ -153,11 +162,11 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
   let button = opts.button || 0;
   let clickCount = opts.clickCount || 1;
   let modifiers = event.parseModifiers_(opts);
-  let pressure = ("pressure" in opts) ? opts.pressure : 0;
-  let inputSource = ("inputSource" in opts) ? opts.inputSource :
-      win.MouseEvent.MOZ_SOURCE_MOUSE;
+  let pressure = "pressure" in opts ? opts.pressure : 0;
+  let inputSource =
+    "inputSource" in opts ? opts.inputSource : win.MouseEvent.MOZ_SOURCE_MOUSE;
   let isDOMEventSynthesized =
-      ("isSynthesized" in opts) ? opts.isSynthesized : true;
+    "isSynthesized" in opts ? opts.isSynthesized : true;
   let isWidgetEventSynthesized;
   if ("isWidgetEventSynthesized" in opts) {
     isWidgetEventSynthesized = opts.isWidgetEventSynthesized;
@@ -171,47 +180,50 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
     buttons = domutils.MOUSE_BUTTONS_NOT_SPECIFIED;
   }
 
-  if (("type" in opts) && opts.type) {
+  if ("type" in opts && opts.type) {
     domutils.sendMouseEvent(
-        opts.type,
-        left,
-        top,
-        button,
-        clickCount,
-        modifiers,
-        false,
-        pressure,
-        inputSource,
-        isDOMEventSynthesized,
-        isWidgetEventSynthesized,
-        buttons);
+      opts.type,
+      left,
+      top,
+      button,
+      clickCount,
+      modifiers,
+      false,
+      pressure,
+      inputSource,
+      isDOMEventSynthesized,
+      isWidgetEventSynthesized,
+      buttons
+    );
   } else {
     domutils.sendMouseEvent(
-        "mousedown",
-        left,
-        top,
-        button,
-        clickCount,
-        modifiers,
-        false,
-        pressure,
-        inputSource,
-        isDOMEventSynthesized,
-        isWidgetEventSynthesized,
-        buttons);
+      "mousedown",
+      left,
+      top,
+      button,
+      clickCount,
+      modifiers,
+      false,
+      pressure,
+      inputSource,
+      isDOMEventSynthesized,
+      isWidgetEventSynthesized,
+      buttons
+    );
     domutils.sendMouseEvent(
-        "mouseup",
-        left,
-        top,
-        button,
-        clickCount,
-        modifiers,
-        false,
-        pressure,
-        inputSource,
-        isDOMEventSynthesized,
-        isWidgetEventSynthesized,
-        buttons);
+      "mouseup",
+      left,
+      top,
+      button,
+      clickCount,
+      modifiers,
+      false,
+      pressure,
+      inputSource,
+      isDOMEventSynthesized,
+      isWidgetEventSynthesized,
+      buttons
+    );
   }
 };
 
@@ -340,7 +352,7 @@ event.isKeypressFiredKey = function(key, win) {
         throw new TypeError("Unknown key: " + key);
       }
 
-    // if key generates a character, it must cause a keypress event
+      // if key generates a character, it must cause a keypress event
     } else {
       return true;
     }
@@ -422,8 +434,9 @@ function getTIP_(win, callback) {
   if (TIPMap.has(win)) {
     tip = TIPMap.get(win);
   } else {
-    tip = Cc["@mozilla.org/text-input-processor;1"]
-        .createInstance(Ci.nsITextInputProcessor);
+    tip = Cc["@mozilla.org/text-input-processor;1"].createInstance(
+      Ci.nsITextInputProcessor
+    );
     TIPMap.set(win, tip);
   }
   if (!tip.beginInputTransactionForTests(win, callback)) {
@@ -443,19 +456,19 @@ function getKeyboardEvent_(win) {
       return KeyboardEvent;
     } catch (ex) {}
   }
-  if (typeof content != "undefined" && ("KeyboardEvent" in content)) {
+  if (typeof content != "undefined" && "KeyboardEvent" in content) {
     return content.KeyboardEvent;
   }
   return win.KeyboardEvent;
 }
 
 function createKeyboardEventDictionary_(key, keyEvent, win) {
-  let result = {dictionary: null, flags: 0};
-  let keyCodeIsDefined = "keyCode" in keyEvent &&
-      keyEvent.keyCode != undefined;
+  let result = { dictionary: null, flags: 0 };
+  let keyCodeIsDefined = "keyCode" in keyEvent && keyEvent.keyCode != undefined;
   let keyCode =
-    (keyCodeIsDefined && keyEvent.keyCode >= 0 && keyEvent.keyCode <= 255) ?
-      keyEvent.keyCode : 0;
+    keyCodeIsDefined && keyEvent.keyCode >= 0 && keyEvent.keyCode <= 255
+      ? keyEvent.keyCode
+      : 0;
   let keyName = "Unidentified";
 
   let printable = false;
@@ -516,22 +529,25 @@ function emulateToActivateModifiers_(TIP, keyEvent, win) {
 
   let modifiers = {
     normal: [
-      {key: "Alt",        attr: "altKey"},
-      {key: "AltGraph",   attr: "altGraphKey"},
-      {key: "Control",    attr: "ctrlKey"},
-      {key: "Fn",         attr: "fnKey"},
-      {key: "Meta",       attr: "metaKey"},
-      {key: "OS",         attr: "osKey"},
-      {key: "Shift",      attr: "shiftKey"},
-      {key: "Symbol",     attr: "symbolKey"},
-      {key: Services.appinfo.OS === "Darwin" ? "Meta" : "Control", attr: "accelKey"},
+      { key: "Alt", attr: "altKey" },
+      { key: "AltGraph", attr: "altGraphKey" },
+      { key: "Control", attr: "ctrlKey" },
+      { key: "Fn", attr: "fnKey" },
+      { key: "Meta", attr: "metaKey" },
+      { key: "OS", attr: "osKey" },
+      { key: "Shift", attr: "shiftKey" },
+      { key: "Symbol", attr: "symbolKey" },
+      {
+        key: Services.appinfo.OS === "Darwin" ? "Meta" : "Control",
+        attr: "accelKey",
+      },
     ],
     lockable: [
-      {key: "CapsLock",   attr: "capsLockKey"},
-      {key: "FnLock",     attr: "fnLockKey"},
-      {key: "NumLock",    attr: "numLockKey"},
-      {key: "ScrollLock", attr: "scrollLockKey"},
-      {key: "SymbolLock", attr: "symbolLockKey"},
+      { key: "CapsLock", attr: "capsLockKey" },
+      { key: "FnLock", attr: "fnLockKey" },
+      { key: "NumLock", attr: "numLockKey" },
+      { key: "ScrollLock", attr: "scrollLockKey" },
+      { key: "SymbolLock", attr: "symbolLockKey" },
     ],
   };
 
@@ -542,9 +558,11 @@ function emulateToActivateModifiers_(TIP, keyEvent, win) {
     if (TIP.getModifierState(modifiers.normal[i].key)) {
       continue; // already activated.
     }
-    let event = new KeyboardEvent("", {key: modifiers.normal[i].key});
-    TIP.keydown(event,
-        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    let event = new KeyboardEvent("", { key: modifiers.normal[i].key });
+    TIP.keydown(
+      event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
     modifiers.normal[i].activated = true;
   }
 
@@ -555,11 +573,15 @@ function emulateToActivateModifiers_(TIP, keyEvent, win) {
     if (TIP.getModifierState(modifiers.lockable[j].key)) {
       continue; // already activated.
     }
-    let event = new KeyboardEvent("", {key: modifiers.lockable[j].key});
-    TIP.keydown(event,
-        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
-    TIP.keyup(event,
-        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    let event = new KeyboardEvent("", { key: modifiers.lockable[j].key });
+    TIP.keydown(
+      event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
+    TIP.keyup(
+      event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
     modifiers.lockable[j].activated = true;
   }
 
@@ -575,9 +597,11 @@ function emulateToInactivateModifiers_(TIP, modifiers, win) {
     if (!modifiers.normal[i].activated) {
       continue;
     }
-    let event = new KeyboardEvent("", {key: modifiers.normal[i].key});
-    TIP.keyup(event,
-        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    let event = new KeyboardEvent("", { key: modifiers.normal[i].key });
+    TIP.keyup(
+      event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
   }
   for (let j = 0; j < modifiers.lockable.length; j++) {
     if (!modifiers.lockable[j].activated) {
@@ -586,11 +610,15 @@ function emulateToInactivateModifiers_(TIP, modifiers, win) {
     if (!TIP.getModifierState(modifiers.lockable[j].key)) {
       continue; // who already inactivated this?
     }
-    let event = new KeyboardEvent("", {key: modifiers.lockable[j].key});
-    TIP.keydown(event,
-        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
-    TIP.keyup(event,
-        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    let event = new KeyboardEvent("", { key: modifiers.lockable[j].key });
+    TIP.keydown(
+      event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
+    TIP.keyup(
+      event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT
+    );
   }
 }
 
@@ -778,9 +806,13 @@ function expectEvent_(expectedTarget, expectedEvent, testName) {
  * be removed.
  */
 function checkExpectedEvent_(
-    expectedTarget, expectedEvent, eventHandler, testName) {
+  expectedTarget,
+  expectedEvent,
+  eventHandler,
+  testName
+) {
   if (eventHandler) {
-    let expectEvent = (expectedEvent.charAt(0) != "!");
+    let expectEvent = expectedEvent.charAt(0) != "!";
     let type = expectEvent;
     if (!type) {
       type = expectedEvent.substring(1);
@@ -824,25 +856,25 @@ function checkExpectedEvent_(
  *     Window object.
  */
 event.synthesizeMouseExpectEvent = function(
-    target, offsetX, offsetY, ev, expectedTarget, expectedEvent,
-    testName, win) {
-  let eventHandler = expectEvent_(
-      expectedTarget,
-      expectedEvent,
-      testName);
+  target,
+  offsetX,
+  offsetY,
+  ev,
+  expectedTarget,
+  expectedEvent,
+  testName,
+  win
+) {
+  let eventHandler = expectEvent_(expectedTarget, expectedEvent, testName);
   event.synthesizeMouse(target, offsetX, offsetY, ev, win);
-  checkExpectedEvent_(
-      expectedTarget,
-      expectedEvent,
-      eventHandler,
-      testName);
+  checkExpectedEvent_(expectedTarget, expectedEvent, eventHandler, testName);
 };
 
 const MODIFIER_KEYCODES_LOOKUP = {
-  "VK_SHIFT": "shiftKey",
-  "VK_CONTROL": "ctrlKey",
-  "VK_ALT": "altKey",
-  "VK_META": "metaKey",
+  VK_SHIFT: "shiftKey",
+  VK_CONTROL: "ctrlKey",
+  VK_ALT: "altKey",
+  VK_META: "metaKey",
 };
 
 const VIRTUAL_KEYCODE_LOOKUP = {
@@ -858,7 +890,7 @@ const VIRTUAL_KEYCODE_LOOKUP = {
   "\uE00A": "VK_ALT",
   "\uE00B": "VK_PAUSE",
   "\uE00C": "VK_ESCAPE",
-  "\uE00D": "VK_SPACE",  // printable
+  "\uE00D": "VK_SPACE", // printable
   "\uE00E": "VK_PAGE_UP",
   "\uE00F": "VK_PAGE_DOWN",
   "\uE010": "VK_END",
@@ -996,7 +1028,7 @@ function isPrintable(c, win) {
     KeyboardEvent.DOM_VK_PLAY,
     KeyboardEvent.DOM_VK_RETURN,
   ];
-  return !(NON_PRINT_KEYS.includes(c));
+  return !NON_PRINT_KEYS.includes(c);
 }
 
 event.sendKeyDown = function(keyToSend, modifiers, win) {

@@ -32,8 +32,9 @@ Cu.forcePermissiveCOWs();
 var EXPORTED_SYMBOLS = ["WrapPrivileged"];
 
 function isWrappable(x) {
-  if (typeof x === "object")
+  if (typeof x === "object") {
     return x !== null;
+  }
   return typeof x === "function";
 }
 
@@ -50,12 +51,22 @@ function wrapIfUnwrapped(x) {
 }
 
 function isObjectOrArray(obj) {
-  if (Object(obj) !== obj)
+  if (Object(obj) !== obj) {
     return false;
-  let arrayClasses = ["Object", "Array", "Int8Array", "Uint8Array",
-                      "Int16Array", "Uint16Array", "Int32Array",
-                      "Uint32Array", "Float32Array", "Float64Array",
-                      "Uint8ClampedArray"];
+  }
+  let arrayClasses = [
+    "Object",
+    "Array",
+    "Int8Array",
+    "Uint8Array",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
+    "Uint8ClampedArray",
+  ];
   let className = Cu.getClassName(obj, true);
   return arrayClasses.includes(className);
 }
@@ -80,10 +91,13 @@ function isObjectOrArray(obj) {
 //   XrayWrapper for security reasons. For test code, we generally want to see
 //   through that sort of thing.
 function waiveXraysIfAppropriate(obj, propName) {
-  if (propName == "toString" || isObjectOrArray(obj) ||
-      /Opaque/.test(Object.prototype.toString.call(obj))) {
+  if (
+    propName == "toString" ||
+    isObjectOrArray(obj) ||
+    /Opaque/.test(Object.prototype.toString.call(obj))
+  ) {
     return XPCNativeWrapper.unwrap(obj);
-}
+  }
   return obj;
 }
 
@@ -101,24 +115,27 @@ function doApply(fun, invocant, args) {
   // clamping for Xrayed DOM objects reached from literals, so passing things
   // like {l : xoWin.location} won't work. Hopefully the rabbit hole doesn't
   // go that deep.
-  args = args.map(x => isObjectOrArray(x) ? Cu.waiveXrays(x) : x);
+  args = args.map(x => (isObjectOrArray(x) ? Cu.waiveXrays(x) : x));
   return Reflect.apply(fun, invocant, args);
 }
 
 function wrapPrivileged(obj) {
   // Primitives pass straight through.
-  if (!isWrappable(obj))
+  if (!isWrappable(obj)) {
     return obj;
+  }
 
   // No double wrapping.
-  if (isWrapper(obj))
+  if (isWrapper(obj)) {
     throw new Error("Trying to double-wrap object!");
+  }
 
   let dummy;
-  if (typeof obj === "function")
+  if (typeof obj === "function") {
     dummy = function() {};
-  else
+  } else {
     dummy = Object.create(null);
+  }
 
   return new Proxy(dummy, new SpecialPowersHandler(obj));
 }
@@ -128,12 +145,14 @@ function unwrapPrivileged(x) {
   // expect to have a wrapper. The proxy pretends to be the type that it's
   // emulating, so we can just as easily check isWrappable() on a proxy as
   // we can on an unwrapped object.
-  if (!isWrappable(x))
+  if (!isWrappable(x)) {
     return x;
+  }
 
   // If we have a wrappable type, make sure it's wrapped.
-  if (!isWrapper(x))
+  if (!isWrapper(x)) {
     throw new Error("Trying to unwrap a non-wrapped object!");
+  }
 
   var obj = x.SpecialPowers_wrappedObject;
   // unwrapped.
@@ -159,7 +178,9 @@ SpecialPowersHandler.prototype = {
     // We want to invoke "obj" as a constructor, but using unwrappedArgs as
     // the arguments.  Make sure to wrap and re-throw exceptions!
     try {
-      return wrapIfUnwrapped(Reflect.construct(this.wrappedObject, unwrappedArgs));
+      return wrapIfUnwrapped(
+        Reflect.construct(this.wrappedObject, unwrappedArgs)
+      );
     } catch (e) {
       throw wrapIfUnwrapped(e);
     }
@@ -172,7 +193,9 @@ SpecialPowersHandler.prototype = {
     var unwrappedArgs = Array.prototype.slice.call(args).map(unwrapIfWrapped);
 
     try {
-      return wrapIfUnwrapped(doApply(this.wrappedObject, invocant, unwrappedArgs));
+      return wrapIfUnwrapped(
+        doApply(this.wrappedObject, invocant, unwrappedArgs)
+      );
     } catch (e) {
       // Wrap exceptions and re-throw them.
       throw wrapIfUnwrapped(e);
@@ -180,15 +203,17 @@ SpecialPowersHandler.prototype = {
   },
 
   has(target, prop) {
-    if (prop === "SpecialPowers_wrappedObject")
+    if (prop === "SpecialPowers_wrappedObject") {
       return true;
+    }
 
     return Reflect.has(this.wrappedObject, prop);
   },
 
   get(target, prop, receiver) {
-    if (prop === "SpecialPowers_wrappedObject")
+    if (prop === "SpecialPowers_wrappedObject") {
       return this.wrappedObject;
+    }
 
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
     let val = Reflect.get(obj, prop);
@@ -204,29 +229,37 @@ SpecialPowersHandler.prototype = {
   },
 
   set(target, prop, val, receiver) {
-    if (prop === "SpecialPowers_wrappedObject")
+    if (prop === "SpecialPowers_wrappedObject") {
       return false;
+    }
 
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
     return Reflect.set(obj, prop, unwrapIfWrapped(val));
   },
 
   delete(target, prop) {
-    if (prop === "SpecialPowers_wrappedObject")
+    if (prop === "SpecialPowers_wrappedObject") {
       return false;
+    }
 
     return Reflect.deleteProperty(this.wrappedObject, prop);
   },
 
   defineProperty(target, prop, descriptor) {
-    throw new Error("Can't call defineProperty on SpecialPowers wrapped object");
+    throw new Error(
+      "Can't call defineProperty on SpecialPowers wrapped object"
+    );
   },
 
   getOwnPropertyDescriptor(target, prop) {
     // Handle our special API.
     if (prop === "SpecialPowers_wrappedObject") {
-      return { value: this.wrappedObject, writeable: true,
-               configurable: true, enumerable: false };
+      return {
+        value: this.wrappedObject,
+        writeable: true,
+        configurable: true,
+        enumerable: false,
+      };
     }
 
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
@@ -239,8 +272,12 @@ SpecialPowersHandler.prototype = {
         // Symbol.hasInstance already.  Once we get rid of JS engine class
         // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
         // can remove this bit (bug 1448400).
-        return { value: wrapPrivileged(specialPowersHasInstance),
-                 writeable: true, configurable: true, enumerable: false };
+        return {
+          value: wrapPrivileged(specialPowersHasInstance),
+          writeable: true,
+          configurable: true,
+          enumerable: false,
+        };
       }
 
       return undefined;
@@ -248,8 +285,9 @@ SpecialPowersHandler.prototype = {
 
     // Transitively maintain the wrapper membrane.
     function wrapIfExists(key) {
-      if (key in desc)
+      if (key in desc) {
         desc[key] = wrapIfUnwrapped(desc[key]);
+      }
     }
 
     wrapIfExists("value");
@@ -269,20 +307,23 @@ SpecialPowersHandler.prototype = {
     let props = ["SpecialPowers_wrappedObject"];
 
     // Do the normal thing.
-    let flt = (a) => !props.includes(a);
+    let flt = a => !props.includes(a);
     props = props.concat(Reflect.ownKeys(this.wrappedObject).filter(flt));
 
     // If we've got an Xray wrapper, include the expandos as well.
     if ("wrappedJSObject" in this.wrappedObject) {
-      props = props.concat(Reflect.ownKeys(this.wrappedObject.wrappedJSObject)
-                           .filter(flt));
+      props = props.concat(
+        Reflect.ownKeys(this.wrappedObject.wrappedJSObject).filter(flt)
+      );
     }
 
     return props;
   },
 
   preventExtensions(target) {
-    throw new Error("Can't call preventExtensions on SpecialPowers wrapped object");
+    throw new Error(
+      "Can't call preventExtensions on SpecialPowers wrapped object"
+    );
   },
 };
 
@@ -297,14 +338,14 @@ function wrapCallbackObject(obj) {
   obj = Cu.waiveXrays(obj);
   var wrapper = {};
   for (var i in obj) {
-    if (typeof obj[i] == "function")
+    if (typeof obj[i] == "function") {
       wrapper[i] = wrapCallback(obj[i]);
-    else
+    } else {
       wrapper[i] = obj[i];
+    }
   }
   return wrapper;
 }
-
 
 var WrapPrivileged = {
   wrap: wrapIfUnwrapped,

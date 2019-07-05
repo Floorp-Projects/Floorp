@@ -8,4 +8,3 @@ function run_test() {
     throw Error("I find your relaxed dishabille unpalatable");
   }, "NS_NOINTERFACE");
 }
-

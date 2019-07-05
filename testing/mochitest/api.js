@@ -4,13 +4,24 @@
 
 /* globals ExtensionAPI */
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function loadChromeScripts(win) {
-  Services.scriptloader.loadSubScript("chrome://mochikit/content/chrome-harness.js", win);
-  Services.scriptloader.loadSubScript("chrome://mochikit/content/mochitest-e10s-utils.js", win);
-  Services.scriptloader.loadSubScript("chrome://mochikit/content/browser-test.js", win);
+  Services.scriptloader.loadSubScript(
+    "chrome://mochikit/content/chrome-harness.js",
+    win
+  );
+  Services.scriptloader.loadSubScript(
+    "chrome://mochikit/content/mochitest-e10s-utils.js",
+    win
+  );
+  Services.scriptloader.loadSubScript(
+    "chrome://mochikit/content/browser-test.js",
+    win
+  );
 }
 
 // ///// Android ///////
@@ -23,10 +34,11 @@ const windowTracker = {
   async observe(window, topic, data) {
     if (topic === "chrome-document-global-created") {
       await new Promise(resolve =>
-        window.addEventListener("DOMContentLoaded", resolve, {once: true}));
+        window.addEventListener("DOMContentLoaded", resolve, { once: true })
+      );
 
-      let {document} = window;
-      let {documentURI} = document;
+      let { document } = window;
+      let { documentURI } = document;
 
       if (documentURI !== AppConstants.BROWSER_CHROME_URL) {
         return;
@@ -60,7 +72,8 @@ function androidStartup() {
 // ///// Desktop ///////
 
 // Special case for Thunderbird windows.
-const IS_THUNDERBIRD = Services.appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
+const IS_THUNDERBIRD =
+  Services.appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 const WINDOW_TYPE = IS_THUNDERBIRD ? "mail:3pane" : "navigator:browser";
 
 var WindowListener = {
@@ -68,8 +81,11 @@ var WindowListener = {
   // needs to happen in all navigator:browser windows should go here.
   setupWindow(win) {
     win.nativeConsole = win.console;
-    ChromeUtils.defineModuleGetter(win, "console",
-      "resource://gre/modules/Console.jsm");
+    ChromeUtils.defineModuleGetter(
+      win,
+      "console",
+      "resource://gre/modules/Console.jsm"
+    );
   },
 
   tearDownWindow(win) {
@@ -82,11 +98,17 @@ var WindowListener = {
   onOpenWindow(xulWin) {
     let win = xulWin.docShell.domWindow;
 
-    win.addEventListener("load", function() {
-      if (win.document.documentElement.getAttribute("windowtype") == WINDOW_TYPE) {
-        WindowListener.setupWindow(win);
-      }
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      function() {
+        if (
+          win.document.documentElement.getAttribute("windowtype") == WINDOW_TYPE
+        ) {
+          WindowListener.setupWindow(win);
+        }
+      },
+      { once: true }
+    );
   },
 };
 
@@ -99,8 +121,17 @@ function loadMochitest(e) {
 
   // for mochitest-plain, navigating to the url is all we need
   if (!IS_THUNDERBIRD) {
-    win.loadURI(url, null, null, null, null, null, null, null,
-      Services.scriptSecurityManager.getSystemPrincipal());
+    win.loadURI(
+      url,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
   }
   if (flavor == "mochitest") {
     return;
@@ -114,9 +145,14 @@ function loadMochitest(e) {
 
 this.mochikit = class extends ExtensionAPI {
   onStartup() {
-    let aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"]
-                                 .getService(Ci.amIAddonManagerStartup);
-    const manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+    let aomStartup = Cc[
+      "@mozilla.org/addons/addon-manager-startup;1"
+    ].getService(Ci.amIAddonManagerStartup);
+    const manifestURI = Services.io.newURI(
+      "manifest.json",
+      null,
+      this.extension.rootURI
+    );
     const targetURL = this.extension.rootURI.resolve("content/");
     this.chromeHandle = aomStartup.registerChrome(manifestURI, [
       ["content", "mochikit", targetURL],

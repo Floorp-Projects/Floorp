@@ -4,18 +4,23 @@
 
 "use strict";
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
-    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
+  this,
+  "env",
+  "@mozilla.org/process/environment;1",
+  "nsIEnvironment"
+);
 
-const {
-  Branch,
-  EnvironmentPrefs,
-  MarionettePrefs,
-} = ChromeUtils.import("chrome://marionette/content/prefs.js", null);
+const { Branch, EnvironmentPrefs, MarionettePrefs } = ChromeUtils.import(
+  "chrome://marionette/content/prefs.js",
+  null
+);
 
 function reset() {
   Services.prefs.setBoolPref("test.bool", false);

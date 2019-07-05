@@ -46,7 +46,9 @@ var Profiler;
   try {
     // eslint-disable-next-line mozilla/use-services
     _profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-  } catch (ex) { (typeof(dumpLog) == "undefined" ? dump : dumpLog)(ex + "\n"); }
+  } catch (ex) {
+    (typeof dumpLog == "undefined" ? dump : dumpLog)(ex + "\n");
+  }
 
   // Parses an url query string into a JS object.
   function searchToObject(locationSearch) {
@@ -73,11 +75,17 @@ var Profiler;
      *  - gecko_profile_dir
      */
     initFromObject: function Profiler__initFromObject(obj) {
-      if (obj &&
-          ("gecko_profile_dir" in obj) && typeof obj.gecko_profile_dir == "string" &&
-          ("gecko_profile_interval" in obj) && Number.isFinite(obj.gecko_profile_interval * 1) &&
-          ("gecko_profile_entries" in obj) && Number.isFinite(obj.gecko_profile_entries * 1) &&
-          ("gecko_profile_threads" in obj) && typeof obj.gecko_profile_threads == "string") {
+      if (
+        obj &&
+        "gecko_profile_dir" in obj &&
+        typeof obj.gecko_profile_dir == "string" &&
+        "gecko_profile_interval" in obj &&
+        Number.isFinite(obj.gecko_profile_interval * 1) &&
+        "gecko_profile_entries" in obj &&
+        Number.isFinite(obj.gecko_profile_entries * 1) &&
+        "gecko_profile_threads" in obj &&
+        typeof obj.gecko_profile_threads == "string"
+      ) {
         profiler_interval = obj.gecko_profile_interval;
         profiler_entries = obj.gecko_profile_entries;
         profiler_threadsArray = obj.gecko_profile_threads.split(",");
@@ -85,15 +93,20 @@ var Profiler;
         enabled = true;
       }
     },
-    initFromURLQueryParams: function Profiler__initFromURLQueryParams(locationSearch) {
+    initFromURLQueryParams: function Profiler__initFromURLQueryParams(
+      locationSearch
+    ) {
       this.initFromObject(searchToObject(locationSearch));
     },
     beginTest: function Profiler__beginTest(testName) {
       currentTest = testName;
       if (_profiler && enabled) {
-        _profiler.StartProfiler(profiler_entries, profiler_interval,
-                                ["js", "leaf", "stackwalk", "threads"],
-                                profiler_threadsArray);
+        _profiler.StartProfiler(
+          profiler_entries,
+          profiler_interval,
+          ["js", "leaf", "stackwalk", "threads"],
+          profiler_threadsArray
+        );
         if (_profiler.PauseSampling) {
           _profiler.PauseSampling();
         }
@@ -101,7 +114,9 @@ var Profiler;
     },
     finishTest: function Profiler__finishTest() {
       if (_profiler && enabled) {
-        _profiler.dumpProfileToFile(profiler_dir + "/" + currentTest + ".profile");
+        _profiler.dumpProfileToFile(
+          profiler_dir + "/" + currentTest + ".profile"
+        );
         _profiler.StopProfiler();
       }
     },
@@ -110,36 +125,45 @@ var Profiler;
         return undefined;
       }
       return new Promise((resolve, reject) => {
-        Services.profiler.getProfileDataAsync().then((profile) => {
-          let profileFile = profiler_dir + "/" + currentTest + ".profile";
+        Services.profiler.getProfileDataAsync().then(
+          profile => {
+            let profileFile = profiler_dir + "/" + currentTest + ".profile";
 
-          const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm");
-          const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
+            const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
+            const { FileUtils } = Cu.import(
+              "resource://gre/modules/FileUtils.jsm"
+            );
 
-          var file = Cc["@mozilla.org/file/local;1"].
-           createInstance(Ci.nsIFile);
-          file.initWithPath(profileFile);
+            var file = Cc["@mozilla.org/file/local;1"].createInstance(
+              Ci.nsIFile
+            );
+            file.initWithPath(profileFile);
 
-          var ostream = FileUtils.openSafeFileOutputStream(file);
+            var ostream = FileUtils.openSafeFileOutputStream(file);
 
-          var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-              createInstance(Ci.nsIScriptableUnicodeConverter);
-          converter.charset = "UTF-8";
-          var istream = converter.convertToInputStream(JSON.stringify(profile));
+            var converter = Cc[
+              "@mozilla.org/intl/scriptableunicodeconverter"
+            ].createInstance(Ci.nsIScriptableUnicodeConverter);
+            converter.charset = "UTF-8";
+            var istream = converter.convertToInputStream(
+              JSON.stringify(profile)
+            );
 
-          // The last argument (the callback) is optional.
-          NetUtil.asyncCopy(istream, ostream, function(status) {
-            if (!Components.isSuccessCode(status)) {
-              reject();
-              return;
-            }
+            // The last argument (the callback) is optional.
+            NetUtil.asyncCopy(istream, ostream, function(status) {
+              if (!Components.isSuccessCode(status)) {
+                reject();
+                return;
+              }
 
-            resolve();
-          });
-        }, (error) => {
-          Cu.reportError("Failed to gather profile: " + error);
-          reject();
-        });
+              resolve();
+            });
+          },
+          error => {
+            Cu.reportError("Failed to gather profile: " + error);
+            reject();
+          }
+        );
       });
     },
     finishStartupProfiling: function Profiler__finishStartupProfiling() {
@@ -153,7 +177,9 @@ var Profiler;
         if (_profiler.ResumeSampling) {
           _profiler.ResumeSampling();
         }
-        _profiler.AddMarker(explicit ? name : 'Start of test "' + (name || test_name) + '"');
+        _profiler.AddMarker(
+          explicit ? name : 'Start of test "' + (name || test_name) + '"'
+        );
       }
     },
     pause: function Profiler__pause(name, explicit) {
@@ -161,12 +187,16 @@ var Profiler;
         if (_profiler.PauseSampling) {
           _profiler.PauseSampling();
         }
-        _profiler.AddMarker(explicit ? name : 'End of test "' + (name || test_name) + '"');
+        _profiler.AddMarker(
+          explicit ? name : 'End of test "' + (name || test_name) + '"'
+        );
       }
     },
     mark: function Profiler__mark(marker, explicit) {
       if (_profiler) {
-        _profiler.AddMarker(explicit ? marker : 'Profiler: "' + (marker || test_name) + '"');
+        _profiler.AddMarker(
+          explicit ? marker : 'Profiler: "' + (marker || test_name) + '"'
+        );
       }
     },
   };

@@ -33,7 +33,7 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/error.js");
 
 function notok(condition) {
-  ok(!(condition));
+  ok(!condition);
 }
 
 add_test(function test_isError() {
@@ -105,12 +105,16 @@ add_test(function test_stringify() {
   equal("<unprintable error>", error.stringify());
   equal("<unprintable error>", error.stringify("foo"));
   equal("[object Object]", error.stringify({}));
-  equal("[object Object]\nfoo", error.stringify({stack: "foo"}));
+  equal("[object Object]\nfoo", error.stringify({ stack: "foo" }));
   equal("Error: foo", error.stringify(new Error("foo")).split("\n")[0]);
-  equal("WebDriverError: foo",
-      error.stringify(new WebDriverError("foo")).split("\n")[0]);
-  equal("InvalidArgumentError: foo",
-      error.stringify(new InvalidArgumentError("foo")).split("\n")[0]);
+  equal(
+    "WebDriverError: foo",
+    error.stringify(new WebDriverError("foo")).split("\n")[0]
+  );
+  equal(
+    "InvalidArgumentError: foo",
+    error.stringify(new InvalidArgumentError("foo")).split("\n")[0]
+  );
 
   run_next_test();
 });
@@ -144,18 +148,23 @@ add_test(function test_toJSON() {
 });
 
 add_test(function test_fromJSON() {
-  Assert.throws(() => WebDriverError.fromJSON({error: "foo"}),
-      /Not of WebDriverError descent/);
-  Assert.throws(() => WebDriverError.fromJSON({error: "Error"}),
-      /Not of WebDriverError descent/);
-  Assert.throws(() => WebDriverError.fromJSON({}),
-      /Undeserialisable error type/);
-  Assert.throws(() => WebDriverError.fromJSON(undefined),
-      /TypeError/);
+  Assert.throws(
+    () => WebDriverError.fromJSON({ error: "foo" }),
+    /Not of WebDriverError descent/
+  );
+  Assert.throws(
+    () => WebDriverError.fromJSON({ error: "Error" }),
+    /Not of WebDriverError descent/
+  );
+  Assert.throws(
+    () => WebDriverError.fromJSON({}),
+    /Undeserialisable error type/
+  );
+  Assert.throws(() => WebDriverError.fromJSON(undefined), /TypeError/);
 
   // stacks will be different
   let e1 = new WebDriverError("1");
-  let e1r = WebDriverError.fromJSON({error: "webdriver error", message: "1"});
+  let e1r = WebDriverError.fromJSON({ error: "webdriver error", message: "1" });
   ok(e1r instanceof WebDriverError);
   equal(e1r.name, e1.name);
   equal(e1r.status, e1.status);
@@ -163,7 +172,10 @@ add_test(function test_fromJSON() {
 
   // stacks will be different
   let e2 = new InvalidArgumentError("2");
-  let e2r = WebDriverError.fromJSON({error: "invalid argument", message: "2"});
+  let e2r = WebDriverError.fromJSON({
+    error: "invalid argument",
+    message: "2",
+  });
   ok(e2r instanceof WebDriverError);
   ok(e2r instanceof InvalidArgumentError);
   equal(e2r.name, e2.name);
@@ -171,7 +183,7 @@ add_test(function test_fromJSON() {
   equal(e2r.message, e2.message);
 
   // test stacks
-  let e3j = {error: "no such element", message: "3", stacktrace: "4"};
+  let e3j = { error: "no such element", message: "3", stacktrace: "4" };
   let e3r = WebDriverError.fromJSON(e3j);
   ok(e3r instanceof WebDriverError);
   ok(e3r instanceof NoSuchElementError);
@@ -203,13 +215,13 @@ add_test(function test_WebDriverError() {
 add_test(function test_ElementClickInterceptedError() {
   let otherEl = {
     hasAttribute: attr => attr in otherEl,
-    getAttribute: attr => attr in otherEl ? otherEl[attr] : null,
+    getAttribute: attr => (attr in otherEl ? otherEl[attr] : null),
     nodeType: 1,
     localName: "a",
   };
   let obscuredEl = {
     hasAttribute: attr => attr in obscuredEl,
-    getAttribute: attr => attr in obscuredEl ? obscuredEl[attr] : null,
+    getAttribute: attr => (attr in obscuredEl ? obscuredEl[attr] : null),
     nodeType: 1,
     localName: "b",
     ownerDocument: {
@@ -222,20 +234,24 @@ add_test(function test_ElementClickInterceptedError() {
     },
   };
 
-  let err1 = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
+  let err1 = new ElementClickInterceptedError(obscuredEl, { x: 1, y: 2 });
   equal("ElementClickInterceptedError", err1.name);
-  equal("Element <b> is not clickable at point (1,2) " +
+  equal(
+    "Element <b> is not clickable at point (1,2) " +
       "because another element <a> obscures it",
-      err1.message);
+    err1.message
+  );
   equal("element click intercepted", err1.status);
   ok(err1 instanceof WebDriverError);
 
   obscuredEl.style.pointerEvents = "none";
-  let err2 = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
-  equal("Element <b> is not clickable at point (1,2) " +
+  let err2 = new ElementClickInterceptedError(obscuredEl, { x: 1, y: 2 });
+  equal(
+    "Element <b> is not clickable at point (1,2) " +
       "because it does not have pointer events enabled, " +
       "and element <a> would receive the click instead",
-      err2.message);
+    err2.message
+  );
 
   run_next_test();
 });

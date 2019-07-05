@@ -56,7 +56,10 @@ class Log {
    */
   static getWithPrefix(prefix) {
     this.get();
-    return StdLog.repository.getLoggerWithMessagePrefix("Marionette", `[${prefix}] `);
+    return StdLog.repository.getLoggerWithMessagePrefix(
+      "Marionette",
+      `[${prefix}] `
+    );
   }
 }
 

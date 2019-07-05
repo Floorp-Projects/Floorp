@@ -6,7 +6,7 @@
 
 // Module used by test_import_module.js
 
-const EXPORTED_SYMBOLS = [ "MODULE_IMPORTED", "MODULE_URI" ];
+const EXPORTED_SYMBOLS = ["MODULE_IMPORTED", "MODULE_URI"];
 
 const MODULE_IMPORTED = true;
 const MODULE_URI = __URI__;

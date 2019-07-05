@@ -4,17 +4,21 @@
 
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {
-  error,
-  stack,
-  TimeoutError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js");
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const { error, stack, TimeoutError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { truncate } = ChromeUtils.import(
+  "chrome://marionette/content/format.js"
+);
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -31,10 +35,9 @@ this.EXPORTED_SYMBOLS = [
   "waitForObserverTopic",
 ];
 
-const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
+const { TYPE_ONE_SHOT, TYPE_REPEATING_SLACK } = Ci.nsITimer;
 
 const PROMISE_TIMEOUT = AppConstants.DEBUG ? 4500 : 1500;
-
 
 /**
  * Dispatch a function to be executed on the main thread.
@@ -115,7 +118,7 @@ function executeSoon(func) {
  * @throws {RangeError}
  *     If `timeout` or `interval` are not unsigned integers.
  */
-function PollPromise(func, {timeout = null, interval = 10} = {}) {
+function PollPromise(func, { timeout = null, interval = 10 } = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof func != "function") {
@@ -127,8 +130,10 @@ function PollPromise(func, {timeout = null, interval = 10} = {}) {
   if (typeof interval != "number") {
     throw new TypeError();
   }
-  if ((timeout && (!Number.isInteger(timeout) || timeout < 0)) ||
-      (!Number.isInteger(interval) || interval < 0)) {
+  if (
+    (timeout && (!Number.isInteger(timeout) || timeout < 0)) ||
+    (!Number.isInteger(interval) || interval < 0)
+  ) {
     throw new RangeError();
   }
 
@@ -141,18 +146,22 @@ function PollPromise(func, {timeout = null, interval = 10} = {}) {
     }
 
     let evalFn = () => {
-      new Promise(func).then(resolve, rejected => {
-        if (error.isError(rejected)) {
-          throw rejected;
-        }
+      new Promise(func)
+        .then(resolve, rejected => {
+          if (error.isError(rejected)) {
+            throw rejected;
+          }
 
-        // return if there is a timeout and set to 0,
-        // allowing |func| to be evaluated at least once
-        if (typeof end != "undefined" &&
-            (start == end || new Date().getTime() >= end)) {
-          resolve(rejected);
-        }
-      }).catch(reject);
+          // return if there is a timeout and set to 0,
+          // allowing |func| to be evaluated at least once
+          if (
+            typeof end != "undefined" &&
+            (start == end || new Date().getTime() >= end)
+          ) {
+            resolve(rejected);
+          }
+        })
+        .catch(reject);
     };
 
     // the repeating slack timer waits |interval|
@@ -160,13 +169,16 @@ function PollPromise(func, {timeout = null, interval = 10} = {}) {
     evalFn();
 
     timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
-  }).then(res => {
-    timer.cancel();
-    return res;
-  }, err => {
-    timer.cancel();
-    throw err;
-  });
+  }).then(
+    res => {
+      timer.cancel();
+      return res;
+    },
+    err => {
+      timer.cancel();
+      throw err;
+    }
+  );
 }
 
 /**
@@ -198,8 +210,10 @@ function PollPromise(func, {timeout = null, interval = 10} = {}) {
  * @throws {RangeError}
  *     If `timeout` is not an unsigned integer.
  */
-function TimedPromise(fn,
-    {timeout = PROMISE_TIMEOUT, throws = TimeoutError} = {}) {
+function TimedPromise(
+  fn,
+  { timeout = PROMISE_TIMEOUT, throws = TimeoutError } = {}
+) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof fn != "function") {
@@ -225,20 +239,23 @@ function TimedPromise(fn,
       }
     };
 
-    timer.initWithCallback({notify: bail}, timeout, TYPE_ONE_SHOT);
+    timer.initWithCallback({ notify: bail }, timeout, TYPE_ONE_SHOT);
 
     try {
       fn(resolve, reject);
     } catch (e) {
       reject(e);
     }
-  }).then(res => {
-    timer.cancel();
-    return res;
-  }, err => {
-    timer.cancel();
-    throw err;
-  });
+  }).then(
+    res => {
+      timer.cancel();
+      return res;
+    },
+    err => {
+      timer.cancel();
+      throw err;
+    }
+  );
 }
 
 /**
@@ -259,7 +276,7 @@ function Sleep(timeout) {
   if (typeof timeout != "number") {
     throw new TypeError();
   }
-  return new TimedPromise(() => {}, {timeout, throws: null});
+  return new TimedPromise(() => {}, { timeout, throws: null });
 }
 
 /**
@@ -355,7 +372,7 @@ function IdlePromise(win) {
  *     Time since last event firing, before `fn` will be invoked.
  */
 class DebounceCallback {
-  constructor(fn, {timeout = 250} = {}) {
+  constructor(fn, { timeout = 250 } = {}) {
     if (typeof fn != "function" || typeof timeout != "number") {
       throw new TypeError();
     }
@@ -370,10 +387,14 @@ class DebounceCallback {
 
   handleEvent(ev) {
     this.timer.cancel();
-    this.timer.initWithCallback(() => {
-      this.timer.cancel();
-      this.fn(ev);
-    }, this.timeout, TYPE_ONE_SHOT);
+    this.timer.initWithCallback(
+      () => {
+        this.timer.cancel();
+        this.fn(ev);
+      },
+      this.timeout,
+      TYPE_ONE_SHOT
+    );
   }
 }
 this.DebounceCallback = DebounceCallback;
@@ -435,8 +456,11 @@ this.DebounceCallback = DebounceCallback;
  *     Promise which resolves to the received ``Event`` object, or rejects
  *     in case of a failure.
  */
-function waitForEvent(subject, eventName,
-    {capture = false, checkFn = null, wantsUntrusted = false} = {}) {
+function waitForEvent(
+  subject,
+  eventName,
+  { capture = false, checkFn = null, wantsUntrusted = false } = {}
+) {
   if (subject == null || !("addEventListener" in subject)) {
     throw new TypeError();
   }
@@ -454,23 +478,28 @@ function waitForEvent(subject, eventName,
   }
 
   return new Promise((resolve, reject) => {
-    subject.addEventListener(eventName, function listener(event) {
-      log.trace(`Received DOM event ${event.type} for ${event.target}`);
-      try {
-        if (checkFn && !checkFn(event)) {
-          return;
-        }
-        subject.removeEventListener(eventName, listener, capture);
-        executeSoon(() => resolve(event));
-      } catch (ex) {
+    subject.addEventListener(
+      eventName,
+      function listener(event) {
+        log.trace(`Received DOM event ${event.type} for ${event.target}`);
         try {
+          if (checkFn && !checkFn(event)) {
+            return;
+          }
           subject.removeEventListener(eventName, listener, capture);
-        } catch (ex2) {
-          // Maybe the provided object does not support removeEventListener.
+          executeSoon(() => resolve(event));
+        } catch (ex) {
+          try {
+            subject.removeEventListener(eventName, listener, capture);
+          } catch (ex2) {
+            // Maybe the provided object does not support removeEventListener.
+          }
+          executeSoon(() => reject(ex));
         }
-        executeSoon(() => reject(ex));
-      }
-    }, capture, wantsUntrusted);
+      },
+      capture,
+      wantsUntrusted
+    );
   });
 }
 
@@ -495,8 +524,11 @@ function waitForEvent(subject, eventName,
  *     Promise which resolves to the data property of the received
  *     ``Message``.
  */
-function waitForMessage(messageManager, messageName,
-    {checkFn = undefined} = {}) {
+function waitForMessage(
+  messageManager,
+  messageName,
+  { checkFn = undefined } = {}
+) {
   if (messageManager == null || !("addMessageListener" in messageManager)) {
     throw new TypeError();
   }
@@ -542,7 +574,7 @@ function waitForMessage(messageManager, messageName,
  *     Promise which resolves to an array of ``subject``, and ``data`` from
  *     the observed notification.
  */
-function waitForObserverTopic(topic, {checkFn = null} = {}) {
+function waitForObserverTopic(topic, { checkFn = null } = {}) {
   if (typeof topic != "string") {
     throw new TypeError();
   }
@@ -558,7 +590,7 @@ function waitForObserverTopic(topic, {checkFn = null} = {}) {
           return;
         }
         Services.obs.removeObserver(observer, topic);
-        resolve({subject, data});
+        resolve({ subject, data });
       } catch (ex) {
         Services.obs.removeObserver(observer, topic);
         reject(ex);
