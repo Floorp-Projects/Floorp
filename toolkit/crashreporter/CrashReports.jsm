@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = [
-  "CrashReports",
-];
+var EXPORTED_SYMBOLS = ["CrashReports"];
 
 var CrashReports = {
   pendingDir: null,
@@ -17,17 +15,17 @@ var CrashReports = {
 
     try {
       // Ignore any non http/https urls
-      if (!/^https?:/i.test(Services.prefs.getCharPref("breakpad.reportURL")))
+      if (!/^https?:/i.test(Services.prefs.getCharPref("breakpad.reportURL"))) {
         return reports;
-    } catch (e) { }
+      }
+    } catch (e) {}
 
     if (this.submittedDir.exists() && this.submittedDir.isDirectory()) {
       let entries = this.submittedDir.directoryEntries;
       while (entries.hasMoreElements()) {
         let file = entries.nextFile;
         let leaf = file.leafName;
-        if (leaf.startsWith("bp-") &&
-            leaf.endsWith(".txt")) {
+        if (leaf.startsWith("bp-") && leaf.endsWith(".txt")) {
           let entry = {
             id: leaf.slice(0, -4),
             date: file.lastModifiedTime,
@@ -57,7 +55,7 @@ var CrashReports = {
     }
 
     // Sort reports descending by date
-    return reports.sort( (a, b) => b.date - a.date);
+    return reports.sort((a, b) => b.date - a.date);
   },
 };
 
