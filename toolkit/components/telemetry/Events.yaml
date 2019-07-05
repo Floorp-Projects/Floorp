@@ -1067,9 +1067,10 @@ security.ui.certerror:
     bug_numbers:
       - 1484255
       - 1505310
+      - 1553181
     description: >
       The about:certerror page is loaded, keyed by error code, see https://searchfox.org/mozilla-central/source/security/nss/lib/mozpkix/include/pkix/Result.h
-    expiry_version: "70"
+    expiry_version: "72"
     notification_emails:
       - jhofmann@mozilla.com
       - rtestard@mozilla.com
@@ -1096,9 +1097,10 @@ security.ui.certerror:
     bug_numbers:
       - 1484255
       - 1505310
+      - 1553181
     description: >
       User interaction by click events on the cert error page. Keyed by error code, see https://searchfox.org/mozilla-central/source/security/nss/lib/mozpkix/include/pkix/Result.h
-    expiry_version: "70"
+    expiry_version: "72"
     notification_emails:
       - jhofmann@mozilla.com
       - rtestard@mozilla.com
