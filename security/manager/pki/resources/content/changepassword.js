@@ -83,7 +83,9 @@ function setPassword(event) {
           // checkPasswords() should have prevented this path from being reached.
         } else {
           if (pw1.value == "") {
-            var secmoddb = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
+            var secmoddb = Cc[
+              "@mozilla.org/security/pkcs11moduledb;1"
+            ].getService(Ci.nsIPKCS11ModuleDB);
             if (secmoddb.isFIPSEnabled) {
               // empty passwords are not allowed in FIPS mode
               doPrompt(bundle.getString("pw_change2empty_in_fips_mode"));
@@ -93,9 +95,11 @@ function setPassword(event) {
           if (passok) {
             token.changePassword(oldpw, pw1.value);
             if (pw1.value == "") {
-              doPrompt(bundle.getString("pw_erased_ok")
-                    + " "
-                    + bundle.getString("pw_empty_warning"));
+              doPrompt(
+                bundle.getString("pw_erased_ok") +
+                  " " +
+                  bundle.getString("pw_empty_warning")
+              );
             } else {
               doPrompt(bundle.getString("pw_change_ok"));
             }
@@ -113,8 +117,11 @@ function setPassword(event) {
   } else {
     token.initPassword(pw1.value);
     if (pw1.value == "") {
-      doPrompt(bundle.getString("pw_not_wanted") + " " +
-               bundle.getString("pw_empty_warning"));
+      doPrompt(
+        bundle.getString("pw_not_wanted") +
+          " " +
+          bundle.getString("pw_empty_warning")
+      );
     }
     success = true;
   }
@@ -162,8 +169,8 @@ function setPasswordStrength() {
     upper = 3;
   }
 
-  let pwstrength = (pwlength * 10) - 20 + (numeric * 10) + (numsymbols * 15) +
-                   (upper * 10);
+  let pwstrength =
+    pwlength * 10 - 20 + numeric * 10 + numsymbols * 15 + upper * 10;
 
   // Clamp strength to [0, 100].
   if (pwstrength < 0) {
@@ -195,5 +202,5 @@ function checkPasswords() {
     }
   }
 
-  document.documentElement.getButton("accept").disabled = (pw1 != pw2);
+  document.documentElement.getButton("accept").disabled = pw1 != pw2;
 }

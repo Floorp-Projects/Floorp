@@ -5,8 +5,9 @@
 "use strict";
 
 function onLoad() {
-  let protectedAuthThread =
-    window.arguments[0].QueryInterface(Ci.nsIProtectedAuthThread);
+  let protectedAuthThread = window.arguments[0].QueryInterface(
+    Ci.nsIProtectedAuthThread
+  );
 
   if (!protectedAuthThread) {
     window.close();
