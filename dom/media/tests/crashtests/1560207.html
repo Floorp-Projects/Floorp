@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+<head>
+<script>
+async function start () {
+  const stream = await window.navigator.mediaDevices.getUserMedia({
+    'video': {
+      'mediaSource': 'browser'
+    }
+  });
+  try {
+    await stream.getVideoTracks()[0].applyConstraints();
+  } finally {
+    document.documentElement.removeAttribute("class");
+  }
+}
+document.addEventListener('DOMContentLoaded', start);
+</script>
+</head>
+</html>
