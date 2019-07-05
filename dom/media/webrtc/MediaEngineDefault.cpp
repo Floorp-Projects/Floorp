@@ -98,15 +98,19 @@ uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
     const nsString& aDeviceId) const {
   AssertIsOnOwningThread();
 
-  uint32_t distance = 0;
+  uint64_t distance = 0;
 #ifdef MOZ_WEBRTC
   for (const auto* cs : aConstraintSets) {
-    distance =
-        MediaConstraintsHelper::GetMinimumFitnessDistance(*cs, aDeviceId);
+    distance +=
+        MediaConstraintsHelper::FitnessDistance(Some(aDeviceId), cs->mDeviceId);
+    Maybe<nsString> facingMode = Nothing();
+    distance +=
+        MediaConstraintsHelper::FitnessDistance(facingMode, cs->mFacingMode);
+
     break;  // distance is read from first entry only
   }
 #endif
-  return distance;
+  return uint32_t(std::min(distance, uint64_t(UINT32_MAX)));
 }
 
 void MediaEngineDefaultVideoSource::GetSettings(
