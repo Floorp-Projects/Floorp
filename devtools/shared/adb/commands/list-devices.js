@@ -13,19 +13,17 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 const listDevices = function() {
   dumpn("listDevices");
 
-  return this.runCommand("host:devices").then(
-    function onSuccess(data) {
-      const lines = data.split("\n");
-      const res = [];
-      lines.forEach(function(line) {
-        if (line.length == 0) {
-          return;
-        }
-        const [ device ] = line.split("\t");
-        res.push(device);
-      });
-      return res;
-    }
-  );
+  return this.runCommand("host:devices").then(function onSuccess(data) {
+    const lines = data.split("\n");
+    const res = [];
+    lines.forEach(function(line) {
+      if (line.length == 0) {
+        return;
+      }
+      const [device] = line.split("\t");
+      res.push(device);
+    });
+    return res;
+  });
 };
 exports.listDevices = listDevices;

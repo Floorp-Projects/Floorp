@@ -9,14 +9,22 @@
  */
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var { Loader, Require, resolveURI, unload } =
-  ChromeUtils.import("resource://devtools/shared/base-loader.js");
-var { requireRawId } = ChromeUtils.import("resource://devtools/shared/loader-plugin-raw.jsm");
+var { Loader, Require, resolveURI, unload } = ChromeUtils.import(
+  "resource://devtools/shared/base-loader.js"
+);
+var { requireRawId } = ChromeUtils.import(
+  "resource://devtools/shared/loader-plugin-raw.jsm"
+);
 
-this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
-                         "require", "loader",
-                         // Export StructuredCloneHolder for its use from builtin-modules
-                         "StructuredCloneHolder"];
+this.EXPORTED_SYMBOLS = [
+  "DevToolsLoader",
+  "devtools",
+  "BuiltinProvider",
+  "require",
+  "loader",
+  // Export StructuredCloneHolder for its use from builtin-modules
+  "StructuredCloneHolder",
+];
 
 /**
  * Providers are different strategies for loading the devtools.
@@ -31,9 +39,9 @@ BuiltinProvider.prototype = {
   load: function() {
     const paths = {
       // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-      "devtools": "resource://devtools",
+      devtools: "resource://devtools",
       // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-      "acorn": "resource://devtools/shared/acorn",
+      acorn: "resource://devtools/shared/acorn",
       // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
       "acorn/util/walk": "resource://devtools/shared/acorn/walk.js",
       // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
@@ -171,7 +179,9 @@ DevToolsLoader.prototype = {
     this.require = Require(this._provider.loader, { id: "devtools" });
 
     // Fetch custom pseudo modules and globals
-    const { modules, globals } = this.require("devtools/shared/builtin-modules");
+    const { modules, globals } = this.require(
+      "devtools/shared/builtin-modules"
+    );
 
     // When creating a Loader for the browser toolbox, we have to use
     // Promise-backend.js, as a Loader module. Instead of Promise.jsm which
@@ -193,7 +203,10 @@ DevToolsLoader.prototype = {
 
     // Register custom globals to the current loader instance
     globals.loader.id = this.id;
-    Object.defineProperties(loader.globals, Object.getOwnPropertyDescriptors(globals));
+    Object.defineProperties(
+      loader.globals,
+      Object.getOwnPropertyDescriptors(globals)
+    );
 
     // Expose lazy helpers on loader
     this.lazyGetter = globals.loader.lazyGetter;
@@ -206,8 +219,12 @@ DevToolsLoader.prototype = {
     // created for objects in the recording/replaying process.
     if (globals.isReplaying) {
       const oldHook = this._provider.loader.requireHook;
-      const ReplayInspector = this.require("devtools/server/actors/replay/inspector");
-      this._provider.loader.requireHook = ReplayInspector.wrapRequireHook(oldHook);
+      const ReplayInspector = this.require(
+        "devtools/server/actors/replay/inspector"
+      );
+      this._provider.loader.requireHook = ReplayInspector.wrapRequireHook(
+        oldHook
+      );
     }
   },
 

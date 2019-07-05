@@ -24,12 +24,16 @@ const TESTS = {
     const isAnEmitter = emitter instanceof EventEmitter;
 
     ok(emitter, "We have an event emitter");
-    ok(hasMethod(emitter, "on") &&
-      hasMethod(emitter, "off") &&
-      hasMethod(emitter, "once") &&
-      !hasMethod(emitter, "decorate") &&
-      !hasMethod(emitter, "count"),
-    `Event Emitter ${isAnEmitter ? "instance" : "mixin"} has the expected methods.`);
+    ok(
+      hasMethod(emitter, "on") &&
+        hasMethod(emitter, "off") &&
+        hasMethod(emitter, "once") &&
+        !hasMethod(emitter, "decorate") &&
+        !hasMethod(emitter, "count"),
+      `Event Emitter ${
+        isAnEmitter ? "instance" : "mixin"
+      } has the expected methods.`
+    );
   },
 
   testEmittingEvents(done) {
@@ -56,7 +60,7 @@ const TESTS = {
     }
 
     function onlyOnce() {
-      ok(!beenHere2, "\"once\" listener has been called once");
+      ok(!beenHere2, '"once" listener has been called once');
       beenHere2 = true;
       emitter.emit("onlyonce");
 
@@ -175,7 +179,7 @@ const TESTS = {
 
     equal(secondCallbackCalled, false, "second callback not called yet");
 
-    return Promise.all([ check1, check2, check3 ]).then(args => {
+    return Promise.all([check1, check2, check3]).then(args => {
       equal(args[0], "rval from c1", "callback 1 done good");
       equal(args[1], "rval from c2", "callback 2 done good");
       equal(args[2], "rval from c3", "callback 3 done good");
@@ -203,13 +207,21 @@ const TESTS = {
     emitter.emit("*", "wildcard");
 
     equal(received.length, 2, "the listener was only triggered once");
-    equal(received[1].length, 1, "the listener was called with only 1 argument");
+    equal(
+      received[1].length,
+      1,
+      "the listener was called with only 1 argument"
+    );
     equal(received[1][0], "wildcard", "first argument is the actual argument");
 
     emitter.emit("other", "arg1", "arg2");
 
     equal(received.length, 3, "the listener was triggered once");
-    equal(received[2].length, 3, "the listener was called with only 1 argument");
+    equal(
+      received[2].length,
+      3,
+      "the listener was called with only 1 argument"
+    );
     equal(received[2][0], "other", "first argument is the event name");
     equal(received[2][1], "arg1", "additional arguments are forwarded");
     equal(received[2][2], "arg2", "additional arguments are forwarded");
@@ -250,16 +262,17 @@ const TESTS = {
  * @param {Object} tests
  *  The tests descriptor object, contains the tests to run.
  */
-const runnable = (tests) => (async function() {
-  for (const name of Object.keys(tests)) {
-    info(name);
-    if (tests[name].length === 1) {
-      await (new Promise(resolve => tests[name](resolve)));
-    } else {
-      await tests[name]();
+const runnable = tests =>
+  async function() {
+    for (const name of Object.keys(tests)) {
+      info(name);
+      if (tests[name].length === 1) {
+        await new Promise(resolve => tests[name](resolve));
+      } else {
+        await tests[name]();
+      }
     }
-  }
-});
+  };
 
 // We want to run the same tests for both an instance of `EventEmitter` and an object
 // decorate with EventEmitter; therefore we create two strategies (`createNewEmitter` and

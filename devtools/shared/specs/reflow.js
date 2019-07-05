@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Arg, generateActorSpec} = require("devtools/shared/protocol");
+const { Arg, generateActorSpec } = require("devtools/shared/protocol");
 
 const reflowSpec = generateActorSpec({
   typeName: "reflow",
@@ -25,8 +25,8 @@ const reflowSpec = generateActorSpec({
   },
 
   methods: {
-    start: {oneway: true},
-    stop: {oneway: true},
+    start: { oneway: true },
+    stop: { oneway: true },
   },
 });
 

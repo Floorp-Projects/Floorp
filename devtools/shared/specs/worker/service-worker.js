@@ -10,4 +10,3 @@ const serviceWorkerSpec = generateActorSpec({
 });
 
 exports.serviceWorkerSpec = serviceWorkerSpec;
-

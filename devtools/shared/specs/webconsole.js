@@ -4,7 +4,13 @@
 
 "use strict";
 
-const {types, generateActorSpec, RetVal, Option, Arg} = require("devtools/shared/protocol");
+const {
+  types,
+  generateActorSpec,
+  RetVal,
+  Option,
+  Arg,
+} = require("devtools/shared/protocol");
 
 types.addDictType("console.traits", {
   evaluateJSAsync: "boolean",
@@ -88,8 +94,7 @@ const webconsoleSpecPrototype = {
     inspectObject: {
       objectActor: Option(0, "json"),
     },
-    lastPrivateContextExited: {
-    },
+    lastPrivateContextExited: {},
     documentEvent: {
       name: Option(0, "string"),
       time: Option(0, "string"),
@@ -194,8 +199,8 @@ const webconsoleSpecPrototype = {
       response: RetVal("console.autocomplete"),
     },
     /**
-    * Clear the cache of messages (page errors and console API calls) expects no response.
-    */
+     * Clear the cache of messages (page errors and console API calls) expects no response.
+     */
     clearMessagesCache: {
       oneway: true,
     },

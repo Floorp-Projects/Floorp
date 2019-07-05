@@ -4,7 +4,7 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const {Arg, RetVal, generateActorSpec} = protocol;
+const { Arg, RetVal, generateActorSpec } = protocol;
 
 const arrayBufferSpec = generateActorSpec({
   typeName: "arraybuffer",

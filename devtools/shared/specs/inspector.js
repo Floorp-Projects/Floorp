@@ -30,9 +30,11 @@ var nodeArrayMethod = {
     start: Option(1, "domnode"),
     whatToShow: Option(1),
   },
-  response: RetVal(types.addDictType("domtraversalarray", {
-    nodes: "array:domnode",
-  })),
+  response: RetVal(
+    types.addDictType("domtraversalarray", {
+      nodes: "array:domnode",
+    })
+  ),
 };
 
 var traversalMethod = {
@@ -85,7 +87,7 @@ const walkerSpec = generateActorSpec({
     // clients know when the browser window gets resized. This may be useful
     // for refreshing a DOM node's styles for example, since those may depend on
     // media-queries.
-    "resize": {
+    resize: {
       type: "resize",
     },
   },
@@ -100,7 +102,7 @@ const walkerSpec = generateActorSpec({
     },
     cancelPick: {},
     highlight: {
-      request: {node: Arg(0, "nullable:domnode")},
+      request: { node: Arg(0, "nullable:domnode") },
     },
     document: {
       request: { node: Arg(0, "nullable:domnode") },
@@ -409,15 +411,15 @@ const inspectorSpec = generateActorSpec({
       },
     },
     getImageDataFromURL: {
-      request: {url: Arg(0), maxDim: Arg(1, "nullable:number")},
+      request: { url: Arg(0), maxDim: Arg(1, "nullable:number") },
       response: RetVal("imageData"),
     },
     resolveRelativeURL: {
-      request: {url: Arg(0, "string"), node: Arg(1, "nullable:domnode")},
-      response: {value: RetVal("string")},
+      request: { url: Arg(0, "string"), node: Arg(1, "nullable:domnode") },
+      response: { value: RetVal("string") },
     },
     pickColorFromPage: {
-      request: {options: Arg(0, "nullable:json")},
+      request: { options: Arg(0, "nullable:json") },
       response: {},
     },
     cancelPickColorFromPage: {

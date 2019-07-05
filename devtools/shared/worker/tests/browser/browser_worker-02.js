@@ -6,8 +6,7 @@
 // Tests errors are handled properly by the DevToolsWorker.
 
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
-const WORKER_URL =
-  "resource://devtools/client/shared/widgets/GraphsWorker.js";
+const WORKER_URL = "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
 add_task(async function() {
   try {
@@ -22,18 +21,28 @@ add_task(async function() {
     // plotTimestampsGraph requires timestamp, interval an duration props on the object
     // passed in so there should be an error thrown in the worker
     await worker.performTask("plotTimestampsGraph", {});
-    ok(false,
-       "DevToolsWorker returns a rejected promise when an error occurs in the worker");
+    ok(
+      false,
+      "DevToolsWorker returns a rejected promise when an error occurs in the worker"
+    );
   } catch (e) {
-    ok(true,
-       "DevToolsWorker returns a rejected promise when an error occurs in the worker");
+    ok(
+      true,
+      "DevToolsWorker returns a rejected promise when an error occurs in the worker"
+    );
   }
 
   try {
     await worker.performTask("not a real task");
-    ok(false, "DevToolsWorker returns a rejected promise when task does not exist");
+    ok(
+      false,
+      "DevToolsWorker returns a rejected promise when task does not exist"
+    );
   } catch (e) {
-    ok(true, "DevToolsWorker returns a rejected promise when task does not exist");
+    ok(
+      true,
+      "DevToolsWorker returns a rejected promise when task does not exist"
+    );
   }
 
   worker.destroy();
@@ -43,8 +52,14 @@ add_task(async function() {
       interval: 1,
       duration: 1,
     });
-    ok(false, "DevToolsWorker rejects when performing a task on a destroyed worker");
+    ok(
+      false,
+      "DevToolsWorker rejects when performing a task on a destroyed worker"
+    );
   } catch (e) {
-    ok(true, "DevToolsWorker rejects when performing a task on a destroyed worker");
+    ok(
+      true,
+      "DevToolsWorker rejects when performing a task on a destroyed worker"
+    );
   }
 });

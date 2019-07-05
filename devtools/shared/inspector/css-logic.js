@@ -21,15 +21,34 @@ const MAX_DATA_URL_LENGTH = 40;
 
 const Services = require("Services");
 
-loader.lazyImporter(this, "findCssSelector", "resource://gre/modules/css-selector.js");
-loader.lazyImporter(this, "getCssPath", "resource://gre/modules/css-selector.js");
+loader.lazyImporter(
+  this,
+  "findCssSelector",
+  "resource://gre/modules/css-selector.js"
+);
+loader.lazyImporter(
+  this,
+  "getCssPath",
+  "resource://gre/modules/css-selector.js"
+);
 loader.lazyImporter(this, "getXPath", "resource://gre/modules/css-selector.js");
-loader.lazyRequireGetter(this, "getCSSLexer", "devtools/shared/css/lexer", true);
-loader.lazyRequireGetter(this, "getTabPrefs", "devtools/shared/indentation", true);
+loader.lazyRequireGetter(
+  this,
+  "getCSSLexer",
+  "devtools/shared/css/lexer",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getTabPrefs",
+  "devtools/shared/indentation",
+  true
+);
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const styleInspectorL10N =
-  new LocalizationHelper("devtools/shared/locales/styleinspector.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const styleInspectorL10N = new LocalizationHelper(
+  "devtools/shared/locales/styleinspector.properties"
+);
 
 /**
  * Special values for filter, in addition to an href these values can be used
@@ -133,8 +152,9 @@ exports.shortSource = function(sheet) {
   // If the sheet is a data URL, return a trimmed version of it.
   const dataUrl = sheet.href.trim().match(/^data:.*?,((?:.|\r|\n)*)$/);
   if (dataUrl) {
-    return dataUrl[1].length > MAX_DATA_URL_LENGTH ?
-      `${dataUrl[1].substr(0, MAX_DATA_URL_LENGTH - 1)}…` : dataUrl[1];
+    return dataUrl[1].length > MAX_DATA_URL_LENGTH
+      ? `${dataUrl[1].substr(0, MAX_DATA_URL_LENGTH - 1)}…`
+      : dataUrl[1];
   }
 
   // We try, in turn, the filename, filePath, query string, whole thing
@@ -166,7 +186,7 @@ const SPACE_CHARS = " ";
 function getLineCountInComments(text) {
   let count = 0;
 
-  for (const comment of text.match(/\/\*(?:.|\n)*?\*\//mg) || []) {
+  for (const comment of text.match(/\/\*(?:.|\n)*?\*\//gm) || []) {
     count += comment.split("\n").length + 1;
   }
 
@@ -204,14 +224,17 @@ function getLineCountInComments(text) {
 function prettifyCSS(text, ruleCount) {
   if (prettifyCSS.LINE_SEPARATOR == null) {
     const os = Services.appinfo.OS;
-    prettifyCSS.LINE_SEPARATOR = (os === "WINNT" ? "\r\n" : "\n");
+    prettifyCSS.LINE_SEPARATOR = os === "WINNT" ? "\r\n" : "\n";
   }
 
   // Stylesheets may start and end with HTML comment tags (possibly with whitespaces
   // before and after). Remove those first. Don't do anything there aren't any.
   const trimmed = text.trim();
   if (trimmed.startsWith("<!--")) {
-    text = trimmed.replace(/^<!--/, "").replace(/-->$/, "").trim();
+    text = trimmed
+      .replace(/^<!--/, "")
+      .replace(/-->$/, "")
+      .trim();
   }
 
   const originalText = text;
@@ -357,8 +380,12 @@ function prettifyCSS(text, ruleCount) {
         break;
       }
 
-      if (token.tokenType === "symbol" && token.text === "," &&
-          isInSelector && !isInAtRuleDefinition) {
+      if (
+        token.tokenType === "symbol" &&
+        token.text === "," &&
+        isInSelector &&
+        !isInAtRuleDefinition
+      ) {
         break;
       }
 
@@ -437,8 +464,12 @@ function prettifyCSS(text, ruleCount) {
     // "Early" bail-out if the text does not appear to be minified.
     // Here we ignore the case where whitespace appears at the end of
     // the text.
-    if (pushbackToken && token && token.tokenType === "whitespace" &&
-        /\n/g.test(text.substring(token.startOffset, token.endOffset))) {
+    if (
+      pushbackToken &&
+      token &&
+      token.tokenType === "whitespace" &&
+      /\n/g.test(text.substring(token.startOffset, token.endOffset))
+    ) {
       return { result: originalText, mappings: [] };
     }
 

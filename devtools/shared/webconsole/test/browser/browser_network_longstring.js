@@ -37,12 +37,14 @@ add_task(async function() {
   const updates = [];
   let netActor = null;
   const onAllNetworkEventUpdateReceived = new Promise(resolve => {
-    const onNetworkEventUpdate = (packet) => {
+    const onNetworkEventUpdate = packet => {
       updates.push(packet.updateType);
       assertNetworkEventUpdate(netActor, packet);
 
-      if (updates.includes("responseContent") &&
-          updates.includes("eventTimings")) {
+      if (
+        updates.includes("responseContent") &&
+        updates.includes("eventTimings")
+      ) {
         client.off("networkEventUpdate", onNetworkEventUpdate);
         resolve();
       }
@@ -151,8 +153,7 @@ function assertNetworkEventUpdate(netActor, packet) {
       };
       break;
     default:
-      ok(false, "unknown network event update type: " +
-         packet.updateType);
+      ok(false, "unknown network event update type: " + packet.updateType);
       return;
   }
 
@@ -201,8 +202,11 @@ function assertRequestPostData(response) {
     postDataDiscarded: false,
   });
 
-  is(response.postData.text.initial.length,
-     LONG_STRING_INITIAL_LENGTH, "postData text initial length");
+  is(
+    response.postData.text.initial.length,
+    LONG_STRING_INITIAL_LENGTH,
+    "postData text initial length"
+  );
 }
 
 function assertResponseHeaders(response) {
@@ -216,10 +220,10 @@ function assertResponseHeaders(response) {
     "content-length": /^\d+$/,
     "x-very-short": "hello world",
     "x-very-long": {
-      "type": "longString",
-      "length": 521,
-      "initial": /^Lorem ipsum.+\. Donec vitae d$/,
-      "actor": /[a-z]/,
+      type: "longString",
+      length: 521,
+      initial: /^Lorem ipsum.+\. Donec vitae d$/,
+      actor: /[a-z]/,
     },
   });
 }
@@ -245,8 +249,11 @@ function assertResponseContent(response) {
     contentDiscarded: false,
   });
 
-  is(response.content.text.initial.length,
-     LONG_STRING_INITIAL_LENGTH, "content initial length");
+  is(
+    response.content.text.initial.length,
+    LONG_STRING_INITIAL_LENGTH,
+    "content initial length"
+  );
 }
 
 function assertEventTimings(response) {

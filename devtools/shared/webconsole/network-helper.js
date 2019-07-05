@@ -59,7 +59,7 @@
 
 "use strict";
 
-const {components, Cc, Ci} = require("chrome");
+const { components, Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
@@ -93,8 +93,9 @@ var NetworkHelper = {
    *          Converted text.
    */
   convertToUnicode: function(text, charset) {
-    const conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Ci.nsIScriptableUnicodeConverter);
+    const conv = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
     try {
       conv.charset = charset || "UTF-8";
       return conv.ConvertToUnicode(text);
@@ -121,7 +122,7 @@ var NetworkHelper = {
     }
   },
 
-   /**
+  /**
    * Reads the posted text from request.
    *
    * @param nsIHttpChannel request
@@ -188,8 +189,11 @@ var NetworkHelper = {
     if (webNav instanceof Ci.nsIWebPageDescriptor) {
       const descriptor = webNav.currentDescriptor;
 
-      if (descriptor instanceof Ci.nsISHEntry && descriptor.postData &&
-          descriptor instanceof Ci.nsISeekableStream) {
+      if (
+        descriptor instanceof Ci.nsISHEntry &&
+        descriptor.postData &&
+        descriptor instanceof Ci.nsISeekableStream
+      ) {
         descriptor.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
 
         return this.readAndConvertFromStream(descriptor, charset);
@@ -246,8 +250,9 @@ var NetworkHelper = {
     }
 
     try {
-      return request.loadGroup.notificationCallbacks
-        .getInterface(Ci.nsILoadContext);
+      return request.loadGroup.notificationCallbacks.getInterface(
+        Ci.nsILoadContext
+      );
     } catch (ex) {
       // Ignore.
     }
@@ -265,7 +270,7 @@ var NetworkHelper = {
     if (request instanceof Ci.nsIChannel) {
       const loadInfo = request.loadInfo;
       if (loadInfo && loadInfo.isTopLevelLoad) {
-        return (request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
+        return request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI;
       }
     }
 
@@ -285,30 +290,31 @@ var NetworkHelper = {
    *        or null if something failed while getting the cached content.
    */
   loadFromCache: function(url, charset, callback) {
-    const channel = NetUtil.newChannel({uri: url,
-                                        loadUsingSystemPrincipal: true});
+    const channel = NetUtil.newChannel({
+      uri: url,
+      loadUsingSystemPrincipal: true,
+    });
 
     // Ensure that we only read from the cache and not the server.
-    channel.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE |
+    channel.loadFlags =
+      Ci.nsIRequest.LOAD_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-    NetUtil.asyncFetch(
-      channel,
-      (inputStream, statusCode, request) => {
-        if (!components.isSuccessCode(statusCode)) {
-          callback(null);
-          return;
-        }
+    NetUtil.asyncFetch(channel, (inputStream, statusCode, request) => {
+      if (!components.isSuccessCode(statusCode)) {
+        callback(null);
+        return;
+      }
 
-        // Try to get the encoding from the channel. If there is none, then use
-        // the passed assumed charset.
-        const requestChannel = request.QueryInterface(Ci.nsIChannel);
-        const contentCharset = requestChannel.contentCharset || charset;
+      // Try to get the encoding from the channel. If there is none, then use
+      // the passed assumed charset.
+      const requestChannel = request.QueryInterface(Ci.nsIChannel);
+      const contentCharset = requestChannel.contentCharset || charset;
 
-        // Read the content of the stream using contentCharset as encoding.
-        callback(this.readAndConvertFromStream(inputStream, contentCharset));
-      });
+      // Read the content of the stream using contentCharset as encoding.
+      callback(this.readAndConvertFromStream(inputStream, contentCharset));
+    });
   },
 
   /**
@@ -328,8 +334,10 @@ var NetworkHelper = {
       const equal = cookie.indexOf("=");
       const name = cookie.substr(0, equal);
       const value = cookie.substr(equal + 1);
-      result.push({name: unescape(name.trim()),
-                   value: unescape(value.trim())});
+      result.push({
+        name: unescape(name.trim()),
+        value: unescape(value.trim()),
+      });
     });
 
     return result;
@@ -366,7 +374,7 @@ var NetworkHelper = {
       const parts = cookie.substr(equal + 1).split(";");
       const value = unescape(parts.shift().trim());
 
-      cookie = {name: name, value: value};
+      cookie = { name: name, value: value };
 
       parts.forEach(function(part) {
         part = part.trim();
@@ -586,8 +594,9 @@ var NetworkHelper = {
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
 
     const wpl = Ci.nsIWebProgressListener;
-    const NSSErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
-                               .getService(Ci.nsINSSErrorsService);
+    const NSSErrorsService = Cc["@mozilla.org/nss_errors_service;1"].getService(
+      Ci.nsINSSErrorsService
+    );
     if (!NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
       const state = securityInfo.securityState;
 
@@ -614,8 +623,10 @@ var NetworkHelper = {
         // validation. Return info as info.state = insecure.
         return info;
       } else {
-        DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
-          "Security state " + state + " has no known STATE_IS_* flags.");
+        DevToolsUtils.reportException(
+          "NetworkHelper.parseSecurityInfo",
+          "Security state " + state + " has no known STATE_IS_* flags."
+        );
         return info;
       }
 
@@ -629,8 +640,9 @@ var NetworkHelper = {
       info.signatureSchemeName = securityInfo.signatureSchemeName;
 
       // Protocol version.
-      info.protocolVersion =
-        this.formatSecurityProtocol(securityInfo.protocolVersion);
+      info.protocolVersion = this.formatSecurityProtocol(
+        securityInfo.protocolVersion
+      );
 
       // Certificate.
       info.cert = this.parseCertificateInfo(securityInfo.serverCert);
@@ -640,14 +652,16 @@ var NetworkHelper = {
 
       // HSTS and HPKP if available.
       if (httpActivity.hostname) {
-        const sss = Cc["@mozilla.org/ssservice;1"]
-                      .getService(Ci.nsISiteSecurityService);
+        const sss = Cc["@mozilla.org/ssservice;1"].getService(
+          Ci.nsISiteSecurityService
+        );
 
         // SiteSecurityService uses different storage if the channel is
         // private. Thus we must give isSecureURI correct flags or we
         // might get incorrect results.
-        const flags = (httpActivity.private) ?
-                      Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
+        const flags = httpActivity.private
+          ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE
+          : 0;
 
         if (!uri) {
           // isSecureURI only cares about the host, not the scheme.
@@ -658,8 +672,10 @@ var NetworkHelper = {
         info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
         info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags);
       } else {
-        DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
-          "Could not get HSTS/HPKP status as hostname is not available.");
+        DevToolsUtils.reportException(
+          "NetworkHelper.parseSecurityInfo",
+          "Could not get HSTS/HPKP status as hostname is not available."
+        );
         info.hsts = false;
         info.hpkp = false;
       }
@@ -711,8 +727,10 @@ var NetworkHelper = {
         sha256: cert.sha256Fingerprint,
       };
     } else {
-      DevToolsUtils.reportException("NetworkHelper.parseCertificateInfo",
-        "Secure connection established without certificate.");
+      DevToolsUtils.reportException(
+        "NetworkHelper.parseCertificateInfo",
+        "Secure connection established without certificate."
+      );
     }
 
     return info;
@@ -739,8 +757,10 @@ var NetworkHelper = {
       case Ci.nsITransportSecurityInfo.TLS_VERSION_1_3:
         return "TLSv1.3";
       default:
-        DevToolsUtils.reportException("NetworkHelper.formatSecurityProtocol",
-          "protocolVersion " + version + " is unknown.");
+        DevToolsUtils.reportException(
+          "NetworkHelper.formatSecurityProtocol",
+          "protocolVersion " + version + " is unknown."
+        );
         return "Unknown";
     }
   },
@@ -772,8 +792,10 @@ var NetworkHelper = {
       }
 
       if (!isCipher) {
-        DevToolsUtils.reportException("NetworkHelper.getReasonsForWeakness",
-          "STATE_IS_BROKEN without a known reason. Full state was: " + state);
+        DevToolsUtils.reportException(
+          "NetworkHelper.getReasonsForWeakness",
+          "STATE_IS_BROKEN without a known reason. Full state was: " + state
+        );
       }
     }
 
@@ -797,15 +819,20 @@ var NetworkHelper = {
     }
 
     // Turn the params string into an array containing { name: value } tuples.
-    const paramsArray = queryString.replace(/^[?&]/, "").split("&").map(e => {
-      const param = e.split("=");
-      return {
-        name: param[0] ?
-          NetworkHelper.convertToUnicode(unescape(param[0])) : "",
-        value: param[1] ?
-          NetworkHelper.convertToUnicode(unescape(param[1])) : "",
-      };
-    });
+    const paramsArray = queryString
+      .replace(/^[?&]/, "")
+      .split("&")
+      .map(e => {
+        const param = e.split("=");
+        return {
+          name: param[0]
+            ? NetworkHelper.convertToUnicode(unescape(param[0]))
+            : "",
+          value: param[1]
+            ? NetworkHelper.convertToUnicode(unescape(param[1]))
+            : "",
+        };
+      });
 
     return paramsArray;
   },

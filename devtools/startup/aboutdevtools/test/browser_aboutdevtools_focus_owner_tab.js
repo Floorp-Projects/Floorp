@@ -16,7 +16,10 @@ add_task(async function() {
   info("Add an about:blank tab");
   const tab1 = await addTab("data:text/html;charset=utf-8,tab1");
   const tab2 = await addTab("data:text/html;charset=utf-8,tab2");
-  ok(tab1 === gBrowser.tabs[1], "tab1 is the second tab in the current browser window");
+  ok(
+    tab1 === gBrowser.tabs[1],
+    "tab1 is the second tab in the current browser window"
+  );
 
   info("Select the first tab");
   gBrowser.selectedTab = tab1;
@@ -28,8 +31,10 @@ add_task(async function() {
   info("about:devtools was opened as expected.");
 
   const aboutDevtoolsTab = gBrowser.selectedTab;
-  ok(aboutDevtoolsTab === gBrowser.tabs[2],
-    "about:devtools was opened next to its owner tab");
+  ok(
+    aboutDevtoolsTab === gBrowser.tabs[2],
+    "about:devtools was opened next to its owner tab"
+  );
 
   info("Move the owner tab to the end of the tabs array.");
   gBrowser.moveTabTo(tab1, gBrowser.tabs.length - 1);
@@ -52,7 +57,10 @@ add_task(async function() {
   info("Add an about:blank tab");
   const tab1 = await addTab("data:text/html;charset=utf-8,tab1");
   const tab2 = await addTab("data:text/html;charset=utf-8,tab2");
-  ok(tab1 === gBrowser.tabs[1], "tab1 is the second tab in the current browser window");
+  ok(
+    tab1 === gBrowser.tabs[1],
+    "tab1 is the second tab in the current browser window"
+  );
 
   info("Select the first tab");
   gBrowser.selectedTab = tab1;
@@ -64,8 +72,10 @@ add_task(async function() {
   info("about:devtools was opened as expected.");
 
   const aboutDevtoolsTab = gBrowser.selectedTab;
-  ok(aboutDevtoolsTab === gBrowser.tabs[2],
-    "about:devtools was opened next to its owner tab");
+  ok(
+    aboutDevtoolsTab === gBrowser.tabs[2],
+    "about:devtools was opened next to its owner tab"
+  );
 
   info("Select the second tab");
   gBrowser.selectedTab = tab2;
@@ -75,8 +85,7 @@ add_task(async function() {
 
   await removeTab(aboutDevtoolsTab);
 
-  ok(tab2 == gBrowser.selectedTab,
-    "Tab 2 should still be selected.");
+  ok(tab2 == gBrowser.selectedTab, "Tab 2 should still be selected.");
 
   await removeTab(tab1);
   await removeTab(tab2);

@@ -18,17 +18,17 @@ const BREAKDOWN = {
 };
 
 const REPORT = {
-  "objects": {
-    "Function": { bytes: 10, count: 1 },
-    "Array": { bytes: 20, count: 2 },
+  objects: {
+    Function: { bytes: 10, count: 1 },
+    Array: { bytes: 20, count: 2 },
   },
-  "strings": { bytes: 10, count: 1 },
-  "scripts": { bytes: 1, count: 1 },
-  "other": {
+  strings: { bytes: 10, count: 1 },
+  scripts: { bytes: 1, count: 1 },
+  other: {
     "js::Shape": { bytes: 30, count: 3 },
     "js::Shape2": { bytes: 40, count: 4 },
   },
-  "domNode": { bytes: 0, count: 0 },
+  domNode: { bytes: 0, count: 0 },
 };
 
 const EXPECTED = {

@@ -20,7 +20,7 @@ function run_test() {
 
   debuggee.eval("this.objects = []");
   debuggee.eval(
-    (function recursiveAllocate(n) {
+    function recursiveAllocate(n) {
       if (n <= 0) {
         return;
       }
@@ -29,7 +29,7 @@ function run_test() {
       // implemented sometime in the future, it doesn't invalidate this test.
       recursiveAllocate(n - 1);
       this.objects.push({});
-    }).toString()
+    }.toString()
   );
   debuggee.eval("recursiveAllocate = recursiveAllocate.bind(this);");
   debuggee.eval("recursiveAllocate(200);");
@@ -45,9 +45,10 @@ function run_test() {
   ok(snapshot instanceof HeapSnapshot, "Should be an instanceof HeapSnapshot");
 
   const report = snapshot.takeCensus({
-    breakdown: { by: "allocationStack",
-                 then: { by: "count", bytes: true, count: true },
-                 noStack: { by: "count", bytes: true, count: true },
+    breakdown: {
+      by: "allocationStack",
+      then: { by: "count", bytes: true, count: true },
+      noStack: { by: "count", bytes: true, count: true },
     },
   });
 
@@ -63,8 +64,10 @@ function run_test() {
     foundStacks = true;
     const depth = stackDepth(k);
     dumpn("Stack depth is " + depth);
-    ok(depth <= MAX_STACK_DEPTH,
-       "Every stack should have depth less than or equal to the maximum stack depth");
+    ok(
+      depth <= MAX_STACK_DEPTH,
+      "Every stack should have depth less than or equal to the maximum stack depth"
+    );
   });
   ok(foundStacks);
 
