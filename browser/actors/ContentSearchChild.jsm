@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["ContentSearchChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 class ContentSearchChild extends ActorChild {
   handleEvent(event) {
@@ -25,13 +27,17 @@ class ContentSearchChild extends ActorChild {
   }
 
   _fireEvent(type, data = null) {
-    let event = Cu.cloneInto({
-      detail: {
-        type,
-        data,
+    let event = Cu.cloneInto(
+      {
+        detail: {
+          type,
+          data,
+        },
       },
-    }, this.content);
-    this.content.dispatchEvent(new this.content.CustomEvent("ContentSearchService",
-                                                            event));
+      this.content
+    );
+    this.content.dispatchEvent(
+      new this.content.CustomEvent("ContentSearchService", event)
+    );
   }
 }

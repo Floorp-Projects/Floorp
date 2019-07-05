@@ -73,23 +73,25 @@ class ContextMenuParent extends JSWindowActorParent {
   }
 
   canvasToBlobURL(targetIdentifier) {
-    return this.sendQuery("ContextMenu:Canvas:ToBlobURL",
-                          { targetIdentifier });
+    return this.sendQuery("ContextMenu:Canvas:ToBlobURL", { targetIdentifier });
   }
 
   saveVideoFrameAsImage(targetIdentifier) {
-    return this.sendQuery("ContextMenu:SaveVideoFrameAsImage",
-                          { targetIdentifier });
+    return this.sendQuery("ContextMenu:SaveVideoFrameAsImage", {
+      targetIdentifier,
+    });
   }
 
   setAsDesktopBackground(targetIdentifier) {
-    return this.sendQuery("ContextMenu:SetAsDesktopBackground",
-                          { targetIdentifier });
+    return this.sendQuery("ContextMenu:SetAsDesktopBackground", {
+      targetIdentifier,
+    });
   }
 
   getSearchFieldBookmarkData(targetIdentifier) {
-    return this.sendQuery("ContextMenu:SearchFieldBookmarkData",
-                          { targetIdentifier });
+    return this.sendQuery("ContextMenu:SearchFieldBookmarkData", {
+      targetIdentifier,
+    });
   }
 
   doCustomCommand(generatedItemId, handlingUserInput) {

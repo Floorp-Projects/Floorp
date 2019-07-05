@@ -44,7 +44,6 @@ module.exports = {
   ],
   "overrides": [{
       "files": [
-        "browser/**",
         "build/**",
         "caps/**",
         "chrome/**",
