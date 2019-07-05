@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // get release notes and vendor URL from prefs
-var releaseNotesURL = Services.urlFormatter.formatURLPref("app.releaseNotesURL");
+var releaseNotesURL = Services.urlFormatter.formatURLPref(
+  "app.releaseNotesURL"
+);
 if (releaseNotesURL != "about:blank") {
   var relnotes = document.getElementById("releaseNotesURL");
   relnotes.setAttribute("href", releaseNotesURL);

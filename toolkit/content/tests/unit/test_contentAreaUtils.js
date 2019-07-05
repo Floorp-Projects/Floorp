@@ -3,11 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function loadUtilsScript() {
   /* import-globals-from ../../contentAreaUtils.js */
-  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js");
+  Services.scriptloader.loadSubScript(
+    "chrome://global/content/contentAreaUtils.js"
+  );
 }
 
 function test_urlSecurityCheck() {
@@ -19,29 +21,37 @@ function test_urlSecurityCheck() {
     Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
 
   try {
-    urlSecurityCheck(makeURI(HTTP_URI), nullPrincipal,
-                     DISALLOW_INHERIT_PRINCIPAL);
+    urlSecurityCheck(
+      makeURI(HTTP_URI),
+      nullPrincipal,
+      DISALLOW_INHERIT_PRINCIPAL
+    );
   } catch (ex) {
-    do_throw("urlSecurityCheck should not throw when linking to a http uri with a null principal");
+    do_throw(
+      "urlSecurityCheck should not throw when linking to a http uri with a null principal"
+    );
   }
 
   // urlSecurityCheck also supports passing the url as a string
   try {
-    urlSecurityCheck(HTTP_URI, nullPrincipal,
-                     DISALLOW_INHERIT_PRINCIPAL);
+    urlSecurityCheck(HTTP_URI, nullPrincipal, DISALLOW_INHERIT_PRINCIPAL);
   } catch (ex) {
-    do_throw("urlSecurityCheck failed to handle the http URI as a string (uri spec)");
+    do_throw(
+      "urlSecurityCheck failed to handle the http URI as a string (uri spec)"
+    );
   }
 
   let shouldThrow = true;
   try {
-    urlSecurityCheck(CHROME_URI, nullPrincipal,
-                     DISALLOW_INHERIT_PRINCIPAL);
+    urlSecurityCheck(CHROME_URI, nullPrincipal, DISALLOW_INHERIT_PRINCIPAL);
   } catch (ex) {
     shouldThrow = false;
   }
-  if (shouldThrow)
-    do_throw("urlSecurityCheck should throw when linking to a chrome uri with a null principal");
+  if (shouldThrow) {
+    do_throw(
+      "urlSecurityCheck should throw when linking to a chrome uri with a null principal"
+    );
+  }
 }
 
 function test_stringBundle() {

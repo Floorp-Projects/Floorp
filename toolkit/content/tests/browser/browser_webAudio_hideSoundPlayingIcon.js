@@ -5,10 +5,12 @@
 "use strict";
 
 function setup_test_preference() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["browser.tabs.delayHidingAudioPlayingIconMS", 0],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["browser.tabs.delayHidingAudioPlayingIconMS", 0],
+    ],
+  });
 }
 
 function createAudioContext() {
@@ -28,8 +30,10 @@ async function resumeAudioContext() {
 
 async function testResumeRunningAudioContext() {
   info(`- create new tab -`);
-  const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                          "about:blank");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   const browser = tab.linkedBrowser;
 
   info(`- create audio context -`);
@@ -42,8 +46,7 @@ async function testResumeRunningAudioContext() {
   await waitForTabPlayingEvent(tab, true);
 
   info(`- resume AudioContext -`);
-  await ContentTask.spawn(browser, null,
-                          resumeAudioContext);
+  await ContentTask.spawn(browser, null, resumeAudioContext);
 
   info(`- 'sound-playing' icon should still exist -`);
   await waitForTabPlayingEvent(tab, true);

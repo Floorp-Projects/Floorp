@@ -1,4 +1,5 @@
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_silentAudioTrack.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_silentAudioTrack.html";
 
 async function check_video_decoding_state(args) {
   let video = content.document.getElementById("autoplay");
@@ -20,54 +21,82 @@ async function check_video_decoding_state(args) {
   let state = isSuspended ? "suspended" : "resumed";
   let event = isSuspended ? "mozentervideosuspend" : "mozexitvideosuspend";
   return new Promise(resolve => {
-    video.addEventListener(event, function() {
-      ok(true, `Video decoding is ${state}.`);
-      resolve();
-    }, {once: true});
+    video.addEventListener(
+      event,
+      function() {
+        ok(true, `Video decoding is ${state}.`);
+        resolve();
+      },
+      { once: true }
+    );
   });
 }
 
 function check_should_send_unselected_tab_hover_msg(browser) {
   if (browser.shouldHandleUnselectedTabHover) {
-    ok(true, "Should send unselected tab hover msg, someone is listening for it.");
+    ok(
+      true,
+      "Should send unselected tab hover msg, someone is listening for it."
+    );
     return true;
   }
 
   info("did not update the value now, wait until it changes.");
   return new Promise(resolve => {
-    browser.messageManager.addMessageListener("UnselectedTabHoverMsg:Enabled", function() {
-      ok(true, "Should send unselected tab hover msg, someone is listening for it.");
-      resolve();
-    });
+    browser.messageManager.addMessageListener(
+      "UnselectedTabHoverMsg:Enabled",
+      function() {
+        ok(
+          true,
+          "Should send unselected tab hover msg, someone is listening for it."
+        );
+        resolve();
+      }
+    );
   });
 }
 
 function check_should_not_send_unselected_tab_hover_msg(browser) {
   if (!browser.shouldHandleUnselectedTabHover) {
-    ok(true, "Should not send unselected tab hover msg, no one is listening for it.");
+    ok(
+      true,
+      "Should not send unselected tab hover msg, no one is listening for it."
+    );
     return true;
   }
 
   info("did not update the value now, wait until it changes.");
   return new Promise(resolve => {
-    browser.messageManager.addMessageListener("UnselectedTabHoverMsg:Disabled", function() {
-      ok(true, "Should not send unselected tab hover msg, no one is listening for it.");
-      resolve();
-    });
+    browser.messageManager.addMessageListener(
+      "UnselectedTabHoverMsg:Disabled",
+      function() {
+        ok(
+          true,
+          "Should not send unselected tab hover msg, no one is listening for it."
+        );
+        resolve();
+      }
+    );
   });
 }
 
 function get_video_decoding_suspend_promise(browser, reload) {
   let suspend = true;
-  return ContentTask.spawn(browser, { suspend, reload },
-                           check_video_decoding_state);
+  return ContentTask.spawn(
+    browser,
+    { suspend, reload },
+    check_video_decoding_state
+  );
 }
 
 function get_video_decoding_resume_promise(browser) {
   let suspend = false;
   let reload = false;
-  return ContentTask.spawn(browser, { suspend, reload },
-                           check_video_decoding_state);
+  return ContentTask.spawn(
+    browser,
+    { suspend, reload },
+    check_video_decoding_state
+  );
 }
 
 /**
@@ -87,12 +116,14 @@ function cursor_leave_tab_and_suspend_video_decoding(browser) {
 }
 
 add_task(async function setup_test_preference() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.block-autoplay-until-in-foreground", false],
-    ["media.suspend-bkgnd-video.enabled", true],
-    ["media.suspend-bkgnd-video.delay-ms", 0],
-    ["media.resume-bkgnd-video-on-tabhover", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.block-autoplay-until-in-foreground", false],
+      ["media.suspend-bkgnd-video.enabled", true],
+      ["media.suspend-bkgnd-video.delay-ms", 0],
+      ["media.resume-bkgnd-video-on-tabhover", true],
+    ],
+  });
 });
 
 /**
@@ -134,8 +165,10 @@ add_task(async function resume_and_suspend_background_video_decoding() {
 
   info("- video's owner tab goes to background again, should suspend video -");
   promise = get_video_decoding_suspend_promise(browser);
-  let blankTab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
-                                                             "about:blank");
+  let blankTab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "about:blank"
+  );
   await promise;
   await check_should_send_unselected_tab_hover_msg(browser);
 
