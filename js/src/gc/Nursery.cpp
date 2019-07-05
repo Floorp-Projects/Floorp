@@ -108,13 +108,9 @@ void js::NurseryDecommitTask::queueChunk(
   queue = chunk;
 }
 
-Chunk* js::NurseryDecommitTask::popChunk() {
-  AutoLockHelperThreadState lock;
-
+Chunk* js::NurseryDecommitTask::popChunk(
+    const AutoLockHelperThreadState& lock) {
   if (!queue) {
-    // We call setFinishing here while we have the lock that checks for work,
-    // rather than in run's loop.
-    setFinishing(lock);
     return nullptr;
   }
 
@@ -128,8 +124,15 @@ Chunk* js::NurseryDecommitTask::popChunk() {
 void js::NurseryDecommitTask::run() {
   Chunk* chunk;
 
-  while ((chunk = popChunk())) {
-    decommitChunk(chunk);
+  {
+    AutoLockHelperThreadState lock;
+
+    while ((chunk = popChunk(lock))) {
+      AutoUnlockHelperThreadState unlock(lock);
+      decommitChunk(chunk);
+    }
+
+    setFinishing(lock);
   }
 }
 
