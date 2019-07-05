@@ -6,8 +6,9 @@
 // Basic tests to verify that MacSharingService returns expected data
 
 function test_getSharingProviders() {
-  let sharingService = Cc["@mozilla.org/widget/macsharingservice;1"].
-      getService(Ci.nsIMacSharingService);
+  let sharingService = Cc["@mozilla.org/widget/macsharingservice;1"].getService(
+    Ci.nsIMacSharingService
+  );
   let providers = sharingService.getSharingProviders("http://example.org");
   Assert.ok(providers.length > 1, "There are providers returned");
   providers.forEach(provider => {
@@ -15,7 +16,11 @@ function test_getSharingProviders() {
     Assert.ok("menuItemTitle" in provider, "Provider has menuItemTitle");
     Assert.ok("image" in provider, "Provider has image");
 
-    Assert.notEqual(provider.title, "Mail", "Known filtered provider not returned");
+    Assert.notEqual(
+      provider.title,
+      "Mail",
+      "Known filtered provider not returned"
+    );
   });
 }
 
