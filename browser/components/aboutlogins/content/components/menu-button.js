@@ -9,12 +9,16 @@ export default class MenuButton extends HTMLElement {
     }
 
     let MenuButtonTemplate = document.querySelector("#menu-button-template");
-    let shadowRoot = this.attachShadow({mode: "open"});
+    let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(MenuButtonTemplate.content.cloneNode(true));
 
-    for (let menuitem of this.shadowRoot.querySelectorAll(".menuitem-button[data-supported-platforms]")) {
-      let supportedPlatforms = menuitem.dataset.supportedPlatforms.split(",").map(platform => platform.trim());
+    for (let menuitem of this.shadowRoot.querySelectorAll(
+      ".menuitem-button[data-supported-platforms]"
+    )) {
+      let supportedPlatforms = menuitem.dataset.supportedPlatforms
+        .split(",")
+        .map(platform => platform.trim());
       if (supportedPlatforms.includes(navigator.platform)) {
         menuitem.hidden = false;
       }
@@ -31,8 +35,10 @@ export default class MenuButton extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "blur": {
-        if (event.relatedTarget &&
-            event.relatedTarget.closest(".menu") == this._menu) {
+        if (
+          event.relatedTarget &&
+          event.relatedTarget.closest(".menu") == this._menu
+        ) {
           // Only hide the menu if focus has left the menu-button.
           return;
         }
@@ -42,20 +48,26 @@ export default class MenuButton extends HTMLElement {
       case "click": {
         // Skip the catch-all event listener if it was the menu-button
         // that was clicked on.
-        if (event.currentTarget == document.documentElement &&
-            event.target == this &&
-            event.originalTarget == this._menuButton) {
+        if (
+          event.currentTarget == document.documentElement &&
+          event.target == this &&
+          event.originalTarget == this._menuButton
+        ) {
           return;
         }
         let classList = event.originalTarget.classList;
-        if (classList.contains("menuitem-import") ||
-            classList.contains("menuitem-faq") ||
-            classList.contains("menuitem-feedback") ||
-            classList.contains("menuitem-preferences")) {
+        if (
+          classList.contains("menuitem-import") ||
+          classList.contains("menuitem-faq") ||
+          classList.contains("menuitem-feedback") ||
+          classList.contains("menuitem-preferences")
+        ) {
           let eventName = event.originalTarget.dataset.eventName;
-          document.dispatchEvent(new CustomEvent(eventName, {
-            bubbles: true,
-          }));
+          document.dispatchEvent(
+            new CustomEvent(eventName, {
+              bubbles: true,
+            })
+          );
           this._hideMenu();
           break;
         }
@@ -81,8 +93,9 @@ export default class MenuButton extends HTMLElement {
       return;
     }
 
-    let activeMenuitem = this.shadowRoot.activeElement ||
-                         this._menu.querySelector(".menuitem-button:not([hidden])");
+    let activeMenuitem =
+      this.shadowRoot.activeElement ||
+      this._menu.querySelector(".menuitem-button:not([hidden])");
 
     let newlyFocusedItem = null;
     if (event.key == "ArrowDown") {

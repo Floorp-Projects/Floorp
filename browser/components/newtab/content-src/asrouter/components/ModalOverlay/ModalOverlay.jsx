@@ -23,36 +23,51 @@ export class ModalOverlayWrapper extends React.PureComponent {
   }
 
   render() {
-    const {props} = this;
+    const { props } = this;
     let className = props.unstyled ? "" : "modalOverlayInner active";
     if (props.innerClassName) {
       className += ` ${props.innerClassName}`;
     }
-    return (<React.Fragment>
-      <div className="modalOverlayOuter active" onClick={props.onClose} onKeyDown={this.onKeyDown} role="presentation" />
-      <div className={className}
-        aria-labelledby={props.headerId}
-        id={props.id}
-        role="dialog">
-        {props.children}
-      </div>
-    </React.Fragment>);
+    return (
+      <React.Fragment>
+        <div
+          className="modalOverlayOuter active"
+          onClick={props.onClose}
+          onKeyDown={this.onKeyDown}
+          role="presentation"
+        />
+        <div
+          className={className}
+          aria-labelledby={props.headerId}
+          id={props.id}
+          role="dialog"
+        >
+          {props.children}
+        </div>
+      </React.Fragment>
+    );
   }
 }
 
-ModalOverlayWrapper.defaultProps = {document: global.document};
+ModalOverlayWrapper.defaultProps = { document: global.document };
 
 export class ModalOverlay extends React.PureComponent {
   render() {
-    const {title, button_label} = this.props;
+    const { title, button_label } = this.props;
     return (
       <ModalOverlayWrapper onClose={this.props.onDismissBundle}>
         <h2> {title} </h2>
         {this.props.children}
         <div className="footer">
-          <button className="button primary modalButton"
-            onClick={this.props.onDismissBundle}> {button_label} </button>
+          <button
+            className="button primary modalButton"
+            onClick={this.props.onDismissBundle}
+          >
+            {" "}
+            {button_label}{" "}
+          </button>
         </div>
-      </ModalOverlayWrapper>);
+      </ModalOverlayWrapper>
+    );
   }
 }

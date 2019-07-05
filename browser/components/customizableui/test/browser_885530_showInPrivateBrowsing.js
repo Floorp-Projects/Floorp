@@ -8,11 +8,16 @@ const kWidgetId = "some-widget";
 
 function assertWidgetExists(aWindow, aExists) {
   if (aExists) {
-    ok(aWindow.document.getElementById(kWidgetId),
-       "Should have found test widget in the window");
+    ok(
+      aWindow.document.getElementById(kWidgetId),
+      "Should have found test widget in the window"
+    );
   } else {
-    is(aWindow.document.getElementById(kWidgetId), null,
-       "Should not have found test widget in the window");
+    is(
+      aWindow.document.getElementById(kWidgetId),
+      null,
+      "Should not have found test widget in the window"
+    );
   }
 }
 
@@ -22,8 +27,10 @@ add_task(function() {
   let wrapper = CustomizableUI.createWidget({
     id: kWidgetId,
   });
-  ok(wrapper.showInPrivateBrowsing,
-     "showInPrivateBrowsing should have defaulted to true.");
+  ok(
+    wrapper.showInPrivateBrowsing,
+    "showInPrivateBrowsing should have defaulted to true."
+  );
   CustomizableUI.destroyWidget(kWidgetId);
 });
 
@@ -32,28 +39,26 @@ add_task(function() {
 // private windows.
 add_task(async function() {
   let plain1 = await openAndLoadWindow();
-  let private1 = await openAndLoadWindow({private: true});
+  let private1 = await openAndLoadWindow({ private: true });
   CustomizableUI.createWidget({
     id: kWidgetId,
     removable: true,
     showInPrivateBrowsing: false,
   });
-  CustomizableUI.addWidgetToArea(kWidgetId,
-                                 CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
   assertWidgetExists(plain1, true);
   assertWidgetExists(private1, false);
 
   // Now open up some new windows. The widget should exist in the new
   // plain window, but not the new private window.
   let plain2 = await openAndLoadWindow();
-  let private2 = await openAndLoadWindow({private: true});
+  let private2 = await openAndLoadWindow({ private: true });
   assertWidgetExists(plain2, true);
   assertWidgetExists(private2, false);
 
   // Try moving the widget around and make sure it doesn't get added
   // to the private windows. We'll start by appending it to the tabstrip.
-  CustomizableUI.addWidgetToArea(kWidgetId,
-                                 CustomizableUI.AREA_TABSTRIP);
+  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_TABSTRIP);
   assertWidgetExists(plain1, true);
   assertWidgetExists(plain2, true);
   assertWidgetExists(private1, false);
@@ -72,7 +77,9 @@ add_task(async function() {
   assertWidgetExists(private1, false);
   assertWidgetExists(private2, false);
 
-  await Promise.all([plain1, plain2, private1, private2].map(promiseWindowClosed));
+  await Promise.all(
+    [plain1, plain2, private1, private2].map(promiseWindowClosed)
+  );
 
   CustomizableUI.destroyWidget("some-widget");
 });
@@ -82,30 +89,28 @@ add_task(async function() {
 // private browsing windows.
 add_task(async function() {
   let plain1 = await openAndLoadWindow();
-  let private1 = await openAndLoadWindow({private: true});
+  let private1 = await openAndLoadWindow({ private: true });
 
   CustomizableUI.createWidget({
     id: kWidgetId,
     removable: true,
     showInPrivateBrowsing: true,
   });
-  CustomizableUI.addWidgetToArea(kWidgetId,
-                                 CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
   assertWidgetExists(plain1, true);
   assertWidgetExists(private1, true);
 
   // Now open up some new windows. The widget should exist in the new
   // plain window, but not the new private window.
   let plain2 = await openAndLoadWindow();
-  let private2 = await openAndLoadWindow({private: true});
+  let private2 = await openAndLoadWindow({ private: true });
 
   assertWidgetExists(plain2, true);
   assertWidgetExists(private2, true);
 
   // Try moving the widget around and make sure it doesn't get added
   // to the private windows. We'll start by appending it to the tabstrip.
-  CustomizableUI.addWidgetToArea(kWidgetId,
-                                 CustomizableUI.AREA_TABSTRIP);
+  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_TABSTRIP);
   assertWidgetExists(plain1, true);
   assertWidgetExists(plain2, true);
   assertWidgetExists(private1, true);
@@ -124,7 +129,9 @@ add_task(async function() {
   assertWidgetExists(private1, false);
   assertWidgetExists(private2, false);
 
-  await Promise.all([plain1, plain2, private1, private2].map(promiseWindowClosed));
+  await Promise.all(
+    [plain1, plain2, private1, private2].map(promiseWindowClosed)
+  );
 
   CustomizableUI.destroyWidget("some-widget");
 });

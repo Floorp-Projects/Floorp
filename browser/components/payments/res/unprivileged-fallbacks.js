@@ -25,8 +25,12 @@ var PaymentDialogUtils = {
   getAddressLabel(address, addressFields = null) {
     if (addressFields) {
       let requestedFields = addressFields.trim().split(/\s+/);
-      return requestedFields.filter(f => f && address[f]).map(f => address[f]).join(", ") +
-        ` (${address.guid})`;
+      return (
+        requestedFields
+          .filter(f => f && address[f])
+          .map(f => address[f])
+          .join(", ") + ` (${address.guid})`
+      );
     }
     return `${address.name} (${address.guid})`;
   },
@@ -50,7 +54,11 @@ var PaymentDialogUtils = {
     return !!str.replace(/[-\s]/g, "").match(/^\d{9,}$/);
   },
   DEFAULT_REGION: "US",
-  countries: new Map([["US", "United States"], ["CA", "Canada"], ["DE", "Germany"]]),
+  countries: new Map([
+    ["US", "United States"],
+    ["CA", "Canada"],
+    ["DE", "Germany"],
+  ]),
   getFormFormat(country) {
     if (country == "DE") {
       return {
@@ -72,11 +80,15 @@ var PaymentDialogUtils = {
             fieldId: "street-address",
             newLine: true,
           },
-          {fieldId: "postal-code"},
-          {fieldId: "address-level2"},
+          { fieldId: "postal-code" },
+          { fieldId: "address-level2" },
         ],
         postalCodePattern: "\\d{5}",
-        countryRequiredFields: ["street-address", "address-level2", "postal-code"],
+        countryRequiredFields: [
+          "street-address",
+          "address-level2",
+          "postal-code",
+        ],
       };
     }
 
@@ -96,15 +108,15 @@ var PaymentDialogUtils = {
     }
 
     let fieldsOrder = [
-      {fieldId: "name", newLine: true},
-      {fieldId: "street-address", newLine: true},
-      {fieldId: "address-level2"},
-      {fieldId: "address-level1"},
-      {fieldId: "postal-code"},
-      {fieldId: "organization"},
+      { fieldId: "name", newLine: true },
+      { fieldId: "street-address", newLine: true },
+      { fieldId: "address-level2" },
+      { fieldId: "address-level1" },
+      { fieldId: "postal-code" },
+      { fieldId: "organization" },
     ];
     if (country == "BR") {
-      fieldsOrder.splice(2, 0, {fieldId: "address-level3"});
+      fieldsOrder.splice(2, 0, { fieldId: "address-level3" });
     }
 
     return {
@@ -116,10 +128,19 @@ var PaymentDialogUtils = {
       fieldsOrder,
       // The following values come from addressReferences.js and should not be changed.
       /* eslint-disable-next-line max-len */
-      postalCodePattern: country == "US" ? "(\\d{5})(?:[ \\-](\\d{4}))?" : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
-      countryRequiredFields: country == "US" || country == "CA" ?
-        ["street-address", "address-level2", "address-level1", "postal-code"] :
-        ["street-address", "address-level2", "postal-code"],
+      postalCodePattern:
+        country == "US"
+          ? "(\\d{5})(?:[ \\-](\\d{4}))?"
+          : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
+      countryRequiredFields:
+        country == "US" || country == "CA"
+          ? [
+              "street-address",
+              "address-level2",
+              "address-level1",
+              "postal-code",
+            ]
+          : ["street-address", "address-level2", "postal-code"],
     };
   },
   findAddressSelectOption(selectEl, address, fieldName) {

@@ -5,7 +5,8 @@
 "use strict";
 
 add_task(async function() {
-  const BASE_URL = "http://example.org/browser/browser/components/places/tests/browser/";
+  const BASE_URL =
+    "http://example.org/browser/browser/components/places/tests/browser/";
   const TEST_PAGES = [
     BASE_URL + "bookmark_dummy_1.html",
     BASE_URL + "bookmark_dummy_2.html",
@@ -21,15 +22,21 @@ add_task(async function() {
   let URIs = PlacesCommandHook.uniqueCurrentPages;
   is(URIs.length, 3, "Only unique pages are returned");
 
-  Assert.deepEqual(URIs.map(URI => URI.uri.spec), [
-    "about:blank",
-    BASE_URL + "bookmark_dummy_1.html",
-    BASE_URL + "bookmark_dummy_2.html",
-  ], "Correct URIs are returned");
+  Assert.deepEqual(
+    URIs.map(URI => URI.uri.spec),
+    [
+      "about:blank",
+      BASE_URL + "bookmark_dummy_1.html",
+      BASE_URL + "bookmark_dummy_2.html",
+    ],
+    "Correct URIs are returned"
+  );
 
-  Assert.deepEqual(URIs.map(URI => URI.title), [
-    "New Tab", "Bookmark Dummy 1", "Bookmark Dummy 2",
-  ], "Correct titles are returned");
+  Assert.deepEqual(
+    URIs.map(URI => URI.title),
+    ["New Tab", "Bookmark Dummy 1", "Bookmark Dummy 2"],
+    "Correct titles are returned"
+  );
 
   registerCleanupFunction(async function() {
     for (let tab of tabs) {

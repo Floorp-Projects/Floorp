@@ -42,7 +42,11 @@ function countingObserver() {
 }
 
 function assertNotificationCount(count) {
-  is(notificationsCount, count, "The expected number of notifications was received.");
+  is(
+    notificationsCount,
+    count,
+    "The expected number of notifications was received."
+  );
 }
 
 async function awaitNotification(callback) {
@@ -57,7 +61,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
 
   // Forget any previous closed windows or tabs from other tests that may have
   // run in the same session.
-  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  await awaitNotification(() =>
+    Services.obs.notifyObservers(null, "browser:purge-session-history")
+  );
 
   // Add an observer to count the number of notifications.
   Services.obs.addObserver(countingObserver, TOPIC);
@@ -77,7 +83,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(MAX_TABS_UNDO_PREF);
   });
-  await awaitNotification(() => Services.prefs.setIntPref(MAX_TABS_UNDO_PREF, 1));
+  await awaitNotification(() =>
+    Services.prefs.setIntPref(MAX_TABS_UNDO_PREF, 1)
+  );
   assertNotificationCount(3);
 
   info("Undoing close of remaining closed tab.");
@@ -90,7 +98,9 @@ add_task(async function test_closedObjectsChangedNotifications() {
   assertNotificationCount(5);
 
   info("Purging session history.");
-  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  await awaitNotification(() =>
+    Services.obs.notifyObservers(null, "browser:purge-session-history")
+  );
   assertNotificationCount(6);
 
   info("Opening and closing another tab.");
@@ -98,11 +108,21 @@ add_task(async function test_closedObjectsChangedNotifications() {
   assertNotificationCount(7);
 
   info("Purging domain data with no matches.");
-  Services.obs.notifyObservers(null, "browser:purge-session-history-for-domain", "mozilla.com");
+  Services.obs.notifyObservers(
+    null,
+    "browser:purge-session-history-for-domain",
+    "mozilla.com"
+  );
   assertNotificationCount(7);
 
   info("Purging domain data with matches.");
-  await awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history-for-domain", "example.com"));
+  await awaitNotification(() =>
+    Services.obs.notifyObservers(
+      null,
+      "browser:purge-session-history-for-domain",
+      "example.com"
+    )
+  );
   assertNotificationCount(8);
 
   info("Opening and closing another tab.");

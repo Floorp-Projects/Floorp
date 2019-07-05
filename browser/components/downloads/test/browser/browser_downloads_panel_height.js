@@ -9,11 +9,11 @@
  * updated correctly if downloads are removed while the panel is hidden.
  */
 add_task(async function test_height_reduced_after_removal() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.download.autohideButton", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.autohideButton", false]],
+  });
   await promiseButtonShown("downloads-button");
-  await task_addDownloads([
-    { state: DownloadsCommon.DOWNLOAD_FINISHED },
-  ]);
+  await task_addDownloads([{ state: DownloadsCommon.DOWNLOAD_FINISHED }]);
 
   await task_openPanel();
   let panel = document.getElementById("downloadsPanel");

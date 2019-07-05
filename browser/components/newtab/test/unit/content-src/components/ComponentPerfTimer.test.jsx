@@ -1,9 +1,9 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { ComponentPerfTimer } from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
 import createMockRaf from "mock-raf";
 import React from "react";
 
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 const perfSvc = {
   mark() {},
@@ -23,13 +23,17 @@ describe("<ComponentPerfTimer>", () => {
   let sandbox;
   let wrapper;
 
-  const InnerEl = () => (<div>Inner Element</div>);
+  const InnerEl = () => <div>Inner Element</div>;
 
   beforeEach(() => {
     mockRaf = createMockRaf();
     sandbox = sinon.createSandbox();
     sandbox.stub(window, "requestAnimationFrame").callsFake(mockRaf.raf);
-    wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+    wrapper = shallow(
+      <ComponentPerfTimer {...DEFAULT_PROPS}>
+        <InnerEl />
+      </ComponentPerfTimer>
+    );
   });
   afterEach(() => {
     sandbox.restore();
@@ -42,8 +46,16 @@ describe("<ComponentPerfTimer>", () => {
   describe("#constructor", () => {
     beforeEach(() => {
       sandbox.stub(ComponentPerfTimer.prototype, "_maybeSendBadStateEvent");
-      sandbox.stub(ComponentPerfTimer.prototype, "_ensureFirstRenderTsRecorded");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>, {disableLifecycleMethods: true});
+      sandbox.stub(
+        ComponentPerfTimer.prototype,
+        "_ensureFirstRenderTsRecorded"
+      );
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>,
+        { disableLifecycleMethods: true }
+      );
     });
 
     it("should have the correct defaults", () => {
@@ -59,8 +71,15 @@ describe("<ComponentPerfTimer>", () => {
     beforeEach(() => {
       sandbox.stub(DEFAULT_PROPS, "id").value("fake_section");
       sandbox.stub(ComponentPerfTimer.prototype, "_maybeSendBadStateEvent");
-      sandbox.stub(ComponentPerfTimer.prototype, "_ensureFirstRenderTsRecorded");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      sandbox.stub(
+        ComponentPerfTimer.prototype,
+        "_ensureFirstRenderTsRecorded"
+      );
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
     });
 
     it("should not call telemetry on sections that we don't want to record", () => {
@@ -83,7 +102,11 @@ describe("<ComponentPerfTimer>", () => {
 
     it("should not call _maybeSendPaintedEvent if id not in RECORDED_SECTIONS", () => {
       sandbox.stub(DEFAULT_PROPS, "id").value("topstories");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
       const instance = wrapper.instance();
       const stub = sandbox.stub(instance, "_maybeSendPaintedEvent");
 
@@ -96,7 +119,10 @@ describe("<ComponentPerfTimer>", () => {
   describe("#_componentDidUpdate", () => {
     it("should call _maybeSendPaintedEvent", () => {
       const instance = wrapper.instance();
-      const maybeSendPaintStub = sandbox.stub(instance, "_maybeSendPaintedEvent");
+      const maybeSendPaintStub = sandbox.stub(
+        instance,
+        "_maybeSendPaintedEvent"
+      );
 
       instance.componentDidUpdate();
 
@@ -105,7 +131,11 @@ describe("<ComponentPerfTimer>", () => {
 
     it("should not call _maybeSendPaintedEvent if id not in RECORDED_SECTIONS", () => {
       sandbox.stub(DEFAULT_PROPS, "id").value("topstories");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
       const instance = wrapper.instance();
       const stub = sandbox.stub(instance, "_maybeSendPaintedEvent");
 
@@ -119,12 +149,19 @@ describe("<ComponentPerfTimer>", () => {
     let recordFirstRenderStub;
     beforeEach(() => {
       sandbox.stub(ComponentPerfTimer.prototype, "_maybeSendBadStateEvent");
-      recordFirstRenderStub = sandbox.stub(ComponentPerfTimer.prototype, "_ensureFirstRenderTsRecorded");
+      recordFirstRenderStub = sandbox.stub(
+        ComponentPerfTimer.prototype,
+        "_ensureFirstRenderTsRecorded"
+      );
     });
 
     it("should set _recordedFirstRender", () => {
       sandbox.stub(DEFAULT_PROPS, "initialized").value(false);
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
       const instance = wrapper.instance();
 
       assert.isFalse(instance._recordedFirstRender);
@@ -137,7 +174,11 @@ describe("<ComponentPerfTimer>", () => {
 
     it("should mark first_render_ts", () => {
       sandbox.stub(DEFAULT_PROPS, "initialized").value(false);
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
       const instance = wrapper.instance();
       const stub = sandbox.stub(perfSvc, "mark");
 
@@ -152,13 +193,23 @@ describe("<ComponentPerfTimer>", () => {
   describe("#_maybeSendBadStateEvent", () => {
     let sendBadStateStub;
     beforeEach(() => {
-      sendBadStateStub = sandbox.stub(ComponentPerfTimer.prototype, "_maybeSendBadStateEvent");
-      sandbox.stub(ComponentPerfTimer.prototype, "_ensureFirstRenderTsRecorded");
+      sendBadStateStub = sandbox.stub(
+        ComponentPerfTimer.prototype,
+        "_maybeSendBadStateEvent"
+      );
+      sandbox.stub(
+        ComponentPerfTimer.prototype,
+        "_ensureFirstRenderTsRecorded"
+      );
     });
 
     it("should set this._reportMissingData=true when called with initialized === false", () => {
       sandbox.stub(DEFAULT_PROPS, "initialized").value(false);
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
       const instance = wrapper.instance();
 
       assert.isFalse(instance._reportMissingData);
@@ -188,8 +239,11 @@ describe("<ComponentPerfTimer>", () => {
     it("should call _sendPaintedEvent if props.initialized is true", () => {
       sandbox.stub(DEFAULT_PROPS, "initialized").value(true);
       wrapper = shallow(
-        <ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>,
-        {disableLifecycleMethods: true});
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>,
+        { disableLifecycleMethods: true }
+      );
       const instance = wrapper.instance();
       const stub = sandbox.stub(instance, "_afterFramePaint");
 
@@ -211,7 +265,11 @@ describe("<ComponentPerfTimer>", () => {
     });
     it("should not call _sendPaintedEvent if component not initialized", () => {
       sandbox.stub(DEFAULT_PROPS, "initialized").value(false);
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
       const instance = wrapper.instance();
       const spy = sinon.spy(instance, "_afterFramePaint");
 
@@ -222,19 +280,20 @@ describe("<ComponentPerfTimer>", () => {
   });
 
   describe("#_afterFramePaint", () => {
-    it("should call callback after the requestAnimationFrame callback returns", () => new Promise(resolve => {
-      // Setting the callback to resolve is the test that it does finally get
-      // called at the correct time, after the event loop ticks again.
-      // If it doesn't get called, this test will time out.
-      const callback = sandbox.spy(resolve);
+    it("should call callback after the requestAnimationFrame callback returns", () =>
+      new Promise(resolve => {
+        // Setting the callback to resolve is the test that it does finally get
+        // called at the correct time, after the event loop ticks again.
+        // If it doesn't get called, this test will time out.
+        const callback = sandbox.spy(resolve);
 
-      const instance = wrapper.instance();
+        const instance = wrapper.instance();
 
-      instance._afterFramePaint(callback);
+        instance._afterFramePaint(callback);
 
-      assert.notCalled(callback);
-      mockRaf.step({count: 1});
-    }));
+        assert.notCalled(callback);
+        mockRaf.step({ count: 1 });
+      }));
   });
 
   describe("#_sendBadStateEvent", () => {
@@ -251,42 +310,66 @@ describe("<ComponentPerfTimer>", () => {
     it("should call compute the delta from first render to data ready", () => {
       sandbox.stub(perfSvc, "getMostRecentAbsMarkStartByName");
 
-      wrapper.instance()._sendBadStateEvent(`${DEFAULT_PROPS.id}_data_ready_ts`);
+      wrapper
+        .instance()
+        ._sendBadStateEvent(`${DEFAULT_PROPS.id}_data_ready_ts`);
 
       assert.calledTwice(perfSvc.getMostRecentAbsMarkStartByName);
-      assert.calledWithExactly(perfSvc.getMostRecentAbsMarkStartByName, `${DEFAULT_PROPS.id}_data_ready_ts`);
-      assert.calledWithExactly(perfSvc.getMostRecentAbsMarkStartByName, `${DEFAULT_PROPS.id}_first_render_ts`);
+      assert.calledWithExactly(
+        perfSvc.getMostRecentAbsMarkStartByName,
+        `${DEFAULT_PROPS.id}_data_ready_ts`
+      );
+      assert.calledWithExactly(
+        perfSvc.getMostRecentAbsMarkStartByName,
+        `${DEFAULT_PROPS.id}_first_render_ts`
+      );
     });
 
     it("should call dispatch SAVE_SESSION_PERF_DATA", () => {
-      sandbox.stub(perfSvc, "getMostRecentAbsMarkStartByName")
-        .withArgs("highlights_first_render_ts").returns(0.5)
+      sandbox
+        .stub(perfSvc, "getMostRecentAbsMarkStartByName")
+        .withArgs("highlights_first_render_ts")
+        .returns(0.5)
         .withArgs("highlights_data_ready_ts")
         .returns(3.2);
 
       const dispatch = sandbox.spy(DEFAULT_PROPS, "dispatch");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
 
       wrapper.instance()._sendBadStateEvent();
 
       assert.calledOnce(dispatch);
-      assert.calledWithExactly(dispatch, ac.OnlyToMain({
-        type: at.SAVE_SESSION_PERF_DATA,
-        data: {[`${DEFAULT_PROPS.id}_data_late_by_ms`]: 2},
-      }));
+      assert.calledWithExactly(
+        dispatch,
+        ac.OnlyToMain({
+          type: at.SAVE_SESSION_PERF_DATA,
+          data: { [`${DEFAULT_PROPS.id}_data_late_by_ms`]: 2 },
+        })
+      );
     });
   });
 
   describe("#_sendPaintedEvent", () => {
     beforeEach(() => {
       sandbox.stub(ComponentPerfTimer.prototype, "_maybeSendBadStateEvent");
-      sandbox.stub(ComponentPerfTimer.prototype, "_ensureFirstRenderTsRecorded");
+      sandbox.stub(
+        ComponentPerfTimer.prototype,
+        "_ensureFirstRenderTsRecorded"
+      );
     });
 
     it("should not call mark with the wrong id", () => {
       sandbox.stub(perfSvc, "mark");
       sandbox.stub(DEFAULT_PROPS, "id").value("fake_id");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
 
       wrapper.instance()._sendPaintedEvent();
 
@@ -295,7 +378,11 @@ describe("<ComponentPerfTimer>", () => {
     it("should call mark with the correct topsites", () => {
       sandbox.stub(perfSvc, "mark");
       sandbox.stub(DEFAULT_PROPS, "id").value("topsites");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
 
       wrapper.instance()._sendPaintedEvent();
 
@@ -305,7 +392,11 @@ describe("<ComponentPerfTimer>", () => {
     it("should not call getMostRecentAbsMarkStartByName if id!=topsites", () => {
       sandbox.stub(perfSvc, "getMostRecentAbsMarkStartByName");
       sandbox.stub(DEFAULT_PROPS, "id").value("fake_id");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
 
       wrapper.instance()._sendPaintedEvent();
 
@@ -314,27 +405,40 @@ describe("<ComponentPerfTimer>", () => {
     it("should call getMostRecentAbsMarkStartByName for topsites", () => {
       sandbox.stub(perfSvc, "getMostRecentAbsMarkStartByName");
       sandbox.stub(DEFAULT_PROPS, "id").value("topsites");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
 
       wrapper.instance()._sendPaintedEvent();
 
       assert.calledOnce(perfSvc.getMostRecentAbsMarkStartByName);
-      assert.calledWithExactly(perfSvc.getMostRecentAbsMarkStartByName,
-                               "topsites_first_painted_ts");
+      assert.calledWithExactly(
+        perfSvc.getMostRecentAbsMarkStartByName,
+        "topsites_first_painted_ts"
+      );
     });
     it("should dispatch SAVE_SESSION_PERF_DATA", () => {
       sandbox.stub(perfSvc, "getMostRecentAbsMarkStartByName").returns(42);
       sandbox.stub(DEFAULT_PROPS, "id").value("topsites");
       const dispatch = sandbox.spy(DEFAULT_PROPS, "dispatch");
-      wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
+      wrapper = shallow(
+        <ComponentPerfTimer {...DEFAULT_PROPS}>
+          <InnerEl />
+        </ComponentPerfTimer>
+      );
 
       wrapper.instance()._sendPaintedEvent();
 
       assert.calledOnce(dispatch);
-      assert.calledWithExactly(dispatch, ac.OnlyToMain({
-        type: at.SAVE_SESSION_PERF_DATA,
-        data: {"topsites_first_painted_ts": 42},
-      }));
+      assert.calledWithExactly(
+        dispatch,
+        ac.OnlyToMain({
+          type: at.SAVE_SESSION_PERF_DATA,
+          data: { topsites_first_painted_ts: 42 },
+        })
+      );
     });
   });
 });

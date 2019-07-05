@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["HeadlessShell"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.
@@ -27,10 +27,12 @@ function loadContentWindow(webNavigation, url, principal) {
       triggeringPrincipal: principal,
     };
     webNavigation.loadURI(uri.spec, loadURIOptions);
-    let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
+    let docShell = webNavigation
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell);
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
     let progressListener = {
       onLocationChange(progress, request, location, flags) {
         // Ignore inner-frame events
@@ -48,35 +50,70 @@ function loadContentWindow(webNavigation, url, principal) {
         let contentWindow = docShell.domWindow;
         progressListeners.delete(progressListener);
         webProgress.removeProgressListener(progressListener);
-        contentWindow.addEventListener("load", (event) => {
-          resolve(contentWindow);
-        }, { once: true });
+        contentWindow.addEventListener(
+          "load",
+          event => {
+            resolve(contentWindow);
+          },
+          { once: true }
+        );
       },
-      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
-                                              "nsISupportsWeakReference"]),
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
+      ]),
     };
     progressListeners.set(progressListener, progressListener);
-    webProgress.addProgressListener(progressListener,
-                                    Ci.nsIWebProgress.NOTIFY_LOCATION);
+    webProgress.addProgressListener(
+      progressListener,
+      Ci.nsIWebProgress.NOTIFY_LOCATION
+    );
   });
 }
 
-async function takeScreenshot(fullWidth, fullHeight, contentWidth, contentHeight, path, url) {
+async function takeScreenshot(
+  fullWidth,
+  fullHeight,
+  contentWidth,
+  contentHeight,
+  path,
+  url
+) {
   try {
     var windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
     // nsIWindowlessBrowser inherits from nsIWebNavigation.
-    let contentWindow = await loadContentWindow(windowlessBrowser, url, Services.scriptSecurityManager.getSystemPrincipal());
+    let contentWindow = await loadContentWindow(
+      windowlessBrowser,
+      url,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
     contentWindow.resizeTo(contentWidth, contentHeight);
 
-    let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");
+    let canvas = contentWindow.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "html:canvas"
+    );
     let context = canvas.getContext("2d");
-    let width = fullWidth ? contentWindow.innerWidth + contentWindow.scrollMaxX - contentWindow.scrollMinX
-                          : contentWindow.innerWidth;
-    let height = fullHeight ? contentWindow.innerHeight + contentWindow.scrollMaxY - contentWindow.scrollMinY
-                            : contentWindow.innerHeight;
+    let width = fullWidth
+      ? contentWindow.innerWidth +
+        contentWindow.scrollMaxX -
+        contentWindow.scrollMinX
+      : contentWindow.innerWidth;
+    let height = fullHeight
+      ? contentWindow.innerHeight +
+        contentWindow.scrollMaxY -
+        contentWindow.scrollMinY
+      : contentWindow.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    context.drawWindow(contentWindow, 0, 0, width, height, "rgb(255, 255, 255)");
+    context.drawWindow(
+      contentWindow,
+      0,
+      0,
+      width,
+      height,
+      "rgb(255, 255, 255)"
+    );
 
     function getBlob() {
       return new Promise(resolve => canvas.toBlob(resolve));
@@ -92,7 +129,9 @@ async function takeScreenshot(fullWidth, fullHeight, contentWidth, contentHeight
 
     let blob = await getBlob();
     let reader = await readBlob(blob);
-    await OS.File.writeAtomic(path, new Uint8Array(reader.result), {flush: true});
+    await OS.File.writeAtomic(path, new Uint8Array(reader.result), {
+      flush: true,
+    });
     dump("Screenshot saved to: " + path + "\n");
   } catch (e) {
     dump("Failure taking screenshot: " + e + "\n");
@@ -167,7 +206,14 @@ let HeadlessShell = {
       }
 
       if (URLlist.length == 1) {
-        await takeScreenshot(fullWidth, fullHeight, contentWidth, contentHeight, path, URLlist[0]);
+        await takeScreenshot(
+          fullWidth,
+          fullHeight,
+          contentWidth,
+          contentHeight,
+          path,
+          URLlist[0]
+        );
       } else {
         dump("expected exactly one URL when using `screenshot`\n");
       }

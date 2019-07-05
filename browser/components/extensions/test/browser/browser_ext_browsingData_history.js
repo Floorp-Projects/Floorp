@@ -2,10 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const OLD_URL = "http://example.com/";
 const RECENT_URL = "http://example.com/2/";
@@ -33,8 +39,16 @@ const PLACEINFO = [
 async function setupHistory() {
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits(PLACEINFO);
-  is((await PlacesTestUtils.visitsInDB(RECENT_URL)), 1, "Expected number of visits found in history database.");
-  is((await PlacesTestUtils.visitsInDB(OLD_URL)), 2, "Expected number of visits found in history database.");
+  is(
+    await PlacesTestUtils.visitsInDB(RECENT_URL),
+    1,
+    "Expected number of visits found in history database."
+  );
+  is(
+    await PlacesTestUtils.visitsInDB(OLD_URL),
+    2,
+    "Expected number of visits found in history database."
+  );
 }
 
 add_task(async function testHistory() {
@@ -43,7 +57,7 @@ add_task(async function testHistory() {
       if (msg == "removeHistory") {
         await browser.browsingData.removeHistory(options);
       } else {
-        await browser.browsingData.remove(options, {history: true});
+        await browser.browsingData.remove(options, { history: true });
       }
       browser.test.sendMessage("historyRemoved");
     });
@@ -62,24 +76,48 @@ add_task(async function testHistory() {
     extension.sendMessage(method, {});
     await extension.awaitMessage("historyRemoved");
 
-    is((await PlacesTestUtils.visitsInDB(RECENT_URL)), 0, "Expected number of visits removed from history database.");
-    is((await PlacesTestUtils.visitsInDB(OLD_URL)), 0, "Expected number of visits removed from history database.");
+    is(
+      await PlacesTestUtils.visitsInDB(RECENT_URL),
+      0,
+      "Expected number of visits removed from history database."
+    );
+    is(
+      await PlacesTestUtils.visitsInDB(OLD_URL),
+      0,
+      "Expected number of visits removed from history database."
+    );
 
     // Clear history with recent since value.
     await setupHistory();
-    extension.sendMessage(method, {since: REFERENCE_DATE - 1000});
+    extension.sendMessage(method, { since: REFERENCE_DATE - 1000 });
     await extension.awaitMessage("historyRemoved");
 
-    is((await PlacesTestUtils.visitsInDB(RECENT_URL)), 0, "Expected number of visits removed from history database.");
-    is((await PlacesTestUtils.visitsInDB(OLD_URL)), 1, "Expected number of visits removed from history database.");
+    is(
+      await PlacesTestUtils.visitsInDB(RECENT_URL),
+      0,
+      "Expected number of visits removed from history database."
+    );
+    is(
+      await PlacesTestUtils.visitsInDB(OLD_URL),
+      1,
+      "Expected number of visits removed from history database."
+    );
 
     // Clear history with old since value.
     await setupHistory();
-    extension.sendMessage(method, {since: REFERENCE_DATE - 100000});
+    extension.sendMessage(method, { since: REFERENCE_DATE - 100000 });
     await extension.awaitMessage("historyRemoved");
 
-    is((await PlacesTestUtils.visitsInDB(RECENT_URL)), 0, "Expected number of visits removed from history database.");
-    is((await PlacesTestUtils.visitsInDB(OLD_URL)), 0, "Expected number of visits removed from history database.");
+    is(
+      await PlacesTestUtils.visitsInDB(RECENT_URL),
+      0,
+      "Expected number of visits removed from history database."
+    );
+    is(
+      await PlacesTestUtils.visitsInDB(OLD_URL),
+      0,
+      "Expected number of visits removed from history database."
+    );
   }
 
   await extension.startup();

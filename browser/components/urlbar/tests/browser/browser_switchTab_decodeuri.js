@@ -22,16 +22,26 @@ add_task(async function test_switchtab_decodeuri() {
 
   info("Select autocomplete popup entry");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window,
-    UrlbarTestUtils.getSelectedIndex(window));
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    UrlbarTestUtils.getSelectedIndex(window)
+  );
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH);
 
   info("switch-to-tab");
-  let tabSelectPromise = BrowserTestUtils.waitForEvent(window, "TabSelect", false);
+  let tabSelectPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "TabSelect",
+    false
+  );
   EventUtils.synthesizeKey("KEY_Enter");
   await tabSelectPromise;
 
-  Assert.equal(gBrowser.selectedTab, tab, "Should have switched to the right tab");
+  Assert.equal(
+    gBrowser.selectedTab,
+    tab,
+    "Should have switched to the right tab"
+  );
 
   gBrowser.removeCurrentTab();
   await PlacesUtils.history.clear();

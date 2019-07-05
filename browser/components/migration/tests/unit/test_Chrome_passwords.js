@@ -1,6 +1,6 @@
 "use strict";
 
-const {OSCrypto} = ChromeUtils.import("resource://gre/modules/OSCrypto.jsm");
+const { OSCrypto } = ChromeUtils.import("resource://gre/modules/OSCrypto.jsm");
 
 const PROFILE = {
   id: "Default",
@@ -92,45 +92,87 @@ var crypto = new OSCrypto();
 var dbConn;
 
 function promiseSetPassword(login) {
-  let passwordValue = new Uint8Array(crypto.stringToArray(crypto.encryptData(login.password)));
-  return dbConn.execute(`UPDATE logins
+  let passwordValue = new Uint8Array(
+    crypto.stringToArray(crypto.encryptData(login.password))
+  );
+  return dbConn.execute(
+    `UPDATE logins
                          SET password_value = :password_value
                          WHERE rowid = :rowid
-                        `, { password_value: passwordValue,
-                             rowid: login.id });
+                        `,
+    { password_value: passwordValue, rowid: login.id }
+  );
 }
 
 function checkLoginsAreEqual(passwordManagerLogin, chromeLogin, id) {
   passwordManagerLogin.QueryInterface(Ci.nsILoginMetaInfo);
 
-  Assert.equal(passwordManagerLogin.username, chromeLogin.username,
-               "The two logins ID " + id + " have the same username");
-  Assert.equal(passwordManagerLogin.password, chromeLogin.password,
-               "The two logins ID " + id + " have the same password");
-  Assert.equal(passwordManagerLogin.origin, chromeLogin.origin,
-               "The two logins ID " + id + " have the same origin");
-  Assert.equal(passwordManagerLogin.formActionOrigin, chromeLogin.formActionOrigin,
-               "The two logins ID " + id + " have the same formActionOrigin");
-  Assert.equal(passwordManagerLogin.httpRealm, chromeLogin.httpRealm,
-               "The two logins ID " + id + " have the same httpRealm");
-  Assert.equal(passwordManagerLogin.usernameField, chromeLogin.usernameField,
-               "The two logins ID " + id + " have the same usernameElement");
-  Assert.equal(passwordManagerLogin.passwordField, chromeLogin.passwordField,
-               "The two logins ID " + id + " have the same passwordElement");
-  Assert.equal(passwordManagerLogin.timeCreated, chromeLogin.timeCreated,
-               "The two logins ID " + id + " have the same timeCreated");
-  Assert.equal(passwordManagerLogin.timePasswordChanged, chromeLogin.timePasswordChanged,
-               "The two logins ID " + id + " have the same timePasswordChanged");
-  Assert.equal(passwordManagerLogin.timesUsed, chromeLogin.timesUsed,
-               "The two logins ID " + id + " have the same timesUsed");
+  Assert.equal(
+    passwordManagerLogin.username,
+    chromeLogin.username,
+    "The two logins ID " + id + " have the same username"
+  );
+  Assert.equal(
+    passwordManagerLogin.password,
+    chromeLogin.password,
+    "The two logins ID " + id + " have the same password"
+  );
+  Assert.equal(
+    passwordManagerLogin.origin,
+    chromeLogin.origin,
+    "The two logins ID " + id + " have the same origin"
+  );
+  Assert.equal(
+    passwordManagerLogin.formActionOrigin,
+    chromeLogin.formActionOrigin,
+    "The two logins ID " + id + " have the same formActionOrigin"
+  );
+  Assert.equal(
+    passwordManagerLogin.httpRealm,
+    chromeLogin.httpRealm,
+    "The two logins ID " + id + " have the same httpRealm"
+  );
+  Assert.equal(
+    passwordManagerLogin.usernameField,
+    chromeLogin.usernameField,
+    "The two logins ID " + id + " have the same usernameElement"
+  );
+  Assert.equal(
+    passwordManagerLogin.passwordField,
+    chromeLogin.passwordField,
+    "The two logins ID " + id + " have the same passwordElement"
+  );
+  Assert.equal(
+    passwordManagerLogin.timeCreated,
+    chromeLogin.timeCreated,
+    "The two logins ID " + id + " have the same timeCreated"
+  );
+  Assert.equal(
+    passwordManagerLogin.timePasswordChanged,
+    chromeLogin.timePasswordChanged,
+    "The two logins ID " + id + " have the same timePasswordChanged"
+  );
+  Assert.equal(
+    passwordManagerLogin.timesUsed,
+    chromeLogin.timesUsed,
+    "The two logins ID " + id + " have the same timesUsed"
+  );
 }
 
 function generateDifferentLogin(login) {
-  let newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+  let newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+    Ci.nsILoginInfo
+  );
 
-  newLogin.init(login.origin, login.formActionOrigin, null,
-                login.username, login.password + 1, login.usernameField + 1,
-                login.passwordField + 1);
+  newLogin.init(
+    login.origin,
+    login.formActionOrigin,
+    null,
+    login.username,
+    login.password + 1,
+    login.usernameField + 1,
+    login.passwordField + 1
+  );
   newLogin.QueryInterface(Ci.nsILoginMetaInfo);
   newLogin.timeCreated = login.timeCreated + 1;
   newLogin.timePasswordChanged = login.timePasswordChanged + 1;
@@ -139,7 +181,9 @@ function generateDifferentLogin(login) {
 }
 
 add_task(async function setup() {
-  let loginDataFile = do_get_file("AppData/Local/Google/Chrome/User Data/Default/Login Data");
+  let loginDataFile = do_get_file(
+    "AppData/Local/Google/Chrome/User Data/Default/Login Data"
+  );
   dbConn = await Sqlite.openConnection({ path: loginDataFile.path });
   registerFakePath("LocalAppData", do_get_file("AppData/Local/"));
 
@@ -156,18 +200,32 @@ add_task(async function test_importIntoEmptyDB() {
   }
 
   let migrator = await MigrationUtils.getMigrator("chrome");
-  Assert.ok(await migrator.isSourceAvailable(), "Sanity check the source exists");
+  Assert.ok(
+    await migrator.isSourceAvailable(),
+    "Sanity check the source exists"
+  );
 
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "There are no logins initially");
 
   // Migrate the logins.
-  await promiseMigration(migrator, MigrationUtils.resourceTypes.PASSWORDS, PROFILE);
+  await promiseMigration(
+    migrator,
+    MigrationUtils.resourceTypes.PASSWORDS,
+    PROFILE
+  );
 
   logins = Services.logins.getAllLogins();
-  Assert.equal(logins.length, TEST_LOGINS.length, "Check login count after importing the data");
-  Assert.equal(logins.length, MigrationUtils._importQuantities.logins,
-               "Check telemetry matches the actual import.");
+  Assert.equal(
+    logins.length,
+    TEST_LOGINS.length,
+    "Check login count after importing the data"
+  );
+  Assert.equal(
+    logins.length,
+    MigrationUtils._importQuantities.logins,
+    "Check telemetry matches the actual import."
+  );
 
   for (let i = 0; i < TEST_LOGINS.length; i++) {
     checkLoginsAreEqual(logins[i], TEST_LOGINS[i], i + 1);
@@ -177,11 +235,18 @@ add_task(async function test_importIntoEmptyDB() {
 // Test that existing logins for the same primary key don't get overwritten
 add_task(async function test_importExistingLogins() {
   let migrator = await MigrationUtils.getMigrator("chrome");
-  Assert.ok(await migrator.isSourceAvailable(), "Sanity check the source exists");
+  Assert.ok(
+    await migrator.isSourceAvailable(),
+    "Sanity check the source exists"
+  );
 
   Services.logins.removeAllLogins();
   let logins = Services.logins.getAllLogins();
-  Assert.equal(logins.length, 0, "There are no logins after removing all of them");
+  Assert.equal(
+    logins.length,
+    0,
+    "There are no logins after removing all of them"
+  );
 
   let newLogins = [];
 
@@ -192,19 +257,33 @@ add_task(async function test_importExistingLogins() {
   }
 
   logins = Services.logins.getAllLogins();
-  Assert.equal(logins.length, newLogins.length, "Check login count after the insertion");
+  Assert.equal(
+    logins.length,
+    newLogins.length,
+    "Check login count after the insertion"
+  );
 
   for (let i = 0; i < newLogins.length; i++) {
     checkLoginsAreEqual(logins[i], newLogins[i], i + 1);
   }
   // Migrate the logins.
-  await promiseMigration(migrator, MigrationUtils.resourceTypes.PASSWORDS, PROFILE);
+  await promiseMigration(
+    migrator,
+    MigrationUtils.resourceTypes.PASSWORDS,
+    PROFILE
+  );
 
   logins = Services.logins.getAllLogins();
-  Assert.equal(logins.length, TEST_LOGINS.length,
-               "Check there are still the same number of logins after re-importing the data");
-  Assert.equal(logins.length, MigrationUtils._importQuantities.logins,
-               "Check telemetry matches the actual import.");
+  Assert.equal(
+    logins.length,
+    TEST_LOGINS.length,
+    "Check there are still the same number of logins after re-importing the data"
+  );
+  Assert.equal(
+    logins.length,
+    MigrationUtils._importQuantities.logins,
+    "Check telemetry matches the actual import."
+  );
 
   for (let i = 0; i < newLogins.length; i++) {
     checkLoginsAreEqual(logins[i], newLogins[i], i + 1);

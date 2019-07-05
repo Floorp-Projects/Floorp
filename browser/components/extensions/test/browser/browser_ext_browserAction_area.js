@@ -3,16 +3,16 @@
 "use strict";
 
 var browserAreas = {
-  "navbar": CustomizableUI.AREA_NAVBAR,
-  "menupanel": getCustomizableUIPanelID(),
-  "tabstrip": CustomizableUI.AREA_TABSTRIP,
-  "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
+  navbar: CustomizableUI.AREA_NAVBAR,
+  menupanel: getCustomizableUIPanelID(),
+  tabstrip: CustomizableUI.AREA_TABSTRIP,
+  personaltoolbar: CustomizableUI.AREA_BOOKMARKS,
 };
 
 async function testInArea(area) {
   let manifest = {
-    "browser_action": {
-      "browser_style": true,
+    browser_action: {
+      browser_style: true,
     },
   };
   if (area) {
@@ -24,7 +24,11 @@ async function testInArea(area) {
   await extension.startup();
   let widget = getBrowserActionWidget(extension);
   let placement = CustomizableUI.getPlacementOfWidget(widget.id);
-  is(placement && placement.area, browserAreas[area || "navbar"], `widget located in correct area`);
+  is(
+    placement && placement.area,
+    browserAreas[area || "navbar"],
+    `widget located in correct area`
+  );
   await extension.unload();
 }
 

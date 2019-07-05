@@ -7,8 +7,11 @@ add_task(async function() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseBrowserLoaded(tab.linkedBrowser);
 
-  is(tab.linkedBrowser.currentURI.spec, "about:blank",
-     "we will be removing an about:blank tab");
+  is(
+    tab.linkedBrowser.currentURI.spec,
+    "about:blank",
+    "we will be removing an about:blank tab"
+  );
 
   let r = `rand-${Math.random()}`;
   ss.setCustomTabValue(tab, "foobar", r);

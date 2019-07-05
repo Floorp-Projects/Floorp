@@ -1,11 +1,11 @@
-import {actionCreators as ac} from "common/Actions.jsm";
-import {connect} from "react-redux";
-import {DSEmptyState} from "../DSEmptyState/DSEmptyState.jsx";
-import {DSImage} from "../DSImage/DSImage.jsx";
-import {DSLinkMenu} from "../DSLinkMenu/DSLinkMenu";
-import {ImpressionStats} from "../../DiscoveryStreamImpressionStats/ImpressionStats";
+import { actionCreators as ac } from "common/Actions.jsm";
+import { connect } from "react-redux";
+import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
+import { DSImage } from "../DSImage/DSImage.jsx";
+import { DSLinkMenu } from "../DSLinkMenu/DSLinkMenu";
+import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
-import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
+import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 
 /**
  * @note exported for testing only
@@ -20,69 +20,102 @@ export class ListItem extends React.PureComponent {
 
   onLinkClick(event) {
     if (this.props.dispatch) {
-      this.props.dispatch(ac.UserEvent({
-        event: "CLICK",
-        source: this.props.type.toUpperCase(),
-        action_position: this.props.pos,
-      }));
+      this.props.dispatch(
+        ac.UserEvent({
+          event: "CLICK",
+          source: this.props.type.toUpperCase(),
+          action_position: this.props.pos,
+        })
+      );
 
-      this.props.dispatch(ac.ImpressionStats({
-        source: this.props.type.toUpperCase(),
-        click: 0,
-        tiles: [{
-          id: this.props.id,
-          pos: this.props.pos,
-          ...(this.props.shim && this.props.shim.click ? {shim: this.props.shim.click} : {}),
-        }],
-      }));
+      this.props.dispatch(
+        ac.ImpressionStats({
+          source: this.props.type.toUpperCase(),
+          click: 0,
+          tiles: [
+            {
+              id: this.props.id,
+              pos: this.props.pos,
+              ...(this.props.shim && this.props.shim.click
+                ? { shim: this.props.shim.click }
+                : {}),
+            },
+          ],
+        })
+      );
     }
   }
 
   render() {
     return (
-      <li className={`ds-list-item${this.props.placeholder ? " placeholder" : ""}`} >
+      <li
+        className={`ds-list-item${
+          this.props.placeholder ? " placeholder" : ""
+        }`}
+      >
         <SafeAnchor
           className="ds-list-item-link"
           dispatch={this.props.dispatch}
           onLinkClick={!this.props.placeholder ? this.onLinkClick : undefined}
-          url={this.props.url}>
+          url={this.props.url}
+        >
           <div className="ds-list-item-text">
             <div>
               <div className="ds-list-item-title clamp">{this.props.title}</div>
-              {this.props.excerpt && <div className="ds-list-item-excerpt clamp">{this.props.excerpt}</div>}
+              {this.props.excerpt && (
+                <div className="ds-list-item-excerpt clamp">
+                  {this.props.excerpt}
+                </div>
+              )}
             </div>
             <p>
               {this.props.context && (
                 <span>
-                  <span className="ds-list-item-context clamp">{this.props.context}</span>
+                  <span className="ds-list-item-context clamp">
+                    {this.props.context}
+                  </span>
                   <br />
                 </span>
               )}
-              <span className="ds-list-item-info clamp">{this.props.domain}</span>
+              <span className="ds-list-item-info clamp">
+                {this.props.domain}
+              </span>
             </p>
           </div>
-          <DSImage extraClassNames="ds-list-image" source={this.props.image_src} rawSource={this.props.raw_image_src} />
+          <DSImage
+            extraClassNames="ds-list-image"
+            source={this.props.image_src}
+            rawSource={this.props.raw_image_src}
+          />
           <ImpressionStats
             campaignId={this.props.campaignId}
-            rows={[{
-              id: this.props.id,
-              pos: this.props.pos,
-              ...(this.props.shim && this.props.shim.impression ? {shim: this.props.shim.impression} : {}),
-            }]}
+            rows={[
+              {
+                id: this.props.id,
+                pos: this.props.pos,
+                ...(this.props.shim && this.props.shim.impression
+                  ? { shim: this.props.shim.impression }
+                  : {}),
+              },
+            ]}
             dispatch={this.props.dispatch}
-            source={this.props.type} />
+            source={this.props.type}
+          />
         </SafeAnchor>
-        {!this.props.placeholder && <DSLinkMenu
-          id={this.props.id}
-          index={this.props.pos}
-          dispatch={this.props.dispatch}
-          url={this.props.url}
-          title={this.props.title}
-          source={this.props.source}
-          type={this.props.type}
-          pocket_id={this.props.pocket_id}
-          shim={this.props.shim}
-          bookmarkGuid={this.props.bookmarkGuid} />}
+        {!this.props.placeholder && (
+          <DSLinkMenu
+            id={this.props.id}
+            index={this.props.pos}
+            dispatch={this.props.dispatch}
+            url={this.props.url}
+            title={this.props.title}
+            source={this.props.source}
+            type={this.props.type}
+            pocket_id={this.props.pocket_id}
+            shim={this.props.shim}
+            bookmarkGuid={this.props.bookmarkGuid}
+          />
+        )}
       </li>
     );
   }
@@ -95,31 +128,38 @@ export const PlaceholderListItem = props => <ListItem placeholder={true} />;
  */
 export function _List(props) {
   const renderList = () => {
-    const recs = props.data.recommendations.slice(props.recStartingPoint, props.recStartingPoint + props.items);
+    const recs = props.data.recommendations.slice(
+      props.recStartingPoint,
+      props.recStartingPoint + props.items
+    );
     const recMarkup = [];
 
     for (let index = 0; index < props.items; index++) {
       const rec = recs[index];
-      recMarkup.push(!rec || rec.placeholder ? (
-        <PlaceholderListItem key={`ds-list-item-${index}`} />
-      ) : (
-        <ListItem key={`ds-list-item-${index}`}
-          dispatch={props.dispatch}
-          campaignId={rec.campaign_id}
-          domain={rec.domain}
-          excerpt={rec.excerpt}
-          id={rec.id}
-          shim={rec.shim}
-          image_src={rec.image_src}
-          raw_image_src={rec.raw_image_src}
-          pos={rec.pos}
-          title={rec.title}
-          context={rec.context}
-          type={props.type}
-          url={rec.url}
-          pocket_id={rec.pocket_id}
-          bookmarkGuid={rec.bookmarkGuid} />
-      ));
+      recMarkup.push(
+        !rec || rec.placeholder ? (
+          <PlaceholderListItem key={`ds-list-item-${index}`} />
+        ) : (
+          <ListItem
+            key={`ds-list-item-${index}`}
+            dispatch={props.dispatch}
+            campaignId={rec.campaign_id}
+            domain={rec.domain}
+            excerpt={rec.excerpt}
+            id={rec.id}
+            shim={rec.shim}
+            image_src={rec.image_src}
+            raw_image_src={rec.raw_image_src}
+            pos={rec.pos}
+            title={rec.title}
+            context={rec.context}
+            type={props.type}
+            url={rec.url}
+            pocket_id={rec.pocket_id}
+            bookmarkGuid={rec.bookmarkGuid}
+          />
+        )
+      );
     }
 
     const listStyles = [
@@ -130,12 +170,10 @@ export function _List(props) {
       props.hasNumbers ? "ds-list-numbers" : "",
     ];
 
-    return (
-      <ul className={listStyles.join(" ")}>{recMarkup}</ul>
-    );
+    return <ul className={listStyles.join(" ")}>{recMarkup}</ul>;
   };
 
-  const {data} = props;
+  const { data } = props;
   if (!data || !data.recommendations) {
     return null;
   }
@@ -145,13 +183,20 @@ export function _List(props) {
 
   return (
     <div>
-      {props.header && props.header.title ? <div className="ds-header">{props.header.title}</div> : null }
-      {isEmpty ?
+      {props.header && props.header.title ? (
+        <div className="ds-header">{props.header.title}</div>
+      ) : null}
+      {isEmpty ? (
         <div className="ds-list empty">
-          <DSEmptyState status={data.status} dispatch={props.dispatch} feed={props.feed} />
-        </div> :
+          <DSEmptyState
+            status={data.status}
+            dispatch={props.dispatch}
+            feed={props.feed}
+          />
+        </div>
+      ) : (
         renderList()
-      }
+      )}
     </div>
   );
 }
@@ -165,4 +210,6 @@ _List.defaultProps = {
   items: 6, // Number of stories to display.  TODO: get from endpoint
 };
 
-export const List = connect(state => ({DiscoveryStream: state.DiscoveryStream}))(_List);
+export const List = connect(state => ({
+  DiscoveryStream: state.DiscoveryStream,
+}))(_List);

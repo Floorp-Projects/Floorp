@@ -2,11 +2,20 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
 
-const OLD_NAMES = {[Downloads.PUBLIC]: "old-public", [Downloads.PRIVATE]: "old-private"};
-const RECENT_NAMES = {[Downloads.PUBLIC]: "recent-public", [Downloads.PRIVATE]: "recent-private"};
+const OLD_NAMES = {
+  [Downloads.PUBLIC]: "old-public",
+  [Downloads.PRIVATE]: "old-private",
+};
+const RECENT_NAMES = {
+  [Downloads.PUBLIC]: "recent-public",
+  [Downloads.PRIVATE]: "recent-private",
+};
 const REFERENCE_DATE = new Date();
 const OLD_DATE = new Date(Number(REFERENCE_DATE) - 10000);
 
@@ -15,17 +24,24 @@ async function downloadExists(list, path) {
   return listArray.some(i => i.target.path == path);
 }
 
-async function checkDownloads(expectOldExists = true, expectRecentExists = true) {
+async function checkDownloads(
+  expectOldExists = true,
+  expectRecentExists = true
+) {
   for (let listType of [Downloads.PUBLIC, Downloads.PRIVATE]) {
     let downloadsList = await Downloads.getList(listType);
     equal(
-      (await downloadExists(downloadsList, OLD_NAMES[listType])),
+      await downloadExists(downloadsList, OLD_NAMES[listType]),
       expectOldExists,
-      `Fake old download ${(expectOldExists) ? "was found" : "was removed"}.`);
+      `Fake old download ${expectOldExists ? "was found" : "was removed"}.`
+    );
     equal(
-      (await downloadExists(downloadsList, RECENT_NAMES[listType])),
+      await downloadExists(downloadsList, RECENT_NAMES[listType]),
       expectRecentExists,
-      `Fake recent download ${(expectRecentExists) ? "was found" : "was removed"}.`);
+      `Fake recent download ${
+        expectRecentExists ? "was found" : "was removed"
+      }.`
+    );
   }
 }
 
@@ -38,7 +54,8 @@ async function setupDownloads() {
     let download = await Downloads.createDownload({
       source: {
         url: "https://bugzilla.mozilla.org/show_bug.cgi?id=1321303",
-        isPrivate: listType == Downloads.PRIVATE},
+        isPrivate: listType == Downloads.PRIVATE,
+      },
       target: OLD_NAMES[listType],
     });
     download.startTime = OLD_DATE;
@@ -48,7 +65,8 @@ async function setupDownloads() {
     download = await Downloads.createDownload({
       source: {
         url: "https://bugzilla.mozilla.org/show_bug.cgi?id=1321303",
-        isPrivate: listType == Downloads.PRIVATE},
+        isPrivate: listType == Downloads.PRIVATE,
+      },
       target: RECENT_NAMES[listType],
     });
     download.startTime = REFERENCE_DATE;
@@ -68,7 +86,7 @@ add_task(async function testDownloads() {
       if (msg == "removeDownloads") {
         await browser.browsingData.removeDownloads(options);
       } else {
-        await browser.browsingData.remove(options, {downloads: true});
+        await browser.browsingData.remove(options, { downloads: true });
       }
       browser.test.sendMessage("downloadsRemoved");
     });
@@ -90,13 +108,13 @@ add_task(async function testDownloads() {
 
     // Clear downloads with recent since value.
     await setupDownloads();
-    extension.sendMessage(method, {since: REFERENCE_DATE});
+    extension.sendMessage(method, { since: REFERENCE_DATE });
     await extension.awaitMessage("downloadsRemoved");
     await checkDownloads(true, false);
 
     // Clear downloads with old since value.
     await setupDownloads();
-    extension.sendMessage(method, {since: REFERENCE_DATE - 100000});
+    extension.sendMessage(method, { since: REFERENCE_DATE - 100000 });
     await extension.awaitMessage("downloadsRemoved");
     await checkDownloads(false, false);
   }

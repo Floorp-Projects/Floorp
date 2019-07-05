@@ -1,10 +1,10 @@
-import {DefaultPrefs, Prefs} from "lib/ActivityStreamPrefs.jsm";
+import { DefaultPrefs, Prefs } from "lib/ActivityStreamPrefs.jsm";
 
 const TEST_PREF_CONFIG = new Map([
-  ["foo", {value: true}],
-  ["bar", {value: "BAR"}],
-  ["baz", {value: 1}],
-  ["qux", {value: "foo", value_local_dev: "foofoo"}],
+  ["foo", { value: true }],
+  ["bar", { value: "BAR" }],
+  ["baz", { value: 1 }],
+  ["qux", { value: "foo", value_local_dev: "foofoo" }],
 ]);
 
 describe("ActivityStreamPrefs", () => {
@@ -21,8 +21,8 @@ describe("ActivityStreamPrefs", () => {
     describe("#observeBranch", () => {
       let listener;
       beforeEach(() => {
-        p._prefBranch = {addObserver: sinon.stub()};
-        listener = {onPrefChanged: sinon.stub()};
+        p._prefBranch = { addObserver: sinon.stub() };
+        listener = { onPrefChanged: sinon.stub() };
         p.observeBranch(listener);
       });
       it("should add an observer", () => {
@@ -53,7 +53,10 @@ describe("ActivityStreamPrefs", () => {
         p.ignoreBranch(listener);
 
         assert.calledOnce(p._prefBranch.removeObserver);
-        assert.calledWith(p._prefBranch.removeObserver, p._prefBranch.addObserver.firstCall.args[0]);
+        assert.calledWith(
+          p._prefBranch.removeObserver,
+          p._prefBranch.addObserver.firstCall.args[0]
+        );
       });
       it("should remove the listener", () => {
         assert.equal(p._branchObservers.size, 1);

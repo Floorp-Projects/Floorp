@@ -4,10 +4,16 @@
 
 SimpleTest.requestCompleteLog();
 
-ChromeUtils.defineModuleGetter(this, "SessionStore",
-                               "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
-                               "resource:///modules/sessionstore/TabStateFlusher.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TabStateFlusher",
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
 
 add_task(async function test_sessions_restore() {
   function background() {
@@ -32,7 +38,10 @@ add_task(async function test_sessions_restore() {
           },
           error => {
             browser.test.assertTrue(
-              error.message.includes("Could not restore object using sessionId not-a-valid-session-id."));
+              error.message.includes(
+                "Could not restore object using sessionId not-a-valid-session-id."
+              )
+            );
             browser.test.sendMessage("restore-rejected");
           }
         );
@@ -50,17 +59,29 @@ add_task(async function test_sessions_restore() {
 
   async function assertNotificationCount(expected) {
     let notificationCount = await extension.awaitMessage("notificationCount");
-    is(notificationCount, expected, "the expected number of notifications was fired");
+    is(
+      notificationCount,
+      expected,
+      "the expected number of notifications was fired"
+    );
   }
 
   await extension.startup();
 
-  let {Management: {global: {windowTracker, tabTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  let {
+    Management: {
+      global: { windowTracker, tabTracker },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   function checkLocalTab(tab, expectedUrl) {
     let realTab = tabTracker.getTab(tab.id);
     let tabState = JSON.parse(SessionStore.getTabState(realTab));
-    is(tabState.entries[0].url, expectedUrl, "restored tab has the expected url");
+    is(
+      tabState.entries[0].url,
+      expectedUrl,
+      "restored tab has the expected url"
+    );
   }
 
   await extension.awaitMessage("ready");
@@ -78,14 +99,22 @@ add_task(async function test_sessions_restore() {
   let recentlyClosed = await extension.awaitMessage("recentlyClosed");
 
   // Check that our expected window is the most recently closed.
-  is(recentlyClosed[0].window.tabs.length, 3, "most recently closed window has the expected number of tabs");
+  is(
+    recentlyClosed[0].window.tabs.length,
+    3,
+    "most recently closed window has the expected number of tabs"
+  );
 
   // Restore the window.
   extension.sendMessage("restore");
   await assertNotificationCount(2);
   let restored = await extension.awaitMessage("restored");
 
-  is(restored.window.tabs.length, 3, "restore returned a window with the expected number of tabs");
+  is(
+    restored.window.tabs.length,
+    3,
+    "restore returned a window with the expected number of tabs"
+  );
   checkLocalTab(restored.window.tabs[0], "about:config");
   checkLocalTab(restored.window.tabs[1], "about:robots");
   checkLocalTab(restored.window.tabs[2], "about:mozilla");
@@ -102,7 +131,11 @@ add_task(async function test_sessions_restore() {
   await assertNotificationCount(4);
   restored = await extension.awaitMessage("restored");
 
-  is(restored.window.tabs.length, 3, "restore returned a window with the expected number of tabs");
+  is(
+    restored.window.tabs.length,
+    3,
+    "restore returned a window with the expected number of tabs"
+  );
   checkLocalTab(restored.window.tabs[0], "about:config");
   checkLocalTab(restored.window.tabs[1], "about:robots");
   checkLocalTab(restored.window.tabs[2], "about:mozilla");
@@ -114,7 +147,10 @@ add_task(async function test_sessions_restore() {
   await assertNotificationCount(5);
 
   // Open and close a tab.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:robots"
+  );
   await TabStateFlusher.flush(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
   await assertNotificationCount(6);

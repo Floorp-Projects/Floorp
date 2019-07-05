@@ -1,10 +1,12 @@
-import {FXASignupSnippet} from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet";
-import {mount} from "enzyme";
+import { FXASignupSnippet } from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet";
+import { mount } from "enzyme";
 import React from "react";
 import schema from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet.schema.json";
-import {SnippetsTestMessageProvider} from "lib/SnippetsTestMessageProvider.jsm";
+import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
-const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(msg => msg.template === "fxa_signup_snippet").content;
+const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(
+  msg => msg.template === "fxa_signup_snippet"
+).content;
 
 describe("FXASignupSnippet", () => {
   let sandbox;
@@ -12,7 +14,11 @@ describe("FXASignupSnippet", () => {
   function mountAndCheckProps(content = {}) {
     const props = {
       id: "foo123",
-      content: Object.assign({utm_campaign: "foo", utm_term: "bar"}, DEFAULT_CONTENT, content),
+      content: Object.assign(
+        { utm_campaign: "foo", utm_term: "bar" },
+        DEFAULT_CONTENT,
+        content
+      ),
       onBlock() {},
       onDismiss: sandbox.stub(),
       sendUserActionTelemetry: sandbox.stub(),
@@ -42,22 +48,30 @@ describe("FXASignupSnippet", () => {
     };
     const wrapper = mount(<FXASignupSnippet {...defaults} />);
     // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
-    const {props} = wrapper.children().get(0);
+    const { props } = wrapper.children().get(0);
 
-    const defaultProperties = Object.keys(schema.properties)
-      .filter(prop => schema.properties[prop].default);
+    const defaultProperties = Object.keys(schema.properties).filter(
+      prop => schema.properties[prop].default
+    );
     assert.lengthOf(defaultProperties, 4);
-    defaultProperties.forEach(prop => assert.propertyVal(props.content, prop, schema.properties[prop].default));
+    defaultProperties.forEach(prop =>
+      assert.propertyVal(props.content, prop, schema.properties[prop].default)
+    );
 
-    const defaultHiddenProperties = Object.keys(schema.properties.hidden_inputs.properties)
-      .filter(prop => schema.properties.hidden_inputs.properties[prop].default);
+    const defaultHiddenProperties = Object.keys(
+      schema.properties.hidden_inputs.properties
+    ).filter(prop => schema.properties.hidden_inputs.properties[prop].default);
     assert.lengthOf(defaultHiddenProperties, 0);
   });
 
   it("should have a form_action", () => {
     const wrapper = mountAndCheckProps();
 
-    assert.propertyVal(wrapper.children().get(0).props, "form_action", "https://accounts.firefox.com/");
+    assert.propertyVal(
+      wrapper.children().get(0).props,
+      "form_action",
+      "https://accounts.firefox.com/"
+    );
   });
 
   it("should navigate to scene2", () => {

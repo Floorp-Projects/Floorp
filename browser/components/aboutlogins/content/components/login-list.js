@@ -7,8 +7,8 @@ import LoginListItem from "./login-list-item.js";
 const collator = new Intl.Collator();
 const sortFnOptions = {
   name: (a, b) => collator.compare(a.title, b.title),
-  "last-used": (a, b) => (a.timeLastUsed < b.timeLastUsed),
-  "last-changed": (a, b) => (a.timePasswordChanged < b.timePasswordChanged),
+  "last-used": (a, b) => a.timeLastUsed < b.timeLastUsed,
+  "last-changed": (a, b) => a.timePasswordChanged < b.timePasswordChanged,
 };
 
 export default class LoginList extends HTMLElement {
@@ -25,7 +25,7 @@ export default class LoginList extends HTMLElement {
       return;
     }
     let loginListTemplate = document.querySelector("#login-list-template");
-    let shadowRoot = this.attachShadow({mode: "open"});
+    let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginListTemplate.content.cloneNode(true));
 
@@ -35,8 +35,9 @@ export default class LoginList extends HTMLElement {
 
     this.render();
 
-    this.shadowRoot.getElementById("login-sort")
-                   .addEventListener("change", this);
+    this.shadowRoot
+      .getElementById("login-sort")
+      .addEventListener("change", this);
     window.addEventListener("AboutLoginsClearSelection", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
@@ -57,12 +58,17 @@ export default class LoginList extends HTMLElement {
     if (options.createLogin) {
       this._blankLoginListItem.classList.add("selected");
       this._blankLoginListItem.setAttribute("aria-selected", "true");
-      this._list.setAttribute("aria-activedescendant", this._blankLoginListItem.id);
+      this._list.setAttribute(
+        "aria-activedescendant",
+        this._blankLoginListItem.id
+      );
       this._list.append(this._blankLoginListItem);
     }
 
     if (!this._logins.length) {
-      document.l10n.setAttributes(this._count, "login-list-count", {count: 0});
+      document.l10n.setAttributes(this._count, "login-list-count", {
+        count: 0,
+      });
       return;
     }
 
@@ -77,7 +83,9 @@ export default class LoginList extends HTMLElement {
     }
 
     let visibleLoginCount = this._applyFilter();
-    document.l10n.setAttributes(this._count, "login-list-count", {count: visibleLoginCount});
+    document.l10n.setAttributes(this._count, "login-list-count", {
+      count: visibleLoginCount,
+    });
   }
 
   handleEvent(event) {
@@ -92,14 +100,16 @@ export default class LoginList extends HTMLElement {
         if (!this._logins.length) {
           return;
         }
-        window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
-          detail: this._logins[0],
-        }));
+        window.dispatchEvent(
+          new CustomEvent("AboutLoginsLoginSelected", {
+            detail: this._logins[0],
+          })
+        );
         break;
       }
       case "AboutLoginsCreateLogin": {
         this._selectedGuid = null;
-        this.render({createLogin: true});
+        this.render({ createLogin: true });
         break;
       }
       case "AboutLoginsFilterLogins": {
@@ -134,14 +144,20 @@ export default class LoginList extends HTMLElement {
 
     this.render();
 
-    if (!this._selectedGuid ||
-        !this._logins.findIndex(login => login.guid == this._selectedGuid) != -1) {
+    if (
+      !this._selectedGuid ||
+      !this._logins.findIndex(login => login.guid == this._selectedGuid) != -1
+    ) {
       // Select the first visible login after any possible filter is applied.
-      let firstVisibleLogin = this._list.querySelector("login-list-item[data-guid]:not([hidden])");
+      let firstVisibleLogin = this._list.querySelector(
+        "login-list-item[data-guid]:not([hidden])"
+      );
       if (firstVisibleLogin) {
-        window.dispatchEvent(new CustomEvent("AboutLoginsInitialLoginSelected", {
-          detail: firstVisibleLogin._login,
-        }));
+        window.dispatchEvent(
+          new CustomEvent("AboutLoginsInitialLoginSelected", {
+            detail: firstVisibleLogin._login,
+          })
+        );
       }
     }
   }
@@ -185,10 +201,14 @@ export default class LoginList extends HTMLElement {
   _applyFilter() {
     let matchingLoginGuids;
     if (this._filter) {
-      matchingLoginGuids = this._logins.filter(login => {
-        return login.origin.toLocaleLowerCase().includes(this._filter) ||
-               login.username.toLocaleLowerCase().includes(this._filter);
-      }).map(login => login.guid);
+      matchingLoginGuids = this._logins
+        .filter(login => {
+          return (
+            login.origin.toLocaleLowerCase().includes(this._filter) ||
+            login.username.toLocaleLowerCase().includes(this._filter)
+          );
+        })
+        .map(login => login.guid);
     } else {
       matchingLoginGuids = this._logins.map(login => login.guid);
     }
@@ -217,9 +237,9 @@ export default class LoginList extends HTMLElement {
 
     let isLTR = document.dir == "ltr";
     let activeDescendantId = this._list.getAttribute("aria-activedescendant");
-    let activeDescendant = activeDescendantId ?
-      this.shadowRoot.getElementById(activeDescendantId) :
-      this._list.firstElementChild;
+    let activeDescendant = activeDescendantId
+      ? this.shadowRoot.getElementById(activeDescendantId)
+      : this._list.firstElementChild;
     let newlyFocusedItem = null;
     switch (event.key) {
       case "ArrowDown": {
@@ -231,9 +251,9 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowLeft": {
-        let item = isLTR ?
-          activeDescendant.previousElementSibling :
-          activeDescendant.nextElementSibling;
+        let item = isLTR
+          ? activeDescendant.previousElementSibling
+          : activeDescendant.nextElementSibling;
         if (!item) {
           return;
         }
@@ -241,9 +261,9 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "ArrowRight": {
-        let item = isLTR ?
-          activeDescendant.nextElementSibling :
-          activeDescendant.previousElementSibling;
+        let item = isLTR
+          ? activeDescendant.nextElementSibling
+          : activeDescendant.previousElementSibling;
         if (!item) {
           return;
         }

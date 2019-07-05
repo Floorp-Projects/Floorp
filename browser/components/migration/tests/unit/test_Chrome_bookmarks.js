@@ -1,6 +1,8 @@
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 add_task(async function() {
   let rootDir = do_get_file("chromefiles/", true);
@@ -28,13 +30,18 @@ add_task(async function() {
   // importing osfile will sometimes greedily fetch certain path identifiers
   // from the dir service, which means they get cached, which means we can't
   // register a fake path for them anymore.
-  const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  await OS.File.makeDir(target.path, {from: rootDir.parent.path, ignoreExisting: true});
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  await OS.File.makeDir(target.path, {
+    from: rootDir.parent.path,
+    ignoreExisting: true,
+  });
 
   target.append("Bookmarks");
-  await OS.File.remove(target.path, {ignoreAbsent: true});
+  await OS.File.remove(target.path, { ignoreAbsent: true });
 
-  let bookmarksData = {roots: {bookmark_bar: {children: []}, other: {children: []}}};
+  let bookmarksData = {
+    roots: { bookmark_bar: { children: [] }, other: { children: [] } },
+  };
   const MAX_BMS = 100;
   let barKids = bookmarksData.roots.bookmark_bar.children;
   let menuKids = bookmarksData.roots.other.children;
@@ -70,17 +77,23 @@ add_task(async function() {
     }
   }
 
-  await OS.File.writeAtomic(target.path, JSON.stringify(bookmarksData), {encoding: "utf-8"});
+  await OS.File.writeAtomic(target.path, JSON.stringify(bookmarksData), {
+    encoding: "utf-8",
+  });
 
   let migrator = await MigrationUtils.getMigrator("chrome");
   // Sanity check for the source.
   Assert.ok(await migrator.isSourceAvailable());
 
-  let itemsSeen = {bookmarks: 0, folders: 0};
+  let itemsSeen = { bookmarks: 0, folders: 0 };
   let listener = events => {
     for (let event of events) {
       if (!event.title.includes("Chrome")) {
-        itemsSeen[event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER ? "folders" : "bookmarks"]++;
+        itemsSeen[
+          event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER
+            ? "folders"
+            : "bookmarks"
+        ]++;
       }
     }
   };
@@ -90,10 +103,18 @@ add_task(async function() {
     id: "Default",
     name: "Default",
   };
-  await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, PROFILE);
+  await promiseMigration(
+    migrator,
+    MigrationUtils.resourceTypes.BOOKMARKS,
+    PROFILE
+  );
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
   Assert.equal(itemsSeen.bookmarks, 200, "Should have seen 200 bookmarks.");
   Assert.equal(itemsSeen.folders, 10, "Should have seen 10 folders.");
-  Assert.equal(MigrationUtils._importQuantities.bookmarks, itemsSeen.bookmarks + itemsSeen.folders, "Telemetry reporting correct.");
+  Assert.equal(
+    MigrationUtils._importQuantities.bookmarks,
+    itemsSeen.bookmarks + itemsSeen.folders,
+    "Telemetry reporting correct."
+  );
 });

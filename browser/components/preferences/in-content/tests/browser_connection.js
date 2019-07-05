@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function test() {
   waitForExplicitFinish();
@@ -25,9 +25,16 @@ function test() {
   Open the main tab here.
   */
   open_preferences(async function tabOpened(aContentWindow) {
-    is(gBrowser.currentURI.spec, "about:preferences", "about:preferences loaded");
+    is(
+      gBrowser.currentURI.spec,
+      "about:preferences",
+      "about:preferences loaded"
+    );
     let dialog = await openAndLoadSubDialog(connectionURL);
-    let dialogClosingPromise = BrowserTestUtils.waitForEvent(dialog.document.documentElement, "dialogclosing");
+    let dialogClosingPromise = BrowserTestUtils.waitForEvent(
+      dialog.document.documentElement,
+      "dialogclosing"
+    );
 
     ok(dialog, "connection window opened");
     runConnectionTests(dialog);
@@ -37,8 +44,11 @@ function test() {
     ok(dialogClosingEvent, "connection window closed");
     // runConnectionTests will have changed this pref - make sure it was
     // sanitized correctly when the dialog was accepted
-    is(Services.prefs.getCharPref("network.proxy.no_proxies_on"),
-       ".a.com,.b.com,.c.com", "no_proxies_on pref has correct value");
+    is(
+      Services.prefs.getCharPref("network.proxy.no_proxies_on"),
+      ".a.com,.b.com,.c.com",
+      "no_proxies_on pref has correct value"
+    );
     gBrowser.removeCurrentTab();
     finish();
   });
@@ -52,10 +62,12 @@ function runConnectionTests(win) {
   let networkProxyTypePref = win.Preferences.get("network.proxy.type");
 
   // make sure the networkProxyNone textbox is formatted properly
-  is(networkProxyNone.localName, "textarea",
-     "networkProxyNone is a textarea");
-  is(networkProxyNone.getAttribute("rows"), "2",
-     "networkProxyNone textbox has two rows");
+  is(networkProxyNone.localName, "textarea", "networkProxyNone is a textarea");
+  is(
+    networkProxyNone.getAttribute("rows"),
+    "2",
+    "networkProxyNone textbox has two rows"
+  );
 
   // make sure manual proxy controls are disabled when the window is opened
   let networkProxyHTTP = doc.getElementById("networkProxyHTTP");
@@ -73,29 +85,57 @@ function runConnectionTests(win) {
   networkProxyTypePref.value = 1;
   is(networkProxyNone.disabled, false, "networkProxyNone textbox is enabled");
 
-  testSanitize(".a.com", ".a.com",
-               "sanitize doesn't mess up single filter");
-  testSanitize(".a.com, .b.com, .c.com", ".a.com, .b.com, .c.com",
-               "sanitize doesn't mess up multiple comma/space sep filters");
-  testSanitize(".a.com\n.b.com", ".a.com,.b.com",
-               "sanitize turns line break into comma");
-  testSanitize(".a.com,\n.b.com", ".a.com,.b.com",
-               "sanitize doesn't add duplicate comma after comma");
-  testSanitize(".a.com\n,.b.com", ".a.com,.b.com",
-               "sanitize doesn't add duplicate comma before comma");
-  testSanitize(".a.com,\n,.b.com", ".a.com,,.b.com",
-               "sanitize doesn't add duplicate comma surrounded by commas");
-  testSanitize(".a.com, \n.b.com", ".a.com, .b.com",
-               "sanitize doesn't add comma after comma/space");
-  testSanitize(".a.com\n .b.com", ".a.com, .b.com",
-               "sanitize adds comma before space");
-  testSanitize(".a.com\n\n\n;;\n;\n.b.com", ".a.com,.b.com",
-               "sanitize only adds one comma per substring of bad chars");
-  testSanitize(".a.com,,.b.com", ".a.com,,.b.com",
-               "duplicate commas from user are untouched");
-  testSanitize(".a.com\n.b.com\n.c.com,\n.d.com,\n.e.com",
-               ".a.com,.b.com,.c.com,.d.com,.e.com",
-               "sanitize replaces things globally");
+  testSanitize(".a.com", ".a.com", "sanitize doesn't mess up single filter");
+  testSanitize(
+    ".a.com, .b.com, .c.com",
+    ".a.com, .b.com, .c.com",
+    "sanitize doesn't mess up multiple comma/space sep filters"
+  );
+  testSanitize(
+    ".a.com\n.b.com",
+    ".a.com,.b.com",
+    "sanitize turns line break into comma"
+  );
+  testSanitize(
+    ".a.com,\n.b.com",
+    ".a.com,.b.com",
+    "sanitize doesn't add duplicate comma after comma"
+  );
+  testSanitize(
+    ".a.com\n,.b.com",
+    ".a.com,.b.com",
+    "sanitize doesn't add duplicate comma before comma"
+  );
+  testSanitize(
+    ".a.com,\n,.b.com",
+    ".a.com,,.b.com",
+    "sanitize doesn't add duplicate comma surrounded by commas"
+  );
+  testSanitize(
+    ".a.com, \n.b.com",
+    ".a.com, .b.com",
+    "sanitize doesn't add comma after comma/space"
+  );
+  testSanitize(
+    ".a.com\n .b.com",
+    ".a.com, .b.com",
+    "sanitize adds comma before space"
+  );
+  testSanitize(
+    ".a.com\n\n\n;;\n;\n.b.com",
+    ".a.com,.b.com",
+    "sanitize only adds one comma per substring of bad chars"
+  );
+  testSanitize(
+    ".a.com,,.b.com",
+    ".a.com,,.b.com",
+    "duplicate commas from user are untouched"
+  );
+  testSanitize(
+    ".a.com\n.b.com\n.c.com,\n.d.com,\n.e.com",
+    ".a.com,.b.com,.c.com,.d.com,.e.com",
+    "sanitize replaces things globally"
+  );
 
   // will check that this was sanitized properly after window closes
   networkProxyNonePref.value = ".a.com;.b.com\n.c.com";

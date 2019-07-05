@@ -7,14 +7,14 @@ add_task(async function testPageActionPopupResize() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
     },
     background: function() {
       /* global browser */
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         const tabId = tabs[0].id;
 
         browser.pageAction.show(tabId).then(() => {
@@ -37,18 +37,34 @@ add_task(async function testPageActionPopupResize() {
 
   async function checkSize(expected) {
     let dims = await promiseContentDimensions(browser);
-    let {body, root} = dims;
+    let { body, root } = dims;
 
-    is(dims.window.innerHeight, expected, `Panel window should be ${expected}px tall`);
-    is(body.clientHeight, body.scrollHeight,
-       "Panel body should be tall enough to fit its contents");
-    is(root.clientHeight, root.scrollHeight,
-       "Panel root should be tall enough to fit its contents");
+    is(
+      dims.window.innerHeight,
+      expected,
+      `Panel window should be ${expected}px tall`
+    );
+    is(
+      body.clientHeight,
+      body.scrollHeight,
+      "Panel body should be tall enough to fit its contents"
+    );
+    is(
+      root.clientHeight,
+      root.scrollHeight,
+      "Panel root should be tall enough to fit its contents"
+    );
 
     // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
-    ok(Math.abs(dims.window.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
-    is(body.clientWidth, body.scrollWidth,
-       "Panel body should be wide enough to fit its contents");
+    ok(
+      Math.abs(dims.window.innerWidth - expected) <= 1,
+      `Panel window should be ${expected}px wide`
+    );
+    is(
+      body.clientWidth,
+      body.scrollWidth,
+      "Panel body should be wide enough to fit its contents"
+    );
   }
 
   function setSize(size) {
@@ -57,11 +73,7 @@ add_task(async function testPageActionPopupResize() {
     elem.style.width = `${size}px`;
   }
 
-  let sizes = [
-    200,
-    400,
-    300,
-  ];
+  let sizes = [200, 400, 300];
 
   for (let size of sizes) {
     await alterContent(browser, setSize, size);
@@ -69,14 +81,20 @@ add_task(async function testPageActionPopupResize() {
   }
 
   let dims = await alterContent(browser, setSize, 1400);
-  let {body, root} = dims;
+  let { body, root } = dims;
 
   is(dims.window.innerWidth, 800, "Panel window width");
-  ok(body.clientWidth <= 800, `Panel body width ${body.clientWidth} is less than 800`);
+  ok(
+    body.clientWidth <= 800,
+    `Panel body width ${body.clientWidth} is less than 800`
+  );
   is(body.scrollWidth, 1400, "Panel body scroll width");
 
   is(dims.window.innerHeight, 600, "Panel window height");
-  ok(root.clientHeight <= 600, `Panel root height (${root.clientHeight}px) is less than 600px`);
+  ok(
+    root.clientHeight <= 600,
+    `Panel root height (${root.clientHeight}px) is less than 600px`
+  );
   is(root.scrollHeight, 1400, "Panel root scroll height");
 
   await extension.unload();
@@ -87,13 +105,13 @@ add_task(async function testPageActionPopupReflow() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": true,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: true,
       },
     },
     background: function() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         const tabId = tabs[0].id;
 
         browser.pageAction.show(tabId).then(() => {
@@ -130,16 +148,29 @@ add_task(async function testPageActionPopupReflow() {
 
   is(dims.window.innerWidth, 800, "Panel window should be 800px wide");
   is(dims.body.clientWidth, 800, "Panel body should be 800px wide");
-  is(dims.body.clientWidth, dims.body.scrollWidth,
-     "Panel body should be wide enough to fit its contents");
+  is(
+    dims.body.clientWidth,
+    dims.body.scrollWidth,
+    "Panel body should be wide enough to fit its contents"
+  );
 
-  ok(dims.window.innerHeight > 36,
-     `Panel window height (${dims.window.innerHeight}px) should be taller than two lines of text.`);
+  ok(
+    dims.window.innerHeight > 36,
+    `Panel window height (${
+      dims.window.innerHeight
+    }px) should be taller than two lines of text.`
+  );
 
-  is(dims.body.clientHeight, dims.body.scrollHeight,
-     "Panel body should be tall enough to fit its contents");
-  is(dims.root.clientHeight, dims.root.scrollHeight,
-     "Panel root should be tall enough to fit its contents");
+  is(
+    dims.body.clientHeight,
+    dims.body.scrollHeight,
+    "Panel body should be tall enough to fit its contents"
+  );
+  is(
+    dims.root.clientHeight,
+    dims.root.scrollHeight,
+    "Panel root should be tall enough to fit its contents"
+  );
 
   await extension.unload();
 });

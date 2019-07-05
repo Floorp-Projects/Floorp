@@ -45,8 +45,11 @@ function checkRestoredPresence(aWidgetID) {
     let testBar = createTestBar();
     CustomizableUI.addWidgetToArea(aWidgetID, kTestBarID);
     let placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
-    is(placement.area, kTestBarID,
-       "Expected " + aWidgetID + " to be in the test toolbar");
+    is(
+      placement.area,
+      kTestBarID,
+      "Expected " + aWidgetID + " to be in the test toolbar"
+    );
 
     CustomizableUI.unregisterArea(testBar.id);
     testBar.remove();
@@ -58,8 +61,11 @@ function checkRestoredPresence(aWidgetID) {
 
     await startCustomizing();
     placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
-    is(placement.area, kTestBarID,
-       "Expected " + aWidgetID + " to be in the test toolbar");
+    is(
+      placement.area,
+      kTestBarID,
+      "Expected " + aWidgetID + " to be in the test toolbar"
+    );
     await endCustomizing();
 
     CustomizableUI.unregisterArea(testBar.id);

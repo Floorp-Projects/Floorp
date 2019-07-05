@@ -3,12 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const testState = {
-  windows: [{
-    tabs: [
-      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
-      { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] },
-    ],
-  }],
+  windows: [
+    {
+      tabs: [
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] },
+      ],
+    },
+  ],
 };
 
 function test() {
@@ -20,7 +22,10 @@ function test() {
 
 function test_setTabState() {
   let tab = gBrowser.tabs[1];
-  let newTabState = JSON.stringify({ entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { foo: "bar" } });
+  let newTabState = JSON.stringify({
+    entries: [{ url: "http://example.org", triggeringPrincipal_base64 }],
+    extData: { foo: "bar" },
+  });
   let busyEventCount = 0;
   let readyEventCount = 0;
 
@@ -54,4 +59,3 @@ function test_setTabState() {
   gBrowser._insertBrowser(tab);
   ss.setTabState(tab, newTabState);
 }
-

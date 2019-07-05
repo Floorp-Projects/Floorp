@@ -21,8 +21,16 @@ async function testPermission(options) {
   await extension.startup();
 
   let types = await extension.awaitMessage("typeof-namespace");
-  equal(types.browser, "undefined", `Type of browser.${options.namespace} without manifest entry`);
-  equal(types.chrome, "undefined", `Type of chrome.${options.namespace} without manifest entry`);
+  equal(
+    types.browser,
+    "undefined",
+    `Type of browser.${options.namespace} without manifest entry`
+  );
+  equal(
+    types.chrome,
+    "undefined",
+    `Type of chrome.${options.namespace} without manifest entry`
+  );
 
   await extension.unload();
 
@@ -32,8 +40,16 @@ async function testPermission(options) {
   await extension.startup();
 
   types = await extension.awaitMessage("typeof-namespace");
-  equal(types.browser, "object", `Type of browser.${options.namespace} with manifest entry`);
-  equal(types.chrome, "object", `Type of chrome.${options.namespace} with manifest entry`);
+  equal(
+    types.browser,
+    "object",
+    `Type of browser.${options.namespace} with manifest entry`
+  );
+  equal(
+    types.chrome,
+    "object",
+    `Type of chrome.${options.namespace} with manifest entry`
+  );
 
   await extension.unload();
 }

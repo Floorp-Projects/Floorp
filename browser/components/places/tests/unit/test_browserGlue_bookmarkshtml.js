@@ -13,14 +13,18 @@ add_task(async function() {
   remove_bookmarks_html();
 
   Services.prefs.setBoolPref("browser.bookmarks.autoExportHTML", true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.bookmarks.autoExportHTML"));
+  registerCleanupFunction(() =>
+    Services.prefs.clearUserPref("browser.bookmarks.autoExportHTML")
+  );
 
   // Initialize nsBrowserGlue before Places.
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
   // Initialize Places through the History Service.
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CREATE);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CREATE
+  );
 
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "profile-before-change");

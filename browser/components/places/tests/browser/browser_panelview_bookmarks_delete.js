@@ -3,7 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+ChromeUtils.import(
+  "resource://testing-common/CustomizableUITestUtils.jsm",
+  this
+);
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
 const TEST_URL = "https://www.example.com/";

@@ -2,16 +2,19 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {PageActions} = ChromeUtils.import("resource:///modules/PageActions.jsm");
+const { PageActions } = ChromeUtils.import(
+  "resource:///modules/PageActions.jsm"
+);
 
-const BASE = "http://example.com/browser/browser/components/extensions/test/browser/";
+const BASE =
+  "http://example.com/browser/browser/components/extensions/test/browser/";
 
 add_task(async function test_pageAction_basic() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "page_action": {
-        "default_popup": "popup.html",
-        "unrecognized_property": "with-a-random-value",
+      page_action: {
+        default_popup: "popup.html",
+        unrecognized_property: "with-a-random-value",
       },
     },
 
@@ -33,7 +36,7 @@ add_task(async function test_pageAction_basic() {
         browser.test.assertEq(msg, "from-popup", "correct message received");
         browser.test.sendMessage("popup");
       });
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
         browser.pageAction.show(tabId).then(() => {
@@ -45,9 +48,11 @@ add_task(async function test_pageAction_basic() {
 
   SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{
-      message: /Reading manifest: Error processing page_action.unrecognized_property: An unexpected property was found/,
-    }]);
+    SimpleTest.monitorConsole(resolve, [
+      {
+        message: /Reading manifest: Error processing page_action.unrecognized_property: An unexpected property was found/,
+      },
+    ]);
   });
 
   await extension.startup();
@@ -55,7 +60,11 @@ add_task(async function test_pageAction_basic() {
 
   let elem = await getPageActionButton(extension);
   let parent = window.document.getElementById("page-action-buttons");
-  is(elem && elem.parentNode, parent, `pageAction pinned to urlbar ${elem.parentNode.getAttribute("id")}`);
+  is(
+    elem && elem.parentNode,
+    parent,
+    `pageAction pinned to urlbar ${elem.parentNode.getAttribute("id")}`
+  );
 
   clickPageAction(extension);
 
@@ -70,9 +79,9 @@ add_task(async function test_pageAction_basic() {
 add_task(async function test_pageAction_pinned() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "page_action": {
-        "default_popup": "popup.html",
-        "pinned": false,
+      page_action: {
+        default_popup: "popup.html",
+        pinned: false,
       },
     },
 
@@ -85,7 +94,7 @@ add_task(async function test_pageAction_pinned() {
     },
 
     background: function() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
         browser.pageAction.show(tabId).then(() => {
@@ -112,8 +121,8 @@ add_task(async function test_pageAction_pinned() {
 add_task(async function test_pageAction_icon_on_subframe_navigation() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "page_action": {
-        "default_popup": "popup.html",
+      page_action: {
+        default_popup: "popup.html",
       },
     },
 
@@ -126,7 +135,7 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
     },
 
     background: function() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
         browser.pageAction.show(tabId).then(() => {
@@ -136,12 +145,17 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
     },
   });
 
-  await navigateTab(gBrowser.selectedTab, "data:text/html,<h1>Top Level Frame</h1>");
+  await navigateTab(
+    gBrowser.selectedTab,
+    "data:text/html,<h1>Top Level Frame</h1>"
+  );
 
   await extension.startup();
   await extension.awaitMessage("page-action-shown");
 
-  const pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+  const pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
 
   await BrowserTestUtils.waitForCondition(() => {
     return document.getElementById(pageActionId);
@@ -150,7 +164,7 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
   info("Create a sub-frame");
 
   let subframeURL = `${BASE}#subframe-url-1`;
-  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async (url) => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async url => {
     const iframe = this.content.document.createElement("iframe");
     iframe.setAttribute("id", "test-subframe");
     iframe.setAttribute("src", url);
@@ -170,7 +184,7 @@ add_task(async function test_pageAction_icon_on_subframe_navigation() {
   info("Navigating the sub-frame");
 
   subframeURL = `${BASE}/file_dummy.html#subframe-url-2`;
-  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async (url) => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async url => {
     const iframe = this.content.document.querySelector("iframe#test-subframe");
 
     // Await the subframe navigation.

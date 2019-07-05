@@ -11,8 +11,7 @@ function isRedirectedURISpec(aURISpec) {
 
 function isRedirectedURI(aURI) {
   // Compare only their before-hash portion.
-  return Services.io.newURI(REDIRECT_TO)
-                 .equalsExceptRef(aURI);
+  return Services.io.newURI(REDIRECT_TO).equalsExceptRef(aURI);
 }
 
 /*
@@ -45,15 +44,19 @@ function test() {
 
   // Load a URI in the background.
   gNewTab = BrowserTestUtils.addTab(gBrowser, REDIRECT_FROM + "#BG");
-  gBrowser.getBrowserForTab(gNewTab)
-          .webProgress
-          .addProgressListener(gWebProgressListener,
-                               Ci.nsIWebProgress
-                                 .NOTIFY_LOCATION);
+  gBrowser
+    .getBrowserForTab(gNewTab)
+    .webProgress.addProgressListener(
+      gWebProgressListener,
+      Ci.nsIWebProgress.NOTIFY_LOCATION
+    );
 }
 
 var gWebProgressListener = {
-  QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsISupportsWeakReference"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
+  ]),
 
   // ---------------------------------------------------------------------------
   // NOTIFY_LOCATION mode should work fine without these methods.
@@ -71,8 +74,10 @@ var gWebProgressListener = {
     }
 
     ok(gNewTab, "There is a new tab.");
-    ok(isRedirectedURI(aLocation),
-       "onLocationChange catches only redirected URI.");
+    ok(
+      isRedirectedURI(aLocation),
+      "onLocationChange catches only redirected URI."
+    );
 
     if (aLocation.ref == "BG") {
       // This is background tab's request.
@@ -97,10 +102,15 @@ function delayed(aIsSelectedTab) {
   }
 
   let currentURI = gBrowser.selectedBrowser.currentURI.spec;
-  ok(isRedirectedURISpec(currentURI),
-     "The content area is redirected. aIsSelectedTab:" + aIsSelectedTab);
-  is(gURLBar.value, currentURI,
-     "The URL bar shows the content URI. aIsSelectedTab:" + aIsSelectedTab);
+  ok(
+    isRedirectedURISpec(currentURI),
+    "The content area is redirected. aIsSelectedTab:" + aIsSelectedTab
+  );
+  is(
+    gURLBar.value,
+    currentURI,
+    "The URL bar shows the content URI. aIsSelectedTab:" + aIsSelectedTab
+  );
 
   if (!aIsSelectedTab) {
     // If this was a background request, go on a foreground request.
@@ -114,9 +124,9 @@ function delayed(aIsSelectedTab) {
 /* Cleanup */
 registerCleanupFunction(function() {
   if (gNewTab) {
-    gBrowser.getBrowserForTab(gNewTab)
-            .webProgress
-            .removeProgressListener(gWebProgressListener);
+    gBrowser
+      .getBrowserForTab(gNewTab)
+      .webProgress.removeProgressListener(gWebProgressListener);
 
     gBrowser.removeTab(gNewTab);
   }

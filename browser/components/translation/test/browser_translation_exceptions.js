@@ -6,7 +6,7 @@
 
 var tmp = {};
 ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
-var {Translation} = tmp;
+var { Translation } = tmp;
 
 const kLanguagesPref = "browser.translation.neverForLanguages";
 const kShowUIPref = "browser.translation.ui.show";
@@ -28,10 +28,10 @@ function test() {
         await testCase.run();
       }
     })().then(finish, ex => {
-     ok(false, "Unexpected Exception: " + ex);
-     finish();
+      ok(false, "Unexpected Exception: " + ex);
+      finish();
     });
-   });
+  });
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
 }
@@ -44,9 +44,12 @@ function getLanguageExceptions() {
 function getDomainExceptions() {
   let results = [];
   for (let perm of Services.perms.enumerator) {
-    if (perm.type == "translate" &&
-        perm.capability == Services.perms.DENY_ACTION)
+    if (
+      perm.type == "translate" &&
+      perm.capability == Services.perms.DENY_ACTION
+    ) {
       results.push(perm.principal);
+    }
   }
 
   return results;
@@ -54,262 +57,308 @@ function getDomainExceptions() {
 
 function getInfoBar() {
   return new Promise(resolve => {
-    let infobar =
-      gBrowser.getNotificationBox().getNotificationWithValue("translation");
+    let infobar = gBrowser
+      .getNotificationBox()
+      .getNotificationWithValue("translation");
 
     if (!infobar) {
       resolve();
     } else {
       // Wait for all animations to finish
-      Promise.all(infobar.getAnimations().map(animation => animation.finished))
-        .then(() => resolve(infobar));
+      Promise.all(
+        infobar.getAnimations().map(animation => animation.finished)
+      ).then(() => resolve(infobar));
     }
   });
 }
 
 function openPopup(aPopup) {
   return new Promise(resolve => {
-    aPopup.addEventListener("popupshown", function() {
-      TestUtils.executeSoon(resolve);
-    }, {once: true});
+    aPopup.addEventListener(
+      "popupshown",
+      function() {
+        TestUtils.executeSoon(resolve);
+      },
+      { once: true }
+    );
 
     aPopup.focus();
     // One down event to open the popup.
-    EventUtils.synthesizeKey("VK_DOWN",
-                             { altKey: !navigator.platform.includes("Mac") });
+    EventUtils.synthesizeKey("VK_DOWN", {
+      altKey: !navigator.platform.includes("Mac"),
+    });
   });
 }
 
 function waitForWindowLoad(aWin) {
   return new Promise(resolve => {
-    aWin.addEventListener("load", function() {
-      TestUtils.executeSoon(resolve);
-    }, {capture: true, once: true});
+    aWin.addEventListener(
+      "load",
+      function() {
+        TestUtils.executeSoon(resolve);
+      },
+      { capture: true, once: true }
+    );
   });
 }
 
-
 var gTests = [
-
-{
-  desc: "clean exception lists at startup",
-  run: function checkNeverForLanguage() {
-    is(getLanguageExceptions().length, 0,
-       "we start with an empty list of languages to never translate");
-    is(getDomainExceptions().length, 0,
-       "we start with an empty list of sites to never translate");
+  {
+    desc: "clean exception lists at startup",
+    run: function checkNeverForLanguage() {
+      is(
+        getLanguageExceptions().length,
+        0,
+        "we start with an empty list of languages to never translate"
+      );
+      is(
+        getDomainExceptions().length,
+        0,
+        "we start with an empty list of sites to never translate"
+      );
+    },
   },
-},
 
-{
-  desc: "never for language",
-  run: async function checkNeverForLanguage() {
-    // Show the infobar for example.com and fr.
-    Translation.documentStateReceived(gBrowser.selectedBrowser,
-                                      {state: Translation.STATE_OFFER,
-                                       originalShown: true,
-                                       detectedLanguage: "fr"});
-    let notif = await getInfoBar();
-    ok(notif, "the infobar is visible");
-    let ui = gBrowser.selectedBrowser.translationUI;
-    let principal = gBrowser.selectedBrowser.contentPrincipal;
-    ok(ui.shouldShowInfoBar(principal, "fr"),
-       "check shouldShowInfoBar initially returns true");
+  {
+    desc: "never for language",
+    run: async function checkNeverForLanguage() {
+      // Show the infobar for example.com and fr.
+      Translation.documentStateReceived(gBrowser.selectedBrowser, {
+        state: Translation.STATE_OFFER,
+        originalShown: true,
+        detectedLanguage: "fr",
+      });
+      let notif = await getInfoBar();
+      ok(notif, "the infobar is visible");
+      let ui = gBrowser.selectedBrowser.translationUI;
+      let principal = gBrowser.selectedBrowser.contentPrincipal;
+      ok(
+        ui.shouldShowInfoBar(principal, "fr"),
+        "check shouldShowInfoBar initially returns true"
+      );
 
-    // Open the "options" drop down.
-    await openPopup(notif._getAnonElt("options"));
-    ok(notif._getAnonElt("options").getAttribute("open"),
-       "the options menu is open");
+      // Open the "options" drop down.
+      await openPopup(notif._getAnonElt("options"));
+      ok(
+        notif._getAnonElt("options").getAttribute("open"),
+        "the options menu is open"
+      );
 
-    // Check that the item is not disabled.
-    ok(!notif._getAnonElt("neverForLanguage").disabled,
-       "The 'Never translate <language>' item isn't disabled");
+      // Check that the item is not disabled.
+      ok(
+        !notif._getAnonElt("neverForLanguage").disabled,
+        "The 'Never translate <language>' item isn't disabled"
+      );
 
-    // Click the 'Never for French' item.
-    notif._getAnonElt("neverForLanguage").click();
-    notif = await getInfoBar();
-    ok(!notif, "infobar hidden");
+      // Click the 'Never for French' item.
+      notif._getAnonElt("neverForLanguage").click();
+      notif = await getInfoBar();
+      ok(!notif, "infobar hidden");
 
-    // Check this has been saved to the exceptions list.
-    let langs = getLanguageExceptions();
-    is(langs.length, 1, "one language in the exception list");
-    is(langs[0], "fr", "correct language in the exception list");
-    ok(!ui.shouldShowInfoBar(principal, "fr"),
-       "the infobar wouldn't be shown anymore");
+      // Check this has been saved to the exceptions list.
+      let langs = getLanguageExceptions();
+      is(langs.length, 1, "one language in the exception list");
+      is(langs[0], "fr", "correct language in the exception list");
+      ok(
+        !ui.shouldShowInfoBar(principal, "fr"),
+        "the infobar wouldn't be shown anymore"
+      );
 
-    // Reopen the infobar.
-    PopupNotifications.getNotification("translate").anchorElement.click();
-    notif = await getInfoBar();
-    // Open the "options" drop down.
-    await openPopup(notif._getAnonElt("options"));
-    ok(notif._getAnonElt("neverForLanguage").disabled,
-       "The 'Never translate French' item is disabled");
+      // Reopen the infobar.
+      PopupNotifications.getNotification("translate").anchorElement.click();
+      notif = await getInfoBar();
+      // Open the "options" drop down.
+      await openPopup(notif._getAnonElt("options"));
+      ok(
+        notif._getAnonElt("neverForLanguage").disabled,
+        "The 'Never translate French' item is disabled"
+      );
 
-    // Cleanup.
-    Services.prefs.setCharPref(kLanguagesPref, "");
-    notif.close();
+      // Cleanup.
+      Services.prefs.setCharPref(kLanguagesPref, "");
+      notif.close();
+    },
   },
-},
 
-{
-  desc: "never for site",
-  run: async function checkNeverForSite() {
-    // Show the infobar for example.com and fr.
-    Translation.documentStateReceived(gBrowser.selectedBrowser,
-                                      {state: Translation.STATE_OFFER,
-                                       originalShown: true,
-                                       detectedLanguage: "fr"});
-    let notif = await getInfoBar();
-    ok(notif, "the infobar is visible");
-    let ui = gBrowser.selectedBrowser.translationUI;
-    let principal = gBrowser.selectedBrowser.contentPrincipal;
-    ok(ui.shouldShowInfoBar(principal, "fr"),
-       "check shouldShowInfoBar initially returns true");
+  {
+    desc: "never for site",
+    run: async function checkNeverForSite() {
+      // Show the infobar for example.com and fr.
+      Translation.documentStateReceived(gBrowser.selectedBrowser, {
+        state: Translation.STATE_OFFER,
+        originalShown: true,
+        detectedLanguage: "fr",
+      });
+      let notif = await getInfoBar();
+      ok(notif, "the infobar is visible");
+      let ui = gBrowser.selectedBrowser.translationUI;
+      let principal = gBrowser.selectedBrowser.contentPrincipal;
+      ok(
+        ui.shouldShowInfoBar(principal, "fr"),
+        "check shouldShowInfoBar initially returns true"
+      );
 
-    // Open the "options" drop down.
-    await openPopup(notif._getAnonElt("options"));
-    ok(notif._getAnonElt("options").getAttribute("open"),
-       "the options menu is open");
+      // Open the "options" drop down.
+      await openPopup(notif._getAnonElt("options"));
+      ok(
+        notif._getAnonElt("options").getAttribute("open"),
+        "the options menu is open"
+      );
 
-    // Check that the item is not disabled.
-    ok(!notif._getAnonElt("neverForSite").disabled,
-       "The 'Never translate site' item isn't disabled");
+      // Check that the item is not disabled.
+      ok(
+        !notif._getAnonElt("neverForSite").disabled,
+        "The 'Never translate site' item isn't disabled"
+      );
 
-    // Click the 'Never for French' item.
-    notif._getAnonElt("neverForSite").click();
-    notif = await getInfoBar();
-    ok(!notif, "infobar hidden");
+      // Click the 'Never for French' item.
+      notif._getAnonElt("neverForSite").click();
+      notif = await getInfoBar();
+      ok(!notif, "infobar hidden");
 
-    // Check this has been saved to the exceptions list.
-    let sites = getDomainExceptions();
-    is(sites.length, 1, "one site in the exception list");
-    is(sites[0].origin, "http://example.com", "correct site in the exception list");
-    ok(!ui.shouldShowInfoBar(principal, "fr"),
-       "the infobar wouldn't be shown anymore");
+      // Check this has been saved to the exceptions list.
+      let sites = getDomainExceptions();
+      is(sites.length, 1, "one site in the exception list");
+      is(
+        sites[0].origin,
+        "http://example.com",
+        "correct site in the exception list"
+      );
+      ok(
+        !ui.shouldShowInfoBar(principal, "fr"),
+        "the infobar wouldn't be shown anymore"
+      );
 
-    // Reopen the infobar.
-    PopupNotifications.getNotification("translate").anchorElement.click();
-    notif = await getInfoBar();
-    // Open the "options" drop down.
-    await openPopup(notif._getAnonElt("options"));
-    ok(notif._getAnonElt("neverForSite").disabled,
-       "The 'Never translate French' item is disabled");
+      // Reopen the infobar.
+      PopupNotifications.getNotification("translate").anchorElement.click();
+      notif = await getInfoBar();
+      // Open the "options" drop down.
+      await openPopup(notif._getAnonElt("options"));
+      ok(
+        notif._getAnonElt("neverForSite").disabled,
+        "The 'Never translate French' item is disabled"
+      );
 
-    // Cleanup.
-    Services.perms.remove(makeURI("http://example.com"), "translate");
-    notif.close();
+      // Cleanup.
+      Services.perms.remove(makeURI("http://example.com"), "translate");
+      notif.close();
+    },
   },
-},
 
-{
-  desc: "language exception list",
-  run: async function checkLanguageExceptions() {
-    // Put 2 languages in the pref before opening the window to check
-    // the list is displayed on load.
-    Services.prefs.setCharPref(kLanguagesPref, "fr,de");
+  {
+    desc: "language exception list",
+    run: async function checkLanguageExceptions() {
+      // Put 2 languages in the pref before opening the window to check
+      // the list is displayed on load.
+      Services.prefs.setCharPref(kLanguagesPref, "fr,de");
 
-    // Open the translation exceptions dialog.
-    let win = openDialog("chrome://browser/content/preferences/translation.xul",
-                         "Browser:TranslationExceptions",
-                         "", null);
-    await waitForWindowLoad(win);
+      // Open the translation exceptions dialog.
+      let win = openDialog(
+        "chrome://browser/content/preferences/translation.xul",
+        "Browser:TranslationExceptions",
+        "",
+        null
+      );
+      await waitForWindowLoad(win);
 
-    // Check that the list of language exceptions is loaded.
-    let getById = win.document.getElementById.bind(win.document);
-    let tree = getById("languagesTree");
-    let remove = getById("removeLanguage");
-    let removeAll = getById("removeAllLanguages");
-    is(tree.view.rowCount, 2, "The language exceptions list has 2 items");
-    ok(remove.disabled, "The 'Remove Language' button is disabled");
-    ok(!removeAll.disabled, "The 'Remove All Languages' button is enabled");
+      // Check that the list of language exceptions is loaded.
+      let getById = win.document.getElementById.bind(win.document);
+      let tree = getById("languagesTree");
+      let remove = getById("removeLanguage");
+      let removeAll = getById("removeAllLanguages");
+      is(tree.view.rowCount, 2, "The language exceptions list has 2 items");
+      ok(remove.disabled, "The 'Remove Language' button is disabled");
+      ok(!removeAll.disabled, "The 'Remove All Languages' button is enabled");
 
-    // Select the first item.
-    tree.view.selection.select(0);
-    ok(!remove.disabled, "The 'Remove Language' button is enabled");
+      // Select the first item.
+      tree.view.selection.select(0);
+      ok(!remove.disabled, "The 'Remove Language' button is enabled");
 
-    // Click the 'Remove' button.
-    remove.click();
-    is(tree.view.rowCount, 1, "The language exceptions now contains 1 item");
-    is(getLanguageExceptions().length, 1, "One exception in the pref");
+      // Click the 'Remove' button.
+      remove.click();
+      is(tree.view.rowCount, 1, "The language exceptions now contains 1 item");
+      is(getLanguageExceptions().length, 1, "One exception in the pref");
 
-    // Clear the pref, and check the last item is removed from the display.
-    Services.prefs.setCharPref(kLanguagesPref, "");
-    is(tree.view.rowCount, 0, "The language exceptions list is empty");
-    ok(remove.disabled, "The 'Remove Language' button is disabled");
-    ok(removeAll.disabled, "The 'Remove All Languages' button is disabled");
+      // Clear the pref, and check the last item is removed from the display.
+      Services.prefs.setCharPref(kLanguagesPref, "");
+      is(tree.view.rowCount, 0, "The language exceptions list is empty");
+      ok(remove.disabled, "The 'Remove Language' button is disabled");
+      ok(removeAll.disabled, "The 'Remove All Languages' button is disabled");
 
-    // Add an item and check it appears.
-    Services.prefs.setCharPref(kLanguagesPref, "fr");
-    is(tree.view.rowCount, 1, "The language exceptions list has 1 item");
-    ok(remove.disabled, "The 'Remove Language' button is disabled");
-    ok(!removeAll.disabled, "The 'Remove All Languages' button is enabled");
+      // Add an item and check it appears.
+      Services.prefs.setCharPref(kLanguagesPref, "fr");
+      is(tree.view.rowCount, 1, "The language exceptions list has 1 item");
+      ok(remove.disabled, "The 'Remove Language' button is disabled");
+      ok(!removeAll.disabled, "The 'Remove All Languages' button is enabled");
 
-    // Click the 'Remove All' button.
-    removeAll.click();
-    is(tree.view.rowCount, 0, "The language exceptions list is empty");
-    ok(remove.disabled, "The 'Remove Language' button is disabled");
-    ok(removeAll.disabled, "The 'Remove All Languages' button is disabled");
-    is(Services.prefs.getCharPref(kLanguagesPref), "", "The pref is empty");
+      // Click the 'Remove All' button.
+      removeAll.click();
+      is(tree.view.rowCount, 0, "The language exceptions list is empty");
+      ok(remove.disabled, "The 'Remove Language' button is disabled");
+      ok(removeAll.disabled, "The 'Remove All Languages' button is disabled");
+      is(Services.prefs.getCharPref(kLanguagesPref), "", "The pref is empty");
 
-    win.close();
+      win.close();
+    },
   },
-},
 
-{
-  desc: "domains exception list",
-  run: async function checkDomainExceptions() {
-    // Put 2 exceptions before opening the window to check the list is
-    // displayed on load.
-    let perms = Services.perms;
-    perms.add(makeURI("http://example.org"), "translate", perms.DENY_ACTION);
-    perms.add(makeURI("http://example.com"), "translate", perms.DENY_ACTION);
+  {
+    desc: "domains exception list",
+    run: async function checkDomainExceptions() {
+      // Put 2 exceptions before opening the window to check the list is
+      // displayed on load.
+      let perms = Services.perms;
+      perms.add(makeURI("http://example.org"), "translate", perms.DENY_ACTION);
+      perms.add(makeURI("http://example.com"), "translate", perms.DENY_ACTION);
 
-    // Open the translation exceptions dialog.
-    let win = openDialog("chrome://browser/content/preferences/translation.xul",
-                         "Browser:TranslationExceptions",
-                         "", null);
-    await waitForWindowLoad(win);
+      // Open the translation exceptions dialog.
+      let win = openDialog(
+        "chrome://browser/content/preferences/translation.xul",
+        "Browser:TranslationExceptions",
+        "",
+        null
+      );
+      await waitForWindowLoad(win);
 
-    // Check that the list of language exceptions is loaded.
-    let getById = win.document.getElementById.bind(win.document);
-    let tree = getById("sitesTree");
-    let remove = getById("removeSite");
-    let removeAll = getById("removeAllSites");
-    is(tree.view.rowCount, 2, "The sites exceptions list has 2 items");
-    ok(remove.disabled, "The 'Remove Site' button is disabled");
-    ok(!removeAll.disabled, "The 'Remove All Sites' button is enabled");
+      // Check that the list of language exceptions is loaded.
+      let getById = win.document.getElementById.bind(win.document);
+      let tree = getById("sitesTree");
+      let remove = getById("removeSite");
+      let removeAll = getById("removeAllSites");
+      is(tree.view.rowCount, 2, "The sites exceptions list has 2 items");
+      ok(remove.disabled, "The 'Remove Site' button is disabled");
+      ok(!removeAll.disabled, "The 'Remove All Sites' button is enabled");
 
-    // Select the first item.
-    tree.view.selection.select(0);
-    ok(!remove.disabled, "The 'Remove Site' button is enabled");
+      // Select the first item.
+      tree.view.selection.select(0);
+      ok(!remove.disabled, "The 'Remove Site' button is enabled");
 
-    // Click the 'Remove' button.
-    remove.click();
-    is(tree.view.rowCount, 1, "The site exceptions now contains 1 item");
-    is(getDomainExceptions().length, 1, "One exception in the permissions");
+      // Click the 'Remove' button.
+      remove.click();
+      is(tree.view.rowCount, 1, "The site exceptions now contains 1 item");
+      is(getDomainExceptions().length, 1, "One exception in the permissions");
 
-    // Clear the permissions, and check the last item is removed from the display.
-    perms.remove(makeURI("http://example.org"), "translate");
-    perms.remove(makeURI("http://example.com"), "translate");
-    is(tree.view.rowCount, 0, "The site exceptions list is empty");
-    ok(remove.disabled, "The 'Remove Site' button is disabled");
-    ok(removeAll.disabled, "The 'Remove All Site' button is disabled");
+      // Clear the permissions, and check the last item is removed from the display.
+      perms.remove(makeURI("http://example.org"), "translate");
+      perms.remove(makeURI("http://example.com"), "translate");
+      is(tree.view.rowCount, 0, "The site exceptions list is empty");
+      ok(remove.disabled, "The 'Remove Site' button is disabled");
+      ok(removeAll.disabled, "The 'Remove All Site' button is disabled");
 
-    // Add an item and check it appears.
-    perms.add(makeURI("http://example.com"), "translate", perms.DENY_ACTION);
-    is(tree.view.rowCount, 1, "The site exceptions list has 1 item");
-    ok(remove.disabled, "The 'Remove Site' button is disabled");
-    ok(!removeAll.disabled, "The 'Remove All Sites' button is enabled");
+      // Add an item and check it appears.
+      perms.add(makeURI("http://example.com"), "translate", perms.DENY_ACTION);
+      is(tree.view.rowCount, 1, "The site exceptions list has 1 item");
+      ok(remove.disabled, "The 'Remove Site' button is disabled");
+      ok(!removeAll.disabled, "The 'Remove All Sites' button is enabled");
 
-    // Click the 'Remove All' button.
-    removeAll.click();
-    is(tree.view.rowCount, 0, "The site exceptions list is empty");
-    ok(remove.disabled, "The 'Remove Site' button is disabled");
-    ok(removeAll.disabled, "The 'Remove All Sites' button is disabled");
-    is(getDomainExceptions().length, 0, "No exceptions in the permissions");
+      // Click the 'Remove All' button.
+      removeAll.click();
+      is(tree.view.rowCount, 0, "The site exceptions list is empty");
+      ok(remove.disabled, "The 'Remove Site' button is disabled");
+      ok(removeAll.disabled, "The 'Remove All Sites' button is disabled");
+      is(getDomainExceptions().length, 0, "No exceptions in the permissions");
 
-    win.close();
+      win.close();
+    },
   },
-},
-
 ];

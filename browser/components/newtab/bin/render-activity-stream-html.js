@@ -1,6 +1,6 @@
- /* eslint-disable no-console */
+/* eslint-disable no-console */
 const fs = require("fs");
-const {mkdir} = require("shelljs");
+const { mkdir } = require("shelljs");
 const path = require("path");
 
 // Note: DEFAULT_OPTIONS.baseUrl should match BASE_URL in aboutNewTabService.js
@@ -34,7 +34,9 @@ function templateHTML(options) {
   ];
 
   // Add spacing and script tags
-  const scriptRender = `\n${scripts.map(script => `    <script src="${script}"></script>`).join("\n")}`;
+  const scriptRender = `\n${scripts
+    .map(script => `    <script src="${script}"></script>`)
+    .join("\n")}`;
 
   return `<!doctype html>
 <html>
@@ -51,7 +53,9 @@ function templateHTML(options) {
   <body class="activity-stream">
     <div id="header-asrouter-container" role="presentation"></div>
     <div id="root"></div>
-    <div id="footer-asrouter-container" role="presentation"></div>${options.noscripts ? "" : scriptRender}
+    <div id="footer-asrouter-container" role="presentation"></div>${
+      options.noscripts ? "" : scriptRender
+    }
   </body>
 </html>
 `;
@@ -68,21 +72,29 @@ function templateHTML(options) {
 function writeFiles(destPath, filesMap, options) {
   for (const [file, templater] of filesMap) {
     console.log("\x1b[32m", `✓ ${file}`, "\x1b[0m");
-    fs.writeFileSync(path.join(destPath, file), templater({options}));
+    fs.writeFileSync(path.join(destPath, file), templater({ options }));
   }
 }
 
 const STATIC_FILES = new Map([
-  ["activity-stream.html", ({options}) => templateHTML(options)],
-  ["activity-stream-debug.html", ({options}) => templateHTML(Object.assign({}, options, {debug: true}))],
-  ["activity-stream-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))],
+  ["activity-stream.html", ({ options }) => templateHTML(options)],
+  [
+    "activity-stream-debug.html",
+    ({ options }) => templateHTML(Object.assign({}, options, { debug: true })),
+  ],
+  [
+    "activity-stream-noscripts.html",
+    ({ options }) =>
+      templateHTML(Object.assign({}, options, { noscripts: true })),
+  ],
 ]);
 
 /**
  * main - Parses command line arguments, generates html and js with templates,
  *        and writes files to their specified locations.
  */
-function main() { // eslint-disable-line max-statements
+function main() {
+  // eslint-disable-line max-statements
   // This code parses command line arguments passed to this script.
   // Note: process.argv.slice(2) is necessary because the first two items in
   // process.argv are paths
@@ -93,7 +105,7 @@ function main() { // eslint-disable-line max-statements
     },
   });
 
-  const options = Object.assign({debug: false}, DEFAULT_OPTIONS, args || {});
+  const options = Object.assign({ debug: false }, DEFAULT_OPTIONS, args || {});
   const addonPath = path.resolve(__dirname, options.addonPath);
   const prerenderedPath = path.join(addonPath, "prerendered");
   console.log(`Writing prerendered files to ${prerenderedPath}:`);

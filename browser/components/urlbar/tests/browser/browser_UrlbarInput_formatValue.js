@@ -22,15 +22,20 @@ function testVal(aExpected, aClobbered = null, synthesizeInput = false) {
     gURLBar.focus();
     gURLBar.select();
     EventUtils.sendString(str);
-    Assert.equal(gURLBar.editor.rootElement.textContent, str,
-                 "Url is not highlighted");
+    Assert.equal(
+      gURLBar.editor.rootElement.textContent,
+      str,
+      "Url is not highlighted"
+    );
     gBrowser.selectedBrowser.focus();
   } else {
     gURLBar.value = str;
   }
 
   let selectionController = gURLBar.editor.selectionController;
-  let selection = selectionController.getSelection(selectionController.SELECTION_URLSECONDARY);
+  let selection = selectionController.getSelection(
+    selectionController.SELECTION_URLSECONDARY
+  );
   let value = gURLBar.editor.rootElement.textContent;
   let result = "";
   for (let i = 0; i < selection.rangeCount; i++) {
@@ -40,9 +45,12 @@ function testVal(aExpected, aClobbered = null, synthesizeInput = false) {
     value = value.substring(pos + range.length);
   }
   result += value;
-  Assert.equal(result, aClobbered || aExpected,
+  Assert.equal(
+    result,
+    aClobbered || aExpected,
     "Correct part of the url is de-emphasized" +
-      (synthesizeInput ? " (with input simulation)" : ""));
+      (synthesizeInput ? " (with input simulation)" : "")
+  );
 
   // Now re-test synthesizing input.
   if (!synthesizeInput) {
@@ -106,33 +114,38 @@ function test() {
   testVal("<foo.bar:@baz@>mozilla.org");
   testVal("<foo.bar@:ba:z@>mozilla.org");
   testVal("<foo.:bar:@baz@>mozilla.org");
-  testVal("foopy:\\blah@somewhere.com//whatever", "foopy</blah@somewhere.com//whatever>");
+  testVal(
+    "foopy:\\blah@somewhere.com//whatever",
+    "foopy</blah@somewhere.com//whatever>"
+  );
 
   testVal("<https://sub.>mozilla.org<:666/file.ext>");
   testVal("<sub.>mozilla.org<:666/file.ext>");
   testVal("localhost<:666/file.ext>");
 
-  let IPs = ["192.168.1.1",
-             "[::]",
-             "[::1]",
-             "[1::]",
-             "[::]",
-             "[::1]",
-             "[1::]",
-             "[1:2:3:4:5:6:7::]",
-             "[::1:2:3:4:5:6:7]",
-             "[1:2:a:B:c:D:e:F]",
-             "[1::8]",
-             "[1:2::8]",
-             "[fe80::222:19ff:fe11:8c76]",
-             "[0000:0123:4567:89AB:CDEF:abcd:ef00:0000]",
-             "[::192.168.1.1]",
-             "[1::0.0.0.0]",
-             "[1:2::255.255.255.255]",
-             "[1:2:3::255.255.255.255]",
-             "[1:2:3:4::255.255.255.255]",
-             "[1:2:3:4:5::255.255.255.255]",
-             "[1:2:3:4:5:6:255.255.255.255]"];
+  let IPs = [
+    "192.168.1.1",
+    "[::]",
+    "[::1]",
+    "[1::]",
+    "[::]",
+    "[::1]",
+    "[1::]",
+    "[1:2:3:4:5:6:7::]",
+    "[::1:2:3:4:5:6:7]",
+    "[1:2:a:B:c:D:e:F]",
+    "[1::8]",
+    "[1:2::8]",
+    "[fe80::222:19ff:fe11:8c76]",
+    "[0000:0123:4567:89AB:CDEF:abcd:ef00:0000]",
+    "[::192.168.1.1]",
+    "[1::0.0.0.0]",
+    "[1:2::255.255.255.255]",
+    "[1:2:3::255.255.255.255]",
+    "[1:2:3:4::255.255.255.255]",
+    "[1:2:3:4:5::255.255.255.255]",
+    "[1:2:3:4:5:6:255.255.255.255]",
+  ];
   IPs.forEach(function(IP) {
     testVal(IP);
     testVal(IP + "</file.ext>");

@@ -32,7 +32,12 @@ add_task(async function test() {
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
-  is(url, "https://www.bing.com/osjson.aspx?query=foo&form=OSDJAS&language=" + getLocale(), "Check search suggestion URL for 'foo'");
+  is(
+    url,
+    "https://www.bing.com/osjson.aspx?query=foo&form=OSDJAS&language=" +
+      getLocale(),
+    "Check search suggestion URL for 'foo'"
+  );
 
   // Check all other engine properties.
   const EXPECTED_ENGINE = {

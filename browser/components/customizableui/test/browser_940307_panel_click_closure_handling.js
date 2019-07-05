@@ -11,7 +11,10 @@ add_task(async function plain_button() {
   button.id = "browser_940307_button";
   button.setAttribute("label", "Button");
   gNavToolbox.palette.appendChild(button);
-  CustomizableUI.addWidgetToArea(button.id, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    button.id,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
 
@@ -24,20 +27,26 @@ add_task(async function plain_button() {
 });
 
 add_task(async function searchbar_in_panel() {
-  CustomizableUI.addWidgetToArea("search-container",
-                                 CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "search-container",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
 
   await document.getElementById("nav-bar").overflowable.show();
 
   let searchbar = document.getElementById("searchbar");
-  await TestUtils.waitForCondition(() => "value" in searchbar && searchbar.value === "");
+  await TestUtils.waitForCondition(
+    () => "value" in searchbar && searchbar.value === ""
+  );
 
   // Focusing a non-empty searchbox will cause us to open the
   // autocomplete panel and search for suggestions, which would
   // trigger network requests. Temporarily disable suggestions.
-  await SpecialPowers.pushPrefEnv({set: [["browser.search.suggest.enabled", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.suggest.enabled", false]],
+  });
   let dontShowPopup = e => e.preventDefault();
   let searchbarPopup = searchbar.textbox.popup;
   searchbarPopup.addEventListener("popupshowing", dontShowPopup);
@@ -45,10 +54,17 @@ add_task(async function searchbar_in_panel() {
   searchbar.value = "foo";
   searchbar.focus();
   // Reaching into this context menu is pretty evil, but hey... it's a test.
-  let textbox = document.getAnonymousElementByAttribute(searchbar.textbox, "anonid", "moz-input-box");
+  let textbox = document.getAnonymousElementByAttribute(
+    searchbar.textbox,
+    "anonid",
+    "moz-input-box"
+  );
   let contextmenu = textbox.menupopup;
   let contextMenuShown = promisePanelElementShown(window, contextmenu);
-  EventUtils.synthesizeMouseAtCenter(searchbar, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouseAtCenter(searchbar, {
+    type: "contextmenu",
+    button: 2,
+  });
   await contextMenuShown;
 
   ok(isOverflowOpen(), "Panel should still be open");
@@ -80,7 +96,10 @@ add_task(async function disabled_button_in_panel() {
   button.setAttribute("disabled", "true");
   button.setAttribute("label", "Button");
   gNavToolbox.palette.appendChild(button);
-  CustomizableUI.addWidgetToArea(button.id, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    button.id,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
   await waitForOverflowButtonShown();
 

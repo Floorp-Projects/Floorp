@@ -10,13 +10,13 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "DownloadsTaskbar",
-];
+var EXPORTED_SYMBOLS = ["DownloadsTaskbar"];
 
 // Globals
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -27,21 +27,26 @@ XPCOMUtils.defineLazyGetter(this, "gWinTaskbar", function() {
   if (!("@mozilla.org/windows-taskbar;1" in Cc)) {
     return null;
   }
-  let winTaskbar = Cc["@mozilla.org/windows-taskbar;1"]
-                     .getService(Ci.nsIWinTaskbar);
+  let winTaskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
+    Ci.nsIWinTaskbar
+  );
   return winTaskbar.available && winTaskbar;
 });
 
 XPCOMUtils.defineLazyGetter(this, "gMacTaskbarProgress", function() {
-  return ("@mozilla.org/widget/macdocksupport;1" in Cc) &&
-         Cc["@mozilla.org/widget/macdocksupport;1"]
-           .getService(Ci.nsITaskbarProgress);
+  return (
+    "@mozilla.org/widget/macdocksupport;1" in Cc &&
+    Cc["@mozilla.org/widget/macdocksupport;1"].getService(Ci.nsITaskbarProgress)
+  );
 });
 
 XPCOMUtils.defineLazyGetter(this, "gGtkTaskbarProgress", function() {
-  return ("@mozilla.org/widget/taskbarprogress/gtk;1" in Cc) &&
-         Cc["@mozilla.org/widget/taskbarprogress/gtk;1"]
-           .getService(Ci.nsIGtkTaskbarProgress);
+  return (
+    "@mozilla.org/widget/taskbarprogress/gtk;1" in Cc &&
+    Cc["@mozilla.org/widget/taskbarprogress/gtk;1"].getService(
+      Ci.nsIGtkTaskbarProgress
+    )
+  );
 });
 
 // DownloadsTaskbar
@@ -105,15 +110,17 @@ var DownloadsTaskbar = {
 
     // Ensure that the DownloadSummary object will be created asynchronously.
     if (!this._summary) {
-      Downloads.getSummary(Downloads.ALL).then(summary => {
-        // In case the method is re-entered, we simply ignore redundant
-        // invocations of the callback, instead of keeping separate state.
-        if (this._summary) {
-          return undefined;
-        }
-        this._summary = summary;
-        return this._summary.addView(this);
-      }).catch(Cu.reportError);
+      Downloads.getSummary(Downloads.ALL)
+        .then(summary => {
+          // In case the method is re-entered, we simply ignore redundant
+          // invocations of the callback, instead of keeping separate state.
+          if (this._summary) {
+            return undefined;
+          }
+          this._summary = summary;
+          return this._summary.addView(this);
+        })
+        .catch(Cu.reportError);
     }
   },
 
@@ -123,8 +130,8 @@ var DownloadsTaskbar = {
   _attachIndicator(aWindow) {
     // Activate the indicator on the specified window.
     let docShell = aWindow.docShell.treeOwner
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIXULWindow).docShell;
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIXULWindow).docShell;
     this._taskbarProgress = gWinTaskbar.getTaskbarProgress(docShell);
 
     // If the DownloadSummary object has already been created, we should update
@@ -188,17 +195,23 @@ var DownloadsTaskbar = {
 
     if (this._summary.allHaveStopped || this._summary.progressTotalBytes == 0) {
       this._taskbarProgress.setProgressState(
-                               Ci.nsITaskbarProgress.STATE_NO_PROGRESS, 0, 0);
+        Ci.nsITaskbarProgress.STATE_NO_PROGRESS,
+        0,
+        0
+      );
     } else {
       // For a brief moment before completion, some download components may
       // report more transferred bytes than the total number of bytes.  Thus,
       // ensure that we never break the expectations of the progress indicator.
-      let progressCurrentBytes = Math.min(this._summary.progressTotalBytes,
-                                          this._summary.progressCurrentBytes);
+      let progressCurrentBytes = Math.min(
+        this._summary.progressTotalBytes,
+        this._summary.progressCurrentBytes
+      );
       this._taskbarProgress.setProgressState(
-                               Ci.nsITaskbarProgress.STATE_NORMAL,
-                               progressCurrentBytes,
-                               this._summary.progressTotalBytes);
+        Ci.nsITaskbarProgress.STATE_NORMAL,
+        progressCurrentBytes,
+        this._summary.progressTotalBytes
+      );
     }
   },
 };

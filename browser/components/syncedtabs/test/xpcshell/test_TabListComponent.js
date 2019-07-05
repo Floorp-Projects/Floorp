@@ -1,8 +1,14 @@
 "use strict";
 
-let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
-let { TabListComponent } = ChromeUtils.import("resource:///modules/syncedtabs/TabListComponent.js");
-let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js");
+let { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
+let { TabListComponent } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/TabListComponent.js"
+);
+let { SyncedTabsListStore } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/SyncedTabsListStore.js"
+);
 
 const ACTION_METHODS = [
   "onSelectRow",
@@ -22,7 +28,7 @@ const ACTION_METHODS = [
 add_task(async function testInitUninit() {
   let store = new SyncedTabsListStore();
   let ViewMock = sinon.stub();
-  let view = {render() {}, destroy() {}};
+  let view = { render() {}, destroy() {} };
   let mockWindow = {};
 
   ViewMock.returns(view);
@@ -34,7 +40,12 @@ add_task(async function testInitUninit() {
   sinon.stub(store, "getData");
   sinon.stub(store, "focusInput");
 
-  let component = new TabListComponent({window: mockWindow, store, View: ViewMock, SyncedTabs});
+  let component = new TabListComponent({
+    window: mockWindow,
+    store,
+    View: ViewMock,
+    SyncedTabs,
+  });
 
   for (let action of ACTION_METHODS) {
     sinon.stub(component, action);
@@ -45,8 +56,10 @@ add_task(async function testInitUninit() {
   Assert.ok(ViewMock.calledWithNew(), "view is instantiated");
   Assert.ok(store.on.calledOnce, "listener is added to store");
   Assert.equal(store.on.args[0][0], "change");
-  Assert.ok(view.render.calledWith({clients: []}),
-    "render is called on view instance");
+  Assert.ok(
+    view.render.calledWith({ clients: [] }),
+    "render is called on view instance"
+  );
   Assert.ok(store.getData.calledOnce, "store gets initial data");
   Assert.ok(store.focusInput.calledOnce, "input field is focused");
 
@@ -54,13 +67,17 @@ add_task(async function testInitUninit() {
     let action = ViewMock.args[0][1][method];
     Assert.ok(action, method + " action is passed to View");
     action("foo", "bar");
-    Assert.ok(component[method].calledWith("foo", "bar"),
-      method + " action passed to View triggers the component method with args");
+    Assert.ok(
+      component[method].calledWith("foo", "bar"),
+      method + " action passed to View triggers the component method with args"
+    );
   }
 
   store.emit("change", "mock state");
-  Assert.ok(view.render.secondCall.calledWith("mock state"),
-    "view.render is called on state change");
+  Assert.ok(
+    view.render.secondCall.calledWith("mock state"),
+    "view.render is called on state change"
+  );
 
   component.uninit();
   Assert.ok(view.destroy.calledOnce, "view is destroyed on uninit");
@@ -81,7 +98,9 @@ add_task(async function testActions() {
   let windowMock = {
     top: {
       PlacesCommandHook: {
-        bookmarkLink() { return Promise.resolve(); },
+        bookmarkLink() {
+          return Promise.resolve();
+        },
       },
       PlacesUtils: { bookmarksMenuFolderId: "id" },
     },
@@ -89,9 +108,13 @@ add_task(async function testActions() {
     openTrustedLinkIn() {},
   };
   let component = new TabListComponent({
-    window: windowMock, store, View: null, SyncedTabs,
+    window: windowMock,
+    store,
+    View: null,
+    SyncedTabs,
     clipboardHelper: clipboardHelperMock,
-    getChromeWindow: getChromeWindowMock });
+    getChromeWindow: getChromeWindowMock,
+  });
 
   sinon.stub(store, "getData");
   component.onFilter("query");
@@ -128,7 +151,10 @@ add_task(async function testActions() {
   sinon.spy(windowMock.top.PlacesCommandHook, "bookmarkLink");
   component.onBookmarkTab("uri", "title");
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][0], "uri");
-  Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1], "title");
+  Assert.equal(
+    windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1],
+    "title"
+  );
 
   sinon.spy(windowMock, "openTrustedLinkIn");
   component.onOpenTab("uri", "where", "params");
@@ -138,17 +164,21 @@ add_task(async function testActions() {
   let tabsToOpen = ["uri1", "uri2"];
   component.onOpenTabs(tabsToOpen, "where");
   Assert.ok(getChromeWindowMock.calledWith(windowMock));
-  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, {
-    inBackground: false,
-    replace: false,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  }));
+  Assert.ok(
+    chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, {
+      inBackground: false,
+      replace: false,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    })
+  );
   component.onOpenTabs(tabsToOpen, "tabshifted");
-  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, {
-    inBackground: true,
-    replace: false,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  }));
+  Assert.ok(
+    chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, {
+      inBackground: true,
+      replace: false,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    })
+  );
 
   sinon.spy(clipboardHelperMock, "copyString");
   component.onCopyTabLocation("uri");
@@ -159,4 +189,3 @@ add_task(async function testActions() {
   Assert.ok(SyncedTabs.syncTabs.calledWith(true));
   SyncedTabs.syncTabs.restore();
 });
-

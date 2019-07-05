@@ -6,12 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["TabState"];
 
-ChromeUtils.defineModuleGetter(this, "PrivacyFilter",
-  "resource://gre/modules/sessionstore/PrivacyFilter.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateCache",
-  "resource:///modules/sessionstore/TabStateCache.jsm");
-ChromeUtils.defineModuleGetter(this, "TabAttributes",
-  "resource:///modules/sessionstore/TabAttributes.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivacyFilter",
+  "resource://gre/modules/sessionstore/PrivacyFilter.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TabStateCache",
+  "resource:///modules/sessionstore/TabStateCache.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TabAttributes",
+  "resource:///modules/sessionstore/TabAttributes.jsm"
+);
 
 /**
  * Module that contains tab state collection methods.
@@ -38,7 +47,7 @@ var TabStateInternal = {
   /**
    * Processes a data update sent by the content script.
    */
-  update(browser, {data}) {
+  update(browser, { data }) {
     TabStateCache.update(browser, data);
   },
 
@@ -55,7 +64,7 @@ var TabStateInternal = {
    * collect(aTab), the same object is returned.
    */
   collect(tab, extData) {
-    return this._collectBaseTabData(tab, {extData});
+    return this._collectBaseTabData(tab, { extData });
   },
 
   /**
@@ -72,7 +81,7 @@ var TabStateInternal = {
    *                   up-to-date.
    */
   clone(tab, extData) {
-    return this._collectBaseTabData(tab, {extData, includePrivateData: true});
+    return this._collectBaseTabData(tab, { extData, includePrivateData: true });
   },
 
   /**
@@ -134,7 +143,9 @@ var TabStateInternal = {
       // the last time the user typed in the URL bar. Mimic this to keep the
       // session store representation in sync, even though we now represent this
       // more explicitly:
-      tabData.userTypedClear = browser.didStartLoadSinceLastUserTyping() ? 1 : 0;
+      tabData.userTypedClear = browser.didStartLoadSinceLastUserTyping()
+        ? 1
+        : 0;
     }
 
     return tabData;

@@ -3,12 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const testState = {
-  windows: [{
-    tabs: [
-      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
-      { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] },
-    ],
-  }],
+  windows: [
+    {
+      tabs: [
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] },
+      ],
+    },
+  ],
 };
 
 function test() {
@@ -47,7 +49,10 @@ function test_duplicateTab() {
 
       window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
       window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
-      gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring);
+      gBrowser.tabContainer.removeEventListener(
+        "SSTabRestoring",
+        onSSTabRestoring
+      );
 
       gBrowser.removeTab(tab);
       gBrowser.removeTab(newTab);
@@ -62,4 +67,3 @@ function test_duplicateTab() {
   gBrowser._insertBrowser(tab);
   newTab = ss.duplicateTab(window, tab);
 }
-

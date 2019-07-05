@@ -4,7 +4,9 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-const { UrlClassifierTestUtils } = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 
 const PREF_INTRO_DELAY = "browser.contentblocking.introDelaySeconds";
 const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
@@ -40,7 +42,6 @@ add_UITour_task(async function test_block_target() {
   window.ContentBlocking.enableForCurrentPage();
 });
 
-
 async function checkToggleTarget(targetID) {
   let popup = document.getElementById("UITourTooltip");
 
@@ -66,20 +67,24 @@ async function checkToggleTarget(targetID) {
 
   let testTargetAvailability = async function(expectedAvailable) {
     let data = await getConfigurationPromise("availableTargets");
-    let available = (data.targets.includes(targetID));
+    let available = data.targets.includes(targetID);
     is(available, expectedAvailable, "Target has expected availability.");
   };
   await testTargetAvailability(false);
   await showMenuPromise("controlCenter");
   await testTargetAvailability(true);
 
-  await showInfoPromise(targetID, "This is " + targetID,
-                        "My arrow should be on the side");
-  is(popup.alignmentPosition, "end_before",
-     "Check " + targetID + " position");
+  await showInfoPromise(
+    targetID,
+    "This is " + targetID,
+    "My arrow should be on the side"
+  );
+  is(popup.alignmentPosition, "end_before", "Check " + targetID + " position");
 
-  let hideMenuPromise =
-        promisePanelElementHidden(window, gIdentityHandler._identityPopup);
+  let hideMenuPromise = promisePanelElementHidden(
+    window,
+    gIdentityHandler._identityPopup
+  );
   await gContentAPI.hideMenu("controlCenter");
   await hideMenuPromise;
 

@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -8,12 +8,21 @@ var EXPORTED_SYMBOLS = ["ContentRestore"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "SessionHistory",
-  "resource://gre/modules/sessionstore/SessionHistory.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SessionHistory",
+  "resource://gre/modules/sessionstore/SessionHistory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Utils",
+  "resource://gre/modules/sessionstore/Utils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
 /**
  * This module implements the content side of session restoration. The chrome
  * side is handled by SessionStore.jsm. The functions in this module are called
@@ -47,11 +56,12 @@ function ContentRestore(chromeGlobal) {
   let internal = new ContentRestoreInternal(chromeGlobal);
   let external = {};
 
-  let EXPORTED_METHODS = ["restoreHistory",
-                          "restoreTabContent",
-                          "restoreDocument",
-                          "resetRestore",
-                         ];
+  let EXPORTED_METHODS = [
+    "restoreHistory",
+    "restoreTabContent",
+    "restoreDocument",
+    "resetRestore",
+  ];
 
   for (let method of EXPORTED_METHODS) {
     external[method] = internal[method].bind(internal);
@@ -91,7 +101,6 @@ function ContentRestoreInternal(chromeGlobal) {
  * public.
  */
 ContentRestoreInternal.prototype = {
-
   get docShell() {
     return this.chromeGlobal.docShell;
   },
@@ -134,8 +143,10 @@ ContentRestoreInternal.prototype = {
 
     // Make sure to reset the capabilities and attributes in case this tab gets
     // reused.
-    SessionStoreUtils.restoreDocShellCapabilities(this.docShell, tabData.disallow);
-
+    SessionStoreUtils.restoreDocShellCapabilities(
+      this.docShell,
+      tabData.disallow
+    );
 
     if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
       SessionStoreUtils.restoreSessionStorage(this.docShell, tabData.storage);
@@ -186,8 +197,10 @@ ContentRestoreInternal.prototype = {
         // If the load was started in another process, and the in-flight channel
         // was redirected into this process, resume that load within our process.
         if (loadArguments.redirectLoadSwitchId) {
-          webNavigation.resumeRedirectedLoad(loadArguments.redirectLoadSwitchId,
-                                             loadArguments.redirectHistoryIndex);
+          webNavigation.resumeRedirectedLoad(
+            loadArguments.redirectLoadSwitchId,
+            loadArguments.redirectHistoryIndex
+          );
           return true;
         }
 
@@ -200,24 +213,35 @@ ContentRestoreInternal.prototype = {
         if (referrerInfo) {
           referrerInfo = E10SUtils.deserializeReferrerInfo(referrerInfo);
         } else {
-          let referrer = loadArguments.referrer ?
-            Services.io.newURI(loadArguments.referrer) : null;
-          let referrerPolicy = ("referrerPolicy" in loadArguments
-            ? loadArguments.referrerPolicy
-            : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
+          let referrer = loadArguments.referrer
+            ? Services.io.newURI(loadArguments.referrer)
+            : null;
+          let referrerPolicy =
+            "referrerPolicy" in loadArguments
+              ? loadArguments.referrerPolicy
+              : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
           let ReferrerInfo = Components.Constructor(
             "@mozilla.org/referrer-info;1",
             "nsIReferrerInfo",
-            "init");
+            "init"
+          );
           referrerInfo = new ReferrerInfo(referrerPolicy, true, referrer);
         }
-        let postData = loadArguments.postData ?
-                       E10SUtils.makeInputStream(loadArguments.postData) : null;
-        let triggeringPrincipal = E10SUtils.deserializePrincipal(loadArguments.triggeringPrincipal, () => Services.scriptSecurityManager.createNullPrincipal({}));
-        let csp = loadArguments.csp ? E10SUtils.deserializeCSP(loadArguments.csp) : null;
+        let postData = loadArguments.postData
+          ? E10SUtils.makeInputStream(loadArguments.postData)
+          : null;
+        let triggeringPrincipal = E10SUtils.deserializePrincipal(
+          loadArguments.triggeringPrincipal,
+          () => Services.scriptSecurityManager.createNullPrincipal({})
+        );
+        let csp = loadArguments.csp
+          ? E10SUtils.deserializeCSP(loadArguments.csp)
+          : null;
 
         if (loadArguments.userContextId) {
-          webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });
+          webNavigation.setOriginAttributesBeforeLoading({
+            userContextId: loadArguments.userContextId,
+          });
         }
         let loadURIOptions = {
           triggeringPrincipal,
@@ -240,9 +264,11 @@ ContentRestoreInternal.prototype = {
       } else if (tabData.entries.length) {
         // Stash away the data we need for restoreDocument.
         let activeIndex = tabData.index - 1;
-        this._restoringDocument = {entry: tabData.entries[activeIndex] || {},
-                                   formdata: tabData.formdata || {},
-                                   scrollPositions: tabData.scroll || {}};
+        this._restoringDocument = {
+          entry: tabData.entries[activeIndex] || {},
+          formdata: tabData.formdata || {},
+          scrollPositions: tabData.scroll || {},
+        };
 
         // In order to work around certain issues in session history, we need to
         // force session history to update its internal index and call reload
@@ -303,7 +329,7 @@ ContentRestoreInternal.prototype = {
     if (!this._restoringDocument) {
       return;
     }
-    let {formdata, scrollPositions} = this._restoringDocument;
+    let { formdata, scrollPositions } = this._restoringDocument;
     this._restoringDocument = null;
 
     let window = this.docShell.domWindow;
@@ -385,7 +411,7 @@ HistoryListener.prototype = {
     // Ignore new SHistory entries with the same URI as those do not indicate
     // a navigation inside a document by changing the #hash part of the URL.
     // We usually hit this when purging session history for browsers.
-    if (currentURI && (currentURI.spec == newURI.spec)) {
+    if (currentURI && currentURI.spec == newURI.spec) {
       return;
     }
 
@@ -424,8 +450,9 @@ HistoryListener.prototype = {
  * longer pending.
  */
 function ProgressListener(docShell, callbacks) {
-  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebProgress);
+  let webProgress = docShell
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebProgress);
   webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
 
   this.webProgress = webProgress;
@@ -443,7 +470,11 @@ ProgressListener.prototype = {
   },
 
   onStateChange(webProgress, request, stateFlags, status) {
-    let {STATE_IS_WINDOW, STATE_STOP, STATE_START} = Ci.nsIWebProgressListener;
+    let {
+      STATE_IS_WINDOW,
+      STATE_STOP,
+      STATE_START,
+    } = Ci.nsIWebProgressListener;
     if (!webProgress.isTopLevel || !(stateFlags & STATE_IS_WINDOW)) {
       return;
     }

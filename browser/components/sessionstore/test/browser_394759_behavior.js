@@ -22,11 +22,10 @@
 function testWindows(windowsToOpen, expectedResults) {
   return (async function() {
     for (let winData of windowsToOpen) {
-      let features = "chrome,dialog=no," +
-                     (winData.isPopup ? "all=no" : "all");
+      let features = "chrome,dialog=no," + (winData.isPopup ? "all=no" : "all");
       let url = "http://example.com/?window=" + windowsToOpen.length;
 
-      let openWindowPromise = BrowserTestUtils.waitForNewWindow({url});
+      let openWindowPromise = BrowserTestUtils.waitForNewWindow({ url });
       openDialog(AppConstants.BROWSER_CHROME_URL, "", features, url);
       let win = await openWindowPromise;
       await BrowserTestUtils.closeWindow(win);
@@ -38,12 +37,19 @@ function testWindows(windowsToOpen, expectedResults) {
     }).length;
     let numNormal = ss.getClosedWindowCount() - numPopups;
     // #ifdef doesn't work in browser-chrome tests, so do a simple regex on platform
-    let oResults = navigator.platform.match(/Mac/) ? expectedResults.mac
-                                                   : expectedResults.other;
-    is(numPopups, oResults.popup,
-       "There were " + oResults.popup + " popup windows to reopen");
-    is(numNormal, oResults.normal,
-       "There were " + oResults.normal + " normal windows to repoen");
+    let oResults = navigator.platform.match(/Mac/)
+      ? expectedResults.mac
+      : expectedResults.other;
+    is(
+      numPopups,
+      oResults.popup,
+      "There were " + oResults.popup + " popup windows to reopen"
+    );
+    is(
+      numNormal,
+      oResults.normal,
+      "There were " + oResults.normal + " normal windows to repoen"
+    );
   })();
 }
 
@@ -53,24 +59,31 @@ add_task(async function test_closed_window_states() {
   // See Bug 518970.
   requestLongerTimeout(2);
 
-  let windowsToOpen = [{isPopup: false},
-                       {isPopup: false},
-                       {isPopup: true},
-                       {isPopup: true},
-                       {isPopup: true}];
-  let expectedResults = {mac: {popup: 3, normal: 0},
-                         other: {popup: 3, normal: 1}};
+  let windowsToOpen = [
+    { isPopup: false },
+    { isPopup: false },
+    { isPopup: true },
+    { isPopup: true },
+    { isPopup: true },
+  ];
+  let expectedResults = {
+    mac: { popup: 3, normal: 0 },
+    other: { popup: 3, normal: 1 },
+  };
 
   await testWindows(windowsToOpen, expectedResults);
 
-
-  let windowsToOpen2 = [{isPopup: false},
-                        {isPopup: false},
-                        {isPopup: false},
-                        {isPopup: false},
-                        {isPopup: false}];
-  let expectedResults2 = {mac: {popup: 0, normal: 3},
-                          other: {popup: 0, normal: 3}};
+  let windowsToOpen2 = [
+    { isPopup: false },
+    { isPopup: false },
+    { isPopup: false },
+    { isPopup: false },
+    { isPopup: false },
+  ];
+  let expectedResults2 = {
+    mac: { popup: 0, normal: 3 },
+    other: { popup: 0, normal: 3 },
+  };
 
   await testWindows(windowsToOpen2, expectedResults2);
 });

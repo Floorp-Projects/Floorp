@@ -35,8 +35,9 @@ add_task(async function test_main() {
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
   // Initialize Places through the History Service.
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
+  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+    Ci.nsINavHistoryService
+  );
 
   // Check a new database has been created.
   // nsBrowserGlue uses databaseStatus to manage initialization.

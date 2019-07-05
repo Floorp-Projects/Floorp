@@ -9,15 +9,19 @@ const TEST_BASE = "/browser/browser/components/originattributes/test/browser/";
 
 add_task(async function setup() {
   // Make sure first party isolation is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.firstparty.isolate", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.firstparty.isolate", true]],
+  });
 });
 
-async function runTestWithOptions(aDifferentFPD, aStarTargetOrigin, aBlockAcrossFPD) {
-  let testPageURL = aDifferentFPD ?
-    FPD_ONE + TEST_BASE + "file_postMessage.html" :
-    FPD_TWO + TEST_BASE + "file_postMessage.html";
+async function runTestWithOptions(
+  aDifferentFPD,
+  aStarTargetOrigin,
+  aBlockAcrossFPD
+) {
+  let testPageURL = aDifferentFPD
+    ? FPD_ONE + TEST_BASE + "file_postMessage.html"
+    : FPD_TWO + TEST_BASE + "file_postMessage.html";
 
   // Deciding the targetOrigin according to the test setting.
   let targetOrigin;
@@ -26,19 +30,22 @@ async function runTestWithOptions(aDifferentFPD, aStarTargetOrigin, aBlockAcross
   } else {
     targetOrigin = aDifferentFPD ? FPD_ONE : FPD_TWO;
   }
-  let senderURL = FPD_TWO + TEST_BASE + `file_postMessageSender.html?${targetOrigin}`;
+  let senderURL =
+    FPD_TWO + TEST_BASE + `file_postMessageSender.html?${targetOrigin}`;
 
   // Open a tab to listen messages.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPageURL);
 
   // Use window.open() in the tab to open the sender tab. The sender tab
   // will send a message through postMessage to window.opener.
-  let senderTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, senderURL, true);
-  ContentTask.spawn(tab.linkedBrowser, senderURL,
-    aSenderPath => {
-      content.open(aSenderPath, "_blank");
-    }
+  let senderTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    senderURL,
+    true
   );
+  ContentTask.spawn(tab.linkedBrowser, senderURL, aSenderPath => {
+    content.open(aSenderPath, "_blank");
+  });
 
   // Wait and get the tab of the sender tab.
   let senderTab = await senderTabPromise;
@@ -49,16 +56,22 @@ async function runTestWithOptions(aDifferentFPD, aStarTargetOrigin, aBlockAcross
   // 'privacy.firstparty.isolate.block_post_message' is true.
   let shouldBlock = aDifferentFPD && (!aStarTargetOrigin || aBlockAcrossFPD);
 
-  await ContentTask.spawn(tab.linkedBrowser, shouldBlock, async (aValue) => {
+  await ContentTask.spawn(tab.linkedBrowser, shouldBlock, async aValue => {
     await new Promise(resolve => {
       content.addEventListener("message", function eventHandler(aEvent) {
         if (aEvent.data === "Self") {
           if (aValue) {
-            is(content.document.getElementById("display").innerHTML, "",
-              "It should not get a message from other OA.");
+            is(
+              content.document.getElementById("display").innerHTML,
+              "",
+              "It should not get a message from other OA."
+            );
           } else {
-            is(content.document.getElementById("display").innerHTML, "Message",
-              "It should get a message from the same OA.");
+            is(
+              content.document.getElementById("display").innerHTML,
+              "Message",
+              "It should get a message from the same OA."
+            );
           }
 
           content.removeEventListener("message", eventHandler);
@@ -80,12 +93,16 @@ add_task(async function runTests() {
     for (let useStarTargetOrigin of [true, false]) {
       for (let enableBlocking of [true, false]) {
         if (enableBlocking) {
-          await SpecialPowers.pushPrefEnv({"set": [
-            ["privacy.firstparty.isolate.block_post_message", true],
-          ]});
+          await SpecialPowers.pushPrefEnv({
+            set: [["privacy.firstparty.isolate.block_post_message", true]],
+          });
         }
 
-        await runTestWithOptions(useDifferentFPD, useStarTargetOrigin, enableBlocking);
+        await runTestWithOptions(
+          useDifferentFPD,
+          useStarTargetOrigin,
+          enableBlocking
+        );
 
         if (enableBlocking) {
           await SpecialPowers.popPrefEnv();

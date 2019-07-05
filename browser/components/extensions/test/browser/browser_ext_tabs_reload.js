@@ -5,15 +5,14 @@
 add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     files: {
       "tab.js": function() {
         browser.runtime.sendMessage("tab-loaded");
       },
-      "tab.html":
-        `<head>
+      "tab.html": `<head>
           <meta charset="utf-8">
           <script src="tab.js"></script>
         </head>`,
@@ -22,7 +21,7 @@ add_task(async function() {
     async background() {
       let tabLoadedCount = 0;
 
-      let tab = await browser.tabs.create({url: "tab.html", active: true});
+      let tab = await browser.tabs.create({ url: "tab.html", active: true });
 
       browser.runtime.onMessage.addListener(msg => {
         if (msg == "tab-loaded") {

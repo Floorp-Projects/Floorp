@@ -3,12 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+const PAGE =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 add_task(async function test_menus_click_event_sequence() {
   async function background() {
     let events = [];
 
-    browser.menus.onShown.addListener(() => { events.push("onShown"); });
+    browser.menus.onShown.addListener(() => {
+      events.push("onShown");
+    });
     browser.menus.onHidden.addListener(() => {
       events.push("onHidden");
       browser.test.sendMessage("event_sequence", events);
@@ -22,18 +25,21 @@ add_task(async function test_menus_click_event_sequence() {
         events.push("onclick parameter of page menu item");
       },
     });
-    browser.menus.create({
-      title: "item in tools menu",
-      contexts: ["tools_menu"],
-      onclick() {
-        events.push("onclick parameter of tools_menu menu item");
+    browser.menus.create(
+      {
+        title: "item in tools menu",
+        contexts: ["tools_menu"],
+        onclick() {
+          events.push("onclick parameter of tools_menu menu item");
+        },
       },
-    }, () => {
-      // The menus creation requests are expected to be handled in-order.
-      // So when the callback for the last menu creation request is called,
-      // we can assume that all menus have been registered.
-      browser.test.sendMessage("created menus");
-    });
+      () => {
+        // The menus creation requests are expected to be handled in-order.
+        // So when the callback for the last menu creation request is called,
+        // we can assume that all menus have been registered.
+        browser.test.sendMessage("created menus");
+      }
+    );
   }
 
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
@@ -51,11 +57,11 @@ add_task(async function test_menus_click_event_sequence() {
   async function verifyResults(menuType) {
     info("Getting menu event info...");
     let events = await extension.awaitMessage("event_sequence");
-    Assert.deepEqual(events, [
-      "onShown",
-      `onclick parameter of ${menuType} menu item`,
-      "onHidden",
-    ], "Expected order of menus events");
+    Assert.deepEqual(
+      events,
+      ["onShown", `onclick parameter of ${menuType} menu item`, "onHidden"],
+      "Expected order of menus events"
+    );
   }
 
   {

@@ -2,10 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {SiteDataManager} = ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
+const { SiteDataManager } = ChromeUtils.import(
+  "resource:///modules/SiteDataManager.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "DownloadUtils",
-                               "resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadUtils",
+  "resource://gre/modules/DownloadUtils.jsm"
+);
 
 var gClearSiteDataDialog = {
   _clearSiteDataCheckbox: null,
@@ -27,13 +32,19 @@ var gClearSiteDataDialog = {
     await Promise.all([
       SiteDataManager.getTotalUsage().then(bytes => {
         let [amount, unit] = DownloadUtils.convertByteUnits(bytes);
-        document.l10n.setAttributes(this._clearSiteDataCheckbox,
-          "clear-site-data-cookies-with-data", { amount, unit });
+        document.l10n.setAttributes(
+          this._clearSiteDataCheckbox,
+          "clear-site-data-cookies-with-data",
+          { amount, unit }
+        );
       }),
       SiteDataManager.getCacheSize().then(bytes => {
         let [amount, unit] = DownloadUtils.convertByteUnits(bytes);
-        document.l10n.setAttributes(this._clearCacheCheckbox,
-          "clear-site-data-cache-with-data", { amount, unit });
+        document.l10n.setAttributes(
+          this._clearCacheCheckbox,
+          "clear-site-data-cache-with-data",
+          { amount, unit }
+        );
       }),
     ]);
     await document.l10n.translateElements([
@@ -46,18 +57,24 @@ var gClearSiteDataDialog = {
     this._cancelButton.addEventListener("command", window.close);
     this._clearButton.addEventListener("command", () => this.onClear());
 
-    this._clearSiteDataCheckbox.addEventListener("command", e => this.onCheckboxCommand(e));
-    this._clearCacheCheckbox.addEventListener("command", e => this.onCheckboxCommand(e));
+    this._clearSiteDataCheckbox.addEventListener("command", e =>
+      this.onCheckboxCommand(e)
+    );
+    this._clearCacheCheckbox.addEventListener("command", e =>
+      this.onCheckboxCommand(e)
+    );
   },
 
   onWindowKeyPress(event) {
-    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE)
+    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
+    }
   },
 
   onCheckboxCommand(event) {
-    this._clearButton.disabled =
-      !(this._clearSiteDataCheckbox.checked || this._clearCacheCheckbox.checked);
+    this._clearButton.disabled = !(
+      this._clearSiteDataCheckbox.checked || this._clearCacheCheckbox.checked
+    );
   },
 
   onClear() {

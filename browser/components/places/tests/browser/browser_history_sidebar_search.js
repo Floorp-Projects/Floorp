@@ -18,9 +18,11 @@ add_task(async function test() {
   let time = Date.now();
   let places = [];
   for (let i = 0; i < pages.length; i++) {
-    places.push({ uri: NetUtil.newURI(pages[i]),
-                  visitDate: (time - i) * 1000,
-                  transition: PlacesUtils.history.TRANSITION_TYPED });
+    places.push({
+      uri: NetUtil.newURI(pages[i]),
+      visitDate: (time - i) * 1000,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    });
   }
   await PlacesTestUtils.addVisits(places);
 
@@ -55,9 +57,14 @@ function check_tree_order(tree, pages, aNumberOfRowsDelta = 0) {
   for (let i = 0; i < treeView.rowCount; i++) {
     let node = treeView.nodeForTreeIndex(i);
     // We could inherit delayed visits from previous tests, skip them.
-    if (!pages.includes(node.uri))
+    if (!pages.includes(node.uri)) {
       continue;
-    is(node.uri, pages[i], "Node is in correct position based on its visit date");
+    }
+    is(
+      node.uri,
+      pages[i],
+      "Node is in correct position based on its visit date"
+    );
     found++;
   }
   is(found, pages.length + aNumberOfRowsDelta, "Found all expected results");

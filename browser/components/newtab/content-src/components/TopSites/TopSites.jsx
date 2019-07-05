@@ -1,14 +1,18 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {MIN_CORNER_FAVICON_SIZE, MIN_RICH_FAVICON_SIZE, TOP_SITES_SOURCE} from "./TopSitesConstants";
-import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
-import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
-import {connect} from "react-redux";
-import {ModalOverlayWrapper} from "../../asrouter/components/ModalOverlay/ModalOverlay";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import {
+  MIN_CORNER_FAVICON_SIZE,
+  MIN_RICH_FAVICON_SIZE,
+  TOP_SITES_SOURCE,
+} from "./TopSitesConstants";
+import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
+import { ComponentPerfTimer } from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
+import { connect } from "react-redux";
+import { ModalOverlayWrapper } from "../../asrouter/components/ModalOverlay/ModalOverlay";
 import React from "react";
-import {SearchShortcutsForm} from "./SearchShortcutsForm";
-import {TOP_SITES_MAX_SITES_PER_ROW} from "common/Reducers.jsm";
-import {TopSiteForm} from "./TopSiteForm";
-import {TopSiteList} from "./TopSite";
+import { SearchShortcutsForm } from "./SearchShortcutsForm";
+import { TOP_SITES_MAX_SITES_PER_ROW } from "common/Reducers.jsm";
+import { TopSiteForm } from "./TopSiteForm";
+import { TopSiteList } from "./TopSite";
 
 function topSiteIconType(link) {
   if (link.customScreenshotURL) {
@@ -41,12 +45,12 @@ function countTopSitesIconsTypes(topSites) {
   };
 
   return topSites.reduce(countTopSitesTypes, {
-    "custom_screenshot": 0,
-    "screenshot_with_icon": 0,
-    "screenshot": 0,
-    "tippytop": 0,
-    "rich_icon": 0,
-    "no_image": 0,
+    custom_screenshot: 0,
+    screenshot_with_icon: 0,
+    screenshot: 0,
+    tippytop: 0,
+    rich_icon: 0,
+    no_image: 0,
   });
 }
 
@@ -54,7 +58,9 @@ export class _TopSites extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onEditFormClose = this.onEditFormClose.bind(this);
-    this.onSearchShortcutsFormClose = this.onSearchShortcutsFormClose.bind(this);
+    this.onSearchShortcutsFormClose = this.onSearchShortcutsFormClose.bind(
+      this
+    );
   }
 
   /**
@@ -64,16 +70,19 @@ export class _TopSites extends React.PureComponent {
     const topSites = this._getVisibleTopSites();
     const topSitesIconsStats = countTopSitesIconsTypes(topSites);
     const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
-    const searchShortcuts = topSites.filter(site => !!site.searchTopSite).length;
+    const searchShortcuts = topSites.filter(site => !!site.searchTopSite)
+      .length;
     // Dispatch telemetry event with the count of TopSites images types.
-    this.props.dispatch(ac.AlsoToMain({
-      type: at.SAVE_SESSION_PERF_DATA,
-      data: {
-        topsites_icon_stats: topSitesIconsStats,
-        topsites_pinned: topSitesPinned,
-        topsites_search_shortcuts: searchShortcuts,
-      },
-    }));
+    this.props.dispatch(
+      ac.AlsoToMain({
+        type: at.SAVE_SESSION_PERF_DATA,
+        data: {
+          topsites_icon_stats: topSitesIconsStats,
+          topsites_pinned: topSitesPinned,
+          topsites_search_shortcuts: searchShortcuts,
+        },
+      })
+    );
   }
 
   /**
@@ -86,7 +95,10 @@ export class _TopSites extends React.PureComponent {
     if (!global.matchMedia(`(min-width: 1072px)`).matches) {
       sitesPerRow -= 2;
     }
-    return this.props.TopSites.rows.slice(0, this.props.TopSitesRows * sitesPerRow);
+    return this.props.TopSites.rows.slice(
+      0,
+      this.props.TopSitesRows * sitesPerRow
+    );
   }
 
   componentDidUpdate() {
@@ -98,69 +110,97 @@ export class _TopSites extends React.PureComponent {
   }
 
   onEditFormClose() {
-    this.props.dispatch(ac.UserEvent({
-      source: TOP_SITES_SOURCE,
-      event: "TOP_SITES_EDIT_CLOSE",
-    }));
-    this.props.dispatch({type: at.TOP_SITES_CANCEL_EDIT});
+    this.props.dispatch(
+      ac.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "TOP_SITES_EDIT_CLOSE",
+      })
+    );
+    this.props.dispatch({ type: at.TOP_SITES_CANCEL_EDIT });
   }
 
   onSearchShortcutsFormClose() {
-    this.props.dispatch(ac.UserEvent({
-      source: TOP_SITES_SOURCE,
-      event: "SEARCH_EDIT_CLOSE",
-    }));
-    this.props.dispatch({type: at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL});
+    this.props.dispatch(
+      ac.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "SEARCH_EDIT_CLOSE",
+      })
+    );
+    this.props.dispatch({ type: at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL });
   }
 
   render() {
-    const {props} = this;
-    const {editForm, showSearchShortcutsForm} = props.TopSites;
+    const { props } = this;
+    const { editForm, showSearchShortcutsForm } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
       extraMenuOptions.push("AddSearchShortcut");
     }
 
-    return (<ComponentPerfTimer id="topsites" initialized={props.TopSites.initialized} dispatch={props.dispatch}>
-      <CollapsibleSection
-        className="top-sites"
-        icon="topsites"
+    return (
+      <ComponentPerfTimer
         id="topsites"
-        title={this.props.title || {id: "newtab-section-header-topsites"}}
-        extraMenuOptions={extraMenuOptions}
-        showPrefName="feeds.topsites"
-        eventSource={TOP_SITES_SOURCE}
-        collapsed={props.TopSites.pref ? props.TopSites.pref.collapsed : undefined}
-        isFixed={props.isFixed}
-        isFirst={props.isFirst}
-        isLast={props.isLast}
-        dispatch={props.dispatch}>
-        <TopSiteList TopSites={props.TopSites} TopSitesRows={props.TopSitesRows} dispatch={props.dispatch} topSiteIconType={topSiteIconType} />
-        <div className="edit-topsites-wrapper">
-          {editForm &&
-            <div className="edit-topsites">
-              <ModalOverlayWrapper unstyled={true} onClose={this.onEditFormClose} innerClassName="modal" >
-                <TopSiteForm
-                  site={props.TopSites.rows[editForm.index]}
+        initialized={props.TopSites.initialized}
+        dispatch={props.dispatch}
+      >
+        <CollapsibleSection
+          className="top-sites"
+          icon="topsites"
+          id="topsites"
+          title={this.props.title || { id: "newtab-section-header-topsites" }}
+          extraMenuOptions={extraMenuOptions}
+          showPrefName="feeds.topsites"
+          eventSource={TOP_SITES_SOURCE}
+          collapsed={
+            props.TopSites.pref ? props.TopSites.pref.collapsed : undefined
+          }
+          isFixed={props.isFixed}
+          isFirst={props.isFirst}
+          isLast={props.isLast}
+          dispatch={props.dispatch}
+        >
+          <TopSiteList
+            TopSites={props.TopSites}
+            TopSitesRows={props.TopSitesRows}
+            dispatch={props.dispatch}
+            topSiteIconType={topSiteIconType}
+          />
+          <div className="edit-topsites-wrapper">
+            {editForm && (
+              <div className="edit-topsites">
+                <ModalOverlayWrapper
+                  unstyled={true}
                   onClose={this.onEditFormClose}
-                  dispatch={this.props.dispatch}
-                  {...editForm} />
-              </ModalOverlayWrapper>
-            </div>
-          }
-          {showSearchShortcutsForm &&
-            <div className="edit-search-shortcuts">
-              <ModalOverlayWrapper unstyled={true} onClose={this.onSearchShortcutsFormClose} innerClassName="modal" >
-                <SearchShortcutsForm
-                  TopSites={props.TopSites}
+                  innerClassName="modal"
+                >
+                  <TopSiteForm
+                    site={props.TopSites.rows[editForm.index]}
+                    onClose={this.onEditFormClose}
+                    dispatch={this.props.dispatch}
+                    {...editForm}
+                  />
+                </ModalOverlayWrapper>
+              </div>
+            )}
+            {showSearchShortcutsForm && (
+              <div className="edit-search-shortcuts">
+                <ModalOverlayWrapper
+                  unstyled={true}
                   onClose={this.onSearchShortcutsFormClose}
-                  dispatch={this.props.dispatch} />
-              </ModalOverlayWrapper>
-            </div>
-          }
-        </div>
-      </CollapsibleSection>
-    </ComponentPerfTimer>);
+                  innerClassName="modal"
+                >
+                  <SearchShortcutsForm
+                    TopSites={props.TopSites}
+                    onClose={this.onSearchShortcutsFormClose}
+                    dispatch={this.props.dispatch}
+                  />
+                </ModalOverlayWrapper>
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+      </ComponentPerfTimer>
+    );
   }
 }
 

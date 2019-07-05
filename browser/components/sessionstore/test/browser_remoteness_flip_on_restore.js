@@ -31,15 +31,39 @@ function prepareState(state, selected) {
   copy.selected = selected;
 
   return {
-    windows: [ copy ],
+    windows: [copy],
   };
 }
 
 const SIMPLE_STATE = {
   tabs: [
-    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
-    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
-    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
+    {
+      entries: [
+        {
+          url: "http://example.com/",
+          triggeringPrincipal_base64,
+          title: "title",
+        },
+      ],
+    },
+    {
+      entries: [
+        {
+          url: "http://example.com/",
+          triggeringPrincipal_base64,
+          title: "title",
+        },
+      ],
+    },
+    {
+      entries: [
+        {
+          url: "http://example.com/",
+          triggeringPrincipal_base64,
+          title: "title",
+        },
+      ],
+    },
   ],
   title: "",
   _closedTabs: [],
@@ -47,9 +71,35 @@ const SIMPLE_STATE = {
 
 const PINNED_STATE = {
   tabs: [
-    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }], pinned: true },
-    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }], pinned: true },
-    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
+    {
+      entries: [
+        {
+          url: "http://example.com/",
+          triggeringPrincipal_base64,
+          title: "title",
+        },
+      ],
+      pinned: true,
+    },
+    {
+      entries: [
+        {
+          url: "http://example.com/",
+          triggeringPrincipal_base64,
+          title: "title",
+        },
+      ],
+      pinned: true,
+    },
+    {
+      entries: [
+        {
+          url: "http://example.com/",
+          triggeringPrincipal_base64,
+          title: "title",
+        },
+      ],
+    },
   ],
   title: "",
   _closedTabs: [],
@@ -98,15 +148,19 @@ const PINNED_STATE = {
 async function runScenarios(scenarios) {
   for (let [scenarioIndex, scenario] of scenarios.entries()) {
     info("Running scenario " + scenarioIndex);
-    Assert.ok(scenario.initialSelectedTab > 0,
-              "You must define an initially selected tab");
+    Assert.ok(
+      scenario.initialSelectedTab > 0,
+      "You must define an initially selected tab"
+    );
 
     // First, we need to create the initial conditions, so we
     // open a new window to put into our starting state...
     let win = await BrowserTestUtils.openNewBrowserWindow();
     let tabbrowser = win.gBrowser;
-    Assert.ok(tabbrowser.selectedBrowser.isRemoteBrowser,
-              "The initial browser should be remote.");
+    Assert.ok(
+      tabbrowser.selectedBrowser.isRemoteBrowser,
+      "The initial browser should be remote."
+    );
     // Now put the window into the expected initial state.
     for (let i = 0; i < scenario.initialRemoteness.length; ++i) {
       let tab;
@@ -120,9 +174,12 @@ async function runScenarios(scenarios) {
         tab = tabbrowser.selectedTab;
       }
       let browser = tab.linkedBrowser;
-      let remotenessState = scenario.initialRemoteness[i] ?
-          E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
-      tabbrowser.updateBrowserRemoteness(browser, { remoteType: remotenessState });
+      let remotenessState = scenario.initialRemoteness[i]
+        ? E10SUtils.DEFAULT_REMOTE_TYPE
+        : E10SUtils.NOT_REMOTE;
+      tabbrowser.updateBrowserRemoteness(browser, {
+        remoteType: remotenessState,
+      });
     }
 
     // And select the requested tab.
@@ -132,8 +189,7 @@ async function runScenarios(scenarios) {
     }
 
     // Okay, time to test!
-    let state = prepareState(scenario.stateToRestore,
-                             scenario.selectedTab);
+    let state = prepareState(scenario.stateToRestore, scenario.selectedTab);
 
     await setWindowState(win, state, true);
 
@@ -141,9 +197,12 @@ async function runScenarios(scenarios) {
       let expectedRemoteness = scenario.expectedRemoteness[i];
       let tab = tabbrowser.tabs[i];
 
-      Assert.equal(tab.linkedBrowser.isRemoteBrowser, expectedRemoteness,
-                   "Should have gotten the expected remoteness " +
-                   `for the tab at index ${i}`);
+      Assert.equal(
+        tab.linkedBrowser.isRemoteBrowser,
+        expectedRemoteness,
+        "Should have gotten the expected remoteness " +
+          `for the tab at index ${i}`
+      );
     }
 
     await BrowserTestUtils.closeWindow(win);
@@ -162,7 +221,7 @@ add_task(async function() {
   requestLongerTimeout(5);
 
   await SpecialPowers.pushPrefEnv({
-    "set": [["browser.sessionstore.restore_on_demand", true]],
+    set: [["browser.sessionstore.restore_on_demand", true]],
   });
 
   const TEST_SCENARIOS = [

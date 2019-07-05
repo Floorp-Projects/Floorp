@@ -2,9 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {
-  SpreadArgs,
-} = ExtensionCommon;
+var { SpreadArgs } = ExtensionCommon;
 
 this.devtools_inspectedWindow = class extends ExtensionAPI {
   getAPI(context) {
@@ -29,23 +27,35 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
 
             const front = await waitForInspectedWindowFront;
 
-            const evalOptions = Object.assign({}, options, getToolboxEvalOptions(context));
+            const evalOptions = Object.assign(
+              {},
+              options,
+              getToolboxEvalOptions(context)
+            );
 
-            const evalResult = await front.eval(callerInfo, expression, evalOptions);
+            const evalResult = await front.eval(
+              callerInfo,
+              expression,
+              evalOptions
+            );
 
             // TODO(rpl): check for additional undocumented behaviors on chrome
             // (e.g. if we should also print error to the console or set lastError?).
             return new SpreadArgs([evalResult.value, evalResult.exceptionInfo]);
           },
           async reload(options) {
-            const {ignoreCache, userAgent, injectedScript} = options || {};
+            const { ignoreCache, userAgent, injectedScript } = options || {};
 
             if (!waitForInspectedWindowFront) {
               waitForInspectedWindowFront = getInspectedWindowFront(context);
             }
 
             const front = await waitForInspectedWindowFront;
-            front.reload(callerInfo, {ignoreCache, userAgent, injectedScript});
+            front.reload(callerInfo, {
+              ignoreCache,
+              userAgent,
+              injectedScript,
+            });
           },
         },
       },

@@ -26,7 +26,7 @@ add_task(async function test_empty() {
   // The first search collects the results, the following ones check results
   // are the same.
   let results = [{}]; // Add a fake first result, to account for heuristic.
-  for (let i = 0; i < await UrlbarTestUtils.getResultCount(window); ++i) {
+  for (let i = 0; i < (await UrlbarTestUtils.getResultCount(window)); ++i) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     // Don't compare the element part of the results.
     delete result.element;
@@ -37,16 +37,17 @@ add_task(async function test_empty() {
     info(`Test searching for "${str}"`);
     await promiseAutocompleteResultPopup(str, window, true);
     // Skip the heuristic result.
-    Assert.ok((await UrlbarTestUtils.getDetailsOfResultAt(window, 0)).heuristic,
-              "The first result is heuristic");
+    Assert.ok(
+      (await UrlbarTestUtils.getDetailsOfResultAt(window, 0)).heuristic,
+      "The first result is heuristic"
+    );
     let length = await UrlbarTestUtils.getResultCount(window);
     Assert.equal(length, results.length, "Comparing results count");
     for (let i = 1; i < length; ++i) {
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
       // Don't compare the element part of the results.
       delete result.element;
-      Assert.deepEqual(result, results[i],
-                       `Comparing result at index ${i}`);
+      Assert.deepEqual(result, results[i], `Comparing result at index ${i}`);
     }
   }
   await UrlbarTestUtils.promisePopupClose(window);

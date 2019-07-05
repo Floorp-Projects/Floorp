@@ -6,18 +6,30 @@
  */
 
 // Import common head.
-var commonFile = do_get_file("../../../../toolkit/components/places/tests/head_common.js", false);
+var commonFile = do_get_file(
+  "../../../../toolkit/components/places/tests/head_common.js",
+  false
+);
 /* import-globals-from ../../../../toolkit/components/places/tests/head_common.js */
 if (commonFile) {
   let uri = Services.io.newFileURI(commonFile);
   Services.scriptloader.loadSubScript(uri.spec, this);
 }
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -62,8 +74,9 @@ function installDistributionEngine() {
   Services.dirsvc.registerProvider({
     getFile(aProp, aPersistent) {
       aPersistent.value = true;
-      if (aProp == XRE_APP_DISTRIBUTION_DIR)
+      if (aProp == XRE_APP_DISTRIBUTION_DIR) {
         return distDir.clone();
+      }
       return null;
     },
   });
@@ -102,65 +115,170 @@ add_task(async function() {
 
 add_task(async function() {
   // Force distribution.
-  let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
-  glue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
+  let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(
+    Ci.nsIObserver
+  );
+  glue.observe(
+    null,
+    TOPIC_BROWSERGLUE_TEST,
+    TOPICDATA_DISTRIBUTION_CUSTOMIZATION
+  );
 
   var defaultBranch = Services.prefs.getDefaultBranch(null);
 
   Assert.equal(defaultBranch.getCharPref("distribution.id"), "disttest");
   Assert.equal(defaultBranch.getCharPref("distribution.version"), "1.0");
-  Assert.equal(defaultBranch.getStringPref("distribution.about"), "Tèƨƭ δïƨƭřïβúƭïôñ ƒïℓè");
+  Assert.equal(
+    defaultBranch.getStringPref("distribution.about"),
+    "Tèƨƭ δïƨƭřïβúƭïôñ ƒïℓè"
+  );
 
-  Assert.equal(defaultBranch.getCharPref("distribution.test.string"), "Test String");
-  Assert.equal(defaultBranch.getCharPref("distribution.test.string.noquotes"), "Test String");
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.string"),
+    "Test String"
+  );
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.string.noquotes"),
+    "Test String"
+  );
   Assert.equal(defaultBranch.getIntPref("distribution.test.int"), 777);
   Assert.equal(defaultBranch.getBoolPref("distribution.test.bool.true"), true);
-  Assert.equal(defaultBranch.getBoolPref("distribution.test.bool.false"), false);
+  Assert.equal(
+    defaultBranch.getBoolPref("distribution.test.bool.false"),
+    false
+  );
 
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.empty"),
-    /NS_ERROR_UNEXPECTED/);
-  Assert.throws(() => defaultBranch.getIntPref("distribution.test.empty"),
-    /NS_ERROR_UNEXPECTED/);
-  Assert.throws(() => defaultBranch.getBoolPref("distribution.test.empty"),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(
+    () => defaultBranch.getCharPref("distribution.test.empty"),
+    /NS_ERROR_UNEXPECTED/
+  );
+  Assert.throws(
+    () => defaultBranch.getIntPref("distribution.test.empty"),
+    /NS_ERROR_UNEXPECTED/
+  );
+  Assert.throws(
+    () => defaultBranch.getBoolPref("distribution.test.empty"),
+    /NS_ERROR_UNEXPECTED/
+  );
 
-  Assert.equal(defaultBranch.getCharPref("distribution.test.pref.locale"), "en-US");
-  Assert.equal(defaultBranch.getCharPref("distribution.test.pref.language.en"), "en");
-  Assert.equal(defaultBranch.getCharPref("distribution.test.pref.locale.en-US"), "en-US");
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.language.de"),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.pref.locale"),
+    "en-US"
+  );
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.pref.language.en"),
+    "en"
+  );
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.pref.locale.en-US"),
+    "en-US"
+  );
+  Assert.throws(
+    () => defaultBranch.getCharPref("distribution.test.pref.language.de"),
+    /NS_ERROR_UNEXPECTED/
+  );
   // This value was never set because of the empty language specific pref
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.language.reset"),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(
+    () => defaultBranch.getCharPref("distribution.test.pref.language.reset"),
+    /NS_ERROR_UNEXPECTED/
+  );
   // This value was never set because of the empty locale specific pref
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.locale.reset"),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(
+    () => defaultBranch.getCharPref("distribution.test.pref.locale.reset"),
+    /NS_ERROR_UNEXPECTED/
+  );
   // This value was overridden by a locale specific setting
-  Assert.equal(defaultBranch.getCharPref("distribution.test.pref.locale.set"), "Locale Set");
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.pref.locale.set"),
+    "Locale Set"
+  );
   // This value was overridden by a language specific setting
-  Assert.equal(defaultBranch.getCharPref("distribution.test.pref.language.set"), "Language Set");
+  Assert.equal(
+    defaultBranch.getCharPref("distribution.test.pref.language.set"),
+    "Language Set"
+  );
   // Language should not override locale
-  Assert.notEqual(defaultBranch.getCharPref("distribution.test.pref.locale.set"), "Language Set");
+  Assert.notEqual(
+    defaultBranch.getCharPref("distribution.test.pref.locale.set"),
+    "Language Set"
+  );
 
-  Assert.equal(defaultBranch.getComplexValue("distribution.test.locale", Ci.nsIPrefLocalizedString).data, "en-US");
-  Assert.equal(defaultBranch.getComplexValue("distribution.test.language.en", Ci.nsIPrefLocalizedString).data, "en");
-  Assert.equal(defaultBranch.getComplexValue("distribution.test.locale.en-US", Ci.nsIPrefLocalizedString).data, "en-US");
-  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.language.de", Ci.nsIPrefLocalizedString),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.equal(
+    defaultBranch.getComplexValue(
+      "distribution.test.locale",
+      Ci.nsIPrefLocalizedString
+    ).data,
+    "en-US"
+  );
+  Assert.equal(
+    defaultBranch.getComplexValue(
+      "distribution.test.language.en",
+      Ci.nsIPrefLocalizedString
+    ).data,
+    "en"
+  );
+  Assert.equal(
+    defaultBranch.getComplexValue(
+      "distribution.test.locale.en-US",
+      Ci.nsIPrefLocalizedString
+    ).data,
+    "en-US"
+  );
+  Assert.throws(
+    () =>
+      defaultBranch.getComplexValue(
+        "distribution.test.language.de",
+        Ci.nsIPrefLocalizedString
+      ),
+    /NS_ERROR_UNEXPECTED/
+  );
   // This value was never set because of the empty language specific pref
-  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.language.reset", Ci.nsIPrefLocalizedString),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(
+    () =>
+      defaultBranch.getComplexValue(
+        "distribution.test.language.reset",
+        Ci.nsIPrefLocalizedString
+      ),
+    /NS_ERROR_UNEXPECTED/
+  );
   // This value was never set because of the empty locale specific pref
-  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.locale.reset", Ci.nsIPrefLocalizedString),
-    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(
+    () =>
+      defaultBranch.getComplexValue(
+        "distribution.test.locale.reset",
+        Ci.nsIPrefLocalizedString
+      ),
+    /NS_ERROR_UNEXPECTED/
+  );
   // This value was overridden by a locale specific setting
-  Assert.equal(defaultBranch.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Locale Set");
+  Assert.equal(
+    defaultBranch.getComplexValue(
+      "distribution.test.locale.set",
+      Ci.nsIPrefLocalizedString
+    ).data,
+    "Locale Set"
+  );
   // This value was overridden by a language specific setting
-  Assert.equal(defaultBranch.getComplexValue("distribution.test.language.set", Ci.nsIPrefLocalizedString).data, "Language Set");
+  Assert.equal(
+    defaultBranch.getComplexValue(
+      "distribution.test.language.set",
+      Ci.nsIPrefLocalizedString
+    ).data,
+    "Language Set"
+  );
   // Language should not override locale
-  Assert.notEqual(defaultBranch.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Language Set");
+  Assert.notEqual(
+    defaultBranch.getComplexValue(
+      "distribution.test.locale.set",
+      Ci.nsIPrefLocalizedString
+    ).data,
+    "Language Set"
+  );
 
-  Services.prefs.setCharPref("distribution.searchplugins.defaultLocale", "de-DE");
+  Services.prefs.setCharPref(
+    "distribution.searchplugins.defaultLocale",
+    "de-DE"
+  );
 
   await Services.search.init();
   var engine = Services.search.getEngineByName("Google");

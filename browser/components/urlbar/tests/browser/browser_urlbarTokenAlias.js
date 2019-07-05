@@ -20,12 +20,9 @@ add_task(async function init() {
   // Search results aren't shown in quantumbar unless search suggestions are
   // enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.suggest.searches", true],
-    ],
+    set: [["browser.urlbar.suggest.searches", true]],
   });
 });
-
 
 // Simple test that tries different variations of an alias, without reverting
 // the urlbar value in between.
@@ -33,13 +30,11 @@ add_task(async function testNoRevert() {
   await doSimpleTest(false);
 });
 
-
 // Simple test that tries different variations of an alias, reverting the urlbar
 // value in between.
 add_task(async function testRevert() {
   await doSimpleTest(true);
 });
-
 
 // An alias should be recognized and highlighted even when there are spaces
 // before it.
@@ -49,10 +44,10 @@ add_task(async function spacesBeforeAlias() {
   await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // An alias in the middle of a string should not be recognized or highlighted.
 add_task(async function charsBeforeAlias() {
@@ -61,10 +56,10 @@ add_task(async function charsBeforeAlias() {
   await waitForAutocompleteResultAt(0);
   await assertAlias(false);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // In a search string that starts with a restriction character followed by an
 // alias, the alias should be neither recognized nor highlighted.
@@ -74,10 +69,10 @@ add_task(async function restrictionCharBeforeAlias() {
   await waitForAutocompleteResultAt(0);
   await assertAlias(false);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // Aliases are case insensitive, and the alias in the result uses the case that
 // the user typed in the input.  Make sure that searching with an alias using a
@@ -89,10 +84,10 @@ add_task(async function aliasCase() {
   await waitForAutocompleteResultAt(0);
   await assertAlias(true, alias);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // Even when the heuristic result is a search engine result with an alias, if
 // the urlbar value does not match that result, then no alias substring in the
@@ -108,8 +103,9 @@ add_task(async function inputDoesntMatchHeuristicResult() {
   await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   // Manually set the urlbar value to a string that contains the alias at the
   // beginning but is not the alias.
@@ -128,8 +124,9 @@ add_task(async function inputDoesntMatchHeuristicResult() {
   await waitForAutocompleteResultAt(0);
   await assertAlias(true);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   // Manually set the urlbar value to a string that contains the alias, but not
   // at the beginning and is not the same as the search string.
@@ -144,7 +141,6 @@ add_task(async function inputDoesntMatchHeuristicResult() {
   // Reset for the next test.
   gURLBar.search("");
 });
-
 
 // Selecting a non-heuristic (non-first) search engine result with an alias and
 // empty query should put the alias in the urlbar and highlight it.
@@ -167,8 +163,9 @@ add_task(async function nonHeuristicAliases() {
     Assert.ok(true, "No token alias engines, skipping task.");
     return;
   }
-  info("Got token alias engines: " +
-       tokenEngines.map(({ engine }) => engine.name));
+  info(
+    "Got token alias engines: " + tokenEngines.map(({ engine }) => engine.name)
+  );
 
   // Populate the results with the list of token alias engines by searching for
   // "@".
@@ -183,10 +180,10 @@ add_task(async function nonHeuristicAliases() {
     assertHighlighted(true, alias);
   }
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // Aliases that don't start with @ shouldn't be highlighted.
 add_task(async function nonTokenAlias() {
@@ -201,12 +198,12 @@ add_task(async function nonTokenAlias() {
   await assertFirstResultIsAlias(true, alias);
   assertHighlighted(false);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   engine.alias = ALIAS;
 });
-
 
 // Clicking on an @ alias offer (an @ alias with an empty search string) in the
 // popup should fill it in the urlbar input.
@@ -249,10 +246,10 @@ add_task(async function clickAndFillAlias() {
     Assert.equal(gURLBar.textValue, `${ALIAS} `);
   }
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // Pressing enter on an @ alias offer (an @ alias with an empty search string)
 // in the popup should fill it in the urlbar input.
@@ -264,7 +261,7 @@ add_task(async function enterAndFillAlias() {
   // Find our test engine in the results.  It's probably last, but for
   // robustness don't assume it is.
   let index = 0;
-  for (;; index++) {
+  for (; ; index++) {
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
     if (details.searchParams && details.searchParams.keyword == ALIAS) {
       index++;
@@ -303,10 +300,10 @@ add_task(async function enterAndFillAlias() {
     Assert.equal(gURLBar.textValue, `${ALIAS} `);
   }
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 // Pressing enter on an @ alias autofill should fill it in the urlbar input
 // with a trailing space and move the caret at the end.
@@ -333,10 +330,10 @@ add_task(async function enterAutofillsAlias() {
     Assert.equal(gURLBar.selectionEnd, expectedString.length);
     await assertAlias(true);
   }
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 });
-
 
 async function doSimpleTest(revertBetweenSteps) {
   // When autofill is enabled, searching for "@tes" will autofill to "@test",
@@ -347,8 +344,11 @@ async function doSimpleTest(revertBetweenSteps) {
   });
 
   // "@tes" -- not an alias, no highlight
-  await promiseAutocompleteResultPopup(ALIAS.substr(0, ALIAS.length - 1),
-                                       window, true);
+  await promiseAutocompleteResultPopup(
+    ALIAS.substr(0, ALIAS.length - 1),
+    window,
+    true
+  );
   await waitForAutocompleteResultAt(0);
   await assertAlias(false);
 
@@ -388,13 +388,17 @@ async function doSimpleTest(revertBetweenSteps) {
   }
 
   // "@tes" -- not an alias, no highlight
-  await promiseAutocompleteResultPopup(ALIAS.substr(0, ALIAS.length - 1),
-                                       window, true);
+  await promiseAutocompleteResultPopup(
+    ALIAS.substr(0, ALIAS.length - 1),
+    window,
+    true
+  );
   await waitForAutocompleteResultAt(0);
   await assertAlias(false);
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
 }
@@ -406,14 +410,23 @@ async function assertAlias(aliasPresent, expectedAlias = ALIAS) {
 
 async function assertFirstResultIsAlias(isAlias, expectedAlias) {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
-    "Should have the correct type");
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.SEARCH,
+    "Should have the correct type"
+  );
 
-  Assert.equal("keyword" in result.searchParams && !!result.searchParams.keyword,
-    isAlias, "Should have a keyword if expected");
+  Assert.equal(
+    "keyword" in result.searchParams && !!result.searchParams.keyword,
+    isAlias,
+    "Should have a keyword if expected"
+  );
   if (isAlias) {
-    Assert.equal(result.searchParams.keyword, expectedAlias,
-      "Should have the correct keyword");
+    Assert.equal(
+      result.searchParams.keyword,
+      expectedAlias,
+      "Should have the correct keyword"
+    );
   }
 }
 
@@ -438,7 +451,6 @@ function assertHighlighted(highlighted, expectedAlias) {
   Assert.equal(range.endOffset, index + expectedAlias.length);
 }
 
-
 /**
  * This test checks that if an engine is marked as hidden then
  * it should not appear in the popup when using the "@" token alias in the search bar.
@@ -460,8 +472,9 @@ add_task(async function hiddenEngine() {
   }
   Assert.ok(foundDefaultEngineInPopup, "Default engine appears in the popup.");
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   // Checks that a hidden default engine (i.e. an engine removed from
   // a user's search settings) does not appear in the urlbar's popup.
@@ -475,10 +488,14 @@ add_task(async function hiddenEngine() {
       break;
     }
   }
-  Assert.ok(!foundDefaultEngineInPopup, "Hidden default engine does not appear in the popup");
+  Assert.ok(
+    !foundDefaultEngineInPopup,
+    "Hidden default engine does not appear in the popup"
+  );
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   defaultEngine.hidden = false;
 });
@@ -504,8 +521,9 @@ add_task(async function hiddenEngine() {
   }
   Assert.ok(foundDefaultEngineInPopup, "Default engine appears in the popup.");
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   // Checks that a hidden default engine (i.e. an engine removed from
   // a user's search settings) does not appear in the urlbar's popup.
@@ -519,10 +537,14 @@ add_task(async function hiddenEngine() {
       break;
     }
   }
-  Assert.ok(!foundDefaultEngineInPopup, "Hidden default engine does not appear in the popup");
+  Assert.ok(
+    !foundDefaultEngineInPopup,
+    "Hidden default engine does not appear in the popup"
+  );
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
 
   defaultEngine.hidden = false;
 });

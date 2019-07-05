@@ -19,13 +19,13 @@ add_task(async function test_check_urls_before_restoring() {
   // Restore form data with a valid URL.
   await promiseTabState(tab, getState(URL));
 
-  let value = await getInputValue(browser, {id: "text"});
+  let value = await getInputValue(browser, { id: "text" });
   is(value, "foobar", "value was restored");
 
   // Restore form data with an invalid URL.
   await promiseTabState(tab, getState("http://example.com/"));
 
-  value = await getInputValue(browser, {id: "text"});
+  value = await getInputValue(browser, { id: "text" });
   is(value, "", "value was not restored");
 
   // Cleanup.
@@ -34,7 +34,7 @@ add_task(async function test_check_urls_before_restoring() {
 
 function getState(url) {
   return JSON.stringify({
-    entries: [{url: URL, triggeringPrincipal_base64}],
-    formdata: {url, id: {text: "foobar"}},
+    entries: [{ url: URL, triggeringPrincipal_base64 }],
+    formdata: { url, id: { text: "foobar" } },
   });
 }

@@ -2,7 +2,7 @@ export function safeURI(url) {
   if (!url) {
     return "";
   }
-  const {protocol} = new URL(url);
+  const { protocol } = new URL(url);
   const isAllowed = [
     "http:",
     "https:",

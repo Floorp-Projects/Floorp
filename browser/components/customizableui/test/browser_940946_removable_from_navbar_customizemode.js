@@ -8,10 +8,18 @@ const kTestBtnId = "test-removable-navbar-customize-mode";
 
 // Items without the removable attribute in the navbar should be considered non-removable
 add_task(async function() {
-  let btn = createDummyXULButton(kTestBtnId, "Test removable in navbar in customize mode");
-  CustomizableUI.getCustomizationTarget(document.getElementById("nav-bar")).appendChild(btn);
+  let btn = createDummyXULButton(
+    kTestBtnId,
+    "Test removable in navbar in customize mode"
+  );
+  CustomizableUI.getCustomizationTarget(
+    document.getElementById("nav-bar")
+  ).appendChild(btn);
   await startCustomizing();
-  ok(!CustomizableUI.isWidgetRemovable(kTestBtnId), "Widget should not be considered removable");
+  ok(
+    !CustomizableUI.isWidgetRemovable(kTestBtnId),
+    "Widget should not be considered removable"
+  );
   await endCustomizing();
   document.getElementById(kTestBtnId).remove();
 });

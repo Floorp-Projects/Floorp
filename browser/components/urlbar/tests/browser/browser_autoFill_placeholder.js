@@ -155,7 +155,6 @@ add_task(async function noMatch2() {
   await cleanUp();
 });
 
-
 async function searchAndCheck(searchString, expectedAutofillValue) {
   gURLBar.value = searchString;
 

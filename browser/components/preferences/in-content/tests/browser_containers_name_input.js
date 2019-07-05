@@ -26,10 +26,11 @@ add_task(async function() {
   let name = doc.getElementById("name");
   let btnApplyChanges = doc.getElementById("btnApplyChanges");
 
-  Assert.equal(name.value, "",
-               "The name textbox should initlally be empty");
-  Assert.ok(btnApplyChanges.disabled,
-            "The done button should initially be disabled");
+  Assert.equal(name.value, "", "The name textbox should initlally be empty");
+  Assert.ok(
+    btnApplyChanges.disabled,
+    "The done button should initially be disabled"
+  );
 
   function setName(value) {
     name.value = value;
@@ -40,11 +41,15 @@ add_task(async function() {
 
   setName("test");
 
-  Assert.ok(!btnApplyChanges.disabled,
-            "The done button should be enabled when the value is not empty");
+  Assert.ok(
+    !btnApplyChanges.disabled,
+    "The done button should be enabled when the value is not empty"
+  );
 
   setName("");
 
-  Assert.ok(btnApplyChanges.disabled,
-            "The done button should be disabled when the value is empty");
+  Assert.ok(
+    btnApplyChanges.disabled,
+    "The done button should be disabled when the value is empty"
+  );
 });

@@ -1,7 +1,10 @@
 "use strict";
 
-const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-let eseBackStage = ChromeUtils.import("resource:///modules/ESEDBReader.jsm", null);
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+let eseBackStage = ChromeUtils.import(
+  "resource:///modules/ESEDBReader.jsm",
+  null
+);
 let ESE = eseBackStage.ESE;
 let KERNEL = eseBackStage.KERNEL;
 let gLibs = eseBackStage.gLibs;
@@ -12,19 +15,19 @@ let loadLibraries = eseBackStage.loadLibraries;
 let gESEInstanceCounter = 1;
 
 ESE.JET_COLUMNCREATE_W = new ctypes.StructType("JET_COLUMNCREATE_W", [
-  {"cbStruct": ctypes.unsigned_long},
-  {"szColumnName": ESE.JET_PCWSTR},
-  {"coltyp": ESE.JET_COLTYP },
-  {"cbMax": ctypes.unsigned_long },
-  {"grbit": ESE.JET_GRBIT },
-  {"pvDefault": ctypes.voidptr_t},
-  {"cbDefault": ctypes.unsigned_long },
-  {"cp": ctypes.unsigned_long },
-  {"columnid": ESE.JET_COLUMNID},
-  {"err": ESE.JET_ERR},
+  { cbStruct: ctypes.unsigned_long },
+  { szColumnName: ESE.JET_PCWSTR },
+  { coltyp: ESE.JET_COLTYP },
+  { cbMax: ctypes.unsigned_long },
+  { grbit: ESE.JET_GRBIT },
+  { pvDefault: ctypes.voidptr_t },
+  { cbDefault: ctypes.unsigned_long },
+  { cp: ctypes.unsigned_long },
+  { columnid: ESE.JET_COLUMNID },
+  { err: ESE.JET_ERR },
 ]);
 
-function createColumnCreationWrapper({name, type, cbMax}) {
+function createColumnCreationWrapper({ name, type, cbMax }) {
   // We use a wrapper object because we need to be sure the JS engine won't GC
   // data that we're "only" pointing to.
   let wrapper = {};
@@ -39,7 +42,7 @@ function createColumnCreationWrapper({name, type, cbMax}) {
   switch (type) {
     case COLUMN_TYPES.JET_coltypText:
       fallback = 255;
-      // Intentional fall-through
+    // Intentional fall-through
     case COLUMN_TYPES.JET_coltypLongText:
       wrapper.column.cbMax = cbMax || fallback || 64 * 1024;
       break;
@@ -70,18 +73,18 @@ ESE.JET_INDEXCREATE = new ctypes.StructType("JET_INDEXCREATE");
 ESE.JET_SETINFO = new ctypes.StructType("JET_SETINFO");
 
 ESE.JET_TABLECREATE_W = new ctypes.StructType("JET_TABLECREATE_W", [
-  {"cbStruct": ctypes.unsigned_long},
-  {"szTableName": ESE.JET_PCWSTR},
-  {"szTemplateTableName": ESE.JET_PCWSTR},
-  {"ulPages": ctypes.unsigned_long},
-  {"ulDensity": ctypes.unsigned_long},
-  {"rgcolumncreate": ESE.JET_COLUMNCREATE_W.ptr},
-  {"cColumns": ctypes.unsigned_long},
-  {"rgindexcreate": ESE.JET_INDEXCREATE.ptr},
-  {"cIndexes": ctypes.unsigned_long},
-  {"grbit": ESE.JET_GRBIT},
-  {"tableid": ESE.JET_TABLEID},
-  {"cCreated": ctypes.unsigned_long},
+  { cbStruct: ctypes.unsigned_long },
+  { szTableName: ESE.JET_PCWSTR },
+  { szTemplateTableName: ESE.JET_PCWSTR },
+  { ulPages: ctypes.unsigned_long },
+  { ulDensity: ctypes.unsigned_long },
+  { rgcolumncreate: ESE.JET_COLUMNCREATE_W.ptr },
+  { cColumns: ctypes.unsigned_long },
+  { rgindexcreate: ESE.JET_INDEXCREATE.ptr },
+  { cIndexes: ctypes.unsigned_long },
+  { grbit: ESE.JET_GRBIT },
+  { tableid: ESE.JET_TABLEID },
+  { cCreated: ctypes.unsigned_long },
 ]);
 
 function createTableCreationWrapper(tableName, columns) {
@@ -126,7 +129,10 @@ function convertValueForWriting(value, valueType) {
         sysTime.wMinute = value.getUTCMinutes();
         sysTime.wSecond = value.getUTCSeconds();
         sysTime.wMilliseconds = value.getUTCMilliseconds();
-        let rv = KERNEL.SystemTimeToFileTime(sysTime.address(), buffer.address());
+        let rv = KERNEL.SystemTimeToFileTime(
+          sysTime.address(),
+          buffer.address()
+        );
         if (!rv) {
           throw new Error("Failed to get FileTime.");
         }
@@ -148,7 +154,7 @@ function convertValueForWriting(value, valueType) {
       buffer = new byteArray(16);
       let j = 0;
       for (let i = 0; i < value.length; i++) {
-        if (!(/[0-9a-f]/i).test(value[i])) {
+        if (!/[0-9a-f]/i.test(value[i])) {
           continue;
         }
         let byteAsHex = value.substr(i, 2);
@@ -169,25 +175,61 @@ let eseDBWritingHelpers = {
       initializedESE = true;
       loadLibraries();
 
-      KERNEL.SystemTimeToFileTime = gLibs.kernel.declare("SystemTimeToFileTime",
-          ctypes.winapi_abi, ctypes.bool, KERNEL.SYSTEMTIME.ptr, KERNEL.FILETIME.ptr);
+      KERNEL.SystemTimeToFileTime = gLibs.kernel.declare(
+        "SystemTimeToFileTime",
+        ctypes.winapi_abi,
+        ctypes.bool,
+        KERNEL.SYSTEMTIME.ptr,
+        KERNEL.FILETIME.ptr
+      );
 
-      declareESEFunction("CreateDatabaseW", ESE.JET_SESID, ESE.JET_PCWSTR,
-                         ESE.JET_PCWSTR, ESE.JET_DBID.ptr, ESE.JET_GRBIT);
-      declareESEFunction("CreateTableColumnIndexW", ESE.JET_SESID, ESE.JET_DBID,
-                         ESE.JET_TABLECREATE_W.ptr);
+      declareESEFunction(
+        "CreateDatabaseW",
+        ESE.JET_SESID,
+        ESE.JET_PCWSTR,
+        ESE.JET_PCWSTR,
+        ESE.JET_DBID.ptr,
+        ESE.JET_GRBIT
+      );
+      declareESEFunction(
+        "CreateTableColumnIndexW",
+        ESE.JET_SESID,
+        ESE.JET_DBID,
+        ESE.JET_TABLECREATE_W.ptr
+      );
       declareESEFunction("BeginTransaction", ESE.JET_SESID);
       declareESEFunction("CommitTransaction", ESE.JET_SESID, ESE.JET_GRBIT);
-      declareESEFunction("PrepareUpdate", ESE.JET_SESID, ESE.JET_TABLEID,
-                         ctypes.unsigned_long);
-      declareESEFunction("Update", ESE.JET_SESID, ESE.JET_TABLEID,
-                         ctypes.voidptr_t, ctypes.unsigned_long,
-                         ctypes.unsigned_long.ptr);
-      declareESEFunction("SetColumn", ESE.JET_SESID, ESE.JET_TABLEID,
-                         ESE.JET_COLUMNID, ctypes.voidptr_t,
-                         ctypes.unsigned_long, ESE.JET_GRBIT, ESE.JET_SETINFO.ptr);
-      ESE.SetSystemParameterW(null, 0, 64 /* JET_paramDatabasePageSize*/,
-                              8192, null);
+      declareESEFunction(
+        "PrepareUpdate",
+        ESE.JET_SESID,
+        ESE.JET_TABLEID,
+        ctypes.unsigned_long
+      );
+      declareESEFunction(
+        "Update",
+        ESE.JET_SESID,
+        ESE.JET_TABLEID,
+        ctypes.voidptr_t,
+        ctypes.unsigned_long,
+        ctypes.unsigned_long.ptr
+      );
+      declareESEFunction(
+        "SetColumn",
+        ESE.JET_SESID,
+        ESE.JET_TABLEID,
+        ESE.JET_COLUMNID,
+        ctypes.voidptr_t,
+        ctypes.unsigned_long,
+        ESE.JET_GRBIT,
+        ESE.JET_SETINFO.ptr
+      );
+      ESE.SetSystemParameterW(
+        null,
+        0,
+        64 /* JET_paramDatabasePageSize*/,
+        8192,
+        null
+      );
     }
 
     let rootPath = dbFile.parent.path + "\\";
@@ -195,65 +237,127 @@ let eseDBWritingHelpers = {
 
     try {
       this._instanceId = new ESE.JET_INSTANCE();
-      ESE.CreateInstanceW(this._instanceId.address(),
-                          "firefox-dbwriter-" + (gESEInstanceCounter++));
+      ESE.CreateInstanceW(
+        this._instanceId.address(),
+        "firefox-dbwriter-" + gESEInstanceCounter++
+      );
       this._instanceCreated = true;
 
-      ESE.SetSystemParameterW(this._instanceId.address(), 0,
-                              0 /* JET_paramSystemPath*/, 0, rootPath);
-      ESE.SetSystemParameterW(this._instanceId.address(), 0,
-                              1 /* JET_paramTempPath */, 0, rootPath);
-      ESE.SetSystemParameterW(this._instanceId.address(), 0,
-                              2 /* JET_paramLogFilePath*/, 0, logPath);
+      ESE.SetSystemParameterW(
+        this._instanceId.address(),
+        0,
+        0 /* JET_paramSystemPath*/,
+        0,
+        rootPath
+      );
+      ESE.SetSystemParameterW(
+        this._instanceId.address(),
+        0,
+        1 /* JET_paramTempPath */,
+        0,
+        rootPath
+      );
+      ESE.SetSystemParameterW(
+        this._instanceId.address(),
+        0,
+        2 /* JET_paramLogFilePath*/,
+        0,
+        logPath
+      );
       // Shouldn't try to call JetTerm if the following call fails.
       this._instanceCreated = false;
       ESE.Init(this._instanceId.address());
       this._instanceCreated = true;
       this._sessionId = new ESE.JET_SESID();
-      ESE.BeginSessionW(this._instanceId, this._sessionId.address(), null,
-                        null);
+      ESE.BeginSessionW(
+        this._instanceId,
+        this._sessionId.address(),
+        null,
+        null
+      );
       this._sessionCreated = true;
 
       this._dbId = new ESE.JET_DBID();
       this._dbPath = rootPath + "spartan.edb";
-      ESE.CreateDatabaseW(this._sessionId, this._dbPath, null,
-                          this._dbId.address(), 0);
+      ESE.CreateDatabaseW(
+        this._sessionId,
+        this._dbPath,
+        null,
+        this._dbId.address(),
+        0
+      );
       this._opened = this._attached = true;
 
       for (let [tableName, data] of tables) {
-        let {rows, columns} = data;
-        let tableCreationWrapper = createTableCreationWrapper(tableName, columns);
-        ESE.CreateTableColumnIndexW(this._sessionId, this._dbId,
-                                    tableCreationWrapper.table.address());
+        let { rows, columns } = data;
+        let tableCreationWrapper = createTableCreationWrapper(
+          tableName,
+          columns
+        );
+        ESE.CreateTableColumnIndexW(
+          this._sessionId,
+          this._dbId,
+          tableCreationWrapper.table.address()
+        );
         this._tableId = tableCreationWrapper.table.tableid;
 
         let columnIdMap = new Map();
         if (rows.length) {
           // Iterate over the struct we passed into ESENT because they have the
           // created column ids.
-          let columnCount = ctypes.UInt64.lo(tableCreationWrapper.table.cColumns);
+          let columnCount = ctypes.UInt64.lo(
+            tableCreationWrapper.table.cColumns
+          );
           let columnsPassed = tableCreationWrapper.table.rgcolumncreate;
           for (let i = 0; i < columnCount; i++) {
             let column = columnsPassed.contents;
             columnIdMap.set(column.szColumnName.readString(), column);
             columnsPassed = columnsPassed.increment();
           }
-          ESE.ManualMove(this._sessionId, this._tableId,
-                         -2147483648 /* JET_MoveFirst */, 0);
+          ESE.ManualMove(
+            this._sessionId,
+            this._tableId,
+            -2147483648 /* JET_MoveFirst */,
+            0
+          );
           ESE.BeginTransaction(this._sessionId);
           for (let row of rows) {
-            ESE.PrepareUpdate(this._sessionId, this._tableId, 0 /* JET_prepInsert */);
+            ESE.PrepareUpdate(
+              this._sessionId,
+              this._tableId,
+              0 /* JET_prepInsert */
+            );
             for (let columnName in row) {
               let col = columnIdMap.get(columnName);
               let colId = col.columnid;
-              let [val, valSize] = convertValueForWriting(row[columnName], col.coltyp);
+              let [val, valSize] = convertValueForWriting(
+                row[columnName],
+                col.coltyp
+              );
               /* JET_bitSetOverwriteLV */
-              ESE.SetColumn(this._sessionId, this._tableId, colId, val.address(), valSize, 4, null);
+              ESE.SetColumn(
+                this._sessionId,
+                this._tableId,
+                colId,
+                val.address(),
+                valSize,
+                4,
+                null
+              );
             }
             let actualBookmarkSize = new ctypes.unsigned_long();
-            ESE.Update(this._sessionId, this._tableId, null, 0, actualBookmarkSize.address());
+            ESE.Update(
+              this._sessionId,
+              this._tableId,
+              null,
+              0,
+              actualBookmarkSize.address()
+            );
           }
-          ESE.CommitTransaction(this._sessionId, 0 /* JET_bitWaitLastLevel0Commit */);
+          ESE.CommitTransaction(
+            this._sessionId,
+            0 /* JET_bitWaitLastLevel0Commit */
+          );
         }
       }
     } finally {
@@ -391,35 +495,61 @@ add_task(async function() {
       IsDeleted: false,
     },
   ];
-  eseDBWritingHelpers.setupDB(db, new Map([["Favorites", {
-    columns: [
-      {type: COLUMN_TYPES.JET_coltypLongText, name: "URL", cbMax: 4096},
-      {type: COLUMN_TYPES.JET_coltypLongText, name: "Title", cbMax: 4096},
-      {type: COLUMN_TYPES.JET_coltypLongLong, name: "DateUpdated"},
-      {type: COLUMN_TYPES.JET_coltypGUID, name: "ItemId"},
-      {type: COLUMN_TYPES.JET_coltypBit, name: "IsDeleted"},
-      {type: COLUMN_TYPES.JET_coltypBit, name: "IsFolder"},
-      {type: COLUMN_TYPES.JET_coltypGUID, name: "ParentId"},
-    ],
-    rows: bookmarkReferenceItems,
-  }], ["ReadingList", {
-    columns: [
-      {type: COLUMN_TYPES.JET_coltypLongText, name: "URL", cbMax: 4096},
-      {type: COLUMN_TYPES.JET_coltypLongText, name: "Title", cbMax: 4096},
-      {type: COLUMN_TYPES.JET_coltypLongLong, name: "AddedDate"},
-      {type: COLUMN_TYPES.JET_coltypGUID, name: "ItemId"},
-      {type: COLUMN_TYPES.JET_coltypBit, name: "IsDeleted"},
-    ],
-    rows: readingListReferenceItems,
-  }]]));
+  eseDBWritingHelpers.setupDB(
+    db,
+    new Map([
+      [
+        "Favorites",
+        {
+          columns: [
+            { type: COLUMN_TYPES.JET_coltypLongText, name: "URL", cbMax: 4096 },
+            {
+              type: COLUMN_TYPES.JET_coltypLongText,
+              name: "Title",
+              cbMax: 4096,
+            },
+            { type: COLUMN_TYPES.JET_coltypLongLong, name: "DateUpdated" },
+            { type: COLUMN_TYPES.JET_coltypGUID, name: "ItemId" },
+            { type: COLUMN_TYPES.JET_coltypBit, name: "IsDeleted" },
+            { type: COLUMN_TYPES.JET_coltypBit, name: "IsFolder" },
+            { type: COLUMN_TYPES.JET_coltypGUID, name: "ParentId" },
+          ],
+          rows: bookmarkReferenceItems,
+        },
+      ],
+      [
+        "ReadingList",
+        {
+          columns: [
+            { type: COLUMN_TYPES.JET_coltypLongText, name: "URL", cbMax: 4096 },
+            {
+              type: COLUMN_TYPES.JET_coltypLongText,
+              name: "Title",
+              cbMax: 4096,
+            },
+            { type: COLUMN_TYPES.JET_coltypLongLong, name: "AddedDate" },
+            { type: COLUMN_TYPES.JET_coltypGUID, name: "ItemId" },
+            { type: COLUMN_TYPES.JET_coltypBit, name: "IsDeleted" },
+          ],
+          rows: readingListReferenceItems,
+        },
+      ],
+    ])
+  );
 
-  let migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=edge"]
-                 .createInstance(Ci.nsIBrowserProfileMigrator);
-  let bookmarksMigrator = migrator.wrappedJSObject.getBookmarksMigratorForTesting(db);
+  let migrator = Cc[
+    "@mozilla.org/profile/migrator;1?app=browser&type=edge"
+  ].createInstance(Ci.nsIBrowserProfileMigrator);
+  let bookmarksMigrator = migrator.wrappedJSObject.getBookmarksMigratorForTesting(
+    db
+  );
   Assert.ok(bookmarksMigrator.exists, "Should recognize db we just created");
 
   let source = MigrationUtils.getLocalizedString("sourceNameEdge");
-  let sourceLabel = MigrationUtils.getLocalizedString("importedBookmarksFolder", [source]);
+  let sourceLabel = MigrationUtils.getLocalizedString(
+    "importedBookmarksFolder",
+    [source]
+  );
 
   let seenBookmarks = [];
   let listener = events => {
@@ -438,69 +568,152 @@ add_task(async function() {
       if (title.startsWith("Deleted")) {
         ok(false, "Should not see deleted items being bookmarked!");
       }
-      seenBookmarks.push({id, parentId, index, itemType, url, title, dateAdded, guid, parentGuid});
+      seenBookmarks.push({
+        id,
+        parentId,
+        index,
+        itemType,
+        url,
+        title,
+        dateAdded,
+        guid,
+        parentGuid,
+      });
     }
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
-  let migrateResult = await new Promise(resolve => bookmarksMigrator.migrate(resolve)).catch(ex => {
+  let migrateResult = await new Promise(resolve =>
+    bookmarksMigrator.migrate(resolve)
+  ).catch(ex => {
     Cu.reportError(ex);
     Assert.ok(false, "Got an exception trying to migrate data! " + ex);
     return false;
   });
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   Assert.ok(migrateResult, "Migration should succeed");
-  Assert.equal(seenBookmarks.length, 7, "Should have seen 7 items being bookmarked.");
-  Assert.equal(seenBookmarks.filter(bm => bm.title != sourceLabel).length,
-               MigrationUtils._importQuantities.bookmarks,
-               "Telemetry should have items except for 'From Microsoft Edge' folders");
+  Assert.equal(
+    seenBookmarks.length,
+    7,
+    "Should have seen 7 items being bookmarked."
+  );
+  Assert.equal(
+    seenBookmarks.filter(bm => bm.title != sourceLabel).length,
+    MigrationUtils._importQuantities.bookmarks,
+    "Telemetry should have items except for 'From Microsoft Edge' folders"
+  );
 
-  let menuParents = seenBookmarks.filter(item => item.parentGuid == PlacesUtils.bookmarks.menuGuid);
-  Assert.equal(menuParents.length, 1, "Should have a single folder added to the menu");
-  let toolbarParents = seenBookmarks.filter(item => item.parentGuid == PlacesUtils.bookmarks.toolbarGuid);
-  Assert.equal(toolbarParents.length, 1, "Should have a single item added to the toolbar");
+  let menuParents = seenBookmarks.filter(
+    item => item.parentGuid == PlacesUtils.bookmarks.menuGuid
+  );
+  Assert.equal(
+    menuParents.length,
+    1,
+    "Should have a single folder added to the menu"
+  );
+  let toolbarParents = seenBookmarks.filter(
+    item => item.parentGuid == PlacesUtils.bookmarks.toolbarGuid
+  );
+  Assert.equal(
+    toolbarParents.length,
+    1,
+    "Should have a single item added to the toolbar"
+  );
   let menuParentGuid = menuParents[0].guid;
   let toolbarParentGuid = toolbarParents[0].guid;
 
-  let expectedTitlesInMenu = bookmarkReferenceItems.filter(item => item.ParentId == kEdgeMenuParent).map(item => item.Title);
+  let expectedTitlesInMenu = bookmarkReferenceItems
+    .filter(item => item.ParentId == kEdgeMenuParent)
+    .map(item => item.Title);
   // Hacky, but seems like much the simplest way:
   expectedTitlesInMenu.push("Item in deleted folder (should be in root)");
-  let expectedTitlesInToolbar = bookmarkReferenceItems.filter(item => item.ParentId == "921dc8a0-6c83-40ef-8df1-9bd1c5c56aaf").map(item => item.Title);
+  let expectedTitlesInToolbar = bookmarkReferenceItems
+    .filter(item => item.ParentId == "921dc8a0-6c83-40ef-8df1-9bd1c5c56aaf")
+    .map(item => item.Title);
 
   let edgeNameStr = MigrationUtils.getLocalizedString("sourceNameEdge");
-  let importParentFolderName = MigrationUtils.getLocalizedString("importedBookmarksFolder", [edgeNameStr]);
+  let importParentFolderName = MigrationUtils.getLocalizedString(
+    "importedBookmarksFolder",
+    [edgeNameStr]
+  );
 
   for (let bookmark of seenBookmarks) {
     let shouldBeInMenu = expectedTitlesInMenu.includes(bookmark.title);
     let shouldBeInToolbar = expectedTitlesInToolbar.includes(bookmark.title);
-    if (bookmark.title == "Folder" || bookmark.title == importParentFolderName) {
-      Assert.equal(bookmark.itemType, PlacesUtils.bookmarks.TYPE_FOLDER,
-          "Bookmark " + bookmark.title + " should be a folder");
+    if (
+      bookmark.title == "Folder" ||
+      bookmark.title == importParentFolderName
+    ) {
+      Assert.equal(
+        bookmark.itemType,
+        PlacesUtils.bookmarks.TYPE_FOLDER,
+        "Bookmark " + bookmark.title + " should be a folder"
+      );
     } else {
-      Assert.notEqual(bookmark.itemType, PlacesUtils.bookmarks.TYPE_FOLDER,
-          "Bookmark " + bookmark.title + " should not be a folder");
+      Assert.notEqual(
+        bookmark.itemType,
+        PlacesUtils.bookmarks.TYPE_FOLDER,
+        "Bookmark " + bookmark.title + " should not be a folder"
+      );
     }
 
     if (shouldBeInMenu) {
-      Assert.equal(bookmark.parentGuid, menuParentGuid, "Item '" + bookmark.title + "' should be in menu");
+      Assert.equal(
+        bookmark.parentGuid,
+        menuParentGuid,
+        "Item '" + bookmark.title + "' should be in menu"
+      );
     } else if (shouldBeInToolbar) {
-      Assert.equal(bookmark.parentGuid, toolbarParentGuid, "Item '" + bookmark.title + "' should be in toolbar");
-    } else if (bookmark.guid == menuParentGuid || bookmark.guid == toolbarParentGuid) {
-      Assert.ok(true, "Expect toolbar and menu folders to not be in menu or toolbar");
+      Assert.equal(
+        bookmark.parentGuid,
+        toolbarParentGuid,
+        "Item '" + bookmark.title + "' should be in toolbar"
+      );
+    } else if (
+      bookmark.guid == menuParentGuid ||
+      bookmark.guid == toolbarParentGuid
+    ) {
+      Assert.ok(
+        true,
+        "Expect toolbar and menu folders to not be in menu or toolbar"
+      );
     } else {
       // Bit hacky, but we do need to check this.
-      Assert.equal(bookmark.title, "Item in folder", "Subfoldered item shouldn't be in menu or toolbar");
-      let parent = seenBookmarks.find(maybeParent => maybeParent.guid == bookmark.parentGuid);
-      Assert.equal(parent && parent.title, "Folder", "Subfoldered item should be in subfolder labeled 'Folder'");
+      Assert.equal(
+        bookmark.title,
+        "Item in folder",
+        "Subfoldered item shouldn't be in menu or toolbar"
+      );
+      let parent = seenBookmarks.find(
+        maybeParent => maybeParent.guid == bookmark.parentGuid
+      );
+      Assert.equal(
+        parent && parent.title,
+        "Folder",
+        "Subfoldered item should be in subfolder labeled 'Folder'"
+      );
     }
 
-    let dbItem = bookmarkReferenceItems.find(someItem => bookmark.title == someItem.Title);
+    let dbItem = bookmarkReferenceItems.find(
+      someItem => bookmark.title == someItem.Title
+    );
     if (!dbItem) {
-      Assert.equal(bookmark.title, importParentFolderName, "Only the extra layer of folders isn't in the input we stuck in the DB.");
-      Assert.ok([menuParentGuid, toolbarParentGuid].includes(bookmark.guid), "This item should be one of the containers");
+      Assert.equal(
+        bookmark.title,
+        importParentFolderName,
+        "Only the extra layer of folders isn't in the input we stuck in the DB."
+      );
+      Assert.ok(
+        [menuParentGuid, toolbarParentGuid].includes(bookmark.guid),
+        "This item should be one of the containers"
+      );
     } else {
       Assert.equal(dbItem.URL || "", bookmark.url, "URL is correct");
-      Assert.equal(dbItem.DateUpdated.valueOf(), (new Date(bookmark.dateAdded)).valueOf(), "Date added is correct");
+      Assert.equal(
+        dbItem.DateUpdated.valueOf(),
+        new Date(bookmark.dateAdded).valueOf(),
+        "Date added is correct"
+      );
     }
   }
 
@@ -519,34 +732,64 @@ add_task(async function() {
         parentGuid,
         parentId,
       } = event;
-      seenBookmarks.push({id, parentId, index, itemType, url, title, dateAdded, guid, parentGuid});
+      seenBookmarks.push({
+        id,
+        parentId,
+        index,
+        itemType,
+        url,
+        title,
+        dateAdded,
+        guid,
+        parentGuid,
+      });
     }
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
-  let readingListMigrator = migrator.wrappedJSObject.getReadingListMigratorForTesting(db);
+  let readingListMigrator = migrator.wrappedJSObject.getReadingListMigratorForTesting(
+    db
+  );
   Assert.ok(readingListMigrator.exists, "Should recognize db we just created");
-  migrateResult = await new Promise(resolve => readingListMigrator.migrate(resolve)).catch(ex => {
+  migrateResult = await new Promise(resolve =>
+    readingListMigrator.migrate(resolve)
+  ).catch(ex => {
     Cu.reportError(ex);
     Assert.ok(false, "Got an exception trying to migrate data! " + ex);
     return false;
   });
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   Assert.ok(migrateResult, "Migration should succeed");
-  Assert.equal(seenBookmarks.length, 3, "Should have seen 3 items being bookmarked (2 items + 1 folder).");
-  Assert.equal(seenBookmarks.filter(bm => bm.title != sourceLabel).length,
-               MigrationUtils._importQuantities.bookmarks,
-               "Telemetry should have items except for 'From Microsoft Edge' folders");
-  let readingListContainerLabel = MigrationUtils.getLocalizedString("importedEdgeReadingList");
+  Assert.equal(
+    seenBookmarks.length,
+    3,
+    "Should have seen 3 items being bookmarked (2 items + 1 folder)."
+  );
+  Assert.equal(
+    seenBookmarks.filter(bm => bm.title != sourceLabel).length,
+    MigrationUtils._importQuantities.bookmarks,
+    "Telemetry should have items except for 'From Microsoft Edge' folders"
+  );
+  let readingListContainerLabel = MigrationUtils.getLocalizedString(
+    "importedEdgeReadingList"
+  );
 
   for (let bookmark of seenBookmarks) {
     if (readingListContainerLabel == bookmark.title) {
       continue;
     }
-    let referenceItem = readingListReferenceItems.find(item => item.Title == bookmark.title);
+    let referenceItem = readingListReferenceItems.find(
+      item => item.Title == bookmark.title
+    );
     Assert.ok(referenceItem, "Should have imported what we expected");
     Assert.equal(referenceItem.URL, bookmark.url, "Should have the right URL");
-    readingListReferenceItems.splice(readingListReferenceItems.findIndex(item => item.Title == bookmark.title), 1);
+    readingListReferenceItems.splice(
+      readingListReferenceItems.findIndex(item => item.Title == bookmark.title),
+      1
+    );
   }
-  Assert.ok(!readingListReferenceItems.length, "Should have seen all expected items.");
+  Assert.ok(
+    !readingListReferenceItems.length,
+    "Should have seen all expected items."
+  );
 });

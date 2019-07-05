@@ -4,17 +4,32 @@
 
 "use strict";
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {MigrationUtils, MigratorPrototype} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PropertyListUtils",
-                               "resource://gre/modules/PropertyListUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-                               "resource://gre/modules/FormHistory.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PropertyListUtils",
+  "resource://gre/modules/PropertyListUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormHistory",
+  "resource://gre/modules/FormHistory.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -29,23 +44,32 @@ Bookmarks.prototype = {
       let dict = await new Promise(resolve =>
         PropertyListUtils.read(this._file, resolve)
       );
-      if (!dict)
+      if (!dict) {
         throw new Error("Could not read Bookmarks.plist");
+      }
       let children = dict.get("Children");
-      if (!children)
+      if (!children) {
         throw new Error("Invalid Bookmarks.plist format");
+      }
 
-      let collection = dict.get("Title") == "com.apple.ReadingList" ?
-        this.READING_LIST_COLLECTION : this.ROOT_COLLECTION;
+      let collection =
+        dict.get("Title") == "com.apple.ReadingList"
+          ? this.READING_LIST_COLLECTION
+          : this.ROOT_COLLECTION;
       await this._migrateCollection(children, collection);
-    })().then(() => aCallback(true),
-                        e => { Cu.reportError(e); aCallback(false); });
+    })().then(
+      () => aCallback(true),
+      e => {
+        Cu.reportError(e);
+        aCallback(false);
+      }
+    );
   },
 
   // Bookmarks collections in Safari.  Constants for migrateCollection.
-  ROOT_COLLECTION:         0,
-  MENU_COLLECTION:         1,
-  TOOLBAR_COLLECTION:      2,
+  ROOT_COLLECTION: 0,
+  MENU_COLLECTION: 1,
+  TOOLBAR_COLLECTION: 2,
   READING_LIST_COLLECTION: 3,
 
   /**
@@ -69,14 +93,18 @@ Bookmarks.prototype = {
         if (type == "WebBookmarkTypeList" && entry.has("Children")) {
           let title = entry.get("Title");
           let children = entry.get("Children");
-          if (title == "BookmarksBar")
+          if (title == "BookmarksBar") {
             await this._migrateCollection(children, this.TOOLBAR_COLLECTION);
-          else if (title == "BookmarksMenu")
+          } else if (title == "BookmarksMenu") {
             await this._migrateCollection(children, this.MENU_COLLECTION);
-          else if (title == "com.apple.ReadingList")
-            await this._migrateCollection(children, this.READING_LIST_COLLECTION);
-          else if (entry.get("ShouldOmitFromUI") !== true)
+          } else if (title == "com.apple.ReadingList") {
+            await this._migrateCollection(
+              children,
+              this.READING_LIST_COLLECTION
+            );
+          } else if (entry.get("ShouldOmitFromUI") !== true) {
             entriesFiltered.push(entry);
+          }
         } else if (type == "WebBookmarkTypeLeaf") {
           entriesFiltered.push(entry);
         }
@@ -85,8 +113,9 @@ Bookmarks.prototype = {
       entriesFiltered = aEntries;
     }
 
-    if (entriesFiltered.length == 0)
+    if (entriesFiltered.length == 0) {
       return;
+    }
 
     let folderGuid = -1;
     switch (aCollection) {
@@ -103,16 +132,20 @@ Bookmarks.prototype = {
       case this.MENU_COLLECTION: {
         folderGuid = PlacesUtils.bookmarks.menuGuid;
         if (!MigrationUtils.isStartupMigration) {
-          folderGuid =
-            await MigrationUtils.createImportedBookmarksFolder("Safari", folderGuid);
+          folderGuid = await MigrationUtils.createImportedBookmarksFolder(
+            "Safari",
+            folderGuid
+          );
         }
         break;
       }
       case this.TOOLBAR_COLLECTION: {
         folderGuid = PlacesUtils.bookmarks.toolbarGuid;
         if (!MigrationUtils.isStartupMigration) {
-          folderGuid =
-            await MigrationUtils.createImportedBookmarksFolder("Safari", folderGuid);
+          folderGuid = await MigrationUtils.createImportedBookmarksFolder(
+            "Safari",
+            folderGuid
+          );
         }
         break;
       }
@@ -130,8 +163,9 @@ Bookmarks.prototype = {
       default:
         throw new Error("Unexpected value for aCollection!");
     }
-    if (folderGuid == -1)
+    if (folderGuid == -1) {
       throw new Error("Invalid folder GUID");
+    }
 
     await this._migrateEntries(entriesFiltered, folderGuid);
   },
@@ -140,35 +174,43 @@ Bookmarks.prototype = {
   // folder.
   _migrateEntries(entries, parentGuid) {
     let convertedEntries = this._convertEntries(entries);
-    return MigrationUtils.insertManyBookmarksWrapper(convertedEntries, parentGuid);
+    return MigrationUtils.insertManyBookmarksWrapper(
+      convertedEntries,
+      parentGuid
+    );
   },
 
   _convertEntries(entries) {
-    return entries.map(function(entry) {
-      let type = entry.get("WebBookmarkType");
-      if (type == "WebBookmarkTypeList" && entry.has("Children")) {
-        return {
-          title: entry.get("Title"),
-          type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          children: this._convertEntries(entry.get("Children")),
-        };
-      }
-      if (type == "WebBookmarkTypeLeaf" && entry.has("URLString")) {
-        // Check we understand this URL before adding it:
-        let url = entry.get("URLString");
-        try {
-          new URL(url);
-        } catch (ex) {
-          Cu.reportError(`Ignoring ${url} when importing from Safari because of exception: ${ex}`);
-          return null;
+    return entries
+      .map(function(entry) {
+        let type = entry.get("WebBookmarkType");
+        if (type == "WebBookmarkTypeList" && entry.has("Children")) {
+          return {
+            title: entry.get("Title"),
+            type: PlacesUtils.bookmarks.TYPE_FOLDER,
+            children: this._convertEntries(entry.get("Children")),
+          };
         }
-        let title;
-        if (entry.has("URIDictionary"))
-          title = entry.get("URIDictionary").get("title");
-        return { url, title };
-      }
-      return null;
-    }, this).filter(e => !!e);
+        if (type == "WebBookmarkTypeLeaf" && entry.has("URLString")) {
+          // Check we understand this URL before adding it:
+          let url = entry.get("URLString");
+          try {
+            new URL(url);
+          } catch (ex) {
+            Cu.reportError(
+              `Ignoring ${url} when importing from Safari because of exception: ${ex}`
+            );
+            return null;
+          }
+          let title;
+          if (entry.has("URIDictionary")) {
+            title = entry.get("URIDictionary").get("title");
+          }
+          return { url, title };
+        }
+        return null;
+      }, this)
+      .filter(e => !!e);
   },
 };
 
@@ -195,10 +237,12 @@ History.prototype = {
   migrate: function H_migrate(aCallback) {
     PropertyListUtils.read(this._file, aDict => {
       try {
-        if (!aDict)
+        if (!aDict) {
           throw new Error("Could not read history property list");
-        if (!aDict.has("WebHistoryDates"))
+        }
+        if (!aDict.has("WebHistoryDates")) {
           throw new Error("Unexpected history-property list format");
+        }
 
         let pageInfos = [];
         let entries = aDict.get("WebHistoryDates");
@@ -210,12 +254,14 @@ History.prototype = {
               pageInfos.push({
                 url: new URL(entry.get("")),
                 title: entry.get("title"),
-                visits: [{
-                  // Safari's History file contains only top-level urls.  It does not
-                  // distinguish between typed urls and linked urls.
-                  transition: PlacesUtils.history.TRANSITIONS.LINK,
-                  date,
-                }],
+                visits: [
+                  {
+                    // Safari's History file contains only top-level urls.  It does not
+                    // distinguish between typed urls and linked urls.
+                    transition: PlacesUtils.history.TRANSITIONS.LINK,
+                    date,
+                  },
+                ],
               });
             } catch (ex) {
               // Safari's History file may contain malformed URIs which
@@ -235,7 +281,8 @@ History.prototype = {
 
         MigrationUtils.insertVisitsWrapper(pageInfos).then(
           () => aCallback(true),
-          () => aCallback(false));
+          () => aCallback(false)
+        );
       } catch (ex) {
         Cu.reportError(ex);
         aCallback(false);
@@ -291,41 +338,45 @@ SearchStrings.prototype = {
   type: MigrationUtils.resourceTypes.OTHERDATA,
 
   migrate: function SS_migrate(aCallback) {
-    this._mainPreferencesPropertyList.read(MigrationUtils.wrapMigrateFunction(
-      function migrateSearchStrings(aDict) {
-        if (!aDict)
+    this._mainPreferencesPropertyList.read(
+      MigrationUtils.wrapMigrateFunction(function migrateSearchStrings(aDict) {
+        if (!aDict) {
           throw new Error("Could not get preferences dictionary");
+        }
 
         if (aDict.has("RecentSearchStrings")) {
           let recentSearchStrings = aDict.get("RecentSearchStrings");
           if (recentSearchStrings && recentSearchStrings.length > 0) {
-            let changes = recentSearchStrings.map((searchString) => (
-              {op: "add",
-               fieldname: "searchbar-history",
-               value: searchString}));
+            let changes = recentSearchStrings.map(searchString => ({
+              op: "add",
+              fieldname: "searchbar-history",
+              value: searchString,
+            }));
             FormHistory.update(changes);
           }
         }
-      }, aCallback));
+      }, aCallback)
+    );
   },
 };
 
-function SafariProfileMigrator() {
-}
+function SafariProfileMigrator() {}
 
 SafariProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 SafariProfileMigrator.prototype.getResources = function SM_getResources() {
   let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
-  if (!profileDir.exists())
+  if (!profileDir.exists()) {
     return null;
+  }
 
   let resources = [];
   let pushProfileFileResource = function(aFileName, aConstructor) {
     let file = profileDir.clone();
     file.append(aFileName);
-    if (file.exists())
+    if (file.exists()) {
       resources.push(new aConstructor(file));
+    }
   };
 
   pushProfileFileResource("History.plist", History);
@@ -350,36 +401,46 @@ SafariProfileMigrator.prototype.getLastUsedDate = function SM_getLastUsedDate() 
   let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
   let datePromises = ["Bookmarks.plist", "History.plist"].map(file => {
     let path = OS.Path.join(profileDir.path, file);
-    return OS.File.stat(path).catch(() => null).then(info => {
-      return info ? info.lastModificationDate : 0;
-    });
+    return OS.File.stat(path)
+      .catch(() => null)
+      .then(info => {
+        return info ? info.lastModificationDate : 0;
+      });
   });
   return Promise.all(datePromises).then(dates => {
     return new Date(Math.max.apply(Math, dates));
   });
 };
 
-Object.defineProperty(SafariProfileMigrator.prototype, "mainPreferencesPropertyList", {
-  get: function get_mainPreferencesPropertyList() {
-    if (this._mainPreferencesPropertyList === undefined) {
-      let file = FileUtils.getDir("UsrPrfs", [], false);
-      if (file.exists()) {
-        file.append("com.apple.Safari.plist");
+Object.defineProperty(
+  SafariProfileMigrator.prototype,
+  "mainPreferencesPropertyList",
+  {
+    get: function get_mainPreferencesPropertyList() {
+      if (this._mainPreferencesPropertyList === undefined) {
+        let file = FileUtils.getDir("UsrPrfs", [], false);
         if (file.exists()) {
-          this._mainPreferencesPropertyList =
-            new MainPreferencesPropertyList(file);
-          return this._mainPreferencesPropertyList;
+          file.append("com.apple.Safari.plist");
+          if (file.exists()) {
+            this._mainPreferencesPropertyList = new MainPreferencesPropertyList(
+              file
+            );
+            return this._mainPreferencesPropertyList;
+          }
         }
+        this._mainPreferencesPropertyList = null;
+        return this._mainPreferencesPropertyList;
       }
-      this._mainPreferencesPropertyList = null;
       return this._mainPreferencesPropertyList;
-    }
-    return this._mainPreferencesPropertyList;
-  },
-});
+    },
+  }
+);
 
 SafariProfileMigrator.prototype.classDescription = "Safari Profile Migrator";
-SafariProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=safari";
-SafariProfileMigrator.prototype.classID = Components.ID("{4b609ecf-60b2-4655-9df4-dc149e474da1}");
+SafariProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=safari";
+SafariProfileMigrator.prototype.classID = Components.ID(
+  "{4b609ecf-60b2-4655-9df4-dc149e474da1}"
+);
 
 var EXPORTED_SYMBOLS = ["SafariProfileMigrator"];

@@ -36,16 +36,21 @@ add_task(function losslessDecode() {
   let urlNoScheme = "example.com/\u30a2\u30a4\u30a6\u30a8\u30aa";
   let url = "http://" + urlNoScheme;
   if (Services.prefs.getBoolPref("browser.urlbar.quantumbar", true)) {
-    const result = new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-                                    UrlbarUtils.RESULT_SOURCE.TABS,
-                                    { url });
+    const result = new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+      UrlbarUtils.RESULT_SOURCE.TABS,
+      { url }
+    );
     gURLBar.setValueFromResult(result);
   } else {
     gURLBar.textValue = url;
   }
   // Since this is directly setting textValue, it is expected to be trimmed.
-  Assert.equal(gURLBar.inputField.value, urlNoScheme,
-               "The string displayed in the textbox should not be escaped");
+  Assert.equal(
+    gURLBar.inputField.value,
+    urlNoScheme,
+    "The string displayed in the textbox should not be escaped"
+  );
   gURLBar.value = "";
   gURLBar.handleRevert();
   gURLBar.blur();
@@ -66,11 +71,17 @@ add_task(async function actionURILosslessDecode() {
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL,
-    "Should have selected a result of URL type");
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.URL,
+    "Should have selected a result of URL type"
+  );
 
-  Assert.equal(gURLBar.inputField.value, urlNoScheme,
-               "The string displayed in the textbox should not be escaped");
+  Assert.equal(
+    gURLBar.inputField.value,
+    urlNoScheme,
+    "The string displayed in the textbox should not be escaped"
+  );
 
   gURLBar.value = "";
   gURLBar.handleRevert();
@@ -85,8 +96,11 @@ add_task(async function test_resultsDisplayDecoded() {
   await promiseAutocompleteResultPopup("example");
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  Assert.equal(result.displayed.url, "example.com/\u9875",
-    "Should be displayed the correctly unescaped URL");
+  Assert.equal(
+    result.displayed.url,
+    "example.com/\u9875",
+    "Should be displayed the correctly unescaped URL"
+  );
 });
 
 async function checkInput(inputStr) {
@@ -95,9 +109,10 @@ async function checkInput(inputStr) {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
 
   // URL matches have their param.urls fixed up.
-  let fixupInfo = Services.uriFixup.getFixupURIInfo(inputStr,
+  let fixupInfo = Services.uriFixup.getFixupURIInfo(
+    inputStr,
     Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-    Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
+      Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
   );
   let expectedVisitURL = fixupInfo.fixedURI.spec;
 
@@ -114,15 +129,27 @@ async function checkInput(inputStr) {
   }
 
   Assert.equal(result.url, expectedVisitURL, "Should have the correct URL");
-  Assert.equal(result.title, inputStr.replace("\\", "/"),
-    "Should have the correct title");
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL,
-    "Should have be a result of type URL");
+  Assert.equal(
+    result.title,
+    inputStr.replace("\\", "/"),
+    "Should have the correct title"
+  );
+  Assert.equal(
+    result.type,
+    UrlbarUtils.RESULT_TYPE.URL,
+    "Should have be a result of type URL"
+  );
 
-  Assert.equal(result.displayed.title, inputStr.replace("\\", "/"),
-    "Should be displaying the correct text");
-  Assert.equal(result.displayed.action,
-    Services.strings.createBundle("chrome://global/locale/autocomplete.properties")
-            .GetStringFromName("visit"),
-    "Should be displaying the correct action text");
+  Assert.equal(
+    result.displayed.title,
+    inputStr.replace("\\", "/"),
+    "Should be displaying the correct text"
+  );
+  Assert.equal(
+    result.displayed.action,
+    Services.strings
+      .createBundle("chrome://global/locale/autocomplete.properties")
+      .GetStringFromName("visit"),
+    "Should be displaying the correct action text"
+  );
 }
