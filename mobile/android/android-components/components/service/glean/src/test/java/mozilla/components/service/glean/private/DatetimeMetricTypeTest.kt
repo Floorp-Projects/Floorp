@@ -38,14 +38,14 @@ class DatetimeMetricTypeTest {
             sendInPings = listOf("store1")
         )
 
-        val value = Calendar.getInstance()!!
+        val value = Calendar.getInstance()
         value.set(2004, 11, 9, 8, 3, 29)
         value.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
         datetimeMetric.set(value)
         assertTrue(datetimeMetric.testHasValue())
         assertEquals("2004-12-09T08:03-08:00", datetimeMetric.testGetValueAsString())
 
-        val value2 = Calendar.getInstance()!!
+        val value2 = Calendar.getInstance()
         value2.set(1993, 1, 23, 9, 5, 43)
         value2.timeZone = TimeZone.getTimeZone("GMT+0")
         datetimeMetric.set(value2)
@@ -54,7 +54,7 @@ class DatetimeMetricTypeTest {
         assertEquals("1993-02-23T09:05+00:00", datetimeMetric.testGetValueAsString())
 
         // A date prior to the UNIX epoch
-        val value3 = Calendar.getInstance()!!
+        val value3 = Calendar.getInstance()
         value3.set(1969, 7, 20, 20, 17, 3)
         value3.timeZone = TimeZone.getTimeZone("GMT-12")
         datetimeMetric.set(value3)
@@ -65,7 +65,7 @@ class DatetimeMetricTypeTest {
         // A date following 2038 (the extent of signed 32-bits after UNIX epoch)
         // This fails on some workers on Taskcluster.  32-bit platforms, perhaps?
 
-        // val value4 = Calendar.getInstance()!!
+        // val value4 = Calendar.getInstance()
         // value4.set(2039, 7, 20, 20, 17, 3)
         // datetimeMetric.set(value4)
         // // Check that data was properly recorded.

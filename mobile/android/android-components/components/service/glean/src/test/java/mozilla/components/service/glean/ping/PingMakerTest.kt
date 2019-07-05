@@ -12,13 +12,12 @@ import mozilla.components.service.glean.storages.MockStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Test
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
@@ -56,7 +55,7 @@ class PingMakerTest {
         )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
-        val data = maker.collect(customPing)
+        val data = maker.collect(customPing).orEmpty()
         assertTrue("We expect a non-empty JSON blob", "{}" != data)
 
         // Parse the data so that we can easily check the other fields
@@ -86,7 +85,7 @@ class PingMakerTest {
         )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
-        val data = maker.collect(customPing)
+        val data = maker.collect(customPing).orEmpty()
         assertTrue("We expect a non-empty JSON blob", "{}" != data)
 
         // Parse the data so that we can easily check the other fields
@@ -112,7 +111,7 @@ class PingMakerTest {
         )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
-        val data = maker.collect(customPing)
+        val data = maker.collect(customPing).orEmpty()
         assertTrue("We expect a non-empty JSON blob", "{}" != data)
 
         // Parse the data so that we can easily check the other fields
@@ -140,7 +139,7 @@ class PingMakerTest {
 
         // Gather the data, this should have everything in the 'test' ping which is the default
         // storex
-        val data = maker.collect(customPing)
+        val data = maker.collect(customPing).orEmpty()
         assertNotNull("We expect a non-null JSON blob", data)
 
         // Parse the data so that we can easily check the other fields
@@ -208,7 +207,7 @@ class PingMakerTest {
                     name = pingName,
                     includeClientId = true
                 )
-                val data = maker.collect(ping)
+                val data = maker.collect(ping).orEmpty()
                 val jsonData = JSONObject(data)
                 val pingInfo = jsonData["ping_info"] as JSONObject
                 val seqNum = pingInfo.getInt("seq")

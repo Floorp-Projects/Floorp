@@ -4,19 +4,18 @@
 
 package mozilla.components.service.glean.storages
 
-import mozilla.components.service.glean.Glean
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.Dispatchers as KotlinDispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import mozilla.components.service.glean.Dispatchers
-import mozilla.components.service.glean.error.ErrorRecording.recordError
+import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.utils.ensureDirectoryExists
@@ -26,6 +25,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import kotlinx.coroutines.Dispatchers as KotlinDispatchers
 
 /**
  * This singleton handles the in-memory storage logic for events. It is meant to be used by
@@ -283,9 +283,10 @@ internal object EventsStorageEngine : StorageEngine {
     private fun deserializeEvent(jsonContent: JSONObject): RecordedEventData {
         val extra: Map<String, String>? = jsonContent.optJSONObject(EXTRA_FIELD)?.let {
             val extraValues: MutableMap<String, String> = mutableMapOf()
-            val names = it.names()
-            for (i in 0..(names.length() - 1)) {
-                extraValues[names.getString(i)] = it.getString(names.getString(i))
+            it.names()?.let { names ->
+                for (i in 0 until names.length()) {
+                    extraValues[names.getString(i)] = it.getString(names.getString(i))
+                }
             }
             extraValues
         }

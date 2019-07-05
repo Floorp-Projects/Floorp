@@ -6,8 +6,8 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.DatetimeMetricType
+import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertEquals
@@ -72,7 +72,7 @@ class DatetimesStorageEngineTest {
 
     @Test
     fun `datetime serializer should correctly serialize datetimes`() {
-        val value = Calendar.getInstance()!!
+        val value = Calendar.getInstance()
         value.set(1993, 1, 23, 9, 5, 23)
         value.set(Calendar.MILLISECOND, 0)
         value.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"))
@@ -173,7 +173,7 @@ class DatetimesStorageEngineTest {
 
     @Test
     fun `test that truncation works`() {
-        val value = Calendar.getInstance()!!
+        val value = Calendar.getInstance()
         value.set(2004, 11, 9, 8, 3, 29)
         value.set(Calendar.MILLISECOND, 320)
         value.timeZone = TimeZone.getTimeZone("GMT-2")
@@ -240,42 +240,42 @@ class DatetimesStorageEngineTest {
 
         // Calendar objects don't have nanosecond resolution, so we don't expect any change,
         // but test anyway so we're testing all of the TimeUnit enumeration values.
-        val expectedNanosecond = Calendar.getInstance()!!
+        val expectedNanosecond = Calendar.getInstance()
         expectedNanosecond.timeZone = TimeZone.getTimeZone("GMT-2")
         expectedNanosecond.set(2004, 11, 9, 8, 3, 29)
         expectedNanosecond.set(Calendar.MILLISECOND, 320)
         assertEquals(expectedNanosecond.getTime(), datetimeNanosecondTruncation.testGetValue())
         assertEquals("2004-12-09T08:03:29.320-02:00", datetimeNanosecondTruncation.testGetValueAsString())
 
-        val expectedMillisecond = Calendar.getInstance()!!
+        val expectedMillisecond = Calendar.getInstance()
         expectedMillisecond.timeZone = TimeZone.getTimeZone("GMT-2")
         expectedMillisecond.set(2004, 11, 9, 8, 3, 29)
         expectedMillisecond.set(Calendar.MILLISECOND, 320)
         assertEquals(expectedMillisecond.getTime(), datetimeMillisecondTruncation.testGetValue())
         assertEquals("2004-12-09T08:03:29.320-02:00", datetimeMillisecondTruncation.testGetValueAsString())
 
-        val expectedSecond = Calendar.getInstance()!!
+        val expectedSecond = Calendar.getInstance()
         expectedSecond.timeZone = TimeZone.getTimeZone("GMT-2")
         expectedSecond.set(2004, 11, 9, 8, 3, 29)
         expectedSecond.set(Calendar.MILLISECOND, 0)
         assertEquals(expectedSecond.getTime(), datetimeSecondTruncation.testGetValue())
         assertEquals("2004-12-09T08:03:29-02:00", datetimeSecondTruncation.testGetValueAsString())
 
-        val expectedMinute = Calendar.getInstance()!!
+        val expectedMinute = Calendar.getInstance()
         expectedMinute.timeZone = TimeZone.getTimeZone("GMT-2")
         expectedMinute.set(2004, 11, 9, 8, 3, 0)
         expectedMinute.set(Calendar.MILLISECOND, 0)
         assertEquals(expectedMinute.getTime(), datetimeMinuteTruncation.testGetValue())
         assertEquals("2004-12-09T08:03-02:00", datetimeMinuteTruncation.testGetValueAsString())
 
-        val expectedHour = Calendar.getInstance()!!
+        val expectedHour = Calendar.getInstance()
         expectedHour.timeZone = TimeZone.getTimeZone("GMT-2")
         expectedHour.set(2004, 11, 9, 8, 0, 0)
         expectedHour.set(Calendar.MILLISECOND, 0)
         assertEquals(expectedHour.getTime(), datetimeHourTruncation.testGetValue())
         assertEquals("2004-12-09T08-02:00", datetimeHourTruncation.testGetValueAsString())
 
-        val expectedDay = Calendar.getInstance()!!
+        val expectedDay = Calendar.getInstance()
         expectedDay.timeZone = TimeZone.getTimeZone("GMT-2")
         expectedDay.set(2004, 11, 9, 0, 0, 0)
         expectedDay.set(Calendar.MILLISECOND, 0)

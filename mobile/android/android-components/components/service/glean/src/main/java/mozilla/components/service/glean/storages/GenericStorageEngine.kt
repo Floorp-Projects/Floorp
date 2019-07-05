@@ -201,7 +201,7 @@ internal abstract class GenericStorageEngine<MetricType> : StorageEngine {
      */
     override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
         return getSnapshot(storeName, clearStore)?.let { dataMap ->
-            return JSONObject(dataMap)
+            return JSONObject(dataMap as MutableMap<*, *>)
         }
     }
 

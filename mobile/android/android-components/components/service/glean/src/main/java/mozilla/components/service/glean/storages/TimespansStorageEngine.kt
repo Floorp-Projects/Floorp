@@ -193,12 +193,13 @@ internal open class TimespansStorageEngineImplementation(
      */
     override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {
         return getSnapshotWithTimeUnit(storeName, clearStore)?.let { dataMap ->
-            return JSONObject(dataMap.mapValuesTo(mutableMapOf<String, JSONObject>()) {
+            val data = dataMap.mapValuesTo(mutableMapOf()) {
                 JSONObject(mapOf(
                     "time_unit" to it.value.first,
                     "value" to it.value.second
                 ))
-            })
+            }
+            return JSONObject(data as MutableMap<*, *>)
         }
     }
 

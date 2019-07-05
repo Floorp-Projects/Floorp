@@ -152,28 +152,28 @@ class GleanTest {
             // Trigger worker task to upload the pings in the background
             triggerWorkManager()
 
-            val requests: MutableMap<String, String> = mutableMapOf()
+            val requests = mutableMapOf<String, String>()
             for (i in 0..1) {
                 val request = server.takeRequest(20L, TimeUnit.SECONDS)
                 val docType = request.path.split("/")[3]
-                requests.set(docType, request.body.readUtf8())
+                requests[docType] = request.body.readUtf8()
             }
 
-            val eventsJson = JSONObject(requests["events"])
+            val eventsJson = JSONObject(requests["events"]!!)
             checkPingSchema(eventsJson)
             assertEquals("events", eventsJson.getJSONObject("ping_info")["ping_type"])
-            assertEquals(1, eventsJson.getJSONArray("events")!!.length())
+            assertEquals(1, eventsJson.getJSONArray("events").length())
 
-            val baselineJson = JSONObject(requests["baseline"])
+            val baselineJson = JSONObject(requests["baseline"]!!)
             assertEquals("baseline", baselineJson.getJSONObject("ping_info")["ping_type"])
             checkPingSchema(baselineJson)
 
-            val baselineMetricsObject = baselineJson.getJSONObject("metrics")!!
-            val baselineStringMetrics = baselineMetricsObject.getJSONObject("string")!!
+            val baselineMetricsObject = baselineJson.getJSONObject("metrics")
+            val baselineStringMetrics = baselineMetricsObject.getJSONObject("string")
             assertEquals(1, baselineStringMetrics.length())
             assertNotNull(baselineStringMetrics.get("glean.baseline.locale"))
 
-            val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
+            val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")
             assertEquals(1, baselineTimespanMetrics.length())
             assertNotNull(baselineTimespanMetrics.get("glean.baseline.duration"))
         } finally {
@@ -261,7 +261,7 @@ class GleanTest {
 
         // We should only have a baseline ping and no events or metrics pings since nothing was
         // recorded
-        val files = Glean.pingStorageEngine.storageDirectory.listFiles()
+        val files = Glean.pingStorageEngine.storageDirectory.listFiles()!!
 
         // Make sure only the baseline ping is present and no events or metrics pings
         assertEquals(1, files.count())
@@ -500,8 +500,8 @@ class GleanTest {
         assertEquals(pingName, pingJson.getJSONObject("ping_info")["ping_type"])
         checkPingSchema(pingJson)
 
-        val pingMetricsObject = pingJson.getJSONObject("metrics")!!
-        val pingStringMetrics = pingMetricsObject.getJSONObject("string")!!
+        val pingMetricsObject = pingJson.getJSONObject("metrics")
+        val pingStringMetrics = pingMetricsObject.getJSONObject("string")
         assertEquals(1, pingStringMetrics.length())
         assertEquals(testValue, pingStringMetrics.get("telemetry.string_metric"))
     }

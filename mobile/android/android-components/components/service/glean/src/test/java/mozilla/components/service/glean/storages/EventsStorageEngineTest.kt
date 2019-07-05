@@ -6,25 +6,25 @@ package mozilla.components.service.glean.storages
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
+import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
-import mozilla.components.service.glean.private.Lifetime
-import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.getContextWithMockedInfo
-import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.getMockWebServer
+import mozilla.components.service.glean.private.EventMetricType
+import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.triggerWorkManager
 import org.json.JSONObject
 import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertNotNull
+import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
@@ -183,12 +183,12 @@ class EventsStorageEngineTest {
         // Check that getting a new snapshot for "store1" returns an empty store.
         assertNull("The engine must report 'null' on empty stores",
                 EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false))
-        val files = EventsStorageEngine.storageDirectory.listFiles()
+        val files = EventsStorageEngine.storageDirectory.listFiles()!!
         assertEquals(1, files.size)
         assertEquals(
             "There should be no events on disk for store1, but there are for store2",
             "store2",
-            EventsStorageEngine.storageDirectory.listFiles().first().name
+            EventsStorageEngine.storageDirectory.listFiles()?.first()?.name
         )
 
         // Check that we get the right data from both the stores. Clearing "store1" must
@@ -291,7 +291,7 @@ class EventsStorageEngineTest {
             assert(request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/"))
             val eventsJsonData = request.body.readUtf8()
             val eventsJson = checkPingSchema(eventsJsonData)
-            val eventsArray = eventsJson.getJSONArray("events")!!
+            val eventsArray = eventsJson.getJSONArray("events")
             assertEquals(500, eventsArray.length())
 
             for (i in 0..499) {
@@ -347,7 +347,7 @@ class EventsStorageEngineTest {
         assertEquals(
             "There should be no events on disk to start",
             0,
-            EventsStorageEngine.storageDirectory.listFiles().size
+            EventsStorageEngine.storageDirectory.listFiles()?.size
         )
 
         val server = getMockWebServer()
@@ -456,7 +456,7 @@ class EventsStorageEngineTest {
         assertNotNull(pingJson.opt("events"))
         val events = pingJson.getJSONArray("events")
         assertEquals(2, events.length())
-        assertEquals("bar", events.getJSONObject(0)!!.getJSONObject("extra")!!.getString("key1"))
-        assertEquals("baz", events.getJSONObject(1)!!.getJSONObject("extra")!!.getString("key1"))
+        assertEquals("bar", events.getJSONObject(0).getJSONObject("extra").getString("key1"))
+        assertEquals("baz", events.getJSONObject(1).getJSONObject("extra").getString("key1"))
     }
 }
