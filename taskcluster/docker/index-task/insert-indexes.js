@@ -2,16 +2,18 @@ let taskcluster = require("taskcluster-client");
 
 // Create instance of index client
 let index = new taskcluster.Index({
-  delayFactor:    750,  // Good solid delay for background process
-  retries:        8,    // A few extra retries for robustness
-  rootUrl:        process.env.TASKCLUSTER_PROXY_URL || process.env.TASKCLUSTER_ROOT_URL,
+  delayFactor: 750, // Good solid delay for background process
+  retries: 8, // A few extra retries for robustness
+  rootUrl:
+    process.env.TASKCLUSTER_PROXY_URL || process.env.TASKCLUSTER_ROOT_URL,
 });
 
 // Create queue instance for fetching taskId
 let queue = new taskcluster.Queue({
-  delayFactor:    750,  // Good solid delay for background process
-  retries:        8,    // A few extra retries for robustness
-  rootUrl:        process.env.TASKCLUSTER_PROXY_URL || process.env.TASKCLUSTER_ROOT_URL,
+  delayFactor: 750, // Good solid delay for background process
+  retries: 8, // A few extra retries for robustness
+  rootUrl:
+    process.env.TASKCLUSTER_PROXY_URL || process.env.TASKCLUSTER_ROOT_URL,
 });
 
 // Load input
@@ -31,24 +33,37 @@ if (isNaN(rank)) {
 }
 
 // Fetch task definition to get expiration and then insert into index
-queue.task(taskId).then(task => task.expires).then(expires => {
-  return Promise.all(namespaces.map(namespace => {
-    console.log("Inserting %s into index (rank %d) under: %s", taskId, rank, namespace);
-    return index.insertTask(namespace, {
-      taskId,
-      rank,
-      data: {},
-      expires,
-    });
-  }));
-}).then(() => {
-  console.log("indexing successfully completed.");
-  process.exit(0);
-}).catch(err => {
-  console.log("Error:\n%s", err);
-  if (err.stack) {
-    console.log("Stack:\n%s", err.stack);
-  }
-  console.log("Properties:\n%j", err);
-  throw err;
-}).catch(() => process.exit(1));
+queue
+  .task(taskId)
+  .then(task => task.expires)
+  .then(expires => {
+    return Promise.all(
+      namespaces.map(namespace => {
+        console.log(
+          "Inserting %s into index (rank %d) under: %s",
+          taskId,
+          rank,
+          namespace
+        );
+        return index.insertTask(namespace, {
+          taskId,
+          rank,
+          data: {},
+          expires,
+        });
+      })
+    );
+  })
+  .then(() => {
+    console.log("indexing successfully completed.");
+    process.exit(0);
+  })
+  .catch(err => {
+    console.log("Error:\n%s", err);
+    if (err.stack) {
+      console.log("Stack:\n%s", err.stack);
+    }
+    console.log("Properties:\n%j", err);
+    throw err;
+  })
+  .catch(() => process.exit(1));
