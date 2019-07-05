@@ -6,12 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["Session"];
 
-const {ParentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ParentProcessDomains.jsm");
-const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
-const {
-  RemoteAgentError,
-  UnknownMethodError,
-} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const { ParentProcessDomains } = ChromeUtils.import(
+  "chrome://remote/content/domains/ParentProcessDomains.jsm"
+);
+const { Domains } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domains.jsm"
+);
+const { RemoteAgentError, UnknownMethodError } = ChromeUtils.import(
+  "chrome://remote/content/Error.jsm"
+);
 
 /**
  * A session represents exactly one client WebSocket connection.
@@ -55,7 +58,7 @@ class Session {
     this.domains.clear();
   }
 
-  async onMessage({id, method, params}) {
+  async onMessage({ id, method, params }) {
     try {
       if (typeof id == "undefined") {
         throw new TypeError("Message missing 'id' field");
@@ -64,7 +67,7 @@ class Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const {domain, command} = Domains.splitMethod(method);
+      const { domain, command } = Domains.splitMethod(method);
       await this.execute(id, domain, command, params);
     } catch (e) {
       this.onError(id, e);
@@ -93,7 +96,7 @@ class Session {
       id,
       sessionId: this.id,
       error: {
-        message: RemoteAgentError.format(error, {stack: true}),
+        message: RemoteAgentError.format(error, { stack: true }),
       },
     });
   }

@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["Input"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domain.jsm"
+);
 
 class Input extends Domain {
   // commands
@@ -28,12 +30,7 @@ class Input extends Domain {
    *        - windowsVirtualKeyCode
    */
   async dispatchKeyEvent(options) {
-    const {
-      key,
-      modifiers,
-      type,
-      windowsVirtualKeyCode,
-    } = options;
+    const { key, modifiers, type, windowsVirtualKeyCode } = options;
 
     let domType;
     if (type == "keyDown" || type == "rawKeyDown") {
@@ -54,8 +51,10 @@ class Input extends Domain {
 
     const EventUtils = this._getEventUtils(browserWindow);
     const onEvent = new Promise(r => {
-      browserWindow.addEventListener(domType, r,
-        {mozSystemGroup: true, once: true});
+      browserWindow.addEventListener(domType, r, {
+        mozSystemGroup: true,
+        once: true,
+      });
     });
 
     if (type == "char") {
@@ -65,21 +64,23 @@ class Input extends Domain {
     } else {
       // Non printable keys should be prefixed with `KEY_`
       const eventUtilsKey = key.length == 1 ? key : "KEY_" + key;
-      EventUtils.synthesizeKey(eventUtilsKey, {
-        keyCode: windowsVirtualKeyCode,
-        type: domType,
-        altKey: !!(modifiers & 1),
-        ctrlKey: !!(modifiers & 2),
-        metaKey: !!(modifiers & 4),
-        shiftKey: !!(modifiers & 8),
-      }, browserWindow);
+      EventUtils.synthesizeKey(
+        eventUtilsKey,
+        {
+          keyCode: windowsVirtualKeyCode,
+          type: domType,
+          altKey: !!(modifiers & 1),
+          ctrlKey: !!(modifiers & 2),
+          metaKey: !!(modifiers & 4),
+          shiftKey: !!(modifiers & 8),
+        },
+        browserWindow
+      );
     }
     await onEvent;
   }
 
-  async dispatchMouseEvent({
-    type, button, x, y, modifiers, clickCount,
-  }) {
+  async dispatchMouseEvent({ type, button, x, y, modifiers, clickCount }) {
     if (type == "mousePressed") {
       type = "mousedown";
     } else if (type == "mouseReleased") {
@@ -135,8 +136,10 @@ class Input extends Domain {
         _EU_Ci: Ci,
         _EU_Cc: Cc,
       };
-      Services.scriptloader.loadSubScript("chrome://remote/content/external/EventUtils.js",
-        this._eventUtils);
+      Services.scriptloader.loadSubScript(
+        "chrome://remote/content/external/EventUtils.js",
+        this._eventUtils
+      );
     }
     return this._eventUtils;
   }

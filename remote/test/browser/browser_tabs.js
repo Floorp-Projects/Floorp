@@ -24,12 +24,18 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let targets = await getTargets(CDP);
-  ok(targets.some(target => target.url == TEST_URI), "Found the tab in target list");
+  ok(
+    targets.some(target => target.url == TEST_URI),
+    "Found the tab in target list"
+  );
 
   BrowserTestUtils.removeTab(tab);
 
   targets = await getTargets(CDP);
-  ok(!targets.some(target => target.url == TEST_URI), "Tab has been removed from the target list");
+  ok(
+    !targets.some(target => target.url == TEST_URI),
+    "Tab has been removed from the target list"
+  );
 
   await RemoteAgent.close();
 });

@@ -6,8 +6,8 @@
 add_task(async function() {
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
   const CDP = await getCDP();
-  const {webSocketDebuggerUrl} = await CDP.Version();
-  const client = await CDP({"target": webSocketDebuggerUrl});
+  const { webSocketDebuggerUrl } = await CDP.Version();
+  const client = await CDP({ target: webSocketDebuggerUrl });
 
   try {
     await client.send("Hoobaflooba");

@@ -6,11 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["Connection"];
 
-const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
-XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 class Connection {
   /**
@@ -40,8 +47,10 @@ class Connection {
   registerSession(session) {
     if (!session.id) {
       if (this.defaultSession) {
-        throw new Error("Default session is already set on Connection," +
-                        "can't register another one.");
+        throw new Error(
+          "Default session is already set on Connection," +
+            "can't register another one."
+        );
       }
       this.defaultSession = session;
     }
@@ -58,14 +67,14 @@ class Connection {
       message: e.message,
       data: e.stack,
     };
-    this.send({id, error});
+    this.send({ id, error });
   }
 
   deserialize(data) {
     const id = data.id;
     const method = data.method;
     const params = data.params || {};
-    return {id, method, params};
+    return { id, method, params };
   }
 
   // transport hooks
@@ -73,7 +82,7 @@ class Connection {
   onPacket(packet) {
     log.trace(`(connection ${this.id})-> ${JSON.stringify(packet)}`);
 
-    let message = {id: null};
+    let message = { id: null };
     try {
       message = this.deserialize(packet);
       const { sessionId } = packet;
