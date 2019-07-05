@@ -194,7 +194,7 @@ data class ContextMenuCandidate(
             action = { _, hitResult ->
                 val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText(hitResult.getLink(), hitResult.getLink())
-                clipboardManager.primaryClip = clip
+                clipboardManager.setPrimaryClip(clip)
 
                 snackbarDelegate.show(
                     snackBarParentView = snackBarParentView,
@@ -218,7 +218,7 @@ data class ContextMenuCandidate(
             action = { _, hitResult ->
                 val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText(hitResult.getLink(), hitResult.src)
-                clipboardManager.primaryClip = clip
+                clipboardManager.setPrimaryClip(clip)
 
                 snackbarDelegate.show(
                     snackBarParentView = snackBarParentView,

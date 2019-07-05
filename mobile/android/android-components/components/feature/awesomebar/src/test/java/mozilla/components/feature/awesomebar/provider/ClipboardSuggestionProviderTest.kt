@@ -39,7 +39,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider returns empty list by default`() = runBlocking {
-        clipboardManager.primaryClip = null
+        clipboardManager.clearPrimaryClip()
 
         val provider = ClipboardSuggestionProvider(testContext, mock())
 
@@ -51,10 +51,13 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider returns empty list for non plain text clip`() {
-        clipboardManager.primaryClip = ClipData.newHtmlText(
-            "Label",
-            "Hello mozilla.org",
-            "<b>This is HTML on mozilla.org</b>")
+        clipboardManager.setPrimaryClip(
+            ClipData.newHtmlText(
+                "Label",
+                "Hello mozilla.org",
+                "<b>This is HTML on mozilla.org</b>"
+            )
+        )
 
         assertNull(getSuggestion())
     }
@@ -91,7 +94,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider return suggestion on input start`() {
-        clipboardManager.primaryClip = ClipData.newPlainText("Test label", "https://www.mozilla.org")
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", "https://www.mozilla.org"))
 
         val provider = ClipboardSuggestionProvider(testContext, mock())
         val suggestions = runBlocking { provider.onInputStarted() }
@@ -115,7 +118,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider should allow customization of title and icon on suggestion`() {
-        clipboardManager.primaryClip = ClipData.newPlainText("Test label", "http://mozilla.org")
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", "http://mozilla.org"))
         val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
         val provider = ClipboardSuggestionProvider(
             testContext,
@@ -140,9 +143,12 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `clicking suggestion loads url`() = runBlocking {
-        clipboardManager.primaryClip = ClipData.newPlainText(
-            "Label",
-            "Hello Mozilla, https://www.mozilla.org")
+        clipboardManager.setPrimaryClip(
+            ClipData.newPlainText(
+                "Label",
+                "Hello Mozilla, https://www.mozilla.org"
+            )
+        )
 
         val selectedEngineSession: EngineSession = mock()
         val selectedSession: Session = mock()
@@ -176,9 +182,12 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider returns empty list for non-empty text if empty text required`() = runBlocking {
-        clipboardManager.primaryClip = ClipData.newPlainText(
+        clipboardManager.setPrimaryClip(
+            ClipData.newPlainText(
                 "Label",
-                "Hello Mozilla, https://www.mozilla.org")
+                "Hello Mozilla, https://www.mozilla.org"
+            )
+        )
 
         val provider = ClipboardSuggestionProvider(testContext, mock(), requireEmptyText = true)
         val suggestions = provider.onInputChanged("Hello")
@@ -199,7 +208,7 @@ class ClipboardSuggestionProviderTest {
     }
 
     private fun getSuggestionWithClipboard(text: String): AwesomeBar.Suggestion? {
-        clipboardManager.primaryClip = ClipData.newPlainText("Test label", text)
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", text))
         return getSuggestion()
     }
 

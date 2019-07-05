@@ -16,6 +16,7 @@ import mozilla.components.browser.search.provider.filter.SearchEngineFilter
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.support.ktx.android.content.res.readJSONObject
 import mozilla.components.support.ktx.android.org.json.toList
+import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -173,7 +174,7 @@ class AssetsSearchEngineProvider(
 
     private fun getStringFromBlock(key: String, blocks: Array<JSONObject>): String? =
             getValueFromBlock(blocks) {
-                it.optString(key, null)
+                it.tryGetString(key)
             }
 
     private fun getArrayFromBlock(key: String, blocks: Array<JSONObject>): JSONArray? =

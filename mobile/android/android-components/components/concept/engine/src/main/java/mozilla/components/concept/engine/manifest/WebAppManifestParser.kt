@@ -125,7 +125,7 @@ private fun parseIcons(json: JSONObject): List<WebAppManifest.Icon> {
             WebAppManifest.Icon(
                 src = obj.getString("src"),
                 sizes = parseIconSizes(obj),
-                type = obj.optString("type", null),
+                type = obj.tryGetString("type"),
                 purpose = parsePurposes(obj)
             )
         }
