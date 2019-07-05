@@ -18,7 +18,11 @@ function test() {
     let uris = PlacesCommandHook.uniqueCurrentPages;
     is(uris.length, 1, "Only one uri is returned");
 
-    is(uris[0].uri.spec, tabTwo.linkedBrowser.currentURI.spec, "It's the correct URI");
+    is(
+      uris[0].uri.spec,
+      tabTwo.linkedBrowser.currentURI.spec,
+      "It's the correct URI"
+    );
 
     gBrowser.removeTab(tabOne);
     gBrowser.removeTab(tabTwo);

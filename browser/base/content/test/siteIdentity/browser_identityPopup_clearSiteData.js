@@ -3,10 +3,14 @@
 
 const TEST_ORIGIN = "https://example.com";
 const TEST_SUB_ORIGIN = "https://test1.example.com";
-const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
+const REMOVE_DIALOG_URL =
+  "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
-ChromeUtils.defineModuleGetter(this, "SiteDataTestUtils",
-                               "resource://testing-common/SiteDataTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SiteDataTestUtils",
+  "resource://testing-common/SiteDataTestUtils.jsm"
+);
 
 add_task(async function setup() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -43,22 +47,40 @@ async function testClearing(testQuota, testCookies) {
 
     // Open the identity popup.
     let { gIdentityHandler } = gBrowser.ownerGlobal;
-    let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
-    let siteDataUpdated = TestUtils.topicObserved("sitedatamanager:sites-updated");
+    let promisePanelOpen = BrowserTestUtils.waitForEvent(
+      gIdentityHandler._identityPopup,
+      "popupshown"
+    );
+    let siteDataUpdated = TestUtils.topicObserved(
+      "sitedatamanager:sites-updated"
+    );
     gIdentityHandler._identityBox.click();
     await promisePanelOpen;
     await siteDataUpdated;
 
-    let clearFooter = document.getElementById("identity-popup-clear-sitedata-footer");
-    let clearButton = document.getElementById("identity-popup-clear-sitedata-button");
+    let clearFooter = document.getElementById(
+      "identity-popup-clear-sitedata-footer"
+    );
+    let clearButton = document.getElementById(
+      "identity-popup-clear-sitedata-button"
+    );
     ok(!clearFooter.hidden, "The clear data footer is not hidden.");
 
     let cookiesCleared;
     if (testCookies) {
       cookiesCleared = Promise.all([
-        TestUtils.topicObserved("cookie-changed", (subj, data) => data == "deleted" && subj.name == "test1"),
-        TestUtils.topicObserved("cookie-changed", (subj, data) => data == "deleted" && subj.name == "test2"),
-        TestUtils.topicObserved("cookie-changed", (subj, data) => data == "deleted" && subj.name == "test3"),
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test1"
+        ),
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test2"
+        ),
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test3"
+        ),
       ]);
     }
 
@@ -66,15 +88,27 @@ async function testClearing(testQuota, testCookies) {
 
     // Click the "Clear data" button.
     siteDataUpdated = TestUtils.topicObserved("sitedatamanager:sites-updated");
-    let hideEvent = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popuphidden");
-    let removeDialogPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
+    let hideEvent = BrowserTestUtils.waitForEvent(
+      gIdentityHandler._identityPopup,
+      "popuphidden"
+    );
+    let removeDialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
+      "accept",
+      REMOVE_DIALOG_URL
+    );
     clearButton.click();
     await hideEvent;
     await removeDialogPromise;
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS).parent;
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    ).parent;
     let buttonEvents = events.filter(
-      e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "clear_sitedata");
+      e =>
+        e[1] == "security.ui.identitypopup" &&
+        e[2] == "click" &&
+        e[3] == "clear_sitedata"
+    );
     is(buttonEvents.length, 1, "recorded telemetry for the button click");
 
     await siteDataUpdated;
@@ -83,9 +117,17 @@ async function testClearing(testQuota, testCookies) {
     if (testCookies) {
       await cookiesCleared;
       let uri = Services.io.newURI(TEST_ORIGIN);
-      is(Services.cookies.countCookiesFromHost(uri.host), 0, "Cookies from the base domain should be cleared");
+      is(
+        Services.cookies.countCookiesFromHost(uri.host),
+        0,
+        "Cookies from the base domain should be cleared"
+      );
       uri = Services.io.newURI(TEST_SUB_ORIGIN);
-      is(Services.cookies.countCookiesFromHost(uri.host), 0, "Cookies from the sub domain should be cleared");
+      is(
+        Services.cookies.countCookiesFromHost(uri.host),
+        0,
+        "Cookies from the sub domain should be cleared"
+      );
     }
 
     // Check that quota storage was deleted.
@@ -100,13 +142,19 @@ async function testClearing(testQuota, testCookies) {
     }
 
     // Open the site identity panel again to check that the button isn't shown anymore.
-    promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+    promisePanelOpen = BrowserTestUtils.waitForEvent(
+      gIdentityHandler._identityPopup,
+      "popupshown"
+    );
     siteDataUpdated = TestUtils.topicObserved("sitedatamanager:sites-updated");
     gIdentityHandler._identityBox.click();
     await promisePanelOpen;
     await siteDataUpdated;
 
-    ok(clearFooter.hidden, "The clear data footer is hidden after clearing data.");
+    ok(
+      clearFooter.hidden,
+      "The clear data footer is hidden after clearing data."
+    );
   });
 }
 

@@ -68,22 +68,26 @@ const processes = {
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // bug 1376994
+    {
+      // bug 1376994
       path: "XCurProcD:omni.ja",
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // Exists call in ScopedXREEmbed::SetAppDir
+    {
+      // Exists call in ScopedXREEmbed::SetAppDir
       path: "XCurProcD:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1357205
+    {
+      // bug 1357205
       path: "XREAppFeat:webcompat@mozilla.org.xpi",
       condition: !WIN,
       stat: 1,
     },
-    { // bug 1357205
+    {
+      // bug 1357205
       path: "XREAppFeat:formautofill@mozilla.org.xpi",
       condition: !WIN,
       ignoreIfUnused: true,
@@ -96,49 +100,57 @@ const processes = {
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // bug 1376994
+    {
+      // bug 1376994
       path: "XCurProcD:omni.ja",
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // Exists call in ScopedXREEmbed::SetAppDir
+    {
+      // Exists call in ScopedXREEmbed::SetAppDir
       path: "XCurProcD:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1357205
+    {
+      // bug 1357205
       path: "XREAppFeat:webcompat@mozilla.org.xpi",
       condition: !WIN,
       stat: 1,
     },
   ],
-  "WebExtensions": [
+  WebExtensions: [
     {
       path: "GreD:omni.ja",
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // bug 1376994
+    {
+      // bug 1376994
       path: "XCurProcD:omni.ja",
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // Exists call in ScopedXREEmbed::SetAppDir
+    {
+      // Exists call in ScopedXREEmbed::SetAppDir
       path: "XCurProcD:",
       condition: WIN,
       stat: 1,
     },
-    { // bug 1357205
+    {
+      // bug 1357205
       path: "XREAppFeat:webcompat@mozilla.org.xpi",
       condition: !WIN,
       stat: 1,
     },
-    { // bug 1357205
+    {
+      // bug 1357205
       path: "XREAppFeat:formautofill@mozilla.org.xpi",
       condition: !WIN,
       stat: 1,
     },
-    { // bug 1357205
+    {
+      // bug 1357205
       path: "XREAppFeat:screenshots@mozilla.org.xpi",
       condition: !WIN,
       close: 1,
@@ -202,8 +214,9 @@ function getIOMarkersFromProfile(profile) {
   for (let m of profile.markers.data) {
     let markerName = profile.stringTable[m[nameCol]];
 
-    if (markerName != "FileIO")
+    if (markerName != "FileIO") {
       continue;
+    }
 
     let markerData = m[dataCol];
     if (markerData.source == "sqlite-mainthread") {
@@ -212,10 +225,12 @@ function getIOMarkersFromProfile(profile) {
 
     let samples = markerData.stack.samples;
     let stack = samples.data[0][samples.schema.stack];
-    markers.push({operation: markerData.operation,
-                  filename: markerData.filename,
-                  source: markerData.source,
-                  stackId: stack});
+    markers.push({
+      operation: markerData.operation,
+      filename: markerData.filename,
+      source: markerData.source,
+      stackId: stack,
+    });
   }
 
   return markers;
@@ -223,21 +238,30 @@ function getIOMarkersFromProfile(profile) {
 
 function pathMatches(path, filename) {
   path = path.toLowerCase();
-  return path == filename || // Full match
+  return (
+    path == filename || // Full match
     // Wildcard on both sides of the path
-    (path.startsWith("*") && path.endsWith("*") &&
-     filename.includes(path.slice(1, -1))) ||
+    (path.startsWith("*") &&
+      path.endsWith("*") &&
+      filename.includes(path.slice(1, -1))) ||
     // Wildcard suffix
     (path.endsWith("*") && filename.startsWith(path.slice(0, -1))) ||
     // Wildcard prefix
-    (path.startsWith("*") && filename.endsWith(path.slice(1)));
+    (path.startsWith("*") && filename.endsWith(path.slice(1)))
+  );
 }
 
 add_task(async function() {
-  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION && !AppConstants.DEBUG) {
-    ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
-       "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
-       "non-debug build.");
+  if (
+    !AppConstants.NIGHTLY_BUILD &&
+    !AppConstants.MOZ_DEV_EDITION &&
+    !AppConstants.DEBUG
+  ) {
+    ok(
+      !("@mozilla.org/test/startuprecorder;1" in Cc),
+      "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
+        "non-debug build."
+    );
     return;
   }
 
@@ -245,18 +269,23 @@ add_task(async function() {
     let omniJa = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
     omniJa.append("omni.ja");
     if (!omniJa.exists()) {
-      ok(false, "This test requires a packaged build, " +
-                "run 'mach package' and then use --appname=dist");
+      ok(
+        false,
+        "This test requires a packaged build, " +
+          "run 'mach package' and then use --appname=dist"
+      );
       return;
     }
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
+    .wrappedJSObject;
   await startupRecorder.done;
 
   for (let process in processes) {
-    processes[process] =
-      processes[process].filter(entry => !("condition" in entry) || entry.condition);
+    processes[process] = processes[process].filter(
+      entry => !("condition" in entry) || entry.condition
+    );
     processes[process].forEach(entry => {
       entry.path = expandWhitelistPath(entry.path, entry.canonicalize);
     });
@@ -266,12 +295,17 @@ add_task(async function() {
   let shouldPass = true;
   for (let procName in processes) {
     let whitelist = processes[procName];
-    info(`whitelisted paths for ${procName} process:\n` +
-         whitelist.map(e => {
-           let operations = Object.keys(e).filter(k => !["path", "condition"].includes(k))
-                                  .map(k => `${k}: ${e[k]}`);
-           return `  ${e.path} - ${operations.join(", ")}`;
-         }).join("\n"));
+    info(
+      `whitelisted paths for ${procName} process:\n` +
+        whitelist
+          .map(e => {
+            let operations = Object.keys(e)
+              .filter(k => !["path", "condition"].includes(k))
+              .map(k => `${k}: ${e[k]}`);
+            return `  ${e.path} - ${operations.join(", ")}`;
+          })
+          .join("\n")
+    );
 
     let profile;
     for (let process of startupRecorder.data.profile.processes) {
@@ -332,16 +366,23 @@ add_task(async function() {
         }
       }
       if (!expected) {
-        record(false,
-               `unexpected ${marker.operation} on ${marker.filename} in ${procName} process`,
-               undefined,
-               "  " + getStackFromProfile(profile, marker.stackId).join("\n  "));
+        record(
+          false,
+          `unexpected ${marker.operation} on ${
+            marker.filename
+          } in ${procName} process`,
+          undefined,
+          "  " + getStackFromProfile(profile, marker.stackId).join("\n  ")
+        );
         shouldPass = false;
       }
       info(`(${marker.source}) ${marker.operation} - ${marker.filename}`);
       if (kDumpAllStacks) {
-        info(getStackFromProfile(profile, marker.stackId).map(f => "  " + f)
-                                                         .join("\n"));
+        info(
+          getStackFromProfile(profile, marker.stackId)
+            .map(f => "  " + f)
+            .join("\n")
+        );
       }
     }
 
@@ -351,8 +392,12 @@ add_task(async function() {
     // The I/O interposer is disabled if !RELEASE_OR_BETA, so we expect to have
     // no I/O marker in that case, but it's good to keep the test running to check
     // that we are still able to produce startup profiles.
-    is(markers.length > 0, !AppConstants.RELEASE_OR_BETA,
-       procName + " startup profiles should have IO markers in builds that are not RELEASE_OR_BETA");
+    is(
+      markers.length > 0,
+      !AppConstants.RELEASE_OR_BETA,
+      procName +
+        " startup profiles should have IO markers in builds that are not RELEASE_OR_BETA"
+    );
     if (!markers.length) {
       // If a profile unexpectedly contains no I/O marker, avoid generating
       // plenty of confusing "unused whitelist entry" failures.
@@ -386,14 +431,18 @@ add_task(async function() {
   } else {
     const filename = "profile_startup_content_mainthreadio.json";
     let path = Cc["@mozilla.org/process/environment;1"]
-                 .getService(Ci.nsIEnvironment)
-                 .get("MOZ_UPLOAD_DIR");
+      .getService(Ci.nsIEnvironment)
+      .get("MOZ_UPLOAD_DIR");
     let encoder = new TextEncoder();
     let profilePath = OS.Path.join(path, filename);
-    await OS.File.writeAtomic(profilePath,
-                              encoder.encode(JSON.stringify(startupRecorder.data.profile)));
-    ok(false,
-       "Unexpected main thread I/O behavior during child process startup; " +
-       `open the ${filename} artifact in the Firefox Profiler to see what happened`);
+    await OS.File.writeAtomic(
+      profilePath,
+      encoder.encode(JSON.stringify(startupRecorder.data.profile))
+    );
+    ok(
+      false,
+      "Unexpected main thread I/O behavior during child process startup; " +
+        `open the ${filename} artifact in the Firefox Profiler to see what happened`
+    );
   }
 });

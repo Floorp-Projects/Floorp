@@ -32,7 +32,9 @@ add_task(async function testNormalBrowsing() {
 });
 
 add_task(async function testPrivateBrowsing() {
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let TrackingProtection = privateWin.gBrowser.ownerGlobal.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
 

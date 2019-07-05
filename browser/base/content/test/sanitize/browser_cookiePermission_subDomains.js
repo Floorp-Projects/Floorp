@@ -1,5 +1,7 @@
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
-const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm");
+const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+const { SiteDataTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SiteDataTestUtils.jsm"
+);
 
 // 2 domains: www.mozilla.org (session-only) mozilla.org (allowed) - after the
 // cleanp, mozilla.org must have data.
@@ -11,27 +13,47 @@ add_task(async function subDomains() {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve);
   });
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.lifetimePolicy", Ci.nsICookieService.ACCEPT_NORMALLY ],
-    ["browser.sanitizer.loglevel", "All"],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.lifetimePolicy", Ci.nsICookieService.ACCEPT_NORMALLY],
+      ["browser.sanitizer.loglevel", "All"],
+    ],
+  });
 
   // Domains and data
   let uriA = Services.io.newURI("https://www.mozilla.org");
   Services.perms.add(uriA, "cookie", Ci.nsICookiePermission.ACCESS_SESSION);
 
-  Services.cookies.add(uriA.host, "/test", "a", "b",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    uriA.host,
+    "/test",
+    "a",
+    "b",
+    false,
+    false,
+    false,
+    Date.now() + 24000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   await createIndexedDB(uriA.host, {});
 
   let uriB = Services.io.newURI("https://mozilla.org");
   Services.perms.add(uriB, "cookie", Ci.nsICookiePermission.ACCESS_ALLOW);
 
-  Services.cookies.add(uriB.host, "/test", "c", "d",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    uriB.host,
+    "/test",
+    "c",
+    "d",
+    false,
+    false,
+    false,
+    Date.now() + 24000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   await createIndexedDB(uriB.host, {});
 
@@ -45,10 +67,22 @@ add_task(async function subDomains() {
   await Sanitizer.runSanitizeOnShutdown();
 
   // Check again
-  ok(!(await checkCookie(uriA.host, {})), "We should not have cookies for URI: " + uriA.host);
-  ok(!(await checkIndexedDB(uriA.host, {})), "We should not have IDB for URI: " + uriA.host);
-  ok(await checkCookie(uriB.host, {}), "We should have cookies for URI: " + uriB.host);
-  ok(await checkIndexedDB(uriB.host, {}), "We should have IDB for URI: " + uriB.host);
+  ok(
+    !(await checkCookie(uriA.host, {})),
+    "We should not have cookies for URI: " + uriA.host
+  );
+  ok(
+    !(await checkIndexedDB(uriA.host, {})),
+    "We should not have IDB for URI: " + uriA.host
+  );
+  ok(
+    await checkCookie(uriB.host, {}),
+    "We should have cookies for URI: " + uriB.host
+  );
+  ok(
+    await checkIndexedDB(uriB.host, {}),
+    "We should have IDB for URI: " + uriB.host
+  );
 
   // Cleaning up permissions
   Services.perms.remove(uriA, "cookie");
@@ -65,26 +99,46 @@ add_task(async function subDomains() {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve);
   });
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.lifetimePolicy", Ci.nsICookieService.ACCEPT_SESSION ],
-    ["browser.sanitizer.loglevel", "All"],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.lifetimePolicy", Ci.nsICookieService.ACCEPT_SESSION],
+      ["browser.sanitizer.loglevel", "All"],
+    ],
+  });
 
   // Domains and data
   let uriA = Services.io.newURI("https://sub.mozilla.org");
   Services.perms.add(uriA, "cookie", Ci.nsICookiePermission.ACCESS_ALLOW);
 
-  Services.cookies.add(uriA.host, "/test", "a", "b",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    uriA.host,
+    "/test",
+    "a",
+    "b",
+    false,
+    false,
+    false,
+    Date.now() + 24000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   await createIndexedDB(uriA.host, {});
 
   let uriB = Services.io.newURI("https://www.mozilla.org");
 
-  Services.cookies.add(uriB.host, "/test", "c", "d",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    uriB.host,
+    "/test",
+    "c",
+    "d",
+    false,
+    false,
+    false,
+    Date.now() + 24000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   await createIndexedDB(uriB.host, {});
 
@@ -98,10 +152,22 @@ add_task(async function subDomains() {
   await Sanitizer.runSanitizeOnShutdown();
 
   // Check again
-  ok(await checkCookie(uriA.host, {}), "We should have cookies for URI: " + uriA.host);
-  ok(await checkIndexedDB(uriA.host, {}), "We should have IDB for URI: " + uriA.host);
-  ok(!await checkCookie(uriB.host, {}), "We should not have cookies for URI: " + uriB.host);
-  ok(!await checkIndexedDB(uriB.host, {}), "We should not have IDB for URI: " + uriB.host);
+  ok(
+    await checkCookie(uriA.host, {}),
+    "We should have cookies for URI: " + uriA.host
+  );
+  ok(
+    await checkIndexedDB(uriA.host, {}),
+    "We should have IDB for URI: " + uriA.host
+  );
+  ok(
+    !(await checkCookie(uriB.host, {})),
+    "We should not have cookies for URI: " + uriB.host
+  );
+  ok(
+    !(await checkIndexedDB(uriB.host, {})),
+    "We should not have IDB for URI: " + uriB.host
+  );
 
   // Cleaning up permissions
   Services.perms.remove(uriA, "cookie");

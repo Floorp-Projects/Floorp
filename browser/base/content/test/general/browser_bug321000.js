@@ -7,17 +7,17 @@
 const kTestString = "  hello hello  \n  world\nworld  ";
 
 var gTests = [
-
-  { desc: "Urlbar strips newlines and surrounding whitespace",
+  {
+    desc: "Urlbar strips newlines and surrounding whitespace",
     element: gURLBar,
     expected: kTestString.replace(/\s*\n\s*/g, ""),
   },
 
-  { desc: "Searchbar replaces newlines with spaces",
+  {
+    desc: "Searchbar replaces newlines with spaces",
     element: document.getElementById("searchbar"),
     expected: kTestString.replace(/\n/g, " "),
   },
-
 ];
 
 // Test for bug 23485 and bug 321000.
@@ -26,21 +26,29 @@ var gTests = [
 function test() {
   waitForExplicitFinish();
 
-  let cbHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].
-                 getService(Ci.nsIClipboardHelper);
+  let cbHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
+    Ci.nsIClipboardHelper
+  );
 
   // Put a multi-line string in the clipboard.
   // Setting the clipboard value is an async OS operation, so we need to poll
   // the clipboard for valid data before going on.
-  waitForClipboard(kTestString, function() { cbHelper.copyString(kTestString); },
-                   next_test, finish);
+  waitForClipboard(
+    kTestString,
+    function() {
+      cbHelper.copyString(kTestString);
+    },
+    next_test,
+    finish
+  );
 }
 
 function next_test() {
-  if (gTests.length)
+  if (gTests.length) {
     test_paste(gTests.shift());
-  else
+  } else {
     finish();
+  }
 }
 
 function test_paste(aCurrentTest) {
@@ -67,13 +75,17 @@ function test_paste(aCurrentTest) {
 
   // Focus the element and wait for focus event.
   info("About to focus " + element.id);
-  element.addEventListener("focus", function() {
-    executeSoon(function() {
-      // Pasting is async because the Accel+V codepath ends up going through
-      // nsDocumentViewer::FireClipboardEvent.
-      info("Pasting into " + element.id);
-      EventUtils.synthesizeKey("v", { accelKey: true });
-    });
-  }, {once: true});
+  element.addEventListener(
+    "focus",
+    function() {
+      executeSoon(function() {
+        // Pasting is async because the Accel+V codepath ends up going through
+        // nsDocumentViewer::FireClipboardEvent.
+        info("Pasting into " + element.id);
+        EventUtils.synthesizeKey("v", { accelKey: true });
+      });
+    },
+    { once: true }
+  );
   element.focus();
 }

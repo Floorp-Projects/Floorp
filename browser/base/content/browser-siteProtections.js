@@ -11,84 +11,105 @@ var gProtectionsHandler = {
   // smart getters
   get _protectionsPopup() {
     delete this._protectionsPopup;
-    return this._protectionsPopup = document.getElementById("protections-popup");
+    return (this._protectionsPopup = document.getElementById(
+      "protections-popup"
+    ));
   },
   get _protectionsIconBox() {
     delete this._protectionsIconBox;
-    return this._protectionsIconBox = document.getElementById("tracking-protection-icon-animatable-box");
+    return (this._protectionsIconBox = document.getElementById(
+      "tracking-protection-icon-animatable-box"
+    ));
   },
   get _protectionsPopupMultiView() {
     delete this._protectionsPopupMultiView;
-    return this._protectionsPopupMultiView =
-      document.getElementById("protections-popup-multiView");
+    return (this._protectionsPopupMultiView = document.getElementById(
+      "protections-popup-multiView"
+    ));
   },
   get _protectionsPopupMainView() {
     delete this._protectionsPopupMainView;
-    return this._protectionsPopupMainView =
-      document.getElementById("protections-popup-mainView");
+    return (this._protectionsPopupMainView = document.getElementById(
+      "protections-popup-mainView"
+    ));
   },
   get _protectionsPopupMainViewHeaderLabel() {
     delete this._protectionsPopupMainViewHeaderLabel;
-    return this._protectionsPopupMainViewHeaderLabel =
-      document.getElementById("protections-popup-mainView-panel-header-span");
+    return (this._protectionsPopupMainViewHeaderLabel = document.getElementById(
+      "protections-popup-mainView-panel-header-span"
+    ));
   },
   get _protectionsPopupTPSwitchBreakageLink() {
     delete this._protectionsPopupTPSwitchBreakageLink;
-    return this._protectionsPopupTPSwitchBreakageLink =
-      document.getElementById("protections-popup-tp-switch-breakage-link");
+    return (this._protectionsPopupTPSwitchBreakageLink = document.getElementById(
+      "protections-popup-tp-switch-breakage-link"
+    ));
   },
   get _protectionsPopupTPSwitch() {
     delete this._protectionsPopupTPSwitch;
-    return this._protectionsPopupTPSwitch =
-      document.getElementById("protections-popup-tp-switch");
+    return (this._protectionsPopupTPSwitch = document.getElementById(
+      "protections-popup-tp-switch"
+    ));
   },
   get _protectionPopupSettingsButton() {
     delete this._protectionPopupSettingsButton;
-    return this._protectionPopupSettingsButton =
-      document.getElementById("protections-popup-settings-button");
+    return (this._protectionPopupSettingsButton = document.getElementById(
+      "protections-popup-settings-button"
+    ));
   },
   get _protectionPopupFooter() {
     delete this._protectionPopupFooter;
-    return this._protectionPopupFooter =
-      document.getElementById("protections-popup-footer");
+    return (this._protectionPopupFooter = document.getElementById(
+      "protections-popup-footer"
+    ));
   },
   get _protectionPopupTrackersCounterDescription() {
     delete this._protectionPopupTrackersCounterDescription;
-    return this._protectionPopupTrackersCounterDescription =
-      document.getElementById("protections-popup-trackers-blocked-counter-description");
+    return (this._protectionPopupTrackersCounterDescription = document.getElementById(
+      "protections-popup-trackers-blocked-counter-description"
+    ));
   },
   get _protectionsPopupSiteNotWorkingTPSwitch() {
     delete this._protectionsPopupSiteNotWorkingTPSwitch;
-    return this._protectionsPopupSiteNotWorkingTPSwitch =
-      document.getElementById("protections-popup-siteNotWorking-tp-switch");
+    return (this._protectionsPopupSiteNotWorkingTPSwitch = document.getElementById(
+      "protections-popup-siteNotWorking-tp-switch"
+    ));
   },
   get _protectionsPopupSendReportLearnMore() {
     delete this._protectionsPopupSendReportLearnMore;
-    return this._protectionsPopupSendReportLearnMore =
-      document.getElementById("protections-popup-sendReportView-learn-more");
+    return (this._protectionsPopupSendReportLearnMore = document.getElementById(
+      "protections-popup-sendReportView-learn-more"
+    ));
   },
   get _protectionsPopupSendReportURL() {
     delete this._protectionsPopupSendReportURL;
-    return this._protectionsPopupSendReportURL =
-      document.getElementById("protections-popup-sendReportView-collection-url");
+    return (this._protectionsPopupSendReportURL = document.getElementById(
+      "protections-popup-sendReportView-collection-url"
+    ));
   },
   get _protectionsPopupToastTimeout() {
     delete this._protectionsPopupToastTimeout;
-    XPCOMUtils.defineLazyPreferenceGetter(this, "_protectionsPopupToastTimeout",
-                                          "browser.protections_panel.toast.timeout",
-                                          5000);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_protectionsPopupToastTimeout",
+      "browser.protections_panel.toast.timeout",
+      5000
+    );
     return this._protectionsPopupToastTimeout;
   },
 
   handleProtectionsButtonEvent(event) {
     event.stopPropagation();
-    if ((event.type == "click" && event.button != 0) ||
-        (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
-         event.keyCode != KeyEvent.DOM_VK_RETURN)) {
+    if (
+      (event.type == "click" && event.button != 0) ||
+      (event.type == "keypress" &&
+        event.charCode != KeyEvent.DOM_VK_SPACE &&
+        event.keyCode != KeyEvent.DOM_VK_RETURN)
+    ) {
       return; // Left click, space or enter only
     }
 
-    this.showProtectionsPopup({event});
+    this.showProtectionsPopup({ event });
   },
 
   onPopupShown(event) {
@@ -111,7 +132,7 @@ var gProtectionsHandler = {
       PanelMultiView.hidePopup(this._protectionsPopup);
 
       // Open the full protections panel.
-      this.showProtectionsPopup({event});
+      this.showProtectionsPopup({ event });
     }
   },
 
@@ -123,8 +144,10 @@ var gProtectionsHandler = {
     this._showToastAfterRefresh = false;
 
     // We only display the toast if we're still on the same page.
-    if (this._previousURI != gBrowser.currentURI.spec ||
-        this._previousOuterWindowID != gBrowser.selectedBrowser.outerWindowID) {
+    if (
+      this._previousURI != gBrowser.currentURI.spec ||
+      this._previousOuterWindowID != gBrowser.selectedBrowser.outerWindowID
+    ) {
       return;
     }
 
@@ -137,9 +160,13 @@ var gProtectionsHandler = {
     let elem = document.activeElement;
     let position = elem.compareDocumentPosition(this._protectionsPopup);
 
-    if (!(position & (Node.DOCUMENT_POSITION_CONTAINS |
-                      Node.DOCUMENT_POSITION_CONTAINED_BY)) &&
-        !this._protectionsPopup.hasAttribute("noautohide")) {
+    if (
+      !(
+        position &
+        (Node.DOCUMENT_POSITION_CONTAINS | Node.DOCUMENT_POSITION_CONTAINED_BY)
+      ) &&
+      !this._protectionsPopup.hasAttribute("noautohide")
+    ) {
       // Hide the panel when focusing an element that is
       // neither an ancestor nor descendant unless the panel has
       // @noautohide (e.g. for a tour).
@@ -155,11 +182,12 @@ var gProtectionsHandler = {
       // gNavigatorBundle.getFormattedString("protections.header", [host]);
       `Tracking Protections for ${host}`;
 
-    let currentlyEnabled =
-      !this._protectionsPopup.hasAttribute("hasException");
+    let currentlyEnabled = !this._protectionsPopup.hasAttribute("hasException");
 
-    for (let tpSwitch of [this._protectionsPopupTPSwitch,
-                          this._protectionsPopupSiteNotWorkingTPSwitch]) {
+    for (let tpSwitch of [
+      this._protectionsPopupTPSwitch,
+      this._protectionsPopupSiteNotWorkingTPSwitch,
+    ]) {
       tpSwitch.toggleAttribute("enabled", currentlyEnabled);
     }
 
@@ -188,10 +216,13 @@ var gProtectionsHandler = {
 
     // Toggling the 'hasException' on the protections panel in order to do some
     // styling after toggling the TP switch.
-    let newExceptionState =
-      this._protectionsPopup.toggleAttribute("hasException");
-    for (let tpSwitch of [this._protectionsPopupTPSwitch,
-                          this._protectionsPopupSiteNotWorkingTPSwitch]) {
+    let newExceptionState = this._protectionsPopup.toggleAttribute(
+      "hasException"
+    );
+    for (let tpSwitch of [
+      this._protectionsPopupTPSwitch,
+      this._protectionsPopupSiteNotWorkingTPSwitch,
+    ]) {
       tpSwitch.toggleAttribute("enabled", !newExceptionState);
     }
 
@@ -202,7 +233,7 @@ var gProtectionsHandler = {
     this._previousURI = gBrowser.currentURI.spec;
     this._previousOuterWindowID = gBrowser.selectedBrowser.outerWindowID;
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (newExceptionState) {
       ContentBlocking.disableForCurrentPage();
@@ -236,7 +267,7 @@ var gProtectionsHandler = {
    *                   will be hidden after a certain amount of time.
    */
   showProtectionsPopup(options = {}) {
-    const {event, toast} = options;
+    const { event, toast } = options;
 
     // We need to clear the toast timer if it exists before showing the
     // protections popup.
@@ -256,41 +287,58 @@ var gProtectionsHandler = {
     }
 
     if (toast) {
-      this._protectionsPopup.addEventListener("popupshown", () => {
-        this._toastPanelTimer = setTimeout(() => {
-          PanelMultiView.hidePopup(this._protectionsPopup);
-          delete this._toastPanelTimer;
-        }, this._protectionsPopupToastTimeout);
-      }, {once: true});
+      this._protectionsPopup.addEventListener(
+        "popupshown",
+        () => {
+          this._toastPanelTimer = setTimeout(() => {
+            PanelMultiView.hidePopup(this._protectionsPopup);
+            delete this._toastPanelTimer;
+          }, this._protectionsPopupToastTimeout);
+        },
+        { once: true }
+      );
     }
 
     // Now open the popup, anchored off the primary chrome element
-    PanelMultiView.openPopup(this._protectionsPopup, gIdentityHandler._identityIcon, {
-      position: "bottomcenter topleft",
-      triggerEvent: event,
-    }).catch(Cu.reportError);
+    PanelMultiView.openPopup(
+      this._protectionsPopup,
+      gIdentityHandler._identityIcon,
+      {
+        position: "bottomcenter topleft",
+        triggerEvent: event,
+      }
+    ).catch(Cu.reportError);
   },
 
   showSiteNotWorkingView() {
-    this._protectionsPopupMultiView.showSubView("protections-popup-siteNotWorkingView");
+    this._protectionsPopupMultiView.showSubView(
+      "protections-popup-siteNotWorkingView"
+    );
   },
 
   showSendReportView() {
     // Save this URI to make sure that the user really only submits the location
     // they see in the report breakage dialog.
     this.reportURI = gBrowser.currentURI;
-    let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
+    let urlWithoutQuery = this.reportURI.asciiSpec.replace(
+      "?" + this.reportURI.query,
+      ""
+    );
     this._protectionsPopupSendReportURL.value = urlWithoutQuery;
-    this._protectionsPopupMultiView.showSubView("protections-popup-sendReportView");
+    this._protectionsPopupMultiView.showSubView(
+      "protections-popup-sendReportView"
+    );
   },
 
   onSendReportClicked() {
     this._protectionsPopup.hidePopup();
     let comments = document.getElementById(
-      "protections-popup-sendReportView-collection-comments");
+      "protections-popup-sendReportView-collection-comments"
+    );
     ContentBlocking.submitBreakageReport(this.reportURI, comments);
   },
 };
 
 let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-gProtectionsHandler._protectionsPopupSendReportLearnMore.href = baseURL + "blocking-breakage";
+gProtectionsHandler._protectionsPopupSendReportLearnMore.href =
+  baseURL + "blocking-breakage";

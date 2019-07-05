@@ -14,10 +14,19 @@ add_task(async function setup() {
 });
 
 add_task(async function testToggleSwitch() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
   await openProtectionsPanel();
-  ok(gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"), "TP Switch should be enabled");
-  let popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
+  ok(
+    gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
+    "TP Switch should be enabled"
+  );
+  let popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   gProtectionsHandler._protectionsPopupTPSwitch.click();
   await popuphiddenPromise;
@@ -25,8 +34,14 @@ add_task(async function testToggleSwitch() {
   // We need to wait toast's popup shown and popup hidden events. It won't fire
   // the popup shown event if we open the protections panel while the toast is
   // opening.
-  let popupShownPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popupshown");
-  popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popupshown"
+  );
+  popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
 
   await browserLoadedPromise;
 
@@ -35,24 +50,47 @@ add_task(async function testToggleSwitch() {
   await popuphiddenPromise;
 
   await openProtectionsPanel();
-  ok(!gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"), "TP Switch should be disabled");
-  Services.perms.remove(ContentBlocking._baseURIForChannelClassifier, "trackingprotection");
+  ok(
+    !gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
+    "TP Switch should be disabled"
+  );
+  Services.perms.remove(
+    ContentBlocking._baseURIForChannelClassifier,
+    "trackingprotection"
+  );
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testSiteNotWorking() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
   await openProtectionsPanel();
   let viewShownPromise = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopupMultiView, "ViewShown");
+    gProtectionsHandler._protectionsPopupMultiView,
+    "ViewShown"
+  );
   document.getElementById("protections-popup-tp-switch-breakage-link").click();
   let event = await viewShownPromise;
-  is(event.originalTarget.id, "protections-popup-siteNotWorkingView", "Site Not Working? view should be shown");
+  is(
+    event.originalTarget.id,
+    "protections-popup-siteNotWorkingView",
+    "Site Not Working? view should be shown"
+  );
   viewShownPromise = BrowserTestUtils.waitForEvent(
-    gProtectionsHandler._protectionsPopupMultiView, "ViewShown");
-  document.getElementById("protections-popup-siteNotWorkingView-sendReport").click();
+    gProtectionsHandler._protectionsPopupMultiView,
+    "ViewShown"
+  );
+  document
+    .getElementById("protections-popup-siteNotWorkingView-sendReport")
+    .click();
   event = await viewShownPromise;
-  is(event.originalTarget.id, "protections-popup-sendReportView", "Send Report view should be shown");
+  is(
+    event.originalTarget.id,
+    "protections-popup-sendReportView",
+    "Send Report view should be shown"
+  );
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -61,11 +99,20 @@ add_task(async function testSiteNotWorking() {
  */
 add_task(async function testSettingsButton() {
   // Open a tab and its protection panel.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
   await openProtectionsPanel();
 
-  let popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
+  let popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:preferences#privacy"
+  );
   gProtectionsHandler._protectionPopupSettingsButton.click();
 
   // The protection popup should be hidden after clicking settings button.
@@ -84,13 +131,23 @@ add_task(async function testSettingsButton() {
  */
 add_task(async function testShowFullReportLink() {
   // Open a tab and its protection panel.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
   await openProtectionsPanel();
 
-  let popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:protections");
-  let showFullReportLink =
-    document.getElementById("protections-popup-show-full-report-link");
+  let popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:protections"
+  );
+  let showFullReportLink = document.getElementById(
+    "protections-popup-show-full-report-link"
+  );
 
   showFullReportLink.click();
 
@@ -110,20 +167,30 @@ add_task(async function testShowFullReportLink() {
  */
 add_task(async function testMiniPanel() {
   // Open a tab.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
 
   // Open the mini panel.
   await openProtectionsPanel(true);
-  let popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
+  let popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
 
   // Check that only the header is displayed.
   for (let item of protectionsPopupMainView.childNodes) {
     if (item.id !== "protections-popup-mainView-panel-header") {
-      ok(!BrowserTestUtils.is_visible(item),
-         `The section '${item.id}' is hidden in the toast.`);
+      ok(
+        !BrowserTestUtils.is_visible(item),
+        `The section '${item.id}' is hidden in the toast.`
+      );
     } else {
-      ok(BrowserTestUtils.is_visible(item),
-         "The panel header is displayed as the content of the toast.");
+      ok(
+        BrowserTestUtils.is_visible(item),
+        "The panel header is displayed as the content of the toast."
+      );
     }
   }
 
@@ -140,11 +207,20 @@ add_task(async function testMiniPanel() {
  */
 add_task(async function testToggleSwitchFlow() {
   // Open a tab.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
   await openProtectionsPanel();
 
-  let popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popupshown");
+  let popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popupshown"
+  );
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Click the TP switch, from On -> Off.
@@ -155,38 +231,62 @@ add_task(async function testToggleSwitchFlow() {
   await browserLoadedPromise;
   await popupShownPromise;
 
-  ok(gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
-     "The protections popup should have the 'toast' attribute.");
+  ok(
+    gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
+    "The protections popup should have the 'toast' attribute."
+  );
 
   // Click on the mini panel and making sure the protection popup shows up.
-  popupShownPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popupshown");
-  popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
+  popupShownPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popupshown"
+  );
+  popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
   protectionsPopupHeader.click();
   await popuphiddenPromise;
   await popupShownPromise;
 
-  ok(!gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
-     "The 'toast' attribute should be cleared on the protections popup.");
+  ok(
+    !gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
+    "The 'toast' attribute should be cleared on the protections popup."
+  );
 
   // Click the TP switch again, from Off -> On.
-  popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
-  popupShownPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popupshown");
+  popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
+  popupShownPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popupshown"
+  );
   browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   gProtectionsHandler._protectionsPopupTPSwitch.click();
 
   // Protections popup hidden -> Page refresh -> Mini panel shows up.
   await popuphiddenPromise;
-  popuphiddenPromise = BrowserTestUtils.waitForEvent(protectionsPopup, "popuphidden");
+  popuphiddenPromise = BrowserTestUtils.waitForEvent(
+    protectionsPopup,
+    "popuphidden"
+  );
   await browserLoadedPromise;
   await popupShownPromise;
 
-  ok(gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
-     "The protections popup should have the 'toast' attribute.");
+  ok(
+    gProtectionsHandler._protectionsPopup.hasAttribute("toast"),
+    "The protections popup should have the 'toast' attribute."
+  );
 
   // Wait until the auto hide is happening.
   await popuphiddenPromise;
 
   // Clean up the TP state.
-  Services.perms.remove(ContentBlocking._baseURIForChannelClassifier, "trackingprotection");
+  Services.perms.remove(
+    ContentBlocking._baseURIForChannelClassifier,
+    "trackingprotection"
+  );
   BrowserTestUtils.removeTab(tab);
 });

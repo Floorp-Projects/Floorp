@@ -10,10 +10,16 @@ function test() {
       return document.getElementById(id).getAttribute(attr);
     }
 
-    is(elemAttr("key_close", "disabled"), "",
-       "key_closed should always be enabled");
-    is(elemAttr("menu_close", "key"), "key_close",
-       "menu_close should always have key_close set");
+    is(
+      elemAttr("key_close", "disabled"),
+      "",
+      "key_closed should always be enabled"
+    );
+    is(
+      elemAttr("menu_close", "key"),
+      "key_close",
+      "menu_close should always have key_close set"
+    );
   }
 
   let unpinnedTab = gBrowser.selectedTab;
@@ -51,7 +57,11 @@ function test() {
 
   EventUtils.synthesizeKey("w", { accelKey: true });
   is(gBrowser.tabs.length, 3, "accel+w in a pinned tab didn't close it");
-  is(gBrowser.selectedTab, unpinnedTab, "accel+w in a pinned tab selected the first unpinned tab");
+  is(
+    gBrowser.selectedTab,
+    unpinnedTab,
+    "accel+w in a pinned tab selected the first unpinned tab"
+  );
 
   // Test the key state after removing the tab.
   gBrowser.removeTab(pinnedTab);

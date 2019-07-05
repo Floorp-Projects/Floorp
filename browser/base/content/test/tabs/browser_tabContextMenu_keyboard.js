@@ -5,7 +5,10 @@
 async function openContextMenu() {
   let contextMenu = document.getElementById("tabContextMenu");
   let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(gBrowser.selectedTab, {type: "contextmenu", button: 2});
+  EventUtils.synthesizeMouseAtCenter(gBrowser.selectedTab, {
+    type: "contextmenu",
+    button: 2,
+  });
   await popupShown;
 }
 
@@ -18,7 +21,7 @@ async function closeContextMenu() {
 
 add_task(async function test() {
   // Ensure tabs are focusable.
-  await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+  await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
 
   // There should be one tab when we start the test.
   let tab1 = gBrowser.selectedTab;
@@ -39,8 +42,9 @@ add_task(async function test() {
   is(document.activeElement, tab1, "tab1 should be focused");
 
   // Switch to tab2 by pressing DownArrow.
-  await BrowserTestUtils.switchTab(gBrowser,
-                                   () => EventUtils.synthesizeKey("KEY_ArrowDown"));
+  await BrowserTestUtils.switchTab(gBrowser, () =>
+    EventUtils.synthesizeKey("KEY_ArrowDown")
+  );
   is(gBrowser.selectedTab, tab2, "should have switched to tab2");
   is(document.activeElement, tab2, "tab2 should now be focused");
   // Ensure that UpArrow doesn't switch to tab1 while the context menu is open.

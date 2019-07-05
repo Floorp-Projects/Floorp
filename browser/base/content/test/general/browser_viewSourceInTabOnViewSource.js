@@ -16,7 +16,11 @@ function wait_while_tab_is_busy() {
 // to load, since the _elementsForViewSource change happens at that time.
 var with_new_tab_opened = async function(options, taskFn) {
   let busyPromise = wait_while_tab_is_busy();
-  let tab = await BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url, false);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    options.gBrowser,
+    options.url,
+    false
+  );
   await busyPromise;
   await taskFn(tab.linkedBrowser);
   gBrowser.removeTab(tab);
@@ -25,27 +29,31 @@ var with_new_tab_opened = async function(options, taskFn) {
 add_task(async function test_regular_page() {
   function test_expect_view_source_enabled(browser) {
     for (let element of [...XULBrowserWindow._elementsForViewSource]) {
-      ok(!element.hasAttribute("disabled"),
-         "View Source should be enabled");
+      ok(!element.hasAttribute("disabled"), "View Source should be enabled");
     }
   }
 
-  await with_new_tab_opened({
-    gBrowser,
-    url: "http://example.com",
-  }, test_expect_view_source_enabled);
+  await with_new_tab_opened(
+    {
+      gBrowser,
+      url: "http://example.com",
+    },
+    test_expect_view_source_enabled
+  );
 });
 
 add_task(async function test_view_source_page() {
   function test_expect_view_source_disabled(browser) {
     for (let element of [...XULBrowserWindow._elementsForViewSource]) {
-      ok(element.hasAttribute("disabled"),
-         "View Source should be disabled");
+      ok(element.hasAttribute("disabled"), "View Source should be disabled");
     }
   }
 
-  await with_new_tab_opened({
-    gBrowser,
-    url: "view-source:http://example.com",
-  }, test_expect_view_source_disabled);
+  await with_new_tab_opened(
+    {
+      gBrowser,
+      url: "view-source:http://example.com",
+    },
+    test_expect_view_source_disabled
+  );
 });

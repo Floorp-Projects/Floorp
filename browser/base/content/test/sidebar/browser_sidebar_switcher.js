@@ -1,13 +1,16 @@
-
 registerCleanupFunction(() => {
   SidebarUI.hide();
 });
 
 function showSwitcherPanelPromise() {
   return new Promise(resolve => {
-    SidebarUI._switcherPanel.addEventListener("popupshown", () => {
-      resolve();
-    }, {once: true});
+    SidebarUI._switcherPanel.addEventListener(
+      "popupshown",
+      () => {
+        resolve();
+      },
+      { once: true }
+    );
     SidebarUI.showSwitcherPanel();
   });
 }
@@ -25,7 +28,10 @@ function clickSwitcherButton(querySelector) {
 add_task(async function() {
   // If a sidebar is already open, close it.
   if (!document.getElementById("sidebar-box").hidden) {
-    ok(false, "Unexpected sidebar found - a previous test failed to cleanup correctly");
+    ok(
+      false,
+      "Unexpected sidebar found - a previous test failed to cleanup correctly"
+    );
     SidebarUI.hide();
   }
 
@@ -34,13 +40,25 @@ add_task(async function() {
 
   await showSwitcherPanelPromise();
   await clickSwitcherButton("#sidebar-switcher-history");
-  is(sidebar.getAttribute("sidebarcommand"), "viewHistorySidebar", "History sidebar loaded");
+  is(
+    sidebar.getAttribute("sidebarcommand"),
+    "viewHistorySidebar",
+    "History sidebar loaded"
+  );
 
   await showSwitcherPanelPromise();
   await clickSwitcherButton("#sidebar-switcher-tabs");
-  is(sidebar.getAttribute("sidebarcommand"), "viewTabsSidebar", "Tabs sidebar loaded");
+  is(
+    sidebar.getAttribute("sidebarcommand"),
+    "viewTabsSidebar",
+    "Tabs sidebar loaded"
+  );
 
   await showSwitcherPanelPromise();
   await clickSwitcherButton("#sidebar-switcher-bookmarks");
-  is(sidebar.getAttribute("sidebarcommand"), "viewBookmarksSidebar", "Bookmarks sidebar loaded");
+  is(
+    sidebar.getAttribute("sidebarcommand"),
+    "viewBookmarksSidebar",
+    "Bookmarks sidebar loaded"
+  );
 });

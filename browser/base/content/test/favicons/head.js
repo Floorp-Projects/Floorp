@@ -1,10 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 // Clear the network cache between every test to make sure we get a stable state
 Services.cache2.clear();
@@ -22,7 +27,10 @@ function waitForFaviconMessage(isTabIcon = undefined, expectedURL = undefined) {
       }
 
       window.messageManager.removeMessageListener("Link:SetIcon", listener);
-      window.messageManager.removeMessageListener("Link:SetFailedIcon", listener);
+      window.messageManager.removeMessageListener(
+        "Link:SetFailedIcon",
+        listener
+      );
 
       if (msg.name == "Link:SetIcon") {
         resolve({

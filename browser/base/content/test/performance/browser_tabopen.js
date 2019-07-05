@@ -32,77 +32,112 @@ add_task(async function() {
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
-  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
-    "anonid", "moz-input-box").getBoundingClientRect();
-  let historyDropmarkerRect = document.getAnonymousElementByAttribute(
-    gURLBar.textbox, "anonid", "historydropmarker").getBoundingClientRect();
+  let textBoxRect = document
+    .getAnonymousElementByAttribute(gURLBar.textbox, "anonid", "moz-input-box")
+    .getBoundingClientRect();
+  let historyDropmarkerRect = document
+    .getAnonymousElementByAttribute(
+      gURLBar.textbox,
+      "anonid",
+      "historydropmarker"
+    )
+    .getBoundingClientRect();
 
   let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.
-  await withPerfObserver(async function() {
-    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    BrowserOpenTab();
-    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabAnimationEnd");
-    await switchDone;
-  }, {expectedReflows: EXPECTED_REFLOWS,
+  await withPerfObserver(
+    async function() {
+      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+      BrowserOpenTab();
+      await BrowserTestUtils.waitForEvent(
+        gBrowser.selectedTab,
+        "TabAnimationEnd"
+      );
+      await switchDone;
+    },
+    {
+      expectedReflows: EXPECTED_REFLOWS,
       frames: {
-        filter: rects => rects.filter(r => !(
-          // We expect all changes to be within the tab strip.
-          r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
-          r.x1 >= tabStripRect.left && r.x2 <= tabStripRect.right && (
-          // The first tab should get deselected at the same time as the next
-          // tab starts appearing, so we should have one rect that includes the
-          // first tab but is wider.
-          (inRange(r.w, firstTabRect.width, firstTabRect.width * 2) &&
-           r.x1 == firstTabRect.x) ||
-          // The second tab gets painted several times due to tabopen animation.
-          (inRange(r.x1, firstTabRect.right - 1, // -1 for the border on Win7
-                   firstTabRect.right + firstTabRect.width) &&
-           r.x2 < firstTabRect.right + firstTabRect.width +
-                  25) || // The + 25 is because sometimes the '+' is in the same rect.
-          // The '+' icon moves with an animation. At the end of the animation
-          // the former and new positions can touch each other causing the rect
-          // to have twice the icon's width.
-          (r.h == 14 && r.w <= 2 * 14 + kMaxEmptyPixels) ||
-          // We sometimes have a rect for the right most 2px of the '+' button.
-          (r.h == 2 && r.w == 2) ||
-          // Same for the 'X' icon.
-          (r.h == 10 && r.w <= 2 * 10)
-        ))),
+        filter: rects =>
+          rects.filter(
+            r =>
+              !// We expect all changes to be within the tab strip.
+              (
+                r.y1 >= tabStripRect.top &&
+                r.y2 <= tabStripRect.bottom &&
+                r.x1 >= tabStripRect.left &&
+                r.x2 <= tabStripRect.right &&
+                // The first tab should get deselected at the same time as the next
+                // tab starts appearing, so we should have one rect that includes the
+                // first tab but is wider.
+                ((inRange(r.w, firstTabRect.width, firstTabRect.width * 2) &&
+                  r.x1 == firstTabRect.x) ||
+                // The second tab gets painted several times due to tabopen animation.
+                (inRange(
+                  r.x1,
+                  firstTabRect.right - 1, // -1 for the border on Win7
+                  firstTabRect.right + firstTabRect.width
+                ) &&
+                  r.x2 < firstTabRect.right + firstTabRect.width + 25) || // The + 25 is because sometimes the '+' is in the same rect.
+                  // The '+' icon moves with an animation. At the end of the animation
+                  // the former and new positions can touch each other causing the rect
+                  // to have twice the icon's width.
+                  (r.h == 14 && r.w <= 2 * 14 + kMaxEmptyPixels) ||
+                  // We sometimes have a rect for the right most 2px of the '+' button.
+                  (r.h == 2 && r.w == 2) ||
+                  // Same for the 'X' icon.
+                  (r.h == 10 && r.w <= 2 * 10))
+              )
+          ),
         exceptions: [
-          {name: "bug 1446452 - the new tab should appear at the same time as the" +
-                 " previous one gets deselected",
-           condition: r =>
-             // In tab strip
-             r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
-             // Position and size of the first tab.
-             r.x1 == firstTabRect.left &&
-             inRange(r.w, firstTabRect.width - 1, // -1 as the border doesn't change
-                     firstTabRect.width),
+          {
+            name:
+              "bug 1446452 - the new tab should appear at the same time as the" +
+              " previous one gets deselected",
+            condition: r =>
+              // In tab strip
+              r.y1 >= tabStripRect.top &&
+              r.y2 <= tabStripRect.bottom &&
+              // Position and size of the first tab.
+              r.x1 == firstTabRect.left &&
+              inRange(
+                r.w,
+                firstTabRect.width - 1, // -1 as the border doesn't change
+                firstTabRect.width
+              ),
           },
-          {name: "the urlbar placeolder moves up and down by a few pixels",
-           // This seems to only happen on the second run in --verify
-           condition: r =>
-             r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
-             r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom,
+          {
+            name: "the urlbar placeolder moves up and down by a few pixels",
+            // This seems to only happen on the second run in --verify
+            condition: r =>
+              r.x1 >= textBoxRect.left &&
+              r.x2 <= textBoxRect.right &&
+              r.y1 >= textBoxRect.top &&
+              r.y2 <= textBoxRect.bottom,
           },
-          {name: "bug 1477966 - the name of a deselected tab should appear immediately",
-           condition: r => AppConstants.platform == "macosx" &&
-                           r.x1 >= firstTabLabelRect.x &&
-                           r.x2 <= firstTabLabelRect.right &&
-                           r.y1 >= firstTabLabelRect.y &&
-                           r.y2 <= firstTabLabelRect.bottom,
+          {
+            name:
+              "bug 1477966 - the name of a deselected tab should appear immediately",
+            condition: r =>
+              AppConstants.platform == "macosx" &&
+              r.x1 >= firstTabLabelRect.x &&
+              r.x2 <= firstTabLabelRect.right &&
+              r.y1 >= firstTabLabelRect.y &&
+              r.y2 <= firstTabLabelRect.bottom,
           },
-          {name: "bug 1547341 - addressbar history dropmarker is shown",
-           condition: r => r.x1 >= historyDropmarkerRect.x &&
-                           r.x2 <= historyDropmarkerRect.right &&
-                           r.y1 >= historyDropmarkerRect.y &&
-                           r.y2 <= historyDropmarkerRect.bottom,
+          {
+            name: "bug 1547341 - addressbar history dropmarker is shown",
+            condition: r =>
+              r.x1 >= historyDropmarkerRect.x &&
+              r.x2 <= historyDropmarkerRect.right &&
+              r.y1 >= historyDropmarkerRect.y &&
+              r.y2 <= historyDropmarkerRect.bottom,
           },
         ],
       },
-     });
+    }
+  );
 
   let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

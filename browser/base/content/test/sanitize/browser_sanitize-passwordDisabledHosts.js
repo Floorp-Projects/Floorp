@@ -3,20 +3,26 @@
 
 add_task(async function() {
   // getLoginSavingEnabled always returns false if password capture is disabled.
-  await SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
+  await SpecialPowers.pushPrefEnv({ set: [["signon.rememberSignons", true]] });
 
   // Add a disabled host
   Services.logins.setLoginSavingEnabled("http://example.com", false);
   // Sanity check
-  is(Services.logins.getLoginSavingEnabled("http://example.com"), false,
-     "example.com should be disabled for password saving since we haven't cleared that yet.");
+  is(
+    Services.logins.getLoginSavingEnabled("http://example.com"),
+    false,
+    "example.com should be disabled for password saving since we haven't cleared that yet."
+  );
 
   // Clear it
-  await Sanitizer.sanitize(["siteSettings"], {ignoreTimespan: false});
+  await Sanitizer.sanitize(["siteSettings"], { ignoreTimespan: false });
 
   // Make sure it's gone
-  is(Services.logins.getLoginSavingEnabled("http://example.com"), true,
-     "example.com should be enabled for password saving again now that we've cleared.");
+  is(
+    Services.logins.getLoginSavingEnabled("http://example.com"),
+    true,
+    "example.com should be enabled for password saving again now that we've cleared."
+  );
 
   await SpecialPowers.popPrefEnv();
 });

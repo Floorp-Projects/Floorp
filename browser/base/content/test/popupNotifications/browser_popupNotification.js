@@ -16,7 +16,8 @@ function test() {
 }
 
 var tests = [
-  { id: "Test#1",
+  {
+    id: "Test#1",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
@@ -27,13 +28,25 @@ var tests = [
     },
     onHidden(popup) {
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-      is(this.notifyObj.mainActionSource, "button", "main action should have been triggered by button.");
-      is(this.notifyObj.secondaryActionSource, undefined, "shouldn't have a secondary action source.");
+      is(
+        this.notifyObj.mainActionSource,
+        "button",
+        "main action should have been triggered by button."
+      );
+      is(
+        this.notifyObj.secondaryActionSource,
+        undefined,
+        "shouldn't have a secondary action source."
+      );
     },
   },
-  { id: "Test#2",
+  {
+    id: "Test#2",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
@@ -44,19 +57,31 @@ var tests = [
     },
     onHidden(popup) {
       ok(this.notifyObj.secondaryActionClicked, "secondaryAction was clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-      is(this.notifyObj.mainActionSource, undefined, "shouldn't have a main action source.");
-      is(this.notifyObj.secondaryActionSource, "button", "secondary action should have been triggered by button.");
+      is(
+        this.notifyObj.mainActionSource,
+        undefined,
+        "shouldn't have a main action source."
+      );
+      is(
+        this.notifyObj.secondaryActionSource,
+        "button",
+        "secondary action should have been triggered by button."
+      );
     },
   },
-  { id: "Test#2b",
+  {
+    id: "Test#2b",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.secondaryActions.push({
         label: "Extra Secondary Action",
         accessKey: "E",
-        callback: () => this.extraSecondaryActionClicked = true,
+        callback: () => (this.extraSecondaryActionClicked = true),
       });
       showNotification(this.notifyObj);
     },
@@ -65,23 +90,33 @@ var tests = [
       triggerSecondaryCommand(popup, 1);
     },
     onHidden(popup) {
-      ok(this.extraSecondaryActionClicked, "extra secondary action was clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        this.extraSecondaryActionClicked,
+        "extra secondary action was clicked"
+      );
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
-  { id: "Test#2c",
+  {
+    id: "Test#2c",
     run() {
       this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.secondaryActions.push({
-        label: "Extra Secondary Action",
-        accessKey: "E",
-        callback: () => ok(false, "unexpected callback invocation"),
-      }, {
-        label: "Other Extra Secondary Action",
-        accessKey: "O",
-        callback: () => this.extraSecondaryActionClicked = true,
-      });
+      this.notifyObj.secondaryActions.push(
+        {
+          label: "Extra Secondary Action",
+          accessKey: "E",
+          callback: () => ok(false, "unexpected callback invocation"),
+        },
+        {
+          label: "Other Extra Secondary Action",
+          accessKey: "O",
+          callback: () => (this.extraSecondaryActionClicked = true),
+        }
+      );
       showNotification(this.notifyObj);
     },
     onShown(popup) {
@@ -89,12 +124,19 @@ var tests = [
       triggerSecondaryCommand(popup, 2);
     },
     onHidden(popup) {
-      ok(this.extraSecondaryActionClicked, "extra secondary action was clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        this.extraSecondaryActionClicked,
+        "extra secondary action was clicked"
+      );
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
-  { id: "Test#3",
+  {
+    id: "Test#3",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notification = showNotification(this.notifyObj);
@@ -104,54 +146,85 @@ var tests = [
       dismissNotification(popup);
     },
     onHidden(popup) {
-      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
+      ok(
+        this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback triggered"
+      );
       this.notification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
   // test opening a notification for a background browser
   // Note: test 4 to 6 share a tab.
-  { id: "Test#4",
+  {
+    id: "Test#4",
     async run() {
       let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
       isnot(gBrowser.selectedTab, tab, "new tab isn't selected");
       wrongBrowserNotificationObject.browser = gBrowser.getBrowserForTab(tab);
-      let promiseTopic = TestUtils.topicObserved("PopupNotifications-backgroundShow");
-      wrongBrowserNotification = showNotification(wrongBrowserNotificationObject);
+      let promiseTopic = TestUtils.topicObserved(
+        "PopupNotifications-backgroundShow"
+      );
+      wrongBrowserNotification = showNotification(
+        wrongBrowserNotificationObject
+      );
       await promiseTopic;
       is(PopupNotifications.isPanelOpen, false, "panel isn't open");
-      ok(!wrongBrowserNotificationObject.mainActionClicked, "main action wasn't clicked");
-      ok(!wrongBrowserNotificationObject.secondaryActionClicked, "secondary action wasn't clicked");
-      ok(!wrongBrowserNotificationObject.dismissalCallbackTriggered, "dismissal callback wasn't called");
+      ok(
+        !wrongBrowserNotificationObject.mainActionClicked,
+        "main action wasn't clicked"
+      );
+      ok(
+        !wrongBrowserNotificationObject.secondaryActionClicked,
+        "secondary action wasn't clicked"
+      );
+      ok(
+        !wrongBrowserNotificationObject.dismissalCallbackTriggered,
+        "dismissal callback wasn't called"
+      );
       goNext();
     },
   },
   // now select that browser and test to see that the notification appeared
-  { id: "Test#5",
+  {
+    id: "Test#5",
     run() {
       this.oldSelectedTab = gBrowser.selectedTab;
       gBrowser.selectedTab = gBrowser.tabs[gBrowser.tabs.length - 1];
     },
     onShown(popup) {
       checkPopup(popup, wrongBrowserNotificationObject);
-      is(PopupNotifications.isPanelOpen, true, "isPanelOpen getter doesn't lie");
+      is(
+        PopupNotifications.isPanelOpen,
+        true,
+        "isPanelOpen getter doesn't lie"
+      );
 
       // switch back to the old browser
       gBrowser.selectedTab = this.oldSelectedTab;
     },
     onHidden(popup) {
       // actually remove the notification to prevent it from reappearing
-      ok(wrongBrowserNotificationObject.dismissalCallbackTriggered, "dismissal callback triggered due to tab switch");
+      ok(
+        wrongBrowserNotificationObject.dismissalCallbackTriggered,
+        "dismissal callback triggered due to tab switch"
+      );
       wrongBrowserNotification.remove();
-      ok(wrongBrowserNotificationObject.removedCallbackTriggered, "removed callback triggered");
+      ok(
+        wrongBrowserNotificationObject.removedCallbackTriggered,
+        "removed callback triggered"
+      );
       wrongBrowserNotification = null;
     },
   },
   // test that the removed notification isn't shown on browser re-select
-  { id: "Test#6",
+  {
+    id: "Test#6",
     async run() {
-      let promiseTopic = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+      let promiseTopic = TestUtils.topicObserved(
+        "PopupNotifications-updateNotShowing"
+      );
       gBrowser.selectedTab = gBrowser.tabs[gBrowser.tabs.length - 1];
       await promiseTopic;
       is(PopupNotifications.isPanelOpen, false, "panel isn't open");
@@ -161,7 +234,8 @@ var tests = [
   },
   // Test that two notifications with the same ID result in a single displayed
   // notification.
-  { id: "Test#7",
+  {
+    id: "Test#7",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       // Show the same notification twice
@@ -173,12 +247,16 @@ var tests = [
       this.notification2.remove();
     },
     onHidden(popup) {
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
   // Test that two notifications with different IDs are displayed
-  { id: "Test#8",
+  {
+    id: "Test#8",
     run() {
       this.testNotif1 = new BasicNotification(this.id);
       this.testNotif1.message += " 1";
@@ -199,17 +277,30 @@ var tests = [
     },
     onHidden(popup) {
       ok(this.testNotif1.mainActionClicked, "main action #1 was clicked");
-      ok(!this.testNotif1.secondaryActionClicked, "secondary action #1 wasn't clicked");
-      ok(!this.testNotif1.dismissalCallbackTriggered, "dismissal callback #1 wasn't called");
+      ok(
+        !this.testNotif1.secondaryActionClicked,
+        "secondary action #1 wasn't clicked"
+      );
+      ok(
+        !this.testNotif1.dismissalCallbackTriggered,
+        "dismissal callback #1 wasn't called"
+      );
 
       ok(!this.testNotif2.mainActionClicked, "main action #2 wasn't clicked");
-      ok(this.testNotif2.secondaryActionClicked, "secondary action #2 was clicked");
-      ok(!this.testNotif2.dismissalCallbackTriggered, "dismissal callback #2 wasn't called");
+      ok(
+        this.testNotif2.secondaryActionClicked,
+        "secondary action #2 was clicked"
+      );
+      ok(
+        !this.testNotif2.dismissalCallbackTriggered,
+        "dismissal callback #2 wasn't called"
+      );
     },
   },
   // Test notification without mainAction or secondaryActions, it should fall back
   // to a default button that dismisses the notification in place of the main action.
-  { id: "Test#9",
+  {
+    id: "Test#9",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.mainAction = null;
@@ -218,19 +309,26 @@ var tests = [
     },
     onShown(popup) {
       let notification = popup.children[0];
-      ok(notification.hasAttribute("buttonhighlight"), "default action is highlighted");
+      ok(
+        notification.hasAttribute("buttonhighlight"),
+        "default action is highlighted"
+      );
       triggerMainCommand(popup);
     },
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
   // Test notification without mainAction but with secondaryActions, it should fall back
   // to a default button that dismisses the notification in place of the main action
   // and ignore the passed secondaryActions.
-  { id: "Test#10",
+  {
+    id: "Test#10",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.mainAction = null;
@@ -238,18 +336,29 @@ var tests = [
     },
     onShown(popup) {
       let notification = popup.children[0];
-      is(notification.getAttribute("secondarybuttonhidden"), "true", "secondary button is hidden");
-      ok(notification.hasAttribute("buttonhighlight"), "default action is highlighted");
+      is(
+        notification.getAttribute("secondarybuttonhidden"),
+        "true",
+        "secondary button is hidden"
+      );
+      ok(
+        notification.hasAttribute("buttonhighlight"),
+        "default action is highlighted"
+      );
       triggerMainCommand(popup);
     },
     onHidden(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
-      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(
+        !this.notifyObj.dismissalCallbackTriggered,
+        "dismissal callback wasn't triggered"
+      );
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     },
   },
   // Test two notifications with different anchors
-  { id: "Test#11",
+  {
+    id: "Test#11",
     run() {
       this.notifyObj = new BasicNotification(this.id);
       this.firstNotification = showNotification(this.notifyObj);
@@ -262,8 +371,12 @@ var tests = [
     onShown(popup) {
       // This also checks that only one element is shown.
       checkPopup(popup, this.notifyObj2);
-      is(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
-         "geo anchor shouldn't be visible");
+      is(
+        document.getElementById("geo-notification-icon").getBoundingClientRect()
+          .width,
+        0,
+        "geo anchor shouldn't be visible"
+      );
       dismissNotification(popup);
     },
     onHidden(popup) {
@@ -271,7 +384,10 @@ var tests = [
       this.firstNotification.remove();
       this.secondNotification.remove();
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-      ok(this.notifyObj2.removedCallbackTriggered, "removed callback triggered");
+      ok(
+        this.notifyObj2.removedCallbackTriggered,
+        "removed callback triggered"
+      );
     },
   },
 ];

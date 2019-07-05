@@ -50,7 +50,7 @@ add_task(async function test() {
 
   ok(true, "Tab1 and tab2 are duplicated succesfully");
 
-  for (let tab of tabs.filter(t => t != tab0))
+  for (let tab of tabs.filter(t => t != tab0)) {
     BrowserTestUtils.removeTab(tab);
+  }
 });
-

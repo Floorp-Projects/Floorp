@@ -11,21 +11,31 @@ add_task(async function() {
   await TestUtils.topicObserved("sessionstore-state-write-complete");
 
   // Wait for the session data to be flushed before continuing the test
-  await new Promise(resolve => SessionStore.getSessionHistory(gBrowser.selectedTab, resolve));
+  await new Promise(resolve =>
+    SessionStore.getSessionHistory(gBrowser.selectedTab, resolve)
+  );
 
   let backButton = document.getElementById("back-button");
   let contextMenu = document.getElementById("backForwardMenu");
 
   info("waiting for the history menu to open");
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(backButton, {type: "contextmenu", button: 2});
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(backButton, {
+    type: "contextmenu",
+    button: 2,
+  });
   let event = await popupShownPromise;
 
   ok(true, "history menu opened");
 
   // Wait for the session data to be flushed before continuing the test
-  await new Promise(resolve => SessionStore.getSessionHistory(gBrowser.selectedTab, resolve));
+  await new Promise(resolve =>
+    SessionStore.getSessionHistory(gBrowser.selectedTab, resolve)
+  );
 
   is(event.target.children.length, 2, "Two history items");
 
@@ -39,12 +49,18 @@ add_task(async function() {
   is(node.getAttribute("index"), "0", "second item index");
   is(node.getAttribute("historyindex"), "-1", "second item historyindex");
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
   event.target.hidePopup();
   await popupHiddenPromise;
   info("Hidden popup");
 
-  let onClose = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabClose");
+  let onClose = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "TabClose"
+  );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await onClose;
   info("Tab closed");

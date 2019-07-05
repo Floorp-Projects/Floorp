@@ -12,12 +12,14 @@ async function checkPreloadedZoom(level, message) {
 
   // Wait for zoom handling of preloaded
   const browser = gBrowser.preloadedBrowser;
-  await new Promise(resolve => Services.obs.addObserver(function obs(subject) {
-    if (subject === browser) {
-      Services.obs.removeObserver(obs, ZOOM_CHANGE_TOPIC);
-      resolve();
-    }
-  }, ZOOM_CHANGE_TOPIC));
+  await new Promise(resolve =>
+    Services.obs.addObserver(function obs(subject) {
+      if (subject === browser) {
+        Services.obs.removeObserver(obs, ZOOM_CHANGE_TOPIC);
+        resolve();
+      }
+    }, ZOOM_CHANGE_TOPIC)
+  );
 
   is(browser.fullZoom, level, message);
 
@@ -33,23 +35,32 @@ add_task(async function test_default_zoom() {
  * Helper to open about:newtab and zoom then check matching preloaded zoom
  */
 async function zoomNewTab(changeZoom, message) {
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:newtab"
+  );
   changeZoom();
   const level = tab.linkedBrowser.fullZoom;
   BrowserTestUtils.removeTab(tab);
 
   // Wait for the the update of the full-zoom content pref value, that happens
   // asynchronously after changing the zoom level.
-  let cps2 = Cc["@mozilla.org/content-pref/service;1"].
-      getService(Ci.nsIContentPrefService2);
+  let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
+    Ci.nsIContentPrefService2
+  );
   await BrowserTestUtils.waitForCondition(() => {
     return new Promise(resolve => {
-      cps2.getByDomainAndName("about:newtab", "browser.content.full-zoom", null, {
-        handleResult(pref) {
-          resolve(level == pref.value);
-        },
-        handleCompletion() {},
-      });
+      cps2.getByDomainAndName(
+        "about:newtab",
+        "browser.content.full-zoom",
+        null,
+        {
+          handleResult(pref) {
+            resolve(level == pref.value);
+          },
+          handleCompletion() {},
+        }
+      );
     });
   });
 
@@ -68,5 +79,8 @@ add_task(async function test_preloaded_zoom_in() {
 });
 
 add_task(async function test_preloaded_zoom_default() {
-  await zoomNewTab(() => FullZoom.reduce(), "zoomed back to default applied to preloaded");
+  await zoomNewTab(
+    () => FullZoom.reduce(),
+    "zoomed back to default applied to preloaded"
+  );
 });
