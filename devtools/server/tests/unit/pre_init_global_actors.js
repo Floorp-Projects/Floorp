@@ -16,6 +16,6 @@ PreInitGlobalActor.prototype = {
 };
 
 PreInitGlobalActor.prototype.requestTypes = {
-  "ping": PreInitGlobalActor.prototype.onPing,
+  ping: PreInitGlobalActor.prototype.onPing,
 };
 exports.PreInitGlobalActor = PreInitGlobalActor;

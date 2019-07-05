@@ -5,11 +5,15 @@
 "use strict";
 
 /* import-globals-from inspector-helpers.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js",
+  this
+);
 
 add_task(async function loadNewChild() {
-  const { target, walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { target, walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
 
   let originalOwnershipSize = 0;
   let longlist = null;
@@ -41,8 +45,11 @@ add_task(async function loadNewChild() {
   // Our ownership size should now be 53 fewer
   // (we forgot about #longlist + 26 children + 26 singleTextChild nodes)
   const newOwnershipSize = await assertOwnershipTrees(walker);
-  is(newOwnershipSize, originalOwnershipSize - 53,
-    "Ownership tree should be lower");
+  is(
+    newOwnershipSize,
+    originalOwnershipSize - 53,
+    "Ownership tree should be lower"
+  );
   // Now verify that some nodes have gone away
   await checkMissing(target, longlist);
   await checkMissing(target, firstChild);

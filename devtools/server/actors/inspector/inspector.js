@@ -52,20 +52,59 @@
 
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
-const {LongStringActor} = require("devtools/server/actors/string");
+const { LongStringActor } = require("devtools/server/actors/string");
 const defer = require("devtools/shared/defer");
 const ReplayInspector = require("devtools/server/actors/replay/inspector");
 
-const {inspectorSpec} = require("devtools/shared/specs/inspector");
+const { inspectorSpec } = require("devtools/shared/specs/inspector");
 
-loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
-loader.lazyRequireGetter(this, "WalkerActor", "devtools/server/actors/inspector/walker", true);
-loader.lazyRequireGetter(this, "EyeDropper", "devtools/server/actors/highlighters/eye-dropper", true);
-loader.lazyRequireGetter(this, "PageStyleActor", "devtools/server/actors/styles", true);
-loader.lazyRequireGetter(this, "HighlighterActor", "devtools/server/actors/highlighters", true);
-loader.lazyRequireGetter(this, "CustomHighlighterActor", "devtools/server/actors/highlighters", true);
-loader.lazyRequireGetter(this, "isTypeRegistered", "devtools/server/actors/highlighters", true);
-loader.lazyRequireGetter(this, "HighlighterEnvironment", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(
+  this,
+  "InspectorActorUtils",
+  "devtools/server/actors/inspector/utils"
+);
+loader.lazyRequireGetter(
+  this,
+  "WalkerActor",
+  "devtools/server/actors/inspector/walker",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "EyeDropper",
+  "devtools/server/actors/highlighters/eye-dropper",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "PageStyleActor",
+  "devtools/server/actors/styles",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "HighlighterActor",
+  "devtools/server/actors/highlighters",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "CustomHighlighterActor",
+  "devtools/server/actors/highlighters",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isTypeRegistered",
+  "devtools/server/actors/highlighters",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "HighlighterEnvironment",
+  "devtools/server/actors/highlighters",
+  true
+);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -224,8 +263,8 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    */
   resolveRelativeURL: function(url, node) {
     const document = InspectorActorUtils.isNodeDead(node)
-                   ? this.window.document
-                   : InspectorActorUtils.nodeDocument(node.rawNode);
+      ? this.window.document
+      : InspectorActorUtils.nodeDocument(node.rawNode);
 
     if (!document) {
       return url;

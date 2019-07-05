@@ -5,8 +5,9 @@
 
 const worker = new Worker("suspendTimeouts_worker.js");
 worker.onerror = error => {
-  const message =
-      `error from worker: ${error.filename}:${error.lineno}: ${error.message}`;
+  const message = `error from worker: ${error.filename}:${error.lineno}: ${
+    error.message
+  }`;
   throw new Error(message);
 };
 
@@ -16,7 +17,7 @@ worker.onerror = error => {
 function create_channel() {
   const { port1, port2 } = new MessageChannel();
   info(`sending port to worker`);
-  worker.postMessage({ mochitestPort: port1 }, [ port1 ]);
+  worker.postMessage({ mochitestPort: port1 }, [port1]);
   return port2;
 }
 
@@ -63,8 +64,11 @@ function resume_timeouts() {
 // The buggy code calls this handler from the resumeTimeouts call, before the
 // main thread returns to the event loop. The correct code calls this only once
 // the JavaScript invocation that called resumeTimeouts has run to completion.
-function handle_echo({data}) {
-  ok(resumeTimeouts_has_returned, "worker message delivered from main event loop");
+function handle_echo({ data }) {
+  ok(
+    resumeTimeouts_has_returned,
+    "worker message delivered from main event loop"
+  );
 
   // Finish the mochitest.
   finish();

@@ -5,7 +5,10 @@
 "use strict";
 
 /* import-globals-from storage-helpers.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
+  this
+);
 
 const storeMap = {
   cookies: {
@@ -143,12 +146,14 @@ const storeMap = {
 const IDBValues = {
   listStoresResponse: {
     "http://test1.example.org": [
-      ["idb1 (default)", "obj1"], ["idb1 (default)", "obj2"], ["idb2 (default)", "obj3"],
+      ["idb1 (default)", "obj1"],
+      ["idb1 (default)", "obj2"],
+      ["idb2 (default)", "obj3"],
     ],
-    "http://sectest1.example.org": [
-    ],
+    "http://sectest1.example.org": [],
     "https://sectest1.example.org": [
-      ["idb-s1 (default)", "obj-s1"], ["idb-s2 (default)", "obj-s2"],
+      ["idb-s1 (default)", "obj-s1"],
+      ["idb-s2 (default)", "obj-s2"],
     ],
   },
   dbDetails: {
@@ -166,8 +171,7 @@ const IDBValues = {
         objectStores: 1,
       },
     ],
-    "http://sectest1.example.org": [
-    ],
+    "http://sectest1.example.org": [],
     "https://sectest1.example.org": [
       {
         db: "idb-s1 (default)",
@@ -194,13 +198,13 @@ const IDBValues = {
             {
               name: "name",
               keyPath: "name",
-              "unique": false,
+              unique: false,
               multiEntry: false,
             },
             {
               name: "email",
               keyPath: "email",
-              "unique": true,
+              unique: true,
               multiEntry: false,
             },
           ],
@@ -221,7 +225,7 @@ const IDBValues = {
             {
               name: "name2",
               keyPath: "name2",
-              "unique": true,
+              unique: true,
               multiEntry: false,
             },
           ],
@@ -247,14 +251,13 @@ const IDBValues = {
             {
               name: "name2",
               keyPath: "name2",
-              "unique": true,
+              unique: true,
               multiEntry: false,
             },
           ],
         },
       ],
     },
-
   },
   entries: {
     "http://test1.example.org": {
@@ -343,8 +346,11 @@ async function testStores(data) {
 }
 
 function testCookies(cookiesActor) {
-  is(Object.keys(cookiesActor.hosts).length, 3,
-                 "Correct number of host entries for cookies");
+  is(
+    Object.keys(cookiesActor.hosts).length,
+    3,
+    "Correct number of host entries for cookies"
+  );
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
 
@@ -358,8 +364,11 @@ var testCookiesObjects = async function(index, hosts, cookiesActor) {
       }
     }
     // Any secure cookies did not get stored in the database.
-    is(data.total, storeMap.cookies[host].length - cookiesLength,
-       "Number of cookies in host " + host + " matches");
+    is(
+      data.total,
+      storeMap.cookies[host].length - cookiesLength,
+      "Number of cookies in host " + host + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of storeMap.cookies[host]) {
@@ -388,16 +397,22 @@ var testCookiesObjects = async function(index, hosts, cookiesActor) {
 };
 
 function testLocalStorage(localStorageActor) {
-  is(Object.keys(localStorageActor.hosts).length, 3,
-     "Correct number of host entries for local storage");
+  is(
+    Object.keys(localStorageActor.hosts).length,
+    3,
+    "Correct number of host entries for local storage"
+  );
   return testLocalStorageObjects(0, localStorageActor.hosts, localStorageActor);
 }
 
 var testLocalStorageObjects = async function(index, hosts, localStorageActor) {
   const host = Object.keys(hosts)[index];
   const matchItems = data => {
-    is(data.total, storeMap.localStorage[host].length,
-       "Number of local storage items in host " + host + " matches");
+    is(
+      data.total,
+      storeMap.localStorage[host].length,
+      "Number of local storage items in host " + host + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of storeMap.localStorage[host]) {
@@ -408,7 +423,10 @@ var testLocalStorageObjects = async function(index, hosts, localStorageActor) {
           break;
         }
       }
-      ok(found, "local storage item " + item.name + " should exist in response");
+      ok(
+        found,
+        "local storage item " + item.name + " should exist in response"
+      );
     }
   };
 
@@ -421,17 +439,30 @@ var testLocalStorageObjects = async function(index, hosts, localStorageActor) {
 };
 
 function testSessionStorage(sessionStorageActor) {
-  is(Object.keys(sessionStorageActor.hosts).length, 3,
-     "Correct number of host entries for session storage");
-  return testSessionStorageObjects(0, sessionStorageActor.hosts,
-                                   sessionStorageActor);
+  is(
+    Object.keys(sessionStorageActor.hosts).length,
+    3,
+    "Correct number of host entries for session storage"
+  );
+  return testSessionStorageObjects(
+    0,
+    sessionStorageActor.hosts,
+    sessionStorageActor
+  );
 }
 
-var testSessionStorageObjects = async function(index, hosts, sessionStorageActor) {
+var testSessionStorageObjects = async function(
+  index,
+  hosts,
+  sessionStorageActor
+) {
   const host = Object.keys(hosts)[index];
   const matchItems = data => {
-    is(data.total, storeMap.sessionStorage[host].length,
-       "Number of session storage items in host " + host + " matches");
+    is(
+      data.total,
+      storeMap.sessionStorage[host].length,
+      "Number of session storage items in host " + host + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of storeMap.sessionStorage[host]) {
@@ -442,7 +473,10 @@ var testSessionStorageObjects = async function(index, hosts, sessionStorageActor
           break;
         }
       }
-      ok(found, "session storage item " + item.name + " should exist in response");
+      ok(
+        found,
+        "session storage item " + item.name + " should exist in response"
+      );
     }
   };
 
@@ -460,8 +494,11 @@ var testIndexedDB = async function(indexedDBActor) {
   // ignore it.
   delete indexedDBActor.hosts.chrome;
 
-  is(Object.keys(indexedDBActor.hosts).length, 3,
-     "Correct number of host entries for indexed db");
+  is(
+    Object.keys(indexedDBActor.hosts).length,
+    3,
+    "Correct number of host entries for indexed db"
+  );
 
   for (const host in indexedDBActor.hosts) {
     for (const item of indexedDBActor.hosts[host]) {
@@ -485,8 +522,11 @@ var testIndexedDB = async function(indexedDBActor) {
 var testIndexedDBs = async function(index, hosts, indexedDBActor) {
   const host = Object.keys(hosts)[index];
   const matchItems = data => {
-    is(data.total, IDBValues.dbDetails[host].length,
-       "Number of indexed db in host " + host + " matches");
+    is(
+      data.total,
+      IDBValues.dbDetails[host].length,
+      "Number of indexed db in host " + host + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of IDBValues.dbDetails[host]) {
@@ -495,8 +535,11 @@ var testIndexedDBs = async function(index, hosts, indexedDBActor) {
           ok(true, "Found indexed db " + item.uniqueKey + " in response");
           is(item.origin, toMatch.origin, "The origin matches.");
           is(item.version, toMatch.version, "The version matches.");
-          is(item.objectStores, toMatch.objectStores,
-             "The number of object stores matches.");
+          is(
+            item.objectStores,
+            toMatch.objectStores,
+            "The number of object stores matches."
+          );
           break;
         }
       }
@@ -515,8 +558,11 @@ var testIndexedDBs = async function(index, hosts, indexedDBActor) {
 var testObjectStores = async function(ix, hosts, indexedDBActor) {
   const host = Object.keys(hosts)[ix];
   const matchItems = (data, db) => {
-    is(data.total, IDBValues.objectStoreDetails[host][db].length,
-       "Number of object stores in host " + host + " matches");
+    is(
+      data.total,
+      IDBValues.objectStoreDetails[host][db].length,
+      "Number of object stores in host " + host + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of IDBValues.objectStoreDetails[host][db]) {
@@ -524,20 +570,34 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
           found = true;
           ok(true, "Found object store " + item.objectStore + " in response");
           is(item.keyPath, toMatch.keyPath, "The keyPath matches.");
-          is(item.autoIncrement, toMatch.autoIncrement, "The autoIncrement matches.");
+          is(
+            item.autoIncrement,
+            toMatch.autoIncrement,
+            "The autoIncrement matches."
+          );
           item.indexes = JSON.parse(item.indexes);
-          is(item.indexes.length, toMatch.indexes.length, "Number of indexes match");
+          is(
+            item.indexes.length,
+            toMatch.indexes.length,
+            "Number of indexes match"
+          );
           for (const index of item.indexes) {
             let indexFound = false;
             for (const toMatchIndex of toMatch.indexes) {
               if (toMatchIndex.name == index.name) {
                 indexFound = true;
                 ok(true, "Found index " + index.name);
-                is(index.keyPath, toMatchIndex.keyPath,
-                   "The keyPath of index matches.");
+                is(
+                  index.keyPath,
+                  toMatchIndex.keyPath,
+                  "The keyPath of index matches."
+                );
                 is(index.unique, toMatchIndex.unique, "The unique matches");
-                is(index.multiEntry, toMatchIndex.multiEntry,
-                   "The multiEntry matches");
+                is(
+                  index.multiEntry,
+                  toMatchIndex.multiEntry,
+                  "The multiEntry matches"
+                );
                 break;
               }
             }
@@ -550,12 +610,16 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
     }
   };
 
-  ok(!!IDBValues.objectStoreDetails[host], "Host is present in the list : " + host);
+  ok(
+    !!IDBValues.objectStoreDetails[host],
+    "Host is present in the list : " + host
+  );
   for (const name of hosts[host]) {
     const objName = JSON.parse(name).slice(0, 1);
-    matchItems((
-      await indexedDBActor.getStoreObjects(host, [JSON.stringify(objName)])
-    ), objName[0]);
+    matchItems(
+      await indexedDBActor.getStoreObjects(host, [JSON.stringify(objName)]),
+      objName[0]
+    );
   }
   if (ix == Object.keys(hosts).length - 1) {
     return;
@@ -566,8 +630,11 @@ var testObjectStores = async function(ix, hosts, indexedDBActor) {
 var testIDBEntries = async function(index, hosts, indexedDBActor) {
   const host = Object.keys(hosts)[index];
   const matchItems = (data, obj) => {
-    is(data.total, IDBValues.entries[host][obj].length,
-       "Number of items in object store " + obj + " matches");
+    is(
+      data.total,
+      IDBValues.entries[host][obj].length,
+      "Number of items in object store " + obj + " matches"
+    );
     for (const item of data.data) {
       let found = false;
       for (const toMatch of IDBValues.entries[host][obj]) {
@@ -575,11 +642,17 @@ var testIDBEntries = async function(index, hosts, indexedDBActor) {
           found = true;
           ok(true, "Found indexed db item " + item.name + " in response");
           const value = JSON.parse(item.value.str);
-          is(Object.keys(value).length, Object.keys(toMatch.value).length,
-             "Number of entries in the value matches");
+          is(
+            Object.keys(value).length,
+            Object.keys(toMatch.value).length,
+            "Number of entries in the value matches"
+          );
           for (const key in value) {
-            is(value[key], toMatch.value[key],
-               "value of " + key + " value key matches");
+            is(
+              value[key],
+              toMatch.value[key],
+              "value of " + key + " value key matches"
+            );
           }
           break;
         }
@@ -591,9 +664,10 @@ var testIDBEntries = async function(index, hosts, indexedDBActor) {
   ok(!!IDBValues.entries[host], "Host is present in the list : " + host);
   for (const name of hosts[host]) {
     const parsed = JSON.parse(name);
-    matchItems((
-      await indexedDBActor.getStoreObjects(host, [name])
-    ), parsed[0] + "#" + parsed[1]);
+    matchItems(
+      await indexedDBActor.getStoreObjects(host, [name]),
+      parsed[0] + "#" + parsed[1]
+    );
   }
   if (index == Object.keys(hosts).length - 1) {
     return;
@@ -602,10 +676,13 @@ var testIDBEntries = async function(index, hosts, indexedDBActor) {
 };
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["privacy.documentCookies.maxage", 0]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.documentCookies.maxage", 0]],
+  });
 
-  const { target, front } =
-    await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
+  const { target, front } = await openTabAndSetupStorage(
+    MAIN_DOMAIN + "storage-listings.html"
+  );
 
   const data = await front.listStores();
   await testStores(data);

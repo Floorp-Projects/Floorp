@@ -5,9 +5,16 @@
 "use strict";
 
 const { AutoRefreshHighlighter } = require("./auto-refresh");
-const { CanvasFrameAnonymousContentHelper, getComputedStyle,
-        createSVGNode, createNode } = require("./utils/markup");
-const { setIgnoreLayoutChanges, getAdjustedQuads } = require("devtools/shared/layout/utils");
+const {
+  CanvasFrameAnonymousContentHelper,
+  getComputedStyle,
+  createSVGNode,
+  createNode,
+} = require("./utils/markup");
+const {
+  setIgnoreLayoutChanges,
+  getAdjustedQuads,
+} = require("devtools/shared/layout/utils");
 const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
 
 const GEOMETRY_LABEL_SIZE = 6;
@@ -95,8 +102,7 @@ function getOffsetParent(node) {
   const win = node.ownerGlobal;
 
   let offsetParent = node.offsetParent;
-  if (offsetParent &&
-      getComputedStyle(offsetParent).position === "static") {
+  if (offsetParent && getComputedStyle(offsetParent).position === "static") {
     offsetParent = null;
   }
 
@@ -111,7 +117,7 @@ function getOffsetParent(node) {
 
   return {
     element: offsetParent,
-    dimension: {width, height},
+    dimension: { width, height },
   };
 }
 
@@ -211,8 +217,10 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
     // The list of element geometry properties that can be set.
     this.definedProperties = new Map();
 
-    this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
-      this._buildMarkup.bind(this));
+    this.markup = new CanvasFrameAnonymousContentHelper(
+      highlighterEnv,
+      this._buildMarkup.bind(this)
+    );
 
     const { pageListenerTarget } = this.highlighterEnv;
 
@@ -224,8 +232,10 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
     const onMouseDown = this.handleEvent.bind(this);
 
     for (const side of GeoProp.SIDES) {
-      this.getElement("handler-" + side)
-        .addEventListener("mousedown", onMouseDown);
+      this.getElement("handler-" + side).addEventListener(
+        "mousedown",
+        onMouseDown
+      );
     }
 
     this.onWillNavigate = this.onWillNavigate.bind(this);
@@ -235,15 +245,15 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
   _buildMarkup() {
     const container = createNode(this.win, {
-      attributes: {"class": "highlighter-container"},
+      attributes: { class: "highlighter-container" },
     });
 
     const root = createNode(this.win, {
       parent: container,
       attributes: {
-        "id": "root",
-        "class": "root",
-        "hidden": "true",
+        id: "root",
+        class: "root",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -252,9 +262,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       nodeType: "svg",
       parent: root,
       attributes: {
-        "id": "elements",
-        "width": "100%",
-        "height": "100%",
+        id: "elements",
+        width: "100%",
+        height: "100%",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -264,9 +274,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       nodeType: "polygon",
       parent: svg,
       attributes: {
-        "class": "offset-parent",
-        "id": "offset-parent",
-        "hidden": "true",
+        class: "offset-parent",
+        id: "offset-parent",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -276,9 +286,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       nodeType: "polygon",
       parent: svg,
       attributes: {
-        "class": "current-node",
-        "id": "current-node",
-        "hidden": "true",
+        class: "current-node",
+        id: "current-node",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -289,9 +299,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         nodeType: "line",
         parent: svg,
         attributes: {
-          "class": "arrow " + name,
-          "id": "arrow-" + name,
-          "hidden": "true",
+          class: "arrow " + name,
+          id: "arrow-" + name,
+          hidden: "true",
         },
         prefix: this.ID_CLASS_PREFIX,
       });
@@ -300,11 +310,11 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         nodeType: "circle",
         parent: svg,
         attributes: {
-          "class": "handler-" + name,
-          "id": "handler-" + name,
-          "r": "4",
+          class: "handler-" + name,
+          id: "handler-" + name,
+          r: "4",
           "data-side": name,
-          "hidden": "true",
+          hidden: "true",
         },
         prefix: this.ID_CLASS_PREFIX,
       });
@@ -317,8 +327,8 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         nodeType: "g",
         parent: svg,
         attributes: {
-          "id": "label-" + name,
-          "hidden": "true",
+          id: "label-" + name,
+          hidden: "true",
         },
         prefix: this.ID_CLASS_PREFIX,
       });
@@ -327,9 +337,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         nodeType: "g",
         parent: labelG,
         attributes: {
-          "transform": GeoProp.isHorizontal(name)
-                       ? "translate(-30 -30)"
-                       : "translate(5 -10)",
+          transform: GeoProp.isHorizontal(name)
+            ? "translate(-30 -30)"
+            : "translate(5 -10)",
         },
       });
 
@@ -337,10 +347,10 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         nodeType: "path",
         parent: subG,
         attributes: {
-          "class": "label-bubble",
-          "d": GeoProp.isHorizontal(name)
-               ? "M0 0 L60 0 L60 20 L35 20 L30 25 L25 20 L0 20z"
-               : "M5 0 L65 0 L65 20 L5 20 L5 15 L0 10 L5 5z",
+          class: "label-bubble",
+          d: GeoProp.isHorizontal(name)
+            ? "M0 0 L60 0 L60 20 L35 20 L30 25 L25 20 L0 20z"
+            : "M5 0 L65 0 L65 20 L5 20 L5 15 L0 10 L5 5z",
         },
         prefix: this.ID_CLASS_PREFIX,
       });
@@ -349,10 +359,10 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         nodeType: "text",
         parent: subG,
         attributes: {
-          "class": "label-text",
-          "id": "label-text-" + name,
-          "x": GeoProp.isHorizontal(name) ? "30" : "35",
-          "y": "10",
+          class: "label-text",
+          id: "label-text-" + name,
+          x: GeoProp.isHorizontal(name) ? "30" : "35",
+          y: "10",
         },
         prefix: this.ID_CLASS_PREFIX,
       });
@@ -372,7 +382,8 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
     if (pageListenerTarget) {
       DOM_EVENTS.forEach(type =>
-        pageListenerTarget.removeEventListener(type, this));
+        pageListenerTarget.removeEventListener(type, this)
+      );
     }
 
     AutoRefreshHighlighter.prototype.destroy.call(this);
@@ -406,7 +417,9 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
           return;
         }
 
-        const handlerSide = this.markup.getElement(id).getAttribute("data-side");
+        const handlerSide = this.markup
+          .getElement(id)
+          .getAttribute("data-side");
 
         if (handlerSide) {
           const side = handlerSide;
@@ -423,7 +436,7 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
           value = parseFloat(value);
 
-          const ratio = (value / parseFloat(computedValue)) || 1;
+          const ratio = value / parseFloat(computedValue) || 1;
           const dir = GeoProp.isInverted(side) ? -1 : 1;
 
           // Store all the initial values needed for drag & drop
@@ -462,7 +475,8 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
           return;
         }
 
-        const delta = (GeoProp.isHorizontal(side) ? pageX - x : pageY - y) * inc;
+        const delta =
+          (GeoProp.isHorizontal(side) ? pageX - x : pageY - y) * inc;
 
         // The inline style has usually the priority over any other CSS rule
         // set in stylesheets. However, if a rule has `!important` keyword,
@@ -470,7 +484,10 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
         // will always update the element, we have to add `!important` as
         // well.
         this.currentNode.style.setProperty(
-          side, (value + delta) + unit, "important");
+          side,
+          value + delta + unit,
+          "important"
+        );
 
         break;
     }
@@ -542,32 +559,61 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
     this.offsetParent = getOffsetParent(this.currentNode);
     // And the offsetParent quads.
     this.parentQuads = getAdjustedQuads(
-        this.win, this.offsetParent.element, "padding");
+      this.win,
+      this.offsetParent.element,
+      "padding"
+    );
 
     const el = this.getElement("offset-parent");
 
-    const isPositioned = this.computedStyle.position === "absolute" ||
-                       this.computedStyle.position === "fixed";
+    const isPositioned =
+      this.computedStyle.position === "absolute" ||
+      this.computedStyle.position === "fixed";
     const isRelative = this.computedStyle.position === "relative";
     let isHighlighted = false;
 
     if (this.offsetParent.element && isPositioned) {
-      const {p1, p2, p3, p4} = this.parentQuads[0];
-      const points = p1.x + "," + p1.y + " " +
-                   p2.x + "," + p2.y + " " +
-                   p3.x + "," + p3.y + " " +
-                   p4.x + "," + p4.y;
+      const { p1, p2, p3, p4 } = this.parentQuads[0];
+      const points =
+        p1.x +
+        "," +
+        p1.y +
+        " " +
+        p2.x +
+        "," +
+        p2.y +
+        " " +
+        p3.x +
+        "," +
+        p3.y +
+        " " +
+        p4.x +
+        "," +
+        p4.y;
       el.setAttribute("points", points);
       isHighlighted = true;
     } else if (isRelative) {
       const xDelta = parseFloat(this.computedStyle.left);
       const yDelta = parseFloat(this.computedStyle.top);
       if (xDelta || yDelta) {
-        const {p1, p2, p3, p4} = this.currentQuads.margin[0];
-        const points = (p1.x - xDelta) + "," + (p1.y - yDelta) + " " +
-                     (p2.x - xDelta) + "," + (p2.y - yDelta) + " " +
-                     (p3.x - xDelta) + "," + (p3.y - yDelta) + " " +
-                     (p4.x - xDelta) + "," + (p4.y - yDelta);
+        const { p1, p2, p3, p4 } = this.currentQuads.margin[0];
+        const points =
+          p1.x -
+          xDelta +
+          "," +
+          (p1.y - yDelta) +
+          " " +
+          (p2.x - xDelta) +
+          "," +
+          (p2.y - yDelta) +
+          " " +
+          (p3.x - xDelta) +
+          "," +
+          (p3.y - yDelta) +
+          " " +
+          (p4.x - xDelta) +
+          "," +
+          (p4.y - yDelta);
         el.setAttribute("points", points);
         isHighlighted = true;
       }
@@ -582,11 +628,23 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
   updateCurrentNode() {
     const box = this.getElement("current-node");
-    const {p1, p2, p3, p4} = this.currentQuads.margin[0];
-    const attr = p1.x + "," + p1.y + " " +
-               p2.x + "," + p2.y + " " +
-               p3.x + "," + p3.y + " " +
-               p4.x + "," + p4.y;
+    const { p1, p2, p3, p4 } = this.currentQuads.margin[0];
+    const attr =
+      p1.x +
+      "," +
+      p1.y +
+      " " +
+      p2.x +
+      "," +
+      p2.y +
+      " " +
+      p3.x +
+      "," +
+      p3.y +
+      " " +
+      p4.x +
+      "," +
+      p4.y;
     box.setAttribute("points", attr);
     box.removeAttribute("hidden");
   }
@@ -651,8 +709,12 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       if (GeoProp.isInverted(side)) {
         return this.offsetParent.dimension[GeoProp.mainAxisSize(side)];
       }
-      return -1 * this.currentNode.ownerGlobal["scroll" +
-                                              GeoProp.axis(side).toUpperCase()];
+      return (
+        -1 *
+        this.currentNode.ownerGlobal[
+          "scroll" + GeoProp.axis(side).toUpperCase()
+        ]
+      );
     };
 
     for (const side of GeoProp.SIDES) {
@@ -663,11 +725,17 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
 
       const mainAxisStartPos = getSideArrowStartPos(side);
       const mainAxisEndPos = marginBox[side];
-      const crossAxisPos = marginBox[GeoProp.crossAxisStart(side)] +
-                         marginBox[GeoProp.crossAxisSize(side)] / 2;
+      const crossAxisPos =
+        marginBox[GeoProp.crossAxisStart(side)] +
+        marginBox[GeoProp.crossAxisSize(side)] / 2;
 
-      this.updateArrow(side, mainAxisStartPos, mainAxisEndPos, crossAxisPos,
-                       sideProp.cssRule.style.getPropertyValue(side));
+      this.updateArrow(
+        side,
+        mainAxisStartPos,
+        mainAxisEndPos,
+        crossAxisPos,
+        sideProp.cssRule.style.getPropertyValue(side)
+      );
     }
   }
 
@@ -693,8 +761,10 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
     const capitalize = str => str[0].toUpperCase() + str.substring(1);
     const winMain = this.win["inner" + capitalize(GeoProp.mainAxisSize(side))];
     let labelMain = mainStart + (mainEnd - mainStart) / 2;
-    if ((mainStart > 0 && mainStart < winMain) ||
-        (mainEnd > 0 && mainEnd < winMain)) {
+    if (
+      (mainStart > 0 && mainStart < winMain) ||
+      (mainEnd > 0 && mainEnd < winMain)
+    ) {
       if (labelMain < GEOMETRY_LABEL_SIZE) {
         labelMain = GEOMETRY_LABEL_SIZE;
       } else if (labelMain > winMain - GEOMETRY_LABEL_SIZE) {
@@ -702,9 +772,12 @@ class GeometryEditorHighlighter extends AutoRefreshHighlighter {
       }
     }
     const labelCross = crossPos;
-    labelEl.setAttribute("transform", GeoProp.isHorizontal(side)
-                         ? "translate(" + labelMain + " " + labelCross + ")"
-                         : "translate(" + labelCross + " " + labelMain + ")");
+    labelEl.setAttribute(
+      "transform",
+      GeoProp.isHorizontal(side)
+        ? "translate(" + labelMain + " " + labelCross + ")"
+        : "translate(" + labelCross + " " + labelMain + ")"
+    );
     labelEl.removeAttribute("hidden");
     labelTextEl.setTextContent(labelValue);
   }

@@ -14,17 +14,22 @@ function run_test() {
   });
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
-  gDebuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+  gDebuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_named_function();
-                           });
+    attachTestTabAndResume(gClient, "test-grips", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_named_function();
+    });
   });
   do_test_pending();
 }
@@ -96,4 +101,3 @@ function test_anonymous_function() {
 
   gDebuggee.eval("stopMe(function(foo, bar, baz) { })");
 }
-

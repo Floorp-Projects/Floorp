@@ -3,11 +3,16 @@
 
 "use strict";
 
-const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
+const {
+  LazyPool,
+  createExtraActors,
+} = require("devtools/shared/protocol/lazy-pool");
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+const {
+  ActorRegistry,
+} = require("devtools/server/actors/utils/actor-registry");
 const { TabSources } = require("devtools/server/actors/utils/TabSources");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
@@ -105,9 +110,11 @@ function TestTargetActor(connection, global) {
         return true;
       }
 
-      return g.hostAnnotations &&
+      return (
+        g.hostAnnotations &&
         g.hostAnnotations.type == "document" &&
-        g.hostAnnotations.element === this._global;
+        g.hostAnnotations.element === this._global
+      );
     },
   });
 }
@@ -157,7 +164,7 @@ TestTargetActor.prototype = {
 
   onDetach: function(request) {
     if (!this._attached) {
-      return { "error": "wrongState" };
+      return { error: "wrongState" };
     }
     return { type: "detached" };
   },
@@ -179,7 +186,7 @@ TestTargetActor.prototype = {
 };
 
 TestTargetActor.prototype.requestTypes = {
-  "attach": TestTargetActor.prototype.onAttach,
-  "detach": TestTargetActor.prototype.onDetach,
-  "reload": TestTargetActor.prototype.onReload,
+  attach: TestTargetActor.prototype.onAttach,
+  detach: TestTargetActor.prototype.onDetach,
+  reload: TestTargetActor.prototype.onReload,
 };

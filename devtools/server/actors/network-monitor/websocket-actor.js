@@ -9,8 +9,9 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { webSocketSpec } = require("devtools/shared/specs/websocket");
 const { LongStringActor } = require("devtools/server/actors/string");
 
-const webSocketEventService = Cc["@mozilla.org/websocketevent/service;1"]
-  .getService(Ci.nsIWebSocketEventService);
+const webSocketEventService = Cc[
+  "@mozilla.org/websocketevent/service;1"
+].getService(Ci.nsIWebSocketEventService);
 
 /**
  * This actor intercepts WebSocket traffic for a specific window.
@@ -55,8 +56,8 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
   startListening: function() {
     // Register WS listener
     if (!this.listening) {
-      const innerWindowID =
-        this.targetActor.window.windowUtils.currentInnerWindowID;
+      const innerWindowID = this.targetActor.window.windowUtils
+        .currentInnerWindowID;
       webSocketEventService.addListener(innerWindowID, this);
       this.listening = true;
     }
@@ -64,8 +65,8 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
 
   stopListening() {
     if (this.listening) {
-      const innerWindowID =
-        this.targetActor.window.windowUtils.currentInnerWindowID;
+      const innerWindowID = this.targetActor.window.windowUtils
+        .currentInnerWindowID;
       webSocketEventService.removeListener(innerWindowID, this);
       this.listening = false;
     }
@@ -73,32 +74,32 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
 
   // nsIWebSocketEventService
 
-  webSocketCreated(webSocketSerialID, uri, protocols) {
-  },
+  webSocketCreated(webSocketSerialID, uri, protocols) {},
 
-  webSocketOpened(webSocketSerialID, effectiveURI, protocols,
-    extensions, httpChannelId) {
+  webSocketOpened(
+    webSocketSerialID,
+    effectiveURI,
+    protocols,
+    extensions,
+    httpChannelId
+  ) {
     this.connections.set(webSocketSerialID, httpChannelId);
 
-    this.emit("serverWebSocketOpened",
+    this.emit(
+      "serverWebSocketOpened",
       httpChannelId,
       effectiveURI,
       protocols,
-      extensions,
+      extensions
     );
   },
 
-  webSocketMessageAvailable(webSocketSerialID, data, messageType) {
-  },
+  webSocketMessageAvailable(webSocketSerialID, data, messageType) {},
 
   webSocketClosed(webSocketSerialID, wasClean, code, reason) {
     this.connections.delete(webSocketSerialID);
 
-    this.emit("serverWebSocketClosed",
-      wasClean,
-      code,
-      reason,
-    );
+    this.emit("serverWebSocketClosed", wasClean, code, reason);
   },
 
   frameReceived(webSocketSerialID, frame) {

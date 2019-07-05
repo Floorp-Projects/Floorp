@@ -19,8 +19,10 @@ add_task(async function() {
   const markers = await waitForMarkerType(front, ["MinorGC"]);
   await front.stopRecording(rec);
 
-  ok(markers.some(m => m.name === "MinorGC" && m.causeName),
-     "got some MinorGC markers");
+  ok(
+    markers.some(m => m.name === "MinorGC" && m.causeName),
+    "got some MinorGC markers"
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();

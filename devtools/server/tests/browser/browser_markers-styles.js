@@ -18,7 +18,10 @@ add_task(async function() {
 
   await front.stopRecording(rec);
 
-  ok(markers.some(m => m.name === MARKER_NAME), `got some ${MARKER_NAME} markers`);
+  ok(
+    markers.some(m => m.name === MARKER_NAME),
+    `got some ${MARKER_NAME} markers`
+  );
 
   await target.destroy();
   gBrowser.removeCurrentTab();

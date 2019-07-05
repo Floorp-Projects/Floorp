@@ -16,8 +16,13 @@ function checkAccessibilityState(accessibility, expected) {
 // Simple checks for the AccessibilityActor and AccessibleWalkerActor
 
 add_task(async function() {
-  const { walker: domWalker, target, accessibility} = await initAccessibilityFrontForUrl(
-    "data:text/html;charset=utf-8,<title>test</title><div></div>");
+  const {
+    walker: domWalker,
+    target,
+    accessibility,
+  } = await initAccessibilityFrontForUrl(
+    "data:text/html;charset=utf-8,<title>test</title><div></div>"
+  );
 
   ok(accessibility, "The AccessibilityFront was created");
   ok(accessibility.getWalker, "The getWalker method exists");
@@ -25,30 +30,42 @@ add_task(async function() {
   let a11yWalker = await accessibility.getWalker();
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
 
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: true });
+  checkAccessibilityState(accessibility, {
+    enabled: false,
+    canBeDisabled: true,
+    canBeEnabled: true,
+  });
 
   info("Force disable accessibility service: updates canBeEnabled flag");
   let onEvent = accessibility.once("can-be-enabled-change");
   Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, 1);
   await onEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: false });
+  checkAccessibilityState(accessibility, {
+    enabled: false,
+    canBeDisabled: true,
+    canBeEnabled: false,
+  });
 
   info("Clear force disable accessibility service: updates canBeEnabled flag");
   onEvent = accessibility.once("can-be-enabled-change");
   Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
   await onEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: true });
+  checkAccessibilityState(accessibility, {
+    enabled: false,
+    canBeDisabled: true,
+    canBeEnabled: true,
+  });
 
   info("Initialize accessibility service");
   const initEvent = accessibility.once("init");
   await accessibility.enable();
   await waitForA11yInit();
   await initEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: true, canBeDisabled: true, canBeEnabled: true });
+  checkAccessibilityState(accessibility, {
+    enabled: true,
+    canBeDisabled: true,
+    canBeEnabled: true,
+  });
 
   a11yWalker = await accessibility.getWalker();
   const rootNode = await domWalker.getRootNode();
@@ -60,8 +77,11 @@ add_task(async function() {
   await accessibility.disable();
   await waitForA11yShutdown();
   await shutdownEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: true });
+  checkAccessibilityState(accessibility, {
+    enabled: false,
+    canBeDisabled: true,
+    canBeEnabled: true,
+  });
 
   await target.destroy();
   gBrowser.removeCurrentTab();

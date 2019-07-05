@@ -4,11 +4,15 @@
    runNextTest, _documentWalker */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {TargetFactory} = require("devtools/client/framework/target");
-const {DebuggerServer} = require("devtools/server/main");
-const {BrowserTestUtils} = require("resource://testing-common/BrowserTestUtils.jsm");
-const {DocumentWalker: _documentWalker} = require("devtools/server/actors/inspector/document-walker");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { TargetFactory } = require("devtools/client/framework/target");
+const { DebuggerServer } = require("devtools/server/main");
+const {
+  BrowserTestUtils,
+} = require("resource://testing-common/BrowserTestUtils.jsm");
+const {
+  DocumentWalker: _documentWalker,
+} = require("devtools/server/actors/inspector/document-walker");
 
 const Services = require("Services");
 
@@ -55,7 +59,8 @@ async function getTargetForSelectedTab(gBrowser) {
  */
 async function attachURL(url) {
   // Get the current browser window
-  const gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
+  const gBrowser = Services.wm.getMostRecentWindow("navigator:browser")
+    .gBrowser;
 
   // open the url in a new tab, save a reference to the new inner window global object
   // and wait for it to load. The tests rely on this window object to send a "ready"
@@ -119,10 +124,11 @@ function waitForMutation(walker, test, mutations = []) {
     }
 
     walker.once("mutations", newMutations => {
-      waitForMutation(walker, test, mutations.concat(newMutations))
-        .then(finalMutations => {
+      waitForMutation(walker, test, mutations.concat(newMutations)).then(
+        finalMutations => {
           resolve(finalMutations);
-        });
+        }
+      );
     });
   });
 }
@@ -133,7 +139,7 @@ function addTest(test) {
 }
 
 function addAsyncTest(generator) {
-  _tests.push(() => (generator)().catch(ok.bind(null, false)));
+  _tests.push(() => generator().catch(ok.bind(null, false)));
 }
 
 function runNextTest() {
@@ -145,7 +151,11 @@ function runNextTest() {
   try {
     fn();
   } catch (ex) {
-    info("Test function " + (fn.name ? "'" + fn.name + "' " : "") +
-         "threw an exception: " + ex);
+    info(
+      "Test function " +
+        (fn.name ? "'" + fn.name + "' " : "") +
+        "threw an exception: " +
+        ex
+    );
   }
 }

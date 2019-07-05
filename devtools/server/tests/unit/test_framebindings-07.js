@@ -22,11 +22,14 @@ function run_test() {
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-bindings",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_banana_environment();
-                           });
+    attachTestTabAndResume(gClient, "test-bindings", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_banana_environment();
+    });
   });
   do_test_pending();
 }
@@ -48,7 +51,10 @@ function test_banana_environment() {
 
       const parentClient = new EnvironmentClient(gClient, parent);
       parentClient.getBindings(response => {
-        Assert.equal(response.bindings.variables.banana3.value.class, "Function");
+        Assert.equal(
+          response.bindings.variables.banana3.value.class,
+          "Function"
+        );
 
         const grandpaClient = new EnvironmentClient(gClient, grandpa);
         grandpaClient.getBindings(response => {
@@ -59,13 +65,15 @@ function test_banana_environment() {
     });
   });
 
-  gDebuggee.eval("function banana(x) {\n" +
-                 "  return function banana2(y) {\n" +
-                 "    return function banana3(z) {\n" +
-                 "      eval(\"\");\n" +
-                 "      debugger;\n" +
-                 "    };\n" +
-                 "  };\n" +
-                 "}\n" +
-                 "banana('x')('y')('z');\n");
+  gDebuggee.eval(
+    "function banana(x) {\n" +
+      "  return function banana2(y) {\n" +
+      "    return function banana3(z) {\n" +
+      '      eval("");\n' +
+      "      debugger;\n" +
+      "    };\n" +
+      "  };\n" +
+      "}\n" +
+      "banana('x')('y')('z');\n"
+  );
 }

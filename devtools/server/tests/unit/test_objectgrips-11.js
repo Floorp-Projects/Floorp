@@ -18,17 +18,22 @@ registerCleanupFunction(() => {
 function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
-  gDebuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+  gDebuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_object_grip();
-                           });
+    attachTestTabAndResume(gClient, "test-grips", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_object_grip();
+    });
   });
   do_test_pending();
 }
@@ -55,4 +60,3 @@ function test_object_grip() {
 
   gDebuggee.eval("stopMe(new TypeError('error message text'))");
 }
-

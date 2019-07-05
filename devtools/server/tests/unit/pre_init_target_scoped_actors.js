@@ -16,6 +16,6 @@ PreInitTargetScopedActor.prototype = {
 };
 
 PreInitTargetScopedActor.prototype.requestTypes = {
-  "ping": PreInitTargetScopedActor.prototype.onPing,
+  ping: PreInitTargetScopedActor.prototype.onPing,
 };
 exports.PreInitTargetScopedActor = PreInitTargetScopedActor;

@@ -4,9 +4,13 @@ function run_test() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   });
-  const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+  const { addDebuggerToGlobal } = ChromeUtils.import(
+    "resource://gre/modules/jsdebugger.jsm"
+  );
   addDebuggerToGlobal(this);
-  const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
+  const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(
+    Ci.nsIJSInspector
+  );
   const g = testGlobal("test1");
 
   const dbg = new Debugger();
