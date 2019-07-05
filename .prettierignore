@@ -40,7 +40,6 @@ toolkit/components/telemetry/datareporting-prefs.js
 toolkit/components/telemetry/healthreport-prefs.js
 
 # Ignore all top-level directories for now.
-intl/**
 ipc/**
 js/**
 layout/**
