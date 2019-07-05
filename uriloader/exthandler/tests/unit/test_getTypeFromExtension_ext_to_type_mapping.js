@@ -11,16 +11,15 @@
 function run_test() {
   // --- Common services ---
 
-  const mimeService = Cc["@mozilla.org/mime;1"].
-                      getService(Ci.nsIMIMEService);
+  const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
   const categoryManager = Services.catMan;
 
   // --- Test procedure ---
 
-  const kTestExtension          = "testextension";
+  const kTestExtension = "testextension";
   const kTestExtensionMixedCase = "testExtensIon";
-  const kTestMimeType           = "application/x-testextension";
+  const kTestMimeType = "application/x-testextension";
 
   // Ensure that the test extension is not initially recognized by the operating
   // system or the "ext-to-type-mapping" category.
@@ -30,8 +29,10 @@ function run_test() {
     // The line above should have thrown an exception.
     do_throw("nsIMIMEService.getTypeFromExtension succeeded unexpectedly");
   } catch (e) {
-    if (!(e instanceof Ci.nsIException) ||
-        e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+    if (
+      !(e instanceof Ci.nsIException) ||
+      e.result != Cr.NS_ERROR_NOT_AVAILABLE
+    ) {
       throw e;
     }
     // This is an expected exception, thrown if the type can't be determined.
@@ -39,8 +40,13 @@ function run_test() {
   }
 
   // Add a temporary category entry mapping the extension to the MIME type.
-  categoryManager.addCategoryEntry("ext-to-type-mapping", kTestExtension,
-                                   kTestMimeType, false, true);
+  categoryManager.addCategoryEntry(
+    "ext-to-type-mapping",
+    kTestExtension,
+    kTestMimeType,
+    false,
+    true
+  );
 
   // Check that the mapping is recognized in the simple case.
   var type = mimeService.getTypeFromExtension(kTestExtension);
@@ -51,5 +57,9 @@ function run_test() {
   Assert.equal(type, kTestMimeType);
 
   // Clean up after ourselves.
-  categoryManager.deleteCategoryEntry("ext-to-type-mapping", kTestExtension, false);
+  categoryManager.deleteCategoryEntry(
+    "ext-to-type-mapping",
+    kTestExtension,
+    false
+  );
 }
