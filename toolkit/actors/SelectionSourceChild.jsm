@@ -5,8 +5,10 @@
 
 var EXPORTED_SYMBOLS = ["SelectionSourceChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class SelectionSourceChild extends ActorChild {
   receiveMessage(message) {
@@ -17,7 +19,10 @@ class SelectionSourceChild extends ActorChild {
       try {
         selectionDetails = this.getSelection(global);
       } finally {
-        global.sendAsyncMessage("ViewSource:GetSelectionDone", selectionDetails);
+        global.sendAsyncMessage(
+          "ViewSource:GetSelectionDone",
+          selectionDetails
+        );
       }
     }
   }
@@ -30,11 +35,13 @@ class SelectionSourceChild extends ActorChild {
   getPath(ancestor, node) {
     var n = node;
     var p = n.parentNode;
-    if (n == ancestor || !p)
+    if (n == ancestor || !p) {
       return null;
+    }
     var path = [];
-    if (!path)
+    if (!path) {
       return null;
+    }
     do {
       for (var i = 0; i < p.childNodes.length; i++) {
         if (p.childNodes.item(i) == n) {
@@ -49,7 +56,7 @@ class SelectionSourceChild extends ActorChild {
   }
 
   getSelection(global) {
-    const {content} = global;
+    const { content } = global;
 
     // These are markers used to delimit the selection during processing. They
     // are removed from the final rendering.
@@ -73,16 +80,20 @@ class SelectionSourceChild extends ActorChild {
 
     // let the ancestor be an element
     var Node = doc.defaultView.Node;
-    if (ancestorContainer.nodeType == Node.TEXT_NODE ||
-        ancestorContainer.nodeType == Node.CDATA_SECTION_NODE)
+    if (
+      ancestorContainer.nodeType == Node.TEXT_NODE ||
+      ancestorContainer.nodeType == Node.CDATA_SECTION_NODE
+    ) {
       ancestorContainer = ancestorContainer.parentNode;
+    }
 
     // for selectAll, let's use the entire document, including <html>...</html>
     // @see nsDocumentViewer::SelectAll() for how selectAll is implemented
     try {
-      if (ancestorContainer == doc.body)
+      if (ancestorContainer == doc.body) {
         ancestorContainer = doc.documentElement;
-    } catch (e) { }
+      }
+    } catch (e) {}
 
     // each path is a "child sequence" (a.k.a. "tumbler") that
     // descends from the ancestor down to the boundary point
@@ -95,10 +106,14 @@ class SelectionSourceChild extends ActorChild {
     // loading and the like.  The use of importNode here, as opposed to adoptNode,
     // is _very_ important.
     // XXXbz wish there were a less hacky way to create an untrusted document here
-    var isHTML = (doc.createElement("div").tagName == "DIV");
-    var dataDoc = isHTML ?
-      ancestorContainer.ownerDocument.implementation.createHTMLDocument("") :
-      ancestorContainer.ownerDocument.implementation.createDocument("", "", null);
+    var isHTML = doc.createElement("div").tagName == "DIV";
+    var dataDoc = isHTML
+      ? ancestorContainer.ownerDocument.implementation.createHTMLDocument("")
+      : ancestorContainer.ownerDocument.implementation.createDocument(
+          "",
+          "",
+          null
+        );
     ancestorContainer = dataDoc.importNode(ancestorContainer, true);
     startContainer = ancestorContainer;
     endContainer = ancestorContainer;
@@ -121,51 +136,75 @@ class SelectionSourceChild extends ActorChild {
       // note: |startOffset| and |endOffset| are interpreted either as
       // offsets in the text data or as child indices (see the Range spec)
       // (here, munging the end point first to keep the start point safe...)
-      if (endContainer.nodeType == Node.TEXT_NODE ||
-          endContainer.nodeType == Node.CDATA_SECTION_NODE) {
+      if (
+        endContainer.nodeType == Node.TEXT_NODE ||
+        endContainer.nodeType == Node.CDATA_SECTION_NODE
+      ) {
         // do some extra tweaks to try to avoid the view-source output to look like
         // ...<tag>]... or ...]</tag>... (where ']' marks the end of the selection).
         // To get a neat output, the idea here is to remap the end point from:
         // 1. ...<tag>]...   to   ...]<tag>...
         // 2. ...]</tag>...  to   ...</tag>]...
-        if ((endOffset > 0 && endOffset < endContainer.data.length) ||
-            !endContainer.parentNode || !endContainer.parentNode.parentNode) {
+        if (
+          (endOffset > 0 && endOffset < endContainer.data.length) ||
+          !endContainer.parentNode ||
+          !endContainer.parentNode.parentNode
+        ) {
           endContainer.insertData(endOffset, MARK_SELECTION_END);
         } else {
           tmpNode = dataDoc.createTextNode(MARK_SELECTION_END);
           endContainer = endContainer.parentNode;
-          if (endOffset === 0)
+          if (endOffset === 0) {
             endContainer.parentNode.insertBefore(tmpNode, endContainer);
-          else
-            endContainer.parentNode.insertBefore(tmpNode, endContainer.nextSibling);
+          } else {
+            endContainer.parentNode.insertBefore(
+              tmpNode,
+              endContainer.nextSibling
+            );
+          }
         }
       } else {
         tmpNode = dataDoc.createTextNode(MARK_SELECTION_END);
-        endContainer.insertBefore(tmpNode, endContainer.childNodes.item(endOffset));
+        endContainer.insertBefore(
+          tmpNode,
+          endContainer.childNodes.item(endOffset)
+        );
       }
 
-      if (startContainer.nodeType == Node.TEXT_NODE ||
-          startContainer.nodeType == Node.CDATA_SECTION_NODE) {
+      if (
+        startContainer.nodeType == Node.TEXT_NODE ||
+        startContainer.nodeType == Node.CDATA_SECTION_NODE
+      ) {
         // do some extra tweaks to try to avoid the view-source output to look like
         // ...<tag>[... or ...[</tag>... (where '[' marks the start of the selection).
         // To get a neat output, the idea here is to remap the start point from:
         // 1. ...<tag>[...   to   ...[<tag>...
         // 2. ...[</tag>...  to   ...</tag>[...
-        if ((startOffset > 0 && startOffset < startContainer.data.length) ||
-            !startContainer.parentNode || !startContainer.parentNode.parentNode ||
-            startContainer != startContainer.parentNode.lastChild) {
+        if (
+          (startOffset > 0 && startOffset < startContainer.data.length) ||
+          !startContainer.parentNode ||
+          !startContainer.parentNode.parentNode ||
+          startContainer != startContainer.parentNode.lastChild
+        ) {
           startContainer.insertData(startOffset, MARK_SELECTION_START);
         } else {
           tmpNode = dataDoc.createTextNode(MARK_SELECTION_START);
           startContainer = startContainer.parentNode;
-          if (startOffset === 0)
+          if (startOffset === 0) {
             startContainer.parentNode.insertBefore(tmpNode, startContainer);
-          else
-            startContainer.parentNode.insertBefore(tmpNode, startContainer.nextSibling);
+          } else {
+            startContainer.parentNode.insertBefore(
+              tmpNode,
+              startContainer.nextSibling
+            );
+          }
         }
       } else {
         tmpNode = dataDoc.createTextNode(MARK_SELECTION_START);
-        startContainer.insertBefore(tmpNode, startContainer.childNodes.item(startOffset));
+        startContainer.insertBefore(
+          tmpNode,
+          startContainer.childNodes.item(startOffset)
+        );
       }
     }
 
@@ -173,11 +212,15 @@ class SelectionSourceChild extends ActorChild {
     tmpNode = dataDoc.createElementNS("http://www.w3.org/1999/xhtml", "div");
     tmpNode.appendChild(ancestorContainer);
 
-    return { uri: (isHTML ? "view-source:data:text/html;charset=utf-8," :
-                            "view-source:data:application/xml;charset=utf-8,")
-                  + encodeURIComponent(tmpNode.innerHTML),
-             drawSelection: canDrawSelection,
-             baseURI: doc.baseURI };
+    return {
+      uri:
+        (isHTML
+          ? "view-source:data:text/html;charset=utf-8,"
+          : "view-source:data:application/xml;charset=utf-8,") +
+        encodeURIComponent(tmpNode.innerHTML),
+      drawSelection: canDrawSelection,
+      baseURI: doc.baseURI,
+    };
   }
 
   get wrapLongLines() {
