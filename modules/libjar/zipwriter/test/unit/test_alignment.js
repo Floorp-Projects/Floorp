@@ -20,15 +20,16 @@ var TESTS = [
 ];
 
 function swap16(n) {
-  return (((n >> 8) & 0xFF) << 0) |
-    (((n >> 0) & 0xFF) << 8);
+  return (((n >> 8) & 0xff) << 0) | (((n >> 0) & 0xff) << 8);
 }
 
 function swap32(n) {
-  return (((n >> 24) & 0xFF) << 0) |
-    (((n >> 16) & 0xFF) << 8) |
-    (((n >> 8) & 0xFF) << 16) |
-    (((n >> 0) & 0xFF) << 24);
+  return (
+    (((n >> 24) & 0xff) << 0) |
+    (((n >> 16) & 0xff) << 8) |
+    (((n >> 8) & 0xff) << 16) |
+    (((n >> 0) & 0xff) << 24)
+  );
 }
 
 function move_to_data(bis, offset) {
@@ -41,7 +42,7 @@ function move_to_data(bis, offset) {
   bis.readBytes(extra_len);
   offset += ZIP_FILE_HEADER_SIZE + file_len + extra_len;
 
-  return {offset, size};
+  return { offset, size };
 }
 
 function test_alignment(align_size) {
@@ -51,18 +52,25 @@ function test_alignment(align_size) {
     var source = do_get_file(DATA_DIR + TESTS[i].name);
     zipW.addEntryFile(TESTS[i].name, TESTS[i].compression, source, false);
   }
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"]
-    .createInstance(Ci.nsIStringInputStream);
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stream.setData(DATA, DATA.length);
-  zipW.addEntryStream(FILENAME, time * PR_USEC_PER_MSEC,
-    Ci.nsIZipWriter.COMPRESSION_NONE, stream, false);
+  zipW.addEntryStream(
+    FILENAME,
+    time * PR_USEC_PER_MSEC,
+    Ci.nsIZipWriter.COMPRESSION_NONE,
+    stream,
+    false
+  );
   zipW.alignStoredFiles(align_size);
   zipW.close();
 
   // Check data can be decompressed.
   var zipR = new ZipReader(tmpFile);
-  stream = Cc["@mozilla.org/scriptableinputstream;1"]
-    .createInstance(Ci.nsIScriptableInputStream);
+  stream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   stream.init(zipR.getInputStream(FILENAME));
   var result = stream.read(DATA.length);
   Assert.equal(result, DATA);
@@ -70,11 +78,13 @@ function test_alignment(align_size) {
   zipR.close();
 
   // Check data is correct and aligned.
-  var fis = Cc["@mozilla.org/network/file-input-stream;1"]
-    .createInstance(Ci.nsIFileInputStream);
+  var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fis.init(tmpFile, -1, -1, null);
-  let bis = Cc["@mozilla.org/binaryinputstream;1"]
-    .createInstance(Ci.nsIBinaryInputStream);
+  let bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   bis.setInputStream(fis);
   var offset = 0;
 
