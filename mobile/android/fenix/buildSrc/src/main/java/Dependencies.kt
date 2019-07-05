@@ -52,6 +52,7 @@ private object Versions {
 
     const val espresso_core = "2.2.2"
     const val espresso_version = "3.0.2"
+    const val mockwebserver = "3.11.0"
     const val orchestrator = "1.1.1"
     const val tools_test_rules = "1.1.1"
     const val tools_test_runner = "1.1.1"
@@ -183,6 +184,7 @@ object Deps {
     const val espresso_contrib = "com.android.support.test.espresso:espresso-contrib:${Versions.espresso_version}"
     const val espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
     const val espresso_idling_resources = "com.android.support.test.espresso:espresso-idling-resource:${Versions.espresso_version}"
+    const val mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     const val orchestrator = "androidx.test:orchestrator:${Versions.orchestrator}"
     const val tools_test_rules = "com.android.support.test:rules:${Versions.tools_test_rules}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.tools_test_runner}"

@@ -399,6 +399,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
+    androidTestImplementation Deps.mockwebserver
     testImplementation Deps.mozilla_support_test
     testImplementation Deps.androidx_junit
     testImplementation Deps.robolectric
