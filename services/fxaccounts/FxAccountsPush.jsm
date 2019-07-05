@@ -2,9 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Async} = ChromeUtils.import("resource://services-common/async.js");
-const {FXA_PUSH_SCOPE_ACCOUNT_UPDATE, ONLOGOUT_NOTIFICATION, ON_ACCOUNT_DESTROYED_NOTIFICATION, ON_ACCOUNT_STATE_CHANGE_NOTIFICATION, ON_COLLECTION_CHANGED_NOTIFICATION, ON_COMMAND_RECEIVED_NOTIFICATION, ON_DEVICE_CONNECTED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_PASSWORD_CHANGED_NOTIFICATION, ON_PASSWORD_RESET_NOTIFICATION, ON_PROFILE_CHANGE_NOTIFICATION, ON_PROFILE_UPDATED_NOTIFICATION, ON_VERIFY_LOGIN_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const {
+  FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
+  ONLOGOUT_NOTIFICATION,
+  ON_ACCOUNT_DESTROYED_NOTIFICATION,
+  ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
+  ON_COLLECTION_CHANGED_NOTIFICATION,
+  ON_COMMAND_RECEIVED_NOTIFICATION,
+  ON_DEVICE_CONNECTED_NOTIFICATION,
+  ON_DEVICE_DISCONNECTED_NOTIFICATION,
+  ON_PASSWORD_CHANGED_NOTIFICATION,
+  ON_PASSWORD_RESET_NOTIFICATION,
+  ON_PROFILE_CHANGE_NOTIFICATION,
+  ON_PROFILE_UPDATED_NOTIFICATION,
+  ON_VERIFY_LOGIN_NOTIFICATION,
+  log,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 /**
  * FxAccountsPushService manages Push notifications for Firefox Accounts in the browser
@@ -62,14 +77,19 @@ FxAccountsPushService.prototype = {
     if (options.pushService) {
       this.pushService = options.pushService;
     } else {
-      this.pushService = Cc["@mozilla.org/push/Service;1"].getService(Ci.nsIPushService);
+      this.pushService = Cc["@mozilla.org/push/Service;1"].getService(
+        Ci.nsIPushService
+      );
     }
 
     if (options.fxAccounts) {
       this.fxAccounts = options.fxAccounts;
     } else {
-      ChromeUtils.defineModuleGetter(this, "fxAccounts",
-        "resource://gre/modules/FxAccounts.jsm");
+      ChromeUtils.defineModuleGetter(
+        this,
+        "fxAccounts",
+        "resource://gre/modules/FxAccounts.jsm"
+      );
     }
 
     this.asyncObserver = Async.asyncObserver(this, this.log);
@@ -81,7 +101,10 @@ FxAccountsPushService.prototype = {
     // the same index multiple times and receive the same exact tabs, multiple times.
     // The async observer will ensure we make these network requests serially.
     Services.obs.addObserver(this.asyncObserver, this.pushService.pushTopic);
-    Services.obs.addObserver(this.asyncObserver, this.pushService.subscriptionChangeTopic);
+    Services.obs.addObserver(
+      this.asyncObserver,
+      this.pushService.subscriptionChangeTopic
+    );
     Services.obs.addObserver(this.asyncObserver, ONLOGOUT_NOTIFICATION);
 
     this.log.debug("FxAccountsPush initialized");
@@ -96,8 +119,9 @@ FxAccountsPushService.prototype = {
   registerPushEndpoint() {
     this.log.trace("FxAccountsPush registerPushEndpoint");
 
-    return new Promise((resolve) => {
-      this.pushService.subscribe(FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
+    return new Promise(resolve => {
+      this.pushService.subscribe(
+        FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
         Services.scriptSecurityManager.getSystemPrincipal(),
         (result, subscription) => {
           if (Components.isSuccessCode(result)) {
@@ -107,7 +131,8 @@ FxAccountsPushService.prototype = {
             this.log.warn("FxAccountsPush failed to subscribe", result);
             resolve(null);
           }
-        });
+        }
+      );
     });
   },
   /**
@@ -120,7 +145,9 @@ FxAccountsPushService.prototype = {
    */
   async observe(subject, topic, data) {
     try {
-      this.log.trace(`observed topic=${topic}, data=${data}, subject=${subject}`);
+      this.log.trace(
+        `observed topic=${topic}, data=${data}, subject=${subject}`
+      );
       switch (topic) {
         case this.pushService.pushTopic:
           if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
@@ -169,7 +196,11 @@ FxAccountsPushService.prototype = {
         await this.fxAccounts.commands.pollDeviceCommands(payload.data.index);
         break;
       case ON_DEVICE_CONNECTED_NOTIFICATION:
-        Services.obs.notifyObservers(null, ON_DEVICE_CONNECTED_NOTIFICATION, payload.data.deviceName);
+        Services.obs.notifyObservers(
+          null,
+          ON_DEVICE_CONNECTED_NOTIFICATION,
+          payload.data.deviceName
+        );
         break;
       case ON_DEVICE_DISCONNECTED_NOTIFICATION:
         this.fxAccounts.handleDeviceDisconnection(payload.data.id);
@@ -187,10 +218,18 @@ FxAccountsPushService.prototype = {
         this.fxAccounts.handleAccountDestroyed(payload.data.uid);
         return;
       case ON_COLLECTION_CHANGED_NOTIFICATION:
-        Services.obs.notifyObservers(null, ON_COLLECTION_CHANGED_NOTIFICATION, payload.data.collections);
+        Services.obs.notifyObservers(
+          null,
+          ON_COLLECTION_CHANGED_NOTIFICATION,
+          payload.data.collections
+        );
         return;
       case ON_VERIFY_LOGIN_NOTIFICATION:
-        Services.obs.notifyObservers(null, ON_VERIFY_LOGIN_NOTIFICATION, JSON.stringify(payload.data));
+        Services.obs.notifyObservers(
+          null,
+          ON_VERIFY_LOGIN_NOTIFICATION,
+          JSON.stringify(payload.data)
+        );
         break;
       default:
         this.log.warn("FxA Push command unrecognized: " + payload.command);
@@ -232,21 +271,28 @@ FxAccountsPushService.prototype = {
    */
   unsubscribe() {
     this.log.trace("FxAccountsPushService unsubscribe");
-    return new Promise((resolve) => {
-      this.pushService.unsubscribe(FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
+    return new Promise(resolve => {
+      this.pushService.unsubscribe(
+        FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
         Services.scriptSecurityManager.getSystemPrincipal(),
         (result, ok) => {
           if (Components.isSuccessCode(result)) {
             if (ok === true) {
               this.log.debug("FxAccountsPushService unsubscribed");
             } else {
-              this.log.debug("FxAccountsPushService had no subscription to unsubscribe");
+              this.log.debug(
+                "FxAccountsPushService had no subscription to unsubscribe"
+              );
             }
           } else {
-            this.log.warn("FxAccountsPushService failed to unsubscribe", result);
+            this.log.warn(
+              "FxAccountsPushService failed to unsubscribe",
+              result
+            );
           }
           return resolve(ok);
-        });
+        }
+      );
     });
   },
 
@@ -258,8 +304,9 @@ FxAccountsPushService.prototype = {
    * @returns {Promise}
    */
   getSubscription() {
-    return new Promise((resolve) => {
-      this.pushService.getSubscription(FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
+    return new Promise(resolve => {
+      this.pushService.getSubscription(
+        FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
         Services.scriptSecurityManager.getSystemPrincipal(),
         (result, subscription) => {
           if (!subscription) {
@@ -267,7 +314,8 @@ FxAccountsPushService.prototype = {
             return resolve(null);
           }
           return resolve(subscription);
-        });
+        }
+      );
     });
   },
 };

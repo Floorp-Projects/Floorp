@@ -17,20 +17,26 @@
 
 "use strict";
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Svc, Utils} = ChromeUtils.import("resource://services-sync/util.js");
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 const DEFAULT_STATE_FILE = "addonsreconciler";
 
-var CHANGE_INSTALLED   = 1;
+var CHANGE_INSTALLED = 1;
 var CHANGE_UNINSTALLED = 2;
-var CHANGE_ENABLED     = 3;
-var CHANGE_DISABLED    = 4;
+var CHANGE_ENABLED = 3;
+var CHANGE_DISABLED = 4;
 
-var EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
-                        "CHANGE_UNINSTALLED", "CHANGE_ENABLED",
-                        "CHANGE_DISABLED"];
+var EXPORTED_SYMBOLS = [
+  "AddonsReconciler",
+  "CHANGE_INSTALLED",
+  "CHANGE_UNINSTALLED",
+  "CHANGE_ENABLED",
+  "CHANGE_DISABLED",
+];
 /**
  * Maintains state of add-ons.
  *
@@ -174,8 +180,11 @@ AddonsReconciler.prototype = {
 
     let version = json.version;
     if (!version || version != 1) {
-      this._log.error("Could not load JSON file because version not " +
-                      "supported: " + version);
+      this._log.error(
+        "Could not load JSON file because version not " +
+          "supported: " +
+          version
+      );
       return false;
     }
 
@@ -200,7 +209,7 @@ AddonsReconciler.prototype = {
    *         will be used.
    */
   async saveState(file = DEFAULT_STATE_FILE) {
-    let state = {version: 1, addons: {}, changes: []};
+    let state = { version: 1, addons: {}, changes: [] };
 
     for (let [id, record] of Object.entries(this._addons)) {
       state.addons[id] = {};
@@ -323,8 +332,11 @@ AddonsReconciler.prototype = {
 
       let installFound = false;
       for (let install of installs) {
-        if (install.addon && install.addon.id == id &&
-            install.state == AddonManager.STATE_INSTALLED) {
+        if (
+          install.addon &&
+          install.addon.id == id &&
+          install.state == AddonManager.STATE_INSTALLED
+        ) {
           installFound = true;
           break;
         }
@@ -336,8 +348,11 @@ AddonsReconciler.prototype = {
 
       if (addon.installed) {
         addon.installed = false;
-        this._log.debug("Adding change because add-on not present in " +
-                        "Add-on Manager: " + id);
+        this._log.debug(
+          "Adding change because add-on not present in " +
+            "Add-on Manager: " +
+            id
+        );
         await this._addChange(new Date(), CHANGE_UNINSTALLED, addon);
       }
     }
@@ -361,7 +376,11 @@ AddonsReconciler.prototype = {
    *        Addon instance being updated.
    */
   async rectifyStateFromAddon(addon) {
-    this._log.debug(`Rectifying state for addon ${addon.name} (version=${addon.version}, id=${addon.id})`);
+    this._log.debug(
+      `Rectifying state for addon ${addon.name} (version=${addon.version}, id=${
+        addon.id
+      })`
+    );
 
     let id = addon.id;
     let enabled = !addon.userDisabled;
@@ -381,8 +400,9 @@ AddonsReconciler.prototype = {
         isSyncable: addon.isSyncable,
       };
       this._addons[id] = record;
-      this._log.debug("Adding change because add-on not present locally: " +
-                      id);
+      this._log.debug(
+        "Adding change because add-on not present locally: " + id
+      );
       await this._addChange(now, CHANGE_INSTALLED, record);
       return;
     }
@@ -529,8 +549,9 @@ AddonsReconciler.prototype = {
             let record = addons[id];
             record.installed = false;
             record.modified = now;
-            this._log.debug("Adding change because of uninstall listener: " +
-                            id);
+            this._log.debug(
+              "Adding change because of uninstall listener: " + id
+            );
             await this._addChange(now, CHANGE_UNINSTALLED, record);
           }
       }
@@ -546,18 +567,28 @@ AddonsReconciler.prototype = {
 
   // AddonListeners
   onEnabled: function onEnabled(addon) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onEnabled", addon));
+    this.queueCaller.enqueueCall(() =>
+      this._handleListener("onEnabled", addon)
+    );
   },
   onDisabled: function onDisabled(addon) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onDisabled", addon));
+    this.queueCaller.enqueueCall(() =>
+      this._handleListener("onDisabled", addon)
+    );
   },
   onInstalled: function onInstalled(addon) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onInstalled", addon));
+    this.queueCaller.enqueueCall(() =>
+      this._handleListener("onInstalled", addon)
+    );
   },
   onUninstalled: function onUninstalled(addon) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onUninstalled", addon));
+    this.queueCaller.enqueueCall(() =>
+      this._handleListener("onUninstalled", addon)
+    );
   },
   onOperationCancelled: function onOperationCancelled(addon) {
-    this.queueCaller.enqueueCall(() => this._handleListener("onOperationCancelled", addon));
+    this.queueCaller.enqueueCall(() =>
+      this._handleListener("onOperationCancelled", addon)
+    );
   },
 };

@@ -1,12 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
-const {Resource} = ChromeUtils.import("resource://services-sync/resource.js");
-const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const {RotaryEngine} = ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { WBORecord } = ChromeUtils.import("resource://services-sync/record.js");
+const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
+const { BookmarksEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/bookmarks.js"
+);
+const { RotaryEngine } = ChromeUtils.import(
+  "resource://testing-common/services/sync/rotaryengine.js"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
@@ -97,14 +101,31 @@ add_task(async function test_basic() {
 
   let handlers = {
     "/1.1/johndoe/info/collections": helper.handler,
-    "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/crypto/keys": upd(
+      "crypto",
+      new ServerWBO("keys").handler()
+    ),
+    "/1.1/johndoe/storage/meta/global": upd(
+      "meta",
+      new ServerWBO("global").handler()
+    ),
   };
 
-  let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];
+  let collections = [
+    "clients",
+    "bookmarks",
+    "forms",
+    "history",
+    "passwords",
+    "prefs",
+    "tabs",
+  ];
 
   for (let coll of collections) {
-    handlers["/1.1/johndoe/storage/" + coll] = upd(coll, new ServerCollection({}, true).handler());
+    handlers["/1.1/johndoe/storage/" + coll] = upd(
+      coll,
+      new ServerCollection({}, true).handler()
+    );
   }
 
   let server = httpd_setup(handlers);
@@ -126,7 +147,7 @@ add_task(async function test_basic() {
 add_task(async function test_processIncoming_error() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
-  let store  = engine._store;
+  let store = engine._store;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("bookmarks");
@@ -145,10 +166,14 @@ add_task(async function test_processIncoming_error() {
 
     let error, pingPayload, fullPing;
     try {
-      await sync_engine_and_validate_telem(engine, true, (errPing, fullErrPing) => {
-        pingPayload = errPing;
-        fullPing = fullErrPing;
-      });
+      await sync_engine_and_validate_telem(
+        engine,
+        true,
+        (errPing, fullErrPing) => {
+          pingPayload = errPing;
+          fullPing = fullErrPing;
+        }
+      );
     } catch (ex) {
       error = ex;
     }
@@ -163,8 +188,9 @@ add_task(async function test_processIncoming_error() {
 
     equal(pingPayload.engines.length, 1);
 
-    let engineName = bufferedBookmarksEnabled() ? "bookmarks-buffered" :
-                                                  "bookmarks";
+    let engineName = bufferedBookmarksEnabled()
+      ? "bookmarks-buffered"
+      : "bookmarks";
     equal(pingPayload.engines[0].name, engineName);
     deepEqual(pingPayload.engines[0].failureReason, {
       name: "httperror",
@@ -179,7 +205,7 @@ add_task(async function test_processIncoming_error() {
 add_task(async function test_uploading() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
-  let store  = engine._store;
+  let store = engine._store;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -190,8 +216,9 @@ add_task(async function test_uploading() {
   });
 
   try {
-    let engineName = bufferedBookmarksEnabled() ? "bookmarks-buffered" :
-                                                  "bookmarks";
+    let engineName = bufferedBookmarksEnabled()
+      ? "bookmarks-buffered"
+      : "bookmarks";
 
     let ping = await sync_engine_and_validate_telem(engine, false);
     ok(!!ping);
@@ -226,7 +253,7 @@ add_task(async function test_upload_failed() {
   collection._wbos.flying = new ServerWBO("flying");
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler(),
+    "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);
@@ -246,14 +273,20 @@ add_task(async function test_upload_failed() {
   await engine._tracker.addChangedID("peppercorn", PEPPERCORN_CHANGED);
 
   let syncID = await engine.resetLocalSyncID();
-  let meta_global = Service.recordManager.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(
+    engine.metaURL,
+    new WBORecord(engine.metaURL)
+  );
   meta_global.payload.engines = { rotary: { version: engine.version, syncID } };
 
   try {
     await engine.setLastSync(123); // needs to be non-zero so that tracker is queried
     let changes = await engine._tracker.getChangedIDs();
-    _(`test_upload_failed: Rotary tracker contents at first sync: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_upload_failed: Rotary tracker contents at first sync: ${JSON.stringify(
+        changes
+      )}`
+    );
     engine.enabled = true;
     let ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
@@ -263,8 +296,11 @@ add_task(async function test_upload_failed() {
     await engine.setLastSync(123);
 
     changes = await engine._tracker.getChangedIDs();
-    _(`test_upload_failed: Rotary tracker contents at second sync: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_upload_failed: Rotary tracker contents at second sync: ${JSON.stringify(
+        changes
+      )}`
+    );
     ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
     equal(ping.engines.length, 1);
@@ -279,7 +315,7 @@ add_task(async function test_upload_failed() {
 add_task(async function test_sync_partialUpload() {
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler(),
+    "/1.1/foo/storage/rotary": collection.handler(),
   });
   await SyncTestingInfrastructure(server);
   await generateNewKeys(Service.collectionKeys);
@@ -299,14 +335,19 @@ add_task(async function test_sync_partialUpload() {
   }
 
   let syncID = await engine.resetLocalSyncID();
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
+  let meta_global = Service.recordManager.set(
+    engine.metaURL,
+    new WBORecord(engine.metaURL)
+  );
+  meta_global.payload.engines = { rotary: { version: engine.version, syncID } };
 
   try {
     let changes = await engine._tracker.getChangedIDs();
-    _(`test_sync_partialUpload: Rotary tracker contents at first sync: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_sync_partialUpload: Rotary tracker contents at first sync: ${JSON.stringify(
+        changes
+      )}`
+    );
     engine.enabled = true;
     let ping = await sync_engine_and_validate_telem(engine, true);
 
@@ -318,7 +359,9 @@ add_task(async function test_sync_partialUpload() {
     ok(!ping.engines[0].failureReason);
     deepEqual(ping.engines[0].outgoing, [{ sent: 234, failed: 2 }]);
 
-    collection.post = function() { throw new Error("Failure"); };
+    collection.post = function() {
+      throw new Error("Failure");
+    };
 
     engine._store.items["record-no-1000"] = "Record No. 1000";
     await engine._tracker.addChangedID("record-no-1000", 1000);
@@ -328,11 +371,18 @@ add_task(async function test_sync_partialUpload() {
     ping = null;
 
     changes = await engine._tracker.getChangedIDs();
-    _(`test_sync_partialUpload: Rotary tracker contents at second sync: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_sync_partialUpload: Rotary tracker contents at second sync: ${JSON.stringify(
+        changes
+      )}`
+    );
     try {
       // should throw
-      await sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
+      await sync_engine_and_validate_telem(
+        engine,
+        true,
+        errPing => (ping = errPing)
+      );
     } catch (e) {}
     // It would be nice if we had a more descriptive error for this...
     let uploadFailureError = {
@@ -370,8 +420,11 @@ add_task(async function test_generic_engine_fail() {
 
   try {
     const changes = await engine._tracker.getChangedIDs();
-    _(`test_generic_engine_fail: Steam tracker contents: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_generic_engine_fail: Steam tracker contents: ${JSON.stringify(
+        changes
+      )}`
+    );
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
@@ -413,7 +466,6 @@ add_task(async function test_engine_fail_weird_errors() {
   }
 });
 
-
 add_task(async function test_overrideTelemetryName() {
   enableValidationPrefs(["steam"]);
 
@@ -437,11 +489,15 @@ add_task(async function test_overrideTelemetryName() {
     ok(enginePing);
     ok(!ping.engines.find(e => e.name === "steam"));
 
-    deepEqual(enginePing.validation, {
-      version: 1,
-      checked: 0,
-      problems: problemsToReport,
-    }, "Should include validation report with overridden name");
+    deepEqual(
+      enginePing.validation,
+      {
+        version: 1,
+        checked: 0,
+        problems: problemsToReport,
+      },
+      "Should include validation report with overridden name"
+    );
 
     info("Sync without validation problems");
     engine.problemsToReport = null;
@@ -449,8 +505,10 @@ add_task(async function test_overrideTelemetryName() {
     enginePing = ping.engines.find(e => e.name === "steam-but-better");
     ok(enginePing);
     ok(!ping.engines.find(e => e.name === "steam"));
-    ok(!enginePing.validation,
-      "Should not include validation report when there are no problems");
+    ok(
+      !enginePing.validation,
+      "Should not include validation report when there are no problems"
+    );
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
@@ -478,14 +536,21 @@ add_task(async function test_engine_fail_ioerror() {
 
   try {
     const changes = await engine._tracker.getChangedIDs();
-    _(`test_engine_fail_ioerror: Steam tracker contents: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_engine_fail_ioerror: Steam tracker contents: ${JSON.stringify(
+        changes
+      )}`
+    );
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    let failureReason = ping.engines.find(e => e.name === "steam").failureReason;
+    let failureReason = ping.engines.find(e => e.name === "steam")
+      .failureReason;
     equal(failureReason.name, "unexpectederror");
     // ensure the profile dir in the exception message has been stripped.
-    ok(!failureReason.error.includes(OS.Constants.Path.profileDir), failureReason.error);
+    ok(
+      !failureReason.error.includes(OS.Constants.Path.profileDir),
+      failureReason.error
+    );
     ok(failureReason.error.includes("[profileDir]"), failureReason.error);
   } finally {
     await cleanAndGo(engine, server);
@@ -501,30 +566,35 @@ add_task(async function test_clean_urls() {
   engine.enabled = true;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
-  engine._errToThrow = new TypeError("http://www.google .com is not a valid URL.");
+  engine._errToThrow = new TypeError(
+    "http://www.google .com is not a valid URL."
+  );
 
   try {
     const changes = await engine._tracker.getChangedIDs();
-    _(`test_clean_urls: Steam tracker contents: ${
-      JSON.stringify(changes)}`);
+    _(`test_clean_urls: Steam tracker contents: ${JSON.stringify(changes)}`);
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    let failureReason = ping.engines.find(e => e.name === "steam").failureReason;
+    let failureReason = ping.engines.find(e => e.name === "steam")
+      .failureReason;
     equal(failureReason.name, "unexpectederror");
     equal(failureReason.error, "<URL> is not a valid URL.");
     // Handle other errors that include urls.
-    engine._errToThrow = "Other error message that includes some:url/foo/bar/ in it.";
+    engine._errToThrow =
+      "Other error message that includes some:url/foo/bar/ in it.";
     ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     failureReason = ping.engines.find(e => e.name === "steam").failureReason;
     equal(failureReason.name, "unexpectederror");
-    equal(failureReason.error, "Other error message that includes <URL> in it.");
+    equal(
+      failureReason.error,
+      "Other error message that includes <URL> in it."
+    );
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
   }
 });
-
 
 add_task(async function test_initial_sync_engines() {
   enableValidationPrefs();
@@ -539,14 +609,18 @@ add_task(async function test_initial_sync_engines() {
   } else {
     telemetryEngineNames.push("bookmarks");
   }
-  let server = await serverForEnginesWithKeys({"foo": "password"}, ["bookmarks", "prefs", "tabs"].map(name =>
-    Service.engineManager.get(name)
-  ));
+  let server = await serverForEnginesWithKeys(
+    { foo: "password" },
+    ["bookmarks", "prefs", "tabs"].map(name => Service.engineManager.get(name))
+  );
   await SyncTestingInfrastructure(server);
   try {
     const changes = await engine._tracker.getChangedIDs();
-    _(`test_initial_sync_engines: Steam tracker contents: ${
-      JSON.stringify(changes)}`);
+    _(
+      `test_initial_sync_engines: Steam tracker contents: ${JSON.stringify(
+        changes
+      )}`
+    );
     let ping = await wait_for_ping(() => Service.sync(), true);
 
     equal(ping.engines.find(e => e.name === "clients").outgoing[0].sent, 1);
@@ -577,11 +651,13 @@ add_task(async function test_nserror() {
   engine.enabled = true;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
-  engine._errToThrow = Components.Exception("NS_ERROR_UNKNOWN_HOST", Cr.NS_ERROR_UNKNOWN_HOST);
+  engine._errToThrow = Components.Exception(
+    "NS_ERROR_UNKNOWN_HOST",
+    Cr.NS_ERROR_UNKNOWN_HOST
+  );
   try {
     const changes = await engine._tracker.getChangedIDs();
-    _(`test_nserror: Steam tracker contents: ${
-      JSON.stringify(changes)}`);
+    _(`test_nserror: Steam tracker contents: ${JSON.stringify(changes)}`);
     let ping = await sync_and_validate_telem(true);
     deepEqual(ping.status, {
       service: SYNC_FAILED_PARTIAL,
@@ -611,9 +687,16 @@ add_task(async function test_sync_why() {
 
   try {
     const changes = await engine._tracker.getChangedIDs();
-    _(`test_generic_engine_fail: Steam tracker contents: ${
-      JSON.stringify(changes)}`);
-    let ping = await wait_for_ping(() => Service.sync({why: "user"}), true, false);
+    _(
+      `test_generic_engine_fail: Steam tracker contents: ${JSON.stringify(
+        changes
+      )}`
+    );
+    let ping = await wait_for_ping(
+      () => Service.sync({ why: "user" }),
+      true,
+      false
+    );
     _(JSON.stringify(ping));
     equal(ping.why, "user");
   } finally {
@@ -636,19 +719,37 @@ add_task(async function test_discarding() {
   try {
     let handlers = {
       "/1.1/johndoe/info/collections": helper.handler,
-      "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-      "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
+      "/1.1/johndoe/storage/crypto/keys": upd(
+        "crypto",
+        new ServerWBO("keys").handler()
+      ),
+      "/1.1/johndoe/storage/meta/global": upd(
+        "meta",
+        new ServerWBO("global").handler()
+      ),
     };
 
-    let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];
+    let collections = [
+      "clients",
+      "bookmarks",
+      "forms",
+      "history",
+      "passwords",
+      "prefs",
+      "tabs",
+    ];
 
     for (let coll of collections) {
-      handlers["/1.1/johndoe/storage/" + coll] = upd(coll, new ServerCollection({}, true).handler());
+      handlers["/1.1/johndoe/storage/" + coll] = upd(
+        coll,
+        new ServerCollection({}, true).handler()
+      );
     }
 
     server = httpd_setup(handlers);
     await configureIdentity({ username: "johndoe" }, server);
-    telem.submit = () => ok(false, "Submitted telemetry ping when we should not have");
+    telem.submit = () =>
+      ok(false, "Submitted telemetry ping when we should not have");
 
     for (let i = 0; i < 5; ++i) {
       await Service.sync();
@@ -720,7 +821,7 @@ add_task(async function test_events() {
     let ping = await wait_for_ping(() => Service.sync(), true, true);
     equal(ping.events.length, 1);
     let [timestamp, category, method, object, value, extra] = ping.events[0];
-    ok((typeof timestamp == "number") && timestamp > 0); // timestamp.
+    ok(typeof timestamp == "number" && timestamp > 0); // timestamp.
     equal(category, "sync");
     equal(method, "method");
     equal(object, "object");
@@ -810,7 +911,7 @@ add_task(async function test_invalid_events() {
     let badextra = {};
     badextra[long21] = "x";
     await checkNotRecorded("object", "method", "value", badextra);
-    badextra = { "x": long86 };
+    badextra = { x: long86 };
     await checkNotRecorded("object", "method", "value", badextra);
     for (let i = 0; i < 10; i++) {
       badextra["name" + i] = "x";

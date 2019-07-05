@@ -1,4 +1,6 @@
-const {WeaveCrypto} = ChromeUtils.import("resource://services-crypto/WeaveCrypto.js");
+const { WeaveCrypto } = ChromeUtils.import(
+  "resource://services-crypto/WeaveCrypto.js"
+);
 Cu.importGlobalProperties(["crypto"]);
 
 var cryptoSvc = new WeaveCrypto();
@@ -11,12 +13,25 @@ add_task(async function test_key_memoization() {
     return;
   }
 
-  let iv  = cryptoSvc.generateRandomIV();
+  let iv = cryptoSvc.generateRandomIV();
   let key = await cryptoSvc.generateRandomKey();
-  let c   = 0;
-  cryptoGlobal.subtle.importKey = function(format, keyData, algo, extractable, usages) {
+  let c = 0;
+  cryptoGlobal.subtle.importKey = function(
+    format,
+    keyData,
+    algo,
+    extractable,
+    usages
+  ) {
     c++;
-    return oldImport.call(cryptoGlobal.subtle, format, keyData, algo, extractable, usages);
+    return oldImport.call(
+      cryptoGlobal.subtle,
+      format,
+      keyData,
+      algo,
+      extractable,
+      usages
+    );
   };
 
   // Encryption should cause a single counter increment.
@@ -42,8 +57,9 @@ add_task(async function test_makeUint8Array() {
 
   let item1 = cryptoSvc.makeUint8Array("abcdefghi", false);
   Assert.ok(item1);
-  for (let i = 0; i < 8; ++i)
+  for (let i = 0; i < 8; ++i) {
     Assert.equal(item1[i], "abcdefghi".charCodeAt(i));
+  }
 });
 
 add_task(async function test_encrypt_decrypt() {
@@ -66,14 +82,13 @@ add_task(async function test_encrypt_decrypt() {
   Assert.equal(clearText, mySecret);
   Assert.notEqual(cipherText, mySecret); // just to be explicit
 
-
   // Do some more tests with a fixed key/iv, to check for reproducable results.
   key = "St1tFCor7vQEJNug/465dQ==";
-  iv  = "oLjkfrLIOnK2bDRvW4kXYA==";
+  iv = "oLjkfrLIOnK2bDRvW4kXYA==";
 
   _("Testing small IV.");
   mySecret = "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo=";
-  let shortiv  = "YWJj";
+  let shortiv = "YWJj";
   let err;
   try {
     await cryptoSvc.encrypt(mySecret, key, shortiv);
@@ -83,7 +98,7 @@ add_task(async function test_encrypt_decrypt() {
   Assert.ok(!!err);
 
   _("Testing long IV.");
-  let longiv  = "gsgLRDaxWvIfKt75RjuvFWERt83FFsY2A0TW+0b2iVk=";
+  let longiv = "gsgLRDaxWvIfKt75RjuvFWERt83FFsY2A0TW+0b2iVk=";
   try {
     await cryptoSvc.encrypt(mySecret, key, longiv);
   } catch (ex) {
@@ -149,9 +164,8 @@ add_task(async function test_encrypt_decrypt() {
   Assert.equal(cipherText, "V6aaOZw8pWlYkoIHNkhsP5GvxWJ9+GIAS6lXw+5fHTI=");
   Assert.equal(clearText, mySecret);
 
-
   key = "iz35tuIMq4/H+IYw2KTgow==";
-  iv  = "TJYrvva2KxvkM8hvOIvWp3==";
+  iv = "TJYrvva2KxvkM8hvOIvWp3==";
   mySecret = "i like pie";
 
   cipherText = await cryptoSvc.encrypt(mySecret, key, iv);
@@ -160,7 +174,7 @@ add_task(async function test_encrypt_decrypt() {
   Assert.equal(clearText, mySecret);
 
   key = "c5hG3YG+NC61FFy8NOHQak1ZhMEWO79bwiAfar2euzI=";
-  iv  = "gsgLRDaxWvIfKt75RjuvFW==";
+  iv = "gsgLRDaxWvIfKt75RjuvFW==";
   mySecret = "i like pie";
 
   cipherText = await cryptoSvc.encrypt(mySecret, key, iv);
@@ -169,13 +183,13 @@ add_task(async function test_encrypt_decrypt() {
   Assert.equal(clearText, mySecret);
 
   key = "St1tFCor7vQEJNug/465dQ==";
-  iv  = "oLjkfrLIOnK2bDRvW4kXYA==";
+  iv = "oLjkfrLIOnK2bDRvW4kXYA==";
   mySecret = "does thunder read testcases?";
   cipherText = await cryptoSvc.encrypt(mySecret, key, iv);
   Assert.equal(cipherText, "T6fik9Ros+DB2ablH9zZ8FWZ0xm/szSwJjIHZu7sjPs=");
 
-  var badkey    = "badkeybadkeybadkeybadk==";
-  var badiv     = "badivbadivbadivbadivbad=";
+  var badkey = "badkeybadkeybadkeybadk==";
+  var badiv = "badivbadivbadivbadivbad=";
   var badcipher = "crapinputcrapinputcrapinputcrapinputcrapinp=";
   var failure;
 

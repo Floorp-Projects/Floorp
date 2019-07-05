@@ -1,4 +1,4 @@
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   _("Make sure catch when copied to an object will correctly catch stuff");
@@ -31,13 +31,16 @@ add_task(async function run_test() {
     },
 
     callbacky() {
-      return this._catch(async function() {
-        rightThis = this == obj;
-        didCall = true;
-        throw new Error("covfefe");
-      }, async function(ex) {
-        wasCovfefe = ex && ex.message == "covfefe";
-      })();
+      return this._catch(
+        async function() {
+          rightThis = this == obj;
+          didCall = true;
+          throw new Error("covfefe");
+        },
+        async function(ex) {
+          wasCovfefe = ex && ex.message == "covfefe";
+        }
+      )();
     },
 
     lockedy() {
@@ -67,7 +70,9 @@ add_task(async function run_test() {
   Assert.equal(wasCovfefe, undefined);
   Assert.ok(!wasLocked);
 
-  _("Make sure catch/throw results in debug call and caller doesn't need to handle exception");
+  _(
+    "Make sure catch/throw results in debug call and caller doesn't need to handle exception"
+  );
   rightThis = didCall = didThrow = wasLocked = false;
   ret = await obj.throwy();
   Assert.equal(ret, undefined);

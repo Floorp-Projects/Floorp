@@ -7,9 +7,7 @@
  * testrunner (no single quotes, extra comma's, etc).
  */
 
-var phases = { "phase1": "profile1",
-               "phase2": "profile2",
-               "phase3": "profile1"};
+var phases = { phase1: "profile1", phase2: "profile2", phase3: "profile1" };
 
 /*
  * Bookmark lists
@@ -18,19 +16,17 @@ var phases = { "phase1": "profile1",
 // the initial list of bookmarks to add to the browser
 var bookmarks_initial = {
   toolbar: [
-    { uri: "http://www.google.com",
-      title: "Google",
-    },
-    { uri: "http://www.cnn.com",
+    { uri: "http://www.google.com", title: "Google" },
+    {
+      uri: "http://www.cnn.com",
       title: "CNN",
       changes: {
         position: "Google",
       },
     },
-    { uri: "http://www.mozilla.com",
-      title: "Mozilla",
-    },
-    { uri: "http://www.firefox.com",
+    { uri: "http://www.mozilla.com", title: "Mozilla" },
+    {
+      uri: "http://www.firefox.com",
       title: "Firefox",
       changes: {
         position: "Mozilla",
@@ -41,18 +37,10 @@ var bookmarks_initial = {
 
 var bookmarks_after_move = {
   toolbar: [
-    { uri: "http://www.cnn.com",
-      title: "CNN",
-    },
-    { uri: "http://www.google.com",
-      title: "Google",
-    },
-    { uri: "http://www.firefox.com",
-      title: "Firefox",
-    },
-    { uri: "http://www.mozilla.com",
-      title: "Mozilla",
-    },
+    { uri: "http://www.cnn.com", title: "CNN" },
+    { uri: "http://www.google.com", title: "Google" },
+    { uri: "http://www.firefox.com", title: "Firefox" },
+    { uri: "http://www.mozilla.com", title: "Mozilla" },
   ],
 };
 
@@ -62,67 +50,59 @@ var bookmarks_after_move = {
 
 // Initial password data
 var passwords_initial = [
-   { hostname: "http://www.example.com",
-     submitURL: "http://login.example.com",
-     username: "joe",
-     password: "secret",
-     usernameField: "uname",
-     passwordField: "pword",
-     changes: {
-       password: "SeCrEt$$$",
-     },
-   },
-   { hostname: "http://www.example.com",
-     realm: "login",
-     username: "jack",
-     password: "secretlogin",
-   },
+  {
+    hostname: "http://www.example.com",
+    submitURL: "http://login.example.com",
+    username: "joe",
+    password: "secret",
+    usernameField: "uname",
+    passwordField: "pword",
+    changes: {
+      password: "SeCrEt$$$",
+    },
+  },
+  {
+    hostname: "http://www.example.com",
+    realm: "login",
+    username: "jack",
+    password: "secretlogin",
+  },
 ];
 
 // Password after first modify action has been performed
 var passwords_after_change = [
-   { hostname: "http://www.example.com",
-     submitURL: "http://login.example.com",
-     username: "joe",
-     password: "SeCrEt$$$",
-     usernameField: "uname",
-     passwordField: "pword",
-     changes: {
-        username: "james",
-     },
-   },
-   { hostname: "http://www.example.com",
-     realm: "login",
-     username: "jack",
-     password: "secretlogin",
-   },
+  {
+    hostname: "http://www.example.com",
+    submitURL: "http://login.example.com",
+    username: "joe",
+    password: "SeCrEt$$$",
+    usernameField: "uname",
+    passwordField: "pword",
+    changes: {
+      username: "james",
+    },
+  },
+  {
+    hostname: "http://www.example.com",
+    realm: "login",
+    username: "jack",
+    password: "secretlogin",
+  },
 ];
 
 /*
  * Prefs to use in the test
  */
 var prefs1 = [
-  { name: "browser.startup.homepage",
-    value: "http://www.getfirefox.com",
-  },
-  { name: "browser.urlbar.maxRichResults",
-    value: 20,
-  },
-  { name: "privacy.clearOnShutdown.siteSettings",
-    value: true,
-  },
+  { name: "browser.startup.homepage", value: "http://www.getfirefox.com" },
+  { name: "browser.urlbar.maxRichResults", value: 20 },
+  { name: "privacy.clearOnShutdown.siteSettings", value: true },
 ];
 
 var prefs2 = [
-  { name: "browser.startup.homepage",
-    value: "http://www.mozilla.com",
-  },
-  { name: "browser.urlbar.maxRichResults",
-    value: 18,
-  },
-  { name: "privacy.clearOnShutdown.siteSettings",
-    value: false,
-  },
+  { name: "browser.startup.homepage", value: "http://www.mozilla.com" },
+  { name: "browser.urlbar.maxRichResults", value: 18 },
+  { name: "privacy.clearOnShutdown.siteSettings", value: false },
 ];
 
 /*
@@ -161,4 +141,3 @@ Phase("phase3", [
   [Passwords.verify, passwords_initial],
   [Bookmarks.verify, bookmarks_initial],
 ]);
-

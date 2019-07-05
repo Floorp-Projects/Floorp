@@ -6,15 +6,20 @@
 
 "use strict";
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 (function initFxAccountsTestingInfrastructure() {
   do_get_profile();
 
   let ns = {};
-  ChromeUtils.import("resource://testing-common/services/common/logging.js", ns);
+  ChromeUtils.import(
+    "resource://testing-common/services/common/logging.js",
+    ns
+  );
 
   ns.initTestLogging("Trace");
-}).call(this);
+}.call(this));

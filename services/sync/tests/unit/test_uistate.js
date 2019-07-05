@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 const UIStateInternal = UIState._internal;
 
@@ -52,8 +52,10 @@ add_task(async function test_refreshState_signedin() {
   UIStateInternal.syncing = false;
 
   UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
+    getSignedInUser: () =>
+      Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
+    getSignedInUserProfile: () =>
+      Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
     hasLocalSession: () => Promise.resolve(true),
   };
 
@@ -107,8 +109,10 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
   UIStateInternal.syncing = false;
 
   UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.reject(new Error("Profile unavailable")),
+    getSignedInUser: () =>
+      Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
+    getSignedInUserProfile: () =>
+      Promise.reject(new Error("Profile unavailable")),
     hasLocalSession: () => Promise.resolve(true),
   };
 
@@ -154,7 +158,8 @@ add_task(async function test_refreshState_unverified() {
 
   let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve({ verified: false, uid: "123", email: "foo@bar.com" }),
+    getSignedInUser: () =>
+      Promise.resolve({ verified: false, uid: "123", email: "foo@bar.com" }),
     getSignedInUserProfile,
     hasLocalSession: () => Promise.resolve(true),
   };
@@ -179,7 +184,8 @@ add_task(async function test_refreshState_unverified_nosession() {
 
   let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve({ verified: false, uid: "123", email: "foo@bar.com" }),
+    getSignedInUser: () =>
+      Promise.resolve({ verified: false, uid: "123", email: "foo@bar.com" }),
     getSignedInUserProfile,
     hasLocalSession: () => Promise.resolve(false),
   };
@@ -208,7 +214,8 @@ add_task(async function test_refreshState_loginFailed() {
 
   let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
+    getSignedInUser: () =>
+      Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
     getSignedInUserProfile,
   };
 
@@ -230,10 +237,15 @@ add_task(async function test_refreshState_loginFailed() {
 add_task(async function test_observer_refreshState() {
   let refreshState = sinon.spy(UIStateInternal, "refreshState");
 
-  let shouldRefresh = ["weave:service:login:change", "weave:service:login:error",
-                       "weave:service:ready", "fxaccounts:onverified",
-                       "fxaccounts:onlogin", "fxaccounts:onlogout",
-                       "fxaccounts:profilechange"];
+  let shouldRefresh = [
+    "weave:service:login:change",
+    "weave:service:login:error",
+    "weave:service:ready",
+    "fxaccounts:onverified",
+    "fxaccounts:onlogin",
+    "fxaccounts:onlogout",
+    "fxaccounts:profilechange",
+  ];
 
   for (let topic of shouldRefresh) {
     let uiUpdateObserved = observeUIUpdate();
@@ -255,8 +267,10 @@ async function configureUIState(syncing, lastSync = new Date()) {
   Services.prefs.setCharPref("services.sync.lastSync", lastSync.toString());
 
   UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
+    getSignedInUser: () =>
+      Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
+    getSignedInUserProfile: () =>
+      Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
     hasLocalSession: () => Promise.resolve(true),
   };
   await UIState.refresh();

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function CanDecryptEngine() {
   SyncEngine.call(this, "CanDecrypt", Service);
@@ -19,7 +19,6 @@ CanDecryptEngine.prototype = {
     this.wasWiped = true;
   },
 };
-
 
 function CannotDecryptEngine() {
   SyncEngine.call(this, "CannotDecrypt", Service);

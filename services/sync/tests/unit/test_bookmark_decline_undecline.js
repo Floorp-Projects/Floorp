@@ -1,8 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { BookmarksEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/bookmarks.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 // A stored reference to the collection won't be valid after disabling.
 function getBookmarkWBO(server, guid) {
@@ -37,7 +39,10 @@ add_task(async function test_decline_undecline() {
 
     engine.enabled = false;
     await Service.sync();
-    ok(!getBookmarkWBO(server, bzGuid), "Shouldn't be present on server anymore");
+    ok(
+      !getBookmarkWBO(server, bzGuid),
+      "Shouldn't be present on server anymore"
+    );
 
     engine.enabled = true;
     await Service.sync();
@@ -47,4 +52,3 @@ add_task(async function test_decline_undecline() {
     await promiseStopServer(server);
   }
 });
-
