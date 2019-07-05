@@ -63,6 +63,7 @@ js/src/vtune/ittnotify_types.h
 js/src/vtune/jitprofiling.c
 js/src/vtune/jitprofiling.h
 js/src/vtune/legacy/
+js/src/zydis/
 media/ffvpx/
 media/gmp-clearkey/0.1/openaes/
 media/kiss_fft/
