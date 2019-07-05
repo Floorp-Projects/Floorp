@@ -11,7 +11,7 @@ class Config(val componentsVersion: String) {
         const val componentsGroupId = "org.mozilla.components"
 
         // Synchronized build configuration for all modules
-        const val compileSdkVersion = 28
+        const val compileSdkVersion = 29
         const val minSdkVersion = 21
         const val targetSdkVersion = 28
 

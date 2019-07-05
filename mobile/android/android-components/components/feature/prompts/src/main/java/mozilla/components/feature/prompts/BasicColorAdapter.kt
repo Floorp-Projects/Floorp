@@ -4,12 +4,15 @@
 
 package mozilla.components.feature.prompts
 
+import android.graphics.BlendMode
+import android.graphics.BlendModeColorFilter
 import android.graphics.Color
-import android.graphics.PorterDuff.Mode.MULTIPLY
-import android.graphics.PorterDuff.Mode.SRC_IN
+import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -93,20 +96,30 @@ internal class ColorViewHolder(
         itemView.setOnClickListener(this)
     }
 
+    @Suppress("LongMethod")
     fun bind(colorItem: ColorItem) {
         // Save the color for the onClick callback
         color = colorItem.color
 
         // Set the background to look like this item's color
         itemView.background = itemView.background.apply {
-            colorFilter = PorterDuffColorFilter(colorItem.color, MULTIPLY)
+            colorFilter = if (SDK_INT >= Build.VERSION_CODES.Q) {
+                BlendModeColorFilter(colorItem.color, BlendMode.MULTIPLY)
+            } else {
+                PorterDuffColorFilter(colorItem.color, PorterDuff.Mode.MULTIPLY)
+            }
         }
         itemView.contentDescription = colorItem.contentDescription
 
         // Display the check mark
         val check = if (colorItem.selected) {
             checkDrawable?.apply {
-                colorFilter = PorterDuffColorFilter(ColorUtils.getReadableTextColor(color), SRC_IN)
+                val readableColor = ColorUtils.getReadableTextColor(color)
+                colorFilter = if (SDK_INT >= Build.VERSION_CODES.Q) {
+                    BlendModeColorFilter(readableColor, BlendMode.SRC_IN)
+                } else {
+                    PorterDuffColorFilter(readableColor, PorterDuff.Mode.SRC_IN)
+                }
             }
         } else {
             null

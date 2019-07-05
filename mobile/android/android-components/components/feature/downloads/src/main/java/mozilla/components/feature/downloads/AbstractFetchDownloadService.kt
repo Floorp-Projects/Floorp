@@ -10,13 +10,15 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
 import android.os.IBinder
+import android.os.ParcelFileDescriptor
+import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -33,8 +35,8 @@ import mozilla.components.concept.fetch.Headers.Names.REFERRER
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.getDownloadExtra
-import mozilla.components.feature.downloads.manager.SystemDownloadManager
 import mozilla.components.feature.downloads.manager.getFileName
 import mozilla.components.support.base.ids.NotificationIds
 import java.io.File
@@ -111,32 +113,57 @@ abstract class AbstractFetchDownloadService(
      *
      * Encapsulates different behaviour depending on the SDK version.
      */
-    @Suppress("LongMethod")
     internal fun useFileStream(
         download: Download,
         response: Response,
         filename: String,
         block: (OutputStream) -> Unit
     ) {
-        /*if (SDK_INT >= Build.VERSION_CODES.Q) {
-            val values = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, filename)
-                put(MediaStore.Downloads.MIME_TYPE, download.contentType)
-                put(MediaStore.Downloads.SIZE, download.contentLength)
-                put(MediaStore.Downloads.IS_PENDING, 1)
-            }
+        if (SDK_INT >= Build.VERSION_CODES.Q) {
+            useFileStreamScopedStorage(download, response, filename, block)
+        } else {
+            useFileStreamLegacy(download, response, filename, block)
+        }
+    }
 
-            val resolver = applicationContext.contentResolver
-            val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val item = resolver.insert(collection, values)
+    @Suppress("LongMethod")
+    @TargetApi(Build.VERSION_CODES.Q)
+    private fun useFileStreamScopedStorage(
+        download: Download,
+        response: Response,
+        filename: String,
+        block: (OutputStream) -> Unit
+    ) {
+        val contentType = response.headers[CONTENT_TYPE]
+        val contentLength = response.headers[CONTENT_LENGTH]?.toLongOrNull()
 
-            val pfd = resolver.openFileDescriptor(item!!, "w")
-            ParcelFileDescriptor.AutoCloseOutputStream(pfd).use(block)
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, filename)
+            put(MediaStore.Downloads.MIME_TYPE, contentType ?: download.contentType ?: "*/*")
+            put(MediaStore.Downloads.SIZE, contentLength ?: download.contentLength)
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
 
-            values.clear()
-            values.put(MediaStore.Downloads.IS_PENDING, 0)
-            resolver.update(item, values, null, null)
-        } else {*/
+        val resolver = applicationContext.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val item = resolver.insert(collection, values)
+
+        val pfd = resolver.openFileDescriptor(item!!, "w")
+        ParcelFileDescriptor.AutoCloseOutputStream(pfd).use(block)
+
+        values.clear()
+        values.put(MediaStore.Downloads.IS_PENDING, 0)
+        resolver.update(item, values, null, null)
+    }
+
+    @TargetApi(Build.VERSION_CODES.P)
+    @Suppress("Deprecation", "LongMethod")
+    private fun useFileStreamLegacy(
+        download: Download,
+        response: Response,
+        filename: String,
+        block: (OutputStream) -> Unit
+    ) {
         val dir = Environment.getExternalStoragePublicDirectory(download.destinationDirectory)
         val file = File(dir, filename)
         FileOutputStream(file).use(block)
@@ -155,51 +182,6 @@ abstract class AbstractFetchDownloadService(
             uri = download.url.toUri(),
             referer = download.referrerUrl?.toUri()
         )
-        // }
-    }
-
-    /**
-     * Wraps around [android.app.DownloadManager.addCompletedDownload] and calls the correct
-     * method depending on the SDK version.
-     *
-     * Deprecated in Android Q, use MediaStore on that version.
-     */
-    @TargetApi(Build.VERSION_CODES.P)
-    @Suppress("Deprecation", "LongParameterList", "LongMethod")
-    private fun addCompletedDownload(
-        title: String,
-        description: String,
-        isMediaScannerScannable: Boolean,
-        mimeType: String,
-        path: String,
-        length: Long,
-        showNotification: Boolean,
-        uri: Uri,
-        referer: Uri?
-    ) = getSystemService<SystemDownloadManager>()!!.run {
-        if (SDK_INT >= Build.VERSION_CODES.N) {
-            addCompletedDownload(
-                title,
-                description,
-                isMediaScannerScannable,
-                mimeType,
-                path,
-                length,
-                showNotification,
-                uri,
-                referer
-            )
-        } else {
-            addCompletedDownload(
-                title,
-                description,
-                isMediaScannerScannable,
-                mimeType,
-                path,
-                length,
-                showNotification
-            )
-        }
     }
 
     /**
