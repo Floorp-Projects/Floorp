@@ -9,7 +9,9 @@
  * loads.
  */
 
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 // Make sure media pre-loading is enabled on Android so that our <audio> and
 // <video> elements trigger the expected requests.
@@ -18,7 +20,10 @@ Services.prefs.setIntPref("media.preload.default", 3);
 
 // Increase the length of the code samples included in CSP reports so that we
 // can correctly validate them.
-Services.prefs.setIntPref("security.csp.reporting.script-sample.max-length", 4096);
+Services.prefs.setIntPref(
+  "security.csp.reporting.script-sample.max-length",
+  4096
+);
 
 // ExtensionContent.jsm needs to know when it's running from xpcshell,
 // to use the right timeout for content scripts executed at document_idle.
@@ -136,12 +141,17 @@ const AUTOCLOSE_TAGS = new Set(["img", "input", "link", "source"]);
 function getElementData(test, opts) {
   let baseURL = typeof BASE_URL !== "undefined" ? BASE_URL : location.href;
 
-  let {srcAttr, src} = test;
+  let { srcAttr, src } = test;
 
   // Absolutify the URL, so it passes sanity checks that ignore
   // triggering principals for relative URLs.
-  src = new URL(src + `?origin=${encodeURIComponent(opts.origin)}&source=${encodeURIComponent(opts.source)}`,
-                baseURL).href;
+  src = new URL(
+    src +
+      `?origin=${encodeURIComponent(opts.origin)}&source=${encodeURIComponent(
+        opts.source
+      )}`,
+    baseURL
+  ).href;
 
   let haveSrc = false;
   function rec(element) {
@@ -150,11 +160,11 @@ function getElementData(test, opts) {
     if (children.length) {
       children = children.map(rec);
     } else if (!haveSrc) {
-      attrs = Object.assign({[srcAttr]: src}, attrs);
+      attrs = Object.assign({ [srcAttr]: src }, attrs);
       haveSrc = true;
     }
 
-    return {tagName, attrs, children};
+    return { tagName, attrs, children };
   }
   return rec(test.element);
 }
@@ -193,7 +203,7 @@ function createElement(test, opts) {
   let srcElem;
   let src;
 
-  function rec({tagName, attrs, children}) {
+  function rec({ tagName, attrs, children }) {
     let elem = document.createElement(tagName);
 
     for (let [key, val] of Object.entries(attrs)) {
@@ -211,7 +221,7 @@ function createElement(test, opts) {
   }
   let elem = rec(getElementData(test, opts));
 
-  return {elem, srcElem, src};
+  return { elem, srcElem, src };
 }
 
 /**
@@ -222,7 +232,13 @@ function createElement(test, opts) {
  * @returns {string} The escaped string.
  */
 function escapeXML(str) {
-  let replacements = {"&": "&amp;", '"': "&quot;", "'": "&apos;", "<": "&lt;", ">": "&gt;"};
+  let replacements = {
+    "&": "&amp;",
+    '"': "&quot;",
+    "'": "&apos;",
+    "<": "&lt;",
+    ">": "&gt;",
+  };
   return String(str).replace(/[&"''<>]/g, m => replacements[m]);
 }
 
@@ -251,7 +267,6 @@ function escaped(strings, ...values) {
   return result.join("");
 }
 
-
 /**
  * Converts the given test data, as accepted by {@see getElementData},
  * to an HTML representation.
@@ -263,7 +278,7 @@ function escaped(strings, ...values) {
  * @returns {string}
  */
 function toHTML(test, opts) {
-  function rec({tagName, attrs, children}) {
+  function rec({ tagName, attrs, children }) {
     let html = [`<${tagName}`];
     for (let [key, val] of Object.entries(attrs)) {
       html.push(escaped` ${key}="${val}"`);
@@ -313,10 +328,14 @@ function testInlineCSS() {
   let url = (origin, name, opts = {}) => {
     let source = `${origin}-${name}`;
 
-    let {href} = new URL(`css-${i++}.png?origin=${encodeURIComponent(origin)}&source=${encodeURIComponent(source)}`,
-                         location.href);
+    let { href } = new URL(
+      `css-${i++}.png?origin=${encodeURIComponent(
+        origin
+      )}&source=${encodeURIComponent(source)}`,
+      location.href
+    );
 
-    urls.push(Object.assign({}, opts, {href, origin, source}));
+    urls.push(Object.assign({}, opts, { href, origin, source }));
     return `url("${href}")`;
   };
 
@@ -329,7 +348,7 @@ function testInlineCSS() {
    * @returns {string}
    */
   let source = (origin, css) => {
-    sources.push({origin, css});
+    sources.push({ origin, css });
     return css;
   };
 
@@ -338,7 +357,7 @@ function testInlineCSS() {
    * the list of loaded sources to the parent process.
    */
   let laters = [];
-  let later = (fn) => {
+  let later = fn => {
     laters.push(fn);
   };
 
@@ -349,40 +368,94 @@ function testInlineCSS() {
 
   {
     let li = document.createElement("li");
-    li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-first")}`));
-    li.style.wrappedJSObject.listStyleImage = url("page", "li.style.listStyleImage-second");
+    li.setAttribute(
+      "style",
+      source(
+        "contentScript",
+        `background: ${url("contentScript", "li.style-first")}`
+      )
+    );
+    li.style.wrappedJSObject.listStyleImage = url(
+      "page",
+      "li.style.listStyleImage-second"
+    );
     document.body.appendChild(li);
   }
 
   {
     let li = document.createElement("li");
-    li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-first", {inline: true})}`));
-    li.style.listStyleImage = url("contentScript", "li.style.listStyleImage-second");
+    li.wrappedJSObject.setAttribute(
+      "style",
+      source(
+        "page",
+        `background: ${url("page", "li.style-first", { inline: true })}`
+      )
+    );
+    li.style.listStyleImage = url(
+      "contentScript",
+      "li.style.listStyleImage-second"
+    );
     document.body.appendChild(li);
   }
 
   {
     let li = document.createElement("li");
     document.body.appendChild(li);
-    li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-first")}`));
-    later(() => li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-second", {inline: true})}`)));
+    li.setAttribute(
+      "style",
+      source(
+        "contentScript",
+        `background: ${url("contentScript", "li.style-first")}`
+      )
+    );
+    later(() =>
+      li.wrappedJSObject.setAttribute(
+        "style",
+        source(
+          "page",
+          `background: ${url("page", "li.style-second", { inline: true })}`
+        )
+      )
+    );
   }
 
   {
     let li = document.createElement("li");
     document.body.appendChild(li);
-    li.wrappedJSObject.setAttribute("style", source("page", `background: ${url("page", "li.style-first", {inline: true})}`));
-    later(() => li.setAttribute("style", source("contentScript", `background: ${url("contentScript", "li.style-second")}`)));
+    li.wrappedJSObject.setAttribute(
+      "style",
+      source(
+        "page",
+        `background: ${url("page", "li.style-first", { inline: true })}`
+      )
+    );
+    later(() =>
+      li.setAttribute(
+        "style",
+        source(
+          "contentScript",
+          `background: ${url("contentScript", "li.style-second")}`
+        )
+      )
+    );
   }
 
   {
     let li = document.createElement("li");
     document.body.appendChild(li);
-    li.style.cssText = source("contentScript", `background: ${url("contentScript", "li.style.cssText-first")}`);
+    li.style.cssText = source(
+      "contentScript",
+      `background: ${url("contentScript", "li.style.cssText-first")}`
+    );
 
     // TODO: This inline style should be blocked, since our style-src does not
     // include 'unsafe-eval', but that is currently unimplemented.
-    later(() => { li.style.wrappedJSObject.cssText = `background: ${url("page", "li.style.cssText-second")}`; });
+    later(() => {
+      li.style.wrappedJSObject.cssText = `background: ${url(
+        "page",
+        "li.style.cssText-second"
+      )}`;
+    });
   }
 
   // Creates a new element, inserts it into the page, and returns its CSS selector.
@@ -400,11 +473,19 @@ function testInlineCSS() {
     {
       let sel = getSelector();
       let style = document.createElement("style");
-      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${prop}-first`)}; }`);
+      style[prop] = source(
+        "extension",
+        `${sel} { background: ${url("extension", `style-${prop}-first`)}; }`
+      );
       document.head.appendChild(style);
 
       later(() => {
-        style.wrappedJSObject[prop] = source("page", `${sel} { background: ${url("page", `style-${prop}-second`, {inline: true})}; }`);
+        style.wrappedJSObject[prop] = source(
+          "page",
+          `${sel} { background: ${url("page", `style-${prop}-second`, {
+            inline: true,
+          })}; }`
+        );
       });
     }
 
@@ -415,11 +496,22 @@ function testInlineCSS() {
     let testModifyAfterInject = (name, modifyFunc) => {
       let sel = getSelector();
       let style = document.createElement("style");
-      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${name}-${prop}-first`)}; }`);
+      style[prop] = source(
+        "extension",
+        `${sel} { background: ${url(
+          "extension",
+          `style-${name}-${prop}-first`
+        )}; }`
+      );
       document.head.appendChild(style);
 
       later(() => {
-        modifyFunc(style, `${sel} { background: ${url("page", `style-${name}-${prop}-second`, {inline: true})}; }`);
+        modifyFunc(
+          style,
+          `${sel} { background: ${url("page", `style-${name}-${prop}-second`, {
+            inline: true,
+          })}; }`
+        );
         source("page", style.textContent);
       });
     };
@@ -444,16 +536,27 @@ function testInlineCSS() {
     {
       let sel = getSelector();
       let style = document.createElement("style");
-      style[prop] = source("extension", `${sel} { background: ${url("extension", `style-${prop}-sheet`)}; }`);
+      style[prop] = source(
+        "extension",
+        `${sel} { background: ${url("extension", `style-${prop}-sheet`)}; }`
+      );
       document.head.appendChild(style);
 
       browser.test.assertThrows(
         () => style.sheet.wrappedJSObject.cssRules,
         /operation is insecure/,
-        "Page content should not be able to access extension-generated CSS rules");
+        "Page content should not be able to access extension-generated CSS rules"
+      );
 
       style.sheet.insertRule(
-        source("extension", `${sel} { border-image: ${url("extension", `style-${prop}-sheet-insertRule`)}; }`));
+        source(
+          "extension",
+          `${sel} { border-image: ${url(
+            "extension",
+            `style-${prop}-sheet-insertRule`
+          )}; }`
+        )
+      );
     }
   }
 
@@ -461,7 +564,7 @@ function testInlineCSS() {
     for (let fn of laters) {
       fn();
     }
-    browser.test.sendMessage("css-sources", {urls, sources});
+    browser.test.sendMessage("css-sources", { urls, sources });
   });
 }
 
@@ -478,26 +581,28 @@ function testInlineCSS() {
  *        context.
  */
 function injectElements(tests, baseOpts) {
-  window.addEventListener("load", () => {
-    if (typeof browser === "object") {
-      try {
-        testInlineCSS();
-      } catch (e) {
-        browser.test.fail(`Error: ${e} :: ${e.stack}`);
+  window.addEventListener(
+    "load",
+    () => {
+      if (typeof browser === "object") {
+        try {
+          testInlineCSS();
+        } catch (e) {
+          browser.test.fail(`Error: ${e} :: ${e.stack}`);
+        }
       }
-    }
 
-    // Basic smoke test to check that SVG images do not try to create a document
-    // with an expanded principal, which would cause a crash.
-    let img = document.createElement("img");
-    img.src = "data:image/svg+xml,%3Csvg%2F%3E";
-    document.body.appendChild(img);
+      // Basic smoke test to check that SVG images do not try to create a document
+      // with an expanded principal, which would cause a crash.
+      let img = document.createElement("img");
+      img.src = "data:image/svg+xml,%3Csvg%2F%3E";
+      document.body.appendChild(img);
 
-    let rand = Math.random();
+      let rand = Math.random();
 
-    // Basic smoke test to check that we don't try to create stylesheets with an
-    // expanded principal, which would cause a crash when loading font sets.
-    let cssText = `
+      // Basic smoke test to check that we don't try to create stylesheets with an
+      // expanded principal, which would cause a crash when loading font sets.
+      let cssText = `
       @font-face {
           font-family: "DoesNotExist${rand}";
           src: url("fonts/DoesNotExist.${rand}.woff") format("woff");
@@ -505,114 +610,132 @@ function injectElements(tests, baseOpts) {
           font-style: normal;
       }`;
 
-    let link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "data:text/css;base64," + btoa(cssText);
-    document.head.appendChild(link);
+      let link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "data:text/css;base64," + btoa(cssText);
+      document.head.appendChild(link);
 
-    let style = document.createElement("style");
-    style.textContent = cssText;
-    document.head.appendChild(style);
+      let style = document.createElement("style");
+      style.textContent = cssText;
+      document.head.appendChild(style);
 
-    let overrideOpts = opts => Object.assign({}, baseOpts, opts);
-    let opts = baseOpts;
+      let overrideOpts = opts => Object.assign({}, baseOpts, opts);
+      let opts = baseOpts;
 
-    // Build the full element with setAttr, then inject.
-    for (let test of tests) {
-      let {elem, srcElem, src} = createElement(test, opts);
-      srcElem.setAttribute(test.srcAttr, src);
-      document.body.appendChild(elem);
-    }
-
-    // Build the full element with a property setter.
-    opts = overrideOpts({source: `${baseOpts.source}-prop`});
-    for (let test of tests) {
-      let {elem, srcElem, src} = createElement(test, opts);
-      srcElem[test.srcAttr] = src;
-      document.body.appendChild(elem);
-    }
-
-    // Build the element without the source attribute, inject, then set
-    // it.
-    opts = overrideOpts({source: `${baseOpts.source}-attr-after-inject`});
-    for (let test of tests) {
-      let {elem, srcElem, src} = createElement(test, opts);
-      document.body.appendChild(elem);
-      srcElem.setAttribute(test.srcAttr, src);
-    }
-
-    // Build the element without the source attribute, inject, then set
-    // the corresponding property.
-    opts = overrideOpts({source: `${baseOpts.source}-prop-after-inject`});
-    for (let test of tests) {
-      let {elem, srcElem, src} = createElement(test, opts);
-      document.body.appendChild(elem);
-      srcElem[test.srcAttr] = src;
-    }
-
-    // Build the element with a relative, rather than absolute, URL, and
-    // make sure it always has the page origin.
-    opts = overrideOpts({source: `${baseOpts.source}-relative-url`,
-                         origin: "page"});
-    for (let test of tests) {
-      let {elem, srcElem, src} = createElement(test, opts);
-      // Note: This assumes that the content page and the src URL are
-      // always at the server root. If that changes, the test will
-      // timeout waiting for matching requests.
-      src = src.replace(/.*\//, "");
-      srcElem.setAttribute(test.srcAttr, src);
-      document.body.appendChild(elem);
-    }
-
-    // If we're in an extension content script, do some additional checks.
-    if (typeof browser !== "undefined") {
-      // Build the element without the source attribute, inject, then
-      // have content set it.
-      opts = overrideOpts({source: `${baseOpts.source}-content-attr-after-inject`,
-                           origin: "page"});
-
+      // Build the full element with setAttr, then inject.
       for (let test of tests) {
-        let {elem, srcElem, src} = createElement(test, opts);
-        document.body.appendChild(elem);
-        window.wrappedJSObject.elem = srcElem;
-        window.wrappedJSObject.eval(`elem.setAttribute(${uneval(test.srcAttr)}, ${uneval(src)})`);
-      }
-
-      // Build the full element, then let content inject.
-      opts = overrideOpts({source: `${baseOpts.source}-content-inject-after-attr`});
-      for (let test of tests) {
-        let {elem, srcElem, src} = createElement(test, opts);
+        let { elem, srcElem, src } = createElement(test, opts);
         srcElem.setAttribute(test.srcAttr, src);
-        window.wrappedJSObject.elem = elem;
-        window.wrappedJSObject.eval(`document.body.appendChild(elem)`);
-      }
-
-      // Build the element without the source attribute, let content set
-      // it, then inject.
-      opts = overrideOpts({source: `${baseOpts.source}-inject-after-content-attr`,
-                           origin: "page"});
-
-      for (let test of tests) {
-        let {elem, srcElem, src} = createElement(test, opts);
-        window.wrappedJSObject.elem = srcElem;
-        window.wrappedJSObject.eval(`elem.setAttribute(${uneval(test.srcAttr)}, ${uneval(src)})`);
         document.body.appendChild(elem);
       }
 
-      // Build the element with a dummy source attribute, inject, then
-      // let content change it.
-      opts = overrideOpts({source: `${baseOpts.source}-content-change-after-inject`,
-                           origin: "page"});
-
+      // Build the full element with a property setter.
+      opts = overrideOpts({ source: `${baseOpts.source}-prop` });
       for (let test of tests) {
-        let {elem, srcElem, src} = createElement(test, opts);
-        srcElem.setAttribute(test.srcAttr, "meh.txt");
+        let { elem, srcElem, src } = createElement(test, opts);
+        srcElem[test.srcAttr] = src;
         document.body.appendChild(elem);
-        window.wrappedJSObject.elem = srcElem;
-        window.wrappedJSObject.eval(`elem.setAttribute(${uneval(test.srcAttr)}, ${uneval(src)})`);
       }
-    }
-  }, {once: true});
+
+      // Build the element without the source attribute, inject, then set
+      // it.
+      opts = overrideOpts({ source: `${baseOpts.source}-attr-after-inject` });
+      for (let test of tests) {
+        let { elem, srcElem, src } = createElement(test, opts);
+        document.body.appendChild(elem);
+        srcElem.setAttribute(test.srcAttr, src);
+      }
+
+      // Build the element without the source attribute, inject, then set
+      // the corresponding property.
+      opts = overrideOpts({ source: `${baseOpts.source}-prop-after-inject` });
+      for (let test of tests) {
+        let { elem, srcElem, src } = createElement(test, opts);
+        document.body.appendChild(elem);
+        srcElem[test.srcAttr] = src;
+      }
+
+      // Build the element with a relative, rather than absolute, URL, and
+      // make sure it always has the page origin.
+      opts = overrideOpts({
+        source: `${baseOpts.source}-relative-url`,
+        origin: "page",
+      });
+      for (let test of tests) {
+        let { elem, srcElem, src } = createElement(test, opts);
+        // Note: This assumes that the content page and the src URL are
+        // always at the server root. If that changes, the test will
+        // timeout waiting for matching requests.
+        src = src.replace(/.*\//, "");
+        srcElem.setAttribute(test.srcAttr, src);
+        document.body.appendChild(elem);
+      }
+
+      // If we're in an extension content script, do some additional checks.
+      if (typeof browser !== "undefined") {
+        // Build the element without the source attribute, inject, then
+        // have content set it.
+        opts = overrideOpts({
+          source: `${baseOpts.source}-content-attr-after-inject`,
+          origin: "page",
+        });
+
+        for (let test of tests) {
+          let { elem, srcElem, src } = createElement(test, opts);
+          document.body.appendChild(elem);
+          window.wrappedJSObject.elem = srcElem;
+          window.wrappedJSObject.eval(
+            `elem.setAttribute(${uneval(test.srcAttr)}, ${uneval(src)})`
+          );
+        }
+
+        // Build the full element, then let content inject.
+        opts = overrideOpts({
+          source: `${baseOpts.source}-content-inject-after-attr`,
+        });
+        for (let test of tests) {
+          let { elem, srcElem, src } = createElement(test, opts);
+          srcElem.setAttribute(test.srcAttr, src);
+          window.wrappedJSObject.elem = elem;
+          window.wrappedJSObject.eval(`document.body.appendChild(elem)`);
+        }
+
+        // Build the element without the source attribute, let content set
+        // it, then inject.
+        opts = overrideOpts({
+          source: `${baseOpts.source}-inject-after-content-attr`,
+          origin: "page",
+        });
+
+        for (let test of tests) {
+          let { elem, srcElem, src } = createElement(test, opts);
+          window.wrappedJSObject.elem = srcElem;
+          window.wrappedJSObject.eval(
+            `elem.setAttribute(${uneval(test.srcAttr)}, ${uneval(src)})`
+          );
+          document.body.appendChild(elem);
+        }
+
+        // Build the element with a dummy source attribute, inject, then
+        // let content change it.
+        opts = overrideOpts({
+          source: `${baseOpts.source}-content-change-after-inject`,
+          origin: "page",
+        });
+
+        for (let test of tests) {
+          let { elem, srcElem, src } = createElement(test, opts);
+          srcElem.setAttribute(test.srcAttr, "meh.txt");
+          document.body.appendChild(elem);
+          window.wrappedJSObject.elem = srcElem;
+          window.wrappedJSObject.eval(
+            `elem.setAttribute(${uneval(test.srcAttr)}, ${uneval(src)})`
+          );
+        }
+      }
+    },
+    { once: true }
+  );
 }
 
 /**
@@ -652,7 +775,7 @@ function getOriginBase(origURL) {
   let origin = url.searchParams.get("origin");
   url.searchParams.delete("origin");
 
-  return {origin, baseURL: url.href};
+  return { origin, baseURL: url.href };
 }
 
 /**
@@ -713,7 +836,7 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
     }
   }
 
-  return {expectedURLs, forbiddenURLs, blockedURLs: forbiddenURLs};
+  return { expectedURLs, forbiddenURLs, blockedURLs: forbiddenURLs };
 }
 
 /**
@@ -744,14 +867,14 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
  *        expected to generate a CSP report, the inline sources themselves will.
  * @returns {RequestedURLs}
  */
-function computeExpectedForbiddenURLs({urls, sources}, cspEnabled = false) {
+function computeExpectedForbiddenURLs({ urls, sources }, cspEnabled = false) {
   let expectedURLs = new Set();
   let forbiddenURLs = new Set();
   let blockedURLs = new Set();
   let blockedSources = new Set();
 
-  for (let {href, origin, inline} of urls) {
-    let {baseURL} = getOriginBase(href);
+  for (let { href, origin, inline } of urls) {
+    let { baseURL } = getOriginBase(href);
     if (cspEnabled && origin === "page") {
       if (inline) {
         forbiddenURLs.add(baseURL);
@@ -764,14 +887,14 @@ function computeExpectedForbiddenURLs({urls, sources}, cspEnabled = false) {
   }
 
   if (cspEnabled) {
-    for (let {origin, css} of sources) {
+    for (let { origin, css } of sources) {
       if (origin === "page") {
         blockedSources.add(css);
       }
     }
   }
 
-  return {expectedURLs, forbiddenURLs, blockedURLs, blockedSources};
+  return { expectedURLs, forbiddenURLs, blockedURLs, blockedSources };
 }
 
 /**
@@ -800,7 +923,7 @@ function awaitLoads(urlsPromise, origins) {
 
     function checkChannel(channel) {
       let origURL = channel.URI.spec;
-      let {baseURL, origin} = getOriginBase(origURL);
+      let { baseURL, origin } = getOriginBase(origURL);
 
       if (forbiddenURLs.has(baseURL)) {
         ok(false, `Got unexpected request for forbidden URL ${origURL}`);
@@ -809,9 +932,11 @@ function awaitLoads(urlsPromise, origins) {
       if (expectedURLs.has(baseURL)) {
         expectedURLs.delete(baseURL);
 
-        equal(channel.loadInfo.triggeringPrincipal.origin,
-              origins[origin],
-              `Got expected origin for URL ${origURL}`);
+        equal(
+          channel.loadInfo.triggeringPrincipal.origin,
+          origins[origin],
+          `Got expected origin for URL ${origURL}`
+        );
 
         if (!expectedURLs.size) {
           Services.obs.removeObserver(observer, "http-on-modify-request");
@@ -823,8 +948,7 @@ function awaitLoads(urlsPromise, origins) {
 
     urlsPromise.then(urls => {
       expectedURLs = new Set(urls.expectedURLs);
-      forbiddenURLs = new Set([...urls.forbiddenURLs,
-                               ...urls.blockedURLs]);
+      forbiddenURLs = new Set([...urls.forbiddenURLs, ...urls.blockedURLs]);
 
       for (let channel of queuedChannels.splice(0)) {
         checkChannel(channel.QueryInterface(Ci.nsIChannel));
@@ -870,7 +994,7 @@ function awaitCSP(urlsPromise) {
 
       let origURL = report["blocked-uri"];
       if (origURL !== "inline" && origURL !== "") {
-        let {baseURL} = getOriginBase(origURL);
+        let { baseURL } = getOriginBase(origURL);
 
         if (expectedURLs.has(baseURL)) {
           ok(false, `Got unexpected CSP report for allowed URL ${origURL}`);
@@ -888,7 +1012,11 @@ function awaitCSP(urlsPromise) {
         if (blockedSources.has(source)) {
           blockedSources.delete(source);
 
-          info(`Got CSP report for forbidden inline source ${JSON.stringify(source)}`);
+          info(
+            `Got CSP report for forbidden inline source ${JSON.stringify(
+              source
+            )}`
+          );
         }
       }
 
@@ -901,7 +1029,7 @@ function awaitCSP(urlsPromise) {
     urlsPromise.then(urls => {
       blockedURLs = new Set(urls.blockedURLs);
       blockedSources = new Set(urls.blockedSources);
-      ({expectedURLs} = urls);
+      ({ expectedURLs } = urls);
 
       for (let request of queuedRequests.splice(0)) {
         checkRequest(request);
@@ -948,11 +1076,11 @@ const TESTS = [
     srcAttr: "srcset",
   },
   {
-    element: ["input", {type: "image"}],
+    element: ["input", { type: "image" }],
     src: "input.png",
   },
   {
-    element: ["link", {rel: "stylesheet"}],
+    element: ["link", { rel: "stylesheet" }],
     src: "link.css",
     srcAttr: "href",
   },
@@ -992,12 +1120,12 @@ for (let test of TESTS) {
  */
 // Sources which load with the page context.
 const PAGE_SOURCES = {
-  "contentScript-content-attr-after-inject": {liveSrc: true},
-  "contentScript-content-change-after-inject": {liveSrc: true},
+  "contentScript-content-attr-after-inject": { liveSrc: true },
+  "contentScript-content-change-after-inject": { liveSrc: true },
   "contentScript-inject-after-content-attr": {},
   "contentScript-relative-url": {},
-  "pageHTML": {},
-  "pageScript": {},
+  pageHTML: {},
+  pageScript: {},
   "pageScript-attr-after-inject": {},
   "pageScript-prop": {},
   "pageScript-prop-after-inject": {},
@@ -1005,8 +1133,8 @@ const PAGE_SOURCES = {
 };
 // Sources which load with the extension context.
 const EXTENSION_SOURCES = {
-  "contentScript": {},
-  "contentScript-attr-after-inject": {liveSrc: true},
+  contentScript: {},
+  "contentScript-attr-after-inject": { liveSrc: true },
   "contentScript-content-inject-after-attr": {},
   "contentScript-prop": {},
   "contentScript-prop-after-inject": {},
@@ -1014,31 +1142,41 @@ const EXTENSION_SOURCES = {
 // All sources.
 const SOURCES = Object.assign({}, PAGE_SOURCES, EXTENSION_SOURCES);
 
-registerStaticPage("/page.html", `<!DOCTYPE html>
+registerStaticPage(
+  "/page.html",
+  `<!DOCTYPE html>
   <html lang="en">
   <head>
     <meta charset="UTF-8">
     <title></title>
     <script nonce="deadbeef">
-      ${getInjectionScript(TESTS, {source: "pageScript", origin: "page"})}
+      ${getInjectionScript(TESTS, { source: "pageScript", origin: "page" })}
     </script>
   </head>
   <body>
-    ${TESTS.map(test => toHTML(test, {source: "pageHTML", origin: "page"})).join("\n  ")}
+    ${TESTS.map(test =>
+      toHTML(test, { source: "pageHTML", origin: "page" })
+    ).join("\n  ")}
   </body>
-  </html>`);
+  </html>`
+);
 
 const EXTENSION_DATA = {
   manifest: {
-    content_scripts: [{
-      "matches": ["http://*/page.html"],
-      "run_at": "document_start",
-      "js": ["content_script.js"],
-    }],
+    content_scripts: [
+      {
+        matches: ["http://*/page.html"],
+        run_at: "document_start",
+        js: ["content_script.js"],
+      },
+    ],
   },
 
   files: {
-    "content_script.js": getInjectionScript(TESTS, {source: "contentScript", origin: "contentScript"}),
+    "content_script.js": getInjectionScript(TESTS, {
+      source: "contentScript",
+      origin: "contentScript",
+    }),
   },
 };
 
@@ -1060,8 +1198,11 @@ function mergeSources(a, b) {
 // use in verifying request triggering principals.
 function getOrigins(extension) {
   return {
-    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {}).origin,
-    contentScript: Cu.getObjectPrincipal(Cu.Sandbox([extension.principal, pageURL])).origin,
+    page: Services.scriptSecurityManager.createCodebasePrincipal(pageURI, {})
+      .origin,
+    contentScript: Cu.getObjectPrincipal(
+      Cu.Sandbox([extension.principal, pageURL])
+    ).origin,
     extension: extension.principal.origin,
   };
 }
@@ -1077,7 +1218,8 @@ add_task(async function test_contentscript_triggeringPrincipals() {
   let urlsPromise = extension.awaitMessage("css-sources").then(msg => {
     return mergeSources(
       computeExpectedForbiddenURLs(msg),
-      computeBaseURLs(TESTS, SOURCES));
+      computeBaseURLs(TESTS, SOURCES)
+    );
   });
 
   let origins = getOrigins(extension.extension);
@@ -1092,7 +1234,6 @@ add_task(async function test_contentscript_triggeringPrincipals() {
 
   clearCache();
 });
-
 
 /**
  * Tests that the correct CSP is applied to loads of inline content
@@ -1113,7 +1254,8 @@ add_task(async function test_contentscript_csp() {
   let urlsPromise = extension.awaitMessage("css-sources").then(msg => {
     return mergeSources(
       computeExpectedForbiddenURLs(msg, true),
-      computeBaseURLs(TESTS, EXTENSION_SOURCES, PAGE_SOURCES));
+      computeBaseURLs(TESTS, EXTENSION_SOURCES, PAGE_SOURCES)
+    );
   });
 
   let origins = getOrigins(extension.extension);

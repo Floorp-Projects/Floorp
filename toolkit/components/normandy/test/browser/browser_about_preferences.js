@@ -6,11 +6,10 @@ const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 const FHR_PREF = "datareporting.healthreport.uploadEnabled";
 
 function withPrivacyPrefs(testFunc) {
-  return async (...args) => (
-    BrowserTestUtils.withNewTab("about:preferences#privacy", async browser => (
+  return async (...args) =>
+    BrowserTestUtils.withNewTab("about:preferences#privacy", async browser =>
       testFunc(...args, browser)
-    ))
-  );
+    );
 }
 
 decorate_task(
@@ -19,8 +18,13 @@ decorate_task(
   }),
   withPrivacyPrefs,
   async function testCheckedOnLoad(browser) {
-    const checkbox = browser.contentDocument.getElementById("optOutStudiesEnabled");
-    ok(checkbox.checked, "Opt-out checkbox is checked on load when the pref is true");
+    const checkbox = browser.contentDocument.getElementById(
+      "optOutStudiesEnabled"
+    );
+    ok(
+      checkbox.checked,
+      "Opt-out checkbox is checked on load when the pref is true"
+    );
   }
 );
 
@@ -30,8 +34,13 @@ decorate_task(
   }),
   withPrivacyPrefs,
   async function testUncheckedOnLoad(browser) {
-    const checkbox = browser.contentDocument.getElementById("optOutStudiesEnabled");
-    ok(!checkbox.checked, "Opt-out checkbox is unchecked on load when the pref is false");
+    const checkbox = browser.contentDocument.getElementById(
+      "optOutStudiesEnabled"
+    );
+    ok(
+      !checkbox.checked,
+      "Opt-out checkbox is unchecked on load when the pref is false"
+    );
   }
 );
 
@@ -41,8 +50,13 @@ decorate_task(
   }),
   withPrivacyPrefs,
   async function testEnabledOnLoad(browser) {
-    const checkbox = browser.contentDocument.getElementById("optOutStudiesEnabled");
-    ok(!checkbox.disabled, "Opt-out checkbox is enabled on load when the FHR pref is true");
+    const checkbox = browser.contentDocument.getElementById(
+      "optOutStudiesEnabled"
+    );
+    ok(
+      !checkbox.disabled,
+      "Opt-out checkbox is enabled on load when the FHR pref is true"
+    );
   }
 );
 
@@ -52,22 +66,28 @@ decorate_task(
   }),
   withPrivacyPrefs,
   async function testDisabledOnLoad(browser) {
-    const checkbox = browser.contentDocument.getElementById("optOutStudiesEnabled");
-    ok(checkbox.disabled, "Opt-out checkbox is disabled on load when the FHR pref is false");
+    const checkbox = browser.contentDocument.getElementById(
+      "optOutStudiesEnabled"
+    );
+    ok(
+      checkbox.disabled,
+      "Opt-out checkbox is disabled on load when the FHR pref is false"
+    );
   }
 );
 
 decorate_task(
   withPrefEnv({
-    set: [
-      [FHR_PREF, true],
-      [OPT_OUT_PREF, true],
-    ],
+    set: [[FHR_PREF, true], [OPT_OUT_PREF, true]],
   }),
   withPrivacyPrefs,
   async function testCheckboxes(browser) {
-    const optOutCheckbox = browser.contentDocument.getElementById("optOutStudiesEnabled");
-    const fhrCheckbox = browser.contentDocument.getElementById("submitHealthReportBox");
+    const optOutCheckbox = browser.contentDocument.getElementById(
+      "optOutStudiesEnabled"
+    );
+    const fhrCheckbox = browser.contentDocument.getElementById(
+      "submitHealthReportBox"
+    );
 
     optOutCheckbox.click();
     ok(
@@ -112,14 +132,13 @@ decorate_task(
 
 decorate_task(
   withPrefEnv({
-    set: [
-      [FHR_PREF, true],
-      [OPT_OUT_PREF, true],
-    ],
+    set: [[FHR_PREF, true], [OPT_OUT_PREF, true]],
   }),
   withPrivacyPrefs,
   async function testPrefWatchers(browser) {
-    const optOutCheckbox = browser.contentDocument.getElementById("optOutStudiesEnabled");
+    const optOutCheckbox = browser.contentDocument.getElementById(
+      "optOutStudiesEnabled"
+    );
 
     Services.prefs.setBoolPref(OPT_OUT_PREF, false);
     ok(
@@ -162,18 +181,15 @@ decorate_task(
   }
 );
 
-decorate_task(
-  withPrivacyPrefs,
-  async function testViewStudiesLink(browser) {
-    browser.contentDocument.getElementById("viewShieldStudies").click();
-    await BrowserTestUtils.waitForLocationChange(gBrowser);
+decorate_task(withPrivacyPrefs, async function testViewStudiesLink(browser) {
+  browser.contentDocument.getElementById("viewShieldStudies").click();
+  await BrowserTestUtils.waitForLocationChange(gBrowser);
 
-    is(
-      gBrowser.currentURI.spec,
-      "about:studies",
-      "Clicking the view studies link opens about:studies in a new tab."
-    );
+  is(
+    gBrowser.currentURI.spec,
+    "about:studies",
+    "Clicking the view studies link opens about:studies in a new tab."
+  );
 
-    gBrowser.removeCurrentTab();
-  }
-);
+  gBrowser.removeCurrentTab();
+});

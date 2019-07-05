@@ -6,15 +6,20 @@
 "use strict";
 
 function run_test() {
-  let defaultBranch = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF);
+  let defaultBranch = Services.prefs.getDefaultBranch(
+    SearchUtils.BROWSER_SEARCH_PREF
+  );
   defaultBranch.setCharPref("ignoredJAREngines", "engine");
-  Services.prefs.getDefaultBranch("").setCharPref("distribution.id", "partner-1");
+  Services.prefs
+    .getDefaultBranch("")
+    .setCharPref("distribution.id", "partner-1");
 
   // The test engines used in this test need to be recognized as 'default'
   // engines or the resource URL won't be used
   let url = "resource://test/data/";
-  let resProt = Services.io.getProtocolHandler("resource")
-                        .QueryInterface(Ci.nsIResProtocolHandler);
+  let resProt = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-extensions", Services.io.newURI(url));
 
   Assert.ok(!Services.search.isInitialized);

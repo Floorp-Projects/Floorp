@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {LoginManagerParent: LMP} = ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm");
+const { LoginManagerParent: LMP } = ChromeUtils.import(
+  "resource://gre/modules/LoginManagerParent.jsm"
+);
 
 const DOMAIN1_HTTP_ORIGIN = "http://www3.example.com";
 const DOMAIN1_HTTPS_ORIGIN = "https://www3.example.com";
@@ -94,13 +96,24 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
     {
       description: "HTTPS form, same origin, different port, both schemes",
       formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
-      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT, DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT],
-      expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT],
+      logins: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P1,
+        DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT,
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT,
+      ],
+      expected: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P1,
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT,
+      ],
     },
     {
       description: "HTTP form, same origin, different port, both schemes",
       formActionOrigin: DOMAIN1_HTTP_ORIGIN,
-      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT, DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT],
+      logins: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P1,
+        DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT,
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P2_DIFFERENT_PORT,
+      ],
       expected: [DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT],
     },
     {
@@ -130,8 +143,17 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
     {
       description: "HTTPS form, different usernames, different schemes",
       formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
-      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P2, DOMAIN1_HTTPS_TO_HTTPS_U2_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN1_HTTP_TO_HTTP_U3_P1],
-      expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P2, DOMAIN1_HTTPS_TO_HTTPS_U2_P1, DOMAIN1_HTTP_TO_HTTP_U3_P1],
+      logins: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P2,
+        DOMAIN1_HTTPS_TO_HTTPS_U2_P1,
+        DOMAIN1_HTTP_TO_HTTP_U1_P1,
+        DOMAIN1_HTTP_TO_HTTP_U3_P1,
+      ],
+      expected: [
+        DOMAIN1_HTTPS_TO_HTTPS_U1_P2,
+        DOMAIN1_HTTPS_TO_HTTPS_U2_P1,
+        DOMAIN1_HTTP_TO_HTTP_U3_P1,
+      ],
     },
   ];
 
@@ -139,7 +161,11 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
     info(tc.description);
 
     let guids = await Services.logins.addLogins(tc.logins);
-    Assert.strictEqual(guids.length, tc.logins.length, "Check length of added logins");
+    Assert.strictEqual(
+      guids.length,
+      tc.logins.length,
+      "Check length of added logins"
+    );
 
     let actual = LMP._searchAndDedupeLogins(tc.formActionOrigin, {
       formActionOrigin: tc.formActionOrigin,
@@ -148,7 +174,11 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
     });
     info(`actual:\n ${JSON.stringify(actual, null, 2)}`);
     info(`expected:\n ${JSON.stringify(tc.expected, null, 2)}`);
-    Assert.strictEqual(actual.length, tc.expected.length, `Check result length`);
+    Assert.strictEqual(
+      actual.length,
+      tc.expected.length,
+      `Check result length`
+    );
     for (let [i, login] of tc.expected.entries()) {
       Assert.ok(actual[i].equals(login), `Check index ${i}`);
     }

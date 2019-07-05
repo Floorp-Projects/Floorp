@@ -1,55 +1,82 @@
 try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.
-  var {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-} catch (e) {
-}
+  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+} catch (e) {}
 
-var acquire, dispose, reset_errno, dispose_errno,
-  acquire_ptr, dispose_ptr,
-  acquire_void_ptr, dispose_void_ptr,
-  acquire_string, dispose_string;
+var acquire,
+  dispose,
+  reset_errno,
+  dispose_errno,
+  acquire_ptr,
+  dispose_ptr,
+  acquire_void_ptr,
+  dispose_void_ptr,
+  acquire_string,
+  dispose_string;
 
 function run_test() {
   let library = open_ctypes_test_lib();
 
-  let start = library.declare("test_finalizer_start", ctypes.default_abi,
-                          ctypes.void_t,
-                          ctypes.size_t);
-  let stop = library.declare("test_finalizer_stop", ctypes.default_abi,
-                             ctypes.void_t);
+  let start = library.declare(
+    "test_finalizer_start",
+    ctypes.default_abi,
+    ctypes.void_t,
+    ctypes.size_t
+  );
+  let stop = library.declare(
+    "test_finalizer_stop",
+    ctypes.default_abi,
+    ctypes.void_t
+  );
   let tester = new ResourceTester(start, stop);
-  acquire = library.declare("test_finalizer_acq_size_t",
-                            ctypes.default_abi,
-                            ctypes.size_t,
-                            ctypes.size_t);
-  dispose = library.declare("test_finalizer_rel_size_t",
-                            ctypes.default_abi,
-                            ctypes.void_t,
-                            ctypes.size_t);
-  reset_errno = library.declare("reset_errno",
-                                ctypes.default_abi,
-                                ctypes.void_t);
-  dispose_errno = library.declare("test_finalizer_rel_size_t_set_errno",
-                                  ctypes.default_abi,
-                                  ctypes.void_t,
-                                  ctypes.size_t);
-  acquire_ptr = library.declare("test_finalizer_acq_int32_ptr_t",
-                                ctypes.default_abi,
-                                ctypes.int32_t.ptr,
-                                ctypes.size_t);
-  dispose_ptr = library.declare("test_finalizer_rel_int32_ptr_t",
-                                ctypes.default_abi,
-                                ctypes.void_t,
-                                ctypes.int32_t.ptr);
-  acquire_string = library.declare("test_finalizer_acq_string_t",
-                                ctypes.default_abi,
-                                ctypes.char.ptr,
-                                ctypes.size_t);
-  dispose_string = library.declare("test_finalizer_rel_string_t",
-                                ctypes.default_abi,
-                                ctypes.void_t,
-                                ctypes.char.ptr);
+  acquire = library.declare(
+    "test_finalizer_acq_size_t",
+    ctypes.default_abi,
+    ctypes.size_t,
+    ctypes.size_t
+  );
+  dispose = library.declare(
+    "test_finalizer_rel_size_t",
+    ctypes.default_abi,
+    ctypes.void_t,
+    ctypes.size_t
+  );
+  reset_errno = library.declare(
+    "reset_errno",
+    ctypes.default_abi,
+    ctypes.void_t
+  );
+  dispose_errno = library.declare(
+    "test_finalizer_rel_size_t_set_errno",
+    ctypes.default_abi,
+    ctypes.void_t,
+    ctypes.size_t
+  );
+  acquire_ptr = library.declare(
+    "test_finalizer_acq_int32_ptr_t",
+    ctypes.default_abi,
+    ctypes.int32_t.ptr,
+    ctypes.size_t
+  );
+  dispose_ptr = library.declare(
+    "test_finalizer_rel_int32_ptr_t",
+    ctypes.default_abi,
+    ctypes.void_t,
+    ctypes.int32_t.ptr
+  );
+  acquire_string = library.declare(
+    "test_finalizer_acq_string_t",
+    ctypes.default_abi,
+    ctypes.char.ptr,
+    ctypes.size_t
+  );
+  dispose_string = library.declare(
+    "test_finalizer_rel_string_t",
+    ctypes.default_abi,
+    ctypes.void_t,
+    ctypes.char.ptr
+  );
 
   tester.launch(10, test_to_string);
   tester.launch(10, test_to_source);
@@ -82,12 +109,14 @@ function test_to_source() {
   info("Starting test_to_source");
   let value = acquire(0);
   let a = ctypes.CDataFinalizer(value, dispose);
-  Assert.equal(a.toSource(),
-               "ctypes.CDataFinalizer("
-               + ctypes.size_t(value).toSource()
-               + ", "
-               + dispose.toSource()
-               + ")");
+  Assert.equal(
+    a.toSource(),
+    "ctypes.CDataFinalizer(" +
+      ctypes.size_t(value).toSource() +
+      ", " +
+      dispose.toSource() +
+      ")"
+  );
   value = null;
 
   a.forget();
@@ -159,8 +188,7 @@ function test_to_pointer() {
 function test_readstring(size) {
   for (let i = 0; i < size; ++i) {
     let acquired = acquire_string(i);
-    let finalizable = ctypes.CDataFinalizer(acquired,
-      dispose_string);
+    let finalizable = ctypes.CDataFinalizer(acquired, dispose_string);
     Assert.equal(finalizable.readString(), acquired.readString());
     finalizable.dispose();
   }

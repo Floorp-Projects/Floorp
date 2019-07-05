@@ -14,7 +14,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -52,7 +54,7 @@ function validateAndParseParamRecursive(param, properties) {
     // types. To check this, make versions of the object definition that include
     // only one type at a time, and check the value against each one.
     for (const type of properties.type) {
-      let typeProperties = Object.assign({}, properties, {type});
+      let typeProperties = Object.assign({}, properties, { type });
       log.debug(`checking subtype ${type}`);
       let [valid, data] = validateAndParseParamRecursive(param, typeProperties);
       if (valid) {
@@ -88,8 +90,13 @@ function validateAndParseParamRecursive(param, properties) {
 
       let parsedArray = [];
       for (let item of param) {
-        log.debug(`in array, checking @${item}@ for type ${properties.items.type}`);
-        let [valid, parsedValue] = validateAndParseParamRecursive(item, properties.items);
+        log.debug(
+          `in array, checking @${item}@ for type ${properties.items.type}`
+        );
+        let [valid, parsedValue] = validateAndParseParamRecursive(
+          item,
+          properties.items
+        );
         if (!valid) {
           if (strict) {
             return [false, null];
@@ -103,7 +110,7 @@ function validateAndParseParamRecursive(param, properties) {
       return [true, parsedArray];
 
     case "object": {
-      if (typeof(param) != "object") {
+      if (typeof param != "object") {
         log.error("Object expected but not received");
         return [false, null];
       }
@@ -116,7 +123,9 @@ function validateAndParseParamRecursive(param, properties) {
           try {
             pattern = new RegExp(propName);
           } catch (e) {
-            throw new Error(`Internal error: Invalid property pattern ${propName}`);
+            throw new Error(
+              `Internal error: Invalid property pattern ${propName}`
+            );
           }
           patternProperties.push({
             pattern,
@@ -136,8 +145,10 @@ function validateAndParseParamRecursive(param, properties) {
 
       for (let item of Object.keys(param)) {
         let schema;
-        if ("properties" in properties &&
-            properties.properties.hasOwnProperty(item)) {
+        if (
+          "properties" in properties &&
+          properties.properties.hasOwnProperty(item)
+        ) {
           schema = properties.properties[item];
         } else if (patternProperties.length) {
           for (let patternProperty of patternProperties) {
@@ -148,7 +159,10 @@ function validateAndParseParamRecursive(param, properties) {
           }
         }
         if (schema) {
-          let [valid, parsedValue] = validateAndParseParamRecursive(param[item], schema);
+          let [valid, parsedValue] = validateAndParseParamRecursive(
+            param[item],
+            schema
+          );
           if (!valid) {
             return [false, null];
           }
@@ -159,12 +173,12 @@ function validateAndParseParamRecursive(param, properties) {
     }
 
     case "JSON":
-      if (typeof(param) == "object") {
+      if (typeof param == "object") {
         return [true, param];
       }
       try {
         let json = JSON.parse(param);
-        if (typeof(json) != "object") {
+        if (typeof json != "object") {
           log.error("JSON was not an object");
           return [false, null];
         }
@@ -184,10 +198,9 @@ function validateAndParseSimpleParam(param, type) {
 
   switch (type) {
     case "boolean":
-      if (typeof(param) == "boolean") {
+      if (typeof param == "boolean") {
         valid = true;
-      } else if (typeof(param) == "number" &&
-                 (param == 0 || param == 1)) {
+      } else if (typeof param == "number" && (param == 0 || param == 1)) {
         valid = true;
         parsedParam = !!param;
       }
@@ -195,12 +208,12 @@ function validateAndParseSimpleParam(param, type) {
 
     case "number":
     case "string":
-      valid = (typeof(param) == type);
+      valid = typeof param == type;
       break;
 
     // integer is an alias to "number" that some JSON schema tools use
     case "integer":
-      valid = (typeof(param) == "number");
+      valid = typeof param == "number";
       break;
 
     case "null":
@@ -208,7 +221,7 @@ function validateAndParseSimpleParam(param, type) {
       break;
 
     case "origin":
-      if (typeof(param) != "string") {
+      if (typeof param != "string") {
         break;
       }
 
@@ -225,7 +238,9 @@ function validateAndParseSimpleParam(param, type) {
           let pathQueryRef = parsedParam.pathname + parsedParam.hash;
           // Make sure that "origin" types won't accept full URLs.
           if (pathQueryRef != "/" && pathQueryRef != "") {
-            log.error(`Ignoring parameter "${param}" - origin was expected but received full URL.`);
+            log.error(
+              `Ignoring parameter "${param}" - origin was expected but received full URL.`
+            );
             valid = false;
           } else {
             valid = true;
@@ -238,7 +253,7 @@ function validateAndParseSimpleParam(param, type) {
 
     case "URL":
     case "URLorEmpty":
-      if (typeof(param) != "string") {
+      if (typeof param != "string") {
         break;
       }
 

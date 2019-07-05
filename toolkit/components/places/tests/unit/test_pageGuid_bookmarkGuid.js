@@ -9,25 +9,33 @@ const histsvc = PlacesUtils.history;
 add_task(async function test_addBookmarksAndCheckGuids() {
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: [{
-      title: "test folder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: [{
-        url: "http://test1.com/",
-        title: "1 title",
-      }, {
-        url: "http://test2.com/",
-        title: "2 title",
-      }, {
-        url: "http://test3.com/",
-        title: "3 title",
-      }, {
-        type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-      }, {
-        title: "test folder 2",
+    children: [
+      {
+        title: "test folder",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      }],
-    }],
+        children: [
+          {
+            url: "http://test1.com/",
+            title: "1 title",
+          },
+          {
+            url: "http://test2.com/",
+            title: "2 title",
+          },
+          {
+            url: "http://test3.com/",
+            title: "3 title",
+          },
+          {
+            type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          },
+          {
+            title: "test folder 2",
+            type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          },
+        ],
+      },
+    ],
   });
 
   let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
@@ -70,17 +78,22 @@ add_task(async function test_addBookmarksAndCheckGuids() {
 add_task(async function test_updateBookmarksAndCheckGuids() {
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: [{
-      title: "test folder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      children: [{
-        url: "http://test1.com/",
-        title: "1 title",
-      }, {
-        title: "test folder 2",
+    children: [
+      {
+        title: "test folder",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      }],
-    }],
+        children: [
+          {
+            url: "http://test1.com/",
+            title: "1 title",
+          },
+          {
+            title: "test folder 2",
+            type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          },
+        ],
+      },
+    ],
   });
 
   let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
@@ -143,7 +156,7 @@ add_task(async function test_addItemsWithInvalidGUIDsFails() {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
     do_throw("Adding a folder with an invalid guid should fail");
-  } catch (ex) { }
+  } catch (ex) {}
 
   let folder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -158,7 +171,7 @@ add_task(async function test_addItemsWithInvalidGUIDsFails() {
       url: "http://test.tld",
     });
     do_throw("Adding a bookmark with an invalid guid should fail");
-  } catch (ex) { }
+  } catch (ex) {}
 
   try {
     PlacesUtils.bookmarks.insert({
@@ -167,31 +180,36 @@ add_task(async function test_addItemsWithInvalidGUIDsFails() {
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     });
     do_throw("Adding a separator with an invalid guid should fail");
-  } catch (ex) { }
+  } catch (ex) {}
 
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(async function test_addItemsWithGUIDs() {
-  const FOLDER_GUID     = "FOLDER--GUID";
-  const BOOKMARK_GUID   = "BM------GUID";
-  const SEPARATOR_GUID  = "SEP-----GUID";
+  const FOLDER_GUID = "FOLDER--GUID";
+  const BOOKMARK_GUID = "BM------GUID";
+  const SEPARATOR_GUID = "SEP-----GUID";
 
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
-    children: [{
-      title: "test folder",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      guid: FOLDER_GUID,
-      children: [{
-        url: "http://test1.com",
-        title: "1 title",
-        guid: BOOKMARK_GUID,
-      }, {
-        type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-        guid: SEPARATOR_GUID,
-      }],
-    }],
+    children: [
+      {
+        title: "test folder",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        guid: FOLDER_GUID,
+        children: [
+          {
+            url: "http://test1.com",
+            title: "1 title",
+            guid: BOOKMARK_GUID,
+          },
+          {
+            type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+            guid: SEPARATOR_GUID,
+          },
+        ],
+      },
+    ],
   });
 
   let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
@@ -213,8 +231,7 @@ add_task(async function test_emptyGUIDFails() {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
     do_throw("Adding a folder with an empty guid should fail");
-  } catch (ex) {
-  }
+  } catch (ex) {}
 });
 
 add_task(async function test_usingSameGUIDFails() {
@@ -233,7 +250,7 @@ add_task(async function test_usingSameGUIDFails() {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
     do_throw("Using the same guid twice should fail");
-  } catch (ex) { }
+  } catch (ex) {}
 
   await PlacesUtils.bookmarks.eraseEverything();
 });

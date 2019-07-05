@@ -2,8 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  const miHelper = Cc["@mozilla.org/mozintlhelper;1"]
-                     .getService(Ci.mozIMozIntlHelper);
+  const miHelper = Cc["@mozilla.org/mozintlhelper;1"].getService(
+    Ci.mozIMozIntlHelper
+  );
 
   test_this_global(miHelper);
   test_cross_global(miHelper);
@@ -27,9 +28,15 @@ function test_cross_global(miHelper) {
   miHelper.addGetCalendarInfo(x);
   var waivedX = Cu.waiveXrays(x);
   equal(waivedX.getCalendarInfo instanceof Function, false);
-  equal(waivedX.getCalendarInfo instanceof Cu.waiveXrays(global.Function), true);
+  equal(
+    waivedX.getCalendarInfo instanceof Cu.waiveXrays(global.Function),
+    true
+  );
   equal(waivedX.getCalendarInfo() instanceof Object, false);
-  equal(waivedX.getCalendarInfo() instanceof Cu.waiveXrays(global.Object), true);
+  equal(
+    waivedX.getCalendarInfo() instanceof Cu.waiveXrays(global.Object),
+    true
+  );
 }
 
 function test_methods_presence(miHelper) {

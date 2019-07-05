@@ -1,6 +1,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 const HOST = "https://example.com";
-const URL = HOST + "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
+const URL =
+  HOST + "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const TIMEOUT_PREF = "signon.masterPasswordReprompt.timeout_ms";
 
 // Waits for the master password prompt and cancels it.
@@ -33,7 +34,7 @@ add_task(async function test_mpAutocompleteTimeout() {
 
   // Set master password prompt timeout to 3s.
   // If this test goes intermittent, you likely have to increase this value.
-  await SpecialPowers.pushPrefEnv({set: [[TIMEOUT_PREF, 3000]]});
+  await SpecialPowers.pushPrefEnv({ set: [[TIMEOUT_PREF, 3000]] });
 
   // Wait for initial master password dialog after opening the tab.
   let dialogShown = waitForDialog();
@@ -48,7 +49,7 @@ add_task(async function test_mpAutocompleteTimeout() {
 
     // Wait 4s, dialog should not have been shown
     // (otherwise the code below will not work).
-    await new Promise((c) => setTimeout(c, 4000));
+    await new Promise(c => setTimeout(c, 4000));
 
     dialogShown = waitForDialog();
     await ContentTask.spawn(browser, null, async function() {

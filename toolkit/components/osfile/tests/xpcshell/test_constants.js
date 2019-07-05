@@ -1,7 +1,7 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 // Test that OS.Constants is defined correctly.
@@ -17,6 +17,6 @@ add_task(async function check_definition() {
   if (Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2).isDebugBuild) {
     Assert.ok(OS.Constants.Sys.DEBUG);
   } else {
-    Assert.ok(typeof(OS.Constants.Sys.DEBUG) == "undefined");
+    Assert.ok(typeof OS.Constants.Sys.DEBUG == "undefined");
   }
 });

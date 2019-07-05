@@ -36,7 +36,8 @@ add_task(async function setup() {
   };
   Services.dirsvc.registerProvider(dirProvider);
 
-  let typeSlug = AppConstants.platform === "linux" ? "managed-storage" : "ManagedStorage";
+  let typeSlug =
+    AppConstants.platform === "linux" ? "managed-storage" : "ManagedStorage";
   OS.File.makeDir(OS.Path.join(tmpDir.path, typeSlug));
 
   let path = OS.Path.join(tmpDir.path, typeSlug, `${MANIFEST.name}.json`);
@@ -45,9 +46,12 @@ add_task(async function setup() {
   let registry;
   if (AppConstants.platform === "win") {
     registry = new MockRegistry();
-    registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                      `Software\\\Mozilla\\\ManagedStorage\\${MANIFEST.name}`,
-                      "", path);
+    registry.setValue(
+      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+      `Software\\\Mozilla\\\ManagedStorage\\${MANIFEST.name}`,
+      "",
+      path
+    );
   }
 
   registerCleanupFunction(() => {
@@ -62,41 +66,47 @@ add_task(async function setup() {
 add_task(async function test_storage_managed() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id: MANIFEST.name}},
+      applications: { gecko: { id: MANIFEST.name } },
       permissions: ["storage"],
     },
 
     async background() {
       await browser.test.assertRejects(
-        browser.storage.managed.set({a: 1}),
+        browser.storage.managed.set({ a: 1 }),
         /storage.managed is read-only/,
-        "browser.storage.managed.set() rejects because it's read only");
+        "browser.storage.managed.set() rejects because it's read only"
+      );
 
       await browser.test.assertRejects(
         browser.storage.managed.remove("str"),
         /storage.managed is read-only/,
-        "browser.storage.managed.remove() rejects because it's read only");
+        "browser.storage.managed.remove() rejects because it's read only"
+      );
 
       await browser.test.assertRejects(
         browser.storage.managed.clear(),
         /storage.managed is read-only/,
-        "browser.storage.managed.clear() rejects because it's read only");
+        "browser.storage.managed.clear() rejects because it's read only"
+      );
 
-      browser.test.sendMessage("results", await Promise.all([
-        browser.storage.managed.get(),
-        browser.storage.managed.get("str"),
-        browser.storage.managed.get(["null", "obj"]),
-        browser.storage.managed.get({str: "a", num: 2}),
-      ]));
+      browser.test.sendMessage(
+        "results",
+        await Promise.all([
+          browser.storage.managed.get(),
+          browser.storage.managed.get("str"),
+          browser.storage.managed.get(["null", "obj"]),
+          browser.storage.managed.get({ str: "a", num: 2 }),
+        ])
+      );
     },
   });
 
   await extension.startup();
   deepEqual(await extension.awaitMessage("results"), [
     MANIFEST.data,
-    {str: "hello"},
-    {null: null, obj: MANIFEST.data.obj},
-    {str: "hello", num: 2},
+    { str: "hello" },
+    { null: null, obj: MANIFEST.data.obj },
+    { str: "hello", num: 2 },
   ]);
   await extension.unload();
 });
@@ -109,9 +119,10 @@ add_task(async function test_manifest_not_found() {
 
     async background() {
       await browser.test.assertRejects(
-        browser.storage.managed.get({a: 1}),
+        browser.storage.managed.get({ a: 1 }),
         /Managed storage manifest not found/,
-        "browser.storage.managed.get() rejects when without manifest");
+        "browser.storage.managed.get() rejects when without manifest"
+      );
 
       browser.test.notifyPass();
     },

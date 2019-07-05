@@ -41,8 +41,11 @@ function task(contentIds) {
 
   function test_inputAddHandler(evt) {
     removeEventListener(evt.type, test_inputAddHandler, false);
-    is(evt.target.id, contentIds.FORM1_ID,
-       evt.type + " event targets correct form element (added password element)");
+    is(
+      evt.target.id,
+      contentIds.FORM1_ID,
+      evt.type + " event targets correct form element (added password element)"
+    );
     gDoc.defaultView.setTimeout(test_inputChangeForm, 0);
   }
 
@@ -54,8 +57,11 @@ function task(contentIds) {
 
   function test_inputChangeFormHandler(evt) {
     removeEventListener(evt.type, test_inputChangeFormHandler, false);
-    is(evt.target.id, contentIds.FORM2_ID,
-       evt.type + " event targets correct form element (changed form)");
+    is(
+      evt.target.id,
+      contentIds.FORM2_ID,
+      evt.type + " event targets correct form element (changed form)"
+    );
     gDoc.defaultView.setTimeout(test_inputChangesType, 0);
   }
 
@@ -67,8 +73,11 @@ function task(contentIds) {
 
   function test_inputChangesTypeHandler(evt) {
     removeEventListener(evt.type, test_inputChangesTypeHandler, false);
-    is(evt.target.id, contentIds.FORM1_ID,
-       evt.type + " event targets correct form element (changed type)");
+    is(
+      evt.target.id,
+      contentIds.FORM1_ID,
+      evt.type + " event targets correct form element (changed type)"
+    );
     gDoc.defaultView.setTimeout(finish, 0);
   }
 
@@ -81,15 +90,24 @@ function task(contentIds) {
 }
 
 add_task(async function() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
   let promise = ContentTask.spawn(tab.linkedBrowser, ids, task);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, "data:text/html;charset=utf-8," +
-                            "<html><body>" +
-                            "<form id='" + ids.FORM1_ID + "'>" +
-                            "<input id='" + ids.CHANGE_INPUT_ID + "'></form>" +
-                            "<form id='" + ids.FORM2_ID + "'></form>" +
-                            "</body></html>");
+  BrowserTestUtils.loadURI(
+    tab.linkedBrowser,
+    "data:text/html;charset=utf-8," +
+      "<html><body>" +
+      "<form id='" +
+      ids.FORM1_ID +
+      "'>" +
+      "<input id='" +
+      ids.CHANGE_INPUT_ID +
+      "'></form>" +
+      "<form id='" +
+      ids.FORM2_ID +
+      "'></form>" +
+      "</body></html>"
+  );
   await promise;
 
   ok(true, "Test completed");

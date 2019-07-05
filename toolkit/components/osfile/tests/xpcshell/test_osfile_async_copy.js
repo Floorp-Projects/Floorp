@@ -1,8 +1,10 @@
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   do_test_pending();
@@ -26,10 +28,12 @@ var EXISTING_FILE = "test_osfile_async_copy.js";
 var reference_fetch_file = function reference_fetch_file(path) {
   return new Promise((resolve, reject) => {
     let file = new FileUtils.File(path);
-    NetUtil.asyncFetch({
-      uri: NetUtil.newURI(file),
-      loadUsingSystemPrincipal: true,
-    }, function(stream, status) {
+    NetUtil.asyncFetch(
+      {
+        uri: NetUtil.newURI(file),
+        loadUsingSystemPrincipal: true,
+      },
+      function(stream, status) {
         if (!Components.isSuccessCode(status)) {
           reject(status);
           return;
@@ -46,7 +50,8 @@ var reference_fetch_file = function reference_fetch_file(path) {
         } else {
           resolve(result);
         }
-      });
+      }
+    );
   });
 };
 
@@ -72,12 +77,15 @@ var reference_compare_files = async function reference_compare_files(a, b) {
  * Test to ensure that OS.File.copy works.
  */
 async function test_copymove(options = {}) {
-  let source = OS.Path.join((await OS.File.getCurrentDirectory()),
-                            EXISTING_FILE);
-  let dest = OS.Path.join(OS.Constants.Path.tmpDir,
-                          "test_osfile_async_copy_dest.tmp");
-  let dest2 = OS.Path.join(OS.Constants.Path.tmpDir,
-                           "test_osfile_async_copy_dest2.tmp");
+  let source = OS.Path.join(await OS.File.getCurrentDirectory(), EXISTING_FILE);
+  let dest = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_copy_dest.tmp"
+  );
+  let dest2 = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_copy_dest2.tmp"
+  );
   try {
     // 1. Test copy.
     await OS.File.copy(source, dest, options);
@@ -86,7 +94,7 @@ async function test_copymove(options = {}) {
     await OS.File.move(dest, dest2);
     await reference_compare_files(source, dest2);
     // 3. Check that the moved file was really moved.
-    Assert.equal((await OS.File.exists(dest)), false);
+    Assert.equal(await OS.File.exists(dest), false);
   } finally {
     await removeTestFile(dest);
     await removeTestFile(dest2);
@@ -96,6 +104,6 @@ async function test_copymove(options = {}) {
 // Regular copy test.
 add_task(test_copymove);
 // Userland copy test.
-add_task(test_copymove.bind(null, {unixUserland: true}));
+add_task(test_copymove.bind(null, { unixUserland: true }));
 
 add_task(do_test_finished);

@@ -6,7 +6,8 @@
 const kSearchEngineID = "addEngineWithDetails_test_engine";
 const kSearchEngineURL = "http://example.com/?search={searchTerms}";
 const kSearchSuggestURL = "http://example.com/?suggest={searchTerms}";
-const kIconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+const kIconURL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const kDescription = "Test Description";
 const kAlias = "alias_foo";
 const kSearchTerm = "foo";
@@ -35,7 +36,10 @@ add_task(async function test_addEngineWithDetails() {
   // An engine added with addEngineWithDetails should have a load path, even
   // though we can't point to a specific file.
   let engine = Services.search.getEngineByName(kSearchEngineID);
-  Assert.equal(engine.wrappedJSObject._loadPath, "[other]addEngineWithDetails:" + kExtensionID);
+  Assert.equal(
+    engine.wrappedJSObject._loadPath,
+    "[other]addEngineWithDetails:" + kExtensionID
+  );
   Assert.equal(engine.description, kDescription);
   Assert.equal(engine.iconURI.spec, kIconURL);
   Assert.equal(engine.alias, kAlias);
@@ -45,10 +49,20 @@ add_task(async function test_addEngineWithDetails() {
   await Services.search.setDefault(engine);
 
   let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
-  let submission = (await Services.search.getDefault()).getSubmission(kSearchTerm, null, "searchbar");
+  let submission = (await Services.search.getDefault()).getSubmission(
+    kSearchTerm,
+    null,
+    "searchbar"
+  );
   Assert.equal(submission.uri.spec, expectedURL);
-  let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
-  let submissionSuggest = (await Services.search.getDefault()).getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+  let expectedSuggestURL = kSearchSuggestURL.replace(
+    "{searchTerms}",
+    kSearchTerm
+  );
+  let submissionSuggest = (await Services.search.getDefault()).getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
   Assert.equal(submissionSuggest.uri.spec, expectedSuggestURL);
 });
 
@@ -63,10 +77,15 @@ add_task(async function test_addEngineWithDetailsPOST() {
 
   let engine = Services.search.getEngineByName(kSearchEnginePOSTID);
 
-  let expectedPOSTData = kSearchEnginePOSTData.replace("{searchTerms}", kSearchTerm);
+  let expectedPOSTData = kSearchEnginePOSTData.replace(
+    "{searchTerms}",
+    kSearchTerm
+  );
   let submission = engine.getSubmission(kSearchTerm, null, "searchbar");
   Assert.equal(submission.uri.spec, kSearchEnginePOSTURL);
-  let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(Ci.nsIScriptableInputStream);
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(submission.postData);
   let data = sis.read(submission.postData.available());
   Assert.equal(data, expectedPOSTData);

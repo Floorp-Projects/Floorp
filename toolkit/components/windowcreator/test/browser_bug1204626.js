@@ -1,14 +1,16 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict"; // -*- js-indent-level: 2; indent-tabs-mode: nil -*-
-const contentBase = "https://example.com/browser/toolkit/components/windowcreator/test/";
-const chromeBase = "chrome://mochitests/content/browser/toolkit/components/windowcreator/test/";
+const contentBase =
+  "https://example.com/browser/toolkit/components/windowcreator/test/";
+const chromeBase =
+  "chrome://mochitests/content/browser/toolkit/components/windowcreator/test/";
 const testPageURL = contentBase + "bug1204626_doc0.html";
 
 function one_test(delay, continuation) {
   let delayStr = delay === null ? "no delay" : "delay = " + delay + "ms";
   let browser;
 
-  BrowserTestUtils.openNewForegroundTab(gBrowser, testPageURL).then((tab) => {
+  BrowserTestUtils.openNewForegroundTab(gBrowser, testPageURL).then(tab => {
     browser = tab.linkedBrowser;
     let persistable = browser.frameLoader;
     persistable.startPersistence(/* outer window ID: */ 0, {
@@ -22,8 +24,9 @@ function one_test(delay, continuation) {
 
   function onDocumentReady(doc) {
     const nameStem = "test_bug1204626_" + Date.now();
-    let wbp = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-              .createInstance(Ci.nsIWebBrowserPersist);
+    let wbp = Cc[
+      "@mozilla.org/embedding/browser/nsWebBrowserPersist;1"
+    ].createInstance(Ci.nsIWebBrowserPersist);
     let tmp = Services.dirsvc.get("TmpD", Ci.nsIFile);
     let tmpFile = tmp.clone();
     tmpFile.append(nameStem + "_saved.html");
@@ -62,7 +65,10 @@ function one_test(delay, continuation) {
     } else {
       setTimeout(doSave, delay);
     }
-    browser.messageManager.loadFrameScript("data:,content.window.close()", true);
+    browser.messageManager.loadFrameScript(
+      "data:,content.window.close()",
+      true
+    );
   }
 }
 

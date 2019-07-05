@@ -4,8 +4,12 @@
 
 "use strict";
 
-const {Downloads} = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
-const {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+const { Downloads } = ChromeUtils.import(
+  "resource://gre/modules/Downloads.jsm"
+);
+const { FileTestUtils } = ChromeUtils.import(
+  "resource://testing-common/FileTestUtils.jsm"
+);
 
 const TEST_TARGET_FILE_NAME = "test-download.txt";
 let fileURL;
@@ -52,7 +56,9 @@ add_task(async function test_all_downloads() {
     view = {
       onDownloadAdded() {},
       onDownloadChanged() {},
-      onDownloadRemoved() { resolve(); },
+      onDownloadRemoved() {
+        resolve();
+      },
     };
   });
 
@@ -62,10 +68,13 @@ add_task(async function test_all_downloads() {
   Assert.equal(items.length, 1);
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
-      Assert.equal(value, 0);
-      resolve();
-    });
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
   });
 
   await removePromise;
@@ -97,20 +106,25 @@ add_task(async function test_range_downloads() {
     view = {
       onDownloadAdded() {},
       onDownloadChanged() {},
-      onDownloadRemoved() { resolve(); },
+      onDownloadRemoved() {
+        resolve();
+      },
     };
   });
 
   await list.addView(view);
 
   await new Promise(resolve => {
-    Services.clearData.deleteDataInTimeRange(download.startTime.getTime() * 1000,
-                                  download.startTime.getTime() * 1000,
-                                  true /* user request */,
-                                  Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
-      Assert.equal(value, 0);
-      resolve();
-    });
+    Services.clearData.deleteDataInTimeRange(
+      download.startTime.getTime() * 1000,
+      download.startTime.getTime() * 1000,
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
   });
 
   await removePromise;
@@ -144,22 +158,30 @@ add_task(async function test_principal_downloads() {
     view = {
       onDownloadAdded() {},
       onDownloadChanged() {},
-      onDownloadRemoved() { resolve(); },
+      onDownloadRemoved() {
+        resolve();
+      },
     };
   });
 
   await list.addView(view);
 
   let uri = Services.io.newURI("http://example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
 
   await new Promise(resolve => {
-    Services.clearData.deleteDataFromPrincipal(principal,
-                                    true /* user request */,
-                                    Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
-      Assert.equal(value, 0);
-      resolve();
-    });
+    Services.clearData.deleteDataFromPrincipal(
+      principal,
+      true /* user request */,
+      Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
   });
 
   await removePromise;
@@ -171,17 +193,22 @@ add_task(async function test_principal_downloads() {
     view = {
       onDownloadAdded() {},
       onDownloadChanged() {},
-      onDownloadRemoved() { resolve(); },
+      onDownloadRemoved() {
+        resolve();
+      },
     };
   });
 
   await list.addView(view);
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_DOWNLOADS, value => {
-      Assert.equal(value, 0);
-      resolve();
-    });
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOWNLOADS,
+      value => {
+        Assert.equal(value, 0);
+        resolve();
+      }
+    );
   });
 
   await removePromise;

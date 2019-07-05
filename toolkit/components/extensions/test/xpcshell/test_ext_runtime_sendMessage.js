@@ -8,7 +8,9 @@ add_task(async function tabsSendMessageReply() {
       if (msg == "respond-now") {
         respond(msg);
       } else if (msg == "respond-soon") {
-        setTimeout(() => { respond(msg); }, 0);
+        setTimeout(() => {
+          respond(msg);
+        }, 0);
         return true;
       } else if (msg == "respond-promise") {
         return Promise.resolve(msg);
@@ -38,31 +40,84 @@ add_task(async function tabsSendMessageReply() {
     Promise.all([
       browser.runtime.sendMessage("respond-now"),
       browser.runtime.sendMessage("respond-now-2"),
-      new Promise(resolve => browser.runtime.sendMessage("respond-soon", resolve)),
+      new Promise(resolve =>
+        browser.runtime.sendMessage("respond-soon", resolve)
+      ),
       browser.runtime.sendMessage("respond-promise"),
       browser.runtime.sendMessage("respond-never"),
       new Promise(resolve => {
-        browser.runtime.sendMessage("respond-never", response => { resolve(response); });
+        browser.runtime.sendMessage("respond-never", response => {
+          resolve(response);
+        });
       }),
 
-      browser.runtime.sendMessage("respond-error").catch(error => Promise.resolve({error})),
-      browser.runtime.sendMessage("throw-error").catch(error => Promise.resolve({error})),
-    ]).then(([respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondNever2, respondError, throwError]) => {
-      browser.test.assertEq("respond-now", respondNow, "Got the expected immediate response");
-      browser.test.assertEq("respond-now-2", respondNow2, "Got the expected immediate response from the second listener");
-      browser.test.assertEq("respond-soon", respondSoon, "Got the expected delayed response");
-      browser.test.assertEq("respond-promise", respondPromise, "Got the expected promise response");
-      browser.test.assertEq(undefined, respondNever, "Got the expected no-response resolution");
-      browser.test.assertEq(undefined, respondNever2, "Got the expected no-response resolution");
+      browser.runtime
+        .sendMessage("respond-error")
+        .catch(error => Promise.resolve({ error })),
+      browser.runtime
+        .sendMessage("throw-error")
+        .catch(error => Promise.resolve({ error })),
+    ])
+      .then(
+        ([
+          respondNow,
+          respondNow2,
+          respondSoon,
+          respondPromise,
+          respondNever,
+          respondNever2,
+          respondError,
+          throwError,
+        ]) => {
+          browser.test.assertEq(
+            "respond-now",
+            respondNow,
+            "Got the expected immediate response"
+          );
+          browser.test.assertEq(
+            "respond-now-2",
+            respondNow2,
+            "Got the expected immediate response from the second listener"
+          );
+          browser.test.assertEq(
+            "respond-soon",
+            respondSoon,
+            "Got the expected delayed response"
+          );
+          browser.test.assertEq(
+            "respond-promise",
+            respondPromise,
+            "Got the expected promise response"
+          );
+          browser.test.assertEq(
+            undefined,
+            respondNever,
+            "Got the expected no-response resolution"
+          );
+          browser.test.assertEq(
+            undefined,
+            respondNever2,
+            "Got the expected no-response resolution"
+          );
 
-      browser.test.assertEq("respond-error", respondError.error.message, "Got the expected error response");
-      browser.test.assertEq("throw-error", throwError.error.message, "Got the expected thrown error response");
+          browser.test.assertEq(
+            "respond-error",
+            respondError.error.message,
+            "Got the expected error response"
+          );
+          browser.test.assertEq(
+            "throw-error",
+            throwError.error.message,
+            "Got the expected thrown error response"
+          );
 
-      browser.test.notifyPass("sendMessage");
-    }).catch(e => {
-      browser.test.fail(`Error: ${e} :: ${e.stack}`);
-      browser.test.notifyFail("sendMessage");
-    });
+          browser.test.notifyPass("sendMessage");
+        }
+      )
+      .catch(e => {
+        browser.test.fail(`Error: ${e} :: ${e.stack}`);
+        browser.test.notifyFail("sendMessage");
+      });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -91,10 +146,15 @@ add_task(async function tabsSendMessageBlob() {
   }
 
   function senderScript() {
-    browser.runtime.sendMessage({blob: new Blob(["hello"])}).then(response => {
-      browser.test.assertTrue(response.blob instanceof Blob, "Response is a blob");
-      browser.test.notifyPass("sendBlob");
-    });
+    browser.runtime
+      .sendMessage({ blob: new Blob(["hello"]) })
+      .then(response => {
+        browser.test.assertTrue(
+          response.blob instanceof Blob,
+          "Response is a blob"
+        );
+        browser.test.notifyPass("sendBlob");
+      });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -149,32 +209,40 @@ add_task(async function sendMessageResponseGC() {
 
   function page() {
     browser.test.onMessage.addListener(msg => {
-      browser.runtime.sendMessage(msg)
-        .then(
-          response => {
-            if (response) {
-              browser.test.log(`Got response: ${response}`);
-              browser.test.sendMessage(response);
-            }
-          }, error => {
-            browser.test.assertEq(
-              "Promised response from onMessage listener went out of scope",
-              error.message,
-              `Promise rejected with the correct error message`);
+      browser.runtime.sendMessage(msg).then(
+        response => {
+          if (response) {
+            browser.test.log(`Got response: ${response}`);
+            browser.test.sendMessage(response);
+          }
+        },
+        error => {
+          browser.test.assertEq(
+            "Promised response from onMessage listener went out of scope",
+            error.message,
+            `Promise rejected with the correct error message`
+          );
 
-            browser.test.assertTrue(
-              /^moz-extension:\/\/[\w-]+\/%7B[\w-]+%7D\.js/.test(error.fileName),
-              `Promise rejected with the correct error filename: ${error.fileName}`);
+          browser.test.assertTrue(
+            /^moz-extension:\/\/[\w-]+\/%7B[\w-]+%7D\.js/.test(error.fileName),
+            `Promise rejected with the correct error filename: ${
+              error.fileName
+            }`
+          );
 
-            browser.test.assertEq(
-              4, error.lineNumber,
-              `Promise rejected with the correct error line number`);
+          browser.test.assertEq(
+            4,
+            error.lineNumber,
+            `Promise rejected with the correct error line number`
+          );
 
-            browser.test.assertTrue(
-              /moz-extension:\/\/[\w-]+\/%7B[\w-]+%7D\.js:4/.test(error.stack),
-              `Promise rejected with the correct error stack: ${error.stack}`);
-            browser.test.sendMessage("rejected");
-          });
+          browser.test.assertTrue(
+            /moz-extension:\/\/[\w-]+\/%7B[\w-]+%7D\.js:4/.test(error.stack),
+            `Promise rejected with the correct error stack: ${error.stack}`
+          );
+          browser.test.sendMessage("rejected");
+        }
+      );
     });
     browser.test.sendMessage("ready");
   }
@@ -182,7 +250,8 @@ add_task(async function sendMessageResponseGC() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     files: {
-      "page.html": "<!DOCTYPE html><meta charset=utf-8><script src=page.js></script>",
+      "page.html":
+        "<!DOCTYPE html><meta charset=utf-8><script src=page.js></script>",
       "page.js": page,
     },
   });

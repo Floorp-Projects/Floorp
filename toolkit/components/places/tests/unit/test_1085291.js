@@ -3,7 +3,8 @@ add_task(async function() {
   // have the extra bookmark properties (bookmarkGuid, dateAdded, lastModified).
 
   // getFolderContents opens the root node.
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid)
+    .root;
 
   async function insertAndTest(bmInfo) {
     bmInfo = await PlacesUtils.bookmarks.insert(bmInfo);
@@ -14,25 +15,33 @@ add_task(async function() {
   }
 
   // Normal bookmark.
-  await insertAndTest({ parentGuid: root.bookmarkGuid,
-                        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                        title: "Test Bookmark",
-                        url: "http://test.url.tld" });
+  await insertAndTest({
+    parentGuid: root.bookmarkGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    title: "Test Bookmark",
+    url: "http://test.url.tld",
+  });
 
   // place: query
-  await insertAndTest({ parentGuid: root.bookmarkGuid,
-                        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                        title: "Test Query",
-                        url: `place:parent=${PlacesUtils.bookmarks.menuGuid}` });
+  await insertAndTest({
+    parentGuid: root.bookmarkGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    title: "Test Query",
+    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
+  });
 
   // folder
-  await insertAndTest({ parentGuid: root.bookmarkGuid,
-                        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-                        title: "Test Folder" });
+  await insertAndTest({
+    parentGuid: root.bookmarkGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "Test Folder",
+  });
 
   // separator
-  await insertAndTest({ parentGuid: root.bookmarkGuid,
-                        type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+  await insertAndTest({
+    parentGuid: root.bookmarkGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+  });
 
   root.containerOpen = false;
 });

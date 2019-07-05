@@ -4,7 +4,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["FeatureGateImplementation"];
 

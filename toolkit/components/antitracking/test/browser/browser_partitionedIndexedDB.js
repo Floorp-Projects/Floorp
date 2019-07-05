@@ -1,6 +1,7 @@
 /* import-globals-from partitionedstorage_head.js */
 
-PartitionedStorageHelper.runTest("IndexedDB",
+PartitionedStorageHelper.runTest(
+  "IndexedDB",
   async (win3rdParty, win1stParty, allowed) => {
     await new Promise(resolve => {
       let a = win1stParty.indexedDB.open("test", 1);
@@ -40,9 +41,12 @@ PartitionedStorageHelper.runTest("IndexedDB",
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
-  });
+  }
+);
 
 PartitionedStorageHelper.runPartitioningTest(
   "Partitioned tabs - IndexedDB",
@@ -54,12 +58,15 @@ PartitionedStorageHelper.runPartitioningTest(
 
       a.onupgradeneeded = e => {
         let db = e.target.result;
-        db.createObjectStore("foobar", {keyPath: "id"});
+        db.createObjectStore("foobar", { keyPath: "id" });
       };
 
       a.onsuccess = e => {
         let db = e.target.result;
-        db.transaction("foobar").objectStore("foobar").get(1).onsuccess = ee => {
+        db
+          .transaction("foobar")
+          .objectStore("foobar")
+          .get(1).onsuccess = ee => {
           resolve(ee.target.result === undefined ? "" : ee.target.result.value);
         };
       };
@@ -73,7 +80,10 @@ PartitionedStorageHelper.runPartitioningTest(
 
       a.onsuccess = e => {
         let db = e.target.result;
-        db.transaction("foobar", "readwrite").objectStore("foobar").add({ id: 1, value }).onsuccess = _ => {
+        db
+          .transaction("foobar", "readwrite")
+          .objectStore("foobar")
+          .add({ id: 1, value }).onsuccess = _ => {
           resolve(true);
         };
       };
@@ -83,7 +93,9 @@ PartitionedStorageHelper.runPartitioningTest(
   // cleanup
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
     });
   }
 );

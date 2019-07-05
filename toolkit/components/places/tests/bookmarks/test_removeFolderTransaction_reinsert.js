@@ -30,11 +30,13 @@ add_task(async function test_removeFolderTransaction_reinsert() {
 
   let listener = events => {
     for (let event of events) {
-      notifications.push(["bookmark-added",
-                         event.id,
-                         event.parentId,
-                         event.guid,
-                         event.parentGuid]);
+      notifications.push([
+        "bookmark-added",
+        event.id,
+        event.parentId,
+        event.guid,
+        event.parentGuid,
+      ]);
     }
   };
   let observer = {
@@ -50,7 +52,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
     PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   });
 
-  let transaction = PlacesTransactions.Remove({guid: folder.guid});
+  let transaction = PlacesTransactions.Remove({ guid: folder.guid });
 
   let folderId = await PlacesUtils.promiseItemId(folder.guid);
   let fxId = await PlacesUtils.promiseItemId(fx.guid);
@@ -58,12 +60,20 @@ add_task(async function test_removeFolderTransaction_reinsert() {
 
   await transaction.transact();
 
-  checkNotifications([
-    ["onItemRemoved", tbId, folderId, tb.guid, folder.guid],
-    ["onItemRemoved", fxId, folderId, fx.guid, folder.guid],
-    ["onItemRemoved", folderId, PlacesUtils.bookmarksMenuFolderId, folder.guid,
-      PlacesUtils.bookmarks.menuGuid],
-  ], "Executing transaction should remove folder and its descendants");
+  checkNotifications(
+    [
+      ["onItemRemoved", tbId, folderId, tb.guid, folder.guid],
+      ["onItemRemoved", fxId, folderId, fx.guid, folder.guid],
+      [
+        "onItemRemoved",
+        folderId,
+        PlacesUtils.bookmarksMenuFolderId,
+        folder.guid,
+        PlacesUtils.bookmarks.menuGuid,
+      ],
+    ],
+    "Executing transaction should remove folder and its descendants"
+  );
 
   await PlacesTransactions.undo();
 
@@ -71,19 +81,35 @@ add_task(async function test_removeFolderTransaction_reinsert() {
   fxId = await PlacesUtils.promiseItemId(fx.guid);
   tbId = await PlacesUtils.promiseItemId(tb.guid);
 
-  checkNotifications([
-    ["bookmark-added", folderId, PlacesUtils.bookmarksMenuFolderId, folder.guid,
-      PlacesUtils.bookmarks.menuGuid],
-    ["bookmark-added", fxId, folderId, fx.guid, folder.guid],
-    ["bookmark-added", tbId, folderId, tb.guid, folder.guid],
-  ], "Undo should reinsert folder with different id but same GUID");
+  checkNotifications(
+    [
+      [
+        "bookmark-added",
+        folderId,
+        PlacesUtils.bookmarksMenuFolderId,
+        folder.guid,
+        PlacesUtils.bookmarks.menuGuid,
+      ],
+      ["bookmark-added", fxId, folderId, fx.guid, folder.guid],
+      ["bookmark-added", tbId, folderId, tb.guid, folder.guid],
+    ],
+    "Undo should reinsert folder with different id but same GUID"
+  );
 
   await PlacesTransactions.redo();
 
-  checkNotifications([
-    ["onItemRemoved", tbId, folderId, tb.guid, folder.guid],
-    ["onItemRemoved", fxId, folderId, fx.guid, folder.guid],
-    ["onItemRemoved", folderId, PlacesUtils.bookmarksMenuFolderId, folder.guid,
-      PlacesUtils.bookmarks.menuGuid],
-  ], "Redo should pass the GUID to observer");
+  checkNotifications(
+    [
+      ["onItemRemoved", tbId, folderId, tb.guid, folder.guid],
+      ["onItemRemoved", fxId, folderId, fx.guid, folder.guid],
+      [
+        "onItemRemoved",
+        folderId,
+        PlacesUtils.bookmarksMenuFolderId,
+        folder.guid,
+        PlacesUtils.bookmarks.menuGuid,
+      ],
+    ],
+    "Redo should pass the GUID to observer"
+  );
 });

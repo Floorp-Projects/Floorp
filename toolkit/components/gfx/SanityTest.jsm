@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
 
@@ -46,10 +46,12 @@ const REASON_AL_CONFIG_CHANGED = 4;
 function testPixel(ctx, x, y, r, g, b, a, fuzz) {
   var data = ctx.getImageData(x, y, 1, 1);
 
-  if (Math.abs(data.data[0] - r) <= fuzz &&
-      Math.abs(data.data[1] - g) <= fuzz &&
-      Math.abs(data.data[2] - b) <= fuzz &&
-      Math.abs(data.data[3] - a) <= fuzz) {
+  if (
+    Math.abs(data.data[0] - r) <= fuzz &&
+    Math.abs(data.data[1] - g) <= fuzz &&
+    Math.abs(data.data[2] - b) <= fuzz &&
+    Math.abs(data.data[3] - a) <= fuzz
+  ) {
     return true;
   }
   return false;
@@ -66,31 +68,32 @@ function reportResult(val) {
 }
 
 function reportTestReason(val) {
-  let histogram = Services.telemetry.getHistogramById("GRAPHICS_SANITY_TEST_REASON");
+  let histogram = Services.telemetry.getHistogramById(
+    "GRAPHICS_SANITY_TEST_REASON"
+  );
   histogram.add(val);
 }
 
 function annotateCrashReport() {
   try {
-    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].
-                          getService(Ci.nsICrashReporter);
+    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+      Ci.nsICrashReporter
+    );
     crashReporter.annotateCrashReport("GraphicsSanityTest", "1");
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 function removeCrashReportAnnotation(value) {
   try {
-    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].
-                          getService(Ci.nsICrashReporter);
+    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
+      Ci.nsICrashReporter
+    );
     crashReporter.removeCrashReportAnnotation("GraphicsSanityTest");
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 function setTimeout(aMs, aCallback) {
-  var timer = Cc["@mozilla.org/timer;1"].
-                createInstance(Ci.nsITimer);
+  var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(aCallback, aMs, Ci.nsITimer.TYPE_ONE_SHOT);
 }
 
@@ -98,8 +101,19 @@ function takeWindowSnapshot(win, ctx) {
   // TODO: drawWindow reads back from the gpu's backbuffer, which won't catch issues with presenting
   // the front buffer via the window manager. Ideally we'd use an OS level API for reading back
   // from the desktop itself to get a more accurate test.
-  var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-  ctx.drawWindow(win.ownerGlobal, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, "rgb(255,255,255)", flags);
+  var flags =
+    ctx.DRAWWINDOW_DRAW_CARET |
+    ctx.DRAWWINDOW_DRAW_VIEW |
+    ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+  ctx.drawWindow(
+    win.ownerGlobal,
+    0,
+    0,
+    PAGE_WIDTH,
+    PAGE_HEIGHT,
+    "rgb(255,255,255)",
+    flags
+  );
 }
 
 // Verify that all the 4 coloured squares of the video
@@ -115,10 +129,48 @@ function takeWindowSnapshot(win, ctx) {
 // it can depend hugely on the yuv -> rgb conversion, and
 // we don't want to fail unnecessarily.
 function verifyVideoRendering(ctx) {
-  return testPixel(ctx, LEFT_EDGE + VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + VIDEO_HEIGHT / 4, 255, 255, 255, 255, 64) &&
-    testPixel(ctx, LEFT_EDGE + 3 * VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + VIDEO_HEIGHT / 4, 0, 255, 0, 255, 64) &&
-    testPixel(ctx, LEFT_EDGE + VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + 3 * VIDEO_HEIGHT / 4, 0, 0, 255, 255, 64) &&
-    testPixel(ctx, LEFT_EDGE + 3 * VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + 3 * VIDEO_HEIGHT / 4, 255, 0, 0, 255, 64);
+  return (
+    testPixel(
+      ctx,
+      LEFT_EDGE + VIDEO_WIDTH / 4,
+      TOP_EDGE + CANVAS_HEIGHT + VIDEO_HEIGHT / 4,
+      255,
+      255,
+      255,
+      255,
+      64
+    ) &&
+    testPixel(
+      ctx,
+      LEFT_EDGE + (3 * VIDEO_WIDTH) / 4,
+      TOP_EDGE + CANVAS_HEIGHT + VIDEO_HEIGHT / 4,
+      0,
+      255,
+      0,
+      255,
+      64
+    ) &&
+    testPixel(
+      ctx,
+      LEFT_EDGE + VIDEO_WIDTH / 4,
+      TOP_EDGE + CANVAS_HEIGHT + (3 * VIDEO_HEIGHT) / 4,
+      0,
+      0,
+      255,
+      255,
+      64
+    ) &&
+    testPixel(
+      ctx,
+      LEFT_EDGE + (3 * VIDEO_WIDTH) / 4,
+      TOP_EDGE + CANVAS_HEIGHT + (3 * VIDEO_HEIGHT) / 4,
+      255,
+      0,
+      0,
+      255,
+      64
+    )
+  );
 }
 
 // Verify that the middle of the layers test is the color we expect.
@@ -127,8 +179,28 @@ function verifyVideoRendering(ctx) {
 // square to check that scaling occurred properly. The square is drawn LEFT_EDGE
 // pixels from the window's left edge and TOP_EDGE from the window's top edge.
 function verifyLayersRendering(ctx) {
-  return testPixel(ctx, LEFT_EDGE + CANVAS_WIDTH / 2, TOP_EDGE + CANVAS_HEIGHT / 2, 255, 0, 0, 255, 64) &&
-         testPixel(ctx, LEFT_EDGE + CANVAS_WIDTH, TOP_EDGE + CANVAS_HEIGHT / 2, 255, 255, 255, 255, 64);
+  return (
+    testPixel(
+      ctx,
+      LEFT_EDGE + CANVAS_WIDTH / 2,
+      TOP_EDGE + CANVAS_HEIGHT / 2,
+      255,
+      0,
+      0,
+      255,
+      64
+    ) &&
+    testPixel(
+      ctx,
+      LEFT_EDGE + CANVAS_WIDTH,
+      TOP_EDGE + CANVAS_HEIGHT / 2,
+      255,
+      255,
+      255,
+      255,
+      64
+    )
+  );
 }
 
 function testCompositor(test, win, ctx) {
@@ -171,9 +243,7 @@ var listener = {
   ctx: null,
   mm: null,
 
-  messages: [
-    "gfxSanity:ContentLoaded",
-  ],
+  messages: ["gfxSanity:ContentLoaded"],
 
   scheduleTest(win) {
     this.win = win;
@@ -188,7 +258,10 @@ var listener = {
   },
 
   runSanityTest() {
-    this.canvas = this.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    this.canvas = this.win.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "canvas"
+    );
     this.canvas.setAttribute("width", PAGE_WIDTH);
     this.canvas.setAttribute("height", PAGE_HEIGHT);
     this.ctx = this.canvas.getContext("2d");
@@ -223,7 +296,7 @@ var listener = {
     // Have to set the mm after we append the child
     this.mm = browser.messageManager;
 
-    this.messages.forEach((msgName) => {
+    this.messages.forEach(msgName => {
       this.mm.addMessageListener(msgName, this);
     });
 
@@ -243,7 +316,7 @@ var listener = {
 
     if (this.mm) {
       // We don't have a MessageManager if onWindowLoaded never fired.
-      this.messages.forEach((msgName) => {
+      this.messages.forEach(msgName => {
         this.mm.removeMessageListener(msgName, this);
       });
 
@@ -259,8 +332,10 @@ var listener = {
 function SanityTest() {}
 SanityTest.prototype = {
   classID: Components.ID("{f3a8ca4d-4c83-456b-aee2-6a2cbf11e9bd}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   shouldRunTest() {
     // Only test gfx features if firefox has updated, or if the user has a new
@@ -280,24 +355,24 @@ SanityTest.prototype = {
       let prefType = Services.prefs.getPrefType(pref);
 
       switch (prefType) {
-          case Ci.nsIPrefBranch.PREF_INVALID:
-              reportTestReason(REASON_FIRST_RUN);
-              return false;
+        case Ci.nsIPrefBranch.PREF_INVALID:
+          reportTestReason(REASON_FIRST_RUN);
+          return false;
 
-          case Ci.nsIPrefBranch.PREF_STRING:
-              prefValue = Services.prefs.getStringPref(pref);
-              break;
+        case Ci.nsIPrefBranch.PREF_STRING:
+          prefValue = Services.prefs.getStringPref(pref);
+          break;
 
-          case Ci.nsIPrefBranch.PREF_BOOL:
-              prefValue = Services.prefs.getBoolPref(pref);
-              break;
+        case Ci.nsIPrefBranch.PREF_BOOL:
+          prefValue = Services.prefs.getBoolPref(pref);
+          break;
 
-          case Ci.nsIPrefBranch.PREF_INT:
-              prefValue = Services.prefs.getIntPref(pref);
-              break;
+        case Ci.nsIPrefBranch.PREF_INT:
+          prefValue = Services.prefs.getIntPref(pref);
+          break;
 
-          default:
-              throw new Error("Unexpected preference type.");
+        default:
+          throw new Error("Unexpected preference type.");
       }
 
       if (prefValue != value) {
@@ -309,10 +384,16 @@ SanityTest.prototype = {
     }
 
     // TODO: Handle dual GPU setups
-    if (checkPref(DRIVER_PREF, gfxinfo.adapterDriverVersion, REASON_DRIVER_CHANGED) &&
-        checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
-        checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED) &&
-        checkPref(ADVANCED_LAYERS_PREF, hasAL, REASON_AL_CONFIG_CHANGED)) {
+    if (
+      checkPref(
+        DRIVER_PREF,
+        gfxinfo.adapterDriverVersion,
+        REASON_DRIVER_CHANGED
+      ) &&
+      checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
+      checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED) &&
+      checkPref(ADVANCED_LAYERS_PREF, hasAL, REASON_AL_CONFIG_CHANGED)
+    ) {
       return false;
     }
 
@@ -331,23 +412,33 @@ SanityTest.prototype = {
   },
 
   observe(subject, topic, data) {
-    if (topic != "profile-after-change") return;
+    if (topic != "profile-after-change") {
+      return;
+    }
 
     // profile-after-change fires only at startup, so we won't need
     // to use the listener again.
     let tester = listener;
     listener = null;
 
-    if (!this.shouldRunTest()) return;
+    if (!this.shouldRunTest()) {
+      return;
+    }
 
     annotateCrashReport();
 
     // Open a tiny window to render our test page, and notify us when it's loaded
-    var sanityTest = Services.ww.openWindow(null,
-        "chrome://gfxsanity/content/sanityparent.html",
-        "Test Page",
-        "width=" + PAGE_WIDTH + ",height=" + PAGE_HEIGHT + ",chrome,titlebar=0,scrollbars=0,popup=1",
-        null);
+    var sanityTest = Services.ww.openWindow(
+      null,
+      "chrome://gfxsanity/content/sanityparent.html",
+      "Test Page",
+      "width=" +
+        PAGE_WIDTH +
+        ",height=" +
+        PAGE_HEIGHT +
+        ",chrome,titlebar=0,scrollbars=0,popup=1",
+      null
+    );
 
     // There's no clean way to have an invisible window and ensure it's always painted.
     // Instead, move the window far offscreen so it doesn't show up during launch.

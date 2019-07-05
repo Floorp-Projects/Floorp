@@ -6,11 +6,15 @@ function AutoCompleteAsyncSearch(aName, aResult) {
   this.name = aName;
   this._result = aResult;
 }
-AutoCompleteAsyncSearch.prototype = Object.create(AutoCompleteSearchBase.prototype);
-AutoCompleteAsyncSearch.prototype.startSearch = function(aSearchString,
-                                                         aSearchParam,
-                                                         aPreviousResult,
-                                                         aListener) {
+AutoCompleteAsyncSearch.prototype = Object.create(
+  AutoCompleteSearchBase.prototype
+);
+AutoCompleteAsyncSearch.prototype.startSearch = function(
+  aSearchString,
+  aSearchParam,
+  aPreviousResult,
+  aListener
+) {
   this._result.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH_ONGOING;
   aListener.onSearchResult(this, this._result);
 
@@ -33,11 +37,15 @@ function AutoCompleteSyncSearch(aName, aResult) {
   this.name = aName;
   this._result = aResult;
 }
-AutoCompleteSyncSearch.prototype = Object.create(AutoCompleteAsyncSearch.prototype);
-AutoCompleteSyncSearch.prototype.startSearch = function(aSearchString,
-                                                        aSearchParam,
-                                                        aPreviousResult,
-                                                        aListener) {
+AutoCompleteSyncSearch.prototype = Object.create(
+  AutoCompleteAsyncSearch.prototype
+);
+AutoCompleteSyncSearch.prototype.startSearch = function(
+  aSearchString,
+  aSearchParam,
+  aPreviousResult,
+  aListener
+) {
   this._returnResults(aListener);
 };
 
@@ -50,7 +58,6 @@ function AutoCompleteResult(aValues, aDefaultIndex) {
 }
 AutoCompleteResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
-
 /**
  * Test AutoComplete with multiple AutoCompleteSearch sources, with one of them
  * (index != 0) returning before the rest.
@@ -62,18 +69,23 @@ function run_test() {
   var inputStr = "moz";
 
   // Async search
-  var asyncSearch = new AutoCompleteAsyncSearch("Async",
-                                                new AutoCompleteResult(results, -1));
+  var asyncSearch = new AutoCompleteAsyncSearch(
+    "Async",
+    new AutoCompleteResult(results, -1)
+  );
   // Sync search
-  var syncSearch = new AutoCompleteSyncSearch("Sync",
-                                              new AutoCompleteResult(results, 0));
+  var syncSearch = new AutoCompleteSyncSearch(
+    "Sync",
+    new AutoCompleteResult(results, 0)
+  );
 
   // Register searches so AutoCompleteController can find them
   registerAutoCompleteSearch(asyncSearch);
   registerAutoCompleteSearch(syncSearch);
 
-  var controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
+  var controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+    Ci.nsIAutoCompleteController
+  );
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete.

@@ -30,11 +30,15 @@ add_task(async function setup() {
 
 add_task(async function test_queryMultipleFolders_ids() {
   // using queryStringToQuery
-  let query = {}, options = {};
+  let query = {},
+    options = {};
   let maxResults = 20;
-  let queryString = `place:${folderGuids.map(guid => "parent=" + guid).join("&")}&sort=5&maxResults=${maxResults}`;
+  let queryString = `place:${folderGuids
+    .map(guid => "parent=" + guid)
+    .join("&")}&sort=5&maxResults=${maxResults}`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
-  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value).root;
+  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value)
+    .root;
   rootNode.containerOpen = true;
   let resultLength = rootNode.childCount;
   Assert.equal(resultLength, maxResults);
@@ -63,11 +67,15 @@ add_task(async function test_queryMultipleFolders_ids() {
 
 add_task(async function test_queryMultipleFolders_guids() {
   // using queryStringToQuery
-  let query = {}, options = {};
+  let query = {},
+    options = {};
   let maxResults = 20;
-  let queryString = `place:${folderGuids.map((guid) => "parent=" + guid).join("&")}&sort=5&maxResults=${maxResults}`;
+  let queryString = `place:${folderGuids
+    .map(guid => "parent=" + guid)
+    .join("&")}&sort=5&maxResults=${maxResults}`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
-  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value).root;
+  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value)
+    .root;
   rootNode.containerOpen = true;
   let resultLength = rootNode.childCount;
   Assert.equal(resultLength, maxResults);

@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { ExtensionTestUtils } = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
+const { ExtensionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
 
 const {
   createAppInfo,
@@ -31,16 +33,16 @@ async function installSearchExtension(id, name) {
   let extensionInfo = {
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": id + "@tests.mozilla.org",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: id + "@tests.mozilla.org",
         },
       },
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": name,
-          "search_url": "https://example.com/?q={searchTerms}",
+      chrome_settings_overrides: {
+        search_provider: {
+          name,
+          search_url: "https://example.com/?q={searchTerms}",
         },
       },
     },
@@ -69,40 +71,49 @@ add_task(async function basic_install_test() {
   await promiseAfterCache();
 
   // On first boot, we get the list.json defaults
-  Assert.deepEqual((await getEngineNames()), ["Plain", "Special"]);
+  Assert.deepEqual(await getEngineNames(), ["Plain", "Special"]);
 
   // Then we ping a server to tell us which engines we want
-  await withGeoServer(async function cont(requests) {
-    Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
-    await restart();
-    Assert.deepEqual((await getEngineNames()), ["Special"]);
-  }, {visibleDefaultEngines: ["special-engine"]});
+  await withGeoServer(
+    async function cont(requests) {
+      Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
+      await restart();
+      Assert.deepEqual(await getEngineNames(), ["Special"]);
+    },
+    { visibleDefaultEngines: ["special-engine"] }
+  );
 
   // User installs a new search engine
   let extension = await installSearchExtension("example", "Example");
-  Assert.deepEqual((await getEngineNames()), ["Special", "Example"]);
+  Assert.deepEqual(await getEngineNames(), ["Special", "Example"]);
 
   await forceExpiration();
 
   // The server tells us to install a different set of engines
-  await withGeoServer(async function cont(requests) {
-    await restart();
-    Assert.deepEqual((await getEngineNames()), ["Example", "Plain"]);
-  }, {visibleDefaultEngines: ["plainengine"]});
+  await withGeoServer(
+    async function cont(requests) {
+      await restart();
+      Assert.deepEqual(await getEngineNames(), ["Example", "Plain"]);
+    },
+    { visibleDefaultEngines: ["plainengine"] }
+  );
 
   // User uninstalls their engine
   await extension.awaitStartup();
   await extension.unload();
   await promiseAfterCache();
-  Assert.deepEqual((await getEngineNames()), ["Plain"]);
+  Assert.deepEqual(await getEngineNames(), ["Plain"]);
 });
 
 add_task(async function basic_multilocale_test() {
   await forceExpiration();
   Services.prefs.setCharPref("browser.search.region", "an");
 
-  await withGeoServer(async function cont(requests) {
-    await restart();
-    Assert.deepEqual((await getEngineNames()), ["Multilocale AN"]);
-  }, {visibleDefaultEngines: ["multilocale-an"]});
+  await withGeoServer(
+    async function cont(requests) {
+      await restart();
+      Assert.deepEqual(await getEngineNames(), ["Multilocale AN"]);
+    },
+    { visibleDefaultEngines: ["multilocale-an"] }
+  );
 });

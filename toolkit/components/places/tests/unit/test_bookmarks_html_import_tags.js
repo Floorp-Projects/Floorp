@@ -1,13 +1,19 @@
 var bookmarkData = [
-  { uri: uri("http://www.toastytech.com"),
+  {
+    uri: uri("http://www.toastytech.com"),
     title: "Nathan's Toasty Technology Page",
-    tags: ["technology", "personal", "retro"] },
-  { uri: uri("http://www.reddit.com"),
+    tags: ["technology", "personal", "retro"],
+  },
+  {
+    uri: uri("http://www.reddit.com"),
     title: "reddit: the front page of the internet",
-    tags: ["social media", "news", "humour"] },
-  { uri: uri("http://www.4chan.org"),
+    tags: ["social media", "news", "humour"],
+  },
+  {
+    uri: uri("http://www.4chan.org"),
     title: "4chan",
-    tags: ["discussion", "imageboard", "anime"] },
+    tags: ["discussion", "imageboard", "anime"],
+  },
 ];
 
 /*
@@ -22,16 +28,20 @@ var bookmarkData = [
 add_task(async function test_import_tags() {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
-  if ((await OS.File.exists(HTMLFile)))
+  if (await OS.File.exists(HTMLFile)) {
     await OS.File.remove(HTMLFile);
+  }
 
   // Adds bookmarks and tags to the database.
   let bookmarkList = new Set();
   for (let { uri, title, tags } of bookmarkData) {
-    bookmarkList.add(await PlacesUtils.bookmarks.insert({
-                                parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                url: uri,
-                                title }));
+    bookmarkList.add(
+      await PlacesUtils.bookmarks.insert({
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        url: uri,
+        title,
+      })
+    );
     PlacesUtils.tagging.tagURI(uri, tags);
   }
 
@@ -54,4 +64,3 @@ add_task(async function test_import_tags() {
     Assert.ok(tags.every(tag => foundTags.includes(tag)));
   }
 });
-

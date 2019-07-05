@@ -6,9 +6,37 @@
 
 do_get_profile();
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {HTTP_400, HTTP_401, HTTP_402, HTTP_403, HTTP_404, HTTP_405, HTTP_406, HTTP_407, HTTP_408, HTTP_409, HTTP_410, HTTP_411, HTTP_412, HTTP_413, HTTP_414, HTTP_415, HTTP_417, HTTP_500, HTTP_501, HTTP_502, HTTP_503, HTTP_504, HTTP_505, HttpError, HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {
+  HTTP_400,
+  HTTP_401,
+  HTTP_402,
+  HTTP_403,
+  HTTP_404,
+  HTTP_405,
+  HTTP_406,
+  HTTP_407,
+  HTTP_408,
+  HTTP_409,
+  HTTP_410,
+  HTTP_411,
+  HTTP_412,
+  HTTP_413,
+  HTTP_414,
+  HTTP_415,
+  HTTP_417,
+  HTTP_500,
+  HTTP_501,
+  HTTP_502,
+  HTTP_503,
+  HTTP_504,
+  HTTP_505,
+  HttpError,
+  HttpServer,
+} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // List types, this should sync with |enum LIST_TYPES| defined in PendingLookup.
 var ALLOW_LIST = 0;
@@ -38,8 +66,9 @@ var DPDisabled = 18;
 var MAX_REASON = 19;
 
 function createURI(aObj) {
-  return (aObj instanceof Ci.nsIFile) ? Services.io.newFileURI(aObj) :
-                                        Services.io.newURI(aObj);
+  return aObj instanceof Ci.nsIFile
+    ? Services.io.newFileURI(aObj)
+    : Services.io.newURI(aObj);
 }
 
 function add_telemetry_count(telemetry, index, count) {
@@ -50,26 +79,35 @@ function add_telemetry_count(telemetry, index, count) {
 function check_telemetry(aExpectedTelemetry) {
   // SHOULD_BLOCK = true
   let shouldBlock = Services.telemetry
-                            .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
-                            .snapshot();
+    .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
+    .snapshot();
   let expectedShouldBlock = aExpectedTelemetry.shouldBlock;
   Assert.equal(shouldBlock.values[1] || 0, expectedShouldBlock);
 
   let local = Services.telemetry
-                      .getHistogramById("APPLICATION_REPUTATION_LOCAL")
-                      .snapshot();
+    .getHistogramById("APPLICATION_REPUTATION_LOCAL")
+    .snapshot();
 
   let expectedLocal = aExpectedTelemetry.local;
-  Assert.equal(local.values[ALLOW_LIST] || 0, expectedLocal[ALLOW_LIST] || 0,
-               "Allow list.values don't match");
-  Assert.equal(local.values[BLOCK_LIST] || 0, expectedLocal[BLOCK_LIST] || 0,
-               "Block list.values don't match");
-  Assert.equal(local.values[NO_LIST] || 0, expectedLocal[NO_LIST] || 0,
-               "No list.values don't match");
+  Assert.equal(
+    local.values[ALLOW_LIST] || 0,
+    expectedLocal[ALLOW_LIST] || 0,
+    "Allow list.values don't match"
+  );
+  Assert.equal(
+    local.values[BLOCK_LIST] || 0,
+    expectedLocal[BLOCK_LIST] || 0,
+    "Block list.values don't match"
+  );
+  Assert.equal(
+    local.values[NO_LIST] || 0,
+    expectedLocal[NO_LIST] || 0,
+    "No list.values don't match"
+  );
 
   let reason = Services.telemetry
-                       .getHistogramById("APPLICATION_REPUTATION_REASON")
-                       .snapshot();
+    .getHistogramById("APPLICATION_REPUTATION_REASON")
+    .snapshot();
   let expectedReason = aExpectedTelemetry.reason;
 
   for (let i = 0; i < MAX_REASON; i++) {
@@ -81,15 +119,17 @@ function check_telemetry(aExpectedTelemetry) {
 
 function get_telemetry_snapshot() {
   let local = Services.telemetry
-                      .getHistogramById("APPLICATION_REPUTATION_LOCAL")
-                      .snapshot();
+    .getHistogramById("APPLICATION_REPUTATION_LOCAL")
+    .snapshot();
   let shouldBlock = Services.telemetry
-                            .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
-                            .snapshot();
+    .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
+    .snapshot();
   let reason = Services.telemetry
-                       .getHistogramById("APPLICATION_REPUTATION_REASON")
-                       .snapshot();
-  return { shouldBlock: shouldBlock.values[1] || 0,
-           local: local.values,
-           reason: reason.values };
+    .getHistogramById("APPLICATION_REPUTATION_REASON")
+    .snapshot();
+  return {
+    shouldBlock: shouldBlock.values[1] || 0,
+    local: local.values,
+    reason: reason.values,
+  };
 }

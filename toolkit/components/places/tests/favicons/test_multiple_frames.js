@@ -30,7 +30,11 @@ add_task(async function() {
     info("Check moz-anno:favicon protocol");
     await compareFavicons(
       Services.io.newFileURI(file),
-      PlacesUtils.urlWithSizeRef(win, PlacesUtils.favicons.getFaviconLinkForIcon(faviconURI).spec, size)
+      PlacesUtils.urlWithSizeRef(
+        win,
+        PlacesUtils.favicons.getFaviconLinkForIcon(faviconURI).spec,
+        size
+      )
     );
 
     info("Check page-icon protocol");

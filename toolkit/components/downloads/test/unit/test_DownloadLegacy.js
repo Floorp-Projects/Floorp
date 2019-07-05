@@ -15,7 +15,10 @@ var gUseLegacySaver = true;
 
 var scriptFile = do_get_file("common_test_Download.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
-Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+Services.prefs.setBoolPref(
+  "network.cookieSettings.unblocked_for_testing",
+  true
+);
 
 /**
  * Checks the referrer for restart downloads.
@@ -32,21 +35,27 @@ add_task(async function test_referrer_restart() {
   }
   registerCleanupFunction(cleanup);
 
-  registerInterruptibleHandler(sourcePath,
+  registerInterruptibleHandler(
+    sourcePath,
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
       Assert.ok(aRequest.hasHeader("Referer"));
       Assert.equal(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
 
-      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
-                          false);
+      aResponse.setHeader(
+        "Content-Length",
+        "" + TEST_DATA_SHORT.length * 2,
+        false
+      );
       aResponse.write(TEST_DATA_SHORT);
-    }, function secondPart(aRequest, aResponse) {
+    },
+    function secondPart(aRequest, aResponse) {
       Assert.ok(aRequest.hasHeader("Referer"));
       Assert.equal(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
 
       aResponse.write(TEST_DATA_SHORT);
-    });
+    }
+  );
 
   async function restart_and_check_referrer(download) {
     let promiseSucceeded = download.whenSucceeded();
@@ -70,16 +79,17 @@ add_task(async function test_referrer_restart() {
   }
 
   mustInterruptResponses();
-  let download = await promiseStartLegacyDownload(
-    sourceUrl, { referrer: TEST_REFERRER_URL });
+  let download = await promiseStartLegacyDownload(sourceUrl, {
+    referrer: TEST_REFERRER_URL,
+  });
   await restart_and_check_referrer(download);
 
   mustInterruptResponses();
-  download = await promiseStartLegacyDownload(
-    sourceUrl, { referrer: TEST_REFERRER_URL,
-                 isPrivate: true});
+  download = await promiseStartLegacyDownload(sourceUrl, {
+    referrer: TEST_REFERRER_URL,
+    isPrivate: true,
+  });
   await restart_and_check_referrer(download);
 
   cleanup();
 });
-

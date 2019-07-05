@@ -47,7 +47,9 @@ add_task(async function test_parent_to_child() {
           resolve();
         };
         req.onerror = event => {
-          browser.test.fail(`Error saving the blob into the DB: ${event.target.error}`);
+          browser.test.fail(
+            `Error saving the blob into the DB: ${event.target.error}`
+          );
           browser.test.notifyFail("test-completed");
           reject();
         };
@@ -62,16 +64,20 @@ add_task(async function test_parent_to_child() {
       return new Promise((resolve, reject) => {
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
-      }).then(loadDetails => {
-        let blobs = [];
-        loadDetails.forEach(details => {
-          blobs.push(details);
+      })
+        .then(loadDetails => {
+          let blobs = [];
+          loadDetails.forEach(details => {
+            blobs.push(details);
+          });
+          return blobs[0];
+        })
+        .catch(err => {
+          browser.test.fail(
+            `Error loading the blob from the DB: ${err} :: ${err.stack}`
+          );
+          browser.test.notifyFail("test-completed");
         });
-        return blobs[0];
-      }).catch(err => {
-        browser.test.fail(`Error loading the blob from the DB: ${err} :: ${err.stack}`);
-        browser.test.notifyFail("test-completed");
-      });
     }
 
     browser.test.log("Blob creation");
@@ -83,7 +89,7 @@ add_task(async function test_parent_to_child() {
     browser.runtime.onMessage.addListener(([msg, what]) => {
       browser.test.log("Message received from content: " + msg);
       if (msg == "script-ready") {
-        return Promise.resolve({blob});
+        return Promise.resolve({ blob });
       }
 
       if (msg == "script-value") {
@@ -101,9 +107,13 @@ add_task(async function test_parent_to_child() {
   function contentScriptStart() {
     browser.runtime.sendMessage(["script-ready"], response => {
       let reader = new FileReader();
-      reader.addEventListener("load", () => {
-        browser.runtime.sendMessage(["script-value", reader.result]);
-      }, {once: true});
+      reader.addEventListener(
+        "load",
+        () => {
+          browser.runtime.sendMessage(["script-value", reader.result]);
+        },
+        { once: true }
+      );
       reader.readAsText(response.blob);
     });
   }
@@ -113,9 +123,9 @@ add_task(async function test_parent_to_child() {
     manifest: {
       content_scripts: [
         {
-          "matches": ["http://*/*/file_sample.html"],
-          "js": ["content_script_start.js"],
-          "run_at": "document_start",
+          matches: ["http://*/*/file_sample.html"],
+          js: ["content_script_start.js"],
+          run_at: "document_start",
         },
       ],
     },
@@ -129,7 +139,9 @@ add_task(async function test_parent_to_child() {
 
   await extension.awaitMessage("bg-ready");
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_sample.html`
+  );
 
   await extension.awaitFinish("test-completed");
 

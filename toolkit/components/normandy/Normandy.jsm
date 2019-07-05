@@ -3,9 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPages: "resource://normandy-content/AboutPages.jsm",
@@ -43,8 +45,12 @@ var Normandy = {
   init() {
     // Initialization that needs to happen before the first paint on startup.
     this.migrateShieldPrefs();
-    this.rolloutPrefsChanged = this.applyStartupPrefs(STARTUP_ROLLOUT_PREFS_BRANCH);
-    this.studyPrefsChanged = this.applyStartupPrefs(STARTUP_EXPERIMENT_PREFS_BRANCH);
+    this.rolloutPrefsChanged = this.applyStartupPrefs(
+      STARTUP_ROLLOUT_PREFS_BRANCH
+    );
+    this.studyPrefsChanged = this.applyStartupPrefs(
+      STARTUP_EXPERIMENT_PREFS_BRANCH
+    );
 
     // Wait until the UI is available before finishing initialization.
     Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
@@ -68,10 +74,12 @@ var Normandy = {
     await PreferenceExperiments.recordOriginalValues(this.studyPrefsChanged);
 
     // Setup logging and listen for changes to logging prefs
-    LogManager.configure(Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn));
+    LogManager.configure(
+      Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn)
+    );
     Services.prefs.addObserver(PREF_LOGGING_LEVEL, LogManager.configure);
-    CleanupManager.addCleanupHandler(
-      () => Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure),
+    CleanupManager.addCleanupHandler(() =>
+      Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure)
     );
 
     try {
@@ -130,8 +138,13 @@ var Normandy = {
       const newPrefType = newBranch.getPrefType(prefName);
 
       // If new preference exists and is not the same as the legacy pref, skip it
-      if (newPrefType !== Services.prefs.PREF_INVALID && newPrefType !== legacyPrefType) {
-        log.error(`Error migrating normandy pref ${prefName}; pref type does not match.`);
+      if (
+        newPrefType !== Services.prefs.PREF_INVALID &&
+        newPrefType !== legacyPrefType
+      ) {
+        log.error(
+          `Error migrating normandy pref ${prefName}; pref type does not match.`
+        );
         continue;
       }
 
@@ -151,12 +164,16 @@ var Normandy = {
 
         case Services.prefs.PREF_INVALID:
           // This should never happen.
-          log.error(`Error migrating pref ${prefName}; pref type is invalid (${legacyPrefType}).`);
+          log.error(
+            `Error migrating pref ${prefName}; pref type is invalid (${legacyPrefType}).`
+          );
           break;
 
         default:
           // This should never happen either.
-          log.error(`Error getting startup pref ${prefName}; unknown value type ${legacyPrefType}.`);
+          log.error(
+            `Error getting startup pref ${prefName}; unknown value type ${legacyPrefType}.`
+          );
       }
 
       legacyBranch.clearUserPref(prefName);
@@ -181,8 +198,15 @@ var Normandy = {
       const sourcePrefType = sourceBranch.getPrefType(prefName);
       const targetPrefType = targetBranch.getPrefType(prefName);
 
-      if (targetPrefType !== Services.prefs.PREF_INVALID && targetPrefType !== sourcePrefType) {
-        Cu.reportError(new Error(`Error setting startup pref ${prefName}; pref type does not match.`));
+      if (
+        targetPrefType !== Services.prefs.PREF_INVALID &&
+        targetPrefType !== sourcePrefType
+      ) {
+        Cu.reportError(
+          new Error(
+            `Error setting startup pref ${prefName}; pref type does not match.`
+          )
+        );
         continue;
       }
 
@@ -207,7 +231,9 @@ var Normandy = {
           }
           default: {
             // This should never happen
-            log.error(`Error getting startup pref ${prefName}; unknown value type ${sourcePrefType}.`);
+            log.error(
+              `Error getting startup pref ${prefName}; unknown value type ${sourcePrefType}.`
+            );
           }
         }
       } catch (e) {
@@ -224,7 +250,10 @@ var Normandy = {
       // now set the new default value
       switch (sourcePrefType) {
         case Services.prefs.PREF_STRING: {
-          targetBranch.setCharPref(prefName, sourceBranch.getCharPref(prefName));
+          targetBranch.setCharPref(
+            prefName,
+            sourceBranch.getCharPref(prefName)
+          );
           break;
         }
         case Services.prefs.PREF_INT: {
@@ -232,12 +261,19 @@ var Normandy = {
           break;
         }
         case Services.prefs.PREF_BOOL: {
-          targetBranch.setBoolPref(prefName, sourceBranch.getBoolPref(prefName));
+          targetBranch.setBoolPref(
+            prefName,
+            sourceBranch.getBoolPref(prefName)
+          );
           break;
         }
         default: {
           // This should never happen.
-          Cu.reportError(new Error(`Error getting startup pref ${prefName}; unexpected value type ${sourcePrefType}.`));
+          Cu.reportError(
+            new Error(
+              `Error getting startup pref ${prefName}; unexpected value type ${sourcePrefType}.`
+            )
+          );
         }
       }
     }

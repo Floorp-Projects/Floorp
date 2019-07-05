@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
@@ -13,7 +15,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "StartupCache", () => ExtensionParent.StartupCache);
+XPCOMUtils.defineLazyGetter(
+  this,
+  "StartupCache",
+  () => ExtensionParent.StartupCache
+);
 
 var EXPORTED_SYMBOLS = ["ExtensionPermissions"];
 
@@ -25,11 +31,11 @@ let _initPromise;
 async function _lazyInit() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, FILE_NAME);
 
-  prefs = new JSONFile({path});
+  prefs = new JSONFile({ path });
   prefs.data = {};
 
   try {
-    let {buffer} = await OS.File.read(path);
+    let { buffer } = await OS.File.read(path);
     prefs.data = JSON.parse(new TextDecoder().decode(buffer));
   } catch (e) {
     if (!e.becauseNoSuchFile) {
@@ -46,7 +52,7 @@ function lazyInit() {
 }
 
 function emptyPermissions() {
-  return {permissions: [], origins: []};
+  return { permissions: [], origins: [] };
 }
 
 var ExtensionPermissions = {
@@ -68,8 +74,9 @@ var ExtensionPermissions = {
   },
 
   async _getCached(extensionId) {
-    return StartupCache.permissions.get(extensionId,
-                                        () => this._get(extensionId));
+    return StartupCache.permissions.get(extensionId, () =>
+      this._get(extensionId)
+    );
   },
 
   /**
@@ -95,7 +102,7 @@ var ExtensionPermissions = {
    * @param {EventEmitter} emitter optional object implementing emitter interfaces
    */
   async add(extensionId, perms, emitter) {
-    let {permissions, origins} = await this._get(extensionId);
+    let { permissions, origins } = await this._get(extensionId);
 
     let added = emptyPermissions();
 
@@ -107,7 +114,7 @@ var ExtensionPermissions = {
     }
 
     for (let origin of perms.origins) {
-      origin = new MatchPattern(origin, {ignorePath: true}).pattern;
+      origin = new MatchPattern(origin, { ignorePath: true }).pattern;
       if (!origins.includes(origin)) {
         added.origins.push(origin);
         origins.push(origin);
@@ -115,7 +122,7 @@ var ExtensionPermissions = {
     }
 
     if (added.permissions.length > 0 || added.origins.length > 0) {
-      await this._update(extensionId, {permissions, origins});
+      await this._update(extensionId, { permissions, origins });
       if (emitter) {
         emitter.emit("add-permissions", added);
       }
@@ -131,7 +138,7 @@ var ExtensionPermissions = {
    * @param {EventEmitter} emitter optional object implementing emitter interfaces
    */
   async remove(extensionId, perms, emitter) {
-    let {permissions, origins} = await this._get(extensionId);
+    let { permissions, origins } = await this._get(extensionId);
 
     let removed = emptyPermissions();
 
@@ -144,7 +151,7 @@ var ExtensionPermissions = {
     }
 
     for (let origin of perms.origins) {
-      origin = new MatchPattern(origin, {ignorePath: true}).pattern;
+      origin = new MatchPattern(origin, { ignorePath: true }).pattern;
 
       let i = origins.indexOf(origin);
       if (i >= 0) {
@@ -154,7 +161,7 @@ var ExtensionPermissions = {
     }
 
     if (removed.permissions.length > 0 || removed.origins.length > 0) {
-      await this._update(extensionId, {permissions, origins});
+      await this._update(extensionId, { permissions, origins });
       if (emitter) {
         emitter.emit("remove-permissions", removed);
       }

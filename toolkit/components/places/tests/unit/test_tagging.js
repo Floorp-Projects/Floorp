@@ -6,8 +6,9 @@
 
 // Notice we use createInstance because later we will have to terminate the
 // service and restart it.
-var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-              createInstance().QueryInterface(Ci.nsITaggingService);
+var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"]
+  .createInstance()
+  .QueryInterface(Ci.nsITaggingService);
 
 function run_test() {
   var options = PlacesUtils.history.getNewQueryOptions();
@@ -28,8 +29,9 @@ function run_test() {
   tagssvc.tagURI(uri2, ["tag 1"]);
   Assert.equal(tagRoot.childCount, 1);
 
-  var tag1node = tagRoot.getChild(0)
-                        .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var tag1node = tagRoot
+    .getChild(0)
+    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   var tag1itemId = tag1node.itemId;
 
   Assert.equal(tag1node.title, "tag 1");
@@ -95,8 +97,9 @@ function run_test() {
   var uri4 = uri("http://testuri/4");
   tagssvc.tagURI(uri4, [tagId, "tag 3", "456"]);
   tagssvc = null;
-  tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-            getService(Ci.nsITaggingService);
+  tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(
+    Ci.nsITaggingService
+  );
   var uri4Tags = tagssvc.getTagsForURI(uri4);
   Assert.equal(uri4Tags.length, 3);
   Assert.ok(uri4Tags.includes(tagTitle));
@@ -163,13 +166,13 @@ function run_test() {
 
   // Tagging service should trim tags (Bug967196)
   let exampleURI = uri("http://www.example.com/");
-  PlacesUtils.tagging.tagURI(exampleURI, [ " test " ]);
+  PlacesUtils.tagging.tagURI(exampleURI, [" test "]);
 
   let exampleTags = PlacesUtils.tagging.getTagsForURI(exampleURI);
   Assert.equal(exampleTags.length, 1);
   Assert.equal(exampleTags[0], "test");
 
-  PlacesUtils.tagging.untagURI(exampleURI, [ "test" ]);
+  PlacesUtils.tagging.untagURI(exampleURI, ["test"]);
   exampleTags = PlacesUtils.tagging.getTagsForURI(exampleURI);
   Assert.equal(exampleTags.length, 0);
 }

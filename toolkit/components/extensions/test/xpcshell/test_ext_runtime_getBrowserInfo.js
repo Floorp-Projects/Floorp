@@ -19,7 +19,7 @@ add_task(async function test_getBrowserInfo() {
     browser.test.notifyPass("runtime.getBrowserInfo");
   }
 
-  const extension = ExtensionTestUtils.loadExtension({background});
+  const extension = ExtensionTestUtils.loadExtension({ background });
   await extension.startup();
   await extension.awaitFinish("runtime.getBrowserInfo");
   await extension.unload();

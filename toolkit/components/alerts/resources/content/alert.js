@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Copied from nsILookAndFeel.h, see comments on eMetric_AlertNotificationOrigin
 const NS_ALERT_HORIZONTAL = 1;
@@ -13,7 +15,6 @@ const NS_ALERT_TOP = 4;
 const WINDOW_MARGIN = AppConstants.platform == "win" ? 0 : 10;
 const BODY_TEXT_LIMIT = 200;
 const WINDOW_SHADOW_SPREAD = AppConstants.platform == "win" ? 10 : 0;
-
 
 var gOrigin = 0; // Default value: alert from bottom right.
 var gReplacedWindow = null;
@@ -57,25 +58,41 @@ function prefillAlertInfo() {
 
         let hostPort = window.arguments[11];
         const ALERT_BUNDLE = Services.strings.createBundle(
-          "chrome://alerts/locale/alert.properties");
+          "chrome://alerts/locale/alert.properties"
+        );
         const BRAND_BUNDLE = Services.strings.createBundle(
-          "chrome://branding/locale/brand.properties");
+          "chrome://branding/locale/brand.properties"
+        );
         const BRAND_NAME = BRAND_BUNDLE.GetStringFromName("brandShortName");
         let label = document.getElementById("alertSourceLabel");
-        label.setAttribute("value",
-          ALERT_BUNDLE.formatStringFromName("source.label",
-                                            [hostPort]));
-        let doNotDisturbMenuItem = document.getElementById("doNotDisturbMenuItem");
-        doNotDisturbMenuItem.setAttribute("label",
-          ALERT_BUNDLE.formatStringFromName("pauseNotifications.label",
-                                            [BRAND_NAME]));
-        let disableForOrigin = document.getElementById("disableForOriginMenuItem");
-        disableForOrigin.setAttribute("label",
-          ALERT_BUNDLE.formatStringFromName("webActions.disableForOrigin.label",
-                                            [hostPort]));
+        label.setAttribute(
+          "value",
+          ALERT_BUNDLE.formatStringFromName("source.label", [hostPort])
+        );
+        let doNotDisturbMenuItem = document.getElementById(
+          "doNotDisturbMenuItem"
+        );
+        doNotDisturbMenuItem.setAttribute(
+          "label",
+          ALERT_BUNDLE.formatStringFromName("pauseNotifications.label", [
+            BRAND_NAME,
+          ])
+        );
+        let disableForOrigin = document.getElementById(
+          "disableForOriginMenuItem"
+        );
+        disableForOrigin.setAttribute(
+          "label",
+          ALERT_BUNDLE.formatStringFromName(
+            "webActions.disableForOrigin.label",
+            [hostPort]
+          )
+        );
         let openSettings = document.getElementById("openSettingsMenuItem");
-        openSettings.setAttribute("label",
-          ALERT_BUNDLE.GetStringFromName("webActions.settings.label"));
+        openSettings.setAttribute(
+          "label",
+          ALERT_BUNDLE.GetStringFromName("webActions.settings.label")
+        );
       }
     }
     case 11:
@@ -86,12 +103,17 @@ function prefillAlertInfo() {
       gRequireInteraction = window.arguments[8];
     case 8:
       if (window.arguments[7]) {
-        document.getElementById("alertTitleLabel").setAttribute("lang", window.arguments[7]);
-        document.getElementById("alertTextLabel").setAttribute("lang", window.arguments[7]);
+        document
+          .getElementById("alertTitleLabel")
+          .setAttribute("lang", window.arguments[7]);
+        document
+          .getElementById("alertTextLabel")
+          .setAttribute("lang", window.arguments[7]);
       }
     case 7:
       if (window.arguments[6]) {
-        document.getElementById("alertNotification").style.direction = window.arguments[6];
+        document.getElementById("alertNotification").style.direction =
+          window.arguments[6];
       }
     case 6:
       gOrigin = window.arguments[5];
@@ -100,8 +122,12 @@ function prefillAlertInfo() {
     case 4:
       gAlertTextClickable = window.arguments[3];
       if (gAlertTextClickable) {
-        document.getElementById("alertNotification").setAttribute("clickable", true);
-        document.getElementById("alertTextLabel").setAttribute("clickable", true);
+        document
+          .getElementById("alertNotification")
+          .setAttribute("clickable", true);
+        document
+          .getElementById("alertTextLabel")
+          .setAttribute("clickable", true);
       }
     case 3:
       if (window.arguments[2]) {
@@ -114,30 +140,35 @@ function prefillAlertInfo() {
 
           let ellipsis = "\u2026";
           try {
-            ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
-                                                      Ci.nsIPrefLocalizedString).data;
-          } catch (e) { }
+            ellipsis = Services.prefs.getComplexValue(
+              "intl.ellipsis",
+              Ci.nsIPrefLocalizedString
+            ).data;
+          } catch (e) {}
 
           // Copied from nsContextMenu.js' formatSearchContextItem().
           // If the JS character after our truncation point is a trail surrogate,
           // include it in the truncated string to avoid splitting a surrogate pair.
           let truncLength = BODY_TEXT_LIMIT;
           let truncChar = bodyText[BODY_TEXT_LIMIT].charCodeAt(0);
-          if (truncChar >= 0xDC00 && truncChar <= 0xDFFF) {
+          if (truncChar >= 0xdc00 && truncChar <= 0xdfff) {
             truncLength++;
           }
 
-          bodyText = bodyText.substring(0, truncLength) +
-                     ellipsis;
+          bodyText = bodyText.substring(0, truncLength) + ellipsis;
         }
         bodyTextLabel.textContent = bodyText;
       }
     case 2:
-      document.getElementById("alertTitleLabel").setAttribute("value", window.arguments[1]);
+      document
+        .getElementById("alertTitleLabel")
+        .setAttribute("value", window.arguments[1]);
     case 1:
       if (window.arguments[0]) {
         document.getElementById("alertBox").setAttribute("hasImage", true);
-        document.getElementById("alertImage").setAttribute("src", window.arguments[0]);
+        document
+          .getElementById("alertImage")
+          .setAttribute("src", window.arguments[0]);
       }
     case 0:
       break;
@@ -160,18 +191,24 @@ function onAlertLoad() {
     moveWindowToEnd();
   }
 
-  window.addEventListener("XULAlertClose", function() { window.close(); });
+  window.addEventListener("XULAlertClose", function() {
+    window.close();
+  });
 
   // If the require interaction flag is set, prevent auto-closing the notification.
   if (!gRequireInteraction) {
     if (!Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
-      setTimeout(function() { window.close(); }, ALERT_DURATION_IMMEDIATE);
+      setTimeout(function() {
+        window.close();
+      }, ALERT_DURATION_IMMEDIATE);
     } else {
       let alertBox = document.getElementById("alertBox");
       alertBox.addEventListener("animationend", function hideAlert(event) {
-        if (event.animationName == "alert-animation" ||
-            event.animationName == "alert-clicked-animation" ||
-            event.animationName == "alert-closing-animation") {
+        if (
+          event.animationName == "alert-animation" ||
+          event.animationName == "alert-clicked-animation" ||
+          event.animationName == "alert-closing-animation"
+        ) {
           alertBox.removeEventListener("animationend", hideAlert);
           window.close();
         }
@@ -184,7 +221,7 @@ function onAlertLoad() {
   alertSettings.addEventListener("focus", onAlertSettingsFocus);
   alertSettings.addEventListener("click", onAlertSettingsClick);
 
-  let ev = new CustomEvent("AlertActive", {bubbles: true, cancelable: true});
+  let ev = new CustomEvent("AlertActive", { bubbles: true, cancelable: true });
   document.documentElement.dispatchEvent(ev);
 
   if (gAlertListener) {
@@ -199,38 +236,52 @@ function moveWindowToReplace(aReplacedAlert) {
   if (heightDelta != 0) {
     for (let alertWindow of Services.wm.getEnumerator("alert:alert")) {
       // boolean to determine if the alert window is after the replaced alert.
-      let alertIsAfter = gOrigin & NS_ALERT_TOP ?
-                         alertWindow.screenY > aReplacedAlert.screenY :
-                         aReplacedAlert.screenY > alertWindow.screenY;
+      let alertIsAfter =
+        gOrigin & NS_ALERT_TOP
+          ? alertWindow.screenY > aReplacedAlert.screenY
+          : aReplacedAlert.screenY > alertWindow.screenY;
       if (alertIsAfter) {
         // The new Y position of the window.
-        let adjustedY = gOrigin & NS_ALERT_TOP ?
-                        alertWindow.screenY + heightDelta :
-                        alertWindow.screenY - heightDelta;
+        let adjustedY =
+          gOrigin & NS_ALERT_TOP
+            ? alertWindow.screenY + heightDelta
+            : alertWindow.screenY - heightDelta;
         alertWindow.moveTo(alertWindow.screenX, adjustedY);
       }
     }
   }
 
-  let adjustedY = gOrigin & NS_ALERT_TOP ? aReplacedAlert.screenY :
-                  aReplacedAlert.screenY - heightDelta;
+  let adjustedY =
+    gOrigin & NS_ALERT_TOP
+      ? aReplacedAlert.screenY
+      : aReplacedAlert.screenY - heightDelta;
   window.moveTo(aReplacedAlert.screenX, adjustedY);
 }
 
 function moveWindowToEnd() {
   // Determine position
-  let x = gOrigin & NS_ALERT_LEFT ? screen.availLeft :
-          screen.availLeft + screen.availWidth - window.outerWidth;
-  let y = gOrigin & NS_ALERT_TOP ? screen.availTop :
-          screen.availTop + screen.availHeight - window.outerHeight;
+  let x =
+    gOrigin & NS_ALERT_LEFT
+      ? screen.availLeft
+      : screen.availLeft + screen.availWidth - window.outerWidth;
+  let y =
+    gOrigin & NS_ALERT_TOP
+      ? screen.availTop
+      : screen.availTop + screen.availHeight - window.outerHeight;
 
   // Position the window at the end of all alerts.
   for (let alertWindow of Services.wm.getEnumerator("alert:alert")) {
     if (alertWindow != window) {
       if (gOrigin & NS_ALERT_TOP) {
-        y = Math.max(y, alertWindow.screenY + alertWindow.outerHeight - WINDOW_SHADOW_SPREAD);
+        y = Math.max(
+          y,
+          alertWindow.screenY + alertWindow.outerHeight - WINDOW_SHADOW_SPREAD
+        );
       } else {
-        y = Math.min(y, alertWindow.screenY - window.outerHeight + WINDOW_SHADOW_SPREAD);
+        y = Math.min(
+          y,
+          alertWindow.screenY - window.outerHeight + WINDOW_SHADOW_SPREAD
+        );
       }
     }
   }
@@ -250,10 +301,16 @@ function onAlertBeforeUnload() {
       if (alertWindow != window) {
         if (gOrigin & NS_ALERT_TOP) {
           if (alertWindow.screenY > window.screenY) {
-            alertWindow.moveTo(alertWindow.screenX, alertWindow.screenY - heightDelta);
+            alertWindow.moveTo(
+              alertWindow.screenX,
+              alertWindow.screenY - heightDelta
+            );
           }
         } else if (window.screenY > alertWindow.screenY) {
-          alertWindow.moveTo(alertWindow.screenX, alertWindow.screenY + heightDelta);
+          alertWindow.moveTo(
+            alertWindow.screenX,
+            alertWindow.screenY + heightDelta
+          );
         }
       }
     }
@@ -280,8 +337,8 @@ function onAlertClick() {
 
 function doNotDisturb() {
   const alertService = Cc["@mozilla.org/alerts-service;1"]
-                         .getService(Ci.nsIAlertsService)
-                         .QueryInterface(Ci.nsIAlertsDoNotDisturb);
+    .getService(Ci.nsIAlertsService)
+    .QueryInterface(Ci.nsIAlertsDoNotDisturb);
   alertService.manualDoNotDisturb = true;
   onAlertClose();
 }

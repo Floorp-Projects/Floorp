@@ -50,7 +50,7 @@ add_task(async function() {
     // ===== 2 =====
     testnum++;
     // File should be empty
-    Assert.ok(!await promiseCountEntries(null, null));
+    Assert.ok(!(await promiseCountEntries(null, null)));
     Assert.equal(0, await promiseCountEntries("name-A", "value-A"));
     // check for current schema.
     Assert.equal(CURRENT_SCHEMA, getDBVersion(destFile));

@@ -12,25 +12,35 @@
 /* exported Counters */
 var EXPORTED_SYMBOLS = ["PerformanceCounters"];
 
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {DeferredTask} = ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { DeferredTask } = ChromeUtils.import(
+  "resource://gre/modules/DeferredTask.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {
-  DefaultMap,
-} = ExtensionUtils;
+const { DefaultMap } = ExtensionUtils;
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gTimingEnabled",
-                                      "extensions.webextensions.enablePerformanceCounters",
-                                      false);
-XPCOMUtils.defineLazyPreferenceGetter(this, "gTimingMaxAge",
-                                      "extensions.webextensions.performanceCountersMaxAge",
-                                      1000);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gTimingEnabled",
+  "extensions.webextensions.enablePerformanceCounters",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gTimingMaxAge",
+  "extensions.webextensions.performanceCountersMaxAge",
+  1000
+);
 
 class CounterMap extends DefaultMap {
   defaultConstructor() {
-    return new DefaultMap(() => ({duration: 0, calls: 0}));
+    return new DefaultMap(() => ({ duration: 0, calls: 0 }));
   }
 
   flush() {
@@ -66,7 +76,7 @@ function _sendPerformanceCounters(childApiManagerId) {
     _performanceCountersSender.arm();
     return;
   }
-  let options = {childId: childApiManagerId, counters: counters};
+  let options = { childId: childApiManagerId, counters: counters };
   Services.cpmm.sendAsyncMessage("Extension:SendPerformanceCounter", options);
   _performanceCountersSender.arm();
 }
@@ -157,6 +167,5 @@ class Counters {
     return this.data;
   }
 }
-
 
 PerformanceCounters = new Counters();
