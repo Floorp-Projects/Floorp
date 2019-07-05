@@ -85,7 +85,7 @@ class NurseryDecommitTask : public GCParallelTaskHelper<NurseryDecommitTask> {
   // Use the next pointers in Chunk::info to form a singly-linked list.
   MainThreadOrGCTaskData<gc::Chunk*> queue;
 
-  gc::Chunk* popChunk();
+  gc::Chunk* popChunk(const AutoLockHelperThreadState& lock);
 };
 
 class TenuringTracer : public JSTracer {
