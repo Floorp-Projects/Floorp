@@ -3,10 +3,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+let { ForgetAboutSite } = ChromeUtils.import(
+  "resource://gre/modules/ForgetAboutSite.jsm"
+);
 
 // Test clearing plugin data by domain using ForgetAboutSite.
-const testURL = "http://mochi.test:8888/browser/toolkit/forgetaboutsite/test/browser/browser_clearplugindata.html";
+const testURL =
+  "http://mochi.test:8888/browser/toolkit/forgetaboutsite/test/browser/browser_clearplugindata.html";
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -16,15 +19,18 @@ var pluginTag;
 
 function stored(needles) {
   var something = pluginHost.siteHasData(this.pluginTag, null);
-  if (!needles)
+  if (!needles) {
     return something;
+  }
 
-  if (!something)
+  if (!something) {
     return false;
+  }
 
   for (var i = 0; i < needles.length; ++i) {
-    if (!pluginHost.siteHasData(this.pluginTag, needles[i]))
+    if (!pluginHost.siteHasData(this.pluginTag, needles[i])) {
       return false;
+    }
   }
   return true;
 }
@@ -58,8 +64,16 @@ add_task(async function() {
     content.wrappedJSObject.testSteps();
   });
 
-  ok(stored(["192.168.1.1", "foo.com", "nonexistent.foo.com", "bar.com", "localhost"]),
-    "Data stored for sites");
+  ok(
+    stored([
+      "192.168.1.1",
+      "foo.com",
+      "nonexistent.foo.com",
+      "bar.com",
+      "localhost",
+    ]),
+    "Data stored for sites"
+  );
 
   // Clear data for "foo.com" and its subdomains.
   await ForgetAboutSite.removeDataFromDomain("foo.com");
@@ -68,7 +82,7 @@ add_task(async function() {
   ok(!stored(["foo.com"]), "Data cleared for foo.com");
   ok(!stored(["bar.foo.com"]), "Data cleared for subdomains of foo.com");
 
-    // Clear data for "bar.com" using a subdomain.
+  // Clear data for "bar.com" using a subdomain.
   await ForgetAboutSite.removeDataFromDomain("foo.bar.com");
   ok(!stored(["bar.com"]), "Data cleared for bar.com");
 
