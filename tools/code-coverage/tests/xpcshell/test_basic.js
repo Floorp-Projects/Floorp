@@ -29,19 +29,41 @@ async function run_test() {
   await codeCoverage.flushCounters();
 
   const first_flush_files = getFiles();
-  const first_flush_records = parseRecords(diffFiles(first_flush_files, files_orig));
+  const first_flush_records = parseRecords(
+    diffFiles(first_flush_files, files_orig)
+  );
 
   Assert.ok(first_flush_records.has("test_basic.js"));
-  let fnRecords = first_flush_records.get("test_basic.js").filter(record => record.type == "FN");
-  let fndaRecords = first_flush_records.get("test_basic.js").filter(record => record.type == "FNDA");
+  let fnRecords = first_flush_records
+    .get("test_basic.js")
+    .filter(record => record.type == "FN");
+  let fndaRecords = first_flush_records
+    .get("test_basic.js")
+    .filter(record => record.type == "FNDA");
   Assert.ok(fnRecords.some(record => record.name == "top-level"));
   Assert.ok(fnRecords.some(record => record.name == "run_test"));
-  Assert.ok(fnRecords.some(record => record.name == "test_code_coverage_func1"));
-  Assert.ok(fndaRecords.some(record => record.name == "run_test" && record.hits == 1));
-  Assert.ok(!fndaRecords.some(record => record.name == "run_test" && record.hits != 1));
-  Assert.ok(fndaRecords.some(record => record.name == "test_code_coverage_func1" && record.hits == 1));
-  Assert.ok(!fndaRecords.some(record => record.name == "test_code_coverage_func1" && record.hits != 1));
-  Assert.ok(!fndaRecords.some(record => record.name == "test_code_coverage_func2"));
+  Assert.ok(
+    fnRecords.some(record => record.name == "test_code_coverage_func1")
+  );
+  Assert.ok(
+    fndaRecords.some(record => record.name == "run_test" && record.hits == 1)
+  );
+  Assert.ok(
+    !fndaRecords.some(record => record.name == "run_test" && record.hits != 1)
+  );
+  Assert.ok(
+    fndaRecords.some(
+      record => record.name == "test_code_coverage_func1" && record.hits == 1
+    )
+  );
+  Assert.ok(
+    !fndaRecords.some(
+      record => record.name == "test_code_coverage_func1" && record.hits != 1
+    )
+  );
+  Assert.ok(
+    !fndaRecords.some(record => record.name == "test_code_coverage_func2")
+  );
 
   test_code_coverage_func2();
 
@@ -49,19 +71,45 @@ async function run_test() {
   await codeCoverage.flushCounters();
 
   const second_flush_files = getFiles();
-  const second_flush_records = parseRecords(diffFiles(second_flush_files, first_flush_files));
+  const second_flush_records = parseRecords(
+    diffFiles(second_flush_files, first_flush_files)
+  );
 
   Assert.ok(second_flush_records.has("test_basic.js"));
-  fnRecords = second_flush_records.get("test_basic.js").filter(record => record.type == "FN");
-  fndaRecords = second_flush_records.get("test_basic.js").filter(record => record.type == "FNDA");
+  fnRecords = second_flush_records
+    .get("test_basic.js")
+    .filter(record => record.type == "FN");
+  fndaRecords = second_flush_records
+    .get("test_basic.js")
+    .filter(record => record.type == "FNDA");
   Assert.ok(fnRecords.some(record => record.name == "top-level"));
   Assert.ok(fnRecords.some(record => record.name == "run_test"));
-  Assert.ok(fnRecords.some(record => record.name == "test_code_coverage_func1"));
-  Assert.ok(fnRecords.some(record => record.name == "test_code_coverage_func2"));
-  Assert.ok(fndaRecords.some(record => record.name == "test_code_coverage_func1" && record.hits == 0));
-  Assert.ok(!fndaRecords.some(record => record.name == "test_code_coverage_func1" && record.hits != 0));
-  Assert.ok(fndaRecords.some(record => record.name == "test_code_coverage_func2" && record.hits == 1));
-  Assert.ok(!fndaRecords.some(record => record.name == "test_code_coverage_func2" && record.hits != 1));
+  Assert.ok(
+    fnRecords.some(record => record.name == "test_code_coverage_func1")
+  );
+  Assert.ok(
+    fnRecords.some(record => record.name == "test_code_coverage_func2")
+  );
+  Assert.ok(
+    fndaRecords.some(
+      record => record.name == "test_code_coverage_func1" && record.hits == 0
+    )
+  );
+  Assert.ok(
+    !fndaRecords.some(
+      record => record.name == "test_code_coverage_func1" && record.hits != 0
+    )
+  );
+  Assert.ok(
+    fndaRecords.some(
+      record => record.name == "test_code_coverage_func2" && record.hits == 1
+    )
+  );
+  Assert.ok(
+    !fndaRecords.some(
+      record => record.name == "test_code_coverage_func2" && record.hits != 1
+    )
+  );
 
   do_test_finished();
 }

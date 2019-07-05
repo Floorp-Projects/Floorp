@@ -27,32 +27,41 @@ module.exports = {
 
   create(context) {
     return {
-      "CallExpression": function(node) {
+      CallExpression(node) {
         let callee = node.callee;
-        if (callee.type !== "MemberExpression" ||
-            callee.object.type !== "Identifier" ||
-            callee.object.name !== "Date" ||
-            callee.property.type !== "Identifier" ||
-            callee.property.name !== "now") {
+        if (
+          callee.type !== "MemberExpression" ||
+          callee.object.type !== "Identifier" ||
+          callee.object.name !== "Date" ||
+          callee.property.type !== "Identifier" ||
+          callee.property.name !== "now"
+        ) {
           return;
         }
 
-        context.report(node, "use performance.now() instead of Date.now() for timing " +
-                             "measurements");
+        context.report(
+          node,
+          "use performance.now() instead of Date.now() for timing " +
+            "measurements"
+        );
       },
 
-      "NewExpression": function(node) {
+      NewExpression(node) {
         let callee = node.callee;
-        if (callee.type !== "Identifier" ||
-            callee.name !== "Date" ||
-            node.arguments.length > 0) {
+        if (
+          callee.type !== "Identifier" ||
+          callee.name !== "Date" ||
+          node.arguments.length > 0
+        ) {
           return;
         }
 
-        context.report(node, "use performance.now() instead of new Date() for timing " +
-                             "measurements");
+        context.report(
+          node,
+          "use performance.now() instead of new Date() for timing " +
+            "measurements"
+        );
       },
     };
   },
 };
-

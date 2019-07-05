@@ -13,9 +13,12 @@
 var globals = require("globals");
 var util = require("util");
 
-var workerGlobals = util._extend({
-  ctypes: false,
-}, globals.worker);
+var workerGlobals = util._extend(
+  {
+    ctypes: false,
+  },
+  globals.worker
+);
 
 module.exports = {
   globals: workerGlobals,

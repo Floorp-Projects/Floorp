@@ -17,13 +17,14 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function wrapCode(code, filename = "xpcshell/test_foo.js") {
-  return {code, filename};
+  return { code, filename };
 }
 
 function invalidCode(code) {
-  let message = "listen for events instead of setTimeout() with arbitrary delay";
+  let message =
+    "listen for events instead of setTimeout() with arbitrary delay";
   let obj = wrapCode(code);
-  obj.errors = [{message, type: "CallExpression"}];
+  obj.errors = [{ message, type: "CallExpression" }];
   return obj;
 }
 
@@ -38,4 +39,3 @@ ruleTester.run("no-arbitrary-setTimeout", rule, {
     invalidCode("setTimeout(function() {}, timeout);"),
   ],
 });
-
