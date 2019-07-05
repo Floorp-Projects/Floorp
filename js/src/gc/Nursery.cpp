@@ -840,7 +840,6 @@ void js::Nursery::collect(JS::GCReason reason) {
   previousGC.reason = JS::GCReason::NO_REASON;
   if (!isEmpty()) {
     doCollection(reason, tenureCounts);
-    poisonAndInitCurrentChunk();
   } else {
     previousGC.nurseryUsedBytes = 0;
     previousGC.nurseryCapacity = capacity();
@@ -851,6 +850,9 @@ void js::Nursery::collect(JS::GCReason reason) {
 
   // Resize the nursery.
   maybeResizeNursery(reason);
+  if (isEnabled() && previousGC.nurseryUsedBytes) {
+    poisonAndInitCurrentChunk();
+  }
 
   const float promotionRate = doPretenuring(rt, reason, tenureCounts);
 
