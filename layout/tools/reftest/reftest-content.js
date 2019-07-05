@@ -176,6 +176,13 @@ function StartTestURI(type, uri, uriTargetType, timeout)
     LoadURI(gCurrentURL);
 }
 
+function setupTextZoom(contentRootElement) {
+    if (!contentRootElement || !contentRootElement.hasAttribute('reftest-text-zoom'))
+        return;
+    markupDocumentViewer().textZoom =
+        contentRootElement.getAttribute('reftest-text-zoom');
+}
+
 function setupFullZoom(contentRootElement) {
     if (!contentRootElement || !contentRootElement.hasAttribute('reftest-zoom'))
         return;
@@ -183,8 +190,9 @@ function setupFullZoom(contentRootElement) {
         contentRootElement.getAttribute('reftest-zoom');
 }
 
-function resetZoom() {
+function resetZoomAndTextZoom() {
     markupDocumentViewer().fullZoom = 1.0;
+    markupDocumentViewer().textZoom = 1.0;
 }
 
 function doPrintMode(contentRootElement) {
@@ -859,6 +867,7 @@ function OnDocumentLoad(event)
     var contentRootElement = currentDoc ? currentDoc.documentElement : null;
     currentDoc = null;
     setupFullZoom(contentRootElement);
+    setupTextZoom(contentRootElement);
     setupViewport(contentRootElement);
     setupDisplayport(contentRootElement);
     var inPrintMode = false;
@@ -1198,7 +1207,7 @@ function RecvLoadPrintTest(uri, timeout)
 
 function RecvResetRenderingState()
 {
-    resetZoom();
+    resetZoomAndTextZoom();
     resetDisplayportAndViewport();
 }
 
