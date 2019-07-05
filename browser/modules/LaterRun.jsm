@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["LaterRun"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kEnabledPref = "browser.laterrun.enabled";
 const kPagePrefRoot = "browser.laterrun.pages.";
@@ -21,7 +21,13 @@ const kSelfDestructSessionLimit = 50;
 const kSelfDestructHoursLimit = 31 * 24;
 
 class Page {
-  constructor({pref, minimumHoursSinceInstall, minimumSessionCount, requireBoth, url}) {
+  constructor({
+    pref,
+    minimumHoursSinceInstall,
+    minimumSessionCount,
+    requireBoth,
+    url,
+  }) {
     this.pref = pref;
     this.minimumHoursSinceInstall = minimumHoursSinceInstall || 0;
     this.minimumSessionCount = minimumSessionCount || 1;
@@ -38,11 +44,15 @@ class Page {
       return false;
     }
     if (this.requireBoth) {
-      return sessionInfo.sessionCount >= this.minimumSessionCount &&
-             sessionInfo.hoursSinceInstall >= this.minimumHoursSinceInstall;
+      return (
+        sessionInfo.sessionCount >= this.minimumSessionCount &&
+        sessionInfo.hoursSinceInstall >= this.minimumHoursSinceInstall
+      );
     }
-    return sessionInfo.sessionCount >= this.minimumSessionCount ||
-           sessionInfo.hoursSinceInstall >= this.minimumHoursSinceInstall;
+    return (
+      sessionInfo.sessionCount >= this.minimumSessionCount ||
+      sessionInfo.hoursSinceInstall >= this.minimumHoursSinceInstall
+    );
   }
 }
 
@@ -52,14 +62,22 @@ let LaterRun = {
       return;
     }
     // If this is the first run, set the time we were installed
-    if (Services.prefs.getPrefType(kProfileCreationTime) == Ci.nsIPrefBranch.PREF_INVALID) {
+    if (
+      Services.prefs.getPrefType(kProfileCreationTime) ==
+      Ci.nsIPrefBranch.PREF_INVALID
+    ) {
       // We need to store seconds in order to fit within int prefs.
-      Services.prefs.setIntPref(kProfileCreationTime, Math.floor(Date.now() / 1000));
+      Services.prefs.setIntPref(
+        kProfileCreationTime,
+        Math.floor(Date.now() / 1000)
+      );
     }
     this.sessionCount++;
 
-    if (this.hoursSinceInstall > kSelfDestructHoursLimit ||
-        this.sessionCount > kSelfDestructSessionLimit) {
+    if (
+      this.hoursSinceInstall > kSelfDestructHoursLimit ||
+      this.sessionCount > kSelfDestructSessionLimit
+    ) {
       this.selfDestruct();
     }
   },
@@ -79,7 +97,10 @@ let LaterRun = {
   },
 
   get hoursSinceInstall() {
-    let installStamp = Services.prefs.getIntPref(kProfileCreationTime, Date.now() / 1000);
+    let installStamp = Services.prefs.getIntPref(
+      kProfileCreationTime,
+      Date.now() / 1000
+    );
     return Math.floor((Date.now() / 1000 - installStamp) / 3600);
   },
 
@@ -87,7 +108,10 @@ let LaterRun = {
     if (this._sessionCount) {
       return this._sessionCount;
     }
-    return this._sessionCount = Services.prefs.getIntPref(kSessionCountPref, 0);
+    return (this._sessionCount = Services.prefs.getIntPref(
+      kSessionCountPref,
+      0
+    ));
   },
 
   set sessionCount(val) {
@@ -110,7 +134,9 @@ let LaterRun = {
     for (let pref of allPrefsForPages) {
       let [slug, prop] = pref.substring(kPagePrefRoot.length).split(".");
       if (!pageDataStore.has(slug)) {
-        pageDataStore.set(slug, {pref: pref.substring(0, pref.length - prop.length)});
+        pageDataStore.set(slug, {
+          pref: pref.substring(0, pref.length - prop.length),
+        });
       }
       if (prop == "requireBoth" || prop == "hasRun") {
         pageDataStore.get(slug)[prop] = Services.prefs.getBoolPref(pref, false);
@@ -128,11 +154,15 @@ let LaterRun = {
           let urlString = Services.urlFormatter.formatURL(pageData.url.trim());
           uri = Services.io.newURI(urlString);
         } catch (ex) {
-          Cu.reportError("Invalid LaterRun page URL " + pageData.url + " ignored.");
+          Cu.reportError(
+            "Invalid LaterRun page URL " + pageData.url + " ignored."
+          );
           continue;
         }
         if (!uri.schemeIs("https")) {
-          Cu.reportError("Insecure LaterRun page URL " + uri.spec + " ignored.");
+          Cu.reportError(
+            "Insecure LaterRun page URL " + uri.spec + " ignored."
+          );
         } else {
           pageData.url = uri.spec;
           rv.push(new Page(pageData));
