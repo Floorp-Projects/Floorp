@@ -6,8 +6,7 @@
 const FILENAME = "missing.txt";
 
 var observer = {
-  onStartRequest(request) {
-  },
+  onStartRequest(request) {},
 
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_ERROR_FILE_NOT_FOUND);

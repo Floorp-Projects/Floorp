@@ -9,8 +9,9 @@ function run_test() {
   // open a bogus file
   var file = do_get_file("/");
 
-  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   var failed = false;
   try {
     zipreader.open(file);
@@ -20,4 +21,3 @@ function run_test() {
   Assert.ok(failed);
   zipreader = null;
 }
-

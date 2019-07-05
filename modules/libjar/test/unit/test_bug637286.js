@@ -2,14 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that the zip cache can expire entries from nested jars
 
 function open_inner_zip(base, idx) {
   var spec = "jar:" + base + "inner" + idx + ".zip!/foo";
-  var channel = NetUtil.newChannel({uri: spec, loadUsingSystemPrincipal: true});
+  var channel = NetUtil.newChannel({
+    uri: spec,
+    loadUsingSystemPrincipal: true,
+  });
   channel.open();
 }
 

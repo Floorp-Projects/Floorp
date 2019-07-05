@@ -10,8 +10,9 @@ function run_test() {
   // the build script have created the zip we can test on in the current dir.
   var file = do_get_file("data/test_bug333423.zip");
 
-  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+    Ci.nsIZipReader
+  );
   zipreader.open(file);
   zipreader.close();
   var entries = zipreader.findEntries("*.*");

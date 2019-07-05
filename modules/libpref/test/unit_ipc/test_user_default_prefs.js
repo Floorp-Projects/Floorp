@@ -1,24 +1,29 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const pb = Services.prefs;
 
 // This pref is chosen somewhat arbitrarily --- we just need one
 // that's guaranteed to have a default value.
 const kPrefName = "intl.accept_languages"; // of type char, which we
-                                           // assume below
+// assume below
 var initialValue = null;
 
 function check_child_pref_info_eq(continuation) {
   sendCommand(
     'var pb = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);\n' +
-    // Returns concatenation "[value],[isUser]"
-    'pb.getCharPref("' + kPrefName + '")+ "," +' +
-    'pb.prefHasUserValue("' + kPrefName + '");',
+      // Returns concatenation "[value],[isUser]"
+      'pb.getCharPref("' +
+      kPrefName +
+      '")+ "," +' +
+      'pb.prefHasUserValue("' +
+      kPrefName +
+      '");',
     function(info) {
-      let [ value, isUser ] = info.split(",");
+      let [value, isUser] = info.split(",");
       Assert.equal(pb.getCharPref(kPrefName), value);
       Assert.equal(pb.prefHasUserValue(kPrefName), isUser == "true");
       continuation();
-    });
+    }
+  );
 }
 
 function run_test() {

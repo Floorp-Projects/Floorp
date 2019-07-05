@@ -1,7 +1,7 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isParentProcess() {
-  return (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+  return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 function run_test() {
