@@ -339,4 +339,113 @@ class SessionManagerMigrationTest {
         assertEquals("https://www.firefox.org", manager.sessions[4].url)
         assertEquals("https://www.firefox.org", store.state.tabs[4].content.url)
     }
+
+    @Test
+    fun `Remove session will not select custom tab`() {
+        val session1 = Session(id = "session1", initialUrl = "https://www.firefox.com").apply {
+            customTabConfig = mock() }
+        val session2 = Session(id = "session2", initialUrl = "https://developer.mozilla.org/en-US/")
+        val session3 = Session(id = "session3", initialUrl = "https://www.mozilla.org/en-US/internet-health/").apply {
+            customTabConfig = mock() }
+        val session4 = Session(id = "session4", initialUrl = "https://www.mozilla.org/en-US/technology/")
+        val session5 = Session(id = "session5", initialUrl = "https://example.org/555").apply {
+            customTabConfig = mock() }
+        val session6 = Session(id = "session6", initialUrl = "https://example.org/Hello").apply {
+            customTabConfig = mock() }
+        val session7 = Session(id = "session7", initialUrl = "https://example.org/World").apply {
+            customTabConfig = mock() }
+        val session8 = Session(id = "session8", initialUrl = "https://example.org/JustTestingThings").apply {
+            customTabConfig = mock() }
+        val session9 = Session(id = "session9", initialUrl = "https://example.org/NoCustomTab")
+
+        val store = BrowserStore()
+
+        val manager = SessionManager(engine = mock(), store = store)
+        manager.add(session1)
+        manager.add(session2)
+        manager.add(session3)
+        manager.add(session4)
+        manager.add(session5)
+        manager.add(session6)
+        manager.add(session7)
+        manager.add(session8)
+        manager.add(session9)
+
+        manager.select(session4)
+        assertEquals(session4, manager.selectedSession)
+        assertEquals("session4", store.state.selectedTabId)
+
+        manager.remove(session4)
+        assertEquals(session9, manager.selectedSession)
+        assertEquals("session9", store.state.selectedTabId)
+
+        manager.remove(session9)
+        assertEquals(session2, manager.selectedSession)
+        assertEquals("session2", store.state.selectedTabId)
+
+        manager.remove(session2)
+        assertNull(manager.selectedSession)
+        assertNull(store.state.selectedTabId)
+    }
+
+    /**
+     * This test case:
+     *
+     * - Runs 10000 times
+     * - Generates a random permutation of tabs and custom tabs
+     * - Selects a random tab
+     * - Randomly removes tabs
+     * - Verifies that the selected tabs in BrowserStore and SessionManager match
+     *
+     * The `println` statements have been commented out to not spam the CI log. However they are helpful in case someone
+     * needs to actually debug a problem here.
+     */
+    @Test
+    fun `Remove session from randomized set will keep store and manager in sync`() {
+        repeat(10000) {
+            val numberOfSessions = (3..20).random()
+
+            // println("Round $round ($numberOfSessions sessions)")
+
+            val store = BrowserStore()
+            val manager = SessionManager(engine = mock(), store = store)
+
+            repeat(numberOfSessions) { number ->
+                val isCustomTab = listOf(true, false).random()
+
+                val session = Session("https://example.org/$number").apply {
+                    if (isCustomTab) {
+                        customTabConfig = mock()
+                    }
+                }
+
+                manager.add(session)
+
+                // println("- Session $number (ct = $isCustomTab, id = ${session.id})" )
+            }
+
+            if (manager.sessions.isNotEmpty()) {
+                val select = manager.sessions.random()
+                // println("Select initial session: $select")
+                manager.select(select)
+            }
+
+            assertEquals(store.state.tabs.size, manager.sessions.size)
+            assertEquals(store.state.tabs.size + store.state.customTabs.size, manager.all.size)
+
+            assertEquals(store.state.selectedTabId, manager.selectedSession?.id)
+
+            (3..3).random()
+
+            repeat((3..numberOfSessions).random()) {
+                val sessionToRemove = manager.all.random()
+
+                // println("X Removing session ${sessionToRemove.id} (ct = ${sessionToRemove.isCustomTabSession()})")
+
+                manager.remove(sessionToRemove)
+
+                assertEquals(store.state.selectedTabId, manager.selectedSession?.id)
+            }
+        }
+    }
 }

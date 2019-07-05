@@ -978,8 +978,8 @@ class SessionManagerTest {
         manager.select(child)
         manager.remove(child, selectParentIfExists = true)
 
-        assertEquals(session2, manager.selectedSession)
-        assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
+        assertEquals(session1, manager.selectedSession)
+        assertEquals("https://www.firefox.com", manager.selectedSessionOrThrow.url)
     }
 
     @Test
@@ -1009,12 +1009,12 @@ class SessionManagerTest {
         assertEquals(session4, manager.selectedSession)
 
         manager.remove(session4)
-        assertEquals(session2, manager.selectedSession)
-
-        manager.remove(session2)
         assertEquals(session9, manager.selectedSession)
 
         manager.remove(session9)
+        assertEquals(session2, manager.selectedSession)
+
+        manager.remove(session2)
         assertNull(manager.selectedSession)
     }
 

@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  * This class provides access to a centralized registry of all active sessions.
@@ -398,20 +399,49 @@ class LegacySessionManager(
         return findNearbySession(index) { !it.isCustomTabSession() }
     }
 
+    /**
+     * Tries to find a [Session] that is near [index] and satisfies the [predicate].
+     *
+     * Its implementation is synchronized with the behavior in `TabListReducer` of the `browser-state` component.
+     */
+    @Suppress("LongMethod") // Yes, this method is pretty long. I hope we can delete it soon.
     private fun findNearbySession(index: Int, predicate: (Session) -> Boolean): Int {
-        val maxSteps = max(values.lastIndex - index, index)
+        // Okay, this is a bit stupid and complex. This implementation intends to implement the same behavior we use in
+        // BrowserStore - which is operating on a list without custom tabs. Since LegacySessionManager uses a list with
+        // custom tabs mixed in, we need to shift the index around a bit.
 
-        if (maxSteps <= 0) {
-            return NO_SELECTION
+        // First we need to determine the number of custom tabs that are *before* the index we removed from. This is
+        // later needed to calculate the index we would have removed from in a list without custom tabs.
+        var numberOfCustomTabsBeforeRemovedIndex = 0
+        for (i in 0..min(index - 1, values.lastIndex)) {
+            if (values[i].isCustomTabSession()) {
+                numberOfCustomTabsBeforeRemovedIndex++
+            }
         }
 
-        // Try sessions oscillating near the index.
-        for (steps in 1..maxSteps) {
-            listOf(index - steps, index + steps).forEach { current ->
+        // Now calculate the index and list without custom tabs included.
+        val indexWithoutCustomTabs = index - numberOfCustomTabsBeforeRemovedIndex
+        val sessionsWithoutCustomTabs = sessions
+
+        // Code run before this one would have re-used the selected index if it is still a valid index that satisfies
+        // the predicate - however that list contained custom tabs. Now without custom tabs we may be able to re-use
+        // the exiting index. Let's check if we can:
+        if (indexWithoutCustomTabs >= 0 &&
+            indexWithoutCustomTabs <= sessionsWithoutCustomTabs.lastIndex &&
+            predicate(sessionsWithoutCustomTabs[indexWithoutCustomTabs])) {
+            return values.indexOf(sessionsWithoutCustomTabs[indexWithoutCustomTabs])
+        }
+
+        // Finally try sessions (without custom tabs) oscillating near the index.
+        val range = 1..max(sessionsWithoutCustomTabs.lastIndex - indexWithoutCustomTabs, indexWithoutCustomTabs)
+        for (steps in range) {
+            listOf(indexWithoutCustomTabs - steps, indexWithoutCustomTabs + steps).forEach { current ->
                 if (current >= 0 &&
-                    current <= values.lastIndex &&
-                    predicate(values[current])) {
-                    return current
+                    current <= sessionsWithoutCustomTabs.lastIndex &&
+                    predicate(sessionsWithoutCustomTabs[current])) {
+                    // Now that we have a match we need to re-calculate the index in the list that includes custom tabs.
+                    val session = sessionsWithoutCustomTabs[current]
+                    return values.indexOf(session)
                 }
             }
         }
