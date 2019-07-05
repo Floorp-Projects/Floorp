@@ -6,16 +6,19 @@
 
 var EXPORTED_SYMBOLS = ["Screenshot"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "extensions.mozscreenshots@mozilla.org.loglevel";
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+  let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {})
+    .ConsoleAPI;
   let consoleOptions = {
     maxLogLevel: "info",
     maxLogLevelPref: PREF_LOG_LEVEL,
@@ -58,7 +61,10 @@ var Screenshot = {
   },
 
   _buildImagePath(baseName) {
-    return OS.Path.join(this._path, this._imagePrefix + baseName + this._imageExtension);
+    return OS.Path.join(
+      this._path,
+      this._imagePrefix + baseName + this._imageExtension
+    );
   },
 
   // Capture the whole screen using an external application.
@@ -80,11 +86,17 @@ var Screenshot = {
         exe.append("bin");
         exe.append("screenshot.exe");
       }
-      let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+      let process = Cc["@mozilla.org/process/util;1"].createInstance(
+        Ci.nsIProcess
+      );
       process.init(exe);
 
       let args = [filename];
-      process.runAsync(args, args.length, this._processObserver(resolve, reject));
+      process.runAsync(
+        args,
+        args.length,
+        this._processObserver(resolve, reject)
+      );
     });
   },
 
@@ -95,13 +107,19 @@ var Screenshot = {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath("/usr/sbin/screencapture");
 
-        let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+        let process = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess
+        );
         process.init(file);
 
         // Run the process.
         let args = ["-x", "-t", "png"];
         args.push(filename);
-        process.runAsync(args, args.length, this._processObserver(resolve, reject));
+        process.runAsync(
+          args,
+          args.length,
+          this._processObserver(resolve, reject)
+        );
       });
     };
 
@@ -109,20 +127,31 @@ var Screenshot = {
       let decoder = new TextDecoder();
       let promise = OS.File.read("/tmp/mozscreenshots-windowid");
       return promise.then(function onSuccess(array) {
-          return decoder.decode(array);
+        return decoder.decode(array);
       });
     }
 
     let promiseWindowID = () => {
       return new Promise((resolve, reject) => {
         // Get the window ID of the application (assuming its front-most)
-        let osascript = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        let osascript = Cc["@mozilla.org/file/local;1"].createInstance(
+          Ci.nsIFile
+        );
         osascript.initWithPath("/bin/bash");
 
-        let osascriptP = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+        let osascriptP = Cc["@mozilla.org/process/util;1"].createInstance(
+          Ci.nsIProcess
+        );
         osascriptP.init(osascript);
-        let osaArgs = ["-c", "/usr/bin/osascript -e 'tell application (path to frontmost application as text) to set winID to id of window 1' > /tmp/mozscreenshots-windowid"];
-        osascriptP.runAsync(osaArgs, osaArgs.length, this._processObserver(resolve, reject));
+        let osaArgs = [
+          "-c",
+          "/usr/bin/osascript -e 'tell application (path to frontmost application as text) to set winID to id of window 1' > /tmp/mozscreenshots-windowid",
+        ];
+        osascriptP.runAsync(
+          osaArgs,
+          osaArgs.length,
+          this._processObserver(resolve, reject)
+        );
       });
     };
 
@@ -140,11 +169,17 @@ var Screenshot = {
         exe.append("bin");
         exe.append("screentopng");
       }
-      let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+      let process = Cc["@mozilla.org/process/util;1"].createInstance(
+        Ci.nsIProcess
+      );
       process.init(exe);
 
       let args = [filename];
-      process.runAsync(args, args.length, this._processObserver(resolve, reject));
+      process.runAsync(
+        args,
+        args.length,
+        this._processObserver(resolve, reject)
+      );
     });
   },
 

@@ -8,10 +8,9 @@ var EXPORTED_SYMBOLS = ["TabsInTitlebar"];
 
 const PREF_TABS_IN_TITLEBAR = "browser.tabs.drawInTitlebar";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var TabsInTitlebar = {
-
   init(libDir) {},
 
   configurations: {
@@ -27,11 +26,12 @@ var TabsInTitlebar = {
     },
 
     tabsOutsideTitlebar: {
-      selectors: ["#navigator-toolbox"].concat(Services.appinfo.OS == "Linux" ? [] : ["#titlebar"]),
+      selectors: ["#navigator-toolbox"].concat(
+        Services.appinfo.OS == "Linux" ? [] : ["#titlebar"]
+      ),
       async applyConfig() {
         Services.prefs.setBoolPref(PREF_TABS_IN_TITLEBAR, false);
       },
     },
-
   },
 };
