@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const MANIFESTS = [
-  do_get_file("data/test_bug292789.manifest"),
-];
+const MANIFESTS = [do_get_file("data/test_bug292789.manifest")];
 
 registerManifests(MANIFESTS);
 
@@ -18,8 +16,9 @@ function check_accessibility(spec, desired) {
 }
 
 function run_test() {
-  gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].
-    getService(Ci.nsIXULChromeRegistry);
+  gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+    Ci.nsIXULChromeRegistry
+  );
   gCR.checkForNewChrome();
 
   check_accessibility("chrome://test1/content/", false);
