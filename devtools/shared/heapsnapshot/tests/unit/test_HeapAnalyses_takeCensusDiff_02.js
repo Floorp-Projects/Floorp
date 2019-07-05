@@ -40,15 +40,18 @@ add_task(async function() {
 
   ok(true, "Should have read both heap snapshot files");
 
-  const { delta } = await client.takeCensusDiff(firstSnapshotFilePath,
-                                                secondSnapshotFilePath,
-                                                { breakdown: BREAKDOWN });
+  const { delta } = await client.takeCensusDiff(
+    firstSnapshotFilePath,
+    secondSnapshotFilePath,
+    { breakdown: BREAKDOWN }
+  );
 
-  const { delta: deltaTreeNode }
-    = await client.takeCensusDiff(firstSnapshotFilePath,
-                                 secondSnapshotFilePath,
-                                 { breakdown: BREAKDOWN },
-                                 { asInvertedTreeNode: true });
+  const { delta: deltaTreeNode } = await client.takeCensusDiff(
+    firstSnapshotFilePath,
+    secondSnapshotFilePath,
+    { breakdown: BREAKDOWN },
+    { asInvertedTreeNode: true }
+  );
 
   // Have to manually set these because symbol properties aren't structured
   // cloned.

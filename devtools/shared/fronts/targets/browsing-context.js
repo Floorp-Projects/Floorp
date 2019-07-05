@@ -3,12 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {browsingContextTargetSpec} = require("devtools/shared/specs/targets/browsing-context");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  browsingContextTargetSpec,
+} = require("devtools/shared/specs/targets/browsing-context");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 const { TargetMixin } = require("./target-mixin");
 
-class BrowsingContextTargetFront extends
-  TargetMixin(FrontClassWithSpec(browsingContextTargetSpec)) {
+class BrowsingContextTargetFront extends TargetMixin(
+  FrontClassWithSpec(browsingContextTargetSpec)
+) {
   constructor(client) {
     super(client);
 
@@ -127,7 +133,8 @@ class BrowsingContextTargetFront extends
       response = await super.detach();
     } catch (e) {
       console.warn(
-        `Error while detaching the browsing context target front: ${e.message}`);
+        `Error while detaching the browsing context target front: ${e.message}`
+      );
     }
 
     // Remove listeners set in attach

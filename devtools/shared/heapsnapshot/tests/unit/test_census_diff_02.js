@@ -7,18 +7,18 @@
 const BREAKDOWN = { by: "count", count: true, bytes: true };
 
 const REPORT1 = {
-  "count": 10,
-  "bytes": 100,
+  count: 10,
+  bytes: 100,
 };
 
 const REPORT2 = {
-  "count": 11,
-  "bytes": 110,
+  count: 11,
+  bytes: 110,
 };
 
 const EXPECTED = {
-  "count": 1,
-  "bytes": 10,
+  count: 1,
+  bytes: 10,
 };
 
 function run_test() {

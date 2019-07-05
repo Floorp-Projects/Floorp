@@ -3,10 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {DebuggerServer} = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/main");
 const promise = require("promise");
-const {longStringSpec, SimpleStringFront} = require("devtools/shared/specs/string");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  longStringSpec,
+  SimpleStringFront,
+} = require("devtools/shared/specs/string");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
 class LongStringFront extends FrontClassWithSpec(longStringSpec) {
   destroy() {
@@ -24,13 +30,14 @@ class LongStringFront extends FrontClassWithSpec(longStringSpec) {
 
   string() {
     if (!this.strPromise) {
-      const promiseRest = (thusFar) => {
+      const promiseRest = thusFar => {
         if (thusFar.length === this.length) {
           return promise.resolve(thusFar);
         }
-        return this.substring(thusFar.length,
-                              thusFar.length + DebuggerServer.LONG_STRING_READ_LENGTH)
-          .then((next) => promiseRest(thusFar + next));
+        return this.substring(
+          thusFar.length,
+          thusFar.length + DebuggerServer.LONG_STRING_READ_LENGTH
+        ).then(next => promiseRest(thusFar + next));
       };
 
       this.strPromise = promiseRest(this.initial);

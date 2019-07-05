@@ -44,38 +44,18 @@ function run_test() {
   dumpn("Multiple edges from and to the same nodes");
   assertDeduplicatedPaths({
     target: a,
-    paths: [
-      [pathEntry(b, "x")],
-      [pathEntry(b, "y")],
-      [pathEntry(b, "z")],
-    ],
+    paths: [[pathEntry(b, "x")], [pathEntry(b, "y")], [pathEntry(b, "z")]],
     expectedNodes: [a, b],
-    expectedEdges: [
-      edge(b, a, "x"),
-      edge(b, a, "y"),
-      edge(b, a, "z"),
-    ],
+    expectedEdges: [edge(b, a, "x"), edge(b, a, "y"), edge(b, a, "z")],
   });
 
   dumpn("Multiple paths sharing some nodes and edges");
   assertDeduplicatedPaths({
     target: g,
     paths: [
-      [
-        pathEntry(a, "a->b"),
-        pathEntry(b, "b->c"),
-        pathEntry(c, "foo"),
-      ],
-      [
-        pathEntry(a, "a->b"),
-        pathEntry(b, "b->d"),
-        pathEntry(d, "bar"),
-      ],
-      [
-        pathEntry(a, "a->b"),
-        pathEntry(b, "b->e"),
-        pathEntry(e, "baz"),
-      ],
+      [pathEntry(a, "a->b"), pathEntry(b, "b->c"), pathEntry(c, "foo")],
+      [pathEntry(a, "a->b"), pathEntry(b, "b->d"), pathEntry(d, "bar")],
+      [pathEntry(a, "a->b"), pathEntry(b, "b->e"), pathEntry(e, "baz")],
     ],
     expectedNodes: [a, b, c, d, e, g],
     expectedEdges: [
@@ -93,10 +73,7 @@ function run_test() {
   assertDeduplicatedPaths({
     target: g,
     paths: [
-      [
-        pathEntry(a, "a->b"),
-        pathEntry(b, "b->g"),
-      ],
+      [pathEntry(a, "a->b"), pathEntry(b, "b->g")],
       [
         pathEntry(a, "a->b"),
         pathEntry(b, "b->g"),
@@ -105,9 +82,6 @@ function run_test() {
       ],
     ],
     expectedNodes: [a, b, g],
-    expectedEdges: [
-      edge(a, b, "a->b"),
-      edge(b, g, "b->g"),
-    ],
+    expectedEdges: [edge(a, b, "a->b"), edge(b, g, "b->g")],
   });
 }

@@ -110,10 +110,12 @@ function pointEquals(pointA, pointB) {
 
 // Return whether two breakpoint positions are the same.
 function positionEquals(posA, posB) {
-  return posA.kind == posB.kind
-      && posA.script == posB.script
-      && posA.offset == posB.offset
-      && posA.frameIndex == posB.frameIndex;
+  return (
+    posA.kind == posB.kind &&
+    posA.script == posB.script &&
+    posA.offset == posB.offset &&
+    posA.frameIndex == posB.frameIndex
+  );
 }
 
 // Return whether an execution point matching posB also matches posA.
@@ -123,8 +125,12 @@ function positionSubsumes(posA, posB) {
     return true;
   }
 
-  if (posA.kind == "Break" && posB.kind == "OnStep" &&
-      posA.script == posB.script && posA.offset == posB.offset) {
+  if (
+    posA.kind == "Break" &&
+    posB.kind == "OnStep" &&
+    posA.script == posB.script &&
+    posA.offset == posB.offset
+  ) {
     return true;
   }
 

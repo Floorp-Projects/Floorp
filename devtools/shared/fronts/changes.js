@@ -4,8 +4,11 @@
 
 "use strict";
 
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
-const {changesSpec} = require("devtools/shared/specs/changes");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
+const { changesSpec } = require("devtools/shared/specs/changes");
 
 /**
  * ChangesFront, the front object for the ChangesActor

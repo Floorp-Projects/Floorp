@@ -46,11 +46,7 @@ const description = {
   domNode: {},
 };
 
-const expected = [
-  "objects",
-  "Array",
-  stack,
-];
+const expected = ["objects", "Array", stack];
 
 const shallowSize = 512;
 

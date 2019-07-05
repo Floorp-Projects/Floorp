@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {addonsSpec} = require("devtools/shared/specs/addon/addons");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { addonsSpec } = require("devtools/shared/specs/addon/addons");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
 class AddonsFront extends FrontClassWithSpec(addonsSpec) {
   constructor(client) {

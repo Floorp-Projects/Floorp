@@ -39,12 +39,6 @@ testing/marionette/prefs/marionette.js
 toolkit/components/telemetry/datareporting-prefs.js
 toolkit/components/telemetry/healthreport-prefs.js
 
-# Ignore all devtools directories for now, except the debugger.
-devtools/docs/**
-devtools/platform/**
-devtools/shared/**
-devtools/startup/**
-
 # Ignore testing pref files which aren't parsed normally.
 testing/profiles/**/user.js
 

@@ -38,30 +38,60 @@ function run_test() {
   const result = NetworkHelper.parseCertificateInfo(DUMMY_CERT);
 
   // Subject
-  equal(result.subject.commonName, DUMMY_CERT.commonName,
-    "Common name is correct.");
-  equal(result.subject.organization, DUMMY_CERT.organization,
-    "Organization is correct.");
-  equal(result.subject.organizationUnit, DUMMY_CERT.organizationUnit,
-    "Organizational unit is correct.");
+  equal(
+    result.subject.commonName,
+    DUMMY_CERT.commonName,
+    "Common name is correct."
+  );
+  equal(
+    result.subject.organization,
+    DUMMY_CERT.organization,
+    "Organization is correct."
+  );
+  equal(
+    result.subject.organizationUnit,
+    DUMMY_CERT.organizationUnit,
+    "Organizational unit is correct."
+  );
 
   // Issuer
-  equal(result.issuer.commonName, DUMMY_CERT.issuerCommonName,
-    "Common name of the issuer is correct.");
-  equal(result.issuer.organization, DUMMY_CERT.issuerOrganization,
-    "Organization of the issuer is correct.");
-  equal(result.issuer.organizationUnit, DUMMY_CERT.issuerOrganizationUnit,
-    "Organizational unit of the issuer is correct.");
+  equal(
+    result.issuer.commonName,
+    DUMMY_CERT.issuerCommonName,
+    "Common name of the issuer is correct."
+  );
+  equal(
+    result.issuer.organization,
+    DUMMY_CERT.issuerOrganization,
+    "Organization of the issuer is correct."
+  );
+  equal(
+    result.issuer.organizationUnit,
+    DUMMY_CERT.issuerOrganizationUnit,
+    "Organizational unit of the issuer is correct."
+  );
 
   // Validity
-  equal(result.validity.start, DUMMY_CERT.validity.notBeforeLocalDay,
-    "Start of the validity period is correct.");
-  equal(result.validity.end, DUMMY_CERT.validity.notAfterLocalDay,
-    "End of the validity period is correct.");
+  equal(
+    result.validity.start,
+    DUMMY_CERT.validity.notBeforeLocalDay,
+    "Start of the validity period is correct."
+  );
+  equal(
+    result.validity.end,
+    DUMMY_CERT.validity.notAfterLocalDay,
+    "End of the validity period is correct."
+  );
 
   // Fingerprints
-  equal(result.fingerprint.sha1, DUMMY_CERT.sha1Fingerprint,
-    "Certificate SHA1 fingerprint is correct.");
-  equal(result.fingerprint.sha256, DUMMY_CERT.sha256Fingerprint,
-    "Certificate SHA256 fingerprint is correct.");
+  equal(
+    result.fingerprint.sha1,
+    DUMMY_CERT.sha1Fingerprint,
+    "Certificate SHA1 fingerprint is correct."
+  );
+  equal(
+    result.fingerprint.sha256,
+    DUMMY_CERT.sha256Fingerprint,
+    "Certificate SHA256 fingerprint is correct."
+  );
 }

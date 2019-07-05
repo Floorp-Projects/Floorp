@@ -61,5 +61,7 @@ function run_test() {
     reportLeafIndex: undefined,
   };
 
-  compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { filter: "zzzzzzzzzzzzzzzzzzzz" });
+  compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, {
+    filter: "zzzzzzzzzzzzzzzzzzzz",
+  });
 }

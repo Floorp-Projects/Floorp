@@ -4,10 +4,13 @@
 
 "use strict";
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { FallibleJSPropertyProvider: JSPropertyProvider } =
-  require("devtools/shared/webconsole/js-property-provider");
+const {
+  FallibleJSPropertyProvider: JSPropertyProvider,
+} = require("devtools/shared/webconsole/js-property-provider");
 
-const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  "resource://gre/modules/jsdebugger.jsm"
+);
 addDebuggerToGlobal(this);
 
 function run_test() {
@@ -67,12 +70,15 @@ function run_test() {
   const dbg = new Debugger();
   const dbgObject = dbg.addDebuggee(sandbox);
   const dbgEnv = dbgObject.asEnvironment();
-  Cu.evalInSandbox(`
+  Cu.evalInSandbox(
+    `
     const hello = Object.create(null, Object.getOwnPropertyDescriptors({world: 1}));
     String.prototype.hello = hello;
     Number.prototype.hello = hello;
     Array.prototype.hello = hello;
-  `, sandbox);
+  `,
+    sandbox
+  );
   Cu.evalInSandbox(testArray, sandbox);
   Cu.evalInSandbox(testObject, sandbox);
   Cu.evalInSandbox(testHyphenated, sandbox);
@@ -88,12 +94,13 @@ function run_test() {
 }
 
 function runChecks(dbgObject, environment, sandbox) {
-  const propertyProvider = (inputValue, options) => JSPropertyProvider({
-    dbgObject,
-    environment,
-    inputValue,
-    ...options,
-  });
+  const propertyProvider = (inputValue, options) =>
+    JSPropertyProvider({
+      dbgObject,
+      environment,
+      inputValue,
+      ...options,
+    });
 
   info("Test that suggestions are given for 'this'");
   let results = propertyProvider("t");
@@ -174,9 +181,9 @@ function runChecks(dbgObject, environment, sandbox) {
   test_has_result(results, "charAt");
   results = propertyProvider("`foo doc`.");
   test_has_result(results, "charAt");
-  results = propertyProvider("`foo \" doc`.");
+  results = propertyProvider('`foo " doc`.');
   test_has_result(results, "charAt");
-  results = propertyProvider("`foo \' doc`.");
+  results = propertyProvider("`foo ' doc`.");
   test_has_result(results, "charAt");
   results = propertyProvider("'[1,2,3]'.");
   test_has_result(results, "charAt");
@@ -232,7 +239,9 @@ function runChecks(dbgObject, environment, sandbox) {
   results = propertyProvider("testArray[1].propC[0].");
   test_has_result(results, "trim");
 
-  info("Test that suggestions are displayed when variable is wrapped in parens");
+  info(
+    "Test that suggestions are displayed when variable is wrapped in parens"
+  );
   results = propertyProvider("(testObject)['propA'][0].");
   test_has_result(results, "propB");
 
@@ -264,77 +273,127 @@ function runChecks(dbgObject, environment, sandbox) {
   const gen2NextResult = Cu.evalInSandbox("gen2.next().value", sandbox);
   Assert.equal(gen2Result + 1, gen2NextResult);
 
-  info("Test that getters are not executed if authorizedEvaluations is undefined");
+  info(
+    "Test that getters are not executed if authorizedEvaluations is undefined"
+  );
   results = propertyProvider("testGetters.x.");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   results = propertyProvider("testGetters.x[");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   results = propertyProvider("testGetters.x.hell");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   results = propertyProvider("testGetters.x['hell");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
-  info("Test that getters are not executed if authorizedEvaluations does not match");
-  results = propertyProvider("testGetters.x.", {authorizedEvaluations: []});
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  info(
+    "Test that getters are not executed if authorizedEvaluations does not match"
+  );
+  results = propertyProvider("testGetters.x.", { authorizedEvaluations: [] });
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   results = propertyProvider("testGetters.x.", {
     authorizedEvaluations: [["testGetters"]],
   });
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   results = propertyProvider("testGetters.x.", {
     authorizedEvaluations: [["testGtrs", "x"]],
   });
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   results = propertyProvider("testGetters.x.", {
     authorizedEvaluations: [["x"]],
   });
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "x"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "x"],
+  });
 
   info("Test that deep getter property access returns intermediate getters");
   results = propertyProvider("testGetters.y.y.");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y"],
+  });
 
   results = propertyProvider("testGetters['y'].y.");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y"],
+  });
 
   results = propertyProvider("testGetters['y']['y'].");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y"],
+  });
 
   results = propertyProvider("testGetters.y['y'].");
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y"],
+  });
 
   info("Test that deep getter property access invoke intermediate getters");
   results = propertyProvider("testGetters.y.y.", {
     authorizedEvaluations: [["testGetters", "y"]],
   });
-  Assert.deepEqual(results,
-    {isUnsafeGetter: true, getterPath: ["testGetters", "y", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y", "y"],
+  });
 
   results = propertyProvider("testGetters['y'].y.", {
     authorizedEvaluations: [["testGetters", "y"]],
   });
-  Assert.deepEqual(results,
-    {isUnsafeGetter: true, getterPath: ["testGetters", "y", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y", "y"],
+  });
 
   results = propertyProvider("testGetters['y']['y'].", {
     authorizedEvaluations: [["testGetters", "y"]],
   });
-  Assert.deepEqual(results,
-    {isUnsafeGetter: true, getterPath: ["testGetters", "y", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y", "y"],
+  });
 
   results = propertyProvider("testGetters.y['y'].", {
     authorizedEvaluations: [["testGetters", "y"]],
   });
-  Assert.deepEqual(
-    results, {isUnsafeGetter: true, getterPath: ["testGetters", "y", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y", "y"],
+  });
 
-  info("Test that getters are executed if matching an authorizedEvaluation element");
+  info(
+    "Test that getters are executed if matching an authorizedEvaluation element"
+  );
   results = propertyProvider("testGetters.x.", {
     authorizedEvaluations: [["testGetters", "x"]],
   });
@@ -360,13 +419,20 @@ function runChecks(dbgObject, environment, sandbox) {
   });
   test_has_exact_results(results, ["'hello'"]);
 
-  info("Test children getters are not executed if not included in authorizedEvaluation");
+  info(
+    "Test children getters are not executed if not included in authorizedEvaluation"
+  );
   results = propertyProvider("testGetters.y.y.", {
     authorizedEvaluations: [["testGetters", "y", "y"]],
   });
-  Assert.deepEqual(results, {isUnsafeGetter: true, getterPath: ["testGetters", "y"]});
+  Assert.deepEqual(results, {
+    isUnsafeGetter: true,
+    getterPath: ["testGetters", "y"],
+  });
 
-  info("Test children getters are executed if matching an authorizedEvaluation element");
+  info(
+    "Test children getters are executed if matching an authorizedEvaluation element"
+  );
   results = propertyProvider("testGetters.y.y.", {
     authorizedEvaluations: [["testGetters", "y"], ["testGetters", "y", "y"]],
   });
@@ -438,8 +504,10 @@ function runChecks(dbgObject, environment, sandbox) {
 
   info("Test access on dot-notation invalid property name");
   results = propertyProvider("testHyphenated.prop");
-  Assert.ok(!results.matches.has("prop-A"),
-    "Does not return invalid property name on dot access");
+  Assert.ok(
+    !results.matches.has("prop-A"),
+    "Does not return invalid property name on dot access"
+  );
 
   results = propertyProvider("testHyphenated['prop");
   test_has_result(results, `'prop-A'`);

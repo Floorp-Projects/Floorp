@@ -10,9 +10,9 @@
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
    withActiveServiceWorker, Services, consoleAPICall */
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {DebuggerServer} = require("devtools/server/main");
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
 const Services = require("Services");
 
@@ -50,9 +50,7 @@ async function attachConsoleToWorker(listeners, callback) {
   callback(state, response);
 }
 
-var _attachConsole = async function(
-  listeners, attachToTab, attachToWorker
-) {
+var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
   try {
     const client = await connectToDebugger();
 
@@ -79,7 +77,9 @@ var _attachConsole = async function(
         const { workers } = await target.listWorkers();
         target = workers.filter(w => w.url == workerName)[0];
         if (!target) {
-          console.error("listWorkers failed. Unable to find the worker actor\n");
+          console.error(
+            "listWorkers failed. Unable to find the worker actor\n"
+          );
           return null;
         }
       }
@@ -104,8 +104,9 @@ var _attachConsole = async function(
       response,
     };
   } catch (error) {
-    console.error(`attachConsole failed: ${error.error} ${error.message} - ` +
-                  error.stack);
+    console.error(
+      `attachConsole failed: ${error.error} ${error.message} - ` + error.stack
+    );
   }
   return null;
 };
@@ -123,8 +124,11 @@ function closeDebugger(state, callback) {
 }
 
 function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
-  is(consoleCalls.length, expectedConsoleCalls.length,
-    "received correct number of console calls");
+  is(
+    consoleCalls.length,
+    expectedConsoleCalls.length,
+    "received correct number of console calls"
+  );
   expectedConsoleCalls.forEach(function(message, index) {
     info("checking received console call #" + index);
     checkConsoleAPICall(consoleCalls[index], expectedConsoleCalls[index]);
@@ -133,8 +137,7 @@ function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
 
 function checkConsoleAPICall(call, expected) {
   if (expected.level != "trace" && expected.arguments) {
-    is(call.arguments.length, expected.arguments.length,
-       "number of arguments");
+    is(call.arguments.length, expected.arguments.length, "number of arguments");
   }
 
   checkObject(call, expected);
@@ -155,8 +158,11 @@ function checkValue(name, value, expected) {
     ok(false, "'" + name + "' is undefined");
   } else if (value === null) {
     ok(false, "'" + name + "' is null");
-  } else if (typeof expected == "string" || typeof expected == "number" ||
-             typeof expected == "boolean") {
+  } else if (
+    typeof expected == "string" ||
+    typeof expected == "number" ||
+    typeof expected == "boolean"
+  ) {
     is(value, expected, "property '" + name + "'");
   } else if (expected instanceof RegExp) {
     ok(expected.test(value), name + ": " + expected + " matched " + value);

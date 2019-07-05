@@ -4,7 +4,7 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const {Arg, RetVal, generateActorSpec} = protocol;
+const { Arg, RetVal, generateActorSpec } = protocol;
 const promise = require("promise");
 
 const longStringSpec = generateActorSpec({
@@ -78,7 +78,7 @@ protocol.types.addType("longstring", {
     if (context instanceof protocol.Actor) {
       throw Error("Passing a longstring as an argument isn't supported.");
     }
-    if (typeof (value) === "string") {
+    if (typeof value === "string") {
       return new SimpleStringFront(value);
     }
     return stringActorType.read(value, context, detail);

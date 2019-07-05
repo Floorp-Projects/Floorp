@@ -9,16 +9,16 @@ const {
   registerFront,
 } = require("devtools/shared/protocol.js");
 
-const {
-  nodeSpec,
-  nodeListSpec,
-} = require("devtools/shared/specs/node");
+const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
 const promise = require("promise");
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
 
-loader.lazyRequireGetter(this, "nodeConstants",
-  "devtools/shared/dom-node-constants");
+loader.lazyRequireGetter(
+  this,
+  "nodeConstants",
+  "devtools/shared/dom-node-constants"
+);
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
@@ -146,7 +146,9 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       // Get the owner actor for this actor (the walker), and find the
       // parent node of this actor from it, creating a standin node if
       // necessary.
-      const parentNodeFront = ctx.marshallPool().ensureDOMNodeFront(form.parent);
+      const parentNodeFront = ctx
+        .marshallPool()
+        .ensureDOMNodeFront(form.parent);
       this.reparent(parentNodeFront);
     }
 
@@ -155,8 +157,9 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     }
 
     if (form.inlineTextChild) {
-      this.inlineTextChild =
-        types.getType("domnode").read(form.inlineTextChild, ctx);
+      this.inlineTextChild = types
+        .getType("domnode")
+        .read(form.inlineTextChild, ctx);
     } else {
       this.inlineTextChild = undefined;
     }
@@ -192,8 +195,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       let found = false;
       for (let i = 0; i < this.attributes.length; i++) {
         const attr = this.attributes[i];
-        if (attr.name == change.attributeName &&
-            attr.namespace == change.attributeNamespace) {
+        if (
+          attr.name == change.attributeName &&
+          attr.namespace == change.attributeNamespace
+        ) {
           if (change.newValue !== null) {
             attr.value = change.newValue;
           } else {
@@ -239,16 +244,19 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.nodeName;
   }
   get displayName() {
-    const {displayName, nodeName} = this._form;
+    const { displayName, nodeName } = this._form;
 
     // Keep `nodeName.toLowerCase()` for backward compatibility
     return displayName || nodeName.toLowerCase();
   }
   get doctypeString() {
-    return "<!DOCTYPE " + this._form.name +
-     (this._form.publicId ? " PUBLIC \"" + this._form.publicId + "\"" : "") +
-     (this._form.systemId ? " \"" + this._form.systemId + "\"" : "") +
-     ">";
+    return (
+      "<!DOCTYPE " +
+      this._form.name +
+      (this._form.publicId ? ' PUBLIC "' + this._form.publicId + '"' : "") +
+      (this._form.systemId ? ' "' + this._form.systemId + '"' : "") +
+      ">"
+    );
   }
 
   get baseURI() {
@@ -279,8 +287,11 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.isAfterPseudoElement;
   }
   get isPseudoElement() {
-    return this.isBeforePseudoElement || this.isAfterPseudoElement ||
-      this.isMarkerPseudoElement;
+    return (
+      this.isBeforePseudoElement ||
+      this.isAfterPseudoElement ||
+      this.isMarkerPseudoElement
+    );
   }
   get isAnonymous() {
     return this._form.isAnonymous;
@@ -333,7 +344,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   }
   hasAttribute(name) {
     this._cacheAttributes();
-    return (name in this._attrMap);
+    return name in this._attrMap;
   }
 
   get hidden() {

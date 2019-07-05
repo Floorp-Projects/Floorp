@@ -4,11 +4,7 @@
 
 "use strict";
 
-const {
-  Arg,
-  generateActorSpec,
-  RetVal,
-} = require("devtools/shared/protocol");
+const { Arg, generateActorSpec, RetVal } = require("devtools/shared/protocol");
 
 const changesSpec = generateActorSpec({
   typeName: "changes",
@@ -28,12 +24,12 @@ const changesSpec = generateActorSpec({
   },
 
   methods: {
-    "allChanges": {
+    allChanges: {
       response: {
         changes: RetVal("array:json"),
       },
     },
-    "start": {},  // no arguments, no response
+    start: {}, // no arguments, no response
   },
 });
 

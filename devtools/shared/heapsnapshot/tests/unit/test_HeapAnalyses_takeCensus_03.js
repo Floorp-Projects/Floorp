@@ -11,7 +11,9 @@ add_task(async function() {
   // Snapshot file path to a file that doesn't exist.
   let failed = false;
   try {
-    await client.readHeapSnapshot(getFilePath("foo-bar-baz" + Math.random(), true));
+    await client.readHeapSnapshot(
+      getFilePath("foo-bar-baz" + Math.random(), true)
+    );
   } catch (e) {
     failed = true;
   }
@@ -20,12 +22,17 @@ add_task(async function() {
   // Snapshot file path to a file that is not a heap snapshot.
   failed = false;
   try {
-    await client.readHeapSnapshot(getFilePath("test_HeapAnalyses_takeCensus_03.js"));
+    await client.readHeapSnapshot(
+      getFilePath("test_HeapAnalyses_takeCensus_03.js")
+    );
   } catch (e) {
     failed = true;
   }
-  ok(failed, "should not be able to read a file "
-    + "that is not a heap snapshot as a heap snapshot");
+  ok(
+    failed,
+    "should not be able to read a file " +
+      "that is not a heap snapshot as a heap snapshot"
+  );
 
   const snapshotFilePath = saveNewHeapSnapshot();
   await client.readHeapSnapshot(snapshotFilePath);

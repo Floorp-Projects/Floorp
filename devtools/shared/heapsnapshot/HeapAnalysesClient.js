@@ -18,12 +18,12 @@ var workerCounter = 0;
  * HeapAnalysesClient owns the worker, and terminating the worker is done by
  * terminating the client (see the `destroy` method).
  */
-const HeapAnalysesClient = module.exports = function() {
+const HeapAnalysesClient = (module.exports = function() {
   this._worker = new DevToolsWorker(WORKER_URL, {
     name: `HeapAnalyses-${workerCounter++}`,
     verbose: DevToolsUtils.dumpv.wantVerbose,
   });
-};
+});
 
 /**
  * Destroy the worker, causing it to release its resources (such as heap
@@ -114,9 +114,11 @@ HeapAnalysesClient.prototype.getCreationTime = function(snapshotFilePath) {
  *            The result of calling CensusUtils.createParentMap on the generated
  *            report. Only exists if asTreeNode or asInvertedTreeNode are set.
  */
-HeapAnalysesClient.prototype.takeCensus = function(snapshotFilePath,
-                                                    censusOptions,
-                                                    requestOptions = {}) {
+HeapAnalysesClient.prototype.takeCensus = function(
+  snapshotFilePath,
+  censusOptions,
+  requestOptions = {}
+) {
   return this._worker.performTask("takeCensus", {
     snapshotFilePath,
     censusOptions,
@@ -190,10 +192,12 @@ HeapAnalysesClient.prototype.getCensusIndividuals = function(opts) {
  *            The result of calling CensusUtils.createParentMap on the generated
  *            delta. Only exists if asTreeNode or asInvertedTreeNode are set.
  */
-HeapAnalysesClient.prototype.takeCensusDiff = function(firstSnapshotFilePath,
-                                                        secondSnapshotFilePath,
-                                                        censusOptions,
-                                                        requestOptions = {}) {
+HeapAnalysesClient.prototype.takeCensusDiff = function(
+  firstSnapshotFilePath,
+  secondSnapshotFilePath,
+  censusOptions,
+  requestOptions = {}
+) {
   return this._worker.performTask("takeCensusDiff", {
     firstSnapshotFilePath,
     secondSnapshotFilePath,

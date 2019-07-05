@@ -32,14 +32,20 @@ function run_test() {
     },
     strings: { count: 0, bytes: 0 },
     scripts: { count: 0, bytes: 0 },
-    domNode: {count: 0, bytes: 0 },
+    domNode: { count: 0, bytes: 0 },
   };
 
-  const node = censusReportToCensusTreeNode(BREAKDOWN, REPORT, { invert: true });
+  const node = censusReportToCensusTreeNode(BREAKDOWN, REPORT, {
+    invert: true,
+  });
 
   equal(node.children[0].name, "Array");
   equal(node.children[0].reportLeafIndex.size, 2);
-  dumpn(`node.children[0].reportLeafIndex = ${[...node.children[0].reportLeafIndex]}`);
+  dumpn(
+    `node.children[0].reportLeafIndex = ${[
+      ...node.children[0].reportLeafIndex,
+    ]}`
+  );
   ok(node.children[0].reportLeafIndex.has(2));
   ok(node.children[0].reportLeafIndex.has(6));
 }

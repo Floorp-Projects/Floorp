@@ -24,8 +24,10 @@ add_task(async function() {
     dominatorTreeId,
     breakdown,
   });
-  ok(partialTree.children.length > 0,
-     "root should immediately dominate some nodes");
+  ok(
+    partialTree.children.length > 0,
+    "root should immediately dominate some nodes"
+  );
 
   // First, test getting a subset of children available.
   const response = await client.getImmediatelyDominated({
@@ -43,12 +45,17 @@ add_task(async function() {
   equal(response.path[0], partialTree.nodeId);
 
   for (const node of response.nodes) {
-    equal(typeof node.shortestPaths, "object",
-          "Should have shortest paths");
-    equal(typeof node.shortestPaths.nodes, "object",
-          "Should have shortest paths' nodes");
-    equal(typeof node.shortestPaths.edges, "object",
-          "Should have shortest paths' edges");
+    equal(typeof node.shortestPaths, "object", "Should have shortest paths");
+    equal(
+      typeof node.shortestPaths.nodes,
+      "object",
+      "Should have shortest paths' nodes"
+    );
+    equal(
+      typeof node.shortestPaths.edges,
+      "object",
+      "Should have shortest paths' edges"
+    );
   }
 
   // Next, test getting a subset of children available.
@@ -67,12 +74,17 @@ add_task(async function() {
   equal(secondResponse.path[0], partialTree.nodeId);
 
   for (const node of secondResponse.nodes) {
-    equal(typeof node.shortestPaths, "object",
-          "Should have shortest paths");
-    equal(typeof node.shortestPaths.nodes, "object",
-          "Should have shortest paths' nodes");
-    equal(typeof node.shortestPaths.edges, "object",
-          "Should have shortest paths' edges");
+    equal(typeof node.shortestPaths, "object", "Should have shortest paths");
+    equal(
+      typeof node.shortestPaths.nodes,
+      "object",
+      "Should have shortest paths' nodes"
+    );
+    equal(
+      typeof node.shortestPaths.edges,
+      "object",
+      "Should have shortest paths' edges"
+    );
   }
 
   client.destroy();

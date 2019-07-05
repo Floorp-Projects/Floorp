@@ -119,7 +119,7 @@ class Pool extends EventEmitter {
   }
 
   // Generator that yields each non-self child of the pool.
-  * poolChildren() {
+  *poolChildren() {
     if (!this.__poolMap) {
       return;
     }

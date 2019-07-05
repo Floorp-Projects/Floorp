@@ -5,13 +5,18 @@
 
 const { components } = require("chrome");
 const Services = require("Services");
-const { actorActorSpec, actorRegistrySpec } = require("devtools/shared/specs/actor-registry");
-const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const {
+  actorActorSpec,
+  actorRegistrySpec,
+} = require("devtools/shared/specs/actor-registry");
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
 
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
-class ActorActorFront extends FrontClassWithSpec(actorActorSpec) {
-}
+class ActorActorFront extends FrontClassWithSpec(actorActorSpec) {}
 
 exports.ActorActorFront = ActorActorFront;
 registerFront(ActorActorFront);
@@ -24,22 +29,32 @@ function request(uri) {
       reject(e);
     }
 
-    NetUtil.asyncFetch({
-      uri,
-      loadUsingSystemPrincipal: true,
-    }, (stream, status, req) => {
-      if (!components.isSuccessCode(status)) {
-        reject(new Error("Request failed with status code = "
-                         + status
-                         + " after NetUtil.asyncFetch for url = "
-                         + uri));
-        return;
-      }
+    NetUtil.asyncFetch(
+      {
+        uri,
+        loadUsingSystemPrincipal: true,
+      },
+      (stream, status, req) => {
+        if (!components.isSuccessCode(status)) {
+          reject(
+            new Error(
+              "Request failed with status code = " +
+                status +
+                " after NetUtil.asyncFetch for url = " +
+                uri
+            )
+          );
+          return;
+        }
 
-      const source = NetUtil.readInputStreamToString(stream, stream.available());
-      stream.close();
-      resolve(source);
-    });
+        const source = NetUtil.readInputStreamToString(
+          stream,
+          stream.available()
+        );
+        stream.close();
+        resolve(source);
+      }
+    );
   });
 }
 
@@ -52,10 +67,9 @@ class ActorRegistryFront extends FrontClassWithSpec(actorRegistrySpec) {
   }
 
   registerActor(uri, options) {
-    return request(uri, options)
-      .then(sourceText => {
-        return super.registerActor(sourceText, uri, options);
-      });
+    return request(uri, options).then(sourceText => {
+      return super.registerActor(sourceText, uri, options);
+    });
   }
 }
 
