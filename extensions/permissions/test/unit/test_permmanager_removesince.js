@@ -10,8 +10,7 @@ function run_test() {
   test_generator.next();
 }
 
-function continue_test()
-{
+function continue_test() {
   do_run_generator(test_generator);
 }
 
@@ -24,10 +23,16 @@ function* do_run_test() {
   // to help with testing edge-cases, we will arrange for .removeAllSince to
   // remove *all* permissions from one principal and one permission from another.
   let permURI1 = NetUtil.newURI("http://example.com");
-  let principal1 = Services.scriptSecurityManager.createCodebasePrincipal(permURI1, {});
+  let principal1 = Services.scriptSecurityManager.createCodebasePrincipal(
+    permURI1,
+    {}
+  );
 
   let permURI2 = NetUtil.newURI("http://example.org");
-  let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(permURI2, {});
+  let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(
+    permURI2,
+    {}
+  );
 
   // add a permission now - this isn't going to be removed.
   pm.addFromPrincipal(principal1, "test/remove-since", 1);
@@ -57,13 +62,25 @@ function* do_run_test() {
   pm.removeAllSince(since);
 
   // principal1 - the first one should remain.
-  Assert.equal(1, pm.testPermissionFromPrincipal(principal1, "test/remove-since"));
+  Assert.equal(
+    1,
+    pm.testPermissionFromPrincipal(principal1, "test/remove-since")
+  );
   // but the second should have been removed.
-  Assert.equal(0, pm.testPermissionFromPrincipal(principal1, "test/remove-since-2"));
+  Assert.equal(
+    0,
+    pm.testPermissionFromPrincipal(principal1, "test/remove-since-2")
+  );
 
   // principal2 - both should have been removed.
-  Assert.equal(0, pm.testPermissionFromPrincipal(principal2, "test/remove-since"));
-  Assert.equal(0, pm.testPermissionFromPrincipal(principal2, "test/remove-since-2"));
+  Assert.equal(
+    0,
+    pm.testPermissionFromPrincipal(principal2, "test/remove-since")
+  );
+  Assert.equal(
+    0,
+    pm.testPermissionFromPrincipal(principal2, "test/remove-since-2")
+  );
 
   do_finish_generator_test(test_generator);
 }

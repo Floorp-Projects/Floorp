@@ -3,8 +3,9 @@
 
 function run_test() {
   // initialize the permission manager service
-  let pm = Cc["@mozilla.org/permissionmanager;1"].
-        getService(Ci.nsIPermissionManager);
+  let pm = Cc["@mozilla.org/permissionmanager;1"].getService(
+    Ci.nsIPermissionManager
+  );
 
   Assert.equal(perm_count(), 0);
 
@@ -41,7 +42,6 @@ function run_test() {
 
   remove_one_by_type("pear");
   Assert.equal(perm_count(), 0);
-
 
   function perm_count() {
     let enumerator = pm.enumerator;

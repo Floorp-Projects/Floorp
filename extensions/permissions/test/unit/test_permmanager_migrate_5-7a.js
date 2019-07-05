@@ -1,13 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 var PERMISSIONS_FILE_NAME = "permissions.sqlite";
 
-function GetPermissionsFile(profile)
-{
+function GetPermissionsFile(profile) {
   let file = profile.clone();
   file.append(PERMISSIONS_FILE_NAME);
   return file;
@@ -35,14 +37,16 @@ add_task(async function test() {
       ",expireType INTEGER" +
       ",expireTime INTEGER" +
       ",modificationTime INTEGER" +
-    ")");
+      ")"
+  );
 
   let stmt5Insert = db.createStatement(
     "INSERT INTO moz_hosts (" +
       "id, origin, type, permission, expireType, expireTime, modificationTime" +
-    ") VALUES (" +
+      ") VALUES (" +
       ":id, :origin, :type, :permission, :expireType, :expireTime, :modificationTime" +
-    ")");
+      ")"
+  );
 
   /*
    * V4 table
@@ -58,18 +62,27 @@ add_task(async function test() {
       ",modificationTime INTEGER" +
       ",appId INTEGER" +
       ",isInBrowserElement INTEGER" +
-    ")");
+      ")"
+  );
 
   let stmtInsert = db.createStatement(
     "INSERT INTO moz_hosts_v4 (" +
       "id, host, type, permission, expireType, expireTime, modificationTime, appId, isInBrowserElement" +
-    ") VALUES (" +
+      ") VALUES (" +
       ":id, :host, :type, :permission, :expireType, :expireTime, :modificationTime, :appId, :isInBrowserElement" +
-    ")");
+      ")"
+  );
 
   let id = 0;
 
-  function insertOrigin(origin, type, permission, expireType, expireTime, modificationTime) {
+  function insertOrigin(
+    origin,
+    type,
+    permission,
+    expireType,
+    expireTime,
+    modificationTime
+  ) {
     let thisId = id++;
 
     stmt5Insert.bindByName("id", thisId);
@@ -93,11 +106,20 @@ add_task(async function test() {
       permission,
       expireType,
       expireTime,
-      modificationTime
+      modificationTime,
     };
   }
 
-  function insertHost(host, type, permission, expireType, expireTime, modificationTime, appId, isInBrowserElement) {
+  function insertHost(
+    host,
+    type,
+    permission,
+    expireType,
+    expireTime,
+    modificationTime,
+    appId,
+    isInBrowserElement
+  ) {
     let thisId = id++;
 
     stmtInsert.bindByName("id", thisId);
@@ -125,7 +147,7 @@ add_task(async function test() {
       expireTime,
       modificationTime,
       appId,
-      isInBrowserElement
+      isInBrowserElement,
     };
   }
 
@@ -151,8 +173,26 @@ add_task(async function test() {
     insertHost("192.0.2.235", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///some/path/to/file.html", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///another/file.html", "A", 1, 0, 0, 0, 0, false),
-    insertHost("moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}", "A", 1, 0, 0, 0, 0, false),
-    insertHost("moz-nullprincipal:{12ahjksd-akjs-asd3-8393-asdu2189asdu}", "B", 1, 0, 0, 0, 0, false),
+    insertHost(
+      "moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}",
+      "A",
+      1,
+      0,
+      0,
+      0,
+      0,
+      false
+    ),
+    insertHost(
+      "moz-nullprincipal:{12ahjksd-akjs-asd3-8393-asdu2189asdu}",
+      "B",
+      1,
+      0,
+      0,
+      0,
+      0,
+      false
+    ),
     insertHost("<file>", "A", 1, 0, 0, 0, 0, false),
     insertHost("<file>", "B", 1, 0, 0, 0, 0, false),
   ];
@@ -209,11 +249,15 @@ add_task(async function test() {
     ["https://192.0.2.235", "A", 1, 0, 0],
   ];
 
-  let found = expected.map((it) => 0);
+  let found = expected.map(it => 0);
 
   // Add some places to the places database
-  await PlacesTestUtils.addVisits(Services.io.newURI("https://foo.com/some/other/subdirectory"));
-  await PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory"));
+  await PlacesTestUtils.addVisits(
+    Services.io.newURI("https://foo.com/some/other/subdirectory")
+  );
+  await PlacesTestUtils.addVisits(
+    Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory")
+  );
 
   // This will force the permission-manager to reload the data.
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
@@ -223,28 +267,43 @@ add_task(async function test() {
     let isExpected = false;
 
     expected.forEach((it, i) => {
-      if (permission.principal.origin == it[0] &&
-          permission.type == it[1] &&
-          permission.capability == it[2] &&
-          permission.expireType == it[3] &&
-          permission.expireTime == it[4]) {
+      if (
+        permission.principal.origin == it[0] &&
+        permission.type == it[1] &&
+        permission.capability == it[2] &&
+        permission.expireType == it[3] &&
+        permission.expireTime == it[4]
+      ) {
         isExpected = true;
         found[i]++;
       }
     });
 
-    Assert.ok(isExpected,
-              "Permission " + (isExpected ? "should" : "shouldn't") +
-              " be in permission database: " +
-              permission.principal.origin + ", " +
-              permission.type + ", " +
-              permission.capability + ", " +
-              permission.expireType + ", " +
-              permission.expireTime);
+    Assert.ok(
+      isExpected,
+      "Permission " +
+        (isExpected ? "should" : "shouldn't") +
+        " be in permission database: " +
+        permission.principal.origin +
+        ", " +
+        permission.type +
+        ", " +
+        permission.capability +
+        ", " +
+        permission.expireType +
+        ", " +
+        permission.expireTime
+    );
   }
 
   found.forEach((count, i) => {
-    Assert.ok(count == 1, "Expected count = 1, got count = " + count + " for permission " + expected[i]);
+    Assert.ok(
+      count == 1,
+      "Expected count = 1, got count = " +
+        count +
+        " for permission " +
+        expected[i]
+    );
   });
 
   // Check to make sure that all of the tables which we care about are present
@@ -265,12 +324,14 @@ add_task(async function test() {
     }
 
     // Check that the moz_perms_v6 table contains the backup of the entry we created
-    let mozPermsV6Stmt = db.createStatement("SELECT " +
-                                            "origin, type, permission, expireType, expireTime, modificationTime " +
-                                            "FROM moz_perms_v6 WHERE id = :id");
+    let mozPermsV6Stmt = db.createStatement(
+      "SELECT " +
+        "origin, type, permission, expireType, expireTime, modificationTime " +
+        "FROM moz_perms_v6 WHERE id = :id"
+    );
     try {
       // Check that the moz_hosts table still contains the correct values.
-      created5.forEach((it) => {
+      created5.forEach(it => {
         mozPermsV6Stmt.reset();
         mozPermsV6Stmt.bindByName("id", it.id);
         mozPermsV6Stmt.executeStep();
@@ -286,7 +347,9 @@ add_task(async function test() {
     }
 
     // Check that there are the right number of values
-    let mozPermsV6Count = db.createStatement("SELECT count(*) FROM moz_perms_v6");
+    let mozPermsV6Count = db.createStatement(
+      "SELECT count(*) FROM moz_perms_v6"
+    );
     try {
       mozPermsV6Count.executeStep();
       Assert.equal(mozPermsV6Count.getInt64(0), created5.length);
