@@ -1,6 +1,6 @@
 // Test nsIThrottledInputChannel interface.
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 function test_handler(metadata, response) {
   const originalBody = "the response";
@@ -10,8 +10,10 @@ function test_handler(metadata, response) {
 }
 
 function make_channel(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 function run_test() {
@@ -23,18 +25,21 @@ function run_test() {
 
   let channel = make_channel("http://localhost:" + PORT + "/testdir");
 
-  let tq = Cc["@mozilla.org/network/throttlequeue;1"]
-      .createInstance(Ci.nsIInputChannelThrottleQueue);
+  let tq = Cc["@mozilla.org/network/throttlequeue;1"].createInstance(
+    Ci.nsIInputChannelThrottleQueue
+  );
   tq.init(1000, 1000);
 
   let tic = channel.QueryInterface(Ci.nsIThrottledInputChannel);
   tic.throttleQueue = tq;
 
-  channel.asyncOpen(new ChannelListener(() => {
-    ok(tq.bytesProcessed() > 0, "throttled queue processed some bytes");
+  channel.asyncOpen(
+    new ChannelListener(() => {
+      ok(tq.bytesProcessed() > 0, "throttled queue processed some bytes");
 
-    httpserver.stop(do_test_finished);
-  }));
+      httpserver.stop(do_test_finished);
+    })
+  );
 
   do_test_pending();
 }

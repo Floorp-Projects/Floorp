@@ -8,10 +8,18 @@
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-    new Test("http://localhost:" + srv.identity.primaryPort + "/writeString",
-            null, check_1234, succeeded),
-    new Test("http://localhost:" + srv.identity.primaryPort + "/writeInt",
-            null, check_1234, succeeded),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/writeString",
+      null,
+      check_1234,
+      succeeded
+    ),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/writeInt",
+      null,
+      check_1234,
+      succeeded
+    ),
   ];
 });
 
@@ -26,7 +34,6 @@ function run_test() {
 
   runHttpTests(tests, testComplete(srv));
 }
-
 
 // TEST DATA
 

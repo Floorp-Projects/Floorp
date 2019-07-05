@@ -2,20 +2,49 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var tests = [
-  {data: '', chunks: [], status: Cr.NS_OK, consume: [],
-   dataChunks: ['']},
-  {data: 'TWO-PARTS', chunks: [4, 5], status: Cr.NS_OK, consume: [4, 5],
-   dataChunks: ['TWO-', 'PARTS', '']},
-  {data: 'TWO-PARTS', chunks: [4, 5], status: Cr.NS_OK, consume: [0, 0],
-   dataChunks: ['TWO-', 'TWO-PARTS', 'TWO-PARTS']},
-  {data: '3-PARTS', chunks: [1, 1, 5], status: Cr.NS_OK, consume: [0, 2, 5],
-   dataChunks: ['3', '3-', 'PARTS', '']},
-  {data: 'ALL-AT-ONCE', chunks: [11], status: Cr.NS_OK, consume: [0],
-   dataChunks: ['ALL-AT-ONCE', 'ALL-AT-ONCE']},
-  {data: 'ALL-AT-ONCE', chunks: [11], status: Cr.NS_OK, consume: [11],
-   dataChunks: ['ALL-AT-ONCE', '']},
-  {data: 'ERROR', chunks: [1], status: Cr.NS_ERROR_OUT_OF_MEMORY, consume: [0],
-   dataChunks: ['E', 'E']}
+  { data: "", chunks: [], status: Cr.NS_OK, consume: [], dataChunks: [""] },
+  {
+    data: "TWO-PARTS",
+    chunks: [4, 5],
+    status: Cr.NS_OK,
+    consume: [4, 5],
+    dataChunks: ["TWO-", "PARTS", ""],
+  },
+  {
+    data: "TWO-PARTS",
+    chunks: [4, 5],
+    status: Cr.NS_OK,
+    consume: [0, 0],
+    dataChunks: ["TWO-", "TWO-PARTS", "TWO-PARTS"],
+  },
+  {
+    data: "3-PARTS",
+    chunks: [1, 1, 5],
+    status: Cr.NS_OK,
+    consume: [0, 2, 5],
+    dataChunks: ["3", "3-", "PARTS", ""],
+  },
+  {
+    data: "ALL-AT-ONCE",
+    chunks: [11],
+    status: Cr.NS_OK,
+    consume: [0],
+    dataChunks: ["ALL-AT-ONCE", "ALL-AT-ONCE"],
+  },
+  {
+    data: "ALL-AT-ONCE",
+    chunks: [11],
+    status: Cr.NS_OK,
+    consume: [11],
+    dataChunks: ["ALL-AT-ONCE", ""],
+  },
+  {
+    data: "ERROR",
+    chunks: [1],
+    status: Cr.NS_ERROR_OUT_OF_MEMORY,
+    consume: [0],
+    dataChunks: ["E", "E"],
+  },
 ];
 
 /**
@@ -31,13 +60,14 @@ var tests = [
  */
 
 function execute_test(test) {
-  let stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stream.data = test.data;
 
   let channel = {
     contentLength: -1,
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel]),
   };
 
   let chunkIndex = 0;
@@ -51,7 +81,7 @@ function execute_test(test) {
 
       equal(status, test.status);
     },
-    onIncrementalData (loader, context, length, data, consumed) {
+    onIncrementalData(loader, context, length, data, consumed) {
       ok(chunkIndex < test.dataChunks.length - 1);
       var expectedChunk = test.dataChunks[chunkIndex];
       equal(length, expectedChunk.length);
@@ -60,17 +90,19 @@ function execute_test(test) {
       consumed.value = test.consume[chunkIndex];
       chunkIndex++;
     },
-    QueryInterface:
-      ChromeUtils.generateQI([Ci.nsIIncrementalStreamLoaderObserver])
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIIncrementalStreamLoaderObserver,
+    ]),
   };
 
-  let listener = Cc["@mozilla.org/network/incremental-stream-loader;1"]
-                 .createInstance(Ci.nsIIncrementalStreamLoader);
+  let listener = Cc[
+    "@mozilla.org/network/incremental-stream-loader;1"
+  ].createInstance(Ci.nsIIncrementalStreamLoader);
   listener.init(observer);
 
   listener.onStartRequest(channel);
   var offset = 0;
-  test.chunks.forEach(function (chunkLength) {
+  test.chunks.forEach(function(chunkLength) {
     listener.onDataAvailable(channel, stream, offset, chunkLength);
     offset += chunkLength;
   });

@@ -1,35 +1,38 @@
 var CC = Components.Constructor;
 
-const ServerSocket = CC("@mozilla.org/network/server-socket;1",
-                        "nsIServerSocket",
-                        "init");
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                           "nsIBinaryInputStream",
-                           "setInputStream");
-const DirectoryService = CC("@mozilla.org/file/directory_service;1",
-                            "nsIProperties");
+const ServerSocket = CC(
+  "@mozilla.org/network/server-socket;1",
+  "nsIServerSocket",
+  "init"
+);
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+const DirectoryService = CC(
+  "@mozilla.org/file/directory_service;1",
+  "nsIProperties"
+);
 const Process = CC("@mozilla.org/process/util;1", "nsIProcess", "init");
 
-const currentThread = Cc["@mozilla.org/thread-manager;1"]
-                      .getService().currentThread;
+const currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
+  .currentThread;
 
 var socks_test_server = null;
 var socks_listen_port = -1;
 
-function getAvailableBytes(input)
-{
+function getAvailableBytes(input) {
   var len = 0;
 
   try {
-    len = input.available();  
-  } catch (e) {
-  }
-  
+    len = input.available();
+  } catch (e) {}
+
   return len;
 }
 
-function runScriptSubprocess(script, args)
-{
+function runScriptSubprocess(script, args) {
   var ds = new DirectoryService();
   var bin = ds.get("XREExeF", Ci.nsIFile);
   if (!bin.exists()) {
@@ -45,33 +48,39 @@ function runScriptSubprocess(script, args)
   return proc;
 }
 
-function buf2ip(buf)
-{
+function buf2ip(buf) {
   if (buf.length == 16) {
-    var ip = (buf[0]  << 4 | buf[1]).toString(16) + ':' +
-             (buf[2]  << 4 | buf[3]).toString(16) + ':' +
-             (buf[4]  << 4 | buf[5]).toString(16) + ':' +
-             (buf[6]  << 4 | buf[7]).toString(16) + ':' +
-             (buf[8]  << 4 | buf[9]).toString(16) + ':' +
-             (buf[10] << 4 | buf[11]).toString(16) + ':' +
-             (buf[12] << 4 | buf[13]).toString(16) + ':' +
-             (buf[14] << 4 | buf[15]).toString(16);
+    var ip =
+      ((buf[0] << 4) | buf[1]).toString(16) +
+      ":" +
+      ((buf[2] << 4) | buf[3]).toString(16) +
+      ":" +
+      ((buf[4] << 4) | buf[5]).toString(16) +
+      ":" +
+      ((buf[6] << 4) | buf[7]).toString(16) +
+      ":" +
+      ((buf[8] << 4) | buf[9]).toString(16) +
+      ":" +
+      ((buf[10] << 4) | buf[11]).toString(16) +
+      ":" +
+      ((buf[12] << 4) | buf[13]).toString(16) +
+      ":" +
+      ((buf[14] << 4) | buf[15]).toString(16);
     for (var i = 8; i >= 2; i--) {
       var re = new RegExp("(^|:)(0(:|$)){" + i + "}");
-      var shortip = ip.replace(re, '::');
+      var shortip = ip.replace(re, "::");
       if (shortip != ip) {
         return shortip;
       }
     }
     return ip;
   }
-  return buf.join('.');
+  return buf.join(".");
 }
 
-function buf2int(buf)
-{
+function buf2int(buf) {
   var n = 0;
-  
+
   for (var i in buf) {
     n |= buf[i] << ((buf.length - i - 1) * 8);
   }
@@ -79,8 +88,7 @@ function buf2int(buf)
   return n;
 }
 
-function buf2str(buf)
-{
+function buf2str(buf) {
   return String.fromCharCode.apply(null, buf);
 }
 
@@ -93,12 +101,11 @@ const STATE_WAIT_SOCKS5_REQUEST = 6;
 const STATE_WAIT_PONG = 7;
 const STATE_GOT_PONG = 8;
 
-function SocksClient(server, client_in, client_out)
-{
+function SocksClient(server, client_in, client_out) {
   this.server = server;
-  this.type = '';
-  this.username = '';
-  this.dest_name = '';
+  this.type = "";
+  this.username = "";
+  this.dest_name = "";
   this.dest_addr = [];
   this.dest_port = [];
 
@@ -110,12 +117,11 @@ function SocksClient(server, client_in, client_out)
   this.waitRead(this.client_in);
 }
 SocksClient.prototype = {
-  onInputStreamReady(input)
-  {
+  onInputStreamReady(input) {
     var len = getAvailableBytes(input);
 
     if (len == 0) {
-      print('server: client closed!');
+      print("server: client closed!");
       Assert.equal(this.state, STATE_GOT_PONG);
       this.server.testCompleted(this);
       return;
@@ -154,45 +160,42 @@ SocksClient.prototype = {
     this.waitRead(input);
   },
 
-  onOutputStreamReady(output)
-  {
+  onOutputStreamReady(output) {
     var len = output.write(this.outbuf, this.outbuf.length);
     if (len != this.outbuf.length) {
       this.outbuf = this.outbuf.substring(len);
       this.waitWrite(output);
-    } else
+    } else {
       this.outbuf = String();
+    }
   },
 
-  waitRead(input)
-  {
+  waitRead(input) {
     input.asyncWait(this, 0, 0, currentThread);
   },
 
-  waitWrite(output)
-  {
+  waitWrite(output) {
     output.asyncWait(this, 0, 0, currentThread);
   },
 
-  write(buf)
-  {
+  write(buf) {
     this.outbuf += buf;
     this.waitWrite(this.client_out);
   },
 
-  checkSocksGreeting()
-  {
-    if (this.inbuf.length == 0)
+  checkSocksGreeting() {
+    if (this.inbuf.length == 0) {
       return;
+    }
 
     if (this.inbuf[0] == 4) {
-      print('server: got socks 4');
-      this.type = 'socks4';
+      print("server: got socks 4");
+      this.type = "socks4";
       this.state = STATE_WAIT_SOCKS4_REQUEST;
       this.checkSocks4Request();
     } else if (this.inbuf[0] == 5) {
-      print('server: got socks 5');
-      this.type = 'socks';
+      print("server: got socks 5");
+      this.type = "socks";
       this.state = STATE_WAIT_SOCKS5_GREETING;
       this.checkSocks5Greeting();
     } else {
@@ -200,13 +203,13 @@ SocksClient.prototype = {
     }
   },
 
-  checkSocks4Request()
-  {
-    if (this.inbuf.length < 8)
+  checkSocks4Request() {
+    if (this.inbuf.length < 8) {
       return;
+    }
 
     Assert.equal(this.inbuf[1], 0x01);
-    
+
     this.dest_port = this.inbuf.slice(2, 4);
     this.dest_addr = this.inbuf.slice(4, 8);
 
@@ -215,32 +218,33 @@ SocksClient.prototype = {
     this.checkSocks4Username();
   },
 
-  readString()
-  {
+  readString() {
     var i = this.inbuf.indexOf(0);
     var str = null;
 
     if (i >= 0) {
-      var buf = this.inbuf.slice(0,i);
+      var buf = this.inbuf.slice(0, i);
       str = buf2str(buf);
-      this.inbuf = this.inbuf.slice(i+1);
+      this.inbuf = this.inbuf.slice(i + 1);
     }
 
     return str;
   },
 
-  checkSocks4Username()
-  {
+  checkSocks4Username() {
     var str = this.readString();
 
-    if (str == null)
+    if (str == null) {
       return;
+    }
 
     this.username = str;
-    if (this.dest_addr[0] == 0 &&
-        this.dest_addr[1] == 0 &&
-        this.dest_addr[2] == 0 &&
-        this.dest_addr[3] != 0) {
+    if (
+      this.dest_addr[0] == 0 &&
+      this.dest_addr[1] == 0 &&
+      this.dest_addr[2] == 0 &&
+      this.dest_addr[3] != 0
+    ) {
       this.state = STATE_WAIT_SOCKS4_HOSTNAME;
       this.checkSocks4Hostname();
     } else {
@@ -248,44 +252,44 @@ SocksClient.prototype = {
     }
   },
 
-  checkSocks4Hostname()
-  {
+  checkSocks4Hostname() {
     var str = this.readString();
 
-    if (str == null)
+    if (str == null) {
       return;
+    }
 
     this.dest_name = str;
     this.sendSocks4Response();
   },
 
-  sendSocks4Response()
-  {
-    this.outbuf = '\x00\x5a\x00\x00\x00\x00\x00\x00';
+  sendSocks4Response() {
+    this.outbuf = "\x00\x5a\x00\x00\x00\x00\x00\x00";
     this.sendPing();
   },
 
-  checkSocks5Greeting()
-  {
-    if (this.inbuf.length < 2)
+  checkSocks5Greeting() {
+    if (this.inbuf.length < 2) {
       return;
+    }
     var nmethods = this.inbuf[1];
-    if (this.inbuf.length < 2 + nmethods)
+    if (this.inbuf.length < 2 + nmethods) {
       return;
+    }
 
-    Assert.ok(nmethods >= 1);  
+    Assert.ok(nmethods >= 1);
     var methods = this.inbuf.slice(2, 2 + nmethods);
     Assert.ok(0 in methods);
 
     this.inbuf = [];
     this.state = STATE_WAIT_SOCKS5_REQUEST;
-    this.write('\x05\x00');
+    this.write("\x05\x00");
   },
-  
-  checkSocks5Request()
-  {
-    if (this.inbuf.length < 4)
+
+  checkSocks5Request() {
+    if (this.inbuf.length < 4) {
       return;
+    }
 
     Assert.equal(this.inbuf[0], 0x05);
     Assert.equal(this.inbuf[1], 0x01);
@@ -305,21 +309,23 @@ SocksClient.prototype = {
         break;
       case 0x04:
         len = 16;
-        break;  
+        break;
       default:
         do_throw("Unknown address type " + atype);
     }
-    
+
     if (name) {
-      if (this.inbuf.length < 4 + len + 1 + 2)
+      if (this.inbuf.length < 4 + len + 1 + 2) {
         return;
+      }
 
       buf = this.inbuf.slice(5, 5 + len);
       this.dest_name = buf2str(buf);
       len += 1;
     } else {
-      if (this.inbuf.length < 4 + len + 2)
+      if (this.inbuf.length < 4 + len + 2) {
         return;
+      }
 
       this.dest_addr = this.inbuf.slice(4, 4 + len);
     }
@@ -330,21 +336,20 @@ SocksClient.prototype = {
     this.sendSocks5Response();
   },
 
-  sendSocks5Response()
-  {
+  sendSocks5Response() {
     if (this.dest_addr.length == 16) {
       // send a successful response with the address, [::1]:80
-      this.outbuf += '\x05\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x80';
+      this.outbuf +=
+        "\x05\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x80";
     } else {
       // send a successful response with the address, 127.0.0.1:80
-      this.outbuf += '\x05\x00\x00\x01\x7f\x00\x00\x01\x00\x80';
+      this.outbuf += "\x05\x00\x00\x01\x7f\x00\x00\x01\x00\x80";
     }
     this.sendPing();
   },
 
-  sendPing()
-  {
-    print('server: sending ping');
+  sendPing() {
+    print("server: sending ping");
     this.state = STATE_WAIT_PONG;
     this.outbuf += "PING!";
     this.inbuf = [];
@@ -352,26 +357,23 @@ SocksClient.prototype = {
     this.waitRead(this.client_in);
   },
 
-  checkPong()
-  {
+  checkPong() {
     var pong = buf2str(this.inbuf);
     Assert.equal(pong, "PONG!");
     this.state = STATE_GOT_PONG;
     this.waitRead(this.client_in);
   },
-  
-  close()
-  {
+
+  close() {
     this.client_in.close();
     this.client_out.close();
-  }
+  },
 };
 
-function SocksTestServer()
-{
+function SocksTestServer() {
   this.listener = ServerSocket(-1, true, -1);
   socks_listen_port = this.listener.port;
-  print('server: listening on', socks_listen_port);
+  print("server: listening on", socks_listen_port);
   this.listener.asyncListen(this);
   this.test_cases = [];
   this.client_connections = [];
@@ -381,15 +383,13 @@ function SocksTestServer()
   this.tests_completed = 0;
 }
 SocksTestServer.prototype = {
-  addTestCase(test)
-  {
+  addTestCase(test) {
     test.finished = false;
     test.port = this.test_port_id++;
     this.test_cases.push(test);
   },
 
-  pickTest(id)
-  {
+  pickTest(id) {
     for (var i in this.test_cases) {
       var test = this.test_cases[i];
       if (test.port == id) {
@@ -400,122 +400,125 @@ SocksTestServer.prototype = {
     do_throw("No test case with id " + id);
   },
 
-  testCompleted(client)
-  {
+  testCompleted(client) {
     var port_id = buf2int(client.dest_port);
     var test = this.pickTest(port_id);
-    
-    print('server: test finished', test.port);
+
+    print("server: test finished", test.port);
     Assert.ok(test != null);
     Assert.equal(test.expectedType || test.type, client.type);
     Assert.equal(test.port, port_id);
 
-    if (test.remote_dns)
+    if (test.remote_dns) {
       Assert.equal(test.host, client.dest_name);
-    else
+    } else {
       Assert.equal(test.host, buf2ip(client.dest_addr));
-    
+    }
+
     if (this.test_cases.length == this.tests_completed) {
-      print('server: all tests completed');
+      print("server: all tests completed");
       this.close();
       do_test_finished();
     }
   },
 
-  runClientSubprocess()
-  {
+  runClientSubprocess() {
     var argv = [];
 
     // marshaled: socks_ver|server_port|dest_host|dest_port|<remote|local>
     for (var test of this.test_cases) {
-      var arg = test.type + '|' +
-        String(socks_listen_port) + '|' +
-        test.host + '|' + test.port + '|';
-      if (test.remote_dns)
-        arg += 'remote';
-      else
-        arg += 'local';
-      print('server: using test case', arg);  
-      argv.push(arg);      
+      var arg =
+        test.type +
+        "|" +
+        String(socks_listen_port) +
+        "|" +
+        test.host +
+        "|" +
+        test.port +
+        "|";
+      if (test.remote_dns) {
+        arg += "remote";
+      } else {
+        arg += "local";
+      }
+      print("server: using test case", arg);
+      argv.push(arg);
     }
 
     this.client_subprocess = runScriptSubprocess(
-        'socks_client_subprocess.js', argv);
+      "socks_client_subprocess.js",
+      argv
+    );
   },
 
-  onSocketAccepted(socket, trans)
-  {
-    print('server: got client connection');
+  onSocketAccepted(socket, trans) {
+    print("server: got client connection");
     var input = trans.openInputStream(0, 0, 0);
     var output = trans.openOutputStream(0, 0, 0);
     var client = new SocksClient(this, input, output);
     this.client_connections.push(client);
   },
-  
-  onStopListening(socket)
-  {  
-  },
 
-  close()
-  {
+  onStopListening(socket) {},
+
+  close() {
     if (this.client_subprocess) {
       try {
-        this.client_subprocess.kill();      
+        this.client_subprocess.kill();
       } catch (x) {
-        do_note_exception(x, 'Killing subprocess failed');
+        do_note_exception(x, "Killing subprocess failed");
       }
       this.client_subprocess = null;
     }
-    for (var client of this.client_connections)
+    for (var client of this.client_connections) {
       client.close();
+    }
     this.client_connections = [];
     if (this.listener) {
       this.listener.close();
       this.listener = null;
     }
-  }
+  },
 };
 
-function test_timeout()
-{
+function test_timeout() {
   socks_test_server.close();
   do_throw("SOCKS test took too long!");
 }
 
-function run_test()
-{
+function run_test() {
   socks_test_server = new SocksTestServer();
 
   socks_test_server.addTestCase({
-        type: "socks4",
-        host: '127.0.0.1',
-        remote_dns: false,
+    type: "socks4",
+    host: "127.0.0.1",
+    remote_dns: false,
   });
   socks_test_server.addTestCase({
-        type: "socks4",
-        host: '12345.xxx',
-        remote_dns: true,
+    type: "socks4",
+    host: "12345.xxx",
+    remote_dns: true,
   });
   socks_test_server.addTestCase({
-        type: "socks4",
-        expectedType: "socks",
-        host: '::1',
-        remote_dns: false,
+    type: "socks4",
+    expectedType: "socks",
+    host: "::1",
+    remote_dns: false,
   });
   socks_test_server.addTestCase({
-        type: "socks",
-        host: '127.0.0.1',
-        remote_dns: false,
+    type: "socks",
+    host: "127.0.0.1",
+    remote_dns: false,
   });
   socks_test_server.addTestCase({
-        type: "socks",
-        host: 'abcdefg.xxx',
-        remote_dns: true,
+    type: "socks",
+    host: "abcdefg.xxx",
+    remote_dns: true,
   });
   socks_test_server.addTestCase({
-        type: "socks",
-        host: '::1',
-        remote_dns: false,
+    type: "socks",
+    host: "::1",
+    remote_dns: false,
   });
   socks_test_server.runClientSubprocess();
 

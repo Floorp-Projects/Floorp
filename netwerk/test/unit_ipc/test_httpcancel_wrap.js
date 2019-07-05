@@ -1,17 +1,19 @@
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                            "nsIReferrerInfo",
-                                            "init");
+const ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
+);
 
 let observer = null;
 
 function run_test() {
   do_await_remote_message("register-observer").then(() => {
-    observer =  {
+    observer = {
       QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
       observe(subject, topic, data) {
@@ -24,21 +26,25 @@ function run_test() {
           let currentReferrer = subject.getRequestHeader("Referer");
           Assert.equal(currentReferrer, "http://site1.com/");
           let uri = Services.io.newURI("http://site2.com");
-          subject.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
+          subject.referrerInfo = new ReferrerInfo(
+            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+            true,
+            uri
+          );
         } catch (ex) {
           do_throw("Exception: " + ex);
         }
-      }
-    }
+      },
+    };
 
     Services.obs.addObserver(observer, "http-on-modify-request");
-    do_send_remote_message('register-observer-done');
+    do_send_remote_message("register-observer-done");
   });
 
   do_await_remote_message("unregister-observer").then(() => {
     Services.obs.removeObserver(observer, "http-on-modify-request");
 
-    do_send_remote_message('unregister-observer-done');
+    do_send_remote_message("unregister-observer-done");
   });
 
   run_test_in_child("../unit/test_httpcancel.js");

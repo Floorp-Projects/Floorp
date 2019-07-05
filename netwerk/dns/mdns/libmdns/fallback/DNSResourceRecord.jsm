@@ -8,10 +8,18 @@
 
 var EXPORTED_SYMBOLS = ["DNSResourceRecord"];
 
-const {DataReader} = ChromeUtils.import("resource://gre/modules/DataReader.jsm");
-const {DataWriter} = ChromeUtils.import("resource://gre/modules/DataWriter.jsm");
-const {DNSRecord} = ChromeUtils.import("resource://gre/modules/DNSRecord.jsm");
-const {DNS_RECORD_TYPES} = ChromeUtils.import("resource://gre/modules/DNSTypes.jsm");
+const { DataReader } = ChromeUtils.import(
+  "resource://gre/modules/DataReader.jsm"
+);
+const { DataWriter } = ChromeUtils.import(
+  "resource://gre/modules/DataWriter.jsm"
+);
+const { DNSRecord } = ChromeUtils.import(
+  "resource://gre/modules/DNSRecord.jsm"
+);
+const { DNS_RECORD_TYPES } = ChromeUtils.import(
+  "resource://gre/modules/DNSTypes.jsm"
+);
 
 const DNS_RESOURCE_RECORD_DEFAULT_TTL = 120; // 120 seconds
 
@@ -19,14 +27,14 @@ class DNSResourceRecord extends DNSRecord {
   constructor(properties = {}) {
     super(properties);
 
-    this.ttl  = properties.ttl || DNS_RESOURCE_RECORD_DEFAULT_TTL;
+    this.ttl = properties.ttl || DNS_RESOURCE_RECORD_DEFAULT_TTL;
     this.data = properties.data || {};
   }
 
   static parseFromPacketReader(reader) {
     let record = super.parseFromPacketReader(reader);
 
-    let ttl        = reader.getValue(4);
+    let ttl = reader.getValue(4);
     let recordData = reader.getBytes(reader.getValue(2));
     let packetData = reader.data;
 
@@ -50,7 +58,7 @@ class DNSResourceRecord extends DNSRecord {
         break;
     }
 
-    record.ttl  = ttl;
+    record.ttl = ttl;
     record.data = data;
 
     return record;
@@ -137,7 +145,7 @@ function _parseTXT(recordData, packetData) {
   let label = reader.getLabel(packetData);
   if (label.length > 0) {
     let parts = label.split(".");
-    parts.forEach((part) => {
+    parts.forEach(part => {
       let [name] = part.split("=", 1);
       let value = part.substr(name.length + 1);
       result[name] = value;
@@ -154,9 +162,9 @@ function _parseSRV(recordData, packetData) {
   let reader = new DataReader(recordData);
 
   let priority = reader.getValue(2);
-  let weight   = reader.getValue(2);
-  let port     = reader.getValue(2);
-  let target   = reader.getLabel(packetData);
+  let weight = reader.getValue(2);
+  let port = reader.getValue(2);
+  let target = reader.getLabel(packetData);
 
   return { priority, weight, port, target };
 }

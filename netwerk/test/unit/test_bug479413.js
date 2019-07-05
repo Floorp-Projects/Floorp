@@ -4,36 +4,35 @@
 
 var idnService;
 
-function expected_pass(inputIDN)
-{
+function expected_pass(inputIDN) {
   var isASCII = {};
   var displayIDN = idnService.convertToDisplayIDN(inputIDN, isASCII);
   Assert.equal(displayIDN, inputIDN);
 }
 
-function expected_fail(inputIDN)
-{
+function expected_fail(inputIDN) {
   var isASCII = {};
   var displayIDN = "";
 
   try {
     displayIDN = idnService.convertToDisplayIDN(inputIDN, isASCII);
-  }
-  catch(e) {}
+  } catch (e) {}
 
   Assert.notEqual(displayIDN, inputIDN);
 }
 
 function run_test() {
-   // add an IDN whitelist pref
-  var pbi = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Ci.nsIPrefBranch);
+  // add an IDN whitelist pref
+  var pbi = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   var whitelistPref = "network.IDN.whitelist.com";
 
   pbi.setBoolPref(whitelistPref, true);
- 
-  idnService = Cc["@mozilla.org/network/idn-service;1"]
-    .getService(Ci.nsIIDNService);
+
+  idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+    Ci.nsIIDNService
+  );
 
   // assigned code point
   expected_pass("foo\u0101bar.com");
@@ -54,6 +53,7 @@ function run_test() {
   expected_fail("foo\u0370bar.com");
 
   // reset the pref
-  if (pbi.prefHasUserValue(whitelistPref))
+  if (pbi.prefHasUserValue(whitelistPref)) {
     pbi.clearUserPref(whitelistPref);
+  }
 }

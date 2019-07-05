@@ -4,8 +4,10 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {UserAgentOverrides} = ChromeUtils.import("resource://gre/modules/UserAgentOverrides.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { UserAgentOverrides } = ChromeUtils.import(
+  "resource://gre/modules/UserAgentOverrides.jsm"
+);
 
 function UAOverridesBootstrapper() {
   this.init();
