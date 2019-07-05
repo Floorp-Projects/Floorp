@@ -20,7 +20,15 @@ add_task(async function test_search_for_tagged_bookmarks() {
   });
 
   // tag the bookmarked URI
-  PlacesUtils.tagging.tagURI(uri(testURI), ["elephant", "walrus", "giraffe", "turkey", "hiPPo", "BABOON", "alf"]);
+  PlacesUtils.tagging.tagURI(uri(testURI), [
+    "elephant",
+    "walrus",
+    "giraffe",
+    "turkey",
+    "hiPPo",
+    "BABOON",
+    "alf",
+  ]);
 
   // search for the bookmark, using a tag
   var query = PlacesUtils.history.getNewQuery();

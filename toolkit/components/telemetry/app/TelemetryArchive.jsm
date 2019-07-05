@@ -4,9 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TelemetryArchive",
-];
+var EXPORTED_SYMBOLS = ["TelemetryArchive"];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm", this);
 ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
@@ -16,8 +14,11 @@ ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryArchive::";
 
-ChromeUtils.defineModuleGetter(this, "TelemetryStorage",
-                               "resource://gre/modules/TelemetryStorage.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryStorage",
+  "resource://gre/modules/TelemetryStorage.jsm"
+);
 
 var TelemetryArchive = {
   /**
@@ -70,7 +71,10 @@ var TelemetryArchiveImpl = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+      this._logger = Log.repository.getLoggerWithMessagePrefix(
+        LOGGER_NAME,
+        LOGGER_PREFIX
+      );
     }
 
     return this._logger;

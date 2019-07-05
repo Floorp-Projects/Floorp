@@ -4,7 +4,12 @@
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "43");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
+);
 
 let {
   promiseRestartManager,
@@ -12,9 +17,15 @@ let {
   promiseStartupManager,
 } = AddonTestUtils;
 
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", true);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  true
+);
 
-let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+let { Management } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
 
 // Crashes a <browser>'s remote process.
 // Based on BrowserTestUtils.crashBrowser.
@@ -25,7 +36,7 @@ function crashBrowser(browser) {
   }
 
   let frameScript = () => {
-    const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+    const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
     privateNoteIntentionalCrash(); /* eslint-disable-line no-undef */
     let zero = new ctypes.intptr_t(8);
     let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
@@ -84,8 +95,11 @@ add_task(async function test_unload_extension_before_background_page_startup() {
   ExtensionParent._resetStartupPromises();
 
   Management.off("extension-browser-inserted", onExtensionBrowserInserted);
-  Assert.equal(extensionBrowserInsertions, 1,
-               "Extension browser should have been inserted only once");
+  Assert.equal(
+    extensionBrowserInsertions,
+    1,
+    "Extension browser should have been inserted only once"
+  );
 });
 
 // Verifies that the "build" method of BackgroundPage in ext-backgroundPage.js
@@ -128,7 +142,9 @@ add_task(async function test_unload_extension_during_background_page_startup() {
 
   let bgStartingPromise = new Promise(resolve => {
     let backgroundLoadCount = 0;
-    let backgroundPageUrl = extension.extension.baseURI.resolve("_generated_background_page.html");
+    let backgroundPageUrl = extension.extension.baseURI.resolve(
+      "_generated_background_page.html"
+    );
 
     // Prevent the background page from actually loading.
     Management.once("extension-browser-inserted", (eventName, browser) => {
@@ -136,7 +152,11 @@ add_task(async function test_unload_extension_during_background_page_startup() {
       let browserLoadURI = browser.loadURI;
       browser.loadURI = function() {
         Assert.equal(++backgroundLoadCount, 1, "loadURI should be called once");
-        Assert.equal(arguments[0], backgroundPageUrl, "Expected background page");
+        Assert.equal(
+          arguments[0],
+          backgroundPageUrl,
+          "Expected background page"
+        );
         // Reset to "about:blank" to not load the actual background page.
         arguments[0] = "about:blank";
         browserLoadURI.apply(this, arguments);

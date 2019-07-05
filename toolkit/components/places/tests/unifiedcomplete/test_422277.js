@@ -12,10 +12,10 @@ add_task(async function test() {
 
   info("Bad escaped uri stays escaped");
   let uri1 = NetUtil.newURI("http://site/%EAid");
-  await PlacesTestUtils.addVisits([ { uri: uri1, title: "title" } ]);
+  await PlacesTestUtils.addVisits([{ uri: uri1, title: "title" }]);
   await check_autocomplete({
     search: "site",
-    matches: [ { uri: uri1, title: "title" } ],
+    matches: [{ uri: uri1, title: "title" }],
   });
   await cleanup();
 });

@@ -32,8 +32,9 @@ add_task(async function check_max_backups_is_respected() {
   try {
     await iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
         lastBackupPath = aEntry.path;
+      }
     });
   } finally {
     iterator.close();
@@ -59,8 +60,9 @@ add_task(async function check_max_backups_greater_than_backups() {
   try {
     await iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
         lastBackupPath = aEntry.path;
+      }
     });
   } finally {
     iterator.close();
@@ -84,8 +86,9 @@ add_task(async function check_max_backups_null() {
   try {
     await iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
         lastBackupPath = aEntry.path;
+      }
     });
   } finally {
     iterator.close();
@@ -109,8 +112,9 @@ add_task(async function check_max_backups_undefined() {
   try {
     await iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (PlacesBackups.filenamesRegex.test(aEntry.name)) {
         lastBackupPath = aEntry.path;
+      }
     });
   } finally {
     iterator.close();

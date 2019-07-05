@@ -1,6 +1,5 @@
 "use strict";
 
-
 function AutoCompleteInput(aSearches, aUserContextId) {
   this.searches = aSearches;
   this.userContextId = aUserContextId;
@@ -22,22 +21,24 @@ function doSearch(aString, aUserContextId) {
   return new Promise(resolve => {
     let search = new AutoCompleteSearch("test");
 
-    search.startSearch = function(aSearchString,
-                                  aSearchParam,
-                                  aPreviousResult,
-                                  aListener) {
+    search.startSearch = function(
+      aSearchString,
+      aSearchParam,
+      aPreviousResult,
+      aListener
+    ) {
       unregisterAutoCompleteSearch(search);
       resolve(aSearchParam);
     };
 
     registerAutoCompleteSearch(search);
 
-    let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                     getService(Ci.nsIAutoCompleteController);
+    let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
+      Ci.nsIAutoCompleteController
+    );
 
-    let input = new AutoCompleteInput([ search.name ], aUserContextId);
+    let input = new AutoCompleteInput([search.name], aUserContextId);
     controller.input = input;
     controller.startSearch(aString);
   });
- }
-
+}

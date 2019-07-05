@@ -8,9 +8,9 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
 
 function makeWatcher() {
-  let watcher =
-    Cc["@mozilla.org/toolkit/filewatcher/native-file-watcher;1"]
-      .getService(Ci.nsINativeFileWatcherService);
+  let watcher = Cc[
+    "@mozilla.org/toolkit/filewatcher/native-file-watcher;1"
+  ].getService(Ci.nsINativeFileWatcherService);
   return watcher;
 }
 

@@ -6,13 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["ChildMessagePort"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {MessagePort} = ChromeUtils.import("resource://gre/modules/remotepagemanager/MessagePort.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { MessagePort } = ChromeUtils.import(
+  "resource://gre/modules/remotepagemanager/MessagePort.jsm"
+);
 
 // The content side of a message port
 class ChildMessagePort extends MessagePort {
   constructor(contentFrame, window) {
-    let portID = Services.appinfo.processID + ":" + ChildMessagePort.nextPortID++;
+    let portID =
+      Services.appinfo.processID + ":" + ChildMessagePort.nextPortID++;
     super(contentFrame, portID);
 
     this.window = window;

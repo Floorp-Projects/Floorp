@@ -1,4 +1,6 @@
-const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+const { FormHistory } = ChromeUtils.import(
+  "resource://gre/modules/FormHistory.jsm"
+);
 
 const ENGINE_NAME = "engine-suggestions.xml";
 // This is fixed to match the port number in engine-suggestions.xml.
@@ -23,7 +25,10 @@ async function cleanUpSuggestions() {
 }
 
 add_task(async function setup() {
-  Services.prefs.setCharPref("browser.urlbar.matchBuckets", "general:5,suggestion:Infinity");
+  Services.prefs.setCharPref(
+    "browser.urlbar.matchBuckets",
+    "general:5,suggestion:Infinity"
+  );
   Services.prefs.setBoolPref("browser.urlbar.geoSpecificDefaults", false);
 
   let engine = await addTestSuggestionsEngine(searchStr => {
@@ -36,7 +41,9 @@ add_task(async function setup() {
 
   // Install the test engine.
   let oldDefaultEngine = await Services.search.getDefault();
-  registerCleanupFunction(async () => Services.search.setDefault(oldDefaultEngine));
+  registerCleanupFunction(async () =>
+    Services.search.setDefault(oldDefaultEngine)
+  );
   Services.search.setDefault(engine);
 
   // We must make sure the FormHistoryStartup component is initialized.
@@ -98,26 +105,29 @@ add_task(async function singleWordQuery() {
       // The test engine echoes back the search string as the first suggestion,
       // so it would appear here (as "hello"), but we remove suggestions that
       // duplicate the search string, so it should not actually appear.
-      { uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "hello foo",
-        searchQuery: "hello",
-        searchSuggestion: "hello foo",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }, {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "hello bar",
-        searchQuery: "hello",
-        searchSuggestion: "hello bar",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }],
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello foo",
+          searchQuery: "hello",
+          searchSuggestion: "hello foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello bar",
+          searchQuery: "hello",
+          searchSuggestion: "hello bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
   });
 
   await cleanUpSuggestions();
@@ -131,27 +141,33 @@ add_task(async function multiWordQuery() {
     search: "hello world",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("hello world", { engineName: ENGINE_NAME, heuristic: true }),
-      { uri: makeActionURI(("searchengine"), {
+      makeSearchMatch("hello world", {
         engineName: ENGINE_NAME,
-        input: "hello world foo",
-        searchQuery: "hello world",
-        searchSuggestion: "hello world foo",
+        heuristic: true,
       }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }, {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "hello world bar",
-        searchQuery: "hello world",
-        searchSuggestion: "hello world bar",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }],
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello world foo",
+          searchQuery: "hello world",
+          searchSuggestion: "hello world foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello world bar",
+          searchQuery: "hello world",
+          searchSuggestion: "hello world bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
   });
 
   await cleanUpSuggestions();
@@ -171,26 +187,29 @@ add_task(async function suffixMatch() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
-      { uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "baz hello",
-        searchQuery: "hello",
-        searchSuggestion: "baz hello",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }, {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "quux hello",
-        searchQuery: "hello",
-        searchSuggestion: "quux hello",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }],
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "baz hello",
+          searchQuery: "hello",
+          searchSuggestion: "baz hello",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "quux hello",
+          searchQuery: "hello",
+          searchSuggestion: "quux hello",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
   });
 
   await cleanUpSuggestions();
@@ -208,26 +227,29 @@ add_task(async function queryIsNotASubstring() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
-      { uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "aaa",
-        searchQuery: "hello",
-        searchSuggestion: "aaa",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }, {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "bbb",
-        searchQuery: "hello",
-        searchSuggestion: "bbb",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }],
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "aaa",
+          searchQuery: "hello",
+          searchSuggestion: "aaa",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "bbb",
+          searchQuery: "hello",
+          searchSuggestion: "bbb",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
   });
 
   await cleanUpSuggestions();
@@ -273,7 +295,7 @@ add_task(async function restrictToken() {
         style: ["bookmark"],
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "hello foo",
           searchQuery: "hello",
@@ -284,7 +306,7 @@ add_task(async function restrictToken() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "hello bar",
           searchQuery: "hello",
@@ -302,10 +324,13 @@ add_task(async function restrictToken() {
     search: `${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(`${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
-                      { searchQuery: "hello", engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(`${UrlbarTokenizer.RESTRICT.SEARCH} hello`, {
+        searchQuery: "hello",
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "hello foo",
           searchQuery: "hello",
@@ -316,7 +341,7 @@ add_task(async function restrictToken() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "hello bar",
           searchQuery: "hello",
@@ -335,8 +360,11 @@ add_task(async function restrictToken() {
     search: UrlbarTokenizer.RESTRICT.SEARCH,
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH,
-                      { searchQuery: "", engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH, {
+        searchQuery: "",
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
     ],
   });
   // Also if followed by multiple spaces.
@@ -344,8 +372,11 @@ add_task(async function restrictToken() {
     search: UrlbarTokenizer.RESTRICT.SEARCH + "  ",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + "  ",
-                      { searchQuery: "", engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + "  ", {
+        searchQuery: "",
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
     ],
   });
   // Also if followed by a single char.
@@ -353,8 +384,11 @@ add_task(async function restrictToken() {
     search: UrlbarTokenizer.RESTRICT.SEARCH + "a",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + "a",
-                      { searchQuery: "a", engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + "a", {
+        searchQuery: "a",
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
     ],
   });
   // Also if followed by a space and single char.
@@ -362,8 +396,11 @@ add_task(async function restrictToken() {
     search: UrlbarTokenizer.RESTRICT.SEARCH + " a",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + " a",
-                      { searchQuery: "a", engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + " a", {
+        searchQuery: "a",
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
     ],
   });
   // Any other restriction char allows to search for it.
@@ -371,8 +408,10 @@ add_task(async function restrictToken() {
     search: UrlbarTokenizer.RESTRICT.OPENPAGE,
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE,
-                      { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
     ],
   });
 
@@ -386,39 +425,44 @@ add_task(async function mixup_frecency() {
   // that it's guaranteed, with its higher frecency, to appear above the search
   // suggestions.
   await PlacesTestUtils.addVisits([
-    { uri: NetUtil.newURI("http://example.com/lo0"),
-      title: "low frecency 0" },
-    { uri: NetUtil.newURI("http://example.com/lo1"),
-      title: "low frecency 1" },
-    { uri: NetUtil.newURI("http://example.com/lo2"),
-      title: "low frecency 2" },
-    { uri: NetUtil.newURI("http://example.com/lo3"),
-      title: "low frecency 3" },
-    { uri: NetUtil.newURI("http://example.com/lo4"),
-      title: "low frecency 4" },
+    { uri: NetUtil.newURI("http://example.com/lo0"), title: "low frecency 0" },
+    { uri: NetUtil.newURI("http://example.com/lo1"), title: "low frecency 1" },
+    { uri: NetUtil.newURI("http://example.com/lo2"), title: "low frecency 2" },
+    { uri: NetUtil.newURI("http://example.com/lo3"), title: "low frecency 3" },
+    { uri: NetUtil.newURI("http://example.com/lo4"), title: "low frecency 4" },
   ]);
 
   for (let i = 0; i < 4; i++) {
     let href = `http://example.com/lo${i}`;
     let frecency = frecencyForUrl(href);
-    Assert.ok(frecency < FRECENCY_DEFAULT,
-              `frecency for ${href}: ${frecency}, should be lower than ${FRECENCY_DEFAULT}`);
+    Assert.ok(
+      frecency < FRECENCY_DEFAULT,
+      `frecency for ${href}: ${frecency}, should be lower than ${FRECENCY_DEFAULT}`
+    );
   }
 
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits([
-      { uri: NetUtil.newURI("http://example.com/hi0"),
+      {
+        uri: NetUtil.newURI("http://example.com/hi0"),
         title: "high frecency 0",
-        transition: TRANSITION_TYPED },
-      { uri: NetUtil.newURI("http://example.com/hi1"),
+        transition: TRANSITION_TYPED,
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi1"),
         title: "high frecency 1",
-        transition: TRANSITION_TYPED },
-      { uri: NetUtil.newURI("http://example.com/hi2"),
+        transition: TRANSITION_TYPED,
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi2"),
         title: "high frecency 2",
-        transition: TRANSITION_TYPED },
-      { uri: NetUtil.newURI("http://example.com/hi3"),
+        transition: TRANSITION_TYPED,
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi3"),
         title: "high frecency 3",
-        transition: TRANSITION_TYPED },
+        transition: TRANSITION_TYPED,
+      },
     ]);
   }
 
@@ -426,8 +470,10 @@ add_task(async function mixup_frecency() {
     let href = `http://example.com/hi${i}`;
     await addBookmark({ uri: href, title: `high frecency ${i}` });
     let frecency = frecencyForUrl(href);
-    Assert.ok(frecency > FRECENCY_DEFAULT,
-              `frecency for ${href}: ${frecency}, should be higher than ${FRECENCY_DEFAULT}`);
+    Assert.ok(
+      frecency > FRECENCY_DEFAULT,
+      `frecency for ${href}: ${frecency}, should be higher than ${FRECENCY_DEFAULT}`
+    );
   }
 
   // Do an unrestricted search to make sure everything appears in it, including
@@ -438,22 +484,32 @@ add_task(async function mixup_frecency() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("frecency", { engineName: ENGINE_NAME, heuristic: true }),
-      { uri: NetUtil.newURI("http://example.com/hi3"),
-        title: "high frecency 3",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi2"),
-        title: "high frecency 2",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi1"),
-        title: "high frecency 1",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi0"),
-        title: "high frecency 0",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/lo4"),
-        title: "low frecency 4" },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: NetUtil.newURI("http://example.com/hi3"),
+        title: "high frecency 3",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi2"),
+        title: "high frecency 2",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi1"),
+        title: "high frecency 1",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi0"),
+        title: "high frecency 0",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo4"),
+        title: "low frecency 4",
+      },
+      {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "frecency foo",
           searchQuery: "frecency",
@@ -464,7 +520,7 @@ add_task(async function mixup_frecency() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "frecency bar",
           searchQuery: "frecency",
@@ -474,20 +530,30 @@ add_task(async function mixup_frecency() {
         style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
-      { uri: NetUtil.newURI("http://example.com/lo3"),
-        title: "low frecency 3" },
-      { uri: NetUtil.newURI("http://example.com/lo2"),
-        title: "low frecency 2" },
-      { uri: NetUtil.newURI("http://example.com/lo1"),
-        title: "low frecency 1" },
-      { uri: NetUtil.newURI("http://example.com/lo0"),
-        title: "low frecency 0" },
+      {
+        uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo2"),
+        title: "low frecency 2",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo1"),
+        title: "low frecency 1",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo0"),
+        title: "low frecency 0",
+      },
     ],
   });
 
   // Change the "general" context mixup.
-  Services.prefs.setCharPref("browser.urlbar.matchBuckets",
-                             "suggestion:1,general:5,suggestion:1");
+  Services.prefs.setCharPref(
+    "browser.urlbar.matchBuckets",
+    "suggestion:1,general:5,suggestion:1"
+  );
 
   // Do an unrestricted search to make sure everything appears in it, including
   // the visit and bookmark.
@@ -498,7 +564,7 @@ add_task(async function mixup_frecency() {
     matches: [
       makeSearchMatch("frecency", { engineName: ENGINE_NAME, heuristic: true }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "frecency foo",
           searchQuery: "frecency",
@@ -508,22 +574,32 @@ add_task(async function mixup_frecency() {
         style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
-      { uri: NetUtil.newURI("http://example.com/hi3"),
-        title: "high frecency 3",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi2"),
-        title: "high frecency 2",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi1"),
-        title: "high frecency 1",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi0"),
-        title: "high frecency 0",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/lo4"),
-        title: "low frecency 4" },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: NetUtil.newURI("http://example.com/hi3"),
+        title: "high frecency 3",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi2"),
+        title: "high frecency 2",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi1"),
+        title: "high frecency 1",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi0"),
+        title: "high frecency 0",
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo4"),
+        title: "low frecency 4",
+      },
+      {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "frecency bar",
           searchQuery: "frecency",
@@ -533,20 +609,30 @@ add_task(async function mixup_frecency() {
         style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
-      { uri: NetUtil.newURI("http://example.com/lo3"),
-        title: "low frecency 3" },
-      { uri: NetUtil.newURI("http://example.com/lo2"),
-        title: "low frecency 2" },
-      { uri: NetUtil.newURI("http://example.com/lo1"),
-        title: "low frecency 1" },
-      { uri: NetUtil.newURI("http://example.com/lo0"),
-        title: "low frecency 0" },
+      {
+        uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo2"),
+        title: "low frecency 2",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo1"),
+        title: "low frecency 1",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo0"),
+        title: "low frecency 0",
+      },
     ],
   });
 
   // Change the "search" context mixup.
-  Services.prefs.setCharPref("browser.urlbar.matchBucketsSearch",
-                             "suggestion:2,general:4");
+  Services.prefs.setCharPref(
+    "browser.urlbar.matchBucketsSearch",
+    "suggestion:2,general:4"
+  );
 
   await check_autocomplete({
     checkSorting: true,
@@ -555,7 +641,7 @@ add_task(async function mixup_frecency() {
     matches: [
       makeSearchMatch("frecency", { engineName: ENGINE_NAME, heuristic: true }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "frecency foo",
           searchQuery: "frecency",
@@ -566,7 +652,7 @@ add_task(async function mixup_frecency() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "frecency bar",
           searchQuery: "frecency",
@@ -576,32 +662,53 @@ add_task(async function mixup_frecency() {
         style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
-      { uri: NetUtil.newURI("http://example.com/hi3"),
+      {
+        uri: NetUtil.newURI("http://example.com/hi3"),
         title: "high frecency 3",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi2"),
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi2"),
         title: "high frecency 2",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi1"),
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi1"),
         title: "high frecency 1",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/hi0"),
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/hi0"),
         title: "high frecency 0",
-        style: [ "bookmark" ] },
-      { uri: NetUtil.newURI("http://example.com/lo4"),
-        title: "low frecency 4" },
-      { uri: NetUtil.newURI("http://example.com/lo3"),
-        title: "low frecency 3" },
-      { uri: NetUtil.newURI("http://example.com/lo2"),
-        title: "low frecency 2" },
-      { uri: NetUtil.newURI("http://example.com/lo1"),
-        title: "low frecency 1" },
-      { uri: NetUtil.newURI("http://example.com/lo0"),
-        title: "low frecency 0" },
+        style: ["bookmark"],
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo4"),
+        title: "low frecency 4",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo2"),
+        title: "low frecency 2",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo1"),
+        title: "low frecency 1",
+      },
+      {
+        uri: NetUtil.newURI("http://example.com/lo0"),
+        title: "low frecency 0",
+      },
     ],
   });
 
-  Services.prefs.setCharPref("browser.urlbar.matchBuckets", "general:5,suggestion:Infinity");
+  Services.prefs.setCharPref(
+    "browser.urlbar.matchBuckets",
+    "general:5,suggestion:Infinity"
+  );
   Services.prefs.clearUserPref("browser.urlbar.matchBucketsSearch");
   await cleanUpSuggestions();
 });
@@ -614,9 +721,12 @@ add_task(async function prohibit_suggestions() {
     search: "localhost",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch("localhost", {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "localhost foo",
           searchQuery: "localhost",
@@ -627,7 +737,7 @@ add_task(async function prohibit_suggestions() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "localhost bar",
           searchQuery: "localhost",
@@ -641,14 +751,20 @@ add_task(async function prohibit_suggestions() {
   });
   Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", true);
   registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
+    Services.prefs.setBoolPref(
+      "browser.fixup.domainwhitelist.localhost",
+      false
+    );
   });
   await check_autocomplete({
     search: "localhost",
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
-      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false }),
+      makeSearchMatch("localhost", {
+        engineName: ENGINE_NAME,
+        heuristic: false,
+      }),
     ],
   });
 
@@ -657,9 +773,12 @@ add_task(async function prohibit_suggestions() {
     search: "localhost other",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("localhost other", { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch("localhost other", {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "localhost other foo",
           searchQuery: "localhost other",
@@ -670,7 +789,7 @@ add_task(async function prohibit_suggestions() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "localhost other bar",
           searchQuery: "localhost other",
@@ -696,7 +815,10 @@ add_task(async function prohibit_suggestions() {
     searchParam: "enable-actions",
     matches: [
       makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
-      makeSearchMatch("localhost", { engineName: ENGINE_NAME, heuristic: false }),
+      makeSearchMatch("localhost", {
+        engineName: ENGINE_NAME,
+        heuristic: false,
+      }),
     ],
   });
 
@@ -704,8 +826,13 @@ add_task(async function prohibit_suggestions() {
     search: "somethingelse",
     searchParam: "enable-actions",
     matches: [
-      makeVisitMatch("somethingelse", "http://somethingelse/", { heuristic: true }),
-      makeSearchMatch("somethingelse", { engineName: ENGINE_NAME, heuristic: false }),
+      makeVisitMatch("somethingelse", "http://somethingelse/", {
+        heuristic: true,
+      }),
+      makeSearchMatch("somethingelse", {
+        engineName: ENGINE_NAME,
+        heuristic: false,
+      }),
     ],
   });
 
@@ -714,9 +841,12 @@ add_task(async function prohibit_suggestions() {
     search: "localhost other",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("localhost other", { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchMatch("localhost other", {
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "localhost other foo",
           searchQuery: "localhost other",
@@ -727,7 +857,7 @@ add_task(async function prohibit_suggestions() {
         icon: "",
       },
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "localhost other bar",
           searchQuery: "localhost other",
@@ -753,14 +883,18 @@ add_task(async function prohibit_suggestions() {
     search: "[2001::1]:30",
     searchParam: "enable-actions",
     matches: [
-      makeVisitMatch("[2001::1]:30", "http://[2001::1]:30/", { heuristic: true }),
+      makeVisitMatch("[2001::1]:30", "http://[2001::1]:30/", {
+        heuristic: true,
+      }),
     ],
   });
   await check_autocomplete({
     search: "user:pass@test",
     searchParam: "enable-actions",
     matches: [
-      makeVisitMatch("user:pass@test", "http://user:pass@test/", { heuristic: true }),
+      makeVisitMatch("user:pass@test", "http://user:pass@test/", {
+        heuristic: true,
+      }),
     ],
   });
   await check_autocomplete({
@@ -774,7 +908,9 @@ add_task(async function prohibit_suggestions() {
     search: "data:text/plain,Content",
     searchParam: "enable-actions",
     matches: [
-      makeVisitMatch("data:text/plain,Content", "data:text/plain,Content", { heuristic: true }),
+      makeVisitMatch("data:text/plain,Content", "data:text/plain,Content", {
+        heuristic: true,
+      }),
     ],
   });
 
@@ -803,7 +939,7 @@ add_task(async function avoid_url_suggestions() {
     matches: [
       makeSearchMatch("test", { engineName: ENGINE_NAME, heuristic: true }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "test. com",
           searchQuery: "test",
@@ -833,7 +969,7 @@ add_task(async function avoid_http_url_suggestions() {
     matches: [
       makeSearchMatch("htt", { engineName: ENGINE_NAME, heuristic: true }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "htted",
           searchQuery: "htt",
@@ -876,7 +1012,7 @@ add_task(async function avoid_http_url_suggestions() {
     matches: [
       makeSearchMatch("httpd", { engineName: ENGINE_NAME, heuristic: true }),
       {
-        uri: makeActionURI(("searchengine"), {
+        uri: makeActionURI("searchengine", {
           engineName: ENGINE_NAME,
           input: "httpded",
           searchQuery: "httpd",
@@ -907,7 +1043,9 @@ add_task(async function avoid_http_url_suggestions() {
 
   // Check FTP enabled
   Services.prefs.setBoolPref("network.ftp.enabled", true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref("network.ftp.enabled"));
+  registerCleanupFunction(() =>
+    Services.prefs.clearUserPref("network.ftp.enabled")
+  );
 
   await check_autocomplete({
     search: "ftp:",
@@ -938,8 +1076,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "ftp://test/", input: "ftp://test" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "ftp://test/",
+          input: "ftp://test",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "ftp://test/",
       },
     ],
@@ -977,8 +1118,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "ftp://test/", input: "ftp://test" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "ftp://test/",
+          input: "ftp://test",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "ftp://test/",
       },
     ],
@@ -1021,8 +1165,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "http://www/", input: "http://www" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "http://www/",
+          input: "http://www",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "http://www/",
       },
     ],
@@ -1033,8 +1180,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "https://www/", input: "https://www" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "https://www/",
+          input: "https://www",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "https://www/",
       },
     ],
@@ -1045,8 +1195,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "http://test/", input: "http://test" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "http://test/",
+          input: "http://test",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "http://test/",
       },
     ],
@@ -1057,8 +1210,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "https://test/", input: "https://test" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "https://test/",
+          input: "https://test",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "https://test/",
       },
     ],
@@ -1069,8 +1225,11 @@ add_task(async function avoid_http_url_suggestions() {
     searchParam: "enable-actions",
     matches: [
       {
-        uri: makeActionURI("visiturl", { url: "http://www.test/", input: "http://www.test" }),
-        style: [ "action", "visiturl", "heuristic" ],
+        uri: makeActionURI("visiturl", {
+          url: "http://www.test/",
+          input: "http://www.test",
+        }),
+        style: ["action", "visiturl", "heuristic"],
         title: "http://www.test/",
       },
     ],
@@ -1089,37 +1248,40 @@ add_task(async function historicalSuggestion() {
     searchParam: "enable-actions",
     matches: [
       makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
-    {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "hello Barney!",
-        searchQuery: "hello",
-        searchSuggestion: "hello Barney!",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }, {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "hello foo",
-        searchQuery: "hello",
-        searchSuggestion: "hello foo",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }, {
-      uri: makeActionURI(("searchengine"), {
-        engineName: ENGINE_NAME,
-        input: "hello bar",
-        searchQuery: "hello",
-        searchSuggestion: "hello bar",
-      }),
-      title: ENGINE_NAME,
-      style: ["action", "searchengine", "suggestion"],
-      icon: "",
-    }],
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello Barney!",
+          searchQuery: "hello",
+          searchSuggestion: "hello Barney!",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello foo",
+          searchQuery: "hello",
+          searchSuggestion: "hello foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello bar",
+          searchQuery: "hello",
+          searchSuggestion: "hello bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
   });
 
   await cleanUpSuggestions();
@@ -1128,15 +1290,17 @@ add_task(async function historicalSuggestion() {
 
 function updateSearchHistory(op, value) {
   return new Promise((resolve, reject) => {
-    FormHistory.update({ op, fieldname: "searchbar-history", value },
-                       {
-                         handleError(error) {
-                           do_throw("Error occurred updating form history: " + error);
-                           reject(error);
-                         },
-                         handleCompletion(reason) {
-                           reason ? reject(reason) : resolve();
-                         },
-                       });
+    FormHistory.update(
+      { op, fieldname: "searchbar-history", value },
+      {
+        handleError(error) {
+          do_throw("Error occurred updating form history: " + error);
+          reject(error);
+        },
+        handleCompletion(reason) {
+          reason ? reject(reason) : resolve();
+        },
+      }
+    );
   });
 }

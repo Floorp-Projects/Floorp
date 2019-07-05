@@ -13,11 +13,12 @@ class CertificateTab extends HTMLElement {
   connectedCallback() {
     let template = document.getElementById("certificate-tab-template");
 
-    this.attachShadow({mode: "open"})
-        .appendChild(template.content.cloneNode(true));
+    this.attachShadow({ mode: "open" }).appendChild(
+      template.content.cloneNode(true)
+    );
 
     this.render();
-    this.addEventListener("click", (e) => this.setSelectedTab(e));
+    this.addEventListener("click", e => this.setSelectedTab(e));
   }
 
   render() {

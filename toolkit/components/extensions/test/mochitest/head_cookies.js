@@ -27,7 +27,7 @@ async function testCookies(options) {
     browser.test.sendMessage("change-cookies");
 
     // Try to access some cookies in various ways.
-    let {url, domain, secure} = backgroundOptions;
+    let { url, domain, secure } = backgroundOptions;
 
     let failures = 0;
     let tallyFailure = error => {
@@ -37,10 +37,14 @@ async function testCookies(options) {
     try {
       await awaitChanges;
 
-      let cookie = await browser.cookies.get({url, name: "foo"});
-      browser.test.assertEq(backgroundOptions.shouldPass, cookie != null, "should pass == get cookie");
+      let cookie = await browser.cookies.get({ url, name: "foo" });
+      browser.test.assertEq(
+        backgroundOptions.shouldPass,
+        cookie != null,
+        "should pass == get cookie"
+      );
 
-      let cookies = await browser.cookies.getAll({domain});
+      let cookies = await browser.cookies.getAll({ domain });
       if (backgroundOptions.shouldPass) {
         browser.test.assertEq(2, cookies.length, "expected number of cookies");
       } else {
@@ -48,9 +52,27 @@ async function testCookies(options) {
       }
 
       await Promise.all([
-        browser.cookies.set({url, domain, secure, name: "foo", "value": "baz", expirationDate: backgroundOptions.expiry}).catch(tallyFailure),
-        browser.cookies.set({url, domain, secure, name: "bar", "value": "quux", expirationDate: backgroundOptions.expiry}).catch(tallyFailure),
-        browser.cookies.remove({url, name: "deleted"}),
+        browser.cookies
+          .set({
+            url,
+            domain,
+            secure,
+            name: "foo",
+            value: "baz",
+            expirationDate: backgroundOptions.expiry,
+          })
+          .catch(tallyFailure),
+        browser.cookies
+          .set({
+            url,
+            domain,
+            secure,
+            name: "bar",
+            value: "quux",
+            expirationDate: backgroundOptions.expiry,
+          })
+          .catch(tallyFailure),
+        browser.cookies.remove({ url, name: "deleted" }),
       ]);
 
       if (backgroundOptions.shouldPass) {
@@ -64,8 +86,11 @@ async function testCookies(options) {
           changed.splice(evicted, 1);
         }
 
-        browser.test.assertEq("x:explicit,x:overwrite,x:explicit,x:explicit,foo:overwrite,foo:explicit,bar:explicit,deleted:explicit",
-                              changed.join(","), "expected changes");
+        browser.test.assertEq(
+          "x:explicit,x:overwrite,x:explicit,x:explicit,foo:overwrite,foo:explicit,bar:explicit,deleted:explicit",
+          changed.join(","),
+          "expected changes"
+        );
       } else {
         browser.test.assertEq("", changed.join(","), "expected no changes");
       }
@@ -85,28 +110,55 @@ async function testCookies(options) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": options.permissions,
+      permissions: options.permissions,
     },
 
     background: `(${background})(${JSON.stringify(options)})`,
   });
 
   let stepOne = loadChromeScript(() => {
-    const {addMessageListener, sendAsyncMessage} = this;
+    const { addMessageListener, sendAsyncMessage } = this;
     addMessageListener("options", options => {
       let domain = options.domain.replace(/^\.?/, ".");
       // This will be evicted after we add a fourth cookie.
-      Services.cookies.add(domain, "/", "evicted", "bar", options.secure, false,
-                           false, options.expiry, {},
-                           Ci.nsICookie.SAMESITE_NONE);
+      Services.cookies.add(
+        domain,
+        "/",
+        "evicted",
+        "bar",
+        options.secure,
+        false,
+        false,
+        options.expiry,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
       // This will be modified by the background script.
-      Services.cookies.add(domain, "/", "foo", "bar", options.secure, false,
-                           false, options.expiry, {},
-                           Ci.nsICookie.SAMESITE_NONE);
+      Services.cookies.add(
+        domain,
+        "/",
+        "foo",
+        "bar",
+        options.secure,
+        false,
+        false,
+        options.expiry,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
       // This will be deleted by the background script.
-      Services.cookies.add(domain, "/", "deleted", "bar", options.secure, false,
-                           false, options.expiry, {},
-                           Ci.nsICookie.SAMESITE_NONE);
+      Services.cookies.add(
+        domain,
+        "/",
+        "deleted",
+        "bar",
+        options.secure,
+        false,
+        false,
+        options.expiry,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
       sendAsyncMessage("done");
     });
   });
@@ -119,14 +171,34 @@ async function testCookies(options) {
   await extension.awaitMessage("change-cookies");
 
   let stepTwo = loadChromeScript(() => {
-    const {addMessageListener, sendAsyncMessage} = this;
+    const { addMessageListener, sendAsyncMessage } = this;
     addMessageListener("options", options => {
       let domain = options.domain.replace(/^\.?/, ".");
 
-      Services.cookies.add(domain, "/", "x", "y", options.secure, false, false,
-                           options.expiry, {}, Ci.nsICookie.SAMESITE_NONE);
-      Services.cookies.add(domain, "/", "x", "z", options.secure, false, false,
-                           options.expiry, {}, Ci.nsICookie.SAMESITE_NONE);
+      Services.cookies.add(
+        domain,
+        "/",
+        "x",
+        "y",
+        options.secure,
+        false,
+        false,
+        options.expiry,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
+      Services.cookies.add(
+        domain,
+        "/",
+        "x",
+        "z",
+        options.secure,
+        false,
+        false,
+        options.expiry,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
       Services.cookies.remove(domain, "x", "/", false, {});
       sendAsyncMessage("done");
     });
@@ -140,9 +212,8 @@ async function testCookies(options) {
   await extension.awaitFinish("cookie-permissions");
   await extension.unload();
 
-
   let stepThree = loadChromeScript(() => {
-    const {addMessageListener, sendAsyncMessage, assert} = this;
+    const { addMessageListener, sendAsyncMessage, assert } = this;
     let cookieSvc = Services.cookies;
 
     function getCookies(host) {

@@ -163,39 +163,49 @@ add_task(async function test_searching() {
   info("Search for lowercase lambda");
   await check_autocomplete({
     search: "\u03BB",
-    matches: [ { uri: uri1, title: "uppercase lambda \u039B" },
-               { uri: uri2, title: "lowercase lambda \u03BB" } ],
+    matches: [
+      { uri: uri1, title: "uppercase lambda \u039B" },
+      { uri: uri2, title: "lowercase lambda \u03BB" },
+    ],
   });
 
   info("Search for uppercase lambda");
   await check_autocomplete({
     search: "\u039B",
-    matches: [ { uri: uri1, title: "uppercase lambda \u039B" },
-               { uri: uri2, title: "lowercase lambda \u03BB" } ],
+    matches: [
+      { uri: uri1, title: "uppercase lambda \u039B" },
+      { uri: uri2, title: "lowercase lambda \u03BB" },
+    ],
   });
 
   info("Search for kelvin sign");
   await check_autocomplete({
     search: "\u212A",
-    matches: [ { uri: uri3, title: "symbol \u212A" },
-               { uri: uri4, title: "uppercase K" },
-               { uri: uri5, title: "lowercase k" } ],
+    matches: [
+      { uri: uri3, title: "symbol \u212A" },
+      { uri: uri4, title: "uppercase K" },
+      { uri: uri5, title: "lowercase k" },
+    ],
   });
 
   info("Search for lowercase k");
   await check_autocomplete({
     search: "k",
-    matches: [ { uri: uri3, title: "symbol \u212A" },
-               { uri: uri4, title: "uppercase K" },
-               { uri: uri5, title: "lowercase k" } ],
+    matches: [
+      { uri: uri3, title: "symbol \u212A" },
+      { uri: uri4, title: "uppercase K" },
+      { uri: uri5, title: "lowercase k" },
+    ],
   });
 
   info("Search for uppercase k");
   await check_autocomplete({
     search: "K",
-    matches: [ { uri: uri3, title: "symbol \u212A" },
-               { uri: uri4, title: "uppercase K" },
-               { uri: uri5, title: "lowercase k" } ],
+    matches: [
+      { uri: uri3, title: "symbol \u212A" },
+      { uri: uri4, title: "uppercase K" },
+      { uri: uri5, title: "lowercase k" },
+    ],
   });
 
   await cleanup();

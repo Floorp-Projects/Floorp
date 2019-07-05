@@ -2,7 +2,7 @@
 
 /* eslint-disable no-lone-blocks */
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * A test to ensure that OS.File.setDates and OS.File.prototype.setDates are
@@ -13,8 +13,10 @@ const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // Non-prototypical tests, operating on path names.
 add_task(async function test_nonproto() {
   // First, create a file we can mess with.
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                              "test_osfile_async_setDates_nonproto.tmp");
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_setDates_nonproto.tmp"
+  );
   await OS.File.writeAtomic(path, new Uint8Array(1));
 
   try {
@@ -100,12 +102,14 @@ add_task(async function test_proto() {
   }
 
   // First, create a file we can mess with.
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                              "test_osfile_async_setDates_proto.tmp");
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_setDates_proto.tmp"
+  );
   await OS.File.writeAtomic(path, new Uint8Array(1));
 
   try {
-    let fd = await OS.File.open(path, {write: true});
+    let fd = await OS.File.open(path, { write: true });
 
     try {
       // 1. Try to set some well known dates.
@@ -186,8 +190,10 @@ add_task(async function test_proto() {
 
 // Tests setting dates on directories.
 add_task(async function test_dirs() {
-  let path = OS.Path.join(OS.Constants.Path.tmpDir,
-                              "test_osfile_async_setDates_dir");
+  let path = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "test_osfile_async_setDates_dir"
+  );
   await OS.File.makeDir(path);
 
   try {

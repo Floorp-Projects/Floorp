@@ -10,14 +10,20 @@ add_task(async function test_execute() {
   let places = [];
   for (let i = 0; i < TOTAL_SITES; i++) {
     for (let j = 0; j <= i; j++) {
-      places.push({ uri: uri("http://www.test-" + i + ".com/"),
-                    transition: TRANSITION_TYPED });
-        // because these are embedded visits, they should not show up on our
-        // query results.  If they do, we have a problem.
-      places.push({ uri: uri("http://www.hidden.com/hidden.gif"),
-                    transition: TRANSITION_EMBED });
-      places.push({ uri: uri("http://www.alsohidden.com/hidden.gif"),
-                    transition: TRANSITION_FRAMED_LINK });
+      places.push({
+        uri: uri("http://www.test-" + i + ".com/"),
+        transition: TRANSITION_TYPED,
+      });
+      // because these are embedded visits, they should not show up on our
+      // query results.  If they do, we have a problem.
+      places.push({
+        uri: uri("http://www.hidden.com/hidden.gif"),
+        transition: TRANSITION_EMBED,
+      });
+      places.push({
+        uri: uri("http://www.alsohidden.com/hidden.gif"),
+        transition: TRANSITION_FRAMED_LINK,
+      });
     }
   }
   await PlacesTestUtils.addVisits(places);
@@ -34,8 +40,10 @@ add_task(async function test_execute() {
   options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
   options.maxResults = 10;
   options.resultType = options.RESULTS_AS_URI;
-  let root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  let root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   let cc = root.childCount;
   Assert.equal(cc, options.maxResults);
@@ -57,8 +65,10 @@ add_task(async function test_execute() {
   options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
   options.resultType = options.RESULTS_AS_URI;
-  root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   cc = root.childCount;
   Assert.equal(cc, TOTAL_SITES);

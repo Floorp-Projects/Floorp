@@ -16,11 +16,13 @@ function run_test() {
 function main_test() {
   "use strict";
   let library = open_ctypes_test_lib();
-  let set_errno = library.declare("set_errno", ctypes.default_abi,
-                                   ctypes.void_t,
-                                   ctypes.int);
-  let get_errno = library.declare("get_errno", ctypes.default_abi,
-                                   ctypes.int);
+  let set_errno = library.declare(
+    "set_errno",
+    ctypes.default_abi,
+    ctypes.void_t,
+    ctypes.int
+  );
+  let get_errno = library.declare("get_errno", ctypes.default_abi, ctypes.int);
 
   for (let i = 50; i >= 0; --i) {
     set_errno(i);
@@ -35,12 +37,19 @@ function main_test() {
   }
 
   let set_last_error, get_last_error;
-  try { // The following test is Windows-specific
-    set_last_error = library.declare("set_last_error", ctypes.default_abi,
-                                     ctypes.void_t,
-                                     ctypes.int);
-    get_last_error = library.declare("get_last_error", ctypes.default_abi,
-                                     ctypes.int);
+  try {
+    // The following test is Windows-specific
+    set_last_error = library.declare(
+      "set_last_error",
+      ctypes.default_abi,
+      ctypes.void_t,
+      ctypes.int
+    );
+    get_last_error = library.declare(
+      "get_last_error",
+      ctypes.default_abi,
+      ctypes.int
+    );
   } catch (x) {
     Assert.equal(ctypes.winLastError, undefined);
   }

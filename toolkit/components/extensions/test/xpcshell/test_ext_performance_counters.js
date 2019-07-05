@@ -2,14 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+const { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
-const ENABLE_COUNTER_PREF = "extensions.webextensions.enablePerformanceCounters";
+const ENABLE_COUNTER_PREF =
+  "extensions.webextensions.enablePerformanceCounters";
 const TIMING_MAX_AGE = "extensions.webextensions.performanceCountersMaxAge";
 
-let {
-  ParentAPIManager,
-} = ExtensionParent;
+let { ParentAPIManager } = ExtensionParent;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms)); // eslint-disable-line mozilla/no-arbitrary-setTimeout
@@ -35,9 +36,12 @@ async function retrieveSpecificCounter(apiName, expectedCount) {
 async function test_counter() {
   async function background() {
     // creating a bookmark is done in the parent
-    let folder = await browser.bookmarks.create({title: "Folder"});
-    await browser.bookmarks.create({title: "Bookmark", url: "http://example.com",
-                                    parentId: folder.id});
+    let folder = await browser.bookmarks.create({ title: "Folder" });
+    await browser.bookmarks.create({
+      title: "Bookmark",
+      url: "http://example.com",
+      parentId: folder.id,
+    });
 
     // getURL() is done in the child, let do three
     browser.extension.getURL("beasts/frog.html");
@@ -72,6 +76,8 @@ async function test_counter() {
 }
 
 add_task(function test_performance_counter() {
-  return runWithPrefs([[ENABLE_COUNTER_PREF, true],
-                       [TIMING_MAX_AGE, 1]], test_counter);
+  return runWithPrefs(
+    [[ENABLE_COUNTER_PREF, true], [TIMING_MAX_AGE, 1]],
+    test_counter
+  );
 });

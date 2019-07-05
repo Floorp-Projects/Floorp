@@ -24,7 +24,7 @@ add_task(async function test_MockExtension() {
     // xpcshell/test_ext_test_mock.js tests "temporary", so here we use
     // "permanent" to have even more test coverage.
     useAddonManager: "permanent",
-    manifest: {applications: {gecko: {id: "@permanent-mock-extension"}}},
+    manifest: { applications: { gecko: { id: "@permanent-mock-extension" } } },
   });
 
   Assert.ok(!ext.id, "Extension ID is initially unavailable");

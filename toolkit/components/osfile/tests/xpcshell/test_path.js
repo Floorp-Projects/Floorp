@@ -6,7 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 Services.prefs.setBoolPref("toolkit.osfile.test.syslib_necessary", false);
-  // We don't need libc/kernel32.dll for this test
+// We don't need libc/kernel32.dll for this test
 
 var ImportWin = {};
 var ImportUnix = {};
@@ -44,12 +44,19 @@ function run_test() {
   Assert.equal(Win.normalize("a\\b\\c\\..\\..\\..\\d\\e\\f"), "d\\e\\f");
   do_check_fail(() => Win.normalize("\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
-  Assert.equal(Win.join("\\tmp", "foo", "bar"), "\\tmp\\foo\\bar", "join \\tmp,foo,bar");
-  Assert.equal(Win.join("\\tmp", "\\foo", "bar"), "\\foo\\bar", "join \\tmp,\\foo,bar");
+  Assert.equal(
+    Win.join("\\tmp", "foo", "bar"),
+    "\\tmp\\foo\\bar",
+    "join \\tmp,foo,bar"
+  );
+  Assert.equal(
+    Win.join("\\tmp", "\\foo", "bar"),
+    "\\foo\\bar",
+    "join \\tmp,\\foo,bar"
+  );
   Assert.equal(Win.winGetDrive("\\tmp"), null);
   Assert.equal(Win.winGetDrive("\\tmp\\a\\b\\c\\d\\e"), null);
   Assert.equal(Win.winGetDrive("\\"), null);
-
 
   info("Backslash-separated, with a drive");
   Assert.equal(Win.basename("c:a\\b"), "b");
@@ -74,15 +81,34 @@ function run_test() {
   Assert.equal(Win.normalize("c:\\a\\b\\\\\\\\c"), "c:\\a\\b\\c");
   Assert.equal(Win.normalize("c:\\\\\\\\a\\b\\c"), "c:\\a\\b\\c");
   Assert.equal(Win.normalize("c:\\a\\b\\c\\\\\\"), "c:\\a\\b\\c");
-  Assert.equal(Win.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
+  Assert.equal(
+    Win.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"),
+    "c:\\d\\e\\f"
+  );
   Assert.equal(Win.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
   do_check_fail(() => Win.normalize("c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
-  Assert.equal(Win.join("c:\\", "foo"), "c:\\foo", "join c:\,foo");
-  Assert.equal(Win.join("c:\\tmp", "foo", "bar"), "c:\\tmp\\foo\\bar", "join c:\\tmp,foo,bar");
-  Assert.equal(Win.join("c:\\tmp", "\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,\\foo,bar");
-  Assert.equal(Win.join("c:\\tmp", "c:\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:\\foo,bar");
-  Assert.equal(Win.join("c:\\tmp", "c:foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:foo,bar");
+  Assert.equal(Win.join("c:\\", "foo"), "c:\\foo", "join c:,foo");
+  Assert.equal(
+    Win.join("c:\\tmp", "foo", "bar"),
+    "c:\\tmp\\foo\\bar",
+    "join c:\\tmp,foo,bar"
+  );
+  Assert.equal(
+    Win.join("c:\\tmp", "\\foo", "bar"),
+    "c:\\foo\\bar",
+    "join c:\\tmp,\\foo,bar"
+  );
+  Assert.equal(
+    Win.join("c:\\tmp", "c:\\foo", "bar"),
+    "c:\\foo\\bar",
+    "join c:\\tmp,c:\\foo,bar"
+  );
+  Assert.equal(
+    Win.join("c:\\tmp", "c:foo", "bar"),
+    "c:\\foo\\bar",
+    "join c:\\tmp,c:foo,bar"
+  );
   Assert.equal(Win.winGetDrive("c:"), "c:");
   Assert.equal(Win.winGetDrive("c:\\"), "c:");
   Assert.equal(Win.winGetDrive("c:abc"), "c:");
@@ -143,8 +169,16 @@ function run_test() {
   Assert.equal(Unix.normalize("a/b/c/../../../d/e/f"), "d/e/f");
   do_check_fail(() => Unix.normalize("/a/b/c/../../../../d/e/f"));
 
-  Assert.equal(Unix.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
-  Assert.equal(Unix.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
+  Assert.equal(
+    Unix.join("/tmp", "foo", "bar"),
+    "/tmp/foo/bar",
+    "join /tmp,foo,bar"
+  );
+  Assert.equal(
+    Unix.join("/tmp", "/foo", "bar"),
+    "/foo/bar",
+    "join /tmp,/foo,bar"
+  );
 
   info("Testing the presence of ospath.jsm");
   let Scope = {};

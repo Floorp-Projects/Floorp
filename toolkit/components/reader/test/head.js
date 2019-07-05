@@ -1,5 +1,8 @@
-ChromeUtils.defineModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Promise",
+  "resource://gre/modules/Promise.jsm"
+);
 
 /* exported promiseTabLoadEvent, is_element_visible, is_element_hidden */
 
@@ -42,8 +45,9 @@ function promiseTabLoadEvent(tab, url) {
     deferred.resolve();
   });
 
-  if (url)
+  if (url) {
     BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  }
 
   // Promise.all rejects if either promise rejects (i.e. if we time out) and
   // if our loaded promise resolves before the timeout, then we resolve the
@@ -59,4 +63,3 @@ function is_element_hidden(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
   ok(BrowserTestUtils.is_hidden(element), msg || "Element should be hidden");
 }
-

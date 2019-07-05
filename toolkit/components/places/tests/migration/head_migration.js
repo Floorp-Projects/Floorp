@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Import common head.
 {
@@ -20,10 +20,13 @@ const FIRST_UPGRADABLE_SCHEMA_VERSION = 35;
 
 async function assertAnnotationsRemoved(db, expectedAnnos) {
   for (let anno of expectedAnnos) {
-    let rows = await db.execute(`
+    let rows = await db.execute(
+      `
       SELECT id FROM moz_anno_attributes
       WHERE name = :anno
-    `, {anno});
+    `,
+      { anno }
+    );
 
     Assert.equal(rows.length, 0, `${anno} should not exist in the database`);
   }
@@ -35,14 +38,12 @@ async function assertNoOrphanAnnotations(db) {
     WHERE item_id NOT IN (SELECT id from moz_bookmarks)
   `);
 
-  Assert.equal(rows.length, 0,
-    `Should have no orphan annotations.`);
+  Assert.equal(rows.length, 0, `Should have no orphan annotations.`);
 
   rows = await db.execute(`
     SELECT id FROM moz_anno_attributes
     WHERE id NOT IN (SELECT id from moz_items_annos)
   `);
 
-  Assert.equal(rows.length, 0,
-    `Should have no orphan annotation attributes.`);
+  Assert.equal(rows.length, 0, `Should have no orphan annotation attributes.`);
 }

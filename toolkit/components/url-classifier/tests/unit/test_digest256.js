@@ -1,10 +1,14 @@
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 // Global test server for serving safebrowsing updates.
 var gHttpServ = null;
 // Global nsIUrlClassifierDBService
-var gDbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-  .getService(Ci.nsIUrlClassifierDBService);
+var gDbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
+  Ci.nsIUrlClassifierDBService
+);
 
 // A map of tables to arrays of update redirect urls.
 var gTables = {};
@@ -12,8 +16,9 @@ var gTables = {};
 // Construct an update from a file.
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
-  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-    .createInstance(Ci.nsIFileInputStream);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   stream.init(f, -1, 0, 0);
   let buf = NetUtil.readInputStreamToString(stream, stream.available());
   return buf;
@@ -40,8 +45,11 @@ function registerTableUpdate(aTable, aFilename) {
     gHttpServ.registerPathHandler(redirectPath, function(request, response) {
       info("Mock safebrowsing server handling request for " + redirectPath);
       let contents = readFileToString(aFilename);
-      response.setHeader("Content-Type",
-                         "application/vnd.google.safebrowsing-update", false);
+      response.setHeader(
+        "Content-Type",
+        "application/vnd.google.safebrowsing-update",
+        false
+      );
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(contents, contents.length);
       resolve(contents);
@@ -69,8 +77,11 @@ function run_test() {
 
   gHttpServ.registerPathHandler("/downloads", function(request, response) {
     let blob = processUpdateRequest();
-    response.setHeader("Content-Type",
-                       "application/vnd.google.safebrowsing-update", false);
+    response.setHeader(
+      "Content-Type",
+      "application/vnd.google.safebrowsing-update",
+      false
+    );
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.bodyOutputStream.write(blob, blob.length);
   });
@@ -85,8 +96,9 @@ function handleError(aEvent) {
 }
 
 add_test(function test_update() {
-  let streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
-    .getService(Ci.nsIUrlClassifierStreamUpdater);
+  let streamUpdater = Cc[
+    "@mozilla.org/url-classifier/streamupdater;1"
+  ].getService(Ci.nsIUrlClassifierStreamUpdater);
 
   // Load up some update chunks for the safebrowsing server to serve.
   registerTableUpdate("goog-downloadwhite-digest256", "data/digest1.chunk");
@@ -105,28 +117,43 @@ add_test(function test_update() {
     "goog-downloadwhite-digest256;\n",
     true,
     "http://localhost:4444/downloads",
-    updateSuccess, handleError, handleError);
+    updateSuccess,
+    handleError,
+    handleError
+  );
 });
 
 add_test(function test_url_not_whitelisted() {
   let uri = Services.io.newURI("http://example.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-  gDbService.lookup(principal, "goog-downloadwhite-digest256",
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
+  gDbService.lookup(
+    principal,
+    "goog-downloadwhite-digest256",
     function handleEvent(aEvent) {
       // This URI is not on any lists.
       Assert.equal("", aEvent);
       run_next_test();
-    });
+    }
+  );
 });
 
 add_test(function test_url_whitelisted() {
   // Hash of "whitelisted.com/" (canonicalized URL) is:
   // 93CA5F48E15E9861CD37C2D95DB43D23CC6E6DE5C3F8FA6E8BE66F97CC518907
   let uri = Services.io.newURI("http://whitelisted.com");
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-  gDbService.lookup(principal, "goog-downloadwhite-digest256",
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
+  gDbService.lookup(
+    principal,
+    "goog-downloadwhite-digest256",
     function handleEvent(aEvent) {
       Assert.equal("goog-downloadwhite-digest256", aEvent);
       run_next_test();
-    });
+    }
+  );
 });

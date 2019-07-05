@@ -10,38 +10,44 @@ const SCRIPT_PAGE = `data:text/html,<script>window.open("about:blank", "_blank")
 // to open a new window, it'll actually open in a new window instead
 // of a new tab.
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.link.open_newwindow", 2],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.link.open_newwindow", 2]],
+  });
 });
 
 function assertFlags(win) {
   let docShell = win.docShell;
   let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
   let chromeFlags = docShell.treeOwner
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIXULWindow)
-                            .chromeFlags;
-  Assert.ok(loadContext.useRemoteTabs,
-            "Should be using remote tabs on the load context");
-  Assert.ok(chromeFlags & Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW,
-            "Should have the remoteness chrome flag on the window");
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIXULWindow).chromeFlags;
+  Assert.ok(
+    loadContext.useRemoteTabs,
+    "Should be using remote tabs on the load context"
+  );
+  Assert.ok(
+    chromeFlags & Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW,
+    "Should have the remoteness chrome flag on the window"
+  );
 }
 
 /**
  * Content can open a window using a target="_blank" link
  */
 add_task(async function test_new_remote_window_flags_target_blank() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: ANCHOR_PAGE,
-  }, async function(browser) {
-    let newWinPromise = BrowserTestUtils.waitForNewWindow();
-    await BrowserTestUtils.synthesizeMouseAtCenter("a", {}, browser);
-    let win = await newWinPromise;
-    assertFlags(win);
-    await BrowserTestUtils.closeWindow(win);
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: ANCHOR_PAGE,
+    },
+    async function(browser) {
+      let newWinPromise = BrowserTestUtils.waitForNewWindow();
+      await BrowserTestUtils.synthesizeMouseAtCenter("a", {}, browser);
+      let win = await newWinPromise;
+      assertFlags(win);
+      await BrowserTestUtils.closeWindow(win);
+    }
+  );
 });
 
 /**
@@ -50,14 +56,17 @@ add_task(async function test_new_remote_window_flags_target_blank() {
 add_task(async function test_new_remote_window_flags_window_open() {
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: SCRIPT_PAGE,
-  }, async function(browser) {
-    let win = await newWinPromise;
-    assertFlags(win);
-    await BrowserTestUtils.closeWindow(win);
-  });
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: SCRIPT_PAGE,
+    },
+    async function(browser) {
+      let win = await newWinPromise;
+      assertFlags(win);
+      await BrowserTestUtils.closeWindow(win);
+    }
+  );
 });
 
 /**

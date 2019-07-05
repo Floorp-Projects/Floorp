@@ -42,15 +42,21 @@ add_task(async function testNarrate() {
     let text = details.paragraph;
     for (let res = boundaryPat.exec(text); res; res = boundaryPat.exec(text)) {
       promiseEvent = ContentTaskUtils.waitForEvent(content, "wordhighlight");
-      NarrateTestUtils.sendBoundaryEvent(content, "word",
-        res.index, res[0].length);
+      NarrateTestUtils.sendBoundaryEvent(
+        content,
+        "word",
+        res.index,
+        res[0].length
+      );
       let { start, end } = (await promiseEvent).detail;
       let nodes = NarrateTestUtils.getWordHighlights(content);
       for (let node of nodes) {
         // Since this is English we can assume each word is to the right or
         // below the previous one.
-        ok(node.left > position.left || node.top > position.top,
-          "highlight position is moving");
+        ok(
+          node.left > position.left || node.top > position.top,
+          "highlight position is moving"
+        );
         position = { left: node.left, top: node.top };
       }
       let wordFromOffset = text.substring(start, end);
@@ -62,7 +68,9 @@ add_task(async function testNarrate() {
 
     $(NarrateTestUtils.STOP).click();
     await ContentTaskUtils.waitForCondition(
-      () => !$(NarrateTestUtils.STOP), "transitioned to stopped state");
+      () => !$(NarrateTestUtils.STOP),
+      "transitioned to stopped state"
+    );
     NarrateTestUtils.isWordHighlightGone(content, ok);
   });
 });

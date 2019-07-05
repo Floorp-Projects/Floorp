@@ -7,16 +7,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends MozXULElement {
-  constructor() {
-    super();
-    this.disconnectedCallback = this.disconnectedCallback.bind(this);
-  }
-  connectedCallback() {
-    window.addEventListener("unload", this.disconnectedCallback, { once: true });
+customElements.define(
+  "printpreview-toolbar",
+  class PrintPreviewToolbar extends MozXULElement {
+    constructor() {
+      super();
+      this.disconnectedCallback = this.disconnectedCallback.bind(this);
+    }
+    connectedCallback() {
+      window.addEventListener("unload", this.disconnectedCallback, {
+        once: true,
+      });
 
-    MozXULElement.insertFTLIfNeeded("toolkit/printing/printPreview.ftl");
-    this.appendChild(MozXULElement.parseXULToFragment(`
+      MozXULElement.insertFTLIfNeeded("toolkit/printing/printPreview.ftl");
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
       <button id="print-preview-print" oncommand="this.parentNode.print();" data-l10n-id="printpreview-print"/>
       <button id="print-preview-pageSetup" oncommand="this.parentNode.doPageSetup();" data-l10n-id="printpreview-page-setup"/>
       <vbox align="center" pack="center">
@@ -67,283 +72,377 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
       <button id="print-preview-toolbar-close-button" oncommand="PrintUtils.exitPrintPreview();" data-l10n-id="printpreview-close"/>
       <data id="print-preview-prompt-title" data-l10n-id="printpreview-custom-prompt"/>
         `)
-    );
+      );
 
+      this.mPrintButton = document.getElementById("print-preview-print");
 
+      this.mPageSetupButton = document.getElementById(
+        "print-preview-pageSetup"
+      );
 
+      this.mNavigateHomeButton = document.getElementById(
+        "print-preview-navigateHome"
+      );
 
-    this.mPrintButton = document.getElementById("print-preview-print");
+      this.mNavigatePreviousButton = document.getElementById(
+        "print-preview-navigatePrevious"
+      );
 
-    this.mPageSetupButton = document.getElementById("print-preview-pageSetup");
+      this.mPageTextBox = document.getElementById("print-preview-pageNumber");
 
-    this.mNavigateHomeButton = document.getElementById("print-preview-navigateHome");
+      this.mNavigateNextButton = document.getElementById(
+        "print-preview-navigateNext"
+      );
 
-    this.mNavigatePreviousButton = document.getElementById("print-preview-navigatePrevious");
+      this.mNavigateEndButton = document.getElementById(
+        "print-preview-navigateEnd"
+      );
 
-    this.mPageTextBox = document.getElementById("print-preview-pageNumber");
+      this.mTotalPages = document.getElementById("print-preview-totalPages");
 
-    this.mNavigateNextButton = document.getElementById("print-preview-navigateNext");
+      this.mScaleCombobox = document.getElementById("print-preview-scale");
 
-    this.mNavigateEndButton = document.getElementById("print-preview-navigateEnd");
+      this.mPortaitButton = document.getElementById(
+        "print-preview-portrait-button"
+      );
 
-    this.mTotalPages = document.getElementById("print-preview-totalPages");
+      this.mLandscapeButton = document.getElementById(
+        "print-preview-landscape-button"
+      );
 
-    this.mScaleCombobox = document.getElementById("print-preview-scale");
+      this.mSimplifyPageCheckbox = document.getElementById(
+        "print-preview-simplify"
+      );
 
-    this.mPortaitButton = document.getElementById("print-preview-portrait-button");
+      this.mSimplifyPageNotAllowed = this.mSimplifyPageCheckbox.disabled;
 
-    this.mLandscapeButton = document.getElementById("print-preview-landscape-button");
+      this.mSimplifyPageToolbarSeparator = this.mSimplifyPageCheckbox.nextElementSibling;
 
-    this.mSimplifyPageCheckbox = document.getElementById("print-preview-simplify");
+      this.mPrintPreviewObs = "";
 
-    this.mSimplifyPageNotAllowed = this.mSimplifyPageCheckbox.disabled;
+      this.mWebProgress = "";
 
-    this.mSimplifyPageToolbarSeparator = this.mSimplifyPageCheckbox.nextElementSibling;
+      this.mPPBrowser = null;
 
-    this.mPrintPreviewObs = "";
+      this.mMessageManager = null;
 
-    this.mWebProgress = "";
+      this.mOnPageTextBoxChange = () => {
+        this.navigate(0, Number(this.mPageTextBox.value), 0);
+      };
+      this.mPageTextBox.addEventListener("change", this.mOnPageTextBoxChange);
 
-    this.mPPBrowser = null;
-
-    this.mMessageManager = null;
-
-    this.mOnPageTextBoxChange = () => {
-      this.navigate(0, Number(this.mPageTextBox.value), 0);
-    };
-    this.mPageTextBox.addEventListener("change", this.mOnPageTextBoxChange);
-
-
-    let dropdown = document.getElementById("print-preview-scale").menupopup;
-    for (let menuitem of dropdown.children) {
-      let value = menuitem.getAttribute("value");
-      if (!isNaN(parseFloat(value))) {
-        document.l10n.setAttributes(menuitem, "printpreview-percentage-value",
-            {"percent": Math.round(parseFloat(value) * 100)});
+      let dropdown = document.getElementById("print-preview-scale").menupopup;
+      for (let menuitem of dropdown.children) {
+        let value = menuitem.getAttribute("value");
+        if (!isNaN(parseFloat(value))) {
+          document.l10n.setAttributes(
+            menuitem,
+            "printpreview-percentage-value",
+            { percent: Math.round(parseFloat(value) * 100) }
+          );
+        }
       }
     }
-  }
 
-  initialize(aPPBrowser) {
-    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    if (!Services.prefs.getBoolPref("print.use_simplify_page")) {
-      this.mSimplifyPageCheckbox.hidden = true;
-      this.mSimplifyPageToolbarSeparator.hidden = true;
-    }
-    this.mPPBrowser = aPPBrowser;
-    this.mMessageManager = aPPBrowser.messageManager;
-    this.mMessageManager.addMessageListener("Printing:Preview:UpdatePageCount", this);
-    this.updateToolbar();
-
-    let ltr = document.documentElement.matches(":root:-moz-locale-dir(ltr)");
-    // Windows 7 doesn't support ⏮ and ⏭ by default, and fallback doesn't
-    // always work (bug 1343330).
-    let { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-    let useCompatCharacters = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
-    let leftEnd = useCompatCharacters ? "\u23EA" : "\u23EE";
-    let rightEnd = useCompatCharacters ? "\u23E9" : "\u23ED";
-    document.l10n.setAttributes(this.mNavigateHomeButton, "printpreview-homearrow", {"arrow": (ltr ? leftEnd : rightEnd)});
-    document.l10n.setAttributes(this.mNavigatePreviousButton, "printpreview-previousarrow", {"arrow": (ltr ? "\u25C2" : "\u25B8")});
-    document.l10n.setAttributes(this.mNavigateNextButton, "printpreview-nextarrow", {"arrow": (ltr ? "\u25B8" : "\u25C2")});
-    document.l10n.setAttributes(this.mNavigateEndButton, "printpreview-endarrow", {"arrow": (ltr ? rightEnd : leftEnd)});
-  }
-
-  destroy() {
-    if (this.mMessageManager) {
-      this.mMessageManager.removeMessageListener("Printing:Preview:UpdatePageCount", this);
-      delete this.mMessageManager;
-      delete this.mPPBrowser;
-    }
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener("unload", this.disconnectedCallback);
-    this.mPageTextBox.removeEventListener("change", this.mOnPageTextBoxChange);
-    this.destroy();
-  }
-
-  disableUpdateTriggers(aDisabled) {
-    this.mPrintButton.disabled = aDisabled;
-    this.mPageSetupButton.disabled = aDisabled;
-    this.mNavigateHomeButton.disabled = aDisabled;
-    this.mNavigatePreviousButton.disabled = aDisabled;
-    this.mPageTextBox.disabled = aDisabled;
-    this.mNavigateNextButton.disabled = aDisabled;
-    this.mNavigateEndButton.disabled = aDisabled;
-    this.mScaleCombobox.disabled = aDisabled;
-    this.mPortaitButton.disabled = aDisabled;
-    this.mLandscapeButton.disabled = aDisabled;
-    this.mSimplifyPageCheckbox.disabled = this.mSimplifyPageNotAllowed || aDisabled;
-  }
-
-  doPageSetup() {
-    /* import-globals-from printUtils.js */
-    var didOK = PrintUtils.showPageSetup();
-    if (didOK) {
-      // the changes that effect the UI
+    initialize(aPPBrowser) {
+      let { Services } = ChromeUtils.import(
+        "resource://gre/modules/Services.jsm"
+      );
+      if (!Services.prefs.getBoolPref("print.use_simplify_page")) {
+        this.mSimplifyPageCheckbox.hidden = true;
+        this.mSimplifyPageToolbarSeparator.hidden = true;
+      }
+      this.mPPBrowser = aPPBrowser;
+      this.mMessageManager = aPPBrowser.messageManager;
+      this.mMessageManager.addMessageListener(
+        "Printing:Preview:UpdatePageCount",
+        this
+      );
       this.updateToolbar();
 
-      // Now do PrintPreview
-      PrintUtils.printPreview();
+      let ltr = document.documentElement.matches(":root:-moz-locale-dir(ltr)");
+      // Windows 7 doesn't support ⏮ and ⏭ by default, and fallback doesn't
+      // always work (bug 1343330).
+      let { AppConstants } = ChromeUtils.import(
+        "resource://gre/modules/AppConstants.jsm"
+      );
+      let useCompatCharacters = AppConstants.isPlatformAndVersionAtMost(
+        "win",
+        "6.1"
+      );
+      let leftEnd = useCompatCharacters ? "\u23EA" : "\u23EE";
+      let rightEnd = useCompatCharacters ? "\u23E9" : "\u23ED";
+      document.l10n.setAttributes(
+        this.mNavigateHomeButton,
+        "printpreview-homearrow",
+        { arrow: ltr ? leftEnd : rightEnd }
+      );
+      document.l10n.setAttributes(
+        this.mNavigatePreviousButton,
+        "printpreview-previousarrow",
+        { arrow: ltr ? "\u25C2" : "\u25B8" }
+      );
+      document.l10n.setAttributes(
+        this.mNavigateNextButton,
+        "printpreview-nextarrow",
+        { arrow: ltr ? "\u25B8" : "\u25C2" }
+      );
+      document.l10n.setAttributes(
+        this.mNavigateEndButton,
+        "printpreview-endarrow",
+        { arrow: ltr ? rightEnd : leftEnd }
+      );
     }
-  }
 
-  navigate(aDirection, aPageNum, aHomeOrEnd) {
-    const nsIWebBrowserPrint = Ci.nsIWebBrowserPrint;
-    let navType, pageNum;
-
-    // we use only one of aHomeOrEnd, aDirection, or aPageNum
-    if (aHomeOrEnd) {
-      // We're going to either the very first page ("home"), or the
-      // very last page ("end").
-      if (aHomeOrEnd == "home") {
-        navType = nsIWebBrowserPrint.PRINTPREVIEW_HOME;
-        this.mPageTextBox.value = 1;
-      } else {
-        navType = nsIWebBrowserPrint.PRINTPREVIEW_END;
-        this.mPageTextBox.value = this.mPageTextBox.max;
-      }
-      pageNum = 0;
-    } else if (aDirection) {
-      // aDirection is either +1 or -1, and allows us to increment
-      // or decrement our currently viewed page.
-      this.mPageTextBox.value = Number(this.mPageTextBox.value) + aDirection;
-      navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
-      pageNum = this.mPageTextBox.value;
-    } else {
-      // We're going to a specific page (aPageNum)
-      navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
-      pageNum = aPageNum;
-    }
-
-    this.mMessageManager.sendAsyncMessage("Printing:Preview:Navigate", {
-      navType,
-      pageNum,
-    });
-  }
-
-  print() {
-    PrintUtils.printWindow(this.mPPBrowser.outerWindowID, this.mPPBrowser);
-  }
-
-  promptForScaleValue(aValue) {
-    var value = Math.round(aValue);
-    var promptStr = document.getElementById("print-preview-scale-label").value;
-    var renameTitle = document.getElementById("print-preview-prompt-title");
-    var result = { value };
-    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    var confirmed = Services.prompt.prompt(window, renameTitle, promptStr, result, null, { value });
-    if (!confirmed || (!result.value) || (result.value == "")) {
-      return -1;
-    }
-    return result.value;
-  }
-
-  setScaleCombobox(aValue) {
-    var scaleValues = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.25, 1.5, 1.75, 2];
-
-    aValue = Number(aValue);
-
-    for (var i = 0; i < scaleValues.length; i++) {
-      if (aValue == scaleValues[i]) {
-        this.mScaleCombobox.selectedIndex = i;
-        return;
+    destroy() {
+      if (this.mMessageManager) {
+        this.mMessageManager.removeMessageListener(
+          "Printing:Preview:UpdatePageCount",
+          this
+        );
+        delete this.mMessageManager;
+        delete this.mPPBrowser;
       }
     }
-    this.mScaleCombobox.value = "Custom";
-  }
 
-  scale(aValue) {
-    var settings = PrintUtils.getPrintSettings();
-    if (aValue == "ShrinkToFit") {
-      if (!settings.shrinkToFit) {
-        settings.shrinkToFit = true;
-        this.savePrintSettings(settings, settings.kInitSaveShrinkToFit | settings.kInitSaveScaling);
+    disconnectedCallback() {
+      window.removeEventListener("unload", this.disconnectedCallback);
+      this.mPageTextBox.removeEventListener(
+        "change",
+        this.mOnPageTextBoxChange
+      );
+      this.destroy();
+    }
+
+    disableUpdateTriggers(aDisabled) {
+      this.mPrintButton.disabled = aDisabled;
+      this.mPageSetupButton.disabled = aDisabled;
+      this.mNavigateHomeButton.disabled = aDisabled;
+      this.mNavigatePreviousButton.disabled = aDisabled;
+      this.mPageTextBox.disabled = aDisabled;
+      this.mNavigateNextButton.disabled = aDisabled;
+      this.mNavigateEndButton.disabled = aDisabled;
+      this.mScaleCombobox.disabled = aDisabled;
+      this.mPortaitButton.disabled = aDisabled;
+      this.mLandscapeButton.disabled = aDisabled;
+      this.mSimplifyPageCheckbox.disabled =
+        this.mSimplifyPageNotAllowed || aDisabled;
+    }
+
+    doPageSetup() {
+      /* import-globals-from printUtils.js */
+      var didOK = PrintUtils.showPageSetup();
+      if (didOK) {
+        // the changes that effect the UI
+        this.updateToolbar();
+
+        // Now do PrintPreview
         PrintUtils.printPreview();
       }
-      return;
     }
 
-    if (aValue == "Custom") {
-      aValue = this.promptForScaleValue(settings.scaling * 100.0);
-      if (aValue >= 10) {
-        aValue /= 100.0;
+    navigate(aDirection, aPageNum, aHomeOrEnd) {
+      const nsIWebBrowserPrint = Ci.nsIWebBrowserPrint;
+      let navType, pageNum;
+
+      // we use only one of aHomeOrEnd, aDirection, or aPageNum
+      if (aHomeOrEnd) {
+        // We're going to either the very first page ("home"), or the
+        // very last page ("end").
+        if (aHomeOrEnd == "home") {
+          navType = nsIWebBrowserPrint.PRINTPREVIEW_HOME;
+          this.mPageTextBox.value = 1;
+        } else {
+          navType = nsIWebBrowserPrint.PRINTPREVIEW_END;
+          this.mPageTextBox.value = this.mPageTextBox.max;
+        }
+        pageNum = 0;
+      } else if (aDirection) {
+        // aDirection is either +1 or -1, and allows us to increment
+        // or decrement our currently viewed page.
+        this.mPageTextBox.value = Number(this.mPageTextBox.value) + aDirection;
+        navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
+        pageNum = this.mPageTextBox.value;
       } else {
-        if (this.mScaleCombobox.hasAttribute("lastValidInx")) {
-          this.mScaleCombobox.selectedIndex = this.mScaleCombobox.getAttribute("lastValidInx");
+        // We're going to a specific page (aPageNum)
+        navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
+        pageNum = aPageNum;
+      }
+
+      this.mMessageManager.sendAsyncMessage("Printing:Preview:Navigate", {
+        navType,
+        pageNum,
+      });
+    }
+
+    print() {
+      PrintUtils.printWindow(this.mPPBrowser.outerWindowID, this.mPPBrowser);
+    }
+
+    promptForScaleValue(aValue) {
+      var value = Math.round(aValue);
+      var promptStr = document.getElementById("print-preview-scale-label")
+        .value;
+      var renameTitle = document.getElementById("print-preview-prompt-title");
+      var result = { value };
+      let { Services } = ChromeUtils.import(
+        "resource://gre/modules/Services.jsm"
+      );
+      var confirmed = Services.prompt.prompt(
+        window,
+        renameTitle,
+        promptStr,
+        result,
+        null,
+        { value }
+      );
+      if (!confirmed || !result.value || result.value == "") {
+        return -1;
+      }
+      return result.value;
+    }
+
+    setScaleCombobox(aValue) {
+      var scaleValues = [
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1,
+        1.25,
+        1.5,
+        1.75,
+        2,
+      ];
+
+      aValue = Number(aValue);
+
+      for (var i = 0; i < scaleValues.length; i++) {
+        if (aValue == scaleValues[i]) {
+          this.mScaleCombobox.selectedIndex = i;
+          return;
+        }
+      }
+      this.mScaleCombobox.value = "Custom";
+    }
+
+    scale(aValue) {
+      var settings = PrintUtils.getPrintSettings();
+      if (aValue == "ShrinkToFit") {
+        if (!settings.shrinkToFit) {
+          settings.shrinkToFit = true;
+          this.savePrintSettings(
+            settings,
+            settings.kInitSaveShrinkToFit | settings.kInitSaveScaling
+          );
+          PrintUtils.printPreview();
         }
         return;
       }
+
+      if (aValue == "Custom") {
+        aValue = this.promptForScaleValue(settings.scaling * 100.0);
+        if (aValue >= 10) {
+          aValue /= 100.0;
+        } else {
+          if (this.mScaleCombobox.hasAttribute("lastValidInx")) {
+            this.mScaleCombobox.selectedIndex = this.mScaleCombobox.getAttribute(
+              "lastValidInx"
+            );
+          }
+          return;
+        }
+      }
+
+      this.setScaleCombobox(aValue);
+      this.mScaleCombobox.setAttribute(
+        "lastValidInx",
+        this.mScaleCombobox.selectedIndex
+      );
+
+      if (settings.scaling != aValue || settings.shrinkToFit) {
+        settings.shrinkToFit = false;
+        settings.scaling = aValue;
+        this.savePrintSettings(
+          settings,
+          settings.kInitSaveShrinkToFit | settings.kInitSaveScaling
+        );
+        PrintUtils.printPreview();
+      }
     }
 
-    this.setScaleCombobox(aValue);
-    this.mScaleCombobox.setAttribute("lastValidInx", this.mScaleCombobox.selectedIndex);
+    orient(aOrientation) {
+      const kIPrintSettings = Ci.nsIPrintSettings;
+      var orientValue =
+        aOrientation == "portrait"
+          ? kIPrintSettings.kPortraitOrientation
+          : kIPrintSettings.kLandscapeOrientation;
+      var settings = PrintUtils.getPrintSettings();
+      if (settings.orientation != orientValue) {
+        settings.orientation = orientValue;
+        this.savePrintSettings(settings, settings.kInitSaveOrientation);
+        PrintUtils.printPreview();
+      }
+    }
 
-    if (settings.scaling != aValue || settings.shrinkToFit) {
-      settings.shrinkToFit = false;
-      settings.scaling = aValue;
-      this.savePrintSettings(settings, settings.kInitSaveShrinkToFit | settings.kInitSaveScaling);
+    simplify() {
+      PrintUtils.setSimplifiedMode(this.mSimplifyPageCheckbox.checked);
       PrintUtils.printPreview();
     }
-  }
 
-  orient(aOrientation) {
-    const kIPrintSettings = Ci.nsIPrintSettings;
-    var orientValue = (aOrientation == "portrait") ? kIPrintSettings.kPortraitOrientation :
-      kIPrintSettings.kLandscapeOrientation;
-    var settings = PrintUtils.getPrintSettings();
-    if (settings.orientation != orientValue) {
-      settings.orientation = orientValue;
-      this.savePrintSettings(settings, settings.kInitSaveOrientation);
-      PrintUtils.printPreview();
-    }
-  }
-
-  simplify() {
-    PrintUtils.setSimplifiedMode(this.mSimplifyPageCheckbox.checked);
-    PrintUtils.printPreview();
-  }
-
-  enableSimplifyPage() {
-    this.mSimplifyPageNotAllowed = false;
-    this.mSimplifyPageCheckbox.disabled = false;
-    document.l10n.setAttributes(this.mSimplifyPageCheckbox, "printpreview-simplify-page-checkbox-enabled");
-  }
-
-  disableSimplifyPage() {
-    this.mSimplifyPageNotAllowed = true;
-    this.mSimplifyPageCheckbox.disabled = true;
-    document.l10n.setAttributes(this.mSimplifyPageCheckbox, "printpreview-simplify-page-checkbox");
-  }
-
-  updateToolbar() {
-    var settings = PrintUtils.getPrintSettings();
-
-    var isPortrait = settings.orientation == Ci.nsIPrintSettings.kPortraitOrientation;
-
-    this.mPortaitButton.checked = isPortrait;
-    this.mLandscapeButton.checked = !isPortrait;
-
-    if (settings.shrinkToFit) {
-      this.mScaleCombobox.value = "ShrinkToFit";
-    } else {
-      this.setScaleCombobox(settings.scaling);
+    enableSimplifyPage() {
+      this.mSimplifyPageNotAllowed = false;
+      this.mSimplifyPageCheckbox.disabled = false;
+      document.l10n.setAttributes(
+        this.mSimplifyPageCheckbox,
+        "printpreview-simplify-page-checkbox-enabled"
+      );
     }
 
-    this.mPageTextBox.value = 1;
-  }
-
-  savePrintSettings(settings, flags) {
-    var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-      .getService(Ci.nsIPrintSettingsService);
-    PSSVC.savePrintSettingsToPrefs(settings, true, flags);
-  }
-
-  receiveMessage(message) {
-    if (message.name == "Printing:Preview:UpdatePageCount") {
-      let numPages = message.data.numPages;
-      this.mTotalPages.value = numPages;
-      this.mPageTextBox.max = numPages;
+    disableSimplifyPage() {
+      this.mSimplifyPageNotAllowed = true;
+      this.mSimplifyPageCheckbox.disabled = true;
+      document.l10n.setAttributes(
+        this.mSimplifyPageCheckbox,
+        "printpreview-simplify-page-checkbox"
+      );
     }
-  }
-}, { extends: "toolbar" });
+
+    updateToolbar() {
+      var settings = PrintUtils.getPrintSettings();
+
+      var isPortrait =
+        settings.orientation == Ci.nsIPrintSettings.kPortraitOrientation;
+
+      this.mPortaitButton.checked = isPortrait;
+      this.mLandscapeButton.checked = !isPortrait;
+
+      if (settings.shrinkToFit) {
+        this.mScaleCombobox.value = "ShrinkToFit";
+      } else {
+        this.setScaleCombobox(settings.scaling);
+      }
+
+      this.mPageTextBox.value = 1;
+    }
+
+    savePrintSettings(settings, flags) {
+      var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+        Ci.nsIPrintSettingsService
+      );
+      PSSVC.savePrintSettingsToPrefs(settings, true, flags);
+    }
+
+    receiveMessage(message) {
+      if (message.name == "Printing:Preview:UpdatePageCount") {
+        let numPages = message.data.numPages;
+        this.mTotalPages.value = numPages;
+        this.mPageTextBox.max = numPages;
+      }
+    }
+  },
+  { extends: "toolbar" }
+);

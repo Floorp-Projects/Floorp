@@ -11,24 +11,35 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(async function test_contentscript_shadowDOM() {
   function backgroundScript() {
-    browser.test.assertTrue("openOrClosedShadowRoot" in document.documentElement,
-                            "Should have openOrClosedShadowRoot in Element in background script.");
+    browser.test.assertTrue(
+      "openOrClosedShadowRoot" in document.documentElement,
+      "Should have openOrClosedShadowRoot in Element in background script."
+    );
   }
 
   function contentScript() {
     let host = document.getElementById("host");
-    browser.test.assertTrue("openOrClosedShadowRoot" in host, "Should have openOrClosedShadowRoot in Element.");
+    browser.test.assertTrue(
+      "openOrClosedShadowRoot" in host,
+      "Should have openOrClosedShadowRoot in Element."
+    );
     let shadowRoot = host.openOrClosedShadowRoot;
-    browser.test.assertEq(shadowRoot.mode, "closed", "Should have closed ShadowRoot.");
+    browser.test.assertEq(
+      shadowRoot.mode,
+      "closed",
+      "Should have closed ShadowRoot."
+    );
     browser.test.sendMessage("contentScript");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      content_scripts: [{
-        "matches": ["http://*/*/file_shadowdom.html"],
-        "js": ["content_script.js"],
-      }],
+      content_scripts: [
+        {
+          matches: ["http://*/*/file_shadowdom.html"],
+          js: ["content_script.js"],
+        },
+      ],
     },
     background: backgroundScript,
     files: {
@@ -38,7 +49,9 @@ add_task(async function test_contentscript_shadowDOM() {
 
   await extension.startup();
 
-  let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_shadowdom.html`);
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `${BASE_URL}/file_shadowdom.html`
+  );
   await extension.awaitMessage("contentScript");
 
   await contentPage.close();

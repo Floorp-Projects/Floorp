@@ -33,7 +33,6 @@ worker.close = function() {
 
 self.addEventListener("message", msg => worker.handleMessage(msg));
 
-
 var Agent = {
   // Checks if the specified file exists and has an age less than as
   // specifed (in seconds).
@@ -61,8 +60,11 @@ var Agent = {
     }
   },
 
-  expireFilesInDirectory:
-  function Agent_expireFilesInDirectory(path, filesToKeep, minChunkSize) {
+  expireFilesInDirectory: function Agent_expireFilesInDirectory(
+    path,
+    filesToKeep,
+    minChunkSize
+  ) {
     let entries = this.getFileEntriesInDirectory(path, filesToKeep);
     let limit = Math.max(minChunkSize, Math.round(entries.length / 2));
 
@@ -78,8 +80,10 @@ var Agent = {
     return true;
   },
 
-  getFileEntriesInDirectory:
-  function Agent_getFileEntriesInDirectory(path, skipFiles) {
+  getFileEntriesInDirectory: function Agent_getFileEntriesInDirectory(
+    path,
+    skipFiles
+  ) {
     let iter = new OS.File.DirectoryIterator(path);
     try {
       if (!iter.exists()) {
@@ -100,9 +104,11 @@ var Agent = {
     }
   },
 
-  moveOrDeleteAllThumbnails:
-  function Agent_moveOrDeleteAllThumbnails(pathFrom, pathTo) {
-    OS.File.makeDir(pathTo, {ignoreExisting: true});
+  moveOrDeleteAllThumbnails: function Agent_moveOrDeleteAllThumbnails(
+    pathFrom,
+    pathTo
+  ) {
+    OS.File.makeDir(pathTo, { ignoreExisting: true });
     if (pathFrom == pathTo) {
       return true;
     }
@@ -113,12 +119,11 @@ var Agent = {
           continue;
         }
 
-
         let from = OS.Path.join(pathFrom, entry.name);
         let to = OS.Path.join(pathTo, entry.name);
 
         try {
-          OS.File.move(from, to, {noOverwrite: true, noCopy: true});
+          OS.File.move(from, to, { noOverwrite: true, noCopy: true });
         } catch (e) {
           OS.File.remove(from);
         }
@@ -137,9 +142,7 @@ var Agent = {
   },
 
   writeAtomic: function Agent_writeAtomic(path, buffer, options) {
-    return File.writeAtomic(path,
-      buffer,
-      options);
+    return File.writeAtomic(path, buffer, options);
   },
 
   makeDir: function Agent_makeDir(path, options) {

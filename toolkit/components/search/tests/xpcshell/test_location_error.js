@@ -18,7 +18,9 @@ add_task(async function test_location_error() {
   // should have an error recorded.
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.ERROR);
   // but false values for timeout
-  let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
+  let histogram = Services.telemetry.getHistogramById(
+    "SEARCH_SERVICE_COUNTRY_TIMEOUT"
+  );
   let snapshot = histogram.snapshot();
-  deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
+  deepEqual(snapshot.values, { 0: 1, 1: 0 }); // boolean probe so 3 buckets, expect 1 result for |0|.
 });

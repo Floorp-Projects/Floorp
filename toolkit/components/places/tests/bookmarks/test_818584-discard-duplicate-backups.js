@@ -13,10 +13,15 @@ add_task(async function() {
   dateObj.setDate(dateObj.getDate() - 1);
   let oldBackupName = PlacesBackups.getFilenameForDate(dateObj);
   let oldBackup = OS.Path.join(backupFolder, oldBackupName);
-  let {count: count, hash: hash} = await BookmarkJSONUtils.exportToFile(oldBackup);
+  let { count: count, hash: hash } = await BookmarkJSONUtils.exportToFile(
+    oldBackup
+  );
   Assert.ok(count > 0);
   Assert.equal(hash.length, 24);
-  oldBackupName = oldBackupName.replace(/\.json/, "_" + count + "_" + hash + ".json");
+  oldBackupName = oldBackupName.replace(
+    /\.json/,
+    "_" + count + "_" + hash + ".json"
+  );
   await OS.File.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
 
   // Create a backup.
@@ -28,7 +33,9 @@ add_task(async function() {
   let backupFiles = await PlacesBackups.getBackupFiles();
   Assert.equal(backupFiles.length, 1);
 
-  let matches = OS.Path.basename(backupFiles[0]).match(PlacesBackups.filenamesRegex);
+  let matches = OS.Path.basename(backupFiles[0]).match(
+    PlacesBackups.filenamesRegex
+  );
   Assert.equal(matches[1], PlacesBackups.toISODateString(new Date()));
   Assert.equal(matches[2], count);
   Assert.equal(matches[3], hash);

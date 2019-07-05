@@ -42,8 +42,10 @@
  * form logins can be added for the same host.
  */
 add_task(function test_addLogin_wildcard() {
-  let loginInfo = TestData.formLogin({ origin: "http://any.example.com",
-                                       formActionOrigin: "" });
+  let loginInfo = TestData.formLogin({
+    origin: "http://any.example.com",
+    formActionOrigin: "",
+  });
   Services.logins.addLogin(loginInfo);
 
   // Normal form logins cannot be added anymore.
@@ -66,26 +68,42 @@ add_task(function test_addLogin_wildcard() {
  */
 add_task(function test_search_all_wildcard() {
   // Search a given formActionOrigin on any host.
-  let matchData = newPropertyBag({ formActionOrigin: "http://www.example.com" });
+  let matchData = newPropertyBag({
+    formActionOrigin: "http://www.example.com",
+  });
   Assert.equal(Services.logins.searchLogins(matchData).length, 2);
 
-  Assert.equal(Services.logins.findLogins("", "http://www.example.com",
-                                          null).length, 2);
+  Assert.equal(
+    Services.logins.findLogins("", "http://www.example.com", null).length,
+    2
+  );
 
-  Assert.equal(Services.logins.countLogins("", "http://www.example.com",
-                                           null), 2);
+  Assert.equal(
+    Services.logins.countLogins("", "http://www.example.com", null),
+    2
+  );
 
   // Restrict the search to one host.
   matchData.setProperty("origin", "http://any.example.com");
   Assert.equal(Services.logins.searchLogins(matchData).length, 1);
 
-  Assert.equal(Services.logins.findLogins("http://any.example.com",
-                                          "http://www.example.com",
-                                          null).length, 1);
+  Assert.equal(
+    Services.logins.findLogins(
+      "http://any.example.com",
+      "http://www.example.com",
+      null
+    ).length,
+    1
+  );
 
-  Assert.equal(Services.logins.countLogins("http://any.example.com",
-                                           "http://www.example.com",
-                                           null), 1);
+  Assert.equal(
+    Services.logins.countLogins(
+      "http://any.example.com",
+      "http://www.example.com",
+      null
+    ),
+    1
+  );
 });
 
 /**
@@ -93,9 +111,13 @@ add_task(function test_search_all_wildcard() {
  * includes only logins that have an empty formActionOrigin in the store.
  */
 add_task(function test_searchLogins_wildcard() {
-  let logins = Services.logins.searchLogins(newPropertyBag({ formActionOrigin: "" }));
+  let logins = Services.logins.searchLogins(
+    newPropertyBag({ formActionOrigin: "" })
+  );
 
-  let loginInfo = TestData.formLogin({ origin: "http://any.example.com",
-                                       formActionOrigin: "" });
+  let loginInfo = TestData.formLogin({
+    origin: "http://any.example.com",
+    formActionOrigin: "",
+  });
   LoginTestUtils.assertLoginListsEqual(logins, [loginInfo]);
 });

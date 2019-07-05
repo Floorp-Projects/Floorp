@@ -17,7 +17,9 @@ function compare_paths(ospath, key) {
     Assert.ok(!!ospath);
     Assert.equal(ospath, file.path);
   } else {
-    info("WARNING: " + key + " is not defined. Test may not be testing anything!");
+    info(
+      "WARNING: " + key + " is not defined. Test may not be testing anything!"
+    );
     Assert.ok(!ospath);
   }
 }

@@ -43,11 +43,23 @@ add_task(async function test() {
       "mozilla",
       "mozilla.com",
     ];
-    let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                                 Ci.nsILoginInfo, "init");
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
     for (let i = 0; i < 10; i++) {
-      Services.logins.addLogin(new nsLoginInfo(urls[i], urls[i], null, users[i], pwds[i],
-                                               "u" + (i + 1), "p" + (i + 1)));
+      Services.logins.addLogin(
+        new nsLoginInfo(
+          urls[i],
+          urls[i],
+          null,
+          users[i],
+          pwds[i],
+          "u" + (i + 1),
+          "p" + (i + 1)
+        )
+      );
     }
 
     // Open the password manager dialog
@@ -68,11 +80,15 @@ add_task(async function test() {
       let toggleCalls = 0;
       function toggleShowPasswords(func) {
         let toggleButton = doc.getElementById("togglePasswords");
-        let showMode = (toggleCalls++ % 2) == 0;
+        let showMode = toggleCalls++ % 2 == 0;
 
         // only watch for a confirmation dialog every other time being called
         if (showMode) {
-          Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
+          Services.ww.registerNotification(function notification(
+            aSubject,
+            aTopic,
+            aData
+          ) {
             if (aTopic == "domwindowclosed") {
               Services.ww.unregisterNotification(notification);
             } else if (aTopic == "domwindowopened") {
@@ -124,13 +140,20 @@ add_task(async function test() {
       function checkSortDirection(col, ascending) {
         checkSortMarkers(col);
         let direction = ascending ? "ascending" : "descending";
-        is(col.getAttribute("sortDirection"), direction,
-           col.id + ": sort direction is " + direction);
+        is(
+          col.getAttribute("sortDirection"),
+          direction,
+          col.id + ": sort direction is " + direction
+        );
       }
 
       function checkColumnEntries(aCol, expectedValues) {
         let actualValues = getColumnEntries(aCol);
-        is(actualValues.length, expectedValues.length, "Checking length of expected column");
+        is(
+          actualValues.length,
+          expectedValues.length,
+          "Checking length of expected column"
+        );
         for (let i = 0; i < expectedValues.length; i++) {
           is(actualValues[i], expectedValues[i], "Checking column entry #" + i);
         }
@@ -179,9 +202,15 @@ add_task(async function test() {
             setFilter("moz");
             break;
           case 4:
-            expectedValues = [ "absolutely", "mozilla", "mozilla.com",
-                               "mypass", "mypass", "super secret",
-                               "very secret" ];
+            expectedValues = [
+              "absolutely",
+              "mozilla",
+              "mozilla.com",
+              "mypass",
+              "mypass",
+              "super secret",
+              "very secret",
+            ];
             checkColumnEntries(2, expectedValues);
             checkSortDirection(passwordCol, true);
             // Reset filter
@@ -192,7 +221,11 @@ add_task(async function test() {
             checkColumnEntries(2, expectedValues);
             checkSortDirection(passwordCol, true);
             // cleanup
-            Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
+            Services.ww.registerNotification(function notification(
+              aSubject,
+              aTopic,
+              aData
+            ) {
               // unregister ourself
               Services.ww.unregisterNotification(notification);
 

@@ -9,13 +9,15 @@
 
 Cu.importGlobalProperties(["fetch"]);
 
-const {SearchService} = ChromeUtils.import("resource://gre/modules/SearchService.jsm");
+const { SearchService } = ChromeUtils.import(
+  "resource://gre/modules/SearchService.jsm"
+);
 const LIST_JSON_URL = "resource://search-extensions/list.json";
 
 function traverse(obj, fun) {
   for (var i in obj) {
     fun.apply(this, [i, obj[i]]);
-    if (obj[i] !== null && typeof(obj[i]) == "object") {
+    if (obj[i] !== null && typeof obj[i] == "object") {
       traverse(obj[i], fun);
     }
   }
@@ -33,9 +35,11 @@ add_task(async function test_validate_engines() {
     }
   });
 
-  let listjson = {default: {
-    visibleDefaultEngines: Array.from(visibleDefaultEngines),
-  }};
+  let listjson = {
+    default: {
+      visibleDefaultEngines: Array.from(visibleDefaultEngines),
+    },
+  };
   ss._listJSONURL = "data:application/json," + JSON.stringify(listjson);
 
   await AddonTestUtils.promiseStartupManager();

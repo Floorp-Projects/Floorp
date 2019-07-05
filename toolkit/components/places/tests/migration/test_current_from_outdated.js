@@ -11,17 +11,24 @@ add_task(async function setup() {
 });
 
 add_task(async function corrupt_database_not_exists() {
-  let corruptPath = OS.Path.join(OS.Constants.Path.profileDir,
-                                 "places.sqlite.corrupt");
-  Assert.ok(!(await OS.File.exists(corruptPath)), "Corrupt file should not exist");
+  let corruptPath = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "places.sqlite.corrupt"
+  );
+  Assert.ok(
+    !(await OS.File.exists(corruptPath)),
+    "Corrupt file should not exist"
+  );
 });
 
 add_task(async function database_is_valid() {
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CORRUPT
+  );
 
   let db = await PlacesUtils.promiseDBConnection();
-  Assert.equal((await db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
+  Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
 });
 
 add_task(async function check_columns() {
@@ -32,7 +39,9 @@ add_task(async function check_columns() {
 });
 
 add_task(async function corrupt_database_exists() {
-  let corruptPath = OS.Path.join(OS.Constants.Path.profileDir,
-                                 "places.sqlite.corrupt");
-  Assert.ok((await OS.File.exists(corruptPath)), "Corrupt file should exist");
+  let corruptPath = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "places.sqlite.corrupt"
+  );
+  Assert.ok(await OS.File.exists(corruptPath), "Corrupt file should exist");
 });

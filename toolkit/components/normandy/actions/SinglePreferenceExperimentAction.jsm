@@ -4,9 +4,19 @@
 
 "use strict";
 
-const {PreferenceExperimentAction} = ChromeUtils.import("resource://normandy/actions/PreferenceExperimentAction.jsm");
-ChromeUtils.defineModuleGetter(this, "ActionSchemas", "resource://normandy/actions/schemas/index.js");
-ChromeUtils.defineModuleGetter(this, "JsonSchemaValidator", "resource://gre/modules/components-utils/JsonSchemaValidator.jsm");
+const { PreferenceExperimentAction } = ChromeUtils.import(
+  "resource://normandy/actions/PreferenceExperimentAction.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ActionSchemas",
+  "resource://normandy/actions/schemas/index.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "JsonSchemaValidator",
+  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["SinglePreferenceExperimentAction"];
 
@@ -53,9 +63,21 @@ class SinglePreferenceExperimentAction extends PreferenceExperimentAction {
 
     const multiprefSchema = ActionSchemas["multiple-preference-experiment"];
 
-    let [valid, validatedArguments] = JsonSchemaValidator.validateAndParseParameters(newArguments, multiprefSchema);
+    let [
+      valid,
+      validatedArguments,
+    ] = JsonSchemaValidator.validateAndParseParameters(
+      newArguments,
+      multiprefSchema
+    );
     if (!valid) {
-      throw new Error(`Transformed arguments do not match schema. Original arguments: ${JSON.stringify(recipe.arguments)}, new arguments: ${JSON.stringify(newArguments)}, schema: ${JSON.stringify(multiprefSchema)}`);
+      throw new Error(
+        `Transformed arguments do not match schema. Original arguments: ${JSON.stringify(
+          recipe.arguments
+        )}, new arguments: ${JSON.stringify(
+          newArguments
+        )}, schema: ${JSON.stringify(multiprefSchema)}`
+      );
     }
 
     validatedArguments.userFacingName = null;

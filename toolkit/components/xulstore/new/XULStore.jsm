@@ -24,8 +24,9 @@ const debugMode = false;
 
 // Internal function for logging debug messages to the Error Console window
 function log(message) {
-  if (!debugMode)
+  if (!debugMode) {
     return;
+  }
   console.log("XULStore: " + message);
 }
 
@@ -92,9 +93,9 @@ class XULStoreEnumerator {
     return this.enumerator.getNext();
   }
 
-  * [Symbol.iterator]() {
+  *[Symbol.iterator]() {
     while (this.enumerator.hasMore()) {
-      yield (this.enumerator.getNext());
+      yield this.enumerator.getNext();
     }
   }
 }

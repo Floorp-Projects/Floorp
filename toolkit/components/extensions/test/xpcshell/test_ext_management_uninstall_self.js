@@ -2,8 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 const id = "uninstall_self_test@tests.mozilla.com";
 
@@ -17,18 +21,19 @@ const manifest = {
   version: "1.0",
 };
 
-const waitForUninstalled = () => new Promise(resolve => {
-  const listener = {
-    onUninstalled: async (addon) => {
-      equal(addon.id, id, "The expected add-on has been uninstalled");
-      let checkedAddon = await AddonManager.getAddonByID(addon.id);
-      equal(checkedAddon, null, "Add-on no longer exists");
-      AddonManager.removeAddonListener(listener);
-      resolve();
-    },
-  };
-  AddonManager.addAddonListener(listener);
-});
+const waitForUninstalled = () =>
+  new Promise(resolve => {
+    const listener = {
+      onUninstalled: async addon => {
+        equal(addon.id, id, "The expected add-on has been uninstalled");
+        let checkedAddon = await AddonManager.getAddonByID(addon.id);
+        equal(checkedAddon, null, "Add-on no longer exists");
+        AddonManager.removeAddonListener(listener);
+        resolve();
+      },
+    };
+    AddonManager.addAddonListener(listener);
+  });
 
 let promptService = {
   _response: null,
@@ -42,7 +47,10 @@ let promptService = {
 AddonTestUtils.init(this);
 
 add_task(async function setup() {
-  let fakePromptService = MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1", promptService);
+  let fakePromptService = MockRegistrar.register(
+    "@mozilla.org/embedcomp/prompt-service;1",
+    promptService
+  );
   registerCleanupFunction(() => {
     MockRegistrar.unregister(fakePromptService);
   });
@@ -75,7 +83,7 @@ add_task(async function test_management_uninstall_prompt_uninstall() {
 
   function background() {
     browser.test.onMessage.addListener(msg => {
-      browser.management.uninstallSelf({showConfirmDialog: true});
+      browser.management.uninstallSelf({ showConfirmDialog: true });
     });
   }
 
@@ -93,8 +101,12 @@ add_task(async function test_management_uninstall_prompt_uninstall() {
 
   // Test localization strings
   equal(promptService._confirmExArgs[1], `Uninstall ${manifest.name}`);
-  equal(promptService._confirmExArgs[2],
-        `The extension “${manifest.name}” is requesting to be uninstalled. What would you like to do?`);
+  equal(
+    promptService._confirmExArgs[2],
+    `The extension “${
+      manifest.name
+    }” is requesting to be uninstalled. What would you like to do?`
+  );
   equal(promptService._confirmExArgs[4], "Uninstall");
   equal(promptService._confirmExArgs[5], "Keep Installed");
   Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry");
@@ -106,9 +118,10 @@ add_task(async function test_management_uninstall_prompt_keep() {
   function background() {
     browser.test.onMessage.addListener(async msg => {
       await browser.test.assertRejects(
-        browser.management.uninstallSelf({showConfirmDialog: true}),
+        browser.management.uninstallSelf({ showConfirmDialog: true }),
         "User cancelled uninstall of extension",
-        "Expected rejection when user declines uninstall");
+        "Expected rejection when user declines uninstall"
+      );
 
       browser.test.sendMessage("uninstall-rejected");
     });

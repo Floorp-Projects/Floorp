@@ -4,7 +4,9 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 
 var EXPORTED_SYMBOLS = ["Sampling"];
@@ -24,7 +26,9 @@ var Sampling = {
       throw new Error(`frac must be between 0 and 1 inclusive (got ${frac})`);
     }
 
-    return Math.floor(frac * hashMultiplier).toString(16).padStart(hashLength, "0");
+    return Math.floor(frac * hashMultiplier)
+      .toString(16)
+      .padStart(hashLength, "0");
   },
 
   /**
@@ -66,7 +70,7 @@ var Sampling = {
   isHashInBucket(inputHash, minBucket, maxBucket, bucketCount) {
     const minHash = Sampling.fractionToKey(minBucket / bucketCount);
     const maxHash = Sampling.fractionToKey(maxBucket / bucketCount);
-    return (minHash <= inputHash) && (inputHash < maxHash);
+    return minHash <= inputHash && inputHash < maxHash;
   },
 
   /**
@@ -122,8 +126,8 @@ var Sampling = {
     // to max, and from min to end.
     if (end > total) {
       return (
-        Sampling.isHashInBucket(inputHash, 0, end % total, total)
-        || Sampling.isHashInBucket(inputHash, wrappedStart, total, total)
+        Sampling.isHashInBucket(inputHash, 0, end % total, total) ||
+        Sampling.isHashInBucket(inputHash, wrappedStart, total, total)
       );
     }
 
@@ -153,7 +157,9 @@ var Sampling = {
    */
   async ratioSample(input, ratios) {
     if (ratios.length < 1) {
-      throw new Error(`ratios must be at least 1 element long (got length: ${ratios.length})`);
+      throw new Error(
+        `ratios must be at least 1 element long (got length: ${ratios.length})`
+      );
     }
 
     const inputHash = await Sampling.truncatedHash(input);

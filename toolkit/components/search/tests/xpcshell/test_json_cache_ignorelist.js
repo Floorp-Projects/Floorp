@@ -7,7 +7,9 @@
 
 "use strict";
 
-var {getAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+var { getAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 
 var cacheTemplate, appPluginsPath, profPlugins;
 
@@ -26,7 +28,10 @@ add_task(async function setup() {
   let engineFile = do_get_profile().clone();
   engineFile.append("searchplugins");
   engineFile.append("test-search-engine.xml");
-  engineFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  engineFile.parent.create(
+    Ci.nsIFile.DIRECTORY_TYPE,
+    FileUtils.PERMS_DIRECTORY
+  );
 
   // Copy the test engine to the test profile.
   let engineTemplateFile = do_get_file("data/engine.xml");
@@ -44,12 +49,16 @@ add_task(async function setup() {
 add_task(async function test_cache_rest() {
   info("init search service");
 
-  let updatePromise = SearchTestUtils.promiseSearchNotification("settings-update-complete");
+  let updatePromise = SearchTestUtils.promiseSearchNotification(
+    "settings-update-complete"
+  );
 
   let result = await Services.search.init();
 
-  Assert.ok(Components.isSuccessCode(result),
-    "Search service should be successfully initialized");
+  Assert.ok(
+    Components.isSuccessCode(result),
+    "Search service should be successfully initialized"
+  );
   await updatePromise;
 
   const engines = await Services.search.getEngines();
@@ -57,7 +66,11 @@ add_task(async function test_cache_rest() {
   // Engine list will have been reset to the default,
   // Not the one engine in the cache.
   // It should have more than one engine.
-  Assert.greater(engines.length, 1, "Should have more than one engine in the list");
+  Assert.greater(
+    engines.length,
+    1,
+    "Should have more than one engine in the list"
+  );
 
   removeCacheFile();
 });

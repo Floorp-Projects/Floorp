@@ -14,7 +14,10 @@ add_task(async function test_fallbacks() {
   await Services.search.removeEngine(defaultEngine);
 
   // ... and verify a new current engine has been set.
-  Assert.notEqual((await Services.search.getDefault()).name, defaultEngine.name);
+  Assert.notEqual(
+    (await Services.search.getDefault()).name,
+    defaultEngine.name
+  );
   Assert.ok(defaultEngine.hidden);
 
   // Remove all the other engines.

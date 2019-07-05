@@ -21,27 +21,41 @@ function check_results_callback(aSequence) {
   let includeHidden = aSequence[0];
   let maxResults = aSequence[1];
   let sortingMode = aSequence[2];
-  print("\nTESTING: includeHidden(" + includeHidden + ")," +
-                  " maxResults(" + maxResults + ")," +
-                  " sortingMode(" + sortingMode + ").");
+  print(
+    "\nTESTING: includeHidden(" +
+      includeHidden +
+      ")," +
+      " maxResults(" +
+      maxResults +
+      ")," +
+      " sortingMode(" +
+      sortingMode +
+      ")."
+  );
 
   function isHidden(aVisit) {
-    return aVisit.transType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
-           aVisit.isRedirect;
+    return (
+      aVisit.transType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
+      aVisit.isRedirect
+    );
   }
 
   // Build expectedData array.
   let expectedData = visits.filter(function(aVisit, aIndex, aArray) {
     // Embed visits never appear in results.
-    if (aVisit.transType == Ci.nsINavHistoryService.TRANSITION_EMBED)
+    if (aVisit.transType == Ci.nsINavHistoryService.TRANSITION_EMBED) {
       return false;
+    }
 
     if (!includeHidden && isHidden(aVisit)) {
       // If the page has any non-hidden visit, then it's visible.
-      if (visits.filter(function(refVisit) {
-        return refVisit.uri == aVisit.uri && !isHidden(refVisit);
-          }).length == 0)
+      if (
+        visits.filter(function(refVisit) {
+          return refVisit.uri == aVisit.uri && !isHidden(refVisit);
+        }).length == 0
+      ) {
         return false;
+      }
     }
 
     return true;
@@ -60,8 +74,9 @@ function check_results_callback(aSequence) {
   // Sort expectedData.
   function getFirstIndexFor(aEntry) {
     for (let i = 0; i < visits.length; i++) {
-      if (visits[i].uri == aEntry.uri)
+      if (visits[i].uri == aEntry.uri) {
         return i;
+      }
     }
     return undefined;
   }
@@ -69,7 +84,9 @@ function check_results_callback(aSequence) {
     if (sortingMode == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING) {
       return b.lastVisit - a.lastVisit;
     }
-    if (sortingMode == Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING) {
+    if (
+      sortingMode == Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING
+    ) {
       return b.visitCount - a.visitCount;
     }
     return getFirstIndexFor(a) - getFirstIndexFor(b);
@@ -86,8 +103,9 @@ function check_results_callback(aSequence) {
   let options = PlacesUtils.history.getNewQueryOptions();
   options.includeHidden = includeHidden;
   options.sortingMode = sortingMode;
-  if (maxResults)
+  if (maxResults) {
     options.maxResults = maxResults;
+  }
 
   // Compare resultset with expectedData.
   let result = PlacesUtils.history.executeQuery(query, options);
@@ -129,8 +147,9 @@ function check_results_callback(aSequence) {
  * @return the total number of sequences in the product
  */
 function cartProd(aSequences, aCallback) {
-  if (aSequences.length === 0)
+  if (aSequences.length === 0) {
     return 0;
+  }
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
@@ -167,8 +186,9 @@ function cartProd(aSequences, aCallback) {
         seqPtr--;
 
         // All element pointers are past the ends of their sequences.
-        if (seqPtr < 0)
+        if (seqPtr < 0) {
           done = true;
+        }
       } else {
         break;
       }
@@ -211,20 +231,27 @@ add_task(async function test_add_visits_to_database() {
   }
 
   // we add a visit for each of the above transition types.
-  t.forEach(transition => visits.push(
-    { isVisit: true,
+  t.forEach(transition =>
+    visits.push({
+      isVisit: true,
       transType: transition,
       uri: "http://" + transition + ".example.com/",
       title: transition + "-example",
       isRedirect: true,
       lastVisit: newTimeInMicroseconds(),
-      visitCount: (transition == Ci.nsINavHistoryService.TRANSITION_EMBED ||
-                   transition == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK) ? 0 : visitCount++,
-      isInQuery: true }));
+      visitCount:
+        transition == Ci.nsINavHistoryService.TRANSITION_EMBED ||
+        transition == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK
+          ? 0
+          : visitCount++,
+      isInQuery: true,
+    })
+  );
 
   // Add a REDIRECT_TEMPORARY layer of visits for each of the above visits.
-  t.forEach(transition => visits.push(
-    { isVisit: true,
+  t.forEach(transition =>
+    visits.push({
+      isVisit: true,
       transType: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
       uri: "http://" + transition + ".redirect.temp.example.com/",
       title: transition + "-redirect-temp-example",
@@ -232,11 +259,14 @@ add_task(async function test_add_visits_to_database() {
       isRedirect: true,
       referrer: "http://" + transition + ".example.com/",
       visitCount: visitCount++,
-      isInQuery: true }));
+      isInQuery: true,
+    })
+  );
 
   // Add a REDIRECT_PERMANENT layer of visits for each of the above redirects.
-  t.forEach(transition => visits.push(
-    { isVisit: true,
+  t.forEach(transition =>
+    visits.push({
+      isVisit: true,
       transType: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
       uri: "http://" + transition + ".redirect.perm.example.com/",
       title: transition + "-redirect-perm-example",
@@ -244,7 +274,9 @@ add_task(async function test_add_visits_to_database() {
       isRedirect: true,
       referrer: "http://" + transition + ".redirect.temp.example.com/",
       visitCount: visitCount++,
-      isInQuery: true }));
+      isInQuery: true,
+    })
+  );
 
   // Add a REDIRECT_PERMANENT layer of visits that loop to the first visit.
   // These entries should not change visitCount or lastVisit, otherwise
@@ -258,24 +290,35 @@ add_task(async function test_add_visits_to_database() {
     do_throw("Unknown uri.");
     return null;
   }
-  t.forEach(transition => visits.push(
-    { isVisit: true,
+  t.forEach(transition =>
+    visits.push({
+      isVisit: true,
       transType: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
       uri: "http://" + transition + ".example.com/",
       title: getLastValue("http://" + transition + ".example.com/", "title"),
-      lastVisit: getLastValue("http://" + transition + ".example.com/", "lastVisit"),
+      lastVisit: getLastValue(
+        "http://" + transition + ".example.com/",
+        "lastVisit"
+      ),
       isRedirect: true,
       referrer: "http://" + transition + ".redirect.perm.example.com/",
-      visitCount: getLastValue("http://" + transition + ".example.com/", "visitCount"),
-      isInQuery: true }));
+      visitCount: getLastValue(
+        "http://" + transition + ".example.com/",
+        "visitCount"
+      ),
+      isInQuery: true,
+    })
+  );
 
   // Add an unvisited bookmark in the database, it should never appear.
-  visits.push({ isBookmark: true,
+  visits.push({
+    isBookmark: true,
     uri: "http://unvisited.bookmark.com/",
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     title: "Unvisited Bookmark",
-    isInQuery: false });
+    isInQuery: false,
+  });
 
   // Put visits in the database.
   await task_populateDB(visits);
@@ -291,12 +334,16 @@ add_task(async function test_redirects() {
   let maxResults_options = [5, 10, 20, null];
   // These sortingMode are choosen to toggle using special queries for history
   // menu.
-  let sorting_options = [Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
-                         Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
-                         Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING];
+  let sorting_options = [
+    Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
+    Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
+    Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING,
+  ];
   // Will execute check_results_callback() for each generated combination.
-  cartProd([includeHidden_options, maxResults_options, sorting_options],
-           check_results_callback);
+  cartProd(
+    [includeHidden_options, maxResults_options, sorting_options],
+    check_results_callback
+  );
 
   await PlacesUtils.bookmarks.eraseEverything();
 

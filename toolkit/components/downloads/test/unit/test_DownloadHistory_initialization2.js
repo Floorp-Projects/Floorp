@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {DownloadHistory} = ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
+const { DownloadHistory } = ChromeUtils.import(
+  "resource://gre/modules/DownloadHistory.jsm"
+);
 
 /**
  * This test is designed to ensure the cache of download history is correctly
@@ -36,8 +38,11 @@ add_task(async function test_initialization_via_addDownload() {
   let downloads = await historyList.getAll();
   Assert.equal(downloads.length, 1, "Should have only one entry");
 
-  Assert.equal(downloads[0].target.path, download1FileLocation,
-    "Should have the correct target path");
+  Assert.equal(
+    downloads[0].target.path,
+    download1FileLocation,
+    "Should have the correct target path"
+  );
 
   // Now re-add the download but with a different target.
   download.target.path = download2FileLocation;
@@ -48,6 +53,9 @@ add_task(async function test_initialization_via_addDownload() {
   downloads = await historyList.getAll();
   Assert.equal(downloads.length, 1, "Should still have only one entry");
 
-  Assert.equal(downloads[0].target.path, download2FileLocation,
-    "Should have the correct revised target path");
+  Assert.equal(
+    downloads[0].target.path,
+    download2FileLocation,
+    "Should have the correct revised target path"
+  );
 });

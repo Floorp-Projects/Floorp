@@ -6,7 +6,10 @@ let expectedNotification;
 let expectedData;
 
 let TestObserver = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   observe(subject, topic, data) {
     Assert.equal(topic, "passwordmgr-storage-changed");
@@ -53,14 +56,27 @@ add_task(function test_notifications() {
   let testdesc = "Setup of nsLoginInfo test-users";
 
   try {
-    let testuser1 = new LoginInfo("http://testhost1", "", null,
-                                  "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+    let testuser1 = new LoginInfo(
+      "http://testhost1",
+      "",
+      null,
+      "dummydude",
+      "itsasecret",
+      "put_user_here",
+      "put_pw_here"
+    );
 
-    let testuser2 = new LoginInfo("http://testhost2", "", null,
-                                  "dummydude2", "itsasecret2", "put_user2_here", "put_pw2_here");
+    let testuser2 = new LoginInfo(
+      "http://testhost2",
+      "",
+      null,
+      "dummydude2",
+      "itsasecret2",
+      "put_user2_here",
+      "put_pw2_here"
+    );
 
     Services.obs.addObserver(TestObserver, "passwordmgr-storage-changed");
-
 
     /* ========== 1 ========== */
     testnum = 1;
@@ -124,8 +140,10 @@ add_task(function test_notifications() {
     expectedData = "http://site.com";
     Services.logins.setLoginSavingEnabled("http://site.com", false);
     Assert.equal(expectedNotification, null);
-    LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                            ["http://site.com"]);
+    LoginTestUtils.assertDisabledHostsEqual(
+      Services.logins.getAllDisabledHosts(),
+      ["http://site.com"]
+    );
 
     /* ========== 8 ========== */
     testnum++;
@@ -135,8 +153,10 @@ add_task(function test_notifications() {
     expectedData = "http://site.com";
     Services.logins.setLoginSavingEnabled("http://site.com", false);
     Assert.equal(expectedNotification, null);
-    LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                            ["http://site.com"]);
+    LoginTestUtils.assertDisabledHostsEqual(
+      Services.logins.getAllDisabledHosts(),
+      ["http://site.com"]
+    );
 
     /* ========== 9 ========== */
     testnum++;
@@ -162,6 +182,8 @@ add_task(function test_notifications() {
 
     LoginTestUtils.clearData();
   } catch (e) {
-    throw new Error("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
+    throw new Error(
+      "FAILED in test #" + testnum + " -- " + testdesc + ": " + e
+    );
   }
 });

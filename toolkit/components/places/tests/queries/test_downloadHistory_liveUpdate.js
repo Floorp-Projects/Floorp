@@ -14,8 +14,9 @@ function accumulateNotifications(result) {
           Assert.deepEqual(notifications, expectedNotifications);
       }
       // ignore a few uninteresting notifications.
-      if (["QueryInterface", "containerStateChanged"].includes(name))
+      if (["QueryInterface", "containerStateChanged"].includes(name)) {
         return () => {};
+      }
       return () => {
         notifications.push(name);
       };
@@ -40,7 +41,11 @@ add_task(async function test_downloadhistory_query_notifications() {
   let transitions = Object.values(PlacesUtils.history.TRANSITIONS);
   for (let transition of transitions) {
     let uri = "http://fx-search.com/" + transition;
-    await PlacesTestUtils.addVisits({ uri, transition, title: "test " + transition });
+    await PlacesTestUtils.addVisits({
+      uri,
+      transition,
+      title: "test " + transition,
+    });
     // For each visit also set apart:
     //  - a bookmark
     //  - an annotation
@@ -64,11 +69,13 @@ add_task(async function test_downloadhistory_query_notifications() {
   // We pretty much don't want to see invalidateContainer here, because that
   // means we requeried.
   // We also don't want to see changes caused by filtered-out transition types.
-  notifications.check(["nodeHistoryDetailsChanged",
-                       "nodeInserted",
-                       "nodeTitleChanged",
-                       "nodeIconChanged",
-                       "nodeRemoved"]);
+  notifications.check([
+    "nodeHistoryDetailsChanged",
+    "nodeInserted",
+    "nodeTitleChanged",
+    "nodeIconChanged",
+    "nodeRemoved",
+  ]);
 });
 
 add_task(async function test_downloadhistory_query_filtering() {

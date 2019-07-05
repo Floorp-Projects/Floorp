@@ -1,10 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
 var WORKER_SOURCE_URI = "chrome://test_lz4/content/worker_lz4.js";
 do_load_manifest("data/chrome.manifest");
-
 
 add_task(function() {
   let worker = new ChromeWorker(WORKER_SOURCE_URI);
@@ -35,4 +33,3 @@ add_task(function() {
     worker.postMessage("START");
   });
 });
-

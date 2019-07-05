@@ -14,8 +14,11 @@ add_task(function test_formActionOrigin_ignoreSchemes() {
     formActionOrigin: "",
   });
 
-  Assert.notEqual(httpActionLogin.formActionOrigin, httpsActionLogin.formActionOrigin,
-                  "Ensure actions differ");
+  Assert.notEqual(
+    httpActionLogin.formActionOrigin,
+    httpsActionLogin.formActionOrigin,
+    "Ensure actions differ"
+  );
 
   const TEST_CASES = [
     [httpActionLogin, httpActionLogin, true],
@@ -40,11 +43,15 @@ add_task(function test_formActionOrigin_ignoreSchemes() {
   ];
 
   for (let [login1, login2, expected] of TEST_CASES) {
-    Assert.strictEqual(LoginHelper.doLoginsMatch(login1, login2, {
-      ignorePassword: false,
-      ignoreSchemes: true,
-    }), expected, `LoginHelper.doLoginsMatch:
+    Assert.strictEqual(
+      LoginHelper.doLoginsMatch(login1, login2, {
+        ignorePassword: false,
+        ignoreSchemes: true,
+      }),
+      expected,
+      `LoginHelper.doLoginsMatch:
 \t${JSON.stringify(login1)}
-\t${JSON.stringify(login2)}`);
+\t${JSON.stringify(login2)}`
+    );
   }
 });

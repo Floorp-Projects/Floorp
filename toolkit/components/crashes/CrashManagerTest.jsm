@@ -53,9 +53,9 @@ this.TestingCrashManager.prototype = {
 
   createDummyDump(submitted = false, date = new Date(), hr = false) {
     let uuid = Cc["@mozilla.org/uuid-generator;1"]
-                .getService(Ci.nsIUUIDGenerator)
-                .generateUUID()
-                .toString();
+      .getService(Ci.nsIUUIDGenerator)
+      .generateUUID()
+      .toString();
     uuid = uuid.substring(1, uuid.length - 1);
 
     let path;
@@ -66,15 +66,18 @@ this.TestingCrashManager.prototype = {
       } else {
         path = OS.Path.join(this._submittedDumpsDir, "bp-" + uuid + ".txt");
       }
-      mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR |
-            OS.Constants.libc.S_IRGRP | OS.Constants.libc.S_IROTH;
+      mode =
+        OS.Constants.libc.S_IRUSR |
+        OS.Constants.libc.S_IWUSR |
+        OS.Constants.libc.S_IRGRP |
+        OS.Constants.libc.S_IROTH;
     } else {
       path = OS.Path.join(this._pendingDumpsDir, uuid + ".dmp");
       mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
     }
 
     return (async function() {
-      let f = await OS.File.open(path, {create: true}, {unixMode: mode});
+      let f = await OS.File.open(path, { create: true }, { unixMode: mode });
       await f.setDates(date, date);
       await f.close();
       dump("Created fake crash: " + path + "\n");
@@ -93,7 +96,7 @@ this.TestingCrashManager.prototype = {
 
     return (async function() {
       let mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
-      await OS.File.open(path, {create: true}, {unixMode: mode});
+      await OS.File.open(path, { create: true }, { unixMode: mode });
       dump("Create ignored dump file: " + path + "\n");
     })();
   },
@@ -101,9 +104,7 @@ this.TestingCrashManager.prototype = {
   createEventsFile(filename, type, date, content, index = 0) {
     let path = OS.Path.join(this._eventsDirs[index], filename);
 
-    let data = type + "\n" +
-               Math.floor(date.getTime() / 1000) + "\n" +
-               content;
+    let data = type + "\n" + Math.floor(date.getTime() / 1000) + "\n" + content;
     let encoder = new TextEncoder();
     let array = encoder.encode(data);
 
@@ -128,12 +129,14 @@ this.TestingCrashManager.prototype = {
       return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
     }
 
-    return CrashManager.prototype._handleEventFilePayload.call(this,
-                                                               store,
-                                                               entry,
-                                                               type,
-                                                               date,
-                                                               payload);
+    return CrashManager.prototype._handleEventFilePayload.call(
+      this,
+      store,
+      entry,
+      type,
+      date,
+      payload
+    );
   },
 };
 
@@ -153,7 +156,7 @@ var getManager = function() {
         }
 
         dump("Creating directory: " + path + "\n");
-        await OS.File.makeDir(path, {unixMode: dirMode});
+        await OS.File.makeDir(path, { unixMode: dirMode });
 
         return path;
       })();

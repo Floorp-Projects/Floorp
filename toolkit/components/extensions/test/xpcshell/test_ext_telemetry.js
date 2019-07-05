@@ -7,14 +7,18 @@ ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 function createExtension(backgroundScript, permissions, isPrivileged = true) {
   let extensionData = {
     background: backgroundScript,
-    manifest: {permissions},
+    manifest: { permissions },
     isPrivileged,
   };
   return ExtensionTestUtils.loadExtension(extensionData);
 }
 
 async function run(test) {
-  let extension = createExtension(test.backgroundScript, test.permissions || ["telemetry"], test.isPrivileged);
+  let extension = createExtension(
+    test.backgroundScript,
+    test.permissions || ["telemetry"],
+    test.isPrivileged
+  );
   await extension.startup();
   await extension.awaitFinish(test.doneSignal);
   await extension.unload();
@@ -26,7 +30,10 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   add_task(async function test_telemetry_without_telemetry_permission() {
     await run({
       backgroundScript: () => {
-        browser.test.assertTrue(!browser.telemetry, "'telemetry' permission is required");
+        browser.test.assertTrue(
+          !browser.telemetry,
+          "'telemetry' permission is required"
+        );
         browser.test.notifyPass("telemetry_permission");
       },
       permissions: [],
@@ -35,23 +42,31 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     });
   });
 
-  add_task(async function test_telemetry_without_telemetry_permission_privileged() {
-    await run({
-      backgroundScript: () => {
-        browser.test.assertTrue(!browser.telemetry, "'telemetry' permission is required");
-        browser.test.notifyPass("telemetry_permission");
-      },
-      permissions: [],
-      doneSignal: "telemetry_permission",
-    });
-  });
+  add_task(
+    async function test_telemetry_without_telemetry_permission_privileged() {
+      await run({
+        backgroundScript: () => {
+          browser.test.assertTrue(
+            !browser.telemetry,
+            "'telemetry' permission is required"
+          );
+          browser.test.notifyPass("telemetry_permission");
+        },
+        permissions: [],
+        doneSignal: "telemetry_permission",
+      });
+    }
+  );
 
   add_task(async function test_telemetry_scalar_add() {
     Services.telemetry.clearScalars();
 
     await run({
       backgroundScript: async () => {
-        await browser.telemetry.scalarAdd("telemetry.test.unsigned_int_kind", 1);
+        await browser.telemetry.scalarAdd(
+          "telemetry.test.unsigned_int_kind",
+          1
+        );
         browser.test.notifyPass("scalar_add");
       },
       doneSignal: "scalar_add",
@@ -64,7 +79,7 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_scalar_add_unknown_name() {
-    let {messages} = await promiseConsoleOutput(async () => {
+    let { messages } = await promiseConsoleOutput(async () => {
       await run({
         backgroundScript: async () => {
           await browser.telemetry.scalarAdd("telemetry.test.does_not_exist", 1);
@@ -74,15 +89,22 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       });
     });
 
-    messages = messages.filter(msg => /telemetry.test.does_not_exist - Unknown scalar./);
-    equal(messages.length, 1, "Telemetry should throw if an unknown scalar is incremented");
+    messages = messages.filter(
+      msg => /telemetry.test.does_not_exist - Unknown scalar./
+    );
+    equal(
+      messages.length,
+      1,
+      "Telemetry should throw if an unknown scalar is incremented"
+    );
   });
 
   add_task(async function test_telemetry_scalar_add_illegal_value() {
     await run({
       backgroundScript: () => {
         browser.test.assertThrows(
-          () => browser.telemetry.scalarAdd("telemetry.test.unsigned_int_kind", {}),
+          () =>
+            browser.telemetry.scalarAdd("telemetry.test.unsigned_int_kind", {}),
           /Incorrect argument types for telemetry.scalarAdd/,
           "The second 'value' argument to scalarAdd must be an integer, string, or boolean"
         );
@@ -93,18 +115,27 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_scalar_add_invalid_keyed_scalar() {
-    let {messages} = await promiseConsoleOutput(async function() {
+    let { messages } = await promiseConsoleOutput(async function() {
       await run({
         backgroundScript: async () => {
-          await browser.telemetry.scalarAdd("telemetry.test.keyed_unsigned_int", 1);
+          await browser.telemetry.scalarAdd(
+            "telemetry.test.keyed_unsigned_int",
+            1
+          );
           browser.test.notifyPass("scalar_add_invalid_keyed_scalar");
         },
         doneSignal: "scalar_add_invalid_keyed_scalar",
       });
     });
 
-    messages = messages.filter(msg => /Attempting to manage a keyed scalar as a scalar/);
-    equal(messages.length, 1, "Telemetry should throw if a keyed scalar is incremented");
+    messages = messages.filter(
+      msg => /Attempting to manage a keyed scalar as a scalar/
+    );
+    equal(
+      messages.length,
+      1,
+      "Telemetry should throw if a keyed scalar is incremented"
+    );
   });
 
   add_task(async function test_telemetry_scalar_set() {
@@ -125,10 +156,13 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_scalar_set_unknown_name() {
-    let {messages} = await promiseConsoleOutput(async function() {
+    let { messages } = await promiseConsoleOutput(async function() {
       await run({
         backgroundScript: async () => {
-          await browser.telemetry.scalarSet("telemetry.test.does_not_exist", true);
+          await browser.telemetry.scalarSet(
+            "telemetry.test.does_not_exist",
+            true
+          );
           browser.test.notifyPass("scalar_set_unknown_name");
         },
         doneSignal: "scalar_set_unknown_name",
@@ -136,7 +170,11 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     });
 
     messages = messages.filter(msg => /Unknown scalar/);
-    equal(messages.length, 1, "Telemetry should throw if an unknown scalar is set");
+    equal(
+      messages.length,
+      1,
+      "Telemetry should throw if an unknown scalar is set"
+    );
   });
 
   add_task(async function test_telemetry_scalar_set_maximum() {
@@ -144,7 +182,10 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
 
     await run({
       backgroundScript: async () => {
-        await browser.telemetry.scalarSetMaximum("telemetry.test.unsigned_int_kind", 123);
+        await browser.telemetry.scalarSetMaximum(
+          "telemetry.test.unsigned_int_kind",
+          123
+        );
         browser.test.notifyPass("scalar_set_maximum");
       },
       doneSignal: "scalar_set_maximum",
@@ -157,10 +198,13 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_scalar_set_maximum_unknown_name() {
-    let {messages} = await promiseConsoleOutput(async function() {
+    let { messages } = await promiseConsoleOutput(async function() {
       await run({
         backgroundScript: async () => {
-          await browser.telemetry.scalarSetMaximum("telemetry.test.does_not_exist", 1);
+          await browser.telemetry.scalarSetMaximum(
+            "telemetry.test.does_not_exist",
+            1
+          );
           browser.test.notifyPass("scalar_set_maximum_unknown_name");
         },
         doneSignal: "scalar_set_maximum_unknown_name",
@@ -168,16 +212,25 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     });
 
     messages = messages.filter(msg => /Unknown scalar/);
-    equal(messages.length, 1, "Telemetry should throw if an unknown scalar is set");
+    equal(
+      messages.length,
+      1,
+      "Telemetry should throw if an unknown scalar is set"
+    );
   });
 
   add_task(async function test_telemetry_scalar_set_maximum_illegal_value() {
     await run({
       backgroundScript: () => {
         browser.test.assertThrows(
-          () => browser.telemetry.scalarSetMaximum("telemetry.test.unsigned_int_kind", "string"),
+          () =>
+            browser.telemetry.scalarSetMaximum(
+              "telemetry.test.unsigned_int_kind",
+              "string"
+            ),
           /Incorrect argument types for telemetry.scalarSetMaximum/,
-          "The second 'value' argument to scalarSetMaximum must be a scalar");
+          "The second 'value' argument to scalarSetMaximum must be a scalar"
+        );
         browser.test.notifyPass("scalar_set_maximum_illegal_value");
       },
       doneSignal: "scalar_set_maximum_illegal_value",
@@ -190,13 +243,20 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
 
     await run({
       backgroundScript: async () => {
-        await browser.telemetry.recordEvent("telemetry.test", "test1", "object1");
+        await browser.telemetry.recordEvent(
+          "telemetry.test",
+          "test1",
+          "object1"
+        );
         browser.test.notifyPass("record_event_ok");
       },
       doneSignal: "record_event_ok",
     });
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    );
     equal(events.parent.length, 1);
     equal(events.parent[0][1], "telemetry.test");
 
@@ -212,10 +272,17 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         try {
-          await browser.telemetry.recordEvent("telemetry.test", "test1", "object1", "value1");
+          await browser.telemetry.recordEvent(
+            "telemetry.test",
+            "test1",
+            "object1",
+            "value1"
+          );
           browser.test.notifyPass("record_event_string_value");
         } catch (ex) {
-          browser.test.fail(`Unexpected exception raised during record_event_value_must_be_string: ${ex}`);
+          browser.test.fail(
+            `Unexpected exception raised during record_event_value_must_be_string: ${ex}`
+          );
           browser.test.notifyPass("record_event_string_value");
           throw ex;
         }
@@ -223,7 +290,10 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "record_event_string_value",
     });
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    );
     equal(events.parent.length, 1);
     equal(events.parent[0][1], "telemetry.test");
     equal(events.parent[0][3], "object1");
@@ -239,13 +309,16 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         await browser.telemetry.registerScalars("telemetry.test.dynamic", {
-          "webext_string": {
+          webext_string: {
             kind: browser.telemetry.ScalarType.STRING,
             keyed: false,
             record_on_release: true,
           },
         });
-        await browser.telemetry.scalarSet("telemetry.test.dynamic.webext_string", "hello");
+        await browser.telemetry.scalarSet(
+          "telemetry.test.dynamic.webext_string",
+          "hello"
+        );
         browser.test.notifyPass("register_scalars_string");
       },
       doneSignal: "register_scalars_string",
@@ -263,19 +336,25 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         await browser.telemetry.registerScalars("telemetry.test.dynamic", {
-          "webext_string": {
+          webext_string: {
             kind: browser.telemetry.ScalarType.STRING,
             keyed: false,
             record_on_release: true,
           },
-          "webext_string_too": {
+          webext_string_too: {
             kind: browser.telemetry.ScalarType.STRING,
             keyed: false,
             record_on_release: true,
           },
         });
-        await browser.telemetry.scalarSet("telemetry.test.dynamic.webext_string", "hello");
-        await browser.telemetry.scalarSet("telemetry.test.dynamic.webext_string_too", "world");
+        await browser.telemetry.scalarSet(
+          "telemetry.test.dynamic.webext_string",
+          "hello"
+        );
+        await browser.telemetry.scalarSet(
+          "telemetry.test.dynamic.webext_string_too",
+          "world"
+        );
         browser.test.notifyPass("register_scalars_multiple");
       },
       doneSignal: "register_scalars_multiple",
@@ -294,13 +373,16 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         await browser.telemetry.registerScalars("telemetry.test.dynamic", {
-          "webext_boolean": {
+          webext_boolean: {
             kind: browser.telemetry.ScalarType.BOOLEAN,
             keyed: false,
             record_on_release: true,
           },
         });
-        await browser.telemetry.scalarSet("telemetry.test.dynamic.webext_boolean", true);
+        await browser.telemetry.scalarSet(
+          "telemetry.test.dynamic.webext_boolean",
+          true
+        );
         browser.test.notifyPass("register_scalars_boolean");
       },
       doneSignal: "register_scalars_boolean",
@@ -318,13 +400,16 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         await browser.telemetry.registerScalars("telemetry.test.dynamic", {
-          "webext_count": {
+          webext_count: {
             kind: browser.telemetry.ScalarType.COUNT,
             keyed: false,
             record_on_release: true,
           },
         });
-        await browser.telemetry.scalarSet("telemetry.test.dynamic.webext_count", 123);
+        await browser.telemetry.scalarSet(
+          "telemetry.test.dynamic.webext_count",
+          123
+        );
         browser.test.notifyPass("register_scalars_count");
       },
       doneSignal: "register_scalars_count",
@@ -342,19 +427,25 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     await run({
       backgroundScript: async () => {
         await browser.telemetry.registerEvents("telemetry.test.dynamic", {
-          "test1": {
+          test1: {
             methods: ["test1"],
             objects: ["object1"],
             extra_keys: [],
           },
         });
-        await browser.telemetry.recordEvent("telemetry.test.dynamic", "test1", "object1");
+        await browser.telemetry.recordEvent(
+          "telemetry.test.dynamic",
+          "test1",
+          "object1"
+        );
         browser.test.notifyPass("register_events");
       },
       doneSignal: "register_events",
     });
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS);
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    );
     let expected = [["telemetry.test.dynamic", "test1", "object1"]];
     equal(events.dynamic.length, expected.length);
     deepEqual(events.dynamic.map(e => e.slice(1)), expected);
@@ -377,7 +468,10 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_can_upload_enabled() {
-    Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.FhrUploadEnabled,
+      true
+    );
 
     await run({
       backgroundScript: async () => {
@@ -392,7 +486,10 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
   });
 
   add_task(async function test_telemetry_can_upload_disabled() {
-    Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.FhrUploadEnabled,
+      false
+    );
 
     await run({
       backgroundScript: async () => {

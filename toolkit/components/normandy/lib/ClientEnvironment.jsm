@@ -4,28 +4,33 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NormandyApi", "resource://normandy/lib/NormandyApi.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NormandyApi",
+  "resource://normandy/lib/NormandyApi.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "ClientEnvironmentBase",
   "resource://gre/modules/components-utils/ClientEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-    this,
-    "PreferenceExperiments",
-    "resource://normandy/lib/PreferenceExperiments.jsm"
+  this,
+  "PreferenceExperiments",
+  "resource://normandy/lib/PreferenceExperiments.jsm"
 );
 
-const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 var EXPORTED_SYMBOLS = ["ClientEnvironment"];
 
 // Cached API request for client attributes that are determined by the Normandy
 // service.
 let _classifyRequest = null;
-
 
 class ClientEnvironment extends ClientEnvironmentBase {
   /**
@@ -64,7 +69,9 @@ class ClientEnvironment extends ClientEnvironmentBase {
     let id = Services.prefs.getCharPref("app.normandy.user_id", "");
     if (!id) {
       // generateUUID adds leading and trailing "{" and "}". strip them off.
-      id = generateUUID().toString().slice(1, -1);
+      id = generateUUID()
+        .toString()
+        .slice(1, -1);
       Services.prefs.setCharPref("app.normandy.user_id", id);
     }
     return id;
@@ -79,14 +86,16 @@ class ClientEnvironment extends ClientEnvironmentBase {
 
   static get request_time() {
     return (async () => {
-      const { request_time } = await ClientEnvironment.getClientClassification();
+      const {
+        request_time,
+      } = await ClientEnvironment.getClientClassification();
       return request_time;
     })();
   }
 
   static get experiments() {
     return (async () => {
-      const names = {all: [], active: [], expired: []};
+      const names = { all: [], active: [], expired: [] };
 
       for (const experiment of await PreferenceExperiments.getAll()) {
         names.all.push(experiment.name);

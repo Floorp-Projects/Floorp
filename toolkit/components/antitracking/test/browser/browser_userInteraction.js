@@ -7,13 +7,18 @@ add_task(async function() {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userInteraction.document.interval", 1],
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
-    ["privacy.trackingprotection.enabled", false],
-    ["privacy.trackingprotection.pbmode.enabled", false],
-    ["privacy.trackingprotection.annotate_channels", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.userInteraction.document.interval", 1],
+      [
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      ["privacy.trackingprotection.annotate_channels", true],
+    ],
+  });
 
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -25,13 +30,18 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   let uri = Services.io.newURI(TEST_DOMAIN);
-  is(Services.perms.testPermission(uri, "storageAccessAPI"), Services.perms.UNKNOWN_ACTION,
-     "Before user-interaction we don't have a permission");
+  is(
+    Services.perms.testPermission(uri, "storageAccessAPI"),
+    Services.perms.UNKNOWN_ACTION,
+    "Before user-interaction we don't have a permission"
+  );
 
   let promise = TestUtils.topicObserved("perm-changed", (aSubject, aData) => {
     let permission = aSubject.QueryInterface(Ci.nsIPermission);
-    return permission.type == "storageAccessAPI" &&
-           permission.principal.URI.equals(uri);
+    return (
+      permission.type == "storageAccessAPI" &&
+      permission.principal.URI.equals(uri)
+    );
   });
 
   info("Simulating user-interaction.");
@@ -47,8 +57,10 @@ add_task(async function() {
     // Another perm-changed event should be triggered by the timer.
     promise = TestUtils.topicObserved("perm-changed", (aSubject, aData) => {
       let permission = aSubject.QueryInterface(Ci.nsIPermission);
-      return permission.type == "storageAccessAPI" &&
-             permission.principal.URI.equals(uri);
+      return (
+        permission.type == "storageAccessAPI" &&
+        permission.principal.URI.equals(uri)
+      );
     });
 
     info("Simulating another user-interaction.");
@@ -61,9 +73,9 @@ add_task(async function() {
   }
 
   // Let's disable the document.interval.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userInteraction.document.interval", 0],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userInteraction.document.interval", 0]],
+  });
 
   promise = new Promise(resolve => {
     let id;
@@ -99,6 +111,8 @@ add_task(async function() {
 add_task(async function() {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
   });
 });

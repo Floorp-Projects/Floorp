@@ -11,18 +11,20 @@ var EXPORTED_SYMBOLS = ["FindContent"];
 
 class FindContent {
   constructor(docShell) {
-    const {Finder} = ChromeUtils.import("resource://gre/modules/Finder.jsm");
+    const { Finder } = ChromeUtils.import("resource://gre/modules/Finder.jsm");
     this.finder = new Finder(docShell);
   }
 
   get iterator() {
     if (!this._iterator) {
-      const {FinderIterator} = ChromeUtils.import("resource://gre/modules/FinderIterator.jsm");
+      const { FinderIterator } = ChromeUtils.import(
+        "resource://gre/modules/FinderIterator.jsm"
+      );
       this._iterator = Object.assign({}, FinderIterator);
 
       // Native FinderIterator._collectFrames skips frames if they are scrolled out
       // of viewport.  Override with method that doesn't do that.
-      this._iterator._collectFrames = (window) => {
+      this._iterator._collectFrames = window => {
         let frames = [];
         if (!("frames" in window) || !window.frames.length) {
           return frames;
@@ -44,7 +46,9 @@ class FindContent {
 
   get highlighter() {
     if (!this._highlighter) {
-      const {FinderHighlighter} = ChromeUtils.import("resource://gre/modules/FinderHighlighter.jsm");
+      const { FinderHighlighter } = ChromeUtils.import(
+        "resource://gre/modules/FinderHighlighter.jsm"
+      );
       this._highlighter = new FinderHighlighter(this.finder);
     }
     return this._highlighter;
@@ -69,7 +73,13 @@ class FindContent {
    */
   findRanges(params) {
     return new Promise(resolve => {
-      let {queryphrase, caseSensitive, entireWord, includeRangeData, includeRectData} = params;
+      let {
+        queryphrase,
+        caseSensitive,
+        entireWord,
+        includeRangeData,
+        includeRectData,
+      } = params;
 
       this.iterator.reset();
 
@@ -92,7 +102,11 @@ class FindContent {
           rectData = this._collectRectData();
         }
 
-        resolve({count: this.iterator._previousRanges.length, rangeData, rectData});
+        resolve({
+          count: this.iterator._previousRanges.length,
+          rangeData,
+          rectData,
+        });
       });
     });
   }
@@ -122,7 +136,12 @@ class FindContent {
       let doc = startContainer.ownerDocument;
 
       if (lastDoc !== doc) {
-        walker = doc.createTreeWalker(doc, doc.defaultView.NodeFilter.SHOW_TEXT, null, false);
+        walker = doc.createTreeWalker(
+          doc,
+          doc.defaultView.NodeFilter.SHOW_TEXT,
+          null,
+          false
+        );
         // Get first node.
         node = walker.nextNode();
         // Reset node count.
@@ -131,7 +150,7 @@ class FindContent {
       }
       lastDoc = doc;
 
-      let data = {framePos, text: range.toString()};
+      let data = { framePos, text: range.toString() };
       rangeData.push(data);
 
       if (node != range.startContainer) {
@@ -179,7 +198,7 @@ class FindContent {
     let ranges = this.iterator._previousRanges;
     for (let range of ranges) {
       let rectsAndTexts = this.highlighter._getRangeRectsAndTexts(range);
-      rectData.push({text: range.toString(), rectsAndTexts});
+      rectData.push({ text: range.toString(), rectsAndTexts });
     }
 
     return rectData;
@@ -206,7 +225,7 @@ class FindContent {
    *   "NoResults" - There were no search results to highlight.
    */
   highlightResults(params) {
-    let {rangeIndex, noScroll} = params;
+    let { rangeIndex, noScroll } = params;
 
     this.highlighter.highlight(false);
     let ranges = this.iterator._previousRanges;
@@ -222,12 +241,15 @@ class FindContent {
           if (!noScroll) {
             let node = foundRange.startContainer;
             let editableNode = this.highlighter._getEditableNode(node);
-            let controller = editableNode ? editableNode.editor.selectionController :
-                             this.finder._getSelectionController(node.ownerGlobal);
+            let controller = editableNode
+              ? editableNode.editor.selectionController
+              : this.finder._getSelectionController(node.ownerGlobal);
 
-            controller.scrollSelectionIntoView(controller.SELECTION_FIND,
-                                               controller.SELECTION_ON,
-                                               controller.SCROLL_CENTER_VERTICALLY);
+            controller.scrollSelectionIntoView(
+              controller.SELECTION_FIND,
+              controller.SELECTION_ON,
+              controller.SCROLL_CENTER_VERTICALLY
+            );
           }
         } else {
           status = "OutOfRange";
@@ -244,4 +266,3 @@ class FindContent {
     return status;
   }
 }
-

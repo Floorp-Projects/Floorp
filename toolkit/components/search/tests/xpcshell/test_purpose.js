@@ -12,10 +12,10 @@ add_task(async function setup() {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams used to set the purpose will be ignored.
   let url = "resource://test/data/";
-  let resProt = Services.io.getProtocolHandler("resource")
-                        .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions",
-                          Services.io.newURI(url));
+  let resProt = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
+  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
 
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
@@ -25,7 +25,8 @@ add_task(async function test_purpose() {
   let engine = Services.search.getEngineByName("Test search engine");
 
   function check_submission(aValue, aSearchTerm, aType, aPurpose) {
-    let submissionURL = engine.getSubmission(aSearchTerm, aType, aPurpose).uri.spec;
+    let submissionURL = engine.getSubmission(aSearchTerm, aType, aPurpose).uri
+      .spec;
     let searchParams = new URLSearchParams(submissionURL.split("?")[1]);
     if (aValue) {
       Assert.equal(searchParams.get("channel"), aValue);
@@ -56,10 +57,13 @@ add_task(async function test_purpose() {
 });
 
 add_task(async function test_purpose() {
-  let engine = Services.search.getEngineByName("Test search engine (Reordered)");
+  let engine = Services.search.getEngineByName(
+    "Test search engine (Reordered)"
+  );
 
   function check_submission(aValue, aSearchTerm, aType, aPurpose) {
-    let submissionURL = engine.getSubmission(aSearchTerm, aType, aPurpose).uri.spec;
+    let submissionURL = engine.getSubmission(aSearchTerm, aType, aPurpose).uri
+      .spec;
     let searchParams = new URLSearchParams(submissionURL.split("?")[1]);
     if (aValue) {
       Assert.equal(searchParams.get("channel"), aValue);

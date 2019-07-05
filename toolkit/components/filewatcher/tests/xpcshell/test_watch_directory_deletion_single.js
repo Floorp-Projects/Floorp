@@ -41,5 +41,10 @@ add_task(async function test_watch_single_path_directory_deletion() {
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).
-  await promiseRemovePath(watcher, watchedDir, deferred.resolve, deferred.reject);
+  await promiseRemovePath(
+    watcher,
+    watchedDir,
+    deferred.resolve,
+    deferred.reject
+  );
 });

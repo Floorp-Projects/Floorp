@@ -78,10 +78,8 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
-  Assert.ok(rootNode.getChild(0).dateAdded <
-                rootNode.getChild(1).dateAdded);
-  Assert.ok(rootNode.getChild(1).dateAdded <
-                rootNode.getChild(2).dateAdded);
+  Assert.ok(rootNode.getChild(0).dateAdded < rootNode.getChild(1).dateAdded);
+  Assert.ok(rootNode.getChild(1).dateAdded < rootNode.getChild(2).dateAdded);
 
   // test SORT_BY_DATEADDED_DESCENDING (live update)
   result.sortingMode = options.SORT_BY_DATEADDED_DESCENDING;
@@ -89,10 +87,8 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b3.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b1.guid);
-  Assert.ok(rootNode.getChild(0).dateAdded >
-                rootNode.getChild(1).dateAdded);
-  Assert.ok(rootNode.getChild(1).dateAdded >
-                rootNode.getChild(2).dateAdded);
+  Assert.ok(rootNode.getChild(0).dateAdded > rootNode.getChild(1).dateAdded);
+  Assert.ok(rootNode.getChild(1).dateAdded > rootNode.getChild(2).dateAdded);
 
   // test SORT_BY_LASTMODIFIED_ASCENDING (live update)
   result.sortingMode = options.SORT_BY_LASTMODIFIED_ASCENDING;
@@ -100,10 +96,12 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b3.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b1.guid);
-  Assert.ok(rootNode.getChild(0).lastModified <
-                rootNode.getChild(1).lastModified);
-  Assert.ok(rootNode.getChild(1).lastModified <
-                rootNode.getChild(2).lastModified);
+  Assert.ok(
+    rootNode.getChild(0).lastModified < rootNode.getChild(1).lastModified
+  );
+  Assert.ok(
+    rootNode.getChild(1).lastModified < rootNode.getChild(2).lastModified
+  );
 
   // test SORT_BY_LASTMODIFIED_DESCENDING (live update)
   result.sortingMode = options.SORT_BY_LASTMODIFIED_DESCENDING;
@@ -112,10 +110,12 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
-  Assert.ok(rootNode.getChild(0).lastModified >
-                rootNode.getChild(1).lastModified);
-  Assert.ok(rootNode.getChild(1).lastModified >
-                rootNode.getChild(2).lastModified);
+  Assert.ok(
+    rootNode.getChild(0).lastModified > rootNode.getChild(1).lastModified
+  );
+  Assert.ok(
+    rootNode.getChild(1).lastModified > rootNode.getChild(2).lastModified
+  );
   rootNode.containerOpen = false;
 
   // test SORT_BY_DATEADDED_ASCENDING
@@ -127,10 +127,8 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
-  Assert.ok(rootNode.getChild(0).dateAdded <
-                rootNode.getChild(1).dateAdded);
-  Assert.ok(rootNode.getChild(1).dateAdded <
-                rootNode.getChild(2).dateAdded);
+  Assert.ok(rootNode.getChild(0).dateAdded < rootNode.getChild(1).dateAdded);
+  Assert.ok(rootNode.getChild(1).dateAdded < rootNode.getChild(2).dateAdded);
   rootNode.containerOpen = false;
 
   // test SORT_BY_DATEADDED_DESCENDING
@@ -142,10 +140,8 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b4.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b3.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b2.guid);
-  Assert.ok(rootNode.getChild(0).dateAdded >
-                rootNode.getChild(1).dateAdded);
-  Assert.ok(rootNode.getChild(1).dateAdded >
-                rootNode.getChild(2).dateAdded);
+  Assert.ok(rootNode.getChild(0).dateAdded > rootNode.getChild(1).dateAdded);
+  Assert.ok(rootNode.getChild(1).dateAdded > rootNode.getChild(2).dateAdded);
   rootNode.containerOpen = false;
 
   // test SORT_BY_LASTMODIFIED_ASCENDING
@@ -157,10 +153,12 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b4.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b3.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b2.guid);
-  Assert.ok(rootNode.getChild(0).lastModified <
-                rootNode.getChild(1).lastModified);
-  Assert.ok(rootNode.getChild(1).lastModified <
-                rootNode.getChild(2).lastModified);
+  Assert.ok(
+    rootNode.getChild(0).lastModified < rootNode.getChild(1).lastModified
+  );
+  Assert.ok(
+    rootNode.getChild(1).lastModified < rootNode.getChild(2).lastModified
+  );
   rootNode.containerOpen = false;
 
   // test SORT_BY_LASTMODIFIED_DESCENDING
@@ -172,9 +170,11 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
   Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
   Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
-  Assert.ok(rootNode.getChild(0).lastModified >
-                rootNode.getChild(1).lastModified);
-  Assert.ok(rootNode.getChild(1).lastModified >
-                rootNode.getChild(2).lastModified);
+  Assert.ok(
+    rootNode.getChild(0).lastModified > rootNode.getChild(1).lastModified
+  );
+  Assert.ok(
+    rootNode.getChild(1).lastModified > rootNode.getChild(2).lastModified
+  );
   rootNode.containerOpen = false;
 });

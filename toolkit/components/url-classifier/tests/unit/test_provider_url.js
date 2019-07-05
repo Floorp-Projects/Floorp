@@ -12,14 +12,7 @@ add_test(function test_provider_url() {
     "browser.safebrowsing.provider.mozilla.gethashURL",
   ];
 
-  let versions = [
-    "49.0",
-    "49.0.1",
-    "49.0a1",
-    "49.0b1",
-    "49.0esr",
-    "49.0.1esr",
-  ];
+  let versions = ["49.0", "49.0.1", "49.0a1", "49.0b1", "49.0esr", "49.0.1esr"];
 
   for (let version of versions) {
     for (let url of urls) {

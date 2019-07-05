@@ -2,10 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {FormAutoCompleteResult} = ChromeUtils.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
-                               "resource://gre/modules/SearchSuggestionController.jsm");
+const { FormAutoCompleteResult } = ChromeUtils.import(
+  "resource://gre/modules/nsFormAutoCompleteResult.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "SearchSuggestionController",
+  "resource://gre/modules/SearchSuggestionController.jsm"
+);
 
 /**
  * SuggestAutoComplete is a base class that implements nsIAutoCompleteSearch
@@ -19,9 +24,10 @@ function SuggestAutoComplete() {
   this._init();
 }
 SuggestAutoComplete.prototype = {
-
   _init() {
-    this._suggestionController = new SearchSuggestionController(obj => this.onResultsReturned(obj));
+    this._suggestionController = new SearchSuggestionController(obj =>
+      this.onResultsReturned(obj)
+    );
     this._suggestionController.maxLocalResults = this._historyLimit;
   },
 
@@ -64,7 +70,12 @@ SuggestAutoComplete.prototype = {
     }
 
     // Notify the FE of our new results
-    this.onResultsReady(results.term, finalResults, finalComments, results.formHistoryResult);
+    this.onResultsReady(
+      results.term,
+      finalResults,
+      finalComments,
+      results.formHistoryResult
+    );
   },
 
   /**
@@ -81,14 +92,15 @@ SuggestAutoComplete.prototype = {
       // for both.
       let labels = results.slice();
       let result = new FormAutoCompleteResult(
-          searchString,
-          Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-          0,
-          "",
-          results,
-          labels,
-          comments,
-          formHistoryResult);
+        searchString,
+        Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+        0,
+        "",
+        results,
+        labels,
+        comments,
+        formHistoryResult
+      );
 
       this._listener.onSearchResult(this, result);
 
@@ -113,8 +125,9 @@ SuggestAutoComplete.prototype = {
    */
   startSearch(searchString, searchParam, previousResult, listener) {
     // Don't reuse a previous form history result when it no longer applies.
-    if (!previousResult)
+    if (!previousResult) {
       this._formHistoryResult = null;
+    }
 
     var formHistorySearchParam = searchParam.split("|")[0];
 
@@ -125,18 +138,35 @@ SuggestAutoComplete.prototype = {
     // and patch all of autocomplete to be aware of this, but the searchParam
     // argument is already an opaque argument, so this solution is hopefully
     // less hackish (although still gross.)
-    var privacyMode = (searchParam.split("|")[1] == "private");
+    var privacyMode = searchParam.split("|")[1] == "private";
 
     // Start search immediately if possible, otherwise once the search
     // service is initialized
     if (Services.search.isInitialized) {
-      this._triggerSearch(searchString, formHistorySearchParam, listener, privacyMode);
+      this._triggerSearch(
+        searchString,
+        formHistorySearchParam,
+        listener,
+        privacyMode
+      );
       return;
     }
 
-    Services.search.init().then(() => {
-      this._triggerSearch(searchString, formHistorySearchParam, listener, privacyMode);
-    }).catch(result => Cu.reportError("Could not initialize search service, bailing out: " + result));
+    Services.search
+      .init()
+      .then(() => {
+        this._triggerSearch(
+          searchString,
+          formHistorySearchParam,
+          listener,
+          privacyMode
+        );
+      })
+      .catch(result =>
+        Cu.reportError(
+          "Could not initialize search service, bailing out: " + result
+        )
+      );
   },
 
   /**
@@ -144,9 +174,11 @@ SuggestAutoComplete.prototype = {
    */
   _triggerSearch(searchString, searchParam, listener, privacyMode) {
     this._listener = listener;
-    this._suggestionController.fetch(searchString,
-                                     privacyMode,
-                                     Services.search.defaultEngine);
+    this._suggestionController.fetch(
+      searchString,
+      privacyMode,
+      Services.search.defaultEngine
+    );
   },
 
   /**
@@ -158,8 +190,10 @@ SuggestAutoComplete.prototype = {
   },
 
   // nsISupports
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteSearch,
-                                          Ci.nsIAutoCompleteObserver]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIAutoCompleteSearch,
+    Ci.nsIAutoCompleteObserver,
+  ]),
 };
 
 /**
