@@ -31,12 +31,7 @@ void main(void) {
     RectWithSize src_rect = src_task.task_rect;
     RectWithSize target_rect = scale_task.common_data.task_rect;
 
-#if defined WR_FEATURE_COLOR_TARGET
-    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0).xy);
-#else
-    vec2 texture_size = vec2(textureSize(sPrevPassAlpha, 0).xy);
-#endif
-
+    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
     vUv.z = src_task.texture_layer_index;
 
     vUvRect = vec4(src_rect.p0 + vec2(0.5),
@@ -52,17 +47,9 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 
-#if defined WR_FEATURE_COLOR_TARGET
-#define SAMPLE_TYPE vec4
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassColor, uv)
-#else
-#define SAMPLE_TYPE float
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassAlpha, uv).r
-#endif
-
 void main(void) {
     vec2 st = clamp(vUv.xy, vUvRect.xy, vUvRect.zw);
-    oFragColor = vec4(SAMPLE_TEXTURE(vec3(st, vUv.z)));
+    oFragColor = texture(sColor0, vec3(st, vUv.z));
 }
 
 #endif
