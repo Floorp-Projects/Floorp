@@ -27,7 +27,8 @@ data class IconRequest(
      */
     enum class Size(@DimenRes val dimen: Int) {
         DEFAULT(R.dimen.mozac_browser_icons_size_default),
-        LAUNCHER(R.dimen.mozac_browser_icons_size_launcher)
+        LAUNCHER(R.dimen.mozac_browser_icons_size_launcher),
+        LAUNCHER_ADAPTIVE(R.dimen.mozac_browser_icons_size_launcher_adaptive)
     }
 
     /**

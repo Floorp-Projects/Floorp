@@ -110,7 +110,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
 
-    val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager) }
+    val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, client) }
 
     // Intent
     val tabIntentProcessor by lazy {

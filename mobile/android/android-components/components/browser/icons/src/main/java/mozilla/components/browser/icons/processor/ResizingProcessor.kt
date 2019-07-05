@@ -50,7 +50,6 @@ class ResizingProcessor(
             }
         }
 
-        originalBitmap.recycle()
         return icon.copy(bitmap = resizedBitmap ?: return null)
     }
 

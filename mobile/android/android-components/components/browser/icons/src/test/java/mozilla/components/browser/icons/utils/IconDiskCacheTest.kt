@@ -20,11 +20,11 @@ import org.mockito.Mockito.`when`
 import java.io.OutputStream
 
 @RunWith(AndroidJUnit4::class)
-class DiskCacheTest {
+class IconDiskCacheTest {
 
     @Test
     fun `Writing and reading resources`() {
-        val cache = DiskCache()
+        val cache = IconDiskCache()
 
         val resources = listOf(
             IconRequest.Resource(
@@ -56,7 +56,7 @@ class DiskCacheTest {
 
     @Test
     fun `Writing and reading bitmap bytes`() {
-        val cache = DiskCache()
+        val cache = IconDiskCache()
 
         val resource = IconRequest.Resource(
             url = "https://www.mozilla.org/icon64.png",

@@ -10,15 +10,19 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.os.Build
 import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.fetch.Client
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -40,18 +44,25 @@ import kotlin.reflect.jvm.javaField
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class WebAppShortcutManagerTest {
-    @Mock lateinit var context: Context
-    @Mock lateinit var packageManager: PackageManager
-    @Mock lateinit var shortcutManager: ShortcutManager
-    @Mock internal lateinit var storage: ManifestStorage
+    private lateinit var context: Context
+    @Mock private lateinit var httpClient: Client
+    @Mock private lateinit var packageManager: PackageManager
+    @Mock private lateinit var shortcutManager: ShortcutManager
+    @Mock private lateinit var storage: ManifestStorage
+    @Mock private lateinit var icons: BrowserIcons
+    private lateinit var manager: WebAppShortcutManager
 
     @Before
     fun setup() {
         setSdkInt(0)
         initMocks(this)
+        context = spy(testContext)
 
         `when`(context.packageManager).thenReturn(packageManager)
         `when`(context.getSystemService(ShortcutManager::class.java)).thenReturn(shortcutManager)
+
+        manager = spy(WebAppShortcutManager(context, httpClient, storage))
+        `when`(manager.icons).thenReturn(icons)
     }
 
     @After
@@ -59,7 +70,6 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `requestPinShortcut no-op if pinning unsupported`() = runBlockingTest {
-        val manager = spy(WebAppShortcutManager(storage))
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
@@ -85,7 +95,6 @@ class WebAppShortcutManagerTest {
     @Test
     fun `requestPinShortcut won't pin if null shortcut is built`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
-        val manager = spy(WebAppShortcutManager(storage))
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
@@ -106,7 +115,6 @@ class WebAppShortcutManagerTest {
     @Test
     fun `requestPinShortcut won't make a PWA icon if the session is not installable`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
-        val manager = spy(WebAppShortcutManager(storage))
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
@@ -125,7 +133,6 @@ class WebAppShortcutManagerTest {
     @Test
     fun `requestPinShortcut pins PWA shortcut`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
-        val manager = spy(WebAppShortcutManager(storage))
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
@@ -147,7 +154,6 @@ class WebAppShortcutManagerTest {
     @Test
     fun `requestPinShortcut pins basic shortcut`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
-        val manager = spy(WebAppShortcutManager(storage))
         val session: Session = mock()
         `when`(session.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
         val shortcutCompat: ShortcutInfoCompat = mock()
@@ -161,7 +167,6 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `updateShortcuts no-op`() = runBlockingTest {
-        val manager = spy(WebAppShortcutManager(storage))
         val manifests = listOf(WebAppManifest(name = "Demo", startUrl = "https://example.com"))
         doReturn(null).`when`(manager).buildWebAppShortcut(context, manifests[0])
 
@@ -177,7 +182,6 @@ class WebAppShortcutManagerTest {
     @Test
     fun `updateShortcuts updates list of existing shortcuts`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
-        val manager = spy(WebAppShortcutManager(storage))
         val manifests = listOf(WebAppManifest(name = "Demo", startUrl = "https://example.com"))
         val shortcutCompat: ShortcutInfoCompat = mock()
         val shortcut: ShortcutInfo = mock()
@@ -190,8 +194,9 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `buildWebAppShortcut builds shortcut and saves manifest`() = runBlockingTest {
-        val manager = WebAppShortcutManager(storage)
         val manifest = WebAppManifest(name = "Demo", startUrl = "https://example.com")
+        doReturn(mock<IconCompat>()).`when`(manager).buildIconFromManifest(manifest)
+
         val shortcut = manager.buildWebAppShortcut(context, manifest)!!
         val intent = shortcut.intent
 
@@ -206,8 +211,9 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `buildWebAppShortcut builds shortcut with short name`() = runBlockingTest {
-        val manager = WebAppShortcutManager(storage)
         val manifest = WebAppManifest(name = "Demo Demo", shortName = "DD", startUrl = "https://example.com")
+        doReturn(mock<IconCompat>()).`when`(manager).buildIconFromManifest(manifest)
+
         val shortcut = manager.buildWebAppShortcut(context, manifest)!!
 
         assertEquals("https://example.com", shortcut.id)
@@ -217,7 +223,6 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `findShortcut returns shortcut`() {
-        val manager = WebAppShortcutManager(storage)
         assertNull(manager.findShortcut(context, "https://mozilla.org"))
 
         setSdkInt(Build.VERSION_CODES.N_MR1)
@@ -238,7 +243,6 @@ class WebAppShortcutManagerTest {
 
     @Test
     fun `uninstallShortcuts removes shortcut`() = runBlockingTest {
-        val manager = WebAppShortcutManager(storage)
         manager.uninstallShortcuts(context, listOf("https://mozilla.org"))
         verify(shortcutManager, never()).disableShortcuts(listOf("https://mozilla.org"), null)
         verify(storage).removeManifests(listOf("https://mozilla.org"))
@@ -257,7 +261,7 @@ class WebAppShortcutManagerTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
         val domains = listOf("https://mozilla.org", "https://firefox.com")
         val message = "Can't touch this - its uninstalled."
-        WebAppShortcutManager(storage).uninstallShortcuts(context, domains, message)
+        WebAppShortcutManager(context, httpClient, storage).uninstallShortcuts(context, domains, message)
 
         verify(shortcutManager).disableShortcuts(domains, message)
     }

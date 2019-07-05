@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
@@ -22,9 +23,8 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class ResizingProcessorTest {
     private lateinit var processor: ResizingProcessor
 
@@ -41,7 +41,6 @@ class ResizingProcessorTest {
         assertEquals(icon.bitmap, resized?.bitmap)
 
         verify(processor, never()).resize(any(), anyInt())
-        verify(icon.bitmap, never()).recycle()
     }
 
     @Test
@@ -55,7 +54,6 @@ class ResizingProcessorTest {
         assertEquals(smallerIcon, resized?.bitmap)
 
         verify(processor).resize(icon.bitmap, 64)
-        verify(icon.bitmap).recycle()
     }
 
     @Test
@@ -69,7 +67,6 @@ class ResizingProcessorTest {
         assertEquals(largerIcon, resized?.bitmap)
 
         verify(processor).resize(icon.bitmap, 64)
-        verify(icon.bitmap).recycle()
     }
 
     @Test
@@ -81,8 +78,6 @@ class ResizingProcessorTest {
 
         assertNotEquals(icon.bitmap, resized?.bitmap)
         assertNull(resized)
-
-        verify(icon.bitmap).recycle()
     }
 
     @Test
@@ -98,7 +93,6 @@ class ResizingProcessorTest {
         assertNotNull(resized)
 
         verify(processor).resize(icon.bitmap, 30)
-        verify(icon.bitmap).recycle()
     }
 
     private fun process(

@@ -4,13 +4,21 @@
 
 package mozilla.components.browser.icons.extension
 
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.browser.icons.IconRequest.Resource.Type.MANIFEST_ICON
+import mozilla.components.browser.icons.IconRequest.Size.LAUNCHER
+import mozilla.components.browser.icons.IconRequest.Size.LAUNCHER_ADAPTIVE
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifest.Icon.Purpose
 
+/**
+ * Creates an [IconRequest] for retrieving the icon specified in the manifest.
+ */
 fun WebAppManifest.toIconRequest() = IconRequest(
     url = startUrl,
-    size = IconRequest.Size.LAUNCHER,
+    size = if (SDK_INT >= Build.VERSION_CODES.O) LAUNCHER_ADAPTIVE else LAUNCHER,
     resources = icons.mapNotNull { it.toIconResource() }
 )
 
@@ -19,7 +27,7 @@ private fun WebAppManifest.Icon.toIconResource(): IconRequest.Resource? {
 
     return IconRequest.Resource(
         url = src,
-        type = IconRequest.Resource.Type.MANIFEST_ICON,
+        type = MANIFEST_ICON,
         sizes = sizes,
         mimeType = type,
         maskable = Purpose.MASKABLE in purpose

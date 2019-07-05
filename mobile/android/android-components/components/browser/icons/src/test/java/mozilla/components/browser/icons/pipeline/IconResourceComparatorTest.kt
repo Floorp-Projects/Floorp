@@ -299,4 +299,33 @@ class IconResourceComparatorTest {
             urls
         )
     }
+
+    @Test
+    fun `compare proxx-app icons`() {
+        val resources = listOf(
+            IconRequest.Resource(
+                url = "https://proxx.app/assets/icon-05a70868.png",
+                type = IconRequest.Resource.Type.MANIFEST_ICON,
+                sizes = listOf(Size(1024, 1024)),
+                mimeType = "image/png"
+            ),
+            IconRequest.Resource(
+                url = "https://proxx.app/assets/icon-maskable-7a2eb399.png",
+                type = IconRequest.Resource.Type.MANIFEST_ICON,
+                sizes = listOf(Size(1024, 1024)),
+                mimeType = "image/png",
+                maskable = true
+            )
+        )
+
+        val urls = resources.sortedWith(IconResourceComparator).map { it.url }
+
+        assertEquals(
+            listOf(
+                "https://proxx.app/assets/icon-maskable-7a2eb399.png",
+                "https://proxx.app/assets/icon-05a70868.png"
+            ),
+            urls
+        )
+    }
 }

@@ -9,19 +9,48 @@ import android.content.Intent
 import android.content.pm.ShortcutManager
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
+import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.decoder.AndroidIconDecoder
+import mozilla.components.browser.icons.decoder.ICOIconDecoder
+import mozilla.components.browser.icons.extension.toIconRequest
+import mozilla.components.browser.icons.generator.DefaultIconGenerator
+import mozilla.components.browser.icons.loader.DataUriIconLoader
+import mozilla.components.browser.icons.loader.DiskIconLoader
+import mozilla.components.browser.icons.loader.HttpIconLoader
+import mozilla.components.browser.icons.loader.MemoryIconLoader
+import mozilla.components.browser.icons.preparer.DiskIconPreparer
+import mozilla.components.browser.icons.preparer.MemoryIconPreparer
+import mozilla.components.browser.icons.preparer.TippyTopIconPreparer
+import mozilla.components.browser.icons.processor.AdaptiveIconProcessor
+import mozilla.components.browser.icons.processor.ColorProcessor
+import mozilla.components.browser.icons.processor.DiskIconProcessor
+import mozilla.components.browser.icons.processor.MemoryIconProcessor
+import mozilla.components.browser.icons.processor.ResizingProcessor
+import mozilla.components.browser.icons.utils.IconDiskCache
+import mozilla.components.browser.icons.utils.IconMemoryCache
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.ext.installableManifest
 
+private val pwaIconMemoryCache = IconMemoryCache()
+private val pwaIconDiskCache = IconDiskCache()
+
 class WebAppShortcutManager(
-    private val storage: ManifestStorage,
+    context: Context,
+    httpClient: Client,
+    private val storage: ManifestStorage = ManifestStorage(context),
     private val supportWebApps: Boolean = true
 ) {
+
+    @VisibleForTesting
+    internal val icons = webAppIcons(context, httpClient)
 
     /**
      * Request to create a new shortcut on the home screen.
@@ -90,8 +119,20 @@ class WebAppShortcutManager(
         return ShortcutInfoCompat.Builder(context, manifest.startUrl)
             .setLongLabel(manifest.name)
             .setShortLabel(manifest.shortName ?: manifest.name)
+            .setIcon(buildIconFromManifest(manifest))
             .setIntent(shortcutIntent)
             .build()
+    }
+
+    @VisibleForTesting
+    internal suspend fun buildIconFromManifest(manifest: WebAppManifest): IconCompat {
+        val request = manifest.toIconRequest()
+        val icon = icons.loadIcon(request).await()
+        return if (icon.maskable) {
+            IconCompat.createWithAdaptiveBitmap(icon.bitmap)
+        } else {
+            IconCompat.createWithBitmap(icon.bitmap)
+        }
     }
 
     /**
@@ -119,3 +160,40 @@ class WebAppShortcutManager(
         storage.removeManifests(startUrls)
     }
 }
+
+/**
+ * Creates custom version of [BrowserIcons] for loading web app icons.
+ *
+ * This version has its own cache to avoid affecting tab icons.
+ */
+@Suppress("LongMethod")
+private fun webAppIcons(
+    context: Context,
+    httpClient: Client
+) = BrowserIcons(
+    context = context,
+    httpClient = httpClient,
+    generator = DefaultIconGenerator(cornerRadiusDimen = null),
+    preparers = listOf(
+        TippyTopIconPreparer(context.assets),
+        MemoryIconPreparer(pwaIconMemoryCache),
+        DiskIconPreparer(pwaIconDiskCache)
+    ),
+    loaders = listOf(
+        MemoryIconLoader(pwaIconMemoryCache),
+        DiskIconLoader(pwaIconDiskCache),
+        HttpIconLoader(httpClient),
+        DataUriIconLoader()
+    ),
+    decoders = listOf(
+        AndroidIconDecoder(ignoreSize = true),
+        ICOIconDecoder()
+    ),
+    processors = listOf(
+        MemoryIconProcessor(pwaIconMemoryCache),
+        ResizingProcessor(),
+        DiskIconProcessor(pwaIconDiskCache),
+        ColorProcessor(),
+        AdaptiveIconProcessor()
+    )
+)

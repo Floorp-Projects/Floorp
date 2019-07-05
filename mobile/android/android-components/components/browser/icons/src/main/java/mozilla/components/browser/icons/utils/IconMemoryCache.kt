@@ -19,7 +19,7 @@ private const val MAXIMUM_CACHE_URLS = 1000
 // https://github.com/mozilla-mobile/android-components/issues/2764
 private const val MAXIMUM_CACHE_BITMAP_BYTES = 1024 * 1024 * 25 // 25 MB
 
-internal class MemoryCache : ProcessorMemoryCache, LoaderMemoryCache, MemoryIconPreparer.PreparerMemoryCache {
+class IconMemoryCache : ProcessorMemoryCache, LoaderMemoryCache, MemoryIconPreparer.PreparerMemoryCache {
     private val iconResourcesCache = LruCache<String, List<IconRequest.Resource>>(MAXIMUM_CACHE_URLS)
     private val iconBitmapCache = object : LruCache<String, Bitmap>(MAXIMUM_CACHE_BITMAP_BYTES) {
         override fun sizeOf(key: String, value: Bitmap): Int {

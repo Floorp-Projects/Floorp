@@ -39,8 +39,8 @@ import mozilla.components.browser.icons.processor.DiskIconProcessor
 import mozilla.components.browser.icons.processor.IconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.utils.CancelOnDetach
-import mozilla.components.browser.icons.utils.DiskCache
-import mozilla.components.browser.icons.utils.MemoryCache
+import mozilla.components.browser.icons.utils.IconDiskCache
+import mozilla.components.browser.icons.utils.IconMemoryCache
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.Engine
@@ -54,8 +54,8 @@ private const val MAXIMUM_SCALE_FACTOR = 2.0f
 // Number of worker threads we are using internally.
 private const val THREADS = 3
 
-internal val sharedMemoryCache = MemoryCache()
-internal val sharedDiskCache = DiskCache()
+internal val sharedMemoryCache = IconMemoryCache()
+internal val sharedDiskCache = IconDiskCache()
 
 /**
  * Entry point for loading icons for websites.
@@ -211,17 +211,19 @@ private fun load(
     request: IconRequest,
     loaders: List<IconLoader>
 ): Pair<IconLoader.Result, IconRequest.Resource?> {
-    // We are just looping over the resources here. We need to rank them first to try the best icon first.
-    // https://github.com/mozilla-mobile/android-components/issues/2048
-    request.resources.toSortedSet(IconResourceComparator).forEach { resource ->
-        loaders.forEach { loader ->
-            val result = loader.load(context, request, resource)
+    request.resources
+        .asSequence()
+        .distinct()
+        .sortedWith(IconResourceComparator)
+        .forEach { resource ->
+            loaders.forEach { loader ->
+                val result = loader.load(context, request, resource)
 
-            if (result != IconLoader.Result.NoResult) {
-                return Pair(result, resource)
+                if (result != IconLoader.Result.NoResult) {
+                    return Pair(result, resource)
+                }
             }
         }
-    }
 
     return Pair(IconLoader.Result.NoResult, null)
 }

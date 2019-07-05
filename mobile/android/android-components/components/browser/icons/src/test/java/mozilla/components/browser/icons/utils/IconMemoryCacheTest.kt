@@ -19,11 +19,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class MemoryCacheTest {
+class IconMemoryCacheTest {
 
     @Test
     fun `Verify memory components interaction`() {
-        val cache = MemoryCache()
+        val cache = IconMemoryCache()
 
         val preparer = MemoryIconPreparer(cache)
         val loader = MemoryIconLoader(cache)
