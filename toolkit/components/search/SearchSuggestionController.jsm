@@ -47,7 +47,9 @@ Services.prefs.addObserver(BROWSER_SUGGEST_PREF, function(
 
 /**
  * Generates an UUID.
- * @returns an UUID string, without leading or trailing braces.
+ *
+ * @returns {string}
+ *   An UUID string, without leading or trailing braces.
  */
 function uuid() {
   let uuid = UUIDGenerator.generateUUID().toString();
@@ -138,11 +140,11 @@ this.SearchSuggestionController.prototype = {
    * results from them will not be provided.
    *
    * @param {string} searchTerm - the term to provide suggestions for
-   * @param {bool} privateMode - whether the request is being made in the context of private browsing
+   * @param {boolean} privateMode - whether the request is being made in the context of private browsing
    * @param {nsISearchEngine} engine - search engine for the suggestions.
    * @param {int} userContextId - the userContextId of the selected tab.
    *
-   * @return {Promise} resolving to an object containing results or null.
+   * @returns {Promise} resolving to an object containing results or null.
    */
   fetch(searchTerm, privateMode, engine, userContextId = 0) {
     // There is no smart filtering from previous results here (as there is when looking through
@@ -287,6 +289,18 @@ this.SearchSuggestionController.prototype = {
 
   /**
    * Fetch suggestions from the search engine over the network.
+   *
+   * @param {string} searchTerm
+   *   The term being searched for.
+   * @param {SearchEngine} engine
+   *   The engine to request suggestions from.
+   * @param {boolean} privateMode
+   *   Set to true if this is coming from a private browsing mode request.
+   * @param {number} userContextId
+   *   The id of the user container this request was made from.
+   * @returns {Promise}
+   *   Returns a promise that is resolved when the response is received, or
+   *   rejected if there is an error.
    */
   _fetchRemote(searchTerm, engine, privateMode, userContextId) {
     let deferredResponse = PromiseUtils.defer();
@@ -348,6 +362,9 @@ this.SearchSuggestionController.prototype = {
   /**
    * Called when the request completed successfully (thought the HTTP status could be anything)
    * so we can handle the response data.
+   *
+   * @param {Promise} deferredResponse
+   *   The promise to resolve when a response is received.
    * @private
    */
   _onRemoteLoaded(deferredResponse) {
@@ -417,7 +434,7 @@ this.SearchSuggestionController.prototype = {
 
   /**
    * @param {Array} suggestResults - an array of result objects from different sources (local or remote)
-   * @return {Object}
+   * @returns {object}
    */
   _dedupeAndReturnResults(suggestResults) {
     if (this._searchString === null) {
@@ -494,7 +511,7 @@ this.SearchSuggestionController.prototype = {
  * Determines whether the given engine offers search suggestions.
  *
  * @param {nsISearchEngine} engine - The search engine
- * @return {boolean} True if the engine offers suggestions and false otherwise.
+ * @returns {boolean} True if the engine offers suggestions and false otherwise.
  */
 this.SearchSuggestionController.engineOffersSuggestions = function(engine) {
   return engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON);
