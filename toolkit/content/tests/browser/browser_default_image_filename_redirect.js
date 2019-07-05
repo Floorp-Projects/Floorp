@@ -6,30 +6,39 @@
  * doggy.png in file picker dialog.
  */
 
-let {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
+let { WebRequest } = ChromeUtils.import(
+  "resource://gre/modules/WebRequest.jsm"
+);
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 add_task(async function() {
-  const URL_FIREBIRD = "http://mochi.test:8888/browser/toolkit/content/tests/browser/firebird.png";
-  const URL_DOGGY = "http://mochi.test:8888/browser/toolkit/content/tests/browser/doggy.png";
+  const URL_FIREBIRD =
+    "http://mochi.test:8888/browser/toolkit/content/tests/browser/firebird.png";
+  const URL_DOGGY =
+    "http://mochi.test:8888/browser/toolkit/content/tests/browser/doggy.png";
   function redirect(requestDetails) {
     info("Redirecting: " + requestDetails.url);
     return {
       redirectUrl: URL_DOGGY,
     };
   }
-  WebRequest.onBeforeRequest.addListener(redirect,
-    {urls: new MatchPatternSet(["http://*/*firebird.png"])},
+  WebRequest.onBeforeRequest.addListener(
+    redirect,
+    { urls: new MatchPatternSet(["http://*/*firebird.png"]) },
     ["blocking"]
   );
 
-  await BrowserTestUtils.withNewTab(URL_FIREBIRD,
-  async function(browser) {
+  await BrowserTestUtils.withNewTab(URL_FIREBIRD, async function(browser) {
     // Click image to show context menu.
-    let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
-    await BrowserTestUtils.synthesizeMouseAtCenter("img",
-                                                    { type: "contextmenu", button: 2 },
-                                                    browser);
+    let popupShownPromise = BrowserTestUtils.waitForEvent(
+      document,
+      "popupshown"
+    );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "img",
+      { type: "contextmenu", button: 2 },
+      browser
+    );
     await popupShownPromise;
 
     // Prepare mock file picker.
@@ -49,7 +58,10 @@ add_task(async function() {
 
     // Close context menu.
     let contextMenu = document.getElementById("contentAreaContextMenu");
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contextMenu,
+      "popuphidden"
+    );
     contextMenu.hidePopup();
     await popupHiddenPromise;
   });

@@ -5,7 +5,8 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_nonAutoplayAudio.html";
 
 function checkMediaPlayingState(isPlaying) {
   let audio = content.document.getElementById("testAudio");
@@ -37,41 +38,64 @@ async function callMediaPlay(shouldStartPlaying) {
   });
 
   let isStartPlaying = await playPromise.then(() => true, () => false);
-  is(isStartPlaying, shouldStartPlaying,
-     "media is " + (isStartPlaying ? "" : "not ") + "playing.");
+  is(
+    isStartPlaying,
+    shouldStartPlaying,
+    "media is " + (isStartPlaying ? "" : "not ") + "playing."
+  );
 }
 
 async function synthesizeTouchScroll(target, browser) {
   const offset = 100;
-  await BrowserTestUtils.synthesizeTouch(target, 0, 0,
-                                         { type: "touchstart" }, browser);
-  await BrowserTestUtils.synthesizeTouch(target, offset / 2, offset / 2,
-                                         { type: "touchmove" }, browser);
-  await BrowserTestUtils.synthesizeTouch(target, offset, offset,
-                                         { type: "touchend" }, browser);
+  await BrowserTestUtils.synthesizeTouch(
+    target,
+    0,
+    0,
+    { type: "touchstart" },
+    browser
+  );
+  await BrowserTestUtils.synthesizeTouch(
+    target,
+    offset / 2,
+    offset / 2,
+    { type: "touchmove" },
+    browser
+  );
+  await BrowserTestUtils.synthesizeTouch(
+    target,
+    offset,
+    offset,
+    { type: "touchend" },
+    browser
+  );
 }
 
 add_task(async function setup_test_preference() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
-    ["media.autoplay.enabled.user-gestures-needed", true],
-  ]});
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
+      ["media.autoplay.enabled.user-gestures-needed", true],
+    ],
+  });
 });
 
 add_task(async function testTouchScroll() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE,
-  }, async (browser) => {
-    info(`- media should not start playing -`);
-    await ContentTask.spawn(browser, false, checkMediaPlayingState);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: PAGE,
+    },
+    async browser => {
+      info(`- media should not start playing -`);
+      await ContentTask.spawn(browser, false, checkMediaPlayingState);
 
-    info(`- simulate touch scroll which should not activate document -`);
-    await synthesizeTouchScroll("#testAudio", browser);
-    await ContentTask.spawn(browser, false, callMediaPlay);
+      info(`- simulate touch scroll which should not activate document -`);
+      await synthesizeTouchScroll("#testAudio", browser);
+      await ContentTask.spawn(browser, false, callMediaPlay);
 
-    info(`- simulate touch at a point which should activate document -`);
-    await BrowserTestUtils.synthesizeTouch("#testAudio", 0, 0, {}, browser);
-    await ContentTask.spawn(browser, true, callMediaPlay);
-  });
+      info(`- simulate touch at a point which should activate document -`);
+      await BrowserTestUtils.synthesizeTouch("#testAudio", 0, 0, {}, browser);
+      await ContentTask.spawn(browser, true, callMediaPlay);
+    }
+  );
 });

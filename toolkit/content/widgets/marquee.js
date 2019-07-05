@@ -86,12 +86,14 @@ this.MarqueeBaseImplWidget = class {
     this.originalHeight = 0;
     this.invalidateCache = true;
 
-    this._mutationObserver = new this.window.MutationObserver(
-      (aMutations) => this._mutationActor(aMutations));
-    this._mutationObserver.observe(this.element, { attributes: true,
+    this._mutationObserver = new this.window.MutationObserver(aMutations =>
+      this._mutationActor(aMutations)
+    );
+    this._mutationObserver.observe(this.element, {
+      attributes: true,
       attributeOldValue: true,
-      attributeFilter: ["loop", "", "behavior",
-        "direction", "width", "height"] });
+      attributeFilter: ["loop", "", "behavior", "direction", "width", "height"],
+    });
 
     // init needs to be run after the page has loaded in order to calculate
     // the correct height/width
@@ -150,7 +152,10 @@ this.MarqueeBaseImplWidget = class {
   doStart() {
     if (this.runId == 0) {
       var lambda = () => this._doMove(false);
-      this.runId = this.window.setTimeout(lambda, this.scrollDelayWithTruespeed - this._deltaStartStop);
+      this.runId = this.window.setTimeout(
+        lambda,
+        this.scrollDelayWithTruespeed - this._deltaStartStop
+      );
       this._deltaStartStop = 0;
     }
   }
@@ -181,56 +186,81 @@ this.MarqueeBaseImplWidget = class {
       var corrvalue = 0;
 
       switch (this._currentDirection) {
-        case "up": {
-          let height = this.window.getComputedStyle(this.element).height;
-          this.outerDiv.style.height = height;
-          if (this.originalHeight > this.outerDiv.offsetHeight) {
+        case "up":
+          {
+            let height = this.window.getComputedStyle(this.element).height;
+            this.outerDiv.style.height = height;
+            if (this.originalHeight > this.outerDiv.offsetHeight) {
               corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+            }
+            this.innerDiv.style.padding = height + " 0";
+            this.dirsign = 1;
+            this.startAt =
+              this.element.behavior == "alternate"
+                ? this.originalHeight - corrvalue
+                : 0;
+            this.stopAt =
+              this.element.behavior == "alternate" ||
+              this.element.behavior == "slide"
+                ? parseInt(height) + corrvalue
+                : this.originalHeight + parseInt(height);
           }
-          this.innerDiv.style.padding = height + " 0";
-          this.dirsign = 1;
-          this.startAt = (this.element.behavior == "alternate") ? (this.originalHeight - corrvalue) : 0;
-          this.stopAt  = (this.element.behavior == "alternate" || this.element.behavior == "slide") ?
-                          (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
-        }
-        break;
+          break;
 
-        case "down": {
-          let height = this.window.getComputedStyle(this.element).height;
-          this.outerDiv.style.height = height;
-          if (this.originalHeight > this.outerDiv.offsetHeight) {
+        case "down":
+          {
+            let height = this.window.getComputedStyle(this.element).height;
+            this.outerDiv.style.height = height;
+            if (this.originalHeight > this.outerDiv.offsetHeight) {
               corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+            }
+            this.innerDiv.style.padding = height + " 0";
+            this.dirsign = -1;
+            this.startAt =
+              this.element.behavior == "alternate"
+                ? parseInt(height) + corrvalue
+                : this.originalHeight + parseInt(height);
+            this.stopAt =
+              this.element.behavior == "alternate" ||
+              this.element.behavior == "slide"
+                ? this.originalHeight - corrvalue
+                : 0;
           }
-          this.innerDiv.style.padding = height + " 0";
-          this.dirsign = -1;
-          this.startAt  = (this.element.behavior == "alternate") ?
-                          (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
-          this.stopAt = (this.element.behavior == "alternate" || this.element.behavior == "slide") ?
-                        (this.originalHeight - corrvalue) : 0;
-        }
-        break;
+          break;
 
         case "right":
           if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth) {
-              corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
+            corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
           }
           this.dirsign = -1;
-          this.stopAt  = (this.element.behavior == "alternate" || this.element.behavior == "slide") ?
-                         (this.innerDiv.offsetWidth - corrvalue) : 0;
-          this.startAt = this.outerDiv.offsetWidth + ((this.element.behavior == "alternate") ?
-                         corrvalue : (this.innerDiv.offsetWidth + this.stopAt));
-        break;
+          this.stopAt =
+            this.element.behavior == "alternate" ||
+            this.element.behavior == "slide"
+              ? this.innerDiv.offsetWidth - corrvalue
+              : 0;
+          this.startAt =
+            this.outerDiv.offsetWidth +
+            (this.element.behavior == "alternate"
+              ? corrvalue
+              : this.innerDiv.offsetWidth + this.stopAt);
+          break;
 
         case "left":
         default:
           if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth) {
-              corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
+            corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
           }
           this.dirsign = 1;
-          this.startAt = (this.element.behavior == "alternate") ? (this.innerDiv.offsetWidth - corrvalue) : 0;
-          this.stopAt  = this.outerDiv.offsetWidth +
-                         ((this.element.behavior == "alternate" || this.element.behavior == "slide") ?
-                         corrvalue : (this.innerDiv.offsetWidth + this.startAt));
+          this.startAt =
+            this.element.behavior == "alternate"
+              ? this.innerDiv.offsetWidth - corrvalue
+              : 0;
+          this.stopAt =
+            this.outerDiv.offsetWidth +
+            (this.element.behavior == "alternate" ||
+            this.element.behavior == "slide"
+              ? corrvalue
+              : this.innerDiv.offsetWidth + this.startAt);
       }
 
       if (aResetPosition) {
@@ -239,21 +269,27 @@ this.MarqueeBaseImplWidget = class {
       }
     } // end if
 
-    this.newPosition = this.newPosition + (this.dirsign * this.element.scrollAmount);
+    this.newPosition =
+      this.newPosition + this.dirsign * this.element.scrollAmount;
 
-    if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
-        (this.dirsign == -1 && this.newPosition < this.stopAt)) {
+    if (
+      (this.dirsign == 1 && this.newPosition > this.stopAt) ||
+      (this.dirsign == -1 && this.newPosition < this.stopAt)
+    ) {
       switch (this.element.behavior) {
         case "alternate":
           // lets start afresh
           this.invalidateCache = true;
 
           // swap direction
-          const swap = {left: "right", down: "up", up: "down", right: "left"};
+          const swap = { left: "right", down: "up", up: "down", right: "left" };
           this._currentDirection = swap[this._currentDirection] || "left";
           this.newPosition = this.stopAt;
 
-          if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
+          if (
+            this._currentDirection == "up" ||
+            this._currentDirection == "down"
+          ) {
             this.outerDiv.scrollTop = this.newPosition;
           } else {
             this.outerDiv.scrollLeft = this.newPosition;
@@ -262,18 +298,21 @@ this.MarqueeBaseImplWidget = class {
           if (this._currentLoop != 1) {
             this._fireEvent("bounce", false, true);
           }
-        break;
+          break;
 
         case "slide":
           if (this._currentLoop > 1) {
             this.newPosition = this.startAt;
           }
-        break;
+          break;
 
         default:
           this.newPosition = this.startAt;
 
-          if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
+          if (
+            this._currentDirection == "up" ||
+            this._currentDirection == "down"
+          ) {
             this.outerDiv.scrollTop = this.newPosition;
           } else {
             this.outerDiv.scrollLeft = this.newPosition;
@@ -286,7 +325,10 @@ this.MarqueeBaseImplWidget = class {
       if (this._currentLoop > 1) {
         this._currentLoop--;
       } else if (this._currentLoop == 1) {
-        if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
+        if (
+          this._currentDirection == "up" ||
+          this._currentDirection == "down"
+        ) {
           this.outerDiv.scrollTop = this.stopAt;
         } else {
           this.outerDiv.scrollLeft = this.stopAt;
@@ -295,21 +337,26 @@ this.MarqueeBaseImplWidget = class {
         this._fireEvent("finish", false, true);
         return;
       }
-    } else if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
-        this.outerDiv.scrollTop = this.newPosition;
-      } else {
-        this.outerDiv.scrollLeft = this.newPosition;
-      }
+    } else if (
+      this._currentDirection == "up" ||
+      this._currentDirection == "down"
+    ) {
+      this.outerDiv.scrollTop = this.newPosition;
+    } else {
+      this.outerDiv.scrollLeft = this.newPosition;
+    }
 
     var myThis = this;
-    var lambda = function myTimeOutFunction() { myThis._doMove(false); };
+    var lambda = function myTimeOutFunction() {
+      myThis._doMove(false);
+    };
     this.runId = this.window.setTimeout(lambda, this.scrollDelayWithTruespeed);
   }
 
   init() {
     this.element.stop();
 
-    if ((this._currentDirection != "up") && (this._currentDirection != "down")) {
+    if (this._currentDirection != "up" && this._currentDirection != "down") {
       var width = this.window.getComputedStyle(this.element).width;
       this.innerDiv.parentNode.style.margin = "0 " + width;
 

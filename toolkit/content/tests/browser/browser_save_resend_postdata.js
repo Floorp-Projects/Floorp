@@ -17,11 +17,15 @@ MockFilePicker.init(window);
 function test() {
   waitForExplicitFinish();
 
-  BrowserTestUtils.loadURI(gBrowser, "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/post_form_outer.sjs");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/post_form_outer.sjs"
+  );
 
   gBrowser.addEventListener("pageshow", function pageShown(event) {
-    if (event.target.location == "about:blank")
+    if (event.target.location == "about:blank") {
       return;
+    }
     gBrowser.removeEventListener("pageshow", pageShown);
 
     // Submit the form in the outer page, then wait for both the outer
@@ -34,8 +38,9 @@ function test() {
   var innerFrame;
 
   function handleOuterSubmit() {
-    if (++framesLoaded < 2)
+    if (++framesLoaded < 2) {
       return;
+    }
 
     gBrowser.removeEventListener("DOMContentLoaded", handleOuterSubmit);
 
@@ -70,40 +75,62 @@ function test() {
     var docToSave = innerFrame.contentDocument;
     // We call internalSave instead of saveDocument to bypass the history
     // cache.
-    internalSave(docToSave.location.href, docToSave, null, null,
-                 docToSave.contentType, false, null, null,
-                 docToSave.referrer ? makeURI(docToSave.referrer) : null,
-                 docToSave, false, null);
+    internalSave(
+      docToSave.location.href,
+      docToSave,
+      null,
+      null,
+      docToSave.contentType,
+      false,
+      null,
+      null,
+      docToSave.referrer ? makeURI(docToSave.referrer) : null,
+      docToSave,
+      false,
+      null
+    );
   }
 
   function onTransferComplete(downloadSuccess) {
-    ok(downloadSuccess, "The inner frame should have been downloaded successfully");
+    ok(
+      downloadSuccess,
+      "The inner frame should have been downloaded successfully"
+    );
 
     // Read the entire saved file.
     var file = MockFilePicker.getNsIFile();
     var fileContents = readShortFile(file);
 
     // Check if outer POST data is found (bug 471962).
-    is(fileContents.indexOf("inputfield=outer"), -1,
-       "The saved inner frame does not contain outer POST data");
+    is(
+      fileContents.indexOf("inputfield=outer"),
+      -1,
+      "The saved inner frame does not contain outer POST data"
+    );
 
     // Check if inner POST data is found (bug 485196).
-    isnot(fileContents.indexOf("inputfield=inner"), -1,
-          "The saved inner frame was generated using the correct POST data");
+    isnot(
+      fileContents.indexOf("inputfield=inner"),
+      -1,
+      "The saved inner frame was generated using the correct POST data"
+    );
 
     finish();
   }
 }
 
 /* import-globals-from common/mockTransfer.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                 this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+  this
+);
 
 function createTemporarySaveDirectory() {
   var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   saveDir.append("testsavedir");
-  if (!saveDir.exists())
+  if (!saveDir.exists()) {
     saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  }
   return saveDir;
 }
 
@@ -117,12 +144,14 @@ function createTemporarySaveDirectory() {
  *        String containing the raw octets read from the file.
  */
 function readShortFile(aFile) {
-  var inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Ci.nsIFileInputStream);
+  var inputStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   inputStream.init(aFile, -1, 0, 0);
   try {
-    var scrInputStream = Cc["@mozilla.org/scriptableinputstream;1"]
-                           .createInstance(Ci.nsIScriptableInputStream);
+    var scrInputStream = Cc[
+      "@mozilla.org/scriptableinputstream;1"
+    ].createInstance(Ci.nsIScriptableInputStream);
     scrInputStream.init(inputStream);
     try {
       // Assume that the file is much shorter than 1 MiB.

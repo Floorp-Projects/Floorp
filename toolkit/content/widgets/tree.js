@@ -9,7 +9,9 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+  const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
 
   class MozTreeChildren extends MozElements.BaseControl {
     constructor() {
@@ -19,13 +21,17 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
        * If there is no modifier key, we select on mousedown, not
        * click, so that drags work correctly.
        */
-      this.addEventListener("mousedown", (event) => {
-        if (this.parentNode.disabled)
+      this.addEventListener("mousedown", event => {
+        if (this.parentNode.disabled) {
           return;
-        if (((!event.getModifierState("Accel") ||
-              !this.parentNode.pageUpOrDownMovesSelection) &&
-            !event.shiftKey && !event.metaKey) ||
-          this.parentNode.view.selection.single) {
+        }
+        if (
+          ((!event.getModifierState("Accel") ||
+            !this.parentNode.pageUpOrDownMovesSelection) &&
+            !event.shiftKey &&
+            !event.metaKey) ||
+          this.parentNode.view.selection.single
+        ) {
           var b = this.parentNode;
           var cell = b.getCellAt(event.clientX, event.clientY);
           var view = this.parentNode.view;
@@ -33,19 +39,24 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
           // save off the last selected row
           this._lastSelectedRow = cell.row;
 
-          if (cell.row == -1)
+          if (cell.row == -1) {
             return;
+          }
 
-          if (cell.childElt == "twisty")
+          if (cell.childElt == "twisty") {
             return;
+          }
 
           if (cell.col && event.button == 0) {
             if (cell.col.cycler) {
               view.cycleCell(cell.row, cell.col);
               return;
             } else if (cell.col.type == window.TreeColumn.TYPE_CHECKBOX) {
-              if (this.parentNode.editable && cell.col.editable &&
-                view.isEditable(cell.row, cell.col)) {
+              if (
+                this.parentNode.editable &&
+                cell.col.editable &&
+                view.isEditable(cell.row, cell.col)
+              ) {
                 var value = view.getCellValue(cell.row, cell.col);
                 value = value == "true" ? "false" : "true";
                 view.setCellValue(cell.row, cell.col, value);
@@ -65,27 +76,35 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
        * On a click (up+down on the same item), deselect everything
        * except this item.
        */
-      this.addEventListener("click", (event) => {
-        if (event.button != 0) { return; }
-        if (this.parentNode.disabled)
+      this.addEventListener("click", event => {
+        if (event.button != 0) {
           return;
+        }
+        if (this.parentNode.disabled) {
+          return;
+        }
         var b = this.parentNode;
         var cell = b.getCellAt(event.clientX, event.clientY);
         var view = this.parentNode.view;
 
-        if (cell.row == -1)
+        if (cell.row == -1) {
           return;
+        }
 
         if (cell.childElt == "twisty") {
-          if (view.selection.currentIndex >= 0 &&
-            view.isContainerOpen(cell.row)) {
+          if (
+            view.selection.currentIndex >= 0 &&
+            view.isContainerOpen(cell.row)
+          ) {
             var parentIndex = view.getParentIndex(view.selection.currentIndex);
-            while (parentIndex >= 0 && parentIndex != cell.row)
+            while (parentIndex >= 0 && parentIndex != cell.row) {
               parentIndex = view.getParentIndex(parentIndex);
+            }
             if (parentIndex == cell.row) {
               var parentSelectable = true;
-              if (parentSelectable)
+              if (parentSelectable) {
                 view.selection.select(parentIndex);
+              }
             }
           }
           this.parentNode.changeOpenState(cell.row);
@@ -112,13 +131,18 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
           in click rather than mousedown so that you can drag a
           selected group of items */
 
-        if (!cell.col) return;
+        if (!cell.col) {
+          return;
+        }
 
         // if the last row has changed in between the time we
         // mousedown and the time we click, don't fire the select handler.
         // see bug #92366
-        if (!cell.col.cycler && this._lastSelectedRow == cell.row &&
-          cell.col.type != window.TreeColumn.TYPE_CHECKBOX) {
+        if (
+          !cell.col.cycler &&
+          this._lastSelectedRow == cell.row &&
+          cell.col.type != window.TreeColumn.TYPE_CHECKBOX
+        ) {
           view.selection.select(cell.row);
           b.ensureRowIsVisible(cell.row);
         }
@@ -127,15 +151,17 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       /**
        * double-click
        */
-      this.addEventListener("dblclick", (event) => {
-        if (this.parentNode.disabled)
+      this.addEventListener("dblclick", event => {
+        if (this.parentNode.disabled) {
           return;
+        }
         var tree = this.parentNode;
         var view = this.parentNode.view;
         var row = view.selection.currentIndex;
 
-        if (row == -1)
+        if (row == -1) {
           return;
+        }
 
         var cell = tree.getCellAt(event.clientX, event.clientY);
 
@@ -143,12 +169,14 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
           this.parentNode.startEditing(row, cell.col);
         }
 
-        if (this.parentNode._editingColumn || !view.isContainer(row))
+        if (this.parentNode._editingColumn || !view.isContainer(row)) {
           return;
+        }
 
         // Cyclers and twisties respond to single clicks, not double clicks
-        if (cell.col && !cell.col.cycler && cell.childElt != "twisty")
+        if (cell.col && !cell.col.cycler && cell.childElt != "twisty") {
           this.parentNode.changeOpenState(row);
+        }
       });
     }
 
@@ -161,8 +189,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
       this._lastSelectedRow = -1;
 
-      if ("_ensureColumnOrder" in this.parentNode)
+      if ("_ensureColumnOrder" in this.parentNode) {
         this.parentNode._ensureColumnOrder();
+      }
     }
   }
 
@@ -172,15 +201,15 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     constructor() {
       super();
 
-      this.addEventListener("command", (event) => {
+      this.addEventListener("command", event => {
         if (event.originalTarget == this) {
-          var popup = this.querySelector("[anonid=\"popup\"]");
+          var popup = this.querySelector('[anonid="popup"]');
           this.buildPopup(popup);
           popup.openPopup(this, "after_end");
         } else {
           var tree = this.parentNode.parentNode;
           tree.stopEditing(true);
-          var menuitem = this.querySelector("[anonid=\"menuitem\"]");
+          var menuitem = this.querySelector('[anonid="menuitem"]');
           if (event.originalTarget == menuitem) {
             tree.columns.restoreNaturalOrder();
             this.removeAttribute("ordinal");
@@ -190,10 +219,11 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             var column = tree.columns[colindex];
             if (column) {
               var element = column.element;
-              if (element.getAttribute("hidden") == "true")
+              if (element.getAttribute("hidden") == "true") {
                 element.setAttribute("hidden", "false");
-              else
+              } else {
                 element.setAttribute("hidden", "true");
+              }
             }
           }
         }
@@ -206,44 +236,60 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       }
 
       this.textContent = "";
-      this.appendChild(MozXULElement.parseXULToFragment(`
+      this.appendChild(
+        MozXULElement.parseXULToFragment(
+          `
         <image class="tree-columnpicker-icon"></image>
         <menupopup anonid="popup">
           <menuseparator anonid="menuseparator"></menuseparator>
           <menuitem anonid="menuitem" label="&restoreColumnOrder.label;"></menuitem>
         </menupopup>
-      `, ["chrome://global/locale/tree.dtd"]));
+      `,
+          ["chrome://global/locale/tree.dtd"]
+        )
+      );
     }
 
     buildPopup(aPopup) {
       // We no longer cache the picker content, remove the old content related to
       // the cols - menuitem and separator should stay.
-      aPopup.querySelectorAll("[colindex]").forEach((e) => { e.remove(); });
+      aPopup.querySelectorAll("[colindex]").forEach(e => {
+        e.remove();
+      });
 
       var refChild = aPopup.firstChild;
 
       var tree = this.parentNode.parentNode;
-      for (var currCol = tree.columns.getFirstColumn(); currCol; currCol = currCol.getNext()) {
+      for (
+        var currCol = tree.columns.getFirstColumn();
+        currCol;
+        currCol = currCol.getNext()
+      ) {
         // Construct an entry for each column in the row, unless
         // it is not being shown.
         var currElement = currCol.element;
         if (!currElement.hasAttribute("ignoreincolumnpicker")) {
           var popupChild = document.createXULElement("menuitem");
           popupChild.setAttribute("type", "checkbox");
-          var columnName = currElement.getAttribute("display") ||
+          var columnName =
+            currElement.getAttribute("display") ||
             currElement.getAttribute("label");
           popupChild.setAttribute("label", columnName);
           popupChild.setAttribute("colindex", currCol.index);
-          if (currElement.getAttribute("hidden") != "true")
+          if (currElement.getAttribute("hidden") != "true") {
             popupChild.setAttribute("checked", "true");
-          if (currCol.primary)
+          }
+          if (currCol.primary) {
             popupChild.setAttribute("disabled", "true");
+          }
           aPopup.insertBefore(popupChild, refChild);
         }
       }
 
       var hidden = !tree.enableColumnDrag;
-      aPopup.querySelectorAll(":scope > :not([colindex])").forEach((e) => { e.hidden = hidden; });
+      aPopup.querySelectorAll(":scope > :not([colindex])").forEach(e => {
+        e.hidden = hidden;
+      });
     }
   }
 
@@ -267,16 +313,22 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     constructor() {
       super();
 
-      this.addEventListener("mousedown", (event) => {
-        if (event.button != 0) { return; }
+      this.addEventListener("mousedown", event => {
+        if (event.button != 0) {
+          return;
+        }
         if (this.parentNode.parentNode.enableColumnDrag) {
-          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var xulns =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           var cols = this.parentNode.getElementsByTagNameNS(xulns, "treecol");
 
           // only start column drag operation if there are at least 2 visible columns
           var visible = 0;
-          for (var i = 0; i < cols.length; ++i)
-            if (cols[i].getBoundingClientRect().width > 0) ++visible;
+          for (var i = 0; i < cols.length; ++i) {
+            if (cols[i].getBoundingClientRect().width > 0) {
+              ++visible;
+            }
+          }
 
           if (visible > 1) {
             window.addEventListener("mousemove", this._onDragMouseMove, true);
@@ -289,15 +341,19 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         }
       });
 
-      this.addEventListener("click", (event) => {
-        if (event.button != 0) { return; }
-        if (event.target != event.originalTarget)
+      this.addEventListener("click", event => {
+        if (event.button != 0) {
           return;
+        }
+        if (event.target != event.originalTarget) {
+          return;
+        }
 
         // On Windows multiple clicking on tree columns only cycles one time
         // every 2 clicks.
-        if (AppConstants.platform == "win" && event.detail % 2 == 0)
+        if (AppConstants.platform == "win" && event.detail % 2 == 0) {
           return;
+        }
 
         var tree = this.parentNode.parentNode;
         if (tree.columns) {
@@ -323,8 +379,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
     get ordinal() {
       var val = this.getAttribute("ordinal");
-      if (val == "")
+      if (val == "") {
         return "1";
+      }
 
       return "" + (val == "0" ? 0 : parseInt(val));
     }
@@ -345,13 +402,17 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
     _onDragMouseMove(aEvent) {
       var col = document.treecolDragging;
-      if (!col) return;
+      if (!col) {
+        return;
+      }
 
       // determine if we have moved the mouse far enough
       // to initiate a drag
       if (col.mDragGesturing) {
-        if (Math.abs(aEvent.clientX - col.mStartDragX) < 5 &&
-          Math.abs(aEvent.clientY - col.mStartDragY) < 5) {
+        if (
+          Math.abs(aEvent.clientX - col.mStartDragX) < 5 &&
+          Math.abs(aEvent.clientY - col.mStartDragY) < 5
+        ) {
           return;
         }
         col.mDragGesturing = false;
@@ -360,11 +421,16 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       }
 
       var pos = {};
-      var targetCol = col.parentNode.parentNode._getColumnAtX(aEvent.clientX, 0.5, pos);
+      var targetCol = col.parentNode.parentNode._getColumnAtX(
+        aEvent.clientX,
+        0.5,
+        pos
+      );
 
       // bail if we haven't mousemoved to a different column
-      if (col.mTargetCol == targetCol && col.mTargetDir == pos.value)
+      if (col.mTargetCol == targetCol && col.mTargetDir == pos.value) {
         return;
+      }
 
       var tree = col.parentNode.parentNode;
       var sib;
@@ -407,13 +473,17 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
     _onDragMouseUp(aEvent) {
       var col = document.treecolDragging;
-      if (!col) return;
+      if (!col) {
+        return;
+      }
 
       if (!col.mDragGesturing) {
         if (col.mTargetCol) {
           // remove insertbefore/after attributes
           var before = col.mTargetCol.hasAttribute("insertbefore");
-          col.mTargetCol.removeAttribute(before ? "insertbefore" : "insertafter");
+          col.mTargetCol.removeAttribute(
+            before ? "insertbefore" : "insertafter"
+          );
 
           var sib = col.mTargetCol._previousVisibleColumn;
           if (before && sib) {
@@ -435,7 +505,11 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
           }
 
           if (move) {
-            col.parentNode.parentNode._reorderColumn(col, col.mTargetCol, before);
+            col.parentNode.parentNode._reorderColumn(
+              col,
+              col.mTargetCol,
+              before
+            );
           }
 
           // repaint to remove lines
@@ -472,7 +546,7 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
   class MozTreecols extends MozElements.BaseControl {
     static get inheritedAttributes() {
       return {
-        "treecolpicker": "tooltiptext=pickertooltiptext",
+        treecolpicker: "tooltiptext=pickertooltiptext",
       };
     }
 
@@ -484,29 +558,35 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       this.setAttribute("slot", "treecols");
 
       if (!this.querySelector("treecolpicker")) {
-        this.appendChild(MozXULElement.parseXULToFragment(`
+        this.appendChild(
+          MozXULElement.parseXULToFragment(`
           <treecolpicker class="treecol-image" fixed="true"></treecolpicker>
-        `));
+        `)
+        );
         this.initializeAttributeInheritance();
       }
 
       // Set resizeafter="farthest" on the splitters if nothing else has been
       // specified.
       for (let splitter of this.getElementsByTagName("splitter")) {
-        if (!splitter.hasAttribute("resizeafter"))
+        if (!splitter.hasAttribute("resizeafter")) {
           splitter.setAttribute("resizeafter", "farthest");
+        }
       }
     }
   }
 
   customElements.define("treecols", MozTreecols);
 
-  class MozTree extends MozElements.BaseControlMixin(MozElements.MozElementMixin(XULTreeElement)) {
+  class MozTree extends MozElements.BaseControlMixin(
+    MozElements.MozElementMixin(XULTreeElement)
+  ) {
     constructor() {
       super();
 
       this.attachShadow({ mode: "open" });
-      this.shadowRoot.appendChild(MozXULElement.parseXULToFragment(`
+      this.shadowRoot.appendChild(
+        MozXULElement.parseXULToFragment(`
         <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
         <html:slot name="treecols"></html:slot>
         <stack class="tree-stack" flex="1">
@@ -532,7 +612,8 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
                         ondblclick="event.stopPropagation();"
                         oncommand="event.stopPropagation();"></scrollcorner>
         </hbox>
-      `));
+      `)
+      );
     }
 
     static get inheritedAttributes() {
@@ -576,36 +657,46 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     }
 
     setupEventListeners() {
-      this.addEventListener("underflow", (event) => {
+      this.addEventListener("underflow", event => {
         // Scrollport event orientation
         // 0: vertical
         // 1: horizontal
         // 2: both (not used)
-        if (event.target.tagName != "treechildren")
+        if (event.target.tagName != "treechildren") {
           return;
-        if (event.detail == 1)
-          this.setAttribute("hidehscroll", "true");
-        else if (event.detail == 0)
-          this.setAttribute("hidevscroll", "true");
-        event.stopPropagation();
-      });
-
-      this.addEventListener("overflow", (event) => {
-        if (event.target.tagName != "treechildren")
-          return;
-        if (event.detail == 1)
-          this.removeAttribute("hidehscroll");
-        else if (event.detail == 0)
-          this.removeAttribute("hidevscroll");
-        event.stopPropagation();
-      });
-
-      this.addEventListener("touchstart", (event) => {
-        function isScrollbarElement(target) {
-          return (target.localName == "thumb" || target.localName == "slider") &&
-            target.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         }
-        if (event.touches.length > 1 || isScrollbarElement(event.touches[0].target)) {
+        if (event.detail == 1) {
+          this.setAttribute("hidehscroll", "true");
+        } else if (event.detail == 0) {
+          this.setAttribute("hidevscroll", "true");
+        }
+        event.stopPropagation();
+      });
+
+      this.addEventListener("overflow", event => {
+        if (event.target.tagName != "treechildren") {
+          return;
+        }
+        if (event.detail == 1) {
+          this.removeAttribute("hidehscroll");
+        } else if (event.detail == 0) {
+          this.removeAttribute("hidevscroll");
+        }
+        event.stopPropagation();
+      });
+
+      this.addEventListener("touchstart", event => {
+        function isScrollbarElement(target) {
+          return (
+            (target.localName == "thumb" || target.localName == "slider") &&
+            target.namespaceURI ==
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          );
+        }
+        if (
+          event.touches.length > 1 ||
+          isScrollbarElement(event.touches[0].target)
+        ) {
           // Multiple touch points detected, abort. In particular this aborts
           // the panning gesture when the user puts a second finger down after
           // already panning with one finger. Aborting at this point prevents
@@ -620,9 +711,8 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         }
       });
 
-      this.addEventListener("touchmove", (event) => {
-        if (event.touches.length == 1 &&
-          this._touchY >= 0) {
+      this.addEventListener("touchmove", event => {
+        if (event.touches.length == 1 && this._touchY >= 0) {
           var deltaY = this._touchY - event.touches[0].screenY;
           var lines = Math.trunc(deltaY / this.rowHeight);
           if (Math.abs(lines) > 0) {
@@ -634,36 +724,49 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         }
       });
 
-      this.addEventListener("touchend", (event) => {
+      this.addEventListener("touchend", event => {
         this._touchY = -1;
       });
 
-      this.addEventListener("MozMousePixelScroll", (event) => {
-        if (!(this.getAttribute("allowunderflowscroll") == "true" &&
-            this.getAttribute("hidevscroll") == "true"))
+      this.addEventListener("MozMousePixelScroll", event => {
+        if (
+          !(
+            this.getAttribute("allowunderflowscroll") == "true" &&
+            this.getAttribute("hidevscroll") == "true"
+          )
+        ) {
           event.preventDefault();
+        }
       });
 
-      this.addEventListener("DOMMouseScroll", (event) => {
-        if (!(this.getAttribute("allowunderflowscroll") == "true" &&
-            this.getAttribute("hidevscroll") == "true"))
+      this.addEventListener("DOMMouseScroll", event => {
+        if (
+          !(
+            this.getAttribute("allowunderflowscroll") == "true" &&
+            this.getAttribute("hidevscroll") == "true"
+          )
+        ) {
           event.preventDefault();
+        }
 
-        if (this._editingColumn)
+        if (this._editingColumn) {
           return;
-        if (event.axis == event.HORIZONTAL_AXIS)
+        }
+        if (event.axis == event.HORIZONTAL_AXIS) {
           return;
+        }
 
         var rows = event.detail;
-        if (rows == UIEvent.SCROLL_PAGE_UP)
+        if (rows == UIEvent.SCROLL_PAGE_UP) {
           this.scrollByPages(-1);
-        else if (rows == UIEvent.SCROLL_PAGE_DOWN)
+        } else if (rows == UIEvent.SCROLL_PAGE_DOWN) {
           this.scrollByPages(1);
-        else
+        } else {
           this.scrollByLines(rows);
+        }
       });
 
-      this.addEventListener("MozSwipeGesture", (event) => {
+      this.addEventListener("MozSwipeGesture", event => {
         // Figure out which row to show
         let targetRow = 0;
 
@@ -671,32 +774,38 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         switch (event.direction) {
           case event.DIRECTION_DOWN:
             targetRow = this.view.rowCount - 1;
-            // Fall through for actual action
+          // Fall through for actual action
           case event.DIRECTION_UP:
             this.ensureRowIsVisible(targetRow);
             break;
         }
       });
 
-      this.addEventListener("select", (event) => {
-        if (event.originalTarget == this) this.stopEditing(true);
+      this.addEventListener("select", event => {
+        if (event.originalTarget == this) {
+          this.stopEditing(true);
+        }
       });
 
-      this.addEventListener("focus", (event) => {
+      this.addEventListener("focus", event => {
         this.focused = true;
         if (this.currentIndex == -1 && this.view.rowCount > 0) {
           this.currentIndex = this.getFirstVisibleRow();
         }
       });
 
-      this.addEventListener("blur", (event) => {
-        this.focused = false;
-        if (event.originalTarget == this.inputField.inputField) {
-          this.stopEditing(true);
-        }
-      }, true);
+      this.addEventListener(
+        "blur",
+        event => {
+          this.focused = false;
+          if (event.originalTarget == this.inputField.inputField) {
+            this.stopEditing(true);
+          }
+        },
+        true
+      );
 
-      this.addEventListener("keydown", (event) => {
+      this.addEventListener("keydown", event => {
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_RETURN: {
             if (this._handleEnter(event)) {
@@ -715,12 +824,14 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_LEFT: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             let row = this.currentIndex;
-            if (row < 0)
+            if (row < 0) {
               return;
+            }
 
             if (this.changeOpenState(this.currentIndex, false)) {
               event.preventDefault();
@@ -735,12 +846,14 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_RIGHT: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             let row = this.currentIndex;
-            if (row < 0)
+            if (row < 0) {
               return;
+            }
 
             if (this.changeOpenState(row, true)) {
               event.preventDefault();
@@ -748,8 +861,7 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             }
             let c = row + 1;
             let view = this.view;
-            if (c < view.rowCount &&
-              view.getParentIndex(c) == row) {
+            if (c < view.rowCount && view.getParentIndex(c) == row) {
               // If already opened, select the first child.
               // The getParentIndex test above ensures that the children
               // are already populated and ready.
@@ -760,8 +872,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_UP: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             if (event.getModifierState("Shift")) {
               this._moveByOffsetShift(-1, 0, event);
@@ -771,8 +884,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_DOWN: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
             if (event.getModifierState("Shift")) {
               this._moveByOffsetShift(1, this.view.rowCount - 1, event);
             } else {
@@ -781,8 +895,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_PAGE_UP: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             if (event.getModifierState("Shift")) {
               this._moveByPageShift(-1, 0, event);
@@ -792,8 +907,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_PAGE_DOWN: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             if (event.getModifierState("Shift")) {
               this._moveByPageShift(1, this.view.rowCount - 1, event);
@@ -803,8 +919,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_HOME: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             if (event.getModifierState("Shift")) {
               this._moveToEdgeShift(0, event);
@@ -814,8 +931,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
             break;
           }
           case KeyEvent.DOM_VK_END: {
-            if (this._editingColumn)
+            if (this._editingColumn) {
               return;
+            }
 
             if (event.getModifierState("Shift")) {
               this._moveToEdgeShift(this.view.rowCount - 1, event);
@@ -827,20 +945,28 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         }
       });
 
-      this.addEventListener("keypress", (event) => {
-        if (this._editingColumn)
+      this.addEventListener("keypress", event => {
+        if (this._editingColumn) {
           return;
+        }
 
         if (event.charCode == " ".charCodeAt(0)) {
           var c = this.currentIndex;
-          if (!this.view.selection.isSelected(c) ||
-            (!this.view.selection.single && event.getModifierState("Accel"))) {
+          if (
+            !this.view.selection.isSelected(c) ||
+            (!this.view.selection.single && event.getModifierState("Accel"))
+          ) {
             this.view.selection.toggleSelect(c);
             event.preventDefault();
           }
-        } else if (!this.disableKeyNavigation && event.charCode > 0 &&
-          !event.altKey && !event.getModifierState("Accel") &&
-          !event.metaKey && !event.ctrlKey) {
+        } else if (
+          !this.disableKeyNavigation &&
+          event.charCode > 0 &&
+          !event.altKey &&
+          !event.getModifierState("Accel") &&
+          !event.metaKey &&
+          !event.ctrlKey
+        ) {
           var l = this._keyNavigate(event);
           if (l >= 0) {
             this.view.selection.timedSelect(l, this._selectDelay);
@@ -856,8 +982,11 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     }
 
     set editable(val) {
-      if (val) this.setAttribute("editable", "true");
-      else this.removeAttribute("editable");
+      if (val) {
+        this.setAttribute("editable", "true");
+      } else {
+        this.removeAttribute("editable");
+      }
       return val;
     }
 
@@ -877,7 +1006,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     }
 
     set currentIndex(val) {
-      if (this.view) return this.view.selection.currentIndex = val;
+      if (this.view) {
+        return (this.view.selection.currentIndex = val);
+      }
       return val;
     }
 
@@ -886,18 +1017,24 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     }
 
     set keepCurrentInView(val) {
-      if (val) this.setAttribute("keepcurrentinview", "true");
-      else this.removeAttribute("keepcurrentinview");
+      if (val) {
+        this.setAttribute("keepcurrentinview", "true");
+      } else {
+        this.removeAttribute("keepcurrentinview");
+      }
       return val;
     }
 
     get keepCurrentInView() {
-      return (this.getAttribute("keepcurrentinview") == "true");
+      return this.getAttribute("keepcurrentinview") == "true";
     }
 
     set enableColumnDrag(val) {
-      if (val) this.setAttribute("enableColumnDrag", "true");
-      else this.removeAttribute("enableColumnDrag");
+      if (val) {
+        this.setAttribute("enableColumnDrag", "true");
+      } else {
+        this.removeAttribute("enableColumnDrag");
+      }
       return val;
     }
 
@@ -908,14 +1045,21 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     get inputField() {
       if (!this._inputField) {
         this._inputField = this.shadowRoot.querySelector(".tree-input");
-        this._inputField.addEventListener("blur", () => this.stopEditing(true), true);
+        this._inputField.addEventListener(
+          "blur",
+          () => this.stopEditing(true),
+          true
+        );
       }
       return this._inputField;
     }
 
     set disableKeyNavigation(val) {
-      if (val) this.setAttribute("disableKeyNavigation", "true");
-      else this.removeAttribute("disableKeyNavigation");
+      if (val) {
+        this.setAttribute("disableKeyNavigation", "true");
+      } else {
+        this.removeAttribute("disableKeyNavigation");
+      }
       return val;
     }
 
@@ -945,11 +1089,15 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         // an odd number and 2 positions above its next sibling
         var cols = [];
 
-        for (let col = this.columns.getFirstColumn(); col; col = col.getNext()) {
+        for (
+          let col = this.columns.getFirstColumn();
+          col;
+          col = col.getNext()
+        ) {
           cols.push(col.element);
         }
         for (let i = 0; i < cols.length; ++i) {
-          cols[i].setAttribute("ordinal", (i * 2) + 1);
+          cols[i].setAttribute("ordinal", i * 2 + 1);
         }
         // update the ordinal positions of splitters to even numbers, so that
         // they are in between columns
@@ -967,32 +1115,47 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       var cols = [];
       var col = this.columns.getColumnFor(aColBefore);
       if (parseInt(aColBefore.ordinal) < parseInt(aColMove.ordinal)) {
-        if (aBefore)
+        if (aBefore) {
           cols.push(aColBefore);
-        for (col = col.getNext(); col.element != aColMove; col = col.getNext())
+        }
+        for (
+          col = col.getNext();
+          col.element != aColMove;
+          col = col.getNext()
+        ) {
           cols.push(col.element);
+        }
 
         aColMove.ordinal = cols[0].ordinal;
-        for (i = 0; i < cols.length; ++i)
+        for (i = 0; i < cols.length; ++i) {
           cols[i].ordinal = parseInt(cols[i].ordinal) + 2;
+        }
       } else if (aColBefore.ordinal != aColMove.ordinal) {
-        if (!aBefore)
+        if (!aBefore) {
           cols.push(aColBefore);
-        for (col = col.getPrevious(); col.element != aColMove; col = col.getPrevious())
+        }
+        for (
+          col = col.getPrevious();
+          col.element != aColMove;
+          col = col.getPrevious()
+        ) {
           cols.push(col.element);
+        }
 
         aColMove.ordinal = cols[0].ordinal;
-        for (i = 0; i < cols.length; ++i)
+        for (i = 0; i < cols.length; ++i) {
           cols[i].ordinal = parseInt(cols[i].ordinal) - 2;
+        }
       }
     }
 
     _getColumnAtX(aX, aThresh, aPos) {
-      var isRTL = document.defaultView.getComputedStyle(this)
-        .direction == "rtl";
+      var isRTL =
+        document.defaultView.getComputedStyle(this).direction == "rtl";
 
-      if (aPos)
+      if (aPos) {
         aPos.value = isRTL ? "after" : "before";
+      }
 
       var columns = [];
       var col = this.columns.getFirstColumn();
@@ -1000,8 +1163,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         columns.push(col);
         col = col.getNext();
       }
-      if (isRTL)
+      if (isRTL) {
         columns.reverse();
+      }
       var currentX = this.getBoundingClientRect().x;
       var adjustedX = aX + this.horizontalPosition;
       for (var i = 0; i < columns.length; ++i) {
@@ -1009,13 +1173,15 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
         var cw = col.element.getBoundingClientRect().width;
         if (cw > 0) {
           currentX += cw;
-          if (currentX - (cw * aThresh) > adjustedX)
+          if (currentX - cw * aThresh > adjustedX) {
             return col.element;
+          }
         }
       }
 
-      if (aPos)
+      if (aPos) {
         aPos.value = isRTL ? "before" : "after";
+      }
       return columns.pop().element;
     }
 
@@ -1040,17 +1206,22 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
     _keyNavigate(event) {
       var key = String.fromCharCode(event.charCode).toLowerCase();
-      if (event.timeStamp - this._lastKeyTime > 1000)
+      if (event.timeStamp - this._lastKeyTime > 1000) {
         this._incrementalString = key;
-      else
+      } else {
         this._incrementalString += key;
+      }
       this._lastKeyTime = event.timeStamp;
 
       var length = this._incrementalString.length;
       var incrementalString = this._incrementalString;
       var charIndex = 1;
-      while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
+      while (
+        charIndex < length &&
+        incrementalString[charIndex] == incrementalString[charIndex - 1]
+      ) {
         charIndex++;
+      }
       // If all letters in incremental string are same, just try to match the first one
       if (charIndex == length) {
         length = 1;
@@ -1064,34 +1235,43 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       var c = this.currentIndex;
       if (length > 1) {
         start = 0;
-        if (c < 0)
+        if (c < 0) {
           c = 0;
+        }
       }
 
       for (var i = 0; i < rowCount; i++) {
         var l = (i + start + c) % rowCount;
         var cellText = this.view.getCellText(l, keyCol);
         cellText = cellText.substring(0, length).toLowerCase();
-        if (cellText == incrementalString)
+        if (cellText == incrementalString) {
           return l;
+        }
       }
       return -1;
     }
 
     startEditing(row, column) {
-      if (!this.editable)
+      if (!this.editable) {
         return false;
-      if (row < 0 || row >= this.view.rowCount || !column)
+      }
+      if (row < 0 || row >= this.view.rowCount || !column) {
         return false;
-      if (column.type != window.TreeColumn.TYPE_TEXT &&
-        column.type != window.TreeColumn.TYPE_PASSWORD)
+      }
+      if (
+        column.type != window.TreeColumn.TYPE_TEXT &&
+        column.type != window.TreeColumn.TYPE_PASSWORD
+      ) {
         return false;
-      if (column.cycler || !this.view.isEditable(row, column))
+      }
+      if (column.cycler || !this.view.isEditable(row, column)) {
         return false;
+      }
 
       // Beyond this point, we are going to edit the cell.
-      if (this._editingColumn)
+      if (this._editingColumn) {
         this.stopEditing();
+      }
 
       var input = this.inputField;
 
@@ -1120,7 +1300,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       }
 
       input.left = left;
-      input.height = textRect.height + topadj +
+      input.height =
+        textRect.height +
+        topadj +
         parseInt(style.borderBottomWidth) +
         parseInt(style.paddingBottom);
       input.width = cellRect.width - widthdiff;
@@ -1140,8 +1322,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     }
 
     stopEditing(accept) {
-      if (!this._editingColumn)
+      if (!this._editingColumn) {
         return;
+      }
 
       var input = this.inputField;
       var editingRow = this._editingRow;
@@ -1162,8 +1345,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     _moveByOffset(offset, edge, event) {
       event.preventDefault();
 
-      if (this.view.rowCount == 0)
+      if (this.view.rowCount == 0) {
         return;
+      }
 
       if (event.getModifierState("Accel") && this.view.selection.single) {
         this.scrollByLines(offset);
@@ -1172,23 +1356,31 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
       var c = this.currentIndex + offset;
       if (offset > 0 ? c > edge : c < edge) {
-        if (this.view.selection.isSelected(edge) && this.view.selection.count <= 1)
+        if (
+          this.view.selection.isSelected(edge) &&
+          this.view.selection.count <= 1
+        ) {
           return;
+        }
         c = edge;
       }
 
-      if (!event.getModifierState("Accel"))
+      if (!event.getModifierState("Accel")) {
         this.view.selection.timedSelect(c, this._selectDelay);
-      else // Ctrl+Up/Down moves the anchor without selecting
+      }
+      // Ctrl+Up/Down moves the anchor without selecting
+      else {
         this.currentIndex = c;
+      }
       this.ensureRowIsVisible(c);
     }
 
     _moveByOffsetShift(offset, edge, event) {
       event.preventDefault();
 
-      if (this.view.rowCount == 0)
+      if (this.view.rowCount == 0) {
         return;
+      }
 
       if (this.view.selection.single) {
         this.scrollByLines(offset);
@@ -1201,25 +1393,31 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       }
 
       var c = this.currentIndex;
-      if (c == -1)
+      if (c == -1) {
         c = 0;
+      }
 
       if (c == edge) {
-        if (this.view.selection.isSelected(c))
+        if (this.view.selection.isSelected(c)) {
           return;
+        }
       }
 
       // Extend the selection from the existing pivot, if any
-      this.view.selection.rangedSelect(-1, c + offset,
-        event.getModifierState("Accel"));
+      this.view.selection.rangedSelect(
+        -1,
+        c + offset,
+        event.getModifierState("Accel")
+      );
       this.ensureRowIsVisible(c + offset);
     }
 
     _moveByPage(offset, edge, event) {
       event.preventDefault();
 
-      if (this.view.rowCount == 0)
+      if (this.view.rowCount == 0) {
         return;
+      }
 
       if (this.pageUpOrDownMovesSelection == event.getModifierState("Accel")) {
         this.scrollByPages(offset);
@@ -1232,8 +1430,9 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
       }
 
       var c = this.currentIndex;
-      if (c == -1)
+      if (c == -1) {
         return;
+      }
 
       if (c == edge && this.view.selection.isSelected(c)) {
         this.ensureRowIsVisible(c);
@@ -1259,21 +1458,27 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     _moveByPageShift(offset, edge, event) {
       event.preventDefault();
 
-      if (this.view.rowCount == 0)
+      if (this.view.rowCount == 0) {
         return;
+      }
 
-      if (this.view.rowCount == 1 && !this.view.selection.isSelected(0) &&
-        !(this.pageUpOrDownMovesSelection == event.getModifierState("Accel"))) {
+      if (
+        this.view.rowCount == 1 &&
+        !this.view.selection.isSelected(0) &&
+        !(this.pageUpOrDownMovesSelection == event.getModifierState("Accel"))
+      ) {
         this.view.selection.timedSelect(0, this._selectDelay);
         return;
       }
 
-      if (this.view.selection.single)
+      if (this.view.selection.single) {
         return;
+      }
 
       var c = this.currentIndex;
-      if (c == -1)
+      if (c == -1) {
         return;
+      }
       if (c == edge && this.view.selection.isSelected(c)) {
         this.ensureRowIsVisible(edge);
         return;
@@ -1288,35 +1493,48 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
           this.ensureRowIsVisible(i > edge ? edge : i);
         }
         // Extend the selection from the existing pivot, if any
-        this.view.selection.rangedSelect(-1, i > edge ? edge : i, event.getModifierState("Accel"));
+        this.view.selection.rangedSelect(
+          -1,
+          i > edge ? edge : i,
+          event.getModifierState("Accel")
+        );
       } else {
         if (c <= i) {
           i = c <= p ? 0 : c - p;
           this.ensureRowIsVisible(i);
         }
         // Extend the selection from the existing pivot, if any
-        this.view.selection.rangedSelect(-1, i, event.getModifierState("Accel"));
+        this.view.selection.rangedSelect(
+          -1,
+          i,
+          event.getModifierState("Accel")
+        );
       }
     }
 
     _moveToEdge(edge, event) {
       event.preventDefault();
 
-      if (this.view.rowCount == 0)
+      if (this.view.rowCount == 0) {
         return;
+      }
 
-      if (this.view.selection.isSelected(edge) && this.view.selection.count == 1) {
+      if (
+        this.view.selection.isSelected(edge) &&
+        this.view.selection.count == 1
+      ) {
         this.currentIndex = edge;
         return;
       }
 
       // Normal behaviour is to select the first/last row
-      if (!event.getModifierState("Accel"))
+      if (!event.getModifierState("Accel")) {
         this.view.selection.timedSelect(edge, this._selectDelay);
-
+      }
       // In a multiselect tree Ctrl+Home/End moves the anchor
-      else if (!this.view.selection.single)
+      else if (!this.view.selection.single) {
         this.currentIndex = edge;
+      }
 
       this.ensureRowIsVisible(edge);
     }
@@ -1324,21 +1542,30 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     _moveToEdgeShift(edge, event) {
       event.preventDefault();
 
-      if (this.view.rowCount == 0)
+      if (this.view.rowCount == 0) {
         return;
+      }
 
       if (this.view.rowCount == 1 && !this.view.selection.isSelected(0)) {
         this.view.selection.timedSelect(0, this._selectDelay);
         return;
       }
 
-      if (this.view.selection.single ||
-        (this.view.selection.isSelected(edge)) && this.view.selection.isSelected(this.currentIndex))
+      if (
+        this.view.selection.single ||
+        (this.view.selection.isSelected(edge) &&
+          this.view.selection.isSelected(this.currentIndex))
+      ) {
         return;
+      }
 
       // Extend the selection from the existing pivot, if any.
       // -1 doesn't work here, so using currentIndex instead
-      this.view.selection.rangedSelect(this.currentIndex, edge, event.getModifierState("Accel"));
+      this.view.selection.rangedSelect(
+        this.currentIndex,
+        edge,
+        event.getModifierState("Accel")
+      );
 
       this.ensureRowIsVisible(edge);
     }
@@ -1354,6 +1581,8 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
     }
   }
 
-  MozXULElement.implementCustomInterface(MozTree, [Ci.nsIDOMXULMultiSelectControlElement]);
+  MozXULElement.implementCustomInterface(MozTree, [
+    Ci.nsIDOMXULMultiSelectControlElement,
+  ]);
   customElements.define("tree", MozTree);
 }

@@ -10,17 +10,17 @@
  * or use the methods that accept a browser to be modified.
  **/
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ZoomManager = {
   get MIN() {
     delete this.MIN;
-    return this.MIN = Services.prefs.getIntPref("zoom.minPercent") / 100;
+    return (this.MIN = Services.prefs.getIntPref("zoom.minPercent") / 100);
   },
 
   get MAX() {
     delete this.MAX;
-    return this.MAX = Services.prefs.getIntPref("zoom.maxPercent") / 100;
+    return (this.MAX = Services.prefs.getIntPref("zoom.maxPercent") / 100);
   },
 
   get useFullZoom() {
@@ -37,8 +37,10 @@ var ZoomManager = {
   },
 
   getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
-    let zoom = (this.useFullZoom || aBrowser.isSyntheticDocument)
-               ? aBrowser.fullZoom : aBrowser.textZoom;
+    let zoom =
+      this.useFullZoom || aBrowser.isSyntheticDocument
+        ? aBrowser.fullZoom
+        : aBrowser.textZoom;
     // Round to remove any floating-point error.
     return Number(zoom ? zoom.toFixed(2) : 1);
   },
@@ -49,8 +51,9 @@ var ZoomManager = {
   },
 
   setZoomForBrowser: function ZoomManager_setZoomForBrowser(aBrowser, aVal) {
-    if (aVal < this.MIN || aVal > this.MAX)
+    if (aVal < this.MIN || aVal > this.MAX) {
       throw Cr.NS_ERROR_INVALID_ARG;
+    }
 
     if (this.useFullZoom || aBrowser.isSyntheticDocument) {
       aBrowser.textZoom = 1;
@@ -62,30 +65,36 @@ var ZoomManager = {
   },
 
   get zoomValues() {
-    var zoomValues = Services.prefs.getCharPref("toolkit.zoomManager.zoomValues")
-                                   .split(",").map(parseFloat);
+    var zoomValues = Services.prefs
+      .getCharPref("toolkit.zoomManager.zoomValues")
+      .split(",")
+      .map(parseFloat);
     zoomValues.sort((a, b) => a - b);
 
-    while (zoomValues[0] < this.MIN)
+    while (zoomValues[0] < this.MIN) {
       zoomValues.shift();
+    }
 
-    while (zoomValues[zoomValues.length - 1] > this.MAX)
+    while (zoomValues[zoomValues.length - 1] > this.MAX) {
       zoomValues.pop();
+    }
 
     delete this.zoomValues;
-    return this.zoomValues = zoomValues;
+    return (this.zoomValues = zoomValues);
   },
 
   enlarge: function ZoomManager_enlarge() {
     var i = this.zoomValues.indexOf(this.snap(this.zoom)) + 1;
-    if (i < this.zoomValues.length)
+    if (i < this.zoomValues.length) {
       this.zoom = this.zoomValues[i];
+    }
   },
 
   reduce: function ZoomManager_reduce() {
     var i = this.zoomValues.indexOf(this.snap(this.zoom)) - 1;
-    if (i >= 0)
+    if (i >= 0) {
       this.zoom = this.zoomValues[i];
+    }
   },
 
   reset: function ZoomManager_reset() {
@@ -103,8 +112,9 @@ var ZoomManager = {
     var values = this.zoomValues;
     for (var i = 0; i < values.length; i++) {
       if (values[i] >= aVal) {
-        if (i > 0 && aVal - values[i - 1] < values[i] - aVal)
+        if (i > 0 && aVal - values[i - 1] < values[i] - aVal) {
           i--;
+        }
         return values[i];
       }
     }

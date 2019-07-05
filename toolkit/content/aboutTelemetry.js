@@ -4,23 +4,41 @@
 
 "use strict";
 
-const {BrowserUtils} = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TelemetryTimestamps} = ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm");
-const {TelemetryController} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
-const {TelemetryArchive} = ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
-const {TelemetrySend} = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm");
+const { BrowserUtils } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryTimestamps } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryTimestamps.jsm"
+);
+const { TelemetryController } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryController.jsm"
+);
+const { TelemetryArchive } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryArchive.jsm"
+);
+const { TelemetrySend } = ChromeUtils.import(
+  "resource://gre/modules/TelemetrySend.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const Telemetry = Services.telemetry;
 const bundle = Services.strings.createBundle(
-  "chrome://global/locale/aboutTelemetry.properties");
+  "chrome://global/locale/aboutTelemetry.properties"
+);
 const brandBundle = Services.strings.createBundle(
-  "chrome://branding/locale/brand.properties");
+  "chrome://branding/locale/brand.properties"
+);
 
 // Maximum height of a histogram bar (in em for html, in chars for text)
 const MAX_BAR_HEIGHT = 8;
@@ -35,7 +53,7 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 // ms idle before applying the filter (allow uninterrupted typing)
 const FILTER_IDLE_TIMEOUT = 500;
 
-const isWindows = (Services.appinfo.OS == "WINNT");
+const isWindows = Services.appinfo.OS == "WINNT";
 const EOL = isWindows ? "\r\n" : "\n";
 
 // This is the ping object currently displayed in the page.
@@ -49,16 +67,17 @@ var documentRTLMode = "";
  * Caches result of check on first invocation.
  */
 function isRTL() {
-  if (!documentRTLMode)
+  if (!documentRTLMode) {
     documentRTLMode = window.getComputedStyle(document.body).direction;
-  return (documentRTLMode == "rtl");
+  }
+  return documentRTLMode == "rtl";
 }
 
 function isFlatArray(obj) {
   if (!Array.isArray(obj)) {
     return false;
   }
-  return !obj.some(e => typeof(e) == "object");
+  return !obj.some(e => typeof e == "object");
 }
 
 /**
@@ -68,7 +87,7 @@ function flattenObject(obj, map, path, array) {
   for (let k of Object.keys(obj)) {
     let newPath = [...path, array ? "[" + k + "]" : k];
     let v = obj[k];
-    if (!v || (typeof(v) != "object")) {
+    if (!v || typeof v != "object") {
       map.set(newPath.join("."), v);
     } else if (isFlatArray(v)) {
       map.set(newPath.join("."), "[" + v.join(", ") + "]");
@@ -180,7 +199,9 @@ var Settings = {
       el.parentElement.addEventListener("click", function(event) {
         if (event.target.localName === "a") {
           if (AppConstants.platform == "android") {
-            var {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+            var { EventDispatcher } = ChromeUtils.import(
+              "resource://gre/modules/Messaging.jsm"
+            );
             EventDispatcher.instance.sendRequest({
               type: "Settings:Show",
               resource: "preferences_privacy",
@@ -211,7 +232,11 @@ var Settings = {
     let channel = extendedEnabled ? "prerelease" : "release";
     let uploadcase = TelemetrySend.sendingEnabled() ? "enabled" : "disabled";
 
-    document.l10n.setAttributes(settingsExplanation, "about-telemetry-settings-explanation", {channel, uploadcase});
+    document.l10n.setAttributes(
+      settingsExplanation,
+      "about-telemetry-settings-explanation",
+      { channel, uploadcase }
+    );
 
     this.attachObservers();
   },
@@ -233,35 +258,48 @@ var PingPicker = {
       el.addEventListener("change", () => this.onPingDisplayChanged());
     }
 
-    document.getElementById("show-subsession-data").addEventListener("change", () => {
-      this._updateCurrentPingData();
-    });
+    document
+      .getElementById("show-subsession-data")
+      .addEventListener("change", () => {
+        this._updateCurrentPingData();
+      });
 
     document.getElementById("choose-ping-id").addEventListener("change", () => {
       this._updateArchivedPingData();
     });
-    document.getElementById("choose-ping-type").addEventListener("change", () => {
-      this.filterDisplayedPings();
-    });
+    document
+      .getElementById("choose-ping-type")
+      .addEventListener("change", () => {
+        this.filterDisplayedPings();
+      });
 
-    document.getElementById("newer-ping")
-            .addEventListener("click", () => this._movePingIndex(-1));
-    document.getElementById("older-ping")
-            .addEventListener("click", () => this._movePingIndex(1));
+    document
+      .getElementById("newer-ping")
+      .addEventListener("click", () => this._movePingIndex(-1));
+    document
+      .getElementById("older-ping")
+      .addEventListener("click", () => this._movePingIndex(1));
 
     let pingPickerNeedHide = false;
     let pingPicker = document.getElementById("ping-picker");
-    pingPicker.addEventListener("mouseenter", () => pingPickerNeedHide = false);
-    pingPicker.addEventListener("mouseleave", () => pingPickerNeedHide = true);
-    document.addEventListener("click", (ev) => {
+    pingPicker.addEventListener(
+      "mouseenter",
+      () => (pingPickerNeedHide = false)
+    );
+    pingPicker.addEventListener(
+      "mouseleave",
+      () => (pingPickerNeedHide = true)
+    );
+    document.addEventListener("click", ev => {
       if (pingPickerNeedHide) {
         pingPicker.classList.add("hidden");
       }
     });
-    document.getElementById("stores")
-            .addEventListener("change", () => displayPingData(gPingData));
+    document
+      .getElementById("stores")
+      .addEventListener("change", () => displayPingData(gPingData));
     Array.from(document.querySelectorAll(".change-ping")).forEach(el => {
-      el.addEventListener("click", (event) => {
+      el.addEventListener("click", event => {
         if (!pingPicker.classList.contains("hidden")) {
           pingPicker.classList.add("hidden");
         } else {
@@ -295,13 +333,23 @@ var PingPicker = {
       let pingTypeText = this._getSelectedPingType();
       controls.classList.remove("hidden");
       pingType.textContent = pingTypeText;
-      document.l10n.setAttributes(pingExplanation, "about-telemetry-ping-details", {timestamp: pingTypeText, name: pingName});
+      document.l10n.setAttributes(
+        pingExplanation,
+        "about-telemetry-ping-details",
+        { timestamp: pingTypeText, name: pingName }
+      );
     } else {
       // Change sidebar heading text.
       controls.classList.add("hidden");
-      document.l10n.setAttributes(pingType, "about-telemetry-current-ping-sidebar");
+      document.l10n.setAttributes(
+        pingType,
+        "about-telemetry-current-ping-sidebar"
+      );
       // Change home page text.
-      document.l10n.setAttributes(pingExplanation, "about-telemetry-ping-details-current");
+      document.l10n.setAttributes(
+        pingExplanation,
+        "about-telemetry-ping-details-current"
+      );
     }
 
     GenericSubsection.deleteAllSubSections();
@@ -316,8 +364,10 @@ var PingPicker = {
     // This can happen on new profiles or if the ping archive is disabled.
     let archivedPingList = await TelemetryArchive.promiseArchivedPingList();
     let sourceArchived = document.getElementById("ping-source-archive");
-    let sourceArchivedContainer = document.getElementById("ping-source-archive-container");
-    let archivedDisabled = (archivedPingList.length == 0);
+    let sourceArchivedContainer = document.getElementById(
+      "ping-source-archive-container"
+    );
+    let archivedDisabled = archivedPingList.length == 0;
     sourceArchived.disabled = archivedDisabled;
     sourceArchivedContainer.classList.toggle("disabled", archivedDisabled);
 
@@ -343,10 +393,10 @@ var PingPicker = {
 
     let stores = Telemetry.getAllStores();
     let getData = {
-      "histograms": Telemetry.getSnapshotForHistograms,
-      "keyedHistograms": Telemetry.getSnapshotForKeyedHistograms,
-      "scalars": Telemetry.getSnapshotForScalars,
-      "keyedScalars": Telemetry.getSnapshotForKeyedScalars,
+      histograms: Telemetry.getSnapshotForHistograms,
+      keyedHistograms: Telemetry.getSnapshotForKeyedHistograms,
+      scalars: Telemetry.getSnapshotForScalars,
+      keyedScalars: Telemetry.getSnapshotForKeyedScalars,
     };
 
     let data = {};
@@ -381,10 +431,15 @@ var PingPicker = {
     delete ping.payload.keyedHistograms;
 
     // augment ping payload with event telemetry
-    let eventSnapshot = Telemetry.snapshotEvents(Telemetry.DATASET_PRERELEASE_CHANNELS, false);
+    let eventSnapshot = Telemetry.snapshotEvents(
+      Telemetry.DATASET_PRERELEASE_CHANNELS,
+      false
+    );
     for (let process of Object.keys(eventSnapshot)) {
       if (process in ping.payload.processes) {
-        ping.payload.processes[process].events = eventSnapshot[process].filter(e => !e[1].startsWith("telemetry.test"));
+        ping.payload.processes[process].events = eventSnapshot[process].filter(
+          e => !e[1].startsWith("telemetry.test")
+        );
       }
     }
 
@@ -399,8 +454,9 @@ var PingPicker = {
     let id = this._getSelectedPingId();
     let res = Promise.resolve();
     if (id) {
-      res = TelemetryArchive.promiseArchivedPingById(id)
-                            .then((ping) => displayPingData(ping, true));
+      res = TelemetryArchive.promiseArchivedPingById(id).then(ping =>
+        displayPingData(ping, true)
+      );
     }
     return res;
   },
@@ -418,7 +474,9 @@ var PingPicker = {
 
   _renderPingList() {
     let pingSelector = document.getElementById("choose-ping-id");
-    Array.from(pingSelector.children).forEach((child) => removeAllChildNodes(child));
+    Array.from(pingSelector.children).forEach(child =>
+      removeAllChildNodes(child)
+    );
 
     let pingTypes = new Set();
     pingTypes.add(this.TYPE_ALL);
@@ -432,9 +490,9 @@ var PingPicker = {
       pingTypes.add(p.type);
       const pingDate = new Date(p.timestampCreated);
       const datetimeText = new Services.intl.DateTimeFormat(undefined, {
-          dateStyle: "short",
-          timeStyle: "medium",
-        }).format(pingDate);
+        dateStyle: "short",
+        timeStyle: "medium",
+      }).format(pingDate);
       const pingName = `${datetimeText}, ${p.type}`;
 
       let option = document.createElement("option");
@@ -459,7 +517,7 @@ var PingPicker = {
   _renderPingTypes(pingTypes) {
     let pingTypeSelector = document.getElementById("choose-ping-type");
     removeAllChildNodes(pingTypeSelector);
-    pingTypes.forEach((type) => {
+    pingTypes.forEach(type => {
       let option = document.createElement("option");
       option.appendChild(document.createTextNode(type));
       option.setAttribute("value", type);
@@ -475,8 +533,11 @@ var PingPicker = {
     let type = typeSelector.selectedOptions.item(0).value;
 
     let id = this._getSelectedPingId();
-    let index = this._archivedPings.findIndex((p) => p.id == id);
-    let newIndex = Math.min(Math.max(0, index + offset), this._archivedPings.length - 1);
+    let index = this._archivedPings.findIndex(p => p.id == id);
+    let newIndex = Math.min(
+      Math.max(0, index + offset),
+      this._archivedPings.length - 1
+    );
 
     let pingList;
     if (offset > 0) {
@@ -486,7 +547,7 @@ var PingPicker = {
       pingList.reverse();
     }
 
-    let ping = pingList.find((p) => {
+    let ping = pingList.find(p => {
       return type == this.TYPE_ALL || p.type == type;
     });
 
@@ -499,8 +560,8 @@ var PingPicker = {
   selectPing(ping) {
     let pingSelector = document.getElementById("choose-ping-id");
     // Use some() to break if we find the ping.
-    Array.from(pingSelector.children).some((group) => {
-      return Array.from(group.children).some((option) => {
+    Array.from(pingSelector.children).some(group => {
+      return Array.from(group.children).some(option => {
         if (option.value == ping.id) {
           option.selected = true;
           return true;
@@ -515,8 +576,8 @@ var PingPicker = {
     let typeSelector = document.getElementById("choose-ping-type");
     let type = typeSelector.selectedOptions.item(0).value;
     let first = true;
-    Array.from(pingSelector.children).forEach((group) => {
-      Array.from(group.children).forEach((option) => {
+    Array.from(pingSelector.children).forEach(group => {
+      Array.from(group.children).forEach(option => {
         if (first && option.dataset.type == type) {
           option.selected = true;
           first = false;
@@ -679,13 +740,25 @@ var EnvironmentData = {
     addonSection.setAttribute("class", "subsection-data subdata");
     let addons = ping.environment.addons;
     this.renderAddonsObject(addons.activeAddons, addonSection, "activeAddons");
-    this.renderActivePlugins(addons.activePlugins, addonSection, "activePlugins");
+    this.renderActivePlugins(
+      addons.activePlugins,
+      addonSection,
+      "activePlugins"
+    );
     this.renderKeyValueObject(addons.theme, addonSection, "theme");
-    this.renderAddonsObject(addons.activeGMPlugins, addonSection, "activeGMPlugins");
+    this.renderAddonsObject(
+      addons.activeGMPlugins,
+      addonSection,
+      "activeGMPlugins"
+    );
     this.renderPersona(addons, addonSection, "persona");
 
     let hasAddonData = Object.keys(ping.environment.addons).length > 0;
-    let s = GenericSubsection.renderSubsectionHeader("addons", hasAddonData, "environment-data-section");
+    let s = GenericSubsection.renderSubsectionHeader(
+      "addons",
+      hasAddonData,
+      "environment-data-section"
+    );
     s.appendChild(addonSection);
     dataDiv.appendChild(s);
   },
@@ -713,7 +786,6 @@ var EnvironmentData = {
 };
 
 var SlowSQL = {
-
   /**
    * Render slow SQL statistics
    */
@@ -724,15 +796,18 @@ var SlowSQL = {
     // We want to show the actual ping data for archived pings,
     // so skip this there.
 
-    let debugSlowSql = PingPicker.viewCurrentPingData && Preferences.get(PREF_DEBUG_SLOW_SQL, false);
+    let debugSlowSql =
+      PingPicker.viewCurrentPingData &&
+      Preferences.get(PREF_DEBUG_SLOW_SQL, false);
     let slowSql = debugSlowSql ? Telemetry.debugSlowSQL : aPing.payload.slowSQL;
     if (!slowSql) {
       setHasData("slow-sql-section", false);
       return;
     }
 
-    let {mainThread, otherThreads} =
-      debugSlowSql ? Telemetry.debugSlowSQL : aPing.payload.slowSQL;
+    let { mainThread, otherThreads } = debugSlowSql
+      ? Telemetry.debugSlowSQL
+      : aPing.payload.slowSQL;
 
     let mainThreadCount = Object.keys(mainThread).length;
     let otherThreadCount = Object.keys(otherThreads).length;
@@ -776,20 +851,27 @@ var SlowSQL = {
   renderTableHeader: function SlowSQL_renderTableHeader(aTable, threadType) {
     let caption = document.createElement("caption");
     if (threadType == "main") {
-        document.l10n.setAttributes(caption, "about-telemetry-slow-sql-main");
+      document.l10n.setAttributes(caption, "about-telemetry-slow-sql-main");
     }
 
     if (threadType == "other") {
-        document.l10n.setAttributes(caption, "about-telemetry-slow-sql-other");
+      document.l10n.setAttributes(caption, "about-telemetry-slow-sql-other");
     }
     aTable.appendChild(caption);
 
-
-
     let headings = document.createElement("tr");
-    document.l10n.setAttributes(this.appendColumn(headings, "th"), "about-telemetry-slow-sql-hits");
-    document.l10n.setAttributes(this.appendColumn(headings, "th"), "about-telemetry-slow-sql-average");
-    document.l10n.setAttributes(this.appendColumn(headings, "th"), "about-telemetry-slow-sql-statement");
+    document.l10n.setAttributes(
+      this.appendColumn(headings, "th"),
+      "about-telemetry-slow-sql-hits"
+    );
+    document.l10n.setAttributes(
+      this.appendColumn(headings, "th"),
+      "about-telemetry-slow-sql-average"
+    );
+    document.l10n.setAttributes(
+      this.appendColumn(headings, "th"),
+      "about-telemetry-slow-sql-statement"
+    );
     aTable.appendChild(headings);
   },
 
@@ -821,7 +903,11 @@ var SlowSQL = {
    * @param aColType Column's tag name
    * @param aColText Column contents
    */
-  appendColumn: function SlowSQL_appendColumn(aRowElement, aColType, aColText = "") {
+  appendColumn: function SlowSQL_appendColumn(
+    aRowElement,
+    aColType,
+    aColText = ""
+  ) {
     let colElement = document.createElement(aColType);
     if (aColText) {
       let colTextElement = document.createTextNode(aColText);
@@ -838,9 +924,15 @@ var StackRenderer = {
    *
    * @param aDiv Output div
    */
-  renderMemoryMap: async function StackRenderer_renderMemoryMap(aDiv, memoryMap) {
+  renderMemoryMap: async function StackRenderer_renderMemoryMap(
+    aDiv,
+    memoryMap
+  ) {
     let memoryMapTitleElement = document.createElement("span");
-    document.l10n.setAttributes(memoryMapTitleElement, "about-telemetry-memory-map-title");
+    document.l10n.setAttributes(
+      memoryMapTitleElement,
+      "about-telemetry-memory-map-title"
+    );
     aDiv.appendChild(memoryMapTitleElement);
     aDiv.appendChild(document.createElement("br"));
 
@@ -860,7 +952,10 @@ var StackRenderer = {
    */
   renderStack: function StackRenderer_renderStack(aDiv, aStack) {
     let stackTitleElement = document.createElement("span");
-    document.l10n.setAttributes(stackTitleElement, "about-telemetry-stack-title");
+    document.l10n.setAttributes(
+      stackTitleElement,
+      "about-telemetry-stack-title"
+    );
     aDiv.appendChild(stackTitleElement);
     let stackText = " " + aStack.join(" ");
     aDiv.appendChild(document.createTextNode(stackText));
@@ -868,8 +963,12 @@ var StackRenderer = {
     aDiv.appendChild(document.createElement("br"));
     aDiv.appendChild(document.createElement("br"));
   },
-  renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
-                                                    aMemoryMap, aRenderHeader) {
+  renderStacks: function StackRenderer_renderStacks(
+    aPrefix,
+    aStacks,
+    aMemoryMap,
+    aRenderHeader
+  ) {
     let div = document.getElementById(aPrefix);
     removeAllChildNodes(div);
 
@@ -910,7 +1009,9 @@ var StackRenderer = {
     titleElement.className = "stack-title";
 
     let titleText = bundle.formatStringFromName(
-      aPrefix + "-title", aFormatArgs);
+      aPrefix + "-title",
+      aFormatArgs
+    );
     titleElement.appendChild(document.createTextNode(titleText));
 
     div.appendChild(titleElement);
@@ -929,14 +1030,21 @@ var RawPayloadData = {
   },
 
   attachObservers() {
-    document.getElementById("payload-json-viewer").addEventListener("click", (e) => {
-      openJsonInFirefoxJsonViewer(JSON.stringify(gPingData.payload, null, 2));
-    });
+    document
+      .getElementById("payload-json-viewer")
+      .addEventListener("click", e => {
+        openJsonInFirefoxJsonViewer(JSON.stringify(gPingData.payload, null, 2));
+      });
   },
 };
 
-function SymbolicationRequest(aPrefix, aRenderHeader,
-                              aMemoryMap, aStacks, aDurations = null) {
+function SymbolicationRequest(
+  aPrefix,
+  aRenderHeader,
+  aMemoryMap,
+  aStacks,
+  aDurations = null
+) {
   this.prefix = aPrefix;
   this.renderHeader = aRenderHeader;
   this.memoryMap = aMemoryMap;
@@ -947,10 +1055,10 @@ function SymbolicationRequest(aPrefix, aRenderHeader,
  * A callback for onreadystatechange. It replaces the numeric stack with
  * the symbolicated one returned by the symbolication server.
  */
-SymbolicationRequest.prototype.handleSymbolResponse =
-async function SymbolicationRequest_handleSymbolResponse() {
-  if (this.symbolRequest.readyState != 4)
+SymbolicationRequest.prototype.handleSymbolResponse = async function SymbolicationRequest_handleSymbolResponse() {
+  if (this.symbolRequest.readyState != 4) {
     return;
+  }
 
   let fetchElement = document.getElementById(this.prefix + "-fetch-symbols");
   fetchElement.hidden = true;
@@ -958,7 +1066,9 @@ async function SymbolicationRequest_handleSymbolResponse() {
   hideElement.hidden = false;
   let div = document.getElementById(this.prefix);
   removeAllChildNodes(div);
-  let errorMessage = await document.l10n.formatValue("about-telemetry-error-fetching-symbols");
+  let errorMessage = await document.l10n.formatValue(
+    "about-telemetry-error-fetching-symbols"
+  );
 
   if (this.symbolRequest.status != 200) {
     div.appendChild(document.createTextNode(errorMessage));
@@ -987,19 +1097,18 @@ async function SymbolicationRequest_handleSymbolResponse() {
 /**
  * Send a request to the symbolication server to symbolicate this stack.
  */
-SymbolicationRequest.prototype.fetchSymbols =
-function SymbolicationRequest_fetchSymbols() {
-  let symbolServerURI =
-    Preferences.get(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
-  let request = {"memoryMap": this.memoryMap, "stacks": this.stacks,
-                 "version": 3};
+SymbolicationRequest.prototype.fetchSymbols = function SymbolicationRequest_fetchSymbols() {
+  let symbolServerURI = Preferences.get(
+    PREF_SYMBOL_SERVER_URI,
+    DEFAULT_SYMBOL_SERVER_URI
+  );
+  let request = { memoryMap: this.memoryMap, stacks: this.stacks, version: 3 };
   let requestJSON = JSON.stringify(request);
 
   this.symbolRequest = new XMLHttpRequest();
   this.symbolRequest.open("POST", symbolServerURI, true);
   this.symbolRequest.setRequestHeader("Content-type", "application/json");
-  this.symbolRequest.setRequestHeader("Content-length",
-                                      requestJSON.length);
+  this.symbolRequest.setRequestHeader("Content-length", requestJSON.length);
   this.symbolRequest.setRequestHeader("Connection", "close");
   this.symbolRequest.onreadystatechange = this.handleSymbolResponse.bind(this);
   this.symbolRequest.send(requestJSON);
@@ -1010,11 +1119,14 @@ var CapturedStacks = {
 
   render: function CapturedStacks_render(payload) {
     // Retrieve captured stacks from telemetry payload.
-    let capturedStacks = "processes" in payload && "parent" in payload.processes
-      ? payload.processes.parent.capturedStacks
-      : false;
-    let hasData = capturedStacks && capturedStacks.stacks &&
-                  capturedStacks.stacks.length > 0;
+    let capturedStacks =
+      "processes" in payload && "parent" in payload.processes
+        ? payload.processes.parent.capturedStacks
+        : false;
+    let hasData =
+      capturedStacks &&
+      capturedStacks.stacks &&
+      capturedStacks.stacks.length > 0;
     setHasData("captured-stacks-section", hasData);
     if (!hasData) {
       return;
@@ -1024,11 +1136,15 @@ var CapturedStacks = {
     let memoryMap = capturedStacks.memoryMap;
     let captures = capturedStacks.captures;
 
-    StackRenderer.renderStacks("captured-stacks", stacks, memoryMap,
-                              (index) => this.renderCaptureHeader(index, captures));
+    StackRenderer.renderStacks("captured-stacks", stacks, memoryMap, index =>
+      this.renderCaptureHeader(index, captures)
+    );
   },
 
-  renderCaptureHeader: function CaptureStacks_renderCaptureHeader(index, captures) {
+  renderCaptureHeader: function CaptureStacks_renderCaptureHeader(
+    index,
+    captures
+  ) {
     let key = captures[index][0];
     let cardinality = captures[index][2];
     StackRenderer.renderHeader("captured-stacks", [key, cardinality]);
@@ -1036,7 +1152,6 @@ var CapturedStacks = {
 };
 
 var Histogram = {
-
   /**
    * Renders a single Telemetry histogram
    *
@@ -1063,12 +1178,16 @@ var Histogram = {
     divStats.classList.add("histogram-stats");
 
     let histogramStatsArgs = {
-        sampleCount: hgram.sample_count,
-        prettyAverage: hgram.pretty_average,
-        sum: hgram.sum,
+      sampleCount: hgram.sample_count,
+      prettyAverage: hgram.pretty_average,
+      sum: hgram.sum,
     };
 
-    document.l10n.setAttributes(divStats, "about-telemetry-histogram-stats", histogramStatsArgs);
+    document.l10n.setAttributes(
+      divStats,
+      "about-telemetry-histogram-stats",
+      histogramStatsArgs
+    );
 
     if (isRTL()) {
       hgram.values.reverse();
@@ -1082,10 +1201,15 @@ var Histogram = {
     document.l10n.setAttributes(copyButton, "about-telemetry-histogram-copy");
 
     copyButton.addEventListener("click", async function() {
-      let divStatsString = await document.l10n.formatValue("about-telemetry-histogram-stats", histogramStatsArgs);
-      copyButton.histogramText = aName + EOL + divStatsString + EOL + EOL + textData;
-      Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper)
-                                                 .copyString(this.histogramText);
+      let divStatsString = await document.l10n.formatValue(
+        "about-telemetry-histogram-stats",
+        histogramStatsArgs
+      );
+      copyButton.histogramText =
+        aName + EOL + divStatsString + EOL + EOL + textData;
+      Cc["@mozilla.org/widget/clipboardhelper;1"]
+        .getService(Ci.nsIClipboardHelper)
+        .copyString(this.histogramText);
     });
     outerDiv.appendChild(copyButton);
 
@@ -1108,11 +1232,13 @@ var Histogram = {
     }
 
     const sample_count = values.reduceRight((a, b) => a + b);
-    const average = Math.round(aHgram.sum * 10 / sample_count) / 10;
+    const average = Math.round((aHgram.sum * 10) / sample_count) / 10;
     const max_value = Math.max(...values);
 
-    const labelledValues = Object.keys(aHgram.values)
-                           .map(k => [Number(k), aHgram.values[k]]);
+    const labelledValues = Object.keys(aHgram.values).map(k => [
+      Number(k),
+      aHgram.values[k],
+    ]);
 
     let result = {
       values: labelledValues,
@@ -1151,21 +1277,30 @@ var Histogram = {
     if (aHgram.values.length) {
       labelPadTo = String(aHgram.values[aHgram.values.length - 1][0]).length;
     }
-    let maxBarValue = aOptions.exponential ? this.getLogValue(aHgram.max) : aHgram.max;
+    let maxBarValue = aOptions.exponential
+      ? this.getLogValue(aHgram.max)
+      : aHgram.max;
 
     for (let [label, value] of aHgram.values) {
       label = String(label);
       let barValue = aOptions.exponential ? this.getLogValue(value) : value;
 
       // Create a text representation: <right-aligned-label> |<bar-of-#><value>  <percentage>
-      text += EOL
-              + " ".repeat(Math.max(0, labelPadTo - label.length)) + label // Right-aligned label
-              + " |" + "#".repeat(Math.round(MAX_BAR_CHARS * barValue / maxBarValue)) // Bar
-              + "  " + value // Value
-              + "  " + Math.round(100 * value / aHgram.sample_count) + "%"; // Percentage
+      text +=
+        EOL +
+        " ".repeat(Math.max(0, labelPadTo - label.length)) +
+        label + // Right-aligned label
+        " |" +
+        "#".repeat(Math.round((MAX_BAR_CHARS * barValue) / maxBarValue)) + // Bar
+        "  " +
+        value + // Value
+        "  " +
+        Math.round((100 * value) / aHgram.sample_count) +
+        "%"; // Percentage
 
       // Construct the HTML labels + bars
-      let belowEm = Math.round(MAX_BAR_HEIGHT * (barValue / maxBarValue) * 10) / 10;
+      let belowEm =
+        Math.round(MAX_BAR_HEIGHT * (barValue / maxBarValue) * 10) / 10;
       let aboveEm = MAX_BAR_HEIGHT - belowEm;
 
       let barDiv = document.createElement("div");
@@ -1183,7 +1318,7 @@ var Histogram = {
 
       // Add a special class to move the text down to prevent text overlap
       if (label.length > 3) {
-          bar.classList.add("long-label");
+        bar.classList.add("long-label");
       }
       // Add bucket label
       barDiv.appendChild(document.createTextNode(label));
@@ -1195,16 +1330,11 @@ var Histogram = {
   },
 };
 
-
 var Search = {
-
   HASH_SEARCH: "search=",
 
   // A list of ids of sections that do not support search.
-  blacklist: [
-    "late-writes-section",
-    "raw-payload-section",
-  ],
+  blacklist: ["late-writes-section", "raw-payload-section"],
 
   // Pass if: all non-empty array items match (case-sensitive)
   isPassText(subject, filter) {
@@ -1225,7 +1355,8 @@ var Search = {
     // Setup normalized filter string (trimmed, lower cased and split on spaces if not RegEx)
     let isPassFunc; // filter function, set once, then applied to all elements
     filter = filter.trim();
-    if (filter[0] != "/") { // Plain text: case insensitive, AND if multi-string
+    if (filter[0] != "/") {
+      // Plain text: case insensitive, AND if multi-string
       isPassFunc = this.isPassText;
       filter = filter.toLowerCase().split(" ");
     } else {
@@ -1233,7 +1364,8 @@ var Search = {
       var r = filter.match(/^\/(.*)\/(i?)$/);
       try {
         filter = RegExp(r[1], r[2]);
-      } catch (e) { // Incomplete or bad RegExp - always no match
+      } catch (e) {
+        // Incomplete or bad RegExp - always no match
         isPassFunc = function() {
           return false;
         };
@@ -1246,7 +1378,7 @@ var Search = {
     let [isPassFunc, filter] = this.chooseFilter(filterText);
     let allElementHidden = true;
 
-    let needLowerCase = (isPassFunc === this.isPassText);
+    let needLowerCase = isPassFunc === this.isPassText;
     for (let element of elements) {
       let subject = needLowerCase ? element.id.toLowerCase() : element.id;
       element.hidden = !isPassFunc(subject, filter);
@@ -1261,10 +1393,13 @@ var Search = {
     let [isPassFunc, filter] = this.chooseFilter(filterText);
     let allElementsHidden = true;
 
-    let needLowerCase = (isPassFunc === this.isPassText);
-    keyedElements.forEach((keyedElement) => {
-      let subject = needLowerCase ? keyedElement.key.id.toLowerCase() : keyedElement.key.id;
-      if (!isPassFunc(subject, filter)) { // If the keyedHistogram's name is not matched
+    let needLowerCase = isPassFunc === this.isPassText;
+    keyedElements.forEach(keyedElement => {
+      let subject = needLowerCase
+        ? keyedElement.key.id.toLowerCase()
+        : keyedElement.key.id;
+      if (!isPassFunc(subject, filter)) {
+        // If the keyedHistogram's name is not matched
         let allKeyedElementsHidden = true;
         for (let element of keyedElement.datas) {
           let subject = needLowerCase ? element.id.toLowerCase() : element.id;
@@ -1278,7 +1413,8 @@ var Search = {
           allElementsHidden = false;
         }
         keyedElement.key.hidden = allKeyedElementsHidden;
-      } else { // If the keyedHistogram's name is matched
+      } else {
+        // If the keyedHistogram's name is matched
         allElementsHidden = false;
         keyedElement.key.hidden = false;
         for (let element of keyedElement.datas) {
@@ -1293,13 +1429,18 @@ var Search = {
     if (this.idleTimeout) {
       clearTimeout(this.idleTimeout);
     }
-    this.idleTimeout = setTimeout(() => Search.search(e.target.value), FILTER_IDLE_TIMEOUT);
+    this.idleTimeout = setTimeout(
+      () => Search.search(e.target.value),
+      FILTER_IDLE_TIMEOUT
+    );
   },
 
   search(text, sectionParam = null) {
     let section = sectionParam;
     if (!section) {
-      let sectionId = document.querySelector(".category.selected").getAttribute("value");
+      let sectionId = document
+        .querySelector(".category.selected")
+        .getAttribute("value");
       section = document.getElementById(sectionId);
     }
     if (Search.blacklist.includes(section.id)) {
@@ -1316,7 +1457,7 @@ var Search = {
       let keyedHistograms = section.getElementsByClassName("keyed-histogram");
       for (let key of keyedHistograms) {
         let datas = key.getElementsByClassName("histogram");
-        keyedElements.push({key, datas});
+        keyedElements.push({ key, datas });
       }
       noSearchResults = this.filterKeyedElements(keyedElements, text);
     } else if (section.id === "keyed-scalars-section") {
@@ -1324,7 +1465,7 @@ var Search = {
       let keyedScalars = section.getElementsByClassName("keyed-scalar");
       for (let key of keyedScalars) {
         let datas = key.querySelector("table").rows;
-        keyedElements.push({key, datas});
+        keyedElements.push({ key, datas });
       }
       noSearchResults = this.filterKeyedElements(keyedElements, text);
     } else if (section.querySelector(".sub-section")) {
@@ -1332,7 +1473,7 @@ var Search = {
       let subsections = section.querySelectorAll(".sub-section");
       for (let section of subsections) {
         let datas = section.querySelector("table").rows;
-        keyedSubSections.push({key: section, datas});
+        keyedSubSections.push({ key: section, datas });
       }
       noSearchResults = this.filterKeyedElements(keyedSubSections, text);
     } else {
@@ -1347,24 +1488,39 @@ var Search = {
 
     changeUrlSearch(text);
 
-    if (!sectionParam) { // If we are not searching in all section.
+    if (!sectionParam) {
+      // If we are not searching in all section.
       this.updateNoResults(text, noSearchResults);
     }
     return noSearchResults;
   },
 
   updateNoResults(text, noSearchResults) {
-    document.getElementById("no-search-results").classList.toggle("hidden", !noSearchResults);
+    document
+      .getElementById("no-search-results")
+      .classList.toggle("hidden", !noSearchResults);
     if (noSearchResults) {
       let section = document.querySelector(".category.selected > span");
       let searchResultsText = document.getElementById("no-search-results-text");
       if (section.parentElement.id === "category-home") {
-        document.l10n.setAttributes(searchResultsText, "about-telemetry-no-search-results-all", {searchTerms: text});
+        document.l10n.setAttributes(
+          searchResultsText,
+          "about-telemetry-no-search-results-all",
+          { searchTerms: text }
+        );
       } else {
         let sectionName = section.textContent.trim();
-        (text === "")
-          ? document.l10n.setAttributes(searchResultsText, "about-telemetry-no-data-to-display", {sectionName})
-          : document.l10n.setAttributes(searchResultsText, "about-telemetry-no-search-results", {sectionName, currentSearchText: text});
+        text === ""
+          ? document.l10n.setAttributes(
+              searchResultsText,
+              "about-telemetry-no-data-to-display",
+              { sectionName }
+            )
+          : document.l10n.setAttributes(
+              searchResultsText,
+              "about-telemetry-no-search-results",
+              { sectionName, currentSearchText: text }
+            );
       }
     }
   },
@@ -1373,7 +1529,7 @@ var Search = {
     document.getElementById("main").classList.remove("search");
     document.getElementById("no-search-results").classList.add("hidden");
     adjustHeaderState();
-    Array.from(document.querySelectorAll("section")).forEach((section) => {
+    Array.from(document.querySelectorAll("section")).forEach(section => {
       section.classList.toggle("active", section.id == "home-section");
     });
   },
@@ -1388,7 +1544,7 @@ var Search = {
     document.getElementById("main").classList.add("search");
     adjustHeaderState(text);
     let noSearchResults = true;
-    Array.from(document.querySelectorAll("section")).forEach((section) => {
+    Array.from(document.querySelectorAll("section")).forEach(section => {
       if (section.id == "home-section" || section.id == "raw-payload-section") {
         section.classList.remove("active");
         return;
@@ -1396,8 +1552,12 @@ var Search = {
       section.classList.add("active");
       let sectionHidden = this.search(text, section);
       if (!sectionHidden) {
-        let sectionTitle = document.querySelector(`.category[value="${section.id}"] .category-name`).textContent;
-        let sectionDataDiv = document.querySelector(`#${section.id}.has-data.active .data`);
+        let sectionTitle = document.querySelector(
+          `.category[value="${section.id}"] .category-name`
+        ).textContent;
+        let sectionDataDiv = document.querySelector(
+          `#${section.id}.has-data.active .data`
+        );
         let titleDiv = document.createElement("h1");
         titleDiv.classList.add("data", "search-section-title");
         titleDiv.textContent = sectionTitle;
@@ -1437,22 +1597,21 @@ function RenderObject(aObject) {
   if (keys.length == 0) {
     return "{}";
   }
-  output = "{\"" + keys[0] + "\":\u00A0" + JSON.stringify(aObject[keys[0]]);
+  output = '{"' + keys[0] + '":\u00A0' + JSON.stringify(aObject[keys[0]]);
   for (let i = 1; i < keys.length; i++) {
-    output += ", \"" + keys[i] + "\":\u00A0" + JSON.stringify(aObject[keys[i]]);
+    output += ', "' + keys[i] + '":\u00A0' + JSON.stringify(aObject[keys[i]]);
   }
   return output + "}";
 }
 
 var GenericSubsection = {
-
   addSubSectionToSidebar(id, title) {
     let category = document.querySelector("#categories > [value=" + id + "]");
     category.classList.add("has-subsection");
     let subCategory = document.createElement("div");
     subCategory.classList.add("category-subsection");
     subCategory.setAttribute("value", id + "-" + title);
-    subCategory.addEventListener("click", (ev) => {
+    subCategory.addEventListener("click", ev => {
       let section = ev.target;
       showSubSection(section);
     });
@@ -1496,15 +1655,13 @@ var GenericSubsection = {
 
   deleteAllSubSections() {
     let subsections = document.querySelectorAll(".category-subsection");
-    subsections.forEach((el) => {
+    subsections.forEach(el => {
       el.parentElement.removeChild(el);
     });
   },
-
 };
 
 var GenericTable = {
-
   // Returns a table with key and value headers
   defaultHeadings() {
     return ["about-telemetry-keys-header", "about-telemetry-values-header"];
@@ -1553,9 +1710,11 @@ var GenericTable = {
     for (let row of rows) {
       row = row.map(value => {
         // use .valueOf() to unbox Number, String, etc. objects
-        if (value &&
-           (typeof value == "object") &&
-           (typeof value.valueOf() == "object")) {
+        if (
+          value &&
+          typeof value == "object" &&
+          typeof value.valueOf() == "object"
+        ) {
           return RenderObject(value);
         }
         return value;
@@ -1566,7 +1725,7 @@ var GenericTable = {
       table.appendChild(newRow);
 
       for (let i = 0; i < row.length; ++i) {
-        let suffix = (i == (row.length - 1)) ? "\n" : "\t";
+        let suffix = i == row.length - 1 ? "\n" : "\t";
         let field = document.createElement("td");
         field.appendChild(document.createTextNode(row[i] + suffix));
         newRow.appendChild(field);
@@ -1596,7 +1755,6 @@ var KeyedHistogram = {
 };
 
 var AddonDetails = {
-
   /**
    * Render the addon details section as a series of headers followed by key/value tables
    * @param aPing A ping object to render the data from.
@@ -1613,10 +1771,19 @@ var AddonDetails = {
 
     for (let provider in addonDetails) {
       let providerSection = document.createElement("caption");
-      document.l10n.setAttributes(providerSection, "about-telemetry-addon-provider", {addonProvider: provider});
-      let headingStrings = ["about-telemetry-addon-table-id", "about-telemetry-addon-table-details"];
-      let table = GenericTable.render(explodeObject(addonDetails[provider]),
-                                      headingStrings);
+      document.l10n.setAttributes(
+        providerSection,
+        "about-telemetry-addon-provider",
+        { addonProvider: provider }
+      );
+      let headingStrings = [
+        "about-telemetry-addon-table-id",
+        "about-telemetry-addon-table-details",
+      ];
+      let table = GenericTable.render(
+        explodeObject(addonDetails[provider]),
+        headingStrings
+      );
       table.appendChild(providerSection);
       addonSection.appendChild(table);
     }
@@ -1628,7 +1795,9 @@ class Section {
     if (data && Object.keys(data).length > 0) {
       let s = GenericSubsection.renderSubsectionHeader(process, true, section);
       let heading = document.createElement("h2");
-      document.l10n.setAttributes(heading, "about-telemetry-process", {process});
+      document.l10n.setAttributes(heading, "about-telemetry-process", {
+        process,
+      });
       s.appendChild(heading);
 
       this.renderData(data, s);
@@ -1705,8 +1874,14 @@ class Scalars extends Section {
   }
 
   static renderData(data, div) {
-    const scalarsHeadings = ["about-telemetry-names-header", "about-telemetry-values-header"];
-    let scalarsTable = GenericTable.render(explodeObject(data), scalarsHeadings);
+    const scalarsHeadings = [
+      "about-telemetry-names-header",
+      "about-telemetry-values-header",
+    ];
+    let scalarsTable = GenericTable.render(
+      explodeObject(data),
+      scalarsHeadings
+    );
     div.appendChild(scalarsTable);
   }
 
@@ -1737,7 +1912,10 @@ class KeyedScalars extends Section {
   }
 
   static renderData(data, div) {
-    const scalarsHeadings = ["about-telemetry-names-header", "about-telemetry-values-header"];
+    const scalarsHeadings = [
+      "about-telemetry-names-header",
+      "about-telemetry-values-header",
+    ];
     for (let scalarId in data) {
       // Add the name of the scalar.
       let container = document.createElement("div");
@@ -1748,7 +1926,10 @@ class KeyedScalars extends Section {
       scalarNameSection.appendChild(document.createTextNode(scalarId));
       container.appendChild(scalarNameSection);
       // Populate the section with the key-value pairs from the scalar.
-      const table = GenericTable.render(explodeObject(data[scalarId]), scalarsHeadings);
+      const table = GenericTable.render(
+        explodeObject(data[scalarId]),
+        scalarsHeadings
+      );
       container.appendChild(table);
       div.appendChild(container);
     }
@@ -1788,7 +1969,11 @@ var Events = {
         let data = aPayload.processes[process].events;
         hasData = hasData || data !== {};
         if (data && Object.keys(data).length > 0) {
-          let s = GenericSubsection.renderSubsectionHeader(process, true, "events-section");
+          let s = GenericSubsection.renderSubsectionHeader(
+            process,
+            true,
+            "events-section"
+          );
           let heading = document.createElement("h2");
           heading.textContent = process;
           s.appendChild(heading);
@@ -1806,7 +1991,11 @@ var Events = {
         let data = process;
         hasData = hasData || data !== {};
         if (data && Object.keys(data).length > 0) {
-          let s = GenericSubsection.renderSubsectionHeader(process, true, "events-section");
+          let s = GenericSubsection.renderSubsectionHeader(
+            process,
+            true,
+            "events-section"
+          );
           let heading = document.createElement("h2");
           heading.textContent = process;
           s.appendChild(heading);
@@ -1861,7 +2050,9 @@ function setHasData(aSectionID, aHasData) {
   sectionElement.classList[aHasData ? "add" : "remove"]("has-data");
 
   // Display or Hide the section in the sidebar
-  let sectionCategory = document.querySelector(".category[value=" + aSectionID + "]");
+  let sectionCategory = document.querySelector(
+    ".category[value=" + aSectionID + "]"
+  );
   sectionCategory.classList[aHasData ? "add" : "remove"]("has-data");
 }
 
@@ -1872,10 +2063,15 @@ function setupServerOwnerBranding() {
   let serverOwner = Preferences.get(PREF_TELEMETRY_SERVER_OWNER, "Mozilla");
   const elements = [
     [document.getElementById("page-subtitle"), "about-telemetry-page-subtitle"],
-    [document.getElementById("origins-explanation"), "about-telemetry-origins-explanation"],
+    [
+      document.getElementById("origins-explanation"),
+      "about-telemetry-origins-explanation",
+    ],
   ];
   for (const [elt, l10nName] of elements) {
-    document.l10n.setAttributes(elt, l10nName, {telemetryServerOwner: serverOwner});
+    document.l10n.setAttributes(elt, l10nName, {
+      telemetryServerOwner: serverOwner,
+    });
   }
 }
 
@@ -1884,16 +2080,23 @@ function setupServerOwnerBranding() {
  * of the whitelisted sections
  */
 function displayStoresSelector(selectedSection) {
-    let whitelist = ["scalars-section", "keyed-scalars-section", "histograms-section", "keyed-histograms-section"];
-    let stores = document.getElementById("stores");
-    stores.hidden = !whitelist.includes(selectedSection);
-    let storesLabel = document.getElementById("storesLabel");
-    storesLabel.hidden = !whitelist.includes(selectedSection);
-  }
+  let whitelist = [
+    "scalars-section",
+    "keyed-scalars-section",
+    "histograms-section",
+    "keyed-histograms-section",
+  ];
+  let stores = document.getElementById("stores");
+  stores.hidden = !whitelist.includes(selectedSection);
+  let storesLabel = document.getElementById("storesLabel");
+  storesLabel.hidden = !whitelist.includes(selectedSection);
+}
 
 function refreshSearch() {
   removeSearchSectionTitles();
-  let selectedSection = document.querySelector(".category.selected").getAttribute("value");
+  let selectedSection = document
+    .querySelector(".category.selected")
+    .getAttribute("value");
   let search = document.getElementById("search");
   if (!Search.blacklist.includes(selectedSection)) {
     Search.search(search.value);
@@ -1902,7 +2105,9 @@ function refreshSearch() {
 
 function adjustSearchState() {
   removeSearchSectionTitles();
-  let selectedSection = document.querySelector(".category.selected").getAttribute("value");
+  let selectedSection = document
+    .querySelector(".category.selected")
+    .getAttribute("value");
   let search = document.getElementById("search");
   search.value = "";
   search.hidden = Search.blacklist.includes(selectedSection);
@@ -1911,9 +2116,11 @@ function adjustSearchState() {
 }
 
 function removeSearchSectionTitles() {
-    for (let sectionTitleDiv of Array.from(document.getElementsByClassName("search-section-title"))) {
-        sectionTitleDiv.remove();
-    }
+  for (let sectionTitleDiv of Array.from(
+    document.getElementsByClassName("search-section-title")
+  )) {
+    sectionTitleDiv.remove();
+  }
 }
 
 function adjustSection() {
@@ -1928,15 +2135,24 @@ function adjustHeaderState(title = null) {
   let selectedTitle = selected.textContent.trim();
   let sectionTitle = document.getElementById("sectionTitle");
   if (title !== null) {
-      document.l10n.setAttributes(sectionTitle, "about-telemetry-results-for-search", {searchTerms: title});
+    document.l10n.setAttributes(
+      sectionTitle,
+      "about-telemetry-results-for-search",
+      { searchTerms: title }
+    );
   } else {
-      sectionTitle.textContent = selectedTitle;
+    sectionTitle.textContent = selectedTitle;
   }
   let search = document.getElementById("search");
   if (selected.parentElement.id === "category-home") {
-    document.l10n.setAttributes(search, "about-telemetry-filter-all-placeholder");
+    document.l10n.setAttributes(
+      search,
+      "about-telemetry-filter-all-placeholder"
+    );
   } else {
-    document.l10n.setAttributes(search, "about-telemetry-filter-placeholder", {selectedTitle});
+    document.l10n.setAttributes(search, "about-telemetry-filter-placeholder", {
+      selectedTitle,
+    });
   }
 }
 
@@ -1968,7 +2184,8 @@ function changeUrlSearch(searchText) {
     hashWithoutSearch += "_";
   }
   if (searchText) {
-    hash = hashWithoutSearch + Search.HASH_SEARCH + searchText.replace(/ /g, "+");
+    hash =
+      hashWithoutSearch + Search.HASH_SEARCH + searchText.replace(/ /g, "+");
   } else if (hashWithoutSearch) {
     hash = hashWithoutSearch.slice(0, hashWithoutSearch.length - 1);
   }
@@ -2000,12 +2217,13 @@ function show(selected) {
   }
 
   let current_button = document.querySelector(".category.selected");
-  if (current_button == selected)
+  if (current_button == selected) {
     return;
+  }
   current_button.classList.remove("selected");
   selected.classList.add("selected");
 
-  document.querySelectorAll("section").forEach((section) => {
+  document.querySelectorAll("section").forEach(section => {
     section.classList.remove("active");
   });
   selected_section.classList.add("active");
@@ -2020,20 +2238,25 @@ function showSubSection(selected) {
   if (!selected) {
     return;
   }
-  let current_selection = document.querySelector(".category-subsection.selected");
-  if (current_selection)
+  let current_selection = document.querySelector(
+    ".category-subsection.selected"
+  );
+  if (current_selection) {
     current_selection.classList.remove("selected");
+  }
   selected.classList.add("selected");
 
   let section = document.getElementById(selected.getAttribute("value"));
-  section.parentElement.childNodes.forEach((element) => {
+  section.parentElement.childNodes.forEach(element => {
     element.hidden = true;
   });
   section.hidden = false;
 
-  let title = selected.parentElement.querySelector(".category-name").textContent;
+  let title = selected.parentElement.querySelector(".category-name")
+    .textContent;
   let subsection = selected.textContent;
-  document.getElementById("sectionTitle").textContent = title + " - " + subsection;
+  document.getElementById("sectionTitle").textContent =
+    title + " - " + subsection;
   changeUrlPath(subsection, true);
 }
 
@@ -2046,7 +2269,7 @@ function setupListeners() {
   RawPayloadData.attachObservers();
 
   let menu = document.getElementById("categories");
-  menu.addEventListener("click", (e) => {
+  menu.addEventListener("click", e => {
     if (e.target && e.target.parentNode == menu) {
       show(e.target);
     }
@@ -2056,54 +2279,65 @@ function setupListeners() {
   search.addEventListener("input", Search.searchHandler);
 
   // Clean up observers when page is closed
-  window.addEventListener("unload",
+  window.addEventListener(
+    "unload",
     function(aEvent) {
       Settings.detachObservers();
-  }, {once: true});
+    },
+    { once: true }
+  );
 
-  document.getElementById("captured-stacks-fetch-symbols").addEventListener("click",
-    function() {
+  document
+    .getElementById("captured-stacks-fetch-symbols")
+    .addEventListener("click", function() {
       if (!gPingData) {
         return;
       }
       let capturedStacks = gPingData.payload.processes.parent.capturedStacks;
-      let req = new SymbolicationRequest("captured-stacks",
-                                         CapturedStacks.renderCaptureHeader,
-                                         capturedStacks.memoryMap,
-                                         capturedStacks.stacks,
-                                         capturedStacks.captures);
+      let req = new SymbolicationRequest(
+        "captured-stacks",
+        CapturedStacks.renderCaptureHeader,
+        capturedStacks.memoryMap,
+        capturedStacks.stacks,
+        capturedStacks.captures
+      );
       req.fetchSymbols();
-  });
+    });
 
-  document.getElementById("captured-stacks-hide-symbols").addEventListener("click",
-    function() {
+  document
+    .getElementById("captured-stacks-hide-symbols")
+    .addEventListener("click", function() {
       if (gPingData) {
         CapturedStacks.render(gPingData.payload);
       }
-  });
+    });
 
-  document.getElementById("late-writes-fetch-symbols").addEventListener("click",
-    function() {
+  document
+    .getElementById("late-writes-fetch-symbols")
+    .addEventListener("click", function() {
       if (!gPingData) {
         return;
       }
 
       let lateWrites = gPingData.payload.lateWrites;
-      let req = new SymbolicationRequest("late-writes",
-                                         LateWritesSingleton.renderHeader,
-                                         lateWrites.memoryMap,
-                                         lateWrites.stacks);
+      let req = new SymbolicationRequest(
+        "late-writes",
+        LateWritesSingleton.renderHeader,
+        lateWrites.memoryMap,
+        lateWrites.stacks
+      );
       req.fetchSymbols();
-  });
+    });
 
-  document.getElementById("late-writes-hide-symbols").addEventListener("click",
-    function() {
+  document
+    .getElementById("late-writes-hide-symbols")
+    .addEventListener("click", function() {
       if (!gPingData) {
         return;
       }
 
       LateWritesSingleton.renderLateWrites(gPingData.payload.lateWrites);
-  });
+    });
 }
 
 // Restores the sections states
@@ -2116,7 +2350,8 @@ function urlSectionRestore(hash) {
     if (category) {
       show(category);
       if (subsection) {
-        let selector = ".category-subsection[value=" + section + "-" + subsection + "]";
+        let selector =
+          ".category-subsection[value=" + section + "-" + subsection + "]";
         let subcategory = document.querySelector(selector);
         showSubSection(subcategory);
       }
@@ -2187,8 +2422,12 @@ var LateWritesSingleton = {
 
     let stacks = lateWrites.stacks;
     let memoryMap = lateWrites.memoryMap;
-    StackRenderer.renderStacks("late-writes", stacks, memoryMap,
-                               LateWritesSingleton.renderHeader);
+    StackRenderer.renderStacks(
+      "late-writes",
+      stacks,
+      memoryMap,
+      LateWritesSingleton.renderHeader
+    );
   },
 };
 
@@ -2212,7 +2451,7 @@ class HistogramSection extends Section {
 
   static renderData(data, div) {
     for (let [hName, hgram] of Object.entries(data)) {
-      Histogram.render(div, hName, hgram, {unpacked: true});
+      Histogram.render(div, hName, hgram, { unpacked: true });
     }
   }
 
@@ -2243,7 +2482,7 @@ class KeyedHistogramSection extends Section {
 
   static renderData(data, div) {
     for (let [id, keyed] of Object.entries(data)) {
-      KeyedHistogram.render(div, id, keyed, {unpacked: true});
+      KeyedHistogram.render(div, id, keyed, { unpacked: true });
     }
   }
 
@@ -2274,7 +2513,9 @@ var SimpleMeasurements = {
     let simpleSection = document.getElementById("simple-measurements");
     removeAllChildNodes(simpleSection);
 
-    let simpleMeasurements = this.sortStartupMilestones(aPayload.simpleMeasurements);
+    let simpleMeasurements = this.sortStartupMilestones(
+      aPayload.simpleMeasurements
+    );
     let hasData = Object.keys(simpleMeasurements).length > 0;
     setHasData("simple-measurements-section", hasData);
 
@@ -2297,7 +2538,7 @@ var SimpleMeasurements = {
     delete startupEvents.process;
 
     function keyIsMilestone(k) {
-      return (k in startupEvents) || (k in telemetryTimestamps);
+      return k in startupEvents || k in telemetryTimestamps;
     }
 
     let sortedKeys = Object.keys(aSimpleMeasurements);
@@ -2308,13 +2549,16 @@ var SimpleMeasurements = {
       let isKeyBMilestone = keyIsMilestone(keyB);
 
       // First order by startup vs non-startup measurement
-      if (isKeyAMilestone && !isKeyBMilestone)
+      if (isKeyAMilestone && !isKeyBMilestone) {
         return -1;
-      if (!isKeyAMilestone && isKeyBMilestone)
+      }
+      if (!isKeyAMilestone && isKeyBMilestone) {
         return 1;
+      }
       // Don't change order of non-startup measurements
-      if (!isKeyAMilestone && !isKeyBMilestone)
+      if (!isKeyAMilestone && !isKeyBMilestone) {
         return 0;
+      }
 
       // If both keys are startup measurements, order them by value
       return aSimpleMeasurements[keyA] - aSimpleMeasurements[keyB];
@@ -2334,30 +2578,30 @@ var SimpleMeasurements = {
  * Render stores options
  */
 function renderStoreList(payload) {
-    let storeSelect = document.getElementById("stores");
-    let storesLabel = document.getElementById("storesLabel");
-    removeAllChildNodes(storeSelect);
+  let storeSelect = document.getElementById("stores");
+  let storesLabel = document.getElementById("storesLabel");
+  removeAllChildNodes(storeSelect);
 
-    if (!("stores" in payload)) {
-      storeSelect.classList.add("hidden");
-      storesLabel.classList.add("hidden");
-      return;
+  if (!("stores" in payload)) {
+    storeSelect.classList.add("hidden");
+    storesLabel.classList.add("hidden");
+    return;
+  }
+
+  storeSelect.classList.remove("hidden");
+  storesLabel.classList.remove("hidden");
+  storeSelect.disabled = false;
+
+  for (let store of Object.keys(payload.stores)) {
+    let option = document.createElement("option");
+    option.appendChild(document.createTextNode(store));
+    option.setAttribute("value", store);
+    // Select main store by default
+    if (store === "main") {
+      option.selected = true;
     }
-
-    storeSelect.classList.remove("hidden");
-    storesLabel.classList.remove("hidden");
-    storeSelect.disabled = false;
-
-    for (let store of Object.keys(payload.stores)) {
-      let option = document.createElement("option");
-      option.appendChild(document.createTextNode(store));
-      option.setAttribute("value", store);
-      // Select main store by default
-      if (store === "main") {
-        option.selected = true;
-      }
-      storeSelect.appendChild(option);
-    }
+    storeSelect.appendChild(option);
+  }
 }
 
 /**
@@ -2366,17 +2610,22 @@ function renderStoreList(payload) {
 function getSelectedStore() {
   let storeSelect = document.getElementById("stores");
   let storeSelectedOption = storeSelect.selectedOptions.item(0);
-  let selectedStore = storeSelectedOption !== null ? storeSelectedOption.getAttribute("value") : undefined;
+  let selectedStore =
+    storeSelectedOption !== null
+      ? storeSelectedOption.getAttribute("value")
+      : undefined;
   return selectedStore;
 }
 
 function togglePingSections(isMainPing) {
   // We always show the sections that are "common" to all pings.
-  let commonSections = new Set(["heading",
-                                "home-section",
-                                "general-data-section",
-                                "environment-data-section",
-                                "raw-json-viewer"]);
+  let commonSections = new Set([
+    "heading",
+    "home-section",
+    "general-data-section",
+    "environment-data-section",
+    "raw-json-viewer",
+  ]);
 
   let elements = document.querySelectorAll(".category");
   for (let section of elements) {
@@ -2421,7 +2670,7 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // We have special rendering code for the payloads from "main" and "event" pings.
   // For any other pings we just render the raw JSON payload.
-  let isMainPing = (ping.type == "main" || ping.type == "saved-session");
+  let isMainPing = ping.type == "main" || ping.type == "saved-session";
   let isEventPing = ping.type == "event";
   togglePingSections(isMainPing);
 
@@ -2444,7 +2693,6 @@ function displayRichPingData(ping, updatePayloadList) {
     Events.render(payload);
     return;
   }
-
 
   if (!isMainPing) {
     return;
