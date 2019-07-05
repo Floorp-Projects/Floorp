@@ -8,18 +8,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
-import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.checkPingSchema
+import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.private.TimingDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
-import mozilla.components.service.glean.getContextWithMockedInfo
-import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.timing.TimingManager
-import mozilla.components.service.glean.triggerWorkManager
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -31,7 +27,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.TimeUnit as AndroidTimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class TimingDistributionsStorageEngineTest {
@@ -139,13 +134,6 @@ class TimingDistributionsStorageEngineTest {
     fun `serializer should serialize timing distribution that matches schema`() {
         val ping1 = PingType("store1", true)
 
-        val server = getMockWebServer()
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
         val metric = TimingDistributionMetricType(
             disabled = false,
             category = "telemetry",
@@ -162,10 +150,7 @@ class TimingDistributionsStorageEngineTest {
             metric.stopAndAccumulate(id)
         }
 
-        Glean.sendPings(listOf(ping1))
-        triggerWorkManager()
-        val pingJson = server.takeRequest(20L, AndroidTimeUnit.SECONDS).body.readUtf8()
-        checkPingSchema(pingJson)
+        collectAndCheckPingSchema(ping1)
     }
 
     @Test
