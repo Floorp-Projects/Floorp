@@ -12,13 +12,16 @@ add_task(async () => {
     options: {
       startWithLastProfile: true,
     },
-    profiles: [{
-      name: "Profile1",
-      path: "Path1",
-    }, {
-      name: "Profile2",
-      path: "Path2",
-    }],
+    profiles: [
+      {
+        name: "Profile1",
+        path: "Path1",
+      },
+      {
+        name: "Profile2",
+        path: "Path2",
+      },
+    ],
   };
 
   let installs = {
@@ -39,6 +42,13 @@ add_task(async () => {
   checkProfileService(profileData);
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  Assert.equal(profile.name, "Profile2", "Should have selected the right profile");
-  Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
+  Assert.equal(
+    profile.name,
+    "Profile2",
+    "Should have selected the right profile"
+  );
+  Assert.ok(
+    !service.createdAlternateProfile,
+    "Should not have created an alternate profile."
+  );
 });
