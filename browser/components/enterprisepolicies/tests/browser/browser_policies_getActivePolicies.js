@@ -5,28 +5,36 @@
 
 add_task(async function test_active_policies() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "DisablePrivateBrowsing": true,
+    policies: {
+      DisablePrivateBrowsing: true,
     },
   });
 
   let expected = {
-    "DisablePrivateBrowsing": true,
+    DisablePrivateBrowsing: true,
   };
 
-  Assert.deepEqual(await Services.policies.getActivePolicies(), expected, "Active policies parsed correctly");
+  Assert.deepEqual(
+    await Services.policies.getActivePolicies(),
+    expected,
+    "Active policies parsed correctly"
+  );
 });
 
 add_task(async function test_wrong_policies() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "BlockAboutSupport": [true],
+    policies: {
+      BlockAboutSupport: [true],
     },
   });
 
   let expected = {};
 
-  Assert.deepEqual(await Services.policies.getActivePolicies(), expected, "Wrong policies ignored");
+  Assert.deepEqual(
+    await Services.policies.getActivePolicies(),
+    expected,
+    "Wrong policies ignored"
+  );
 });
 
 add_task(async function test_content_process() {
@@ -34,7 +42,11 @@ add_task(async function test_content_process() {
     try {
       Services.policies.getActivePolicies();
     } catch (ex) {
-      is(ex.result, Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED, "Function getActivePolicies() doesn't have a valid definition in the content process");
+      is(
+        ex.result,
+        Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED,
+        "Function getActivePolicies() doesn't have a valid definition in the content process"
+      );
     }
   });
 });

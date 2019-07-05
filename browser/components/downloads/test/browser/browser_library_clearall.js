@@ -3,8 +3,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 let win;
 
@@ -47,13 +50,16 @@ async function testClearingDownloads(clearCallback) {
   await promiseLength;
 
   let receivedNotifications = [];
-  let promiseNotification = PlacesTestUtils.waitForNotification("onDeleteURI",
+  let promiseNotification = PlacesTestUtils.waitForNotification(
+    "onDeleteURI",
     uri => {
       if (DOWNLOAD_DATA.includes(uri.spec)) {
         receivedNotifications.push(uri.spec);
       }
       return receivedNotifications.length == DOWNLOAD_DATA.length;
-    }, "history");
+    },
+    "history"
+  );
 
   promiseLength = waitForChildrenLength(listbox, 0);
   await clearCallback(listbox);
@@ -61,8 +67,11 @@ async function testClearingDownloads(clearCallback) {
 
   await promiseNotification;
 
-  Assert.deepEqual(receivedNotifications.sort(), DOWNLOAD_DATA.sort(),
-    "Should have received notifications for each URL");
+  Assert.deepEqual(
+    receivedNotifications.sort(),
+    DOWNLOAD_DATA.sort(),
+    "Should have received notifications for each URL"
+  );
 }
 
 add_task(async function setup() {
@@ -92,13 +101,21 @@ add_task(async function test_clear_downloads_context_menu() {
 
     let contextMenu = win.document.getElementById("downloadsContextMenu");
 
-    let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(listbox.itemChildren[0], {type: "contextmenu", button: 2}, win);
+    let popupShownPromise = BrowserTestUtils.waitForEvent(
+      contextMenu,
+      "popupshown"
+    );
+    EventUtils.synthesizeMouseAtCenter(
+      listbox.itemChildren[0],
+      { type: "contextmenu", button: 2 },
+      win
+    );
     await popupShownPromise;
 
     // Find the clear context item.
-    let clearDownloadsButton =
-      [...contextMenu.children].find(child => child.command == "downloadsCmd_clearDownloads");
+    let clearDownloadsButton = [...contextMenu.children].find(
+      child => child.command == "downloadsCmd_clearDownloads"
+    );
     clearDownloadsButton.click();
   });
 });

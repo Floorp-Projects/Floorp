@@ -52,7 +52,10 @@ add_task(async function testIntervalChanges() {
   Services.prefs.setIntPref("browser.sessionstore.idleDelay", 86400000);
 
   // Mock an idle service.
-  let fakeIdleService = MockRegistrar.register("@mozilla.org/widget/idleservice;1", idleService);
+  let fakeIdleService = MockRegistrar.register(
+    "@mozilla.org/widget/idleservice;1",
+    idleService
+  );
   idleService._reset();
 
   registerCleanupFunction(function() {
@@ -71,7 +74,9 @@ add_task(async function testIntervalChanges() {
   info("Waiting for sessionstore-state-write-complete notification");
   await TestUtils.topicObserved("sessionstore-state-write-complete");
 
-  info("Got the sessionstore-state-write-complete notification, now testing idle mode");
+  info(
+    "Got the sessionstore-state-write-complete notification, now testing idle mode"
+  );
 
   // Enter the "idle mode" (raise the `_isIdle` flag) by firing idle
   // observer of mock idle service.
@@ -88,11 +93,19 @@ add_task(async function testIntervalChanges() {
   SessionSaver.runDelayed(0);
 
   // We expect `p1` hits the timeout.
-  await Assert.rejects(p1, /Save state timeout/, "[Test 1A] No state write during idle.");
+  await Assert.rejects(
+    p1,
+    /Save state timeout/,
+    "[Test 1A] No state write during idle."
+  );
 
   // Test again for better reliability. Same, we expect following promise hits
   // the timeout.
-  await Assert.rejects(promiseSaveState(), /Save state timeout/, "[Test 1B] Again: No state write during idle.");
+  await Assert.rejects(
+    promiseSaveState(),
+    /Save state timeout/,
+    "[Test 1B] Again: No state write during idle."
+  );
 
   // Back to the active mode.
   info("Start to test active mode...");

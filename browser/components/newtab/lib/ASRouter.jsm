@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -13,32 +15,71 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
-  SnippetsTestMessageProvider: "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
+  SnippetsTestMessageProvider:
+    "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
   PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
 });
-const {ASRouterActions: ra, actionTypes: at, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
-const {CFRMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/CFRMessageProvider.jsm");
-const {OnboardingMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/OnboardingMessageProvider.jsm");
-const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
-const {CFRPageActions} = ChromeUtils.import("resource://activity-stream/lib/CFRPageActions.jsm");
-const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+const {
+  ASRouterActions: ra,
+  actionTypes: at,
+  actionCreators: ac,
+} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+const { CFRMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRMessageProvider.jsm"
+);
+const { OnboardingMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+);
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
+const { CFRPageActions } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRPageActions.jsm"
+);
+const { AttributionCode } = ChromeUtils.import(
+  "resource:///modules/AttributionCode.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
-  "resource://activity-stream/lib/ASRouterPreferences.jsm");
-ChromeUtils.defineModuleGetter(this, "TARGETING_PREFERENCES",
-  "resource://activity-stream/lib/ASRouterPreferences.jsm");
-ChromeUtils.defineModuleGetter(this, "ASRouterTargeting",
-  "resource://activity-stream/lib/ASRouterTargeting.jsm");
-ChromeUtils.defineModuleGetter(this, "QueryCache",
-  "resource://activity-stream/lib/ASRouterTargeting.jsm");
-ChromeUtils.defineModuleGetter(this, "ASRouterTriggerListeners",
-  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "ClientEnvironment",
-  "resource://normandy/lib/ClientEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "Sampling",
-  "resource://gre/modules/components-utils/Sampling.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterPreferences",
+  "resource://activity-stream/lib/ASRouterPreferences.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TARGETING_PREFERENCES",
+  "resource://activity-stream/lib/ASRouterPreferences.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterTargeting",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "QueryCache",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterTriggerListeners",
+  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ClientEnvironment",
+  "resource://normandy/lib/ClientEnvironment.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sampling",
+  "resource://gre/modules/components-utils/Sampling.jsm"
+);
 
 const TRAILHEAD_CONFIG = {
   OVERRIDE_PREF: "trailhead.firstrun.branches",
@@ -46,26 +87,11 @@ const TRAILHEAD_CONFIG = {
   INTERRUPTS_EXPERIMENT_PREF: "trailhead.firstrun.interruptsExperiment",
   TRIPLETS_ENROLLED_PREF: "trailhead.firstrun.tripletsEnrolled",
   BRANCHES: {
-    interrupts: [
-      ["control"],
-      ["join"],
-      ["sync"],
-      ["nofirstrun"],
-      ["cards"],
-    ],
-    triplets: [
-      ["supercharge"],
-      ["payoff"],
-      ["multidevice"],
-      ["privacy"],
-    ],
+    interrupts: [["control"], ["join"], ["sync"], ["nofirstrun"], ["cards"]],
+    triplets: [["supercharge"], ["payoff"], ["multidevice"], ["privacy"]],
   },
   LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
-  EXPERIMENT_RATIOS: [
-    ["", 0],
-    ["interrupts", 1],
-    ["triplets", 3],
-  ],
+  EXPERIMENT_RATIOS: [["", 0], ["interrupts", 1], ["triplets", 3]],
 };
 
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
@@ -77,11 +103,15 @@ const DEFAULT_WHITELIST_HOSTS = {
   "activity-stream-icons.services.mozilla.com": "production",
   "snippets-admin.mozilla.org": "preview",
 };
-const SNIPPETS_ENDPOINT_WHITELIST = "browser.newtab.activity-stream.asrouter.whitelistHosts";
+const SNIPPETS_ENDPOINT_WHITELIST =
+  "browser.newtab.activity-stream.asrouter.whitelistHosts";
 // Max possible impressions cap for any message
 const MAX_MESSAGE_LIFETIME_CAP = 100;
 
-const LOCAL_MESSAGE_PROVIDERS = {OnboardingMessageProvider, CFRMessageProvider};
+const LOCAL_MESSAGE_PROVIDERS = {
+  OnboardingMessageProvider,
+  CFRMessageProvider,
+};
 const STARTPAGE_VERSION = "6";
 
 /**
@@ -91,7 +121,9 @@ const STARTPAGE_VERSION = "6";
  * @returns {T} An randomly chosen item in a branch
  */
 async function chooseBranch(seed, branches) {
-  const ratios = branches.map(([item, ratio]) => ((typeof ratio !== "undefined") ? ratio : 1));
+  const ratios = branches.map(([item, ratio]) =>
+    typeof ratio !== "undefined" ? ratio : 1
+  );
   return branches[await Sampling.ratioSample(seed, ratios)][0];
 }
 
@@ -102,7 +134,10 @@ const MessageLoaderUtils = {
 
   reportError(e) {
     Cu.reportError(e);
-    this._errors.push({timestamp: new Date(), error: {message: e.toString(), stack: e.stack}});
+    this._errors.push({
+      timestamp: new Date(),
+      error: { message: e.toString(), stack: e.stack },
+    });
   },
 
   get errors() {
@@ -125,7 +160,8 @@ const MessageLoaderUtils = {
   async _remoteLoaderCache(storage) {
     let allCached;
     try {
-      allCached = await storage.get(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY) || {};
+      allCached =
+        (await storage.get(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY)) || {};
     } catch (e) {
       // istanbul ignore next
       MessageLoaderUtils.reportError(e);
@@ -146,13 +182,24 @@ const MessageLoaderUtils = {
   async _remoteLoader(provider, options) {
     let remoteMessages = [];
     if (provider.url) {
-      const allCached = await MessageLoaderUtils._remoteLoaderCache(options.storage);
+      const allCached = await MessageLoaderUtils._remoteLoaderCache(
+        options.storage
+      );
       const cached = allCached[provider.id];
       let etag;
 
-      if (cached && cached.url === provider.url && cached.version === STARTPAGE_VERSION) {
-        const {lastFetched, messages} = cached;
-        if (!MessageLoaderUtils.shouldProviderUpdate({...provider, lastUpdated: lastFetched})) {
+      if (
+        cached &&
+        cached.url === provider.url &&
+        cached.version === STARTPAGE_VERSION
+      ) {
+        const { lastFetched, messages } = cached;
+        if (
+          !MessageLoaderUtils.shouldProviderUpdate({
+            ...provider,
+            lastUpdated: lastFetched,
+          })
+        ) {
           // Cached messages haven't expired, return early.
           return messages;
         }
@@ -167,7 +214,7 @@ const MessageLoaderUtils = {
 
       let response;
       try {
-        response = await fetch(provider.url, {headers, credentials: "omit"});
+        response = await fetch(provider.url, { headers, credentials: "omit" });
       } catch (e) {
         MessageLoaderUtils.reportError(e);
       }
@@ -184,8 +231,10 @@ const MessageLoaderUtils = {
           return remoteMessages;
         }
         if (jsonResponse && jsonResponse.messages) {
-          remoteMessages = jsonResponse.messages
-            .map(msg => ({...msg, provider_url: provider.url}));
+          remoteMessages = jsonResponse.messages.map(msg => ({
+            ...msg,
+            provider_url: provider.url,
+          }));
 
           // Cache the results if this isn't a preview URL.
           if (provider.updateCycleInMs > 0) {
@@ -197,13 +246,20 @@ const MessageLoaderUtils = {
               version: STARTPAGE_VERSION,
             };
 
-            options.storage.set(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY, {...allCached, [provider.id]: cacheInfo});
+            options.storage.set(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY, {
+              ...allCached,
+              [provider.id]: cacheInfo,
+            });
           }
         } else {
-          MessageLoaderUtils.reportError(`No messages returned from ${provider.url}.`);
+          MessageLoaderUtils.reportError(
+            `No messages returned from ${provider.url}.`
+          );
         }
       } else if (response) {
-        MessageLoaderUtils.reportError(`Invalid response status ${response.status} from ${provider.url}.`);
+        MessageLoaderUtils.reportError(
+          `Invalid response status ${response.status} from ${provider.url}.`
+        );
       }
     }
     return remoteMessages;
@@ -222,12 +278,22 @@ const MessageLoaderUtils = {
     let messages = [];
     if (provider.bucket) {
       try {
-        messages = await MessageLoaderUtils._getRemoteSettingsMessages(provider.bucket);
+        messages = await MessageLoaderUtils._getRemoteSettingsMessages(
+          provider.bucket
+        );
         if (!messages.length) {
-          MessageLoaderUtils._handleRemoteSettingsUndesiredEvent("ASR_RS_NO_MESSAGES", provider.id, options.dispatchToAS);
+          MessageLoaderUtils._handleRemoteSettingsUndesiredEvent(
+            "ASR_RS_NO_MESSAGES",
+            provider.id,
+            options.dispatchToAS
+          );
         }
       } catch (e) {
-        MessageLoaderUtils._handleRemoteSettingsUndesiredEvent("ASR_RS_ERROR", provider.id, options.dispatchToAS);
+        MessageLoaderUtils._handleRemoteSettingsUndesiredEvent(
+          "ASR_RS_ERROR",
+          provider.id,
+          options.dispatchToAS
+        );
         MessageLoaderUtils.reportError(e);
       }
     }
@@ -240,12 +306,14 @@ const MessageLoaderUtils = {
 
   _handleRemoteSettingsUndesiredEvent(event, providerId, dispatchToAS) {
     if (dispatchToAS) {
-      dispatchToAS(ac.ASRouterUserEvent({
-        action: "asrouter_undesired_event",
-        event,
-        message_id: "n/a",
-        value: providerId,
-      }));
+      dispatchToAS(
+        ac.ASRouterUserEvent({
+          action: "asrouter_undesired_event",
+          event,
+          message_id: "n/a",
+          value: providerId,
+        })
+      );
     }
   },
 
@@ -277,7 +345,10 @@ const MessageLoaderUtils = {
    * @returns {bool} Should an update happen?
    */
   shouldProviderUpdate(provider, currentTime = Date.now()) {
-    return (!(provider.lastUpdated >= 0) || currentTime - provider.lastUpdated > provider.updateCycleInMs);
+    return (
+      !(provider.lastUpdated >= 0) ||
+      currentTime - provider.lastUpdated > provider.updateCycleInMs
+    );
   },
 
   /**
@@ -295,16 +366,25 @@ const MessageLoaderUtils = {
     // istanbul ignore if
     if (!messages) {
       messages = [];
-      MessageLoaderUtils.reportError(new Error(`Tried to load messages for ${provider.id} but the result was not an Array.`));
+      MessageLoaderUtils.reportError(
+        new Error(
+          `Tried to load messages for ${
+            provider.id
+          } but the result was not an Array.`
+        )
+      );
     }
     // Filter out messages we temporarily want to exclude
     if (provider.exclude && provider.exclude.length) {
-      messages = messages.filter(message => !provider.exclude.includes(message.id));
+      messages = messages.filter(
+        message => !provider.exclude.includes(message.id)
+      );
     }
     const lastUpdated = Date.now();
     return {
-      messages: messages.map(msg => ({weight: 100, ...msg, provider: provider.id}))
-                        .filter(message => message.weight > 0),
+      messages: messages
+        .map(msg => ({ weight: 100, ...msg, provider: provider.id }))
+        .filter(message => message.weight > 0),
       lastUpdated,
       errors: MessageLoaderUtils.errors,
     };
@@ -321,12 +401,16 @@ const MessageLoaderUtils = {
       return;
     }
     const chromeDoc = browser.ownerDocument;
-    let notificationPopupBox = chromeDoc.getElementById("notification-popup-box");
+    let notificationPopupBox = chromeDoc.getElementById(
+      "notification-popup-box"
+    );
     if (!notificationPopupBox) {
       return;
     }
-    if (notificationPopupBox.style.display === "none" ||
-        notificationPopupBox.style.display === "") {
+    if (
+      notificationPopupBox.style.display === "none" ||
+      notificationPopupBox.style.display === ""
+    ) {
       notificationPopupBox.style.display = "block";
     }
   },
@@ -339,10 +423,16 @@ const MessageLoaderUtils = {
 
       // AddonManager installation source associated to the addons installed from activitystream's CFR
       // and RTAMO (source is going to be "amo" if not configured explicitly in the message provider).
-      const telemetryInfo = {source: telemetrySource};
-      const install = await AddonManager.getInstallForURL(aUri.spec, {telemetryInfo});
-      await AddonManager.installAddonFromWebpage("application/x-xpinstall", browser,
-        systemPrincipal, install);
+      const telemetryInfo = { source: telemetrySource };
+      const install = await AddonManager.getInstallForURL(aUri.spec, {
+        telemetryInfo,
+      });
+      await AddonManager.installAddonFromWebpage(
+        "application/x-xpinstall",
+        browser,
+        systemPrincipal,
+        install
+      );
     } catch (e) {
       Cu.reportError(e);
     }
@@ -421,7 +511,10 @@ class _ASRouter {
           invalidMessages.push(msg.id);
         }
       }
-      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: at.AS_ROUTER_TARGETING_UPDATE, data: invalidMessages});
+      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+        type: at.AS_ROUTER_TARGETING_UPDATE,
+        data: invalidMessages,
+      });
     } else {
       // Update message providers and fetch new messages on pref change
       this._loadLocalProviders();
@@ -432,7 +525,7 @@ class _ASRouter {
 
   // Replace all frequency time period aliases with their millisecond values
   // This allows us to avoid accounting for special cases later on
-  normalizeItemFrequency({frequency}) {
+  normalizeItemFrequency({ frequency }) {
     if (frequency && frequency.custom) {
       for (const setting of frequency.custom) {
         if (setting.period === "daily") {
@@ -444,23 +537,25 @@ class _ASRouter {
 
   // Fetch and decode the message provider pref JSON, and update the message providers
   _updateMessageProviders() {
-    const previousProviders =  this.state.providers;
+    const previousProviders = this.state.providers;
     const providers = [
       // If we have added a `preview` provider, hold onto it
       ...previousProviders.filter(p => p.id === "preview"),
       // The provider should be enabled and not have a user preference set to false
-      ...ASRouterPreferences.providers.filter(p => (
-        p.enabled &&
-        (
-          ASRouterPreferences.getUserPreference(p.id) !== false &&
-          // Provider is enabled or if provider has multiple categories
-          // check that at least one category is enabled
-          (!p.categories || p.categories.some(c => ASRouterPreferences.getUserPreference(c) !== false))
-        )
-      )),
+      ...ASRouterPreferences.providers.filter(
+        p =>
+          p.enabled &&
+          (ASRouterPreferences.getUserPreference(p.id) !== false &&
+            // Provider is enabled or if provider has multiple categories
+            // check that at least one category is enabled
+            (!p.categories ||
+              p.categories.some(
+                c => ASRouterPreferences.getUserPreference(c) !== false
+              )))
+      ),
     ].map(_provider => {
       // make a copy so we don't modify the source of the pref
-      const provider = {..._provider};
+      const provider = { ..._provider };
 
       if (provider.type === "local" && !provider.messages) {
         // Get the messages from the local message provider
@@ -468,7 +563,10 @@ class _ASRouter {
         provider.messages = localProvider ? localProvider.getMessages() : [];
       }
       if (provider.type === "remote" && provider.url) {
-        provider.url = provider.url.replace(/%STARTPAGE_VERSION%/g, STARTPAGE_VERSION);
+        provider.url = provider.url.replace(
+          /%STARTPAGE_VERSION%/g,
+          STARTPAGE_VERSION
+        );
         provider.url = Services.urlFormatter.formatURL(provider.url);
       }
       this.normalizeItemFrequency(provider);
@@ -482,14 +580,21 @@ class _ASRouter {
     // Clear old messages for providers that are no longer enabled
     for (const prevProvider of previousProviders) {
       if (!providerIDs.includes(prevProvider.id)) {
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_PROVIDER", data: {id: prevProvider.id}});
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "CLEAR_PROVIDER",
+          data: { id: prevProvider.id },
+        });
       }
     }
 
     this.setState(prevState => ({
       providers,
       // Clear any messages from removed providers
-      messages: [...prevState.messages.filter(message => providerIDs.includes(message.provider))],
+      messages: [
+        ...prevState.messages.filter(message =>
+          providerIDs.includes(message.provider)
+        ),
+      ],
     }));
   }
 
@@ -498,7 +603,9 @@ class _ASRouter {
   }
 
   set state(value) {
-    throw new Error("Do not modify this.state directy. Instead, call this.setState(newState)");
+    throw new Error(
+      "Do not modify this.state directy. Instead, call this.setState(newState)"
+    );
   }
 
   /**
@@ -525,22 +632,35 @@ class _ASRouter {
    * @memberof _ASRouter
    */
   async loadMessagesFromAllProviders() {
-    const needsUpdate = this.state.providers.filter(provider => MessageLoaderUtils.shouldProviderUpdate(provider));
+    const needsUpdate = this.state.providers.filter(provider =>
+      MessageLoaderUtils.shouldProviderUpdate(provider)
+    );
     // Don't do extra work if we don't need any updates
     if (needsUpdate.length) {
-      let newState = {messages: [], providers: []};
+      let newState = { messages: [], providers: [] };
       for (const provider of this.state.providers) {
         if (needsUpdate.includes(provider)) {
-          let {messages, lastUpdated, errors} = await MessageLoaderUtils.loadMessagesForProvider(provider, {
+          let {
+            messages,
+            lastUpdated,
+            errors,
+          } = await MessageLoaderUtils.loadMessagesForProvider(provider, {
             storage: this._storage,
             dispatchToAS: this.dispatchToAS,
           });
-          messages = messages.filter(({content}) => !content || !content.category || ASRouterPreferences.getUserPreference(content.category));
-          newState.providers.push({...provider, lastUpdated, errors});
+          messages = messages.filter(
+            ({ content }) =>
+              !content ||
+              !content.category ||
+              ASRouterPreferences.getUserPreference(content.category)
+          );
+          newState.providers.push({ ...provider, lastUpdated, errors });
           newState.messages = [...newState.messages, ...messages];
         } else {
           // Skip updating this provider's messages if no update is required
-          let messages = this.state.messages.filter(msg => msg.provider === provider.id);
+          let messages = this.state.messages.filter(
+            msg => msg.provider === provider.id
+          );
           newState.providers.push(provider);
           newState.messages = [...newState.messages, ...messages];
         }
@@ -552,9 +672,13 @@ class _ASRouter {
 
       // Some messages have triggers that require us to initalise trigger listeners
       const unseenListeners = new Set(ASRouterTriggerListeners.keys());
-      for (const {trigger} of newState.messages) {
+      for (const { trigger } of newState.messages) {
         if (trigger && ASRouterTriggerListeners.has(trigger.id)) {
-          await ASRouterTriggerListeners.get(trigger.id).init(this._triggerHandler, trigger.params, trigger.patterns);
+          await ASRouterTriggerListeners.get(trigger.id).init(
+            this._triggerHandler,
+            trigger.params,
+            trigger.patterns
+          );
           unseenListeners.delete(trigger.id);
         }
       }
@@ -581,7 +705,10 @@ class _ASRouter {
    */
   async init(channel, storage, dispatchToAS) {
     this.messageChannel = channel;
-    this.messageChannel.addMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
+    this.messageChannel.addMessageListener(
+      INCOMING_MESSAGE_NAME,
+      this.onMessage
+    );
     this._storage = storage;
     this.WHITELIST_HOSTS = this._loadSnippetsWhitelistHosts();
     this.dispatchToAS = dispatchToAS;
@@ -589,25 +716,45 @@ class _ASRouter {
 
     ASRouterPreferences.init();
     ASRouterPreferences.addListener(this.onPrefChange);
-    BookmarkPanelHub.init(this.handleMessageRequest, this.addImpression, this.dispatch);
+    BookmarkPanelHub.init(
+      this.handleMessageRequest,
+      this.addImpression,
+      this.dispatch
+    );
 
     this._loadLocalProviders();
 
     // We need to check whether to set up telemetry for trailhead
     await this.setupTrailhead();
 
-    const messageBlockList = await this._storage.get("messageBlockList") || [];
-    const providerBlockList = await this._storage.get("providerBlockList") || [];
-    const messageImpressions = await this._storage.get("messageImpressions") || {};
-    const providerImpressions = await this._storage.get("providerImpressions") || {};
-    const previousSessionEnd = await this._storage.get("previousSessionEnd") || 0;
-    await this.setState({messageBlockList, providerBlockList, messageImpressions, providerImpressions, previousSessionEnd});
+    const messageBlockList =
+      (await this._storage.get("messageBlockList")) || [];
+    const providerBlockList =
+      (await this._storage.get("providerBlockList")) || [];
+    const messageImpressions =
+      (await this._storage.get("messageImpressions")) || {};
+    const providerImpressions =
+      (await this._storage.get("providerImpressions")) || {};
+    const previousSessionEnd =
+      (await this._storage.get("previousSessionEnd")) || 0;
+    await this.setState({
+      messageBlockList,
+      providerBlockList,
+      messageImpressions,
+      providerImpressions,
+      previousSessionEnd,
+    });
     this._updateMessageProviders();
     await this.loadMessagesFromAllProviders();
     await MessageLoaderUtils.cleanupCache(this.state.providers, storage);
 
     // set necessary state in the rest of AS
-    this.dispatchToAS(ac.BroadcastToContent({type: at.AS_ROUTER_INITIALIZED, data: ASRouterPreferences.specialConditions}));
+    this.dispatchToAS(
+      ac.BroadcastToContent({
+        type: at.AS_ROUTER_INITIALIZED,
+        data: ASRouterPreferences.specialConditions,
+      })
+    );
 
     // sets .initialized to true and resolves .waitForInitialized promise
     this._finishInitializing();
@@ -616,8 +763,13 @@ class _ASRouter {
   uninit() {
     this._storage.set("previousSessionEnd", Date.now());
 
-    this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_ALL"});
-    this.messageChannel.removeMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
+    this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+      type: "CLEAR_ALL",
+    });
+    this.messageChannel.removeMessageListener(
+      INCOMING_MESSAGE_NAME,
+      this.onMessage
+    );
     this.messageChannel = null;
     this.dispatchToAS = null;
 
@@ -635,8 +787,11 @@ class _ASRouter {
   }
 
   setState(callbackOrObj) {
-    const newState = (typeof callbackOrObj === "function") ? callbackOrObj(this.state) : callbackOrObj;
-    this._state = {...this.state, ...newState};
+    const newState =
+      typeof callbackOrObj === "function"
+        ? callbackOrObj(this.state)
+        : callbackOrObj;
+    this._state = { ...this.state, ...newState };
     return new Promise(resolve => {
       this._onStateChanged(this.state);
       resolve();
@@ -688,7 +843,10 @@ class _ASRouter {
         ...this.state,
         providerPrefs: ASRouterPreferences.providers,
         userPrefs: ASRouterPreferences.getAllUserPreferences(),
-        targetingParameters: await this.getTargetingParameters(ASRouterTargeting.Environment, this._getMessagesContext()),
+        targetingParameters: await this.getTargetingParameters(
+          ASRouterTargeting.Environment,
+          this._getMessagesContext()
+        ),
         errors: this.errors,
       },
     });
@@ -697,18 +855,20 @@ class _ASRouter {
   _handleTargetingError(type, error, message) {
     Cu.reportError(error);
     if (this.dispatchToAS) {
-      this.dispatchToAS(ac.ASRouterUserEvent({
-        message_id: message.id,
-        action: "asrouter_undesired_event",
-        event: "TARGETING_EXPRESSION_ERROR",
-        value: type,
-      }));
+      this.dispatchToAS(
+        ac.ASRouterUserEvent({
+          message_id: message.id,
+          action: "asrouter_undesired_event",
+          event: "TARGETING_EXPRESSION_ERROR",
+          value: type,
+        })
+      );
     }
   }
 
   async _hasAddonAttributionData() {
     try {
-      const data = await AttributionCode.getAttrDataAsync() || {};
+      const data = (await AttributionCode.getAttrDataAsync()) || {};
       return data.source === "addons.mozilla.org";
     } catch (e) {
       return false;
@@ -727,42 +887,54 @@ class _ASRouter {
 
     // Use control Trailhead Branch (for cards) if we are showing RTAMO.
     if (await this._hasAddonAttributionData()) {
-      return {experiment, interrupt: "control", triplet: ""};
+      return { experiment, interrupt: "control", triplet: "" };
     }
 
     // If a value is set in TRAILHEAD_OVERRIDE_PREF, it will be returned and no experiment will be set.
-    const overrideValue = Services.prefs.getStringPref(TRAILHEAD_CONFIG.OVERRIDE_PREF, "");
+    const overrideValue = Services.prefs.getStringPref(
+      TRAILHEAD_CONFIG.OVERRIDE_PREF,
+      ""
+    );
     if (overrideValue) {
       [interrupt, triplet] = overrideValue.split("-");
-      return {experiment, interrupt, triplet: triplet || ""};
+      return { experiment, interrupt, triplet: triplet || "" };
     }
 
     const locale = Services.locale.appLocaleAsLangTag;
 
     if (TRAILHEAD_CONFIG.LOCALES.includes(locale)) {
-      const {userId} = ClientEnvironment;
-      experiment = await chooseBranch(`${userId}-trailhead-experiments`, TRAILHEAD_CONFIG.EXPERIMENT_RATIOS);
+      const { userId } = ClientEnvironment;
+      experiment = await chooseBranch(
+        `${userId}-trailhead-experiments`,
+        TRAILHEAD_CONFIG.EXPERIMENT_RATIOS
+      );
 
       // For the interrupts experiment,
       // we randomly assign an interrupt and always use the "supercharge" triplet.
       if (experiment === "interrupts") {
-        interrupt =  await chooseBranch(`${userId}-interrupts-branch`, TRAILHEAD_CONFIG.BRANCHES.interrupts);
+        interrupt = await chooseBranch(
+          `${userId}-interrupts-branch`,
+          TRAILHEAD_CONFIG.BRANCHES.interrupts
+        );
         if (["join", "sync", "cards"].includes(interrupt)) {
           triplet = "supercharge";
         }
 
-      // For the triplets experiment or non-experiment experience,
-      // we randomly assign a triplet and always use the "join" interrupt.
+        // For the triplets experiment or non-experiment experience,
+        // we randomly assign a triplet and always use the "join" interrupt.
       } else {
         interrupt = "join";
-        triplet = await chooseBranch(`${userId}-triplets-branch`, TRAILHEAD_CONFIG.BRANCHES.triplets);
+        triplet = await chooseBranch(
+          `${userId}-triplets-branch`,
+          TRAILHEAD_CONFIG.BRANCHES.triplets
+        );
       }
     } else {
       // If the user is not in a trailhead-compabtible locale, return the control experience and no experiment.
       interrupt = "control";
     }
 
-    return {experiment, interrupt, triplet};
+    return { experiment, interrupt, triplet };
   }
 
   // Dispatch a TRAILHEAD_ENROLL_EVENT action
@@ -775,12 +947,26 @@ class _ASRouter {
 
   async setupTrailhead() {
     // Don't initialize
-    if (this.state.trailheadInitialized || !Services.prefs.getBoolPref(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF, false)) {
+    if (
+      this.state.trailheadInitialized ||
+      !Services.prefs.getBoolPref(
+        TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF,
+        false
+      )
+    ) {
       return;
     }
 
-    const {experiment, interrupt, triplet} = await this._generateTrailheadBranches();
-    await this.setState({trailheadInitialized: true, trailheadInterrupt: interrupt, trailheadTriplet: triplet});
+    const {
+      experiment,
+      interrupt,
+      triplet,
+    } = await this._generateTrailheadBranches();
+    await this.setState({
+      trailheadInitialized: true,
+      trailheadInterrupt: interrupt,
+      trailheadTriplet: triplet,
+    });
 
     if (experiment) {
       // In order for ping centre to pick this up, it MUST contain a substring activity-stream
@@ -789,29 +975,56 @@ class _ASRouter {
       TelemetryEnvironment.setExperimentActive(
         experimentName,
         experiment === "interrupts" ? interrupt : triplet,
-        {type: "as-firstrun"}
+        { type: "as-firstrun" }
       );
 
       // On the first time setting the interrupts experiment, expose the branch
       // for normandy to target for survey study, and send out the enrollment ping.
-      if (experiment === "interrupts" &&
-          !Services.prefs.prefHasUserValue(TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF)) {
-        Services.prefs.setStringPref(TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF, interrupt);
-        this._sendTrailheadEnrollEvent({experiment: experimentName, type: "as-firstrun", branch: interrupt});
+      if (
+        experiment === "interrupts" &&
+        !Services.prefs.prefHasUserValue(
+          TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF
+        )
+      ) {
+        Services.prefs.setStringPref(
+          TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF,
+          interrupt
+        );
+        this._sendTrailheadEnrollEvent({
+          experiment: experimentName,
+          type: "as-firstrun",
+          branch: interrupt,
+        });
       }
 
       // On the first time setting the triplets experiment, send out the enrollment ping.
-      if (experiment === "triplets" &&
-          !Services.prefs.getBoolPref(TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF, false)) {
-        Services.prefs.setBoolPref(TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF, true);
-        this._sendTrailheadEnrollEvent({experiment: experimentName, type: "as-firstrun", branch: triplet});
+      if (
+        experiment === "triplets" &&
+        !Services.prefs.getBoolPref(
+          TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF,
+          false
+        )
+      ) {
+        Services.prefs.setBoolPref(
+          TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF,
+          true
+        );
+        this._sendTrailheadEnrollEvent({
+          experiment: experimentName,
+          type: "as-firstrun",
+          branch: triplet,
+        });
       }
     }
   }
 
   // Return an object containing targeting parameters used to select messages
   _getMessagesContext() {
-    const {previousSessionEnd, trailheadInterrupt, trailheadTriplet} = this.state;
+    const {
+      previousSessionEnd,
+      trailheadInterrupt,
+      trailheadTriplet,
+    } = this.state;
 
     return {
       get previousSessionEnd() {
@@ -827,24 +1040,37 @@ class _ASRouter {
   }
 
   _findMessage(candidateMessages, trigger) {
-    const messages = candidateMessages.filter(m => this.isBelowFrequencyCaps(m));
+    const messages = candidateMessages.filter(m =>
+      this.isBelowFrequencyCaps(m)
+    );
     const context = this._getMessagesContext();
 
-     // Find a message that matches the targeting context as well as the trigger context (if one is provided)
-     // If no trigger is provided, we should find a message WITHOUT a trigger property defined.
-    return ASRouterTargeting.findMatchingMessage({messages, trigger, context, onError: this._handleTargetingError});
+    // Find a message that matches the targeting context as well as the trigger context (if one is provided)
+    // If no trigger is provided, we should find a message WITHOUT a trigger property defined.
+    return ASRouterTargeting.findMatchingMessage({
+      messages,
+      trigger,
+      context,
+      onError: this._handleTargetingError,
+    });
   }
 
-  async evaluateExpression(target, {expression, context}) {
+  async evaluateExpression(target, { expression, context }) {
     const channel = target || this.messageChannel;
     let evaluationStatus;
     try {
-      evaluationStatus = {result: await ASRouterTargeting.isMatch(expression, context), success: true};
+      evaluationStatus = {
+        result: await ASRouterTargeting.isMatch(expression, context),
+        success: true,
+      };
     } catch (e) {
-      evaluationStatus = {result: e.message, success: false};
+      evaluationStatus = { result: e.message, success: false };
     }
 
-    channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: {...this.state, evaluationStatus}});
+    channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+      type: "ADMIN_SET_STATE",
+      data: { ...this.state, evaluationStatus },
+    });
   }
 
   _orderBundle(bundle) {
@@ -853,14 +1079,19 @@ class _ASRouter {
 
   // Work out if a message can be shown based on its and its provider's frequency caps.
   isBelowFrequencyCaps(message) {
-    const {providers, messageImpressions, providerImpressions} = this.state;
+    const { providers, messageImpressions, providerImpressions } = this.state;
 
     const provider = providers.find(p => p.id === message.provider);
     const impressionsForMessage = messageImpressions[message.id];
     const impressionsForProvider = providerImpressions[message.provider];
 
-    return (this._isBelowItemFrequencyCap(message, impressionsForMessage, MAX_MESSAGE_LIFETIME_CAP) &&
-      this._isBelowItemFrequencyCap(provider, impressionsForProvider));
+    return (
+      this._isBelowItemFrequencyCap(
+        message,
+        impressionsForMessage,
+        MAX_MESSAGE_LIFETIME_CAP
+      ) && this._isBelowItemFrequencyCap(provider, impressionsForProvider)
+    );
   }
 
   // Helper for isBelowFrecencyCaps - work out if the frequency cap for the given
@@ -876,8 +1107,8 @@ class _ASRouter {
       if (item.frequency.custom) {
         const now = Date.now();
         for (const setting of item.frequency.custom) {
-          let {period} = setting;
-          const impressionsInPeriod = impressions.filter(t => (now - t) < period);
+          let { period } = setting;
+          const impressionsInPeriod = impressions.filter(t => now - t < period);
           if (impressionsInPeriod.length >= setting.cap) {
             return false;
           }
@@ -896,24 +1127,30 @@ class _ASRouter {
     if (originalMessage.includeBundle) {
       // The original message is not part of the bundle, so don't include it
       bundleLength = originalMessage.includeBundle.length;
-      bundleTemplate =  originalMessage.includeBundle.template;
+      bundleTemplate = originalMessage.includeBundle.template;
     } else {
       // The original message is part of the bundle
       bundleLength = originalMessage.bundled;
-      bundleTemplate =  originalMessage.template;
+      bundleTemplate = originalMessage.template;
       originalId = originalMessage.id;
       // Add in a copy of the first message
-      result.push({content: originalMessage.content, id: originalMessage.id, order: originalMessage.order || 0});
+      result.push({
+        content: originalMessage.content,
+        id: originalMessage.id,
+        order: originalMessage.order || 0,
+      });
     }
 
     // First, find all messages of same template. These are potential matching targeting candidates
-    let bundledMessagesOfSameTemplate = this._getUnblockedMessages()
-      .filter(msg => msg.bundled && msg.template === bundleTemplate && msg.id !== originalId);
+    let bundledMessagesOfSameTemplate = this._getUnblockedMessages().filter(
+      msg =>
+        msg.bundled && msg.template === bundleTemplate && msg.id !== originalId
+    );
 
     if (force) {
       // Forcefully show the messages without targeting matching - this is for about:newtab#asrouter to show the messages
       for (const message of bundledMessagesOfSameTemplate) {
-        result.push({content: message.content, id: message.id});
+        result.push({ content: message.content, id: message.id });
         // Stop once we have enough messages to fill a bundle
         if (result.length === bundleLength) {
           break;
@@ -922,15 +1159,25 @@ class _ASRouter {
     } else {
       while (bundledMessagesOfSameTemplate.length) {
         // Find a message that matches the targeting context - or break if there are no matching messages
-        const message = await this._findMessage(bundledMessagesOfSameTemplate, trigger);
+        const message = await this._findMessage(
+          bundledMessagesOfSameTemplate,
+          trigger
+        );
         if (!message) {
           /* istanbul ignore next */ // Code coverage in mochitests
           break;
         }
         // Only copy the content of the message (that's what the UI cares about)
         // Also delete the message we picked so we don't pick it again
-        result.push({content: message.content, id: message.id, order: message.order || 0});
-        bundledMessagesOfSameTemplate.splice(bundledMessagesOfSameTemplate.findIndex(msg => msg.id === message.id), 1);
+        result.push({
+          content: message.content,
+          id: message.id,
+          order: message.order || 0,
+        });
+        bundledMessagesOfSameTemplate.splice(
+          bundledMessagesOfSameTemplate.findIndex(msg => msg.id === message.id),
+          1
+        );
         // Stop once we have enough messages to fill a bundle
         if (result.length === bundleLength) {
           break;
@@ -946,11 +1193,13 @@ class _ASRouter {
     // The bundle may have some extra attributes, like a header, or a dismiss button, so attempt to get those strings now
     // This is a temporary solution until we can use Fluent strings in the content process, in which case the content can
     // handle finding these strings on its own. See bug 1488973
-    const extraTemplateStrings = await this._extraTemplateStrings(originalMessage);
+    const extraTemplateStrings = await this._extraTemplateStrings(
+      originalMessage
+    );
 
     return {
       bundle: this._orderBundle(result),
-      ...(extraTemplateStrings && {extraTemplateStrings}),
+      ...(extraTemplateStrings && { extraTemplateStrings }),
       provider: originalMessage.provider,
       template: originalMessage.template,
     };
@@ -967,15 +1216,18 @@ class _ASRouter {
   }
 
   _findProvider(providerID) {
-    return this._localProviders[this.state.providers.find(i => i.id === providerID).localProvider];
+    return this._localProviders[
+      this.state.providers.find(i => i.id === providerID).localProvider
+    ];
   }
 
   _getUnblockedMessages() {
-    let {state} = this;
-    return state.messages.filter(item =>
-      !state.messageBlockList.includes(item.id) &&
-      (!item.campaign || !state.messageBlockList.includes(item.campaign)) &&
-      !state.providerBlockList.includes(item.provider)
+    let { state } = this;
+    return state.messages.filter(
+      item =>
+        !state.messageBlockList.includes(item.id) &&
+        (!item.campaign || !state.messageBlockList.includes(item.campaign)) &&
+        !state.providerBlockList.includes(item.provider)
     );
   }
 
@@ -988,7 +1240,12 @@ class _ASRouter {
         if (force) {
           CFRPageActions.forceRecommendation(target, message, this.dispatch);
         } else {
-          CFRPageActions.addRecommendation(target, trigger.param.host, message, this.dispatch);
+          CFRPageActions.addRecommendation(
+            target,
+            trigger.param.host,
+            message,
+            this.dispatch
+          );
         }
         break;
       case "fxa_bookmark_panel":
@@ -997,7 +1254,10 @@ class _ASRouter {
         }
         break;
       default:
-        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "SET_MESSAGE",
+          data: message,
+        });
         break;
     }
   }
@@ -1006,22 +1266,40 @@ class _ASRouter {
     // No message is available, so send CLEAR_ALL.
     if (!message) {
       try {
-        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_ALL"});
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, { type: "CLEAR_ALL" });
       } catch (e) {}
 
-    // For bundled messages, look for the rest of the bundle or else send CLEAR_ALL
+      // For bundled messages, look for the rest of the bundle or else send CLEAR_ALL
     } else if (message.bundled) {
-      const bundledMessages = await this._getBundledMessages(message, target, trigger, force);
-      const action = bundledMessages ? {type: "SET_BUNDLED_MESSAGES", data: bundledMessages} : {type: "CLEAR_ALL"};
+      const bundledMessages = await this._getBundledMessages(
+        message,
+        target,
+        trigger,
+        force
+      );
+      const action = bundledMessages
+        ? { type: "SET_BUNDLED_MESSAGES", data: bundledMessages }
+        : { type: "CLEAR_ALL" };
       try {
         target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
       } catch (e) {}
 
-    // For nested bundled messages, look for the desired bundle
+      // For nested bundled messages, look for the desired bundle
     } else if (message.includeBundle) {
-      const bundledMessages = await this._getBundledMessages(message, target, message.includeBundle.trigger, force);
+      const bundledMessages = await this._getBundledMessages(
+        message,
+        target,
+        message.includeBundle.trigger,
+        force
+      );
       try {
-        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: {...message, bundle: bundledMessages && bundledMessages.bundle}});
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "SET_MESSAGE",
+          data: {
+            ...message,
+            bundle: bundledMessages && bundledMessages.bundle,
+          },
+        });
       } catch (e) {}
     } else {
       try {
@@ -1037,9 +1315,19 @@ class _ASRouter {
     if (message.frequency || (provider && provider.frequency)) {
       const time = Date.now();
       await this.setState(state => {
-        const messageImpressions = this._addImpressionForItem(state, message, "messageImpressions", time);
-        const providerImpressions = this._addImpressionForItem(state, provider, "providerImpressions", time);
-        return {messageImpressions, providerImpressions};
+        const messageImpressions = this._addImpressionForItem(
+          state,
+          message,
+          "messageImpressions",
+          time
+        );
+        const providerImpressions = this._addImpressionForItem(
+          state,
+          provider,
+          "providerImpressions",
+          time
+        );
+        return { messageImpressions, providerImpressions };
       });
     }
   }
@@ -1049,9 +1337,11 @@ class _ASRouter {
   _addImpressionForItem(state, item, impressionsString, time) {
     // The destructuring here is to avoid mutating existing objects in state as in redux
     // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
-    const impressions = {...state[impressionsString]};
+    const impressions = { ...state[impressionsString] };
     if (item.frequency) {
-      impressions[item.id] = impressions[item.id] ? [...impressions[item.id]] : [];
+      impressions[item.id] = impressions[item.id]
+        ? [...impressions[item.id]]
+        : [];
       impressions[item.id].push(time);
       this._storage.set(impressionsString, impressions);
     }
@@ -1086,16 +1376,24 @@ class _ASRouter {
    */
   async cleanupImpressions() {
     await this.setState(state => {
-      const messageImpressions = this._cleanupImpressionsForItems(state, state.messages, "messageImpressions");
-      const providerImpressions = this._cleanupImpressionsForItems(state, state.providers, "providerImpressions");
-      return {messageImpressions, providerImpressions};
+      const messageImpressions = this._cleanupImpressionsForItems(
+        state,
+        state.messages,
+        "messageImpressions"
+      );
+      const providerImpressions = this._cleanupImpressionsForItems(
+        state,
+        state.providers,
+        "providerImpressions"
+      );
+      return { messageImpressions, providerImpressions };
     });
   }
 
   // Helper for cleanupImpressions - calculate the updated impressions object for
   //                                 the given items, then store it and return it
   _cleanupImpressionsForItems(state, items, impressionsString) {
-    const impressions = {...state[impressionsString]};
+    const impressions = { ...state[impressionsString] };
     let needsUpdate = false;
     Object.keys(impressions).forEach(id => {
       const [item] = items.filter(x => x.id === id);
@@ -1111,7 +1409,9 @@ class _ASRouter {
       // If we don't want to store impressions older than the longest period
       if (item.frequency.custom && !item.frequency.lifetime) {
         const now = Date.now();
-        impressions[id] = impressions[id].filter(t => (now - t) < this.getLongestPeriod(item));
+        impressions[id] = impressions[id].filter(
+          t => now - t < this.getLongestPeriod(item)
+        );
         needsUpdate = true;
       }
     });
@@ -1124,7 +1424,9 @@ class _ASRouter {
   async sendNextMessage(target, trigger) {
     const msgs = this._getUnblockedMessages();
     let message = null;
-    const previewMsgs = this.state.messages.filter(item => item.provider === "preview");
+    const previewMsgs = this.state.messages.filter(
+      item => item.provider === "preview"
+    );
     // Always send preview messages when available
     if (previewMsgs.length) {
       [message] = previewMsgs;
@@ -1139,18 +1441,21 @@ class _ASRouter {
         messages: state.messages.filter(m => m.id !== message.id),
       }));
     } else {
-      await this.setState({lastMessageId: message ? message.id : null});
+      await this.setState({ lastMessageId: message ? message.id : null });
     }
     await this._sendMessageToTarget(message, target, trigger);
   }
 
   handleMessageRequest(trigger) {
     const msgs = this._getUnblockedMessages();
-    return this._findMessage(msgs.filter(m => m.trigger && m.trigger.id === trigger.id), trigger);
+    return this._findMessage(
+      msgs.filter(m => m.trigger && m.trigger.id === trigger.id),
+      trigger
+    );
   }
 
   async setMessageById(id, target, force = true, action = {}) {
-    await this.setState({lastMessageId: id});
+    await this.setState({ lastMessageId: id });
     const newMessage = this.getMessageById(id);
 
     await this._sendMessageToTarget(newMessage, target, action.data, force);
@@ -1161,11 +1466,11 @@ class _ASRouter {
 
     await this.setState(state => {
       const messageBlockList = [...state.messageBlockList];
-      const messageImpressions = {...state.messageImpressions};
+      const messageImpressions = { ...state.messageImpressions };
 
       idsToBlock.forEach(id => {
         const message = state.messages.find(m => m.id === id);
-        const idToBlock = (message && message.campaign) ? message.campaign : id;
+        const idToBlock = message && message.campaign ? message.campaign : id;
         if (!messageBlockList.includes(idToBlock)) {
           messageBlockList.push(idToBlock);
         }
@@ -1176,7 +1481,7 @@ class _ASRouter {
 
       this._storage.set("messageBlockList", messageBlockList);
       this._storage.set("messageImpressions", messageImpressions);
-      return {messageBlockList, messageImpressions};
+      return { messageBlockList, messageImpressions };
     });
   }
 
@@ -1186,10 +1491,10 @@ class _ASRouter {
     await this.setState(state => {
       const providerBlockList = [...state.providerBlockList, ...idsToBlock];
       // When a provider is blocked, its impressions should be cleared as well
-      const providerImpressions = {...state.providerImpressions};
+      const providerImpressions = { ...state.providerImpressions };
       idsToBlock.forEach(id => delete providerImpressions[id]);
       this._storage.set("providerBlockList", providerBlockList);
-      return {providerBlockList, providerImpressions};
+      return { providerBlockList, providerImpressions };
     });
   }
 
@@ -1197,12 +1502,16 @@ class _ASRouter {
     try {
       const endpoint = new URL(url);
       if (!this.WHITELIST_HOSTS[endpoint.host]) {
-        Cu.reportError(`The preview URL host ${endpoint.host} is not in the whitelist.`);
+        Cu.reportError(
+          `The preview URL host ${endpoint.host} is not in the whitelist.`
+        );
       }
       if (endpoint.protocol !== "https:") {
         Cu.reportError("The URL protocol is not https.");
       }
-      return (endpoint.protocol === "https:" && this.WHITELIST_HOSTS[endpoint.host]);
+      return (
+        endpoint.protocol === "https:" && this.WHITELIST_HOSTS[endpoint.host]
+      );
     } catch (e) {
       return false;
     }
@@ -1211,8 +1520,14 @@ class _ASRouter {
   // Ensure we switch to the Onboarding message after RTAMO addon was installed
   _updateOnboardingState() {
     let addonInstallObs = (subject, topic) => {
-      Services.obs.removeObserver(addonInstallObs, "webextension-install-notify");
-      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: "RETURN_TO_AMO_1"}});
+      Services.obs.removeObserver(
+        addonInstallObs,
+        "webextension-install-notify"
+      );
+      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+        type: "CLEAR_MESSAGE",
+        data: { id: "RETURN_TO_AMO_1" },
+      });
       this.blockMessageById("RETURN_TO_AMO_1");
     };
     Services.obs.addObserver(addonInstallObs, "webextension-install-notify");
@@ -1220,12 +1535,17 @@ class _ASRouter {
 
   _loadSnippetsWhitelistHosts() {
     let additionalHosts = [];
-    const whitelistPrefValue = Services.prefs.getStringPref(SNIPPETS_ENDPOINT_WHITELIST, "");
+    const whitelistPrefValue = Services.prefs.getStringPref(
+      SNIPPETS_ENDPOINT_WHITELIST,
+      ""
+    );
     try {
       additionalHosts = JSON.parse(whitelistPrefValue);
     } catch (e) {
       if (whitelistPrefValue) {
-        Cu.reportError(`Pref ${SNIPPETS_ENDPOINT_WHITELIST} value is not valid JSON`);
+        Cu.reportError(
+          `Pref ${SNIPPETS_ENDPOINT_WHITELIST} value is not valid JSON`
+        );
       }
     }
 
@@ -1235,16 +1555,22 @@ class _ASRouter {
 
     // If there are additional hosts we want to whitelist, add them as
     // `preview` so that the updateCycle is 0
-    return additionalHosts.reduce((whitelist_hosts, host) => {
-      whitelist_hosts[host] = "preview";
-      Services.console.logStringMessage(`Adding ${host} to whitelist hosts.`);
-      return whitelist_hosts;
-    }, {...DEFAULT_WHITELIST_HOSTS});
+    return additionalHosts.reduce(
+      (whitelist_hosts, host) => {
+        whitelist_hosts[host] = "preview";
+        Services.console.logStringMessage(`Adding ${host} to whitelist hosts.`);
+        return whitelist_hosts;
+      },
+      { ...DEFAULT_WHITELIST_HOSTS }
+    );
   }
 
   // To be passed to ASRouterTriggerListeners
   async _triggerHandler(target, trigger) {
-    await this.onMessage({target, data: {type: "TRIGGER", data: {trigger}}});
+    await this.onMessage({
+      target,
+      data: { type: "TRIGGER", data: { trigger } },
+    });
   }
 
   _removePreviewEndpoint(state) {
@@ -1255,10 +1581,20 @@ class _ASRouter {
   async _addPreviewEndpoint(url, portID) {
     // When you view a preview snippet we want to hide all real content
     const providers = [...this.state.providers];
-    if (this._validPreviewEndpoint(url) && !providers.find(p => p.url === url)) {
-      this.dispatchToAS(ac.OnlyToOneContent({type: at.SNIPPETS_PREVIEW_MODE}, portID));
-      providers.push({id: "preview", type: "remote", url, updateCycleInMs: 0});
-      await this.setState({providers});
+    if (
+      this._validPreviewEndpoint(url) &&
+      !providers.find(p => p.url === url)
+    ) {
+      this.dispatchToAS(
+        ac.OnlyToOneContent({ type: at.SNIPPETS_PREVIEW_MODE }, portID)
+      );
+      providers.push({
+        id: "preview",
+        type: "remote",
+        url,
+        updateCycleInMs: 0,
+      });
+      await this.setState({ providers });
     }
   }
 
@@ -1272,8 +1608,10 @@ class _ASRouter {
     file.append(Services.appinfo.vendor || "mozilla");
     file.append(AppConstants.MOZ_APP_NAME);
 
-    await OS.File.makeDir(file.path,
-        {from: appDir.path, ignoreExisting: true});
+    await OS.File.makeDir(file.path, {
+      from: appDir.path,
+      ignoreExisting: true,
+    });
 
     file.append("postSigningData");
     await OS.File.writeAtomic(file.path, data);
@@ -1289,23 +1627,28 @@ class _ASRouter {
   /* istanbul ignore next */
   async forceAttribution(data) {
     // Extract the parameters from data that will make up the referrer url
-    const {source, campaign, content} = data;
+    const { source, campaign, content } = data;
     if (AppConstants.platform === "win") {
       const attributionData = `source=${source}&campaign=${campaign}&content=${content}`;
       this._writeAttributionFile(encodeURIComponent(attributionData));
     } else if (AppConstants.platform === "macosx") {
       let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
-      let attributionSvc = Cc["@mozilla.org/mac-attribution;1"]
-        .getService(Ci.nsIMacAttributionService);
+      let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+        Ci.nsIMacAttributionService
+      );
 
-      let referrer = `https://www.mozilla.org/anything/?utm_campaign=${campaign}&utm_source=${source}&utm_content=${encodeURIComponent(content)}`;
+      let referrer = `https://www.mozilla.org/anything/?utm_campaign=${campaign}&utm_source=${source}&utm_content=${encodeURIComponent(
+        content
+      )}`;
 
       // This sets the Attribution to be the referrer
       attributionSvc.setReferrerUrl(appPath, referrer, true);
     }
 
     // Clear cache call is only possible in a testing environment
-    let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
     env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
 
     // Clear and refresh Attribution, and then fetch the messages again to update
@@ -1315,21 +1658,30 @@ class _ASRouter {
     await this.loadMessagesFromAllProviders();
   }
 
-  async handleUserAction({data: action, target}) {
+  async handleUserAction({ data: action, target }) {
     switch (action.type) {
       case ra.OPEN_PRIVATE_BROWSER_WINDOW:
         // Forcefully open about:privatebrowsing
-        target.browser.ownerGlobal.OpenBrowserWindow({private: true});
+        target.browser.ownerGlobal.OpenBrowserWindow({ private: true });
         break;
       case ra.OPEN_URL:
-        target.browser.ownerGlobal.openLinkIn(action.data.args, action.data.where || "current", {
-          private: false,
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-          csp: null,
-        });
+        target.browser.ownerGlobal.openLinkIn(
+          action.data.args,
+          action.data.where || "current",
+          {
+            private: false,
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+              {}
+            ),
+            csp: null,
+          }
+        );
         break;
       case ra.OPEN_ABOUT_PAGE:
-        target.browser.ownerGlobal.openTrustedLinkIn(`about:${action.data.args}`, "tab");
+        target.browser.ownerGlobal.openTrustedLinkIn(
+          `about:${action.data.args}`,
+          "tab"
+        );
         break;
       case ra.OPEN_PREFERENCES_PAGE:
         target.browser.ownerGlobal.openPreferences(action.data.category);
@@ -1339,19 +1691,27 @@ class _ASRouter {
         break;
       case ra.INSTALL_ADDON_FROM_URL:
         this._updateOnboardingState();
-        await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url, action.data.telemetrySource);
+        await MessageLoaderUtils.installAddonFromURL(
+          target.browser,
+          action.data.url,
+          action.data.telemetrySource
+        );
         break;
       case ra.PIN_CURRENT_TAB:
         let tab = target.browser.ownerGlobal.gBrowser.selectedTab;
         target.browser.ownerGlobal.gBrowser.pinTab(tab);
-        target.browser.ownerGlobal.ConfirmationHint.show(tab, "pinTab", {showDescription: true});
+        target.browser.ownerGlobal.ConfirmationHint.show(tab, "pinTab", {
+          showDescription: true,
+        });
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
         const url = await FxAccounts.config.promiseSignUpURI("snippets");
         // We want to replace the current tab.
         target.browser.ownerGlobal.openLinkIn(url, "current", {
           private: false,
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+            {}
+          ),
           csp: null,
         });
         break;
@@ -1359,15 +1719,15 @@ class _ASRouter {
   }
 
   dispatch(action, target) {
-    this.onMessage({data: action, target});
+    this.onMessage({ data: action, target });
   }
 
   /* eslint-disable complexity */
-  async onMessage({data: action, target}) {
+  async onMessage({ data: action, target }) {
     switch (action.type) {
       case "USER_ACTION":
         if (action.data.type in ra) {
-          await this.handleUserAction({data: action.data, target});
+          await this.handleUserAction({ data: action.data, target });
         }
         break;
       case "SNIPPETS_REQUEST":
@@ -1375,18 +1735,31 @@ class _ASRouter {
         // Wait for our initial message loading to be done before responding to any UI requests
         await this.waitForInitialized;
         if (action.data && action.data.endpoint) {
-          await this._addPreviewEndpoint(action.data.endpoint.url, target.portID);
+          await this._addPreviewEndpoint(
+            action.data.endpoint.url,
+            target.portID
+          );
         }
 
         // Special experiment intialization for trailhead
-        if (action.data && action.data.trigger && action.data.trigger.id === "firstRun") {
-          Services.prefs.setBoolPref(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF, true);
+        if (
+          action.data &&
+          action.data.trigger &&
+          action.data.trigger.id === "firstRun"
+        ) {
+          Services.prefs.setBoolPref(
+            TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF,
+            true
+          );
           await this.setupTrailhead();
         }
 
         // Check if any updates are needed first
         await this.loadMessagesFromAllProviders();
-        await this.sendNextMessage(target, (action.data && action.data.trigger) || {});
+        await this.sendNextMessage(
+          target,
+          (action.data && action.data.trigger) || {}
+        );
         break;
       case "BLOCK_MESSAGE_BY_ID":
         await this.blockMessageById(action.data.id);
@@ -1395,38 +1768,55 @@ class _ASRouter {
         if (action.data.preventDismiss) {
           break;
         }
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: action.data.id}});
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "CLEAR_MESSAGE",
+          data: { id: action.data.id },
+        });
         break;
       case "DISMISS_MESSAGE_BY_ID":
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: action.data.id}});
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "CLEAR_MESSAGE",
+          data: { id: action.data.id },
+        });
         break;
       case "BLOCK_PROVIDER_BY_ID":
         await this.blockProviderById(action.data.id);
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_PROVIDER", data: {id: action.data.id}});
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "CLEAR_PROVIDER",
+          data: { id: action.data.id },
+        });
         break;
       case "DISMISS_BUNDLE":
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_BUNDLE"});
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "CLEAR_BUNDLE",
+        });
         break;
       case "BLOCK_BUNDLE":
         await this.blockMessageById(action.data.bundle.map(b => b.id));
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_BUNDLE"});
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+          type: "CLEAR_BUNDLE",
+        });
         break;
       case "UNBLOCK_MESSAGE_BY_ID":
         await this.setState(state => {
           const messageBlockList = [...state.messageBlockList];
           const message = state.messages.find(m => m.id === action.data.id);
-          const idToUnblock = (message && message.campaign) ? message.campaign : action.data.id;
+          const idToUnblock =
+            message && message.campaign ? message.campaign : action.data.id;
           messageBlockList.splice(messageBlockList.indexOf(idToUnblock), 1);
           this._storage.set("messageBlockList", messageBlockList);
-          return {messageBlockList};
+          return { messageBlockList };
         });
         break;
       case "UNBLOCK_PROVIDER_BY_ID":
         await this.setState(state => {
           const providerBlockList = [...state.providerBlockList];
-          providerBlockList.splice(providerBlockList.indexOf(action.data.id), 1);
+          providerBlockList.splice(
+            providerBlockList.indexOf(action.data.id),
+            1
+          );
           this._storage.set("providerBlockList", providerBlockList);
-          return {providerBlockList};
+          return { providerBlockList };
         });
         break;
       case "UNBLOCK_BUNDLE":
@@ -1436,7 +1826,7 @@ class _ASRouter {
             messageBlockList.splice(messageBlockList.indexOf(message.id), 1);
           }
           this._storage.set("messageBlockList", messageBlockList);
-          return {messageBlockList};
+          return { messageBlockList };
         });
         break;
       case "OVERRIDE_MESSAGE":
@@ -1471,7 +1861,10 @@ class _ASRouter {
         ASRouterPreferences.resetProviderPref();
         break;
       case "SET_PROVIDER_USER_PREF":
-        ASRouterPreferences.setUserPreference(action.data.id, action.data.value);
+        ASRouterPreferences.setUserPreference(
+          action.data.id,
+          action.data.value
+        );
         break;
       case "EVALUATE_JEXL_EXPRESSION":
         this.evaluateExpression(target, action.data);
@@ -1495,4 +1888,10 @@ this.TRAILHEAD_CONFIG = TRAILHEAD_CONFIG;
  */
 this.ASRouter = new _ASRouter();
 
-const EXPORTED_SYMBOLS = ["_ASRouter", "ASRouter", "MessageLoaderUtils", "chooseBranch", "TRAILHEAD_CONFIG"];
+const EXPORTED_SYMBOLS = [
+  "_ASRouter",
+  "ASRouter",
+  "MessageLoaderUtils",
+  "chooseBranch",
+  "TRAILHEAD_CONFIG",
+];

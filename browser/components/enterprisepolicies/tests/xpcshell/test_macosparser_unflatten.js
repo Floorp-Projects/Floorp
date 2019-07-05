@@ -3,92 +3,82 @@
 
 "use strict";
 
-let { macOSPoliciesParser } = ChromeUtils.import("resource://gre/modules/policies/macOSPoliciesParser.jsm");
+let { macOSPoliciesParser } = ChromeUtils.import(
+  "resource://gre/modules/policies/macOSPoliciesParser.jsm"
+);
 
 add_task(async function test_object_unflatten() {
   // Note: these policies are just examples and they won't actually
   // run through the policy engine on this test. We're just testing
   // that the unflattening algorithm produces the correct output.
   let input = {
-    "DisplayBookmarksToolbar": true,
+    DisplayBookmarksToolbar: true,
 
-    "Homepage__URL": "https://www.mozilla.org",
-    "Homepage__Locked": "true",
-    "Homepage__Additional__0": "https://extra-homepage-1.example.com",
-    "Homepage__Additional__1": "https://extra-homepage-2.example.com",
+    Homepage__URL: "https://www.mozilla.org",
+    Homepage__Locked: "true",
+    Homepage__Additional__0: "https://extra-homepage-1.example.com",
+    Homepage__Additional__1: "https://extra-homepage-2.example.com",
 
-    "WebsiteFilter__Block__0": "*://*.example.org/*",
-    "WebsiteFilter__Block__1": "*://*.example.net/*",
-    "WebsiteFilter__Exceptions__0": "*://*.example.org/*exception*",
+    WebsiteFilter__Block__0: "*://*.example.org/*",
+    WebsiteFilter__Block__1: "*://*.example.net/*",
+    WebsiteFilter__Exceptions__0: "*://*.example.org/*exception*",
 
-    "Permissions__Camera__Allow__0": "https://www.example.com",
+    Permissions__Camera__Allow__0: "https://www.example.com",
 
-    "Permissions__Notifications__Allow__0": "https://www.example.com",
-    "Permissions__Notifications__Allow__1": "https://www.example.org",
-    "Permissions__Notifications__Block__0": "https://www.example.net",
+    Permissions__Notifications__Allow__0: "https://www.example.com",
+    Permissions__Notifications__Allow__1: "https://www.example.org",
+    Permissions__Notifications__Block__0: "https://www.example.net",
 
-    "Permissions__Notifications__BlockNewRequests": true,
-    "Permissions__Notifications__Locked": true,
+    Permissions__Notifications__BlockNewRequests: true,
+    Permissions__Notifications__Locked: true,
 
-    "Bookmarks__0__Title": "Bookmark 1",
-    "Bookmarks__0__URL": "https://bookmark1.example.com",
+    Bookmarks__0__Title: "Bookmark 1",
+    Bookmarks__0__URL: "https://bookmark1.example.com",
 
-    "Bookmarks__1__Title": "Bookmark 2",
-    "Bookmarks__1__URL": "https://bookmark2.example.com",
-    "Bookmarks__1__Folder": "Folder",
+    Bookmarks__1__Title: "Bookmark 2",
+    Bookmarks__1__URL: "https://bookmark2.example.com",
+    Bookmarks__1__Folder: "Folder",
   };
 
   let expected = {
-    "DisplayBookmarksToolbar": true,
+    DisplayBookmarksToolbar: true,
 
-    "Homepage": {
-      "URL": "https://www.mozilla.org",
-      "Locked": "true",
-      "Additional": [
+    Homepage: {
+      URL: "https://www.mozilla.org",
+      Locked: "true",
+      Additional: [
         "https://extra-homepage-1.example.com",
         "https://extra-homepage-2.example.com",
       ],
     },
 
-    "WebsiteFilter": {
-      "Block": [
-        "*://*.example.org/*",
-        "*://*.example.net/*",
-      ],
-      "Exceptions": [
-        "*://*.example.org/*exception*",
-      ],
+    WebsiteFilter: {
+      Block: ["*://*.example.org/*", "*://*.example.net/*"],
+      Exceptions: ["*://*.example.org/*exception*"],
     },
 
-    "Permissions": {
-      "Camera": {
-        "Allow": [
-          "https://www.example.com",
-        ],
+    Permissions: {
+      Camera: {
+        Allow: ["https://www.example.com"],
       },
 
-      "Notifications": {
-        "Allow": [
-          "https://www.example.com",
-          "https://www.example.org",
-        ],
-        "Block": [
-          "https://www.example.net",
-        ],
-        "BlockNewRequests": true,
-        "Locked": true,
+      Notifications: {
+        Allow: ["https://www.example.com", "https://www.example.org"],
+        Block: ["https://www.example.net"],
+        BlockNewRequests: true,
+        Locked: true,
       },
     },
 
-    "Bookmarks": [
+    Bookmarks: [
       {
-        "Title": "Bookmark 1",
-        "URL": "https://bookmark1.example.com",
+        Title: "Bookmark 1",
+        URL: "https://bookmark1.example.com",
       },
       {
-        "Title": "Bookmark 2",
-        "URL": "https://bookmark2.example.com",
-        "Folder": "Folder",
+        Title: "Bookmark 2",
+        URL: "https://bookmark2.example.com",
+        Folder: "Folder",
       },
     ],
   };
@@ -100,11 +90,11 @@ add_task(async function test_object_unflatten() {
 
 add_task(async function test_array_unflatten() {
   let input = {
-    "Foo__1": 1,
-    "Foo__5": 5,
-    "Foo__10": 10,
-    "Foo__30": 30,
-    "Foo__51": 51, // This one should not be included as the limit is 50
+    Foo__1: 1,
+    Foo__5: 5,
+    Foo__10: 10,
+    Foo__30: 30,
+    Foo__51: 51, // This one should not be included as the limit is 50
   };
 
   let unflattened = macOSPoliciesParser.unflatten(input);

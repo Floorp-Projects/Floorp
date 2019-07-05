@@ -28,17 +28,23 @@ add_task(async function paste() {
 
   let bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: [{
-      url: TEST_URL,
-      title: "0",
-    }, {
-      url: TEST_URL1,
-      title: "1",
-    }],
+    children: [
+      {
+        url: TEST_URL,
+        title: "0",
+      },
+      {
+        url: TEST_URL1,
+        title: "1",
+      },
+    ],
   });
 
-  Assert.equal(ContentTree.view.view.rowCount, 2,
-    "Should have the right amount of items in the view");
+  Assert.equal(
+    ContentTree.view.view.rowCount,
+    2,
+    "Should have the right amount of items in the view"
+  );
 
   ContentTree.view.selectItems([bookmarks[0].guid]);
 
@@ -78,11 +84,16 @@ function assertItemsHighlighted(expectedItems) {
   // Check the properties of the cells to make sure nothing has a cut highlight.
   let highlighedItems = 0;
   for (let i = 0; i < ContentTree.view.view.rowCount; i++) {
-    if (ContentTree.view.view.getCellProperties(i, column).includes("cutting")) {
+    if (
+      ContentTree.view.view.getCellProperties(i, column).includes("cutting")
+    ) {
       highlighedItems++;
     }
   }
 
-  Assert.equal(highlighedItems, expectedItems,
-    "Should have the correct amount of items highlighed");
+  Assert.equal(
+    highlighedItems,
+    expectedItems,
+    "Should have the correct amount of items highlighed"
+  );
 }

@@ -14,7 +14,10 @@ add_task(async function() {
 
   originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-  ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
@@ -27,19 +30,30 @@ add_task(async function() {
 
   // Listen for hiding immediately so we don't miss the event because of the
   // async-ness of the 'shown' yield...
-  let panelHiddenPromise = promisePanelElementHidden(window, widgetOverflowPanel);
+  let panelHiddenPromise = promisePanelElementHidden(
+    window,
+    widgetOverflowPanel
+  );
 
-  var ds = Cc["@mozilla.org/widget/dragservice;1"].
-           getService(Ci.nsIDragService);
+  var ds = Cc["@mozilla.org/widget/dragservice;1"].getService(
+    Ci.nsIDragService
+  );
 
   ds.startDragSession();
   try {
-    var [result, dataTransfer] = EventUtils.synthesizeDragOver(identityBox, overflowChevron);
+    var [result, dataTransfer] = EventUtils.synthesizeDragOver(
+      identityBox,
+      overflowChevron
+    );
 
     // Wait for showing panel before ending drag session.
     await panelShownPromise;
 
-    EventUtils.synthesizeDropAfterDragOver(result, dataTransfer, overflowChevron);
+    EventUtils.synthesizeDropAfterDragOver(
+      result,
+      dataTransfer,
+      overflowChevron
+    );
   } finally {
     ds.endDragSession(true);
   }
@@ -54,5 +68,8 @@ add_task(async function() {
   window.resizeTo(originalWindowWidth, window.outerHeight);
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   await waitForCondition(() => !navbar.hasAttribute("overflowing"));
-  ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should not have an overflowing toolbar."
+  );
 });

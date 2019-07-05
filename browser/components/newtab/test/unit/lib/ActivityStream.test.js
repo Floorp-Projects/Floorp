@@ -1,4 +1,4 @@
-import {CONTENT_MESSAGE_TYPE} from "common/Actions.jsm";
+import { CONTENT_MESSAGE_TYPE } from "common/Actions.jsm";
 import injector from "inject!lib/ActivityStream.jsm";
 
 describe("ActivityStream", () => {
@@ -8,26 +8,26 @@ describe("ActivityStream", () => {
   let PREFS_CONFIG;
   function Fake() {}
   function FakeStore() {
-    return {init: () => {}, uninit: () => {}, feeds: {get: () => {}}};
+    return { init: () => {}, uninit: () => {}, feeds: { get: () => {} } };
   }
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    ({ActivityStream, PREFS_CONFIG} = injector({
-      "lib/Store.jsm": {Store: FakeStore},
-      "lib/AboutPreferences.jsm": {AboutPreferences: Fake},
-      "lib/NewTabInit.jsm": {NewTabInit: Fake},
-      "lib/PlacesFeed.jsm": {PlacesFeed: Fake},
-      "lib/PrefsFeed.jsm": {PrefsFeed: Fake},
-      "lib/SectionsManager.jsm": {SectionsFeed: Fake},
-      "lib/SystemTickFeed.jsm": {SystemTickFeed: Fake},
-      "lib/TelemetryFeed.jsm": {TelemetryFeed: Fake},
-      "lib/FaviconFeed.jsm": {FaviconFeed: Fake},
-      "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
-      "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake},
-      "lib/HighlightsFeed.jsm": {HighlightsFeed: Fake},
-      "lib/ASRouterFeed.jsm": {ASRouterFeed: Fake},
-      "lib/DiscoveryStreamFeed.jsm": {DiscoveryStreamFeed: Fake},
+    ({ ActivityStream, PREFS_CONFIG } = injector({
+      "lib/Store.jsm": { Store: FakeStore },
+      "lib/AboutPreferences.jsm": { AboutPreferences: Fake },
+      "lib/NewTabInit.jsm": { NewTabInit: Fake },
+      "lib/PlacesFeed.jsm": { PlacesFeed: Fake },
+      "lib/PrefsFeed.jsm": { PrefsFeed: Fake },
+      "lib/SectionsManager.jsm": { SectionsFeed: Fake },
+      "lib/SystemTickFeed.jsm": { SystemTickFeed: Fake },
+      "lib/TelemetryFeed.jsm": { TelemetryFeed: Fake },
+      "lib/FaviconFeed.jsm": { FaviconFeed: Fake },
+      "lib/TopSitesFeed.jsm": { TopSitesFeed: Fake },
+      "lib/TopStoriesFeed.jsm": { TopStoriesFeed: Fake },
+      "lib/HighlightsFeed.jsm": { HighlightsFeed: Fake },
+      "lib/ASRouterFeed.jsm": { ASRouterFeed: Fake },
+      "lib/DiscoveryStreamFeed.jsm": { DiscoveryStreamFeed: Fake },
     }));
     as = new ActivityStream();
     sandbox.stub(as.store, "init");
@@ -200,7 +200,9 @@ describe("ActivityStream", () => {
     it("should be false with expected geo and unexpected locale", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "no-LOCALE");
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "no-LOCALE");
 
       as._updateDynamicPrefs();
 
@@ -209,7 +211,9 @@ describe("ActivityStream", () => {
     it("should be true with expected geo and locale", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "en-US");
 
       as._updateDynamicPrefs();
 
@@ -217,12 +221,15 @@ describe("ActivityStream", () => {
     });
     it("should be false after expected geo and locale then unexpected", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-      sandbox.stub(global.Services.prefs, "getStringPref")
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
         .onFirstCall()
         .returns("US")
         .onSecondCall()
         .returns("NOGEO");
-      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "en-US");
 
       as._updateDynamicPrefs();
       as._updateDynamicPrefs();
@@ -236,10 +243,12 @@ describe("ActivityStream", () => {
       clock = sinon.useFakeTimers();
 
       // Have addObserver cause prefHasUserValue to now return true then observe
-      sandbox.stub(global.Services.prefs, "addObserver").callsFake((pref, obs) => {
-        sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-        setTimeout(() => obs.observe(null, "nsPref:changed", pref)); // eslint-disable-line max-nested-callbacks
-      });
+      sandbox
+        .stub(global.Services.prefs, "addObserver")
+        .callsFake((pref, obs) => {
+          sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+          setTimeout(() => obs.observe(null, "nsPref:changed", pref)); // eslint-disable-line max-nested-callbacks
+        });
     });
     afterEach(() => clock.restore());
 
@@ -253,7 +262,9 @@ describe("ActivityStream", () => {
     });
     it("should set true with expected geo and locale", () => {
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .get(() => "en-US");
 
       as._updateDynamicPrefs();
       clock.tick(1);
@@ -264,19 +275,19 @@ describe("ActivityStream", () => {
   describe("telemetry reporting on init failure", () => {
     it("should send a ping on init error", () => {
       as = new ActivityStream();
-      const telemetry = {handleUndesiredEvent: sandbox.spy()};
+      const telemetry = { handleUndesiredEvent: sandbox.spy() };
       sandbox.stub(as.store, "init").throws();
       sandbox.stub(as.store.feeds, "get").returns(telemetry);
       try {
         as.init();
-      } catch (e) {
-      }
+      } catch (e) {}
       assert.calledOnce(telemetry.handleUndesiredEvent);
     });
   });
 
   describe("searchs shortcuts shouldPin pref", () => {
-    const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF = "improvesearch.topSiteSearchShortcuts.searchEngines";
+    const SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF =
+      "improvesearch.topSiteSearchShortcuts.searchEngines";
     let stub;
 
     beforeEach(() => {
@@ -286,13 +297,19 @@ describe("ActivityStream", () => {
 
     it("should be an empty string when no geo is available", () => {
       as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "");
+      assert.equal(
+        PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
+        ""
+      );
     });
 
     it("should be 'baidu' in China", () => {
       stub.returns("CN");
       as._updateDynamicPrefs();
-      assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "baidu");
+      assert.equal(
+        PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
+        "baidu"
+      );
     });
 
     it("should be 'yandex' in Russia, Belarus, Kazakhstan, and Turkey", () => {
@@ -300,7 +317,10 @@ describe("ActivityStream", () => {
       for (const geo of geos) {
         stub.returns(geo);
         as._updateDynamicPrefs();
-        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "yandex");
+        assert.equal(
+          PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
+          "yandex"
+        );
       }
     });
 
@@ -309,7 +329,10 @@ describe("ActivityStream", () => {
       for (const geo of geos) {
         stub.returns(geo);
         as._updateDynamicPrefs();
-        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "google,amazon");
+        assert.equal(
+          PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
+          "google,amazon"
+        );
       }
     });
 
@@ -319,7 +342,10 @@ describe("ActivityStream", () => {
       for (const geo of geos) {
         stub.returns(geo);
         as._updateDynamicPrefs();
-        assert.equal(PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value, "google");
+        assert.equal(
+          PREFS_CONFIG.get(SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF).value,
+          "google"
+        );
       }
     });
   });

@@ -1,4 +1,4 @@
-  /* This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -6,14 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["Pocket"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
 var Pocket = {
-  get site() { return Services.prefs.getCharPref("extensions.pocket.site"); },
-  get listURL() { return "https://" + Pocket.site + "/firefox_learnmore?src=ff_library"; },
+  get site() {
+    return Services.prefs.getCharPref("extensions.pocket.site");
+  },
+  get listURL() {
+    return "https://" + Pocket.site + "/firefox_learnmore?src=ff_library";
+  },
 
   openList(event) {
     let win = event.view;
@@ -71,7 +78,7 @@ var Pocket = {
     return this._pageAction;
   },
   set pageAction(pageAction) {
-    return this._pageAction = pageAction;
+    return (this._pageAction = pageAction);
   },
   _pageAction: null,
 };

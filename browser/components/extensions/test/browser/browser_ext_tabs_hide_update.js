@@ -23,7 +23,7 @@ async function disableExtension(ID) {
 
 function getExtension() {
   async function background() {
-    let tabs = await browser.tabs.query({url: "http://example.com/"});
+    let tabs = await browser.tabs.query({ url: "http://example.com/" });
     let testTab = tabs[0];
 
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -36,17 +36,21 @@ function getExtension() {
 
     let hidden = await browser.tabs.hide(testTab.id);
     browser.test.assertEq(hidden[0], testTab.id, "tabs.hide hide the tab");
-    tabs = await browser.tabs.query({hidden: true});
-    browser.test.assertEq(tabs[0].id, testTab.id, "tabs.query result was hidden");
+    tabs = await browser.tabs.query({ hidden: true });
+    browser.test.assertEq(
+      tabs[0].id,
+      testTab.id,
+      "tabs.query result was hidden"
+    );
     browser.test.sendMessage("ready");
   }
 
   let extdata = {
     manifest: {
       version: "1.0",
-      "applications": {
-        "gecko": {
-          "id": ID,
+      applications: {
+        gecko: {
+          id: ID,
         },
       },
       permissions: ["tabs", "tabHide"],
@@ -61,7 +65,10 @@ function getExtension() {
 // shown when a tabHide extension is shutdown.  We additionally test the
 // tabs.onUpdated listener gets called with hidden state changes.
 add_task(async function test_tabs_update() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
 
   const extension = getExtension();
@@ -78,9 +85,9 @@ add_task(async function test_tabs_update() {
   let extdata = {
     manifest: {
       version: "2.0",
-      "applications": {
-        "gecko": {
-          "id": ID,
+      applications: {
+        gecko: {
+          id: ID,
         },
       },
       permissions: ["tabs", "tabHide"],
@@ -92,9 +99,9 @@ add_task(async function test_tabs_update() {
   // Test that update does hide tabs when tabHide permission is removed.
   extdata.manifest = {
     version: "3.0",
-    "applications": {
-      "gecko": {
-        "id": ID,
+    applications: {
+      gecko: {
+        id: ID,
       },
     },
     permissions: ["tabs"],
@@ -107,12 +114,14 @@ add_task(async function test_tabs_update() {
   BrowserTestUtils.removeTab(tab);
 });
 
-
 // Test our update handling.  Currently this means any hidden tabs will be
 // shown when a tabHide extension is shutdown.  We additionally test the
 // tabs.onUpdated listener gets called with hidden state changes.
 add_task(async function test_tabs_disable() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
 
   const extension = getExtension();

@@ -13,9 +13,16 @@ async function testSidebarBrowserStyle(sidebarAction, assertMessage) {
       let buttonBackgroundColor = style.backgroundColor;
       let browserStyleBackgroundColor = "rgb(9, 150, 248)";
       if (!("browser_style" in info) || info.browser_style) {
-        browser.test.assertEq(browserStyleBackgroundColor, buttonBackgroundColor, assertMessage);
+        browser.test.assertEq(
+          browserStyleBackgroundColor,
+          buttonBackgroundColor,
+          assertMessage
+        );
       } else {
-        browser.test.assertTrue(browserStyleBackgroundColor !== buttonBackgroundColor, assertMessage);
+        browser.test.assertTrue(
+          browserStyleBackgroundColor !== buttonBackgroundColor,
+          assertMessage
+        );
       }
 
       browser.test.notifyPass("sidebar-browser-style");
@@ -25,7 +32,7 @@ async function testSidebarBrowserStyle(sidebarAction, assertMessage) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "sidebar_action": sidebarAction,
+      sidebar_action: sidebarAction,
     },
     useAddonManager: "temporary",
 
@@ -54,21 +61,30 @@ async function testSidebarBrowserStyle(sidebarAction, assertMessage) {
 }
 
 add_task(async function test_sidebar_without_setting_browser_style() {
-  await testSidebarBrowserStyle({
-    "default_panel": "panel.html",
-  }, "Expected correct style when browser_style is excluded");
+  await testSidebarBrowserStyle(
+    {
+      default_panel: "panel.html",
+    },
+    "Expected correct style when browser_style is excluded"
+  );
 });
 
 add_task(async function test_sidebar_with_browser_style_set_to_true() {
-  await testSidebarBrowserStyle({
-    "default_panel": "panel.html",
-    "browser_style": true,
-  }, "Expected correct style when browser_style is set to `true`");
+  await testSidebarBrowserStyle(
+    {
+      default_panel: "panel.html",
+      browser_style: true,
+    },
+    "Expected correct style when browser_style is set to `true`"
+  );
 });
 
 add_task(async function test_sidebar_with_browser_style_set_to_false() {
-  await testSidebarBrowserStyle({
-    "default_panel": "panel.html",
-    "browser_style": false,
-  }, "Expected no style when browser_style is set to `false`");
+  await testSidebarBrowserStyle(
+    {
+      default_panel: "panel.html",
+      browser_style: false,
+    },
+    "Expected no style when browser_style is set to `false`"
+  );
 });

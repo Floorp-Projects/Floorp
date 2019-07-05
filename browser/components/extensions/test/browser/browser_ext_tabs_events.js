@@ -2,14 +2,13 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-
 // A single monitor for the tests.  If it receives any
 // incognito data in event listeners it will fail.
 let monitor;
 add_task(async function startup() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
   monitor = await startIncognitoMonitorExtension();
 });
 registerCleanupFunction(async function finish() {
@@ -30,27 +29,27 @@ add_task(async function test_tab_events_incognito_monitored() {
     };
 
     browser.tabs.onCreated.addListener(tab => {
-      events.push({type: "onCreated", tab});
+      events.push({ type: "onCreated", tab });
       checkEvents();
     });
 
     browser.tabs.onAttached.addListener((tabId, info) => {
-      events.push(Object.assign({type: "onAttached", tabId}, info));
+      events.push(Object.assign({ type: "onAttached", tabId }, info));
       checkEvents();
     });
 
     browser.tabs.onDetached.addListener((tabId, info) => {
-      events.push(Object.assign({type: "onDetached", tabId}, info));
+      events.push(Object.assign({ type: "onDetached", tabId }, info));
       checkEvents();
     });
 
     browser.tabs.onRemoved.addListener((tabId, info) => {
-      events.push(Object.assign({type: "onRemoved", tabId}, info));
+      events.push(Object.assign({ type: "onRemoved", tabId }, info));
       checkEvents();
     });
 
     browser.tabs.onMoved.addListener((tabId, info) => {
-      events.push(Object.assign({type: "onMoved", tabId}, info));
+      events.push(Object.assign({ type: "onMoved", tabId }, info));
       checkEvents();
     });
 
@@ -58,22 +57,29 @@ add_task(async function test_tab_events_incognito_monitored() {
       browser.test.log(`Expecting events: ${names.join(", ")}`);
 
       await new Promise(resolve => {
-        eventPromise = {names, resolve};
+        eventPromise = { names, resolve };
         checkEvents();
       });
 
-      browser.test.assertEq(names.length, events.length, "Got expected number of events");
+      browser.test.assertEq(
+        names.length,
+        events.length,
+        "Got expected number of events"
+      );
       for (let [i, name] of names.entries()) {
-        browser.test.assertEq(name, i in events && events[i].type,
-                              `Got expected ${name} event`);
+        browser.test.assertEq(
+          name,
+          i in events && events[i].type,
+          `Got expected ${name} event`
+        );
       }
       return events.splice(0);
     }
 
     try {
       let windows = await Promise.all([
-        browser.windows.create({url: "about:blank", incognito}),
-        browser.windows.create({url: "about:blank", incognito}),
+        browser.windows.create({ url: "about:blank", incognito }),
+        browser.windows.create({ url: "about:blank", incognito }),
       ]);
 
       let windowId = windows[0].id;
@@ -82,65 +88,113 @@ add_task(async function test_tab_events_incognito_monitored() {
       let created = await expectEvents(["onCreated", "onCreated"]);
       let initialTab = created[1].tab;
 
-
       browser.test.log("Create tab in window 1");
-      let tab = await browser.tabs.create({windowId, index: 0, url: "about:blank"});
+      let tab = await browser.tabs.create({
+        windowId,
+        index: 0,
+        url: "about:blank",
+      });
       let oldIndex = tab.index;
       browser.test.assertEq(0, oldIndex, "Tab has the expected index");
       browser.test.assertEq(tab.incognito, incognito, "Tab is incognito");
 
       [created] = await expectEvents(["onCreated"]);
       browser.test.assertEq(tab.id, created.tab.id, "Got expected tab ID");
-      browser.test.assertEq(oldIndex, created.tab.index, "Got expected tab index");
-
+      browser.test.assertEq(
+        oldIndex,
+        created.tab.index,
+        "Got expected tab index"
+      );
 
       browser.test.log("Move tab to window 2");
-      await browser.tabs.move([tab.id], {windowId: otherWindowId, index: 0});
+      await browser.tabs.move([tab.id], { windowId: otherWindowId, index: 0 });
 
-      let [detached, attached] = await expectEvents(["onDetached", "onAttached"]);
-      browser.test.assertEq(tab.id, detached.tabId, "Expected onDetached tab ID");
-      browser.test.assertEq(oldIndex, detached.oldPosition, "Expected old index");
-      browser.test.assertEq(windowId, detached.oldWindowId, "Expected old window ID");
+      let [detached, attached] = await expectEvents([
+        "onDetached",
+        "onAttached",
+      ]);
+      browser.test.assertEq(
+        tab.id,
+        detached.tabId,
+        "Expected onDetached tab ID"
+      );
+      browser.test.assertEq(
+        oldIndex,
+        detached.oldPosition,
+        "Expected old index"
+      );
+      browser.test.assertEq(
+        windowId,
+        detached.oldWindowId,
+        "Expected old window ID"
+      );
 
-      browser.test.assertEq(tab.id, attached.tabId, "Expected onAttached tab ID");
+      browser.test.assertEq(
+        tab.id,
+        attached.tabId,
+        "Expected onAttached tab ID"
+      );
       browser.test.assertEq(0, attached.newPosition, "Expected new index");
-      browser.test.assertEq(otherWindowId, attached.newWindowId, "Expected new window ID");
-
+      browser.test.assertEq(
+        otherWindowId,
+        attached.newWindowId,
+        "Expected new window ID"
+      );
 
       browser.test.log("Move tab within the same window");
-      let [moved] = await browser.tabs.move([tab.id], {index: 1});
+      let [moved] = await browser.tabs.move([tab.id], { index: 1 });
       browser.test.assertEq(1, moved.index, "Expected new index");
 
       [moved] = await expectEvents(["onMoved"]);
       browser.test.assertEq(tab.id, moved.tabId, "Expected tab ID");
       browser.test.assertEq(0, moved.fromIndex, "Expected old index");
       browser.test.assertEq(1, moved.toIndex, "Expected new index");
-      browser.test.assertEq(otherWindowId, moved.windowId, "Expected window ID");
-
+      browser.test.assertEq(
+        otherWindowId,
+        moved.windowId,
+        "Expected window ID"
+      );
 
       browser.test.log("Remove tab");
       await browser.tabs.remove(tab.id);
       let [removed] = await expectEvents(["onRemoved"]);
 
       browser.test.assertEq(tab.id, removed.tabId, "Expected removed tab ID");
-      browser.test.assertEq(otherWindowId, removed.windowId, "Expected removed tab window ID");
+      browser.test.assertEq(
+        otherWindowId,
+        removed.windowId,
+        "Expected removed tab window ID"
+      );
       // Note: We want to test for the actual boolean value false here.
-      browser.test.assertEq(false, removed.isWindowClosing, "Expected isWindowClosing value");
-
+      browser.test.assertEq(
+        false,
+        removed.isWindowClosing,
+        "Expected isWindowClosing value"
+      );
 
       browser.test.log("Close second window");
       await browser.windows.remove(otherWindowId);
       [removed] = await expectEvents(["onRemoved"]);
-      browser.test.assertEq(initialTab.id, removed.tabId, "Expected removed tab ID");
-      browser.test.assertEq(otherWindowId, removed.windowId, "Expected removed tab window ID");
-      browser.test.assertEq(true, removed.isWindowClosing, "Expected isWindowClosing value");
-
+      browser.test.assertEq(
+        initialTab.id,
+        removed.tabId,
+        "Expected removed tab ID"
+      );
+      browser.test.assertEq(
+        otherWindowId,
+        removed.windowId,
+        "Expected removed tab window ID"
+      );
+      browser.test.assertEq(
+        true,
+        removed.isWindowClosing,
+        "Expected isWindowClosing value"
+      );
 
       browser.test.log("Create additional tab in window 1");
-      tab = await browser.tabs.create({windowId, url: "about:blank"});
+      tab = await browser.tabs.create({ windowId, url: "about:blank" });
       await expectEvents(["onCreated"]);
       browser.test.assertEq(tab.incognito, incognito, "Tab is incognito");
-
 
       browser.test.log("Create a new window, adopting the new tab");
       // We have to explicitly wait for the event here, since its timing is
@@ -153,33 +207,81 @@ add_task(async function test_tab_events_incognito_monitored() {
       });
 
       let [window] = await Promise.all([
-        browser.windows.create({tabId: tab.id, incognito}),
+        browser.windows.create({ tabId: tab.id, incognito }),
         promiseAttached,
       ]);
 
       [detached, attached] = await expectEvents(["onDetached", "onAttached"]);
 
-      browser.test.assertEq(tab.id, detached.tabId, "Expected onDetached tab ID");
-      browser.test.assertEq(1, detached.oldPosition, "Expected onDetached old index");
-      browser.test.assertEq(windowId, detached.oldWindowId, "Expected onDetached old window ID");
+      browser.test.assertEq(
+        tab.id,
+        detached.tabId,
+        "Expected onDetached tab ID"
+      );
+      browser.test.assertEq(
+        1,
+        detached.oldPosition,
+        "Expected onDetached old index"
+      );
+      browser.test.assertEq(
+        windowId,
+        detached.oldWindowId,
+        "Expected onDetached old window ID"
+      );
 
-      browser.test.assertEq(tab.id, attached.tabId, "Expected onAttached tab ID");
-      browser.test.assertEq(0, attached.newPosition, "Expected onAttached new index");
-      browser.test.assertEq(window.id, attached.newWindowId,
-                            "Expected onAttached new window id");
+      browser.test.assertEq(
+        tab.id,
+        attached.tabId,
+        "Expected onAttached tab ID"
+      );
+      browser.test.assertEq(
+        0,
+        attached.newPosition,
+        "Expected onAttached new index"
+      );
+      browser.test.assertEq(
+        window.id,
+        attached.newWindowId,
+        "Expected onAttached new window id"
+      );
 
-      browser.test.log("Close the new window by moving the tab into former window");
-      await browser.tabs.move(tab.id, {index: 1, windowId});
+      browser.test.log(
+        "Close the new window by moving the tab into former window"
+      );
+      await browser.tabs.move(tab.id, { index: 1, windowId });
       [detached, attached] = await expectEvents(["onDetached", "onAttached"]);
 
-      browser.test.assertEq(tab.id, detached.tabId, "Expected onDetached tab ID");
-      browser.test.assertEq(0, detached.oldPosition, "Expected onDetached old index");
-      browser.test.assertEq(window.id, detached.oldWindowId, "Expected onDetached old window ID");
+      browser.test.assertEq(
+        tab.id,
+        detached.tabId,
+        "Expected onDetached tab ID"
+      );
+      browser.test.assertEq(
+        0,
+        detached.oldPosition,
+        "Expected onDetached old index"
+      );
+      browser.test.assertEq(
+        window.id,
+        detached.oldWindowId,
+        "Expected onDetached old window ID"
+      );
 
-      browser.test.assertEq(tab.id, attached.tabId, "Expected onAttached tab ID");
-      browser.test.assertEq(1, attached.newPosition, "Expected onAttached new index");
-      browser.test.assertEq(windowId, attached.newWindowId,
-                            "Expected onAttached new window id");
+      browser.test.assertEq(
+        tab.id,
+        attached.tabId,
+        "Expected onAttached tab ID"
+      );
+      browser.test.assertEq(
+        1,
+        attached.newPosition,
+        "Expected onAttached new index"
+      );
+      browser.test.assertEq(
+        windowId,
+        attached.newWindowId,
+        "Expected onAttached new window id"
+      );
       browser.test.assertEq(tab.incognito, incognito, "Tab is incognito");
 
       browser.test.log("Remove the tab");
@@ -195,7 +297,7 @@ add_task(async function test_tab_events_incognito_monitored() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     background,
     incognitoOverride: "spanning",
@@ -209,7 +311,10 @@ add_task(async function test_tab_events_incognito_monitored() {
 add_task(async function testTabEventsSize() {
   function background() {
     function sendSizeMessages(tab, type) {
-      browser.test.sendMessage(`${type}-dims`, {width: tab.width, height: tab.height});
+      browser.test.sendMessage(`${type}-dims`, {
+        width: tab.width,
+        height: tab.height,
+      });
     }
 
     browser.tabs.onCreated.addListener(tab => {
@@ -224,11 +329,13 @@ add_task(async function testTabEventsSize() {
 
     browser.test.onMessage.addListener(async (msg, arg) => {
       if (msg === "create-tab") {
-        let tab = await browser.tabs.create({url: "http://example.com/"});
+        let tab = await browser.tabs.create({ url: "http://example.com/" });
         sendSizeMessages(tab, "create");
         browser.test.sendMessage("created-tab-id", tab.id);
       } else if (msg === "update-tab") {
-        let tab = await browser.tabs.update(arg, {url: "http://example.org/"});
+        let tab = await browser.tabs.update(arg, {
+          url: "http://example.org/",
+        });
         sendSizeMessages(tab, "update");
       } else if (msg === "remove-tab") {
         browser.tabs.remove(arg);
@@ -241,7 +348,7 @@ add_task(async function testTabEventsSize() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     background,
   });
@@ -252,27 +359,48 @@ add_task(async function testTabEventsSize() {
   });
 
   function checkDimensions(dims, type) {
-    is(dims.width, gBrowser.selectedBrowser.clientWidth, `tab from ${type} reports expected width`);
-    is(dims.height, gBrowser.selectedBrowser.clientHeight, `tab from ${type} reports expected height`);
+    is(
+      dims.width,
+      gBrowser.selectedBrowser.clientWidth,
+      `tab from ${type} reports expected width`
+    );
+    is(
+      dims.height,
+      gBrowser.selectedBrowser.clientHeight,
+      `tab from ${type} reports expected height`
+    );
   }
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
   for (let resolution of [2, 1]) {
     SpecialPowers.setCharPref(RESOLUTION_PREF, String(resolution));
-    is(window.devicePixelRatio, resolution, "window has the required resolution");
+    is(
+      window.devicePixelRatio,
+      resolution,
+      "window has the required resolution"
+    );
 
     extension.sendMessage("create-tab");
     let tabId = await extension.awaitMessage("created-tab-id");
 
     checkDimensions(await extension.awaitMessage("create-dims"), "create");
-    checkDimensions(await extension.awaitMessage("on-created-dims"), "onCreated");
-    checkDimensions(await extension.awaitMessage("on-updated-dims"), "onUpdated");
+    checkDimensions(
+      await extension.awaitMessage("on-created-dims"),
+      "onCreated"
+    );
+    checkDimensions(
+      await extension.awaitMessage("on-updated-dims"),
+      "onUpdated"
+    );
 
     extension.sendMessage("update-tab", tabId);
 
     checkDimensions(await extension.awaitMessage("update-dims"), "update");
-    checkDimensions(await extension.awaitMessage("on-updated-dims"), "onUpdated");
+    checkDimensions(
+      await extension.awaitMessage("on-updated-dims"),
+      "onUpdated"
+    );
 
     extension.sendMessage("remove-tab", tabId);
     await extension.awaitMessage("tab-removed");
@@ -288,7 +416,11 @@ add_task(async function testTabRemovalEvent() {
 
     function awaitLoad(tabId) {
       return new Promise(resolve => {
-        browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+        browser.tabs.onUpdated.addListener(function listener(
+          tabId_,
+          changed,
+          tab
+        ) {
           if (tabId == tabId_ && changed.status == "complete") {
             browser.tabs.onUpdated.removeListener(listener);
             resolve();
@@ -298,25 +430,43 @@ add_task(async function testTabRemovalEvent() {
     }
 
     chrome.tabs.onRemoved.addListener((tabId, info) => {
-      browser.test.assertEq(0, events.length, "No events recorded before onRemoved.");
+      browser.test.assertEq(
+        0,
+        events.length,
+        "No events recorded before onRemoved."
+      );
       events.push("onRemoved");
-      browser.test.log("Make sure the removed tab is not available in the tabs.query callback.");
+      browser.test.log(
+        "Make sure the removed tab is not available in the tabs.query callback."
+      );
       chrome.tabs.query({}, tabs => {
         for (let tab of tabs) {
-          browser.test.assertTrue(tab.id != tabId, "Tab query should not include removed tabId");
+          browser.test.assertTrue(
+            tab.id != tabId,
+            "Tab query should not include removed tabId"
+          );
         }
       });
     });
 
     try {
-      let url = "http://example.com/browser/browser/components/extensions/test/browser/context.html";
-      let tab = await browser.tabs.create({url: url});
+      let url =
+        "http://example.com/browser/browser/components/extensions/test/browser/context.html";
+      let tab = await browser.tabs.create({ url: url });
       await awaitLoad(tab.id);
 
       chrome.tabs.onActivated.addListener(info => {
-        browser.test.assertEq(1, events.length, "One event recorded before onActivated.");
+        browser.test.assertEq(
+          1,
+          events.length,
+          "One event recorded before onActivated."
+        );
         events.push("onActivated");
-        browser.test.assertEq("onRemoved", events[0], "onRemoved fired before onActivated.");
+        browser.test.assertEq(
+          "onRemoved",
+          events[0],
+          "onRemoved fired before onActivated."
+        );
         browser.test.notifyPass("tabs-events");
       });
 
@@ -329,7 +479,7 @@ add_task(async function testTabRemovalEvent() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     background,
@@ -341,10 +491,12 @@ add_task(async function testTabRemovalEvent() {
 });
 
 add_task(async function testTabCreateRelated() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.tabs.opentabfor.middleclick", true],
-    ["browser.tabs.insertRelatedAfterCurrent", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.tabs.opentabfor.middleclick", true],
+      ["browser.tabs.insertRelatedAfterCurrent", true],
+    ],
+  });
 
   async function background() {
     let created;
@@ -354,7 +506,9 @@ add_task(async function testTabCreateRelated() {
       created = tab.id;
     });
     browser.tabs.onMoved.addListener((id, info) => {
-      browser.test.log(`tabs.onMoved, from ${info.fromIndex} to ${info.toIndex}`);
+      browser.test.log(
+        `tabs.onMoved, from ${info.fromIndex} to ${info.toIndex}`
+      );
       browser.test.fail("tabMoved was received");
     });
     browser.tabs.onRemoved.addListener((tabId, info) => {
@@ -365,25 +519,39 @@ add_task(async function testTabCreateRelated() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     background,
   });
 
   // Create a *opener* tab page which has a link to "example.com".
-  let pageURL = "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
-  let openerTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageURL);
+  let pageURL =
+    "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
+  let openerTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    pageURL
+  );
   gBrowser.moveTabTo(openerTab, 0);
 
   await extension.startup();
 
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/#linkclick", true);
-  await BrowserTestUtils.synthesizeMouseAtCenter("#link_to_example_com",
-                                                 {button: 1}, gBrowser.selectedBrowser);
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "http://example.com/#linkclick",
+    true
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#link_to_example_com",
+    { button: 1 },
+    gBrowser.selectedBrowser
+  );
   let openTab = await newTabPromise;
-  is(openTab.linkedBrowser.currentURI.spec, "http://example.com/#linkclick",
-     "Middle click should open site to correct url.");
+  is(
+    openTab.linkedBrowser.currentURI.spec,
+    "http://example.com/#linkclick",
+    "Middle click should open site to correct url."
+  );
   BrowserTestUtils.removeTab(openTab);
 
   await extension.awaitMessage("tabRemoved");
@@ -393,15 +561,18 @@ add_task(async function testTabCreateRelated() {
 });
 
 add_task(async function testLastTabRemoval() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.tabs.closeWindowWithLastTab", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.closeWindowWithLastTab", false]],
+  });
 
   async function background() {
     let windowId;
     browser.tabs.onCreated.addListener(tab => {
-      browser.test.assertEq(windowId, tab.windowId,
-                            "expecting onCreated after onRemoved on the same window");
+      browser.test.assertEq(
+        windowId,
+        tab.windowId,
+        "expecting onCreated after onRemoved on the same window"
+      );
       browser.test.sendMessage("tabCreated", `${tab.width}x${tab.height}`);
     });
     browser.tabs.onRemoved.addListener((tabId, info) => {
@@ -411,7 +582,7 @@ add_task(async function testLastTabRemoval() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     background,
   });
@@ -424,7 +595,11 @@ add_task(async function testLastTabRemoval() {
   BrowserTestUtils.removeTab(newWin.gBrowser.selectedTab);
 
   const actualDims = await extension.awaitMessage("tabCreated");
-  is(actualDims, expectedDims, "created tab reports a size same to the removed last tab");
+  is(
+    actualDims,
+    expectedDims,
+    "created tab reports a size same to the removed last tab"
+  );
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(newWin);
@@ -434,7 +609,8 @@ add_task(async function testLastTabRemoval() {
 add_task(async function testTabActivationEvent() {
   async function background() {
     function makeExpectable() {
-      let expectation = null, resolver = null;
+      let expectation = null,
+        resolver = null;
       const expectable = param => {
         if (expectation === null) {
           browser.test.fail("unexpected call to expectable");
@@ -450,7 +626,9 @@ add_task(async function testTabActivationEvent() {
       };
       expectable.expect = e => {
         expectation = e;
-        return new Promise(r => { resolver = r; });
+        return new Promise(r => {
+          resolver = r;
+        });
       };
       return expectable;
     }
@@ -458,31 +636,52 @@ add_task(async function testTabActivationEvent() {
       const listener = makeExpectable();
       browser.tabs.onActivated.addListener(listener);
 
-      const [, {tabs: [tab1]}] = await Promise.all([
+      const [
+        ,
+        {
+          tabs: [tab1],
+        },
+      ] = await Promise.all([
         listener.expect(info => {
-          browser.test.assertEq(undefined, info.previousTabId, "previousTabId should not be defined when window is first opened");
+          browser.test.assertEq(
+            undefined,
+            info.previousTabId,
+            "previousTabId should not be defined when window is first opened"
+          );
         }),
-        browser.windows.create({url: "about:blank"}),
+        browser.windows.create({ url: "about:blank" }),
       ]);
       const [, tab2] = await Promise.all([
         listener.expect(info => {
-          browser.test.assertEq(tab1.id, info.previousTabId, "Got expected previousTabId");
+          browser.test.assertEq(
+            tab1.id,
+            info.previousTabId,
+            "Got expected previousTabId"
+          );
         }),
-        browser.tabs.create({url: "about:blank"}),
+        browser.tabs.create({ url: "about:blank" }),
       ]);
 
       await Promise.all([
         listener.expect(info => {
           browser.test.assertEq(tab1.id, info.tabId, "Got expected tabId");
-          browser.test.assertEq(tab2.id, info.previousTabId, "Got expected previousTabId");
+          browser.test.assertEq(
+            tab2.id,
+            info.previousTabId,
+            "Got expected previousTabId"
+          );
         }),
-        browser.tabs.update(tab1.id, {active: true}),
+        browser.tabs.update(tab1.id, { active: true }),
       ]);
 
       await Promise.all([
         listener.expect(info => {
           browser.test.assertEq(tab2.id, info.tabId, "Got expected tabId");
-          browser.test.assertEq(undefined, info.previousTabId, "previousTabId should not be defined when previous tab was closed");
+          browser.test.assertEq(
+            undefined,
+            info.previousTabId,
+            "previousTabId should not be defined when previous tab was closed"
+          );
         }),
         browser.tabs.remove(tab1.id),
       ]);
@@ -498,7 +697,7 @@ add_task(async function testTabActivationEvent() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     background,
   });

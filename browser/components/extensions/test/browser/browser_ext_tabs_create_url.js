@@ -3,14 +3,14 @@
 "use strict";
 
 async function runWithDisabledPrivateBrowsing(callback) {
-  const {
-    EnterprisePolicyTesting,
-    PoliciesPrefTracker,
-  } = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", null);
+  const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
+    "resource://testing-common/EnterprisePolicyTesting.jsm",
+    null
+  );
 
   PoliciesPrefTracker.start();
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
-    policies: {DisablePrivateBrowsing: true},
+    policies: { DisablePrivateBrowsing: true },
   });
 
   try {
@@ -48,13 +48,17 @@ add_task(async function test_urlbar_focus() {
   await extension.startup();
 
   // Test content is focused after opening a regular url
-  extension.sendMessage("create", {url: "https://example.com"});
+  extension.sendMessage("create", { url: "https://example.com" });
   const [tab1] = await Promise.all([
     extension.awaitMessage("result"),
     extension.awaitMessage("complete"),
   ]);
 
-  is(document.activeElement.tagName, "browser", "Content focused after opening a web page");
+  is(
+    document.activeElement.tagName,
+    "browser",
+    "Content focused after opening a web page"
+  );
 
   extension.sendMessage("remove", tab1.id);
   await extension.awaitMessage("result");
@@ -64,13 +68,20 @@ add_task(async function test_urlbar_focus() {
   const tab2 = await extension.awaitMessage("result");
 
   const active = document.activeElement;
-  info(`Active element: ${active.tagName}, id: ${active.id}, class: ${active.className}`);
+  info(
+    `Active element: ${active.tagName}, id: ${active.id}, class: ${
+      active.className
+    }`
+  );
 
   const parent = active.parentNode;
-  info(`Parent element: ${parent.tagName}, id: ${parent.id}, class: ${parent.className}`);
+  info(
+    `Parent element: ${parent.tagName}, id: ${parent.id}, class: ${
+      parent.className
+    }`
+  );
 
   info(`After opening an empty tab, gURLBar.focused: ${gURLBar.focused}`);
-
 
   is(active.tagName, "html:input", "Input element focused");
   ok(active.classList.contains("urlbar-input"), "Urlbar focused");
@@ -90,7 +101,11 @@ add_task(async function default_url() {
     background() {
       function promiseNonBlankTab() {
         return new Promise(resolve => {
-          browser.tabs.onUpdated.addListener(function listener(tabId, changeInfo, tab) {
+          browser.tabs.onUpdated.addListener(function listener(
+            tabId,
+            changeInfo,
+            tab
+          ) {
             if (changeInfo.status === "complete" && tab.url !== "about:blank") {
               browser.tabs.onUpdated.removeListener(listener);
               resolve(tab);
@@ -99,30 +114,52 @@ add_task(async function default_url() {
         });
       }
 
-      browser.test.onMessage.addListener(async (msg, {incognito, expectedNewWindowUrl, expectedNewTabUrl}) => {
-        browser.test.assertEq("start", msg, `Start test, incognito=${incognito}`);
+      browser.test.onMessage.addListener(
+        async (msg, { incognito, expectedNewWindowUrl, expectedNewTabUrl }) => {
+          browser.test.assertEq(
+            "start",
+            msg,
+            `Start test, incognito=${incognito}`
+          );
 
-        let tabPromise = promiseNonBlankTab();
-        let win;
-        try {
-          win = await browser.windows.create({incognito});
-          browser.test.assertEq(1, win.tabs.length, "Expected one tab in the new window.");
-        } catch (e) {
-          browser.test.assertEq(expectedNewWindowUrl, e.message, "Expected error");
+          let tabPromise = promiseNonBlankTab();
+          let win;
+          try {
+            win = await browser.windows.create({ incognito });
+            browser.test.assertEq(
+              1,
+              win.tabs.length,
+              "Expected one tab in the new window."
+            );
+          } catch (e) {
+            browser.test.assertEq(
+              expectedNewWindowUrl,
+              e.message,
+              "Expected error"
+            );
+            browser.test.sendMessage("done");
+            return;
+          }
+          let tab = await tabPromise;
+          browser.test.assertEq(
+            expectedNewWindowUrl,
+            tab.url,
+            "Expected default URL of new window"
+          );
+
+          tabPromise = promiseNonBlankTab();
+          await browser.tabs.create({ windowId: win.id });
+          tab = await tabPromise;
+          browser.test.assertEq(
+            expectedNewTabUrl,
+            tab.url,
+            "Expected default URL of new tab"
+          );
+
+          await browser.windows.remove(win.id);
           browser.test.sendMessage("done");
-          return;
         }
-        let tab = await tabPromise;
-        browser.test.assertEq(expectedNewWindowUrl, tab.url, "Expected default URL of new window");
-
-        tabPromise = promiseNonBlankTab();
-        await browser.tabs.create({windowId: win.id});
-        tab = await tabPromise;
-        browser.test.assertEq(expectedNewTabUrl, tab.url, "Expected default URL of new tab");
-
-        await browser.windows.remove(win.id);
-        browser.test.sendMessage("done");
-      });
+      );
     },
   });
 
@@ -142,7 +179,9 @@ add_task(async function default_url() {
   await extension.awaitMessage("done");
 
   info("Testing with multiple homepages.");
-  await SpecialPowers.pushPrefEnv({set: [["browser.startup.homepage", "about:robots|about:blank|about:home"]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.startup.homepage", "about:robots|about:blank|about:home"]],
+  });
   extension.sendMessage("start", {
     incognito: false,
     expectedNewWindowUrl: "about:robots",
@@ -158,7 +197,9 @@ add_task(async function default_url() {
   await SpecialPowers.popPrefEnv();
 
   info("Testing with perma-private browsing mode.");
-  await SpecialPowers.pushPrefEnv({set: [["browser.privatebrowsing.autostart", true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.privatebrowsing.autostart", true]],
+  });
   extension.sendMessage("start", {
     incognito: false,
     expectedNewWindowUrl: "about:home",
@@ -183,7 +224,8 @@ add_task(async function default_url() {
     await extension.awaitMessage("done");
     extension.sendMessage("start", {
       incognito: true,
-      expectedNewWindowUrl: "`incognito` cannot be used if incognito mode is disabled",
+      expectedNewWindowUrl:
+        "`incognito` cannot be used if incognito mode is disabled",
     });
     await extension.awaitMessage("done");
   });

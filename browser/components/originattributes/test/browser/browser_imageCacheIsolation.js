@@ -4,7 +4,7 @@
 
 requestLongerTimeout(2);
 
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const NUM_ISOLATION_LOADS = 2;
 const NUM_CACHED_LOADS = 1;
@@ -38,7 +38,8 @@ function imageHandler(metadata, response) {
   response.setHeader("Cache-Control", "max-age=10000", false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "image/png", false);
-  var body = "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
+  var body =
+    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -55,8 +56,8 @@ function doBefore() {
   gHits = 0;
   info("XXX clearing image cache");
   let imageCache = Cc["@mozilla.org/image/tools;1"]
-                      .getService(Ci.imgITools)
-                      .getImgCacheForDocument(null);
+    .getService(Ci.imgITools)
+    .getImgCacheForDocument(null);
   imageCache.clearCache(true);
   imageCache.clearCache(false);
   info("XXX clearning network cache");
@@ -76,8 +77,9 @@ function doCheck(shouldIsolate, a, b) {
   // gHits should be 1 since there would be one image load from the server and
   // one load from the image cache.
   info(`XXX check: gHits == ${gHits}, shouldIsolate == ${shouldIsolate}`);
-  return shouldIsolate ? gHits == NUM_ISOLATION_LOADS
-                       : gHits == NUM_CACHED_LOADS;
+  return shouldIsolate
+    ? gHits == NUM_ISOLATION_LOADS
+    : gHits == NUM_CACHED_LOADS;
 }
 
 IsolationTestTools.runTests(FILE_URI, doTest, doCheck, doBefore);

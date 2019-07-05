@@ -8,7 +8,8 @@ add_task(async function prepare() {
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
 
@@ -24,8 +25,12 @@ add_task(async function prepare() {
   // Move the mouse away from the urlbar one-offs so that a one-off engine is
   // not inadvertently selected.
   await new Promise(resolve => {
-    EventUtils.synthesizeNativeMouseMove(window.document.documentElement, 0, 0,
-                                         resolve);
+    EventUtils.synthesizeNativeMouseMove(
+      window.document.documentElement,
+      0,
+      0,
+      resolve
+    );
   });
 });
 
@@ -35,8 +40,11 @@ add_task(async function heuristicResultMouse() {
     gURLBar.focus();
     await promiseAutocompleteResultPopup("heuristicResult");
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-    Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
-      "Should be of type search");
+    Assert.equal(
+      result.type,
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      "Should be of type search"
+    );
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
     EventUtils.synthesizeMouseAtCenter(element, {});
@@ -51,8 +59,11 @@ add_task(async function heuristicResultKeyboard() {
     gURLBar.focus();
     await promiseAutocompleteResultPopup("heuristicResult");
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-    Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
-      "Should be of type search");
+    Assert.equal(
+      result.type,
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      "Should be of type search"
+    );
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     EventUtils.sendKey("return");
     await loadPromise;
@@ -68,7 +79,10 @@ add_task(async function searchSuggestionMouse() {
     let idx = await getFirstSuggestionIndex();
     Assert.greaterOrEqual(idx, 0, "there should be a first suggestion");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, idx);
+    let element = await UrlbarTestUtils.waitForAutocompleteResultAt(
+      window,
+      idx
+    );
     EventUtils.synthesizeMouseAtCenter(element, {});
     await loadPromise;
     BrowserTestUtils.removeTab(tab);
@@ -114,8 +128,9 @@ async function compareCounts(clickCallback) {
   histogram.clear();
 
   // FHR -- first make sure the engine has an identifier so that FHR is happy.
-  Object.defineProperty(engine.wrappedJSObject, "identifier",
-                        { value: engineID });
+  Object.defineProperty(engine.wrappedJSObject, "identifier", {
+    value: engineID,
+  });
 
   gURLBar.focus();
   await clickCallback();
@@ -132,8 +147,10 @@ async function getFirstSuggestionIndex() {
   const matchCount = UrlbarTestUtils.getResultCount(window);
   for (let i = 0; i < matchCount; i++) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-        result.searchParams.suggestion) {
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+      result.searchParams.suggestion
+    ) {
       return i;
     }
   }

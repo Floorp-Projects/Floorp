@@ -4,11 +4,11 @@
 
 "use strict";
 
-let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm");
+let { EventEmitter } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/EventEmitter.jsm"
+);
 
-var EXPORTED_SYMBOLS = [
-  "SyncedTabsListStore",
-];
+var EXPORTED_SYMBOLS = ["SyncedTabsListStore"];
 
 /**
  * SyncedTabsListStore
@@ -114,7 +114,12 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
 
     if (branchRow < 0) {
       this.selectRow(0, -1);
-    } else if ((!branch.tabs.length || childRow >= branch.tabs.length - 1 || !this._isOpen(branch)) && branchRow < this.data.length) {
+    } else if (
+      (!branch.tabs.length ||
+        childRow >= branch.tabs.length - 1 ||
+        !this._isOpen(branch)) &&
+      branchRow < this.data.length
+    ) {
       this.selectRow(branchRow + 1, -1);
     } else if (childRow < branch.tabs.length) {
       this.selectRow(branchRow, childRow + 1);
@@ -134,7 +139,9 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
       this.selectRow(0, -1);
     } else if (childRow < 0 && branchRow > 0) {
       let prevBranch = this.data[branchRow - 1];
-      let newChildRow = this._isOpen(prevBranch) ? prevBranch.tabs.length - 1 : -1;
+      let newChildRow = this._isOpen(prevBranch)
+        ? prevBranch.tabs.length - 1
+        : -1;
       this.selectRow(branchRow - 1, newChildRow);
     } else if (childRow >= 0) {
       this.selectRow(branchRow, childRow - 1);
@@ -152,13 +159,21 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
     }
 
     let childRow = child;
-    if (parentRow === -1 || this.filter || typeof child === "undefined" || child < -1) {
+    if (
+      parentRow === -1 ||
+      this.filter ||
+      typeof child === "undefined" ||
+      child < -1
+    ) {
       childRow = -1;
     } else if (child >= this.data[parentRow].tabs.length) {
       childRow = this.data[parentRow].tabs.length - 1;
     }
 
-    if (this._selectedRow[0] === parentRow && this._selectedRow[1] === childRow) {
+    if (
+      this._selectedRow[0] === parentRow &&
+      this._selectedRow[1] === childRow
+    ) {
       return;
     }
 
@@ -219,7 +234,8 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
     }
 
     // return promise for tests
-    return this._SyncedTabs.getTabClients(this.filter)
+    return this._SyncedTabs
+      .getTabClients(this.filter)
       .then(result => {
         if (!hasFilter) {
           // Only sort clients and tabs if we're rendering the whole list.

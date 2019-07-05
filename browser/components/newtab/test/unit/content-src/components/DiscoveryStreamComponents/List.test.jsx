@@ -1,13 +1,21 @@
-import {_List as List, ListItem, PlaceholderListItem} from "content-src/components/DiscoveryStreamComponents/List/List";
-import {actionCreators as ac} from "common/Actions.jsm";
-import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
-import {DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
-import {GlobalOverrider} from "test/unit/utils";
+import {
+  _List as List,
+  ListItem,
+  PlaceholderListItem,
+} from "content-src/components/DiscoveryStreamComponents/List/List";
+import { actionCreators as ac } from "common/Actions.jsm";
+import { DSEmptyState } from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
+import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
+import { GlobalOverrider } from "test/unit/utils";
 import React from "react";
-import {shallow} from "enzyme";
+import { shallow } from "enzyme";
 
 describe("<List> presentation component", () => {
-  const ValidRecommendations = [{url: 1}, {url: 2}, {context: "test spoc", url: 3}];
+  const ValidRecommendations = [
+    { url: 1 },
+    { url: 2 },
+    { context: "test spoc", url: 3 },
+  ];
   const ValidListProps = {
     data: {
       recommendations: ValidRecommendations,
@@ -22,7 +30,7 @@ describe("<List> presentation component", () => {
 
   it("should return null if feed.data is falsy", () => {
     const ListProps = {
-      data: {feeds: {a: "stuff"}},
+      data: { feeds: { a: "stuff" } },
     };
 
     const wrapper = shallow(<List {...ListProps} />);
@@ -31,8 +39,8 @@ describe("<List> presentation component", () => {
 
   it("should return Empty State for no recommendations", () => {
     const ListProps = {
-      data: {recommendations: []},
-      header: {title: "headerTitle"},
+      data: { recommendations: [] },
+      header: { title: "headerTitle" },
     };
 
     const wrapper = shallow(<List {...ListProps} />);
@@ -86,17 +94,28 @@ describe("<List> presentation component", () => {
   });
 
   it("should return expected ListItems when offset", () => {
-    const wrapper = shallow(<List {...ValidListProps} items={2} recStartingPoint={1} />);
+    const wrapper = shallow(
+      <List {...ValidListProps} items={2} recStartingPoint={1} />
+    );
 
     const listItemUrls = wrapper.find(ListItem).map(i => i.prop("url"));
-    assert.sameOrderedMembers(listItemUrls, [ValidRecommendations[1].url, ValidRecommendations[2].url]);
+    assert.sameOrderedMembers(listItemUrls, [
+      ValidRecommendations[1].url,
+      ValidRecommendations[2].url,
+    ]);
   });
 
   it("should return expected spoc ListItem", () => {
-    const wrapper = shallow(<List {...ValidListProps} items={3} recStartingPoint={0} />);
+    const wrapper = shallow(
+      <List {...ValidListProps} items={3} recStartingPoint={0} />
+    );
 
     const listItemContext = wrapper.find(ListItem).map(i => i.prop("context"));
-    assert.sameOrderedMembers(listItemContext, [undefined, undefined, ValidRecommendations[2].context]);
+    assert.sameOrderedMembers(listItemContext, [
+      undefined,
+      undefined,
+      ValidRecommendations[2].context,
+    ]);
   });
 });
 
@@ -128,7 +147,8 @@ describe("<ListItem> presentation component", () => {
     const wrapper = shallow(<ListItem {...ValidListItemProps} />);
 
     const anchors = wrapper.find(
-      `SafeAnchor.ds-list-item-link[url="${ValidListItemProps.url}"]`);
+      `SafeAnchor.ds-list-item-link[url="${ValidListItemProps.url}"]`
+    );
     assert.lengthOf(anchors, 1);
   });
 
@@ -154,7 +174,9 @@ describe("<ListItem> presentation component", () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       dispatch = sandbox.stub();
-      wrapper = shallow(<ListItem dispatch={dispatch} {...ValidListItemProps} />);
+      wrapper = shallow(
+        <ListItem dispatch={dispatch} {...ValidListItemProps} />
+      );
     });
 
     afterEach(() => {
@@ -162,21 +184,27 @@ describe("<ListItem> presentation component", () => {
     });
 
     it("should call dispatch with the correct events", () => {
-      wrapper.setProps({id: "foo-id", pos: 1, type: "foo"});
+      wrapper.setProps({ id: "foo-id", pos: 1, type: "foo" });
 
       wrapper.instance().onLinkClick();
 
       assert.calledTwice(dispatch);
-      assert.calledWith(dispatch, ac.UserEvent({
-        event: "CLICK",
-        source: "FOO",
-        action_position: 1,
-      }));
-      assert.calledWith(dispatch, ac.ImpressionStats({
-        click: 0,
-        source: "FOO",
-        tiles: [{id: "foo-id", pos: 1}],
-      }));
+      assert.calledWith(
+        dispatch,
+        ac.UserEvent({
+          event: "CLICK",
+          source: "FOO",
+          action_position: 1,
+        })
+      );
+      assert.calledWith(
+        dispatch,
+        ac.ImpressionStats({
+          click: 0,
+          source: "FOO",
+          tiles: [{ id: "foo-id", pos: 1 }],
+        })
+      );
     });
   });
 });

@@ -11,8 +11,10 @@ const TEST_URL = "data:text/html,a test page";
 
 add_task(async function test_setup() {
   // Stop search-engine loads from hitting the network.
-  await Services.search.addEngineWithDetails("MozSearch",
-    {method: "GET", template: "http://example.com/?q={searchTerms}"});
+  await Services.search.addEngineWithDetails("MozSearch", {
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
+  });
   let originalEngine = await Services.search.getDefault();
   let engine = Services.search.getEngineByName("MozSearch");
   await Services.search.setDefault(engine);
@@ -37,18 +39,26 @@ function simulateURLBarDrop(content) {
     document.getElementById("home-button"), // Dragstart element.
     gURLBar.inputField, // Drop element.
     [[content]], // Drag data.
-    "copy", window);
+    "copy",
+    window
+  );
 }
 
 add_task(async function checkDragURL() {
   await BrowserTestUtils.withNewTab(TEST_URL, function(browser) {
     info("Check dragging a normal url to the urlbar");
     const DRAG_URL = "http://www.example.com/";
-    simulateURLBarDrop({type: "text/plain", data: DRAG_URL});
-    Assert.equal(gURLBar.value, TEST_URL,
-      "URL bar value should not have changed");
-    Assert.equal(gBrowser.selectedBrowser.userTypedValue, null,
-      "Stored URL bar value should not have changed");
+    simulateURLBarDrop({ type: "text/plain", data: DRAG_URL });
+    Assert.equal(
+      gURLBar.value,
+      TEST_URL,
+      "URL bar value should not have changed"
+    );
+    Assert.equal(
+      gBrowser.selectedBrowser.userTypedValue,
+      null,
+      "Stored URL bar value should not have changed"
+    );
   });
 });
 
@@ -69,9 +79,12 @@ add_task(async function checkDragForbiddenURL() {
       "javascript:javascript:alert('hi!')",
     ]) {
       info(`Check dragging "{$url}" to the URL bar`);
-      simulateURLBarDrop({type: "text/plain", data: url});
-      Assert.notEqual(gURLBar.value, url,
-        `Shouldn't be allowed to drop ${url} on URL bar`);
+      simulateURLBarDrop({ type: "text/plain", data: url });
+      Assert.notEqual(
+        gURLBar.value,
+        url,
+        `Shouldn't be allowed to drop ${url} on URL bar`
+      );
     }
   });
 });
@@ -82,14 +95,14 @@ add_task(async function checkDragText() {
     const TEXT = "Firefox is awesome";
     const TEXT_URL = "http://example.com/?q=Firefox+is+awesome";
     let promiseLoad = BrowserTestUtils.browserLoaded(browser, false, TEXT_URL);
-    simulateURLBarDrop({type: "text/plain", data: TEXT});
+    simulateURLBarDrop({ type: "text/plain", data: TEXT });
     await promiseLoad;
 
     info("Check dragging single word text to the urlbar");
     const WORD = "Firefox";
     const WORD_URL = "http://example.com/?q=Firefox";
     promiseLoad = BrowserTestUtils.browserLoaded(browser, false, WORD_URL);
-    simulateURLBarDrop({type: "text/plain", data: WORD});
+    simulateURLBarDrop({ type: "text/plain", data: WORD });
     await promiseLoad;
   });
 });

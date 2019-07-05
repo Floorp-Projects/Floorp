@@ -24,15 +24,19 @@ async function checkShortcutLoading(modifierKeys) {
 
   // We stub getShortcutOrURIAndPostData so that we can guarentee it doesn't resolve
   // until after we've loaded a new page.
-  sandbox.stub(UrlbarUtils, "getShortcutOrURIAndPostData").callsFake(() => deferred.promise);
+  sandbox
+    .stub(UrlbarUtils, "getShortcutOrURIAndPostData")
+    .callsFake(() => deferred.promise);
 
   gURLBar.focus();
   gURLBar.value = "search";
   gURLBar.userTypedValue = true;
   EventUtils.synthesizeKey("KEY_Enter", modifierKeys);
 
-  Assert.ok(UrlbarUtils.getShortcutOrURIAndPostData.calledOnce,
-    "should have called getShortcutOrURIAndPostData");
+  Assert.ok(
+    UrlbarUtils.getShortcutOrURIAndPostData.calledOnce,
+    "should have called getShortcutOrURIAndPostData"
+  );
 
   BrowserTestUtils.loadURI(tab.linkedBrowser, "about:license");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -55,7 +59,10 @@ async function checkShortcutLoading(modifierKeys) {
     Assert.ok(openedTab, "Should have attempted to open the shortcut page");
     BrowserTestUtils.removeTab(openedTab);
   } else {
-    Assert.ok(!openedTab, "Should have not attempted to open the shortcut page");
+    Assert.ok(
+      !openedTab,
+      "Should have not attempted to open the shortcut page"
+    );
   }
 
   window.removeEventListener("TabOpen", listener);
@@ -68,5 +75,5 @@ add_task(async function test_location_change_stops_load() {
 });
 
 add_task(async function test_opening_different_tab_with_location_change() {
-  await checkShortcutLoading({altKey: true});
+  await checkShortcutLoading({ altKey: true });
 });

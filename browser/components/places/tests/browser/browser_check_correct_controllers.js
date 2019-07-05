@@ -34,21 +34,29 @@ add_task(async function test() {
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
   tree.focus();
 
-  let controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
-  let treeController = tree.controllers
-                           .getControllerForCommand("placesCmd_copy");
+  let controller = PlacesUIUtils.getControllerForCommand(
+    window,
+    "placesCmd_copy"
+  );
+  let treeController = tree.controllers.getControllerForCommand(
+    "placesCmd_copy"
+  );
   ok(controller == treeController, "tree controller was returned");
 
   // Open the context menu for a toolbar item, and check if the toolbar's
   // controller is returned.
   let toolbarItems = document.getElementById("PlacesToolbarItems");
-  EventUtils.synthesizeMouse(toolbarItems.children[0],
-                             4, 4, { type: "contextmenu", button: 2 },
-                             window);
+  EventUtils.synthesizeMouse(
+    toolbarItems.children[0],
+    4,
+    4,
+    { type: "contextmenu", button: 2 },
+    window
+  );
   controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
-  let toolbarController = document.getElementById("PlacesToolbar")
-                                  .controllers
-                                  .getControllerForCommand("placesCmd_copy");
+  let toolbarController = document
+    .getElementById("PlacesToolbar")
+    .controllers.getControllerForCommand("placesCmd_copy");
   ok(controller == toolbarController, "the toolbar controller was returned");
 
   document.getElementById("placesContext").hidePopup();
@@ -66,9 +74,13 @@ add_task(async function test() {
 function promiseLoadedSidebar(cmd) {
   return new Promise(resolve => {
     let sidebar = document.getElementById("sidebar");
-    sidebar.addEventListener("load", function() {
-      executeSoon(() => resolve(sidebar));
-    }, {capture: true, once: true});
+    sidebar.addEventListener(
+      "load",
+      function() {
+        executeSoon(() => resolve(sidebar));
+      },
+      { capture: true, once: true }
+    );
 
     SidebarUI.show(cmd);
   });

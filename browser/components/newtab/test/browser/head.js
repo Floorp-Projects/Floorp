@@ -1,26 +1,37 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "QueryCache",
-  "resource://activity-stream/lib/ASRouterTargeting.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "QueryCache",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+);
 
 function popPrefs() {
   return SpecialPowers.popPrefEnv();
 }
 function pushPrefs(...prefs) {
-  return SpecialPowers.pushPrefEnv({set: prefs});
+  return SpecialPowers.pushPrefEnv({ set: prefs });
 }
 
 // eslint-disable-next-line no-unused-vars
 async function setDefaultTopSites() {
   // The pref for TopSites is empty by default.
-  await pushPrefs(["browser.newtabpage.activity-stream.default.sites",
-    "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/"]);
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.default.sites",
+    "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/",
+  ]);
   // Toggle the feed off and on as a workaround to read the new prefs.
   await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", false]);
   await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", true]);
-  await pushPrefs(["browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", true]);
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
+    true,
+  ]);
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -36,7 +47,11 @@ async function clearHistoryAndBookmarks() {
  * not necessarily have had all its javascript/render logic executed.
  */
 async function waitForPreloaded(browser) {
-  let readyState = await ContentTask.spawn(browser, {}, () => content.document.readyState);
+  let readyState = await ContentTask.spawn(
+    browser,
+    {},
+    () => content.document.readyState
+  );
   if (readyState !== "complete") {
     await BrowserTestUtils.browserLoaded(browser);
   }
@@ -47,8 +62,14 @@ async function waitForPreloaded(browser) {
  */
 function refreshHighlightsFeed() {
   // Toggling the pref will clear the feed cache and force a places query.
-  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.section.highlights", false);
-  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.section.highlights", true);
+  Services.prefs.setBoolPref(
+    "browser.newtabpage.activity-stream.feeds.section.highlights",
+    false
+  );
+  Services.prefs.setBoolPref(
+    "browser.newtabpage.activity-stream.feeds.section.highlights",
+    true
+  );
 }
 
 /**
@@ -78,7 +99,7 @@ async function addHighlightsBookmarks(count) {
  * and functions to the `content` global.
  */
 function addContentHelpers() {
-  const {document} = content;
+  const { document } = content;
   Object.assign(content, {
     /**
      * Click the context menu button for an item and get its options list.
@@ -115,7 +136,7 @@ function addContentHelpers() {
 // eslint-disable-next-line no-unused-vars
 function test_newtab(testInfo) {
   // Extract any test parts or default to just the single content task
-  let {before, test: contentTask, after} = testInfo;
+  let { before, test: contentTask, after } = testInfo;
   if (!before) {
     before = () => ({});
   }
@@ -142,7 +163,11 @@ function test_newtab(testInfo) {
   // new tab that opens and closes.
   let testTask = async () => {
     // Open about:newtab without using the default load listener
-    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:newtab",
+      false
+    );
 
     // Specially wait for potentially preloaded browsers
     let browser = tab.linkedBrowser;
@@ -152,14 +177,24 @@ function test_newtab(testInfo) {
     ContentTask.spawn(browser, {}, addContentHelpers);
 
     // Wait for React to render something
-    await BrowserTestUtils.waitForCondition(() => ContentTask.spawn(browser, {},
-      () => content.document.getElementById("root").children.length),
-      "Should render activity stream content");
+    await BrowserTestUtils.waitForCondition(
+      () =>
+        ContentTask.spawn(
+          browser,
+          {},
+          () => content.document.getElementById("root").children.length
+        ),
+      "Should render activity stream content"
+    );
 
     // Chain together before -> contentTask -> after data passing
     try {
-      let contentArg = await before({pushPrefs: scopedPushPrefs, tab});
-      let contentResult = await ContentTask.spawn(browser, contentArg, contentTask);
+      let contentArg = await before({ pushPrefs: scopedPushPrefs, tab });
+      let contentResult = await ContentTask.spawn(
+        browser,
+        contentArg,
+        contentTask
+      );
       await after(contentResult);
     } finally {
       // Clean up for next tests
@@ -169,6 +204,6 @@ function test_newtab(testInfo) {
   };
 
   // Copy the name of the content task to identify the test
-  Object.defineProperty(testTask, "name", {value: contentTask.name});
+  Object.defineProperty(testTask, "name", { value: contentTask.name });
   add_task(testTask);
 }

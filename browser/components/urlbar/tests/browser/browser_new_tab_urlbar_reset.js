@@ -8,11 +8,19 @@
  * same text will reopen the results popup.
  */
 add_task(async function() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", false);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank",
+    false
+  );
   await promiseAutocompleteResultPopup("m");
   assertOpen();
 
-  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", false);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank",
+    false
+  );
   await promiseAutocompleteResultPopup("m");
   assertOpen();
 
@@ -22,10 +30,12 @@ add_task(async function() {
 
 function assertOpen() {
   if (UrlbarPrefs.get("quantumbar")) {
-    Assert.equal(gURLBar.view.panel.state, "open",
-      "Should be showing the popup");
+    Assert.equal(
+      gURLBar.view.panel.state,
+      "open",
+      "Should be showing the popup"
+    );
   } else {
-    Assert.ok(gURLBar.popupOpen,
-      "Should be showing the popup");
+    Assert.ok(gURLBar.popupOpen, "Should be showing the popup");
   }
 }

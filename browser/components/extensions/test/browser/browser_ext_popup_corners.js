@@ -5,20 +5,20 @@
 add_task(async function testPopupBorderRadius() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         browser.pageAction.show(tabs[0].id);
       });
     },
 
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
 
-      "page_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      page_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
     },
 
@@ -35,7 +35,11 @@ add_task(async function testPopupBorderRadius() {
 
   async function testPanel(browser, standAlone = true) {
     let panel = getPanelForNode(browser);
-    let arrowContent = document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent");
+    let arrowContent = document.getAnonymousElementByAttribute(
+      panel,
+      "class",
+      "panel-arrowcontent"
+    );
 
     let panelStyle = getComputedStyle(arrowContent);
 
@@ -43,10 +47,16 @@ add_task(async function testPopupBorderRadius() {
     let viewNode = stack.parentNode === panel ? browser : stack.parentNode;
     let viewStyle = getComputedStyle(viewNode);
 
-    let props = ["borderTopLeftRadius", "borderTopRightRadius",
-                 "borderBottomRightRadius", "borderBottomLeftRadius"];
+    let props = [
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderBottomRightRadius",
+      "borderBottomLeftRadius",
+    ];
 
-    let bodyStyle = await ContentTask.spawn(browser, props, async function(props) {
+    let bodyStyle = await ContentTask.spawn(browser, props, async function(
+      props
+    ) {
       let bodyStyle = content.getComputedStyle(content.document.body);
 
       return new Map(props.map(prop => [prop, bodyStyle[prop]]));
@@ -54,8 +64,16 @@ add_task(async function testPopupBorderRadius() {
 
     for (let prop of props) {
       if (standAlone) {
-        is(viewStyle[prop], panelStyle[prop], `Panel and view ${prop} should be the same`);
-        is(bodyStyle.get(prop), panelStyle[prop], `Panel and body ${prop} should be the same`);
+        is(
+          viewStyle[prop],
+          panelStyle[prop],
+          `Panel and view ${prop} should be the same`
+        );
+        is(
+          bodyStyle.get(prop),
+          panelStyle[prop],
+          `Panel and body ${prop} should be the same`
+        );
       } else {
         is(viewStyle[prop], "0px", `View node ${prop} should be 0px`);
         is(bodyStyle.get(prop), "0px", `Body node ${prop} should be 0px`);

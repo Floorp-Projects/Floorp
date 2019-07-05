@@ -5,9 +5,9 @@
 requestLongerTimeout(2);
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["signon.management.page.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.management.page.enabled", true]],
+  });
 
   let aboutURLs = [];
 
@@ -31,7 +31,9 @@ add_task(async function() {
   ];
 
   for (let cid in Cc) {
-    let result = cid.match(/@mozilla.org\/network\/protocol\/about;1\?what\=(.*)$/);
+    let result = cid.match(
+      /@mozilla.org\/network\/protocol\/about;1\?what\=(.*)$/
+    );
     if (!result) {
       continue;
     }
@@ -42,8 +44,10 @@ add_task(async function() {
       let am = Cc[contract].getService(Ci.nsIAboutModule);
       let uri = Services.io.newURI("about:" + aboutType);
       let flags = am.getURIFlags(uri);
-      if (!(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
-          !skipURLs.includes(aboutType)) {
+      if (
+        !(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
+        !skipURLs.includes(aboutType)
+      ) {
         aboutURLs.push(aboutType);
       }
     } catch (e) {
@@ -54,7 +58,9 @@ add_task(async function() {
 
   for (let url of aboutURLs) {
     info("Loading about:" + url);
-    let tab = BrowserTestUtils.addTab(gBrowser, "about:" + url, {userContextId: 1});
+    let tab = BrowserTestUtils.addTab(gBrowser, "about:" + url, {
+      userContextId: 1,
+    });
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     ok(true, "Done loading about:" + url);

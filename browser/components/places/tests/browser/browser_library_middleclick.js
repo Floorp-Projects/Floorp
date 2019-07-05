@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- /**
+/**
  * Tests middle-clicking items in the Library.
  */
 
@@ -17,9 +17,7 @@ add_task(async function test_setup() {
   requestLongerTimeout(2);
 
   // Temporary disable history, so we won't record pages navigation.
-  await SpecialPowers.pushPrefEnv({set: [
-    ["places.history.enabled", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({ set: [["places.history.enabled", false]] });
 
   // Ensure the database is empty.
   await PlacesUtils.bookmarks.eraseEverything();
@@ -54,12 +52,19 @@ gTests.push({
 
     // Select unsorted bookmarks root in the left pane.
     gLibrary.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
-    Assert.notEqual(gLibrary.PlacesOrganizer._places.selectedNode, null,
-      "We correctly have selection in the Library left pane");
+    Assert.notEqual(
+      gLibrary.PlacesOrganizer._places.selectedNode,
+      null,
+      "We correctly have selection in the Library left pane"
+    );
 
     // Get our bookmark in the right pane.
     var bookmarkNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
-    Assert.equal(bookmarkNode.uri, this.URIs[0], "Found bookmark in the right pane");
+    Assert.equal(
+      bookmarkNode.uri,
+      this.URIs[0],
+      "Found bookmark in the right pane"
+    );
   },
 
   async cleanup() {
@@ -86,17 +91,22 @@ gTests.push({
 
     this._bookmarks = await PlacesUtils.bookmarks.insertTree({
       guid: PlacesUtils.bookmarks.unfiledGuid,
-      children: [{
-        title: "Folder",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        children,
-      }],
+      children: [
+        {
+          title: "Folder",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          children,
+        },
+      ],
     });
 
     // Select unsorted bookmarks root in the left pane.
     gLibrary.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
-    isnot(gLibrary.PlacesOrganizer._places.selectedNode, null,
-          "We correctly have selection in the Library left pane");
+    isnot(
+      gLibrary.PlacesOrganizer._places.selectedNode,
+      null,
+      "We correctly have selection in the Library left pane"
+    );
     // Get our bookmark in the right pane.
     var folderNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
     is(folderNode.title, "Folder", "Found folder in the right pane");
@@ -126,11 +136,13 @@ gTests.push({
 
     this._bookmarks = await PlacesUtils.bookmarks.insertTree({
       guid: PlacesUtils.bookmarks.unfiledGuid,
-      children: [{
-        title: "Folder",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        children,
-      }],
+      children: [
+        {
+          title: "Folder",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          children,
+        },
+      ],
     });
 
     // Create a bookmarks query containing our bookmarks.
@@ -151,8 +163,11 @@ gTests.push({
 
     // Select unsorted bookmarks root in the left pane.
     gLibrary.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
-    isnot(gLibrary.PlacesOrganizer._places.selectedNode, null,
-          "We correctly have selection in the Library left pane");
+    isnot(
+      gLibrary.PlacesOrganizer._places.selectedNode,
+      null,
+      "We correctly have selection in the Library left pane"
+    );
     // Get our bookmark in the right pane.
     var folderNode = gLibrary.ContentTree.view.view.nodeForTreeIndex(0);
     is(folderNode.title, "Query", "Found query in the right pane");
@@ -175,8 +190,11 @@ async function runTest(test) {
   await SimpleTest.promiseFocus(gLibrary);
 
   // Now middle-click on the bookmark contained with it.
-  let promiseLoaded = Promise.all(test.URIs.map(uri =>
-    BrowserTestUtils.waitForNewTab(gBrowser, uri, false, true)));
+  let promiseLoaded = Promise.all(
+    test.URIs.map(uri =>
+      BrowserTestUtils.waitForNewTab(gBrowser, uri, false, true)
+    )
+  );
 
   mouseEventOnCell(gLibrary.ContentTree.view, 0, 0, { button: 1 });
 
@@ -206,6 +224,11 @@ function mouseEventOnCell(aTree, aRowIndex, aColumnIndex, aEventDetails) {
   // get cell coordinates
   var rect = aTree.getCoordsForCellItem(aRowIndex, column, "text");
 
-  EventUtils.synthesizeMouse(aTree.body, rect.x, rect.y,
-                             aEventDetails, gLibrary);
+  EventUtils.synthesizeMouse(
+    aTree.body,
+    rect.x,
+    rect.y,
+    aEventDetails,
+    gLibrary
+  );
 }

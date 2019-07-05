@@ -2,14 +2,17 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-var {
-  normalizeTime,
-} = ExtensionCommon;
+var { normalizeTime } = ExtensionCommon;
 
 let nsINavHistoryService = Ci.nsINavHistoryService;
 const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([
@@ -31,7 +34,9 @@ const getTransitionType = transition => {
   transition = transition || "link";
   let transitionType = TRANSITION_TO_TRANSITION_TYPES_MAP.get(transition);
   if (!transitionType) {
-    throw new Error(`|${transition}| is not a supported transition for history`);
+    throw new Error(
+      `|${transition}| is not a supported transition for history`
+    );
   }
   return transitionType;
 };
@@ -90,9 +95,9 @@ var _observer;
 
 const getHistoryObserver = () => {
   if (!_observer) {
-    _observer = new class extends EventEmitter {
+    _observer = new (class extends EventEmitter {
       onDeleteURI(uri, guid, reason) {
-        this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
+        this.emit("visitRemoved", { allHistory: false, urls: [uri.spec] });
       }
       handlePlacesEvents(events) {
         for (let event of events) {
@@ -110,23 +115,24 @@ const getHistoryObserver = () => {
       onBeginUpdateBatch() {}
       onEndUpdateBatch() {}
       onTitleChanged(uri, title) {
-        this.emit("titleChanged", {url: uri.spec, title: title});
+        this.emit("titleChanged", { url: uri.spec, title: title });
       }
       onClearHistory() {
-        this.emit("visitRemoved", {allHistory: true, urls: []});
+        this.emit("visitRemoved", { allHistory: true, urls: [] });
       }
       onPageChanged() {}
       onFrecencyChanged() {}
       onManyFrecenciesChanged() {}
       onDeleteVisits(uri, partialRemoval, guid, reason) {
         if (!partialRemoval) {
-          this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
+          this.emit("visitRemoved", { allHistory: false, urls: [uri.spec] });
         }
       }
-    }();
+    })();
     PlacesUtils.observers.addListener(
       ["page-visited"],
-      _observer.handlePlacesEvents.bind(_observer));
+      _observer.handlePlacesEvents.bind(_observer)
+    );
     PlacesUtils.history.addObserver(_observer);
   }
   return _observer;
@@ -141,7 +147,7 @@ this.history = class extends ExtensionAPI {
           try {
             transition = getTransitionType(details.transition);
           } catch (error) {
-            return Promise.reject({message: error.message});
+            return Promise.reject({ message: error.message });
           }
           if (details.visitTime) {
             date = normalizeTime(details.visitTime);
@@ -159,7 +165,7 @@ this.history = class extends ExtensionAPI {
           try {
             return PlacesUtils.history.insert(pageInfo).then(() => undefined);
           } catch (error) {
-            return Promise.reject({message: error.message});
+            return Promise.reject({ message: error.message });
           }
         },
 
@@ -173,7 +179,9 @@ this.history = class extends ExtensionAPI {
             endDate: normalizeTime(filter.endTime),
           };
           // History.removeVisitsByFilter returns a boolean, but our API should return nothing
-          return PlacesUtils.history.removeVisitsByFilter(newFilter).then(() => undefined);
+          return PlacesUtils.history
+            .removeVisitsByFilter(newFilter)
+            .then(() => undefined);
         },
 
         deleteUrl: function(details) {
@@ -183,14 +191,18 @@ this.history = class extends ExtensionAPI {
         },
 
         search: function(query) {
-          let beginTime = (query.startTime == null) ?
-                            PlacesUtils.toPRTime(Date.now() - 24 * 60 * 60 * 1000) :
-                            PlacesUtils.toPRTime(normalizeTime(query.startTime));
-          let endTime = (query.endTime == null) ?
-                          Number.MAX_VALUE :
-                          PlacesUtils.toPRTime(normalizeTime(query.endTime));
+          let beginTime =
+            query.startTime == null
+              ? PlacesUtils.toPRTime(Date.now() - 24 * 60 * 60 * 1000)
+              : PlacesUtils.toPRTime(normalizeTime(query.startTime));
+          let endTime =
+            query.endTime == null
+              ? Number.MAX_VALUE
+              : PlacesUtils.toPRTime(normalizeTime(query.endTime));
           if (beginTime > endTime) {
-            return Promise.reject({message: "The startTime cannot be after the endTime"});
+            return Promise.reject({
+              message: "The startTime cannot be after the endTime",
+            });
           }
 
           let options = PlacesUtils.history.getNewQueryOptions();
@@ -202,15 +214,23 @@ this.history = class extends ExtensionAPI {
           historyQuery.searchTerms = query.text;
           historyQuery.beginTime = beginTime;
           historyQuery.endTime = endTime;
-          let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
-          let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToHistoryItem);
+          let queryResult = PlacesUtils.history.executeQuery(
+            historyQuery,
+            options
+          ).root;
+          let results = convertNavHistoryContainerResultNode(
+            queryResult,
+            convertNodeToHistoryItem
+          );
           return Promise.resolve(results);
         },
 
         getVisits: function(details) {
           let url = details.url;
           if (!url) {
-            return Promise.reject({message: "A URL must be provided for getVisits"});
+            return Promise.reject({
+              message: "A URL must be provided for getVisits",
+            });
           }
 
           let options = PlacesUtils.history.getNewQueryOptions();
@@ -220,8 +240,14 @@ this.history = class extends ExtensionAPI {
 
           let historyQuery = PlacesUtils.history.getNewQuery();
           historyQuery.uri = Services.io.newURI(url);
-          let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
-          let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
+          let queryResult = PlacesUtils.history.executeQuery(
+            historyQuery,
+            options
+          ).root;
+          let results = convertNavHistoryContainerResultNode(
+            queryResult,
+            convertNodeToVisitItem
+          );
           return Promise.resolve(results);
         },
 

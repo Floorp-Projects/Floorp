@@ -10,11 +10,18 @@ const TOOLBARID = "test-API-created-extra-toolbar";
 add_task(async function() {
   let toolbar = createToolbarWithPlacements(TOOLBARID, []);
   CustomizableUI.addWidgetToArea(BUTTONID, TOOLBARID);
-  is(CustomizableUI.getPlacementOfWidget(BUTTONID).area, TOOLBARID, "Should be on toolbar");
+  is(
+    CustomizableUI.getPlacementOfWidget(BUTTONID).area,
+    TOOLBARID,
+    "Should be on toolbar"
+  );
   is(toolbar.children.length, 0, "Toolbar has no kid");
 
   CustomizableUI.unregisterArea(TOOLBARID);
-  CustomizableUI.createWidget({id: BUTTONID, label: "Test widget toolbar gone"});
+  CustomizableUI.createWidget({
+    id: BUTTONID,
+    label: "Test widget toolbar gone",
+  });
 
   let currentWidget = CustomizableUI.getWidget(BUTTONID);
 
@@ -22,11 +29,27 @@ add_task(async function() {
   let buttonNode = document.getElementById(BUTTONID);
   ok(buttonNode, "Should find button in window");
   if (buttonNode) {
-    is(buttonNode.parentNode.localName, "toolbarpaletteitem", "Node should be wrapped");
-    is(buttonNode.parentNode.getAttribute("place"), "palette", "Node should be in palette");
-    is(buttonNode, gNavToolbox.palette.querySelector("#" + BUTTONID), "Node should really be in palette.");
+    is(
+      buttonNode.parentNode.localName,
+      "toolbarpaletteitem",
+      "Node should be wrapped"
+    );
+    is(
+      buttonNode.parentNode.getAttribute("place"),
+      "palette",
+      "Node should be in palette"
+    );
+    is(
+      buttonNode,
+      gNavToolbox.palette.querySelector("#" + BUTTONID),
+      "Node should really be in palette."
+    );
   }
-  is(currentWidget.forWindow(window).node, buttonNode, "Should have the same node for customize mode");
+  is(
+    currentWidget.forWindow(window).node,
+    buttonNode,
+    "Should have the same node for customize mode"
+  );
   await endCustomizing();
 
   CustomizableUI.destroyWidget(BUTTONID);

@@ -5,13 +5,12 @@
 const CC = Components.Constructor;
 
 const TEST_HOST = "example.com";
-const TEST_URL = "http://" + TEST_HOST + "/browser/browser/components/contextualidentity/test/browser/";
+const TEST_URL =
+  "http://" +
+  TEST_HOST +
+  "/browser/browser/components/contextualidentity/test/browser/";
 
-const USER_CONTEXTS = [
-  "default",
-  "personal",
-  "work",
-];
+const USER_CONTEXTS = ["default", "personal", "work"];
 
 const DELETE_CONTEXT = 1;
 const COOKIE_NAME = "userContextId";
@@ -22,7 +21,7 @@ const COOKIE_NAME = "userContextId";
 
 async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
@@ -30,11 +29,11 @@ async function openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return {tab, browser};
+  return { tab, browser };
 }
 
 function getCookiesForOA(host, userContextId) {
-  return Services.cookies.getCookiesFromHost(host, {userContextId});
+  return Services.cookies.getCookiesFromHost(host, { userContextId });
 }
 
 //
@@ -43,9 +42,9 @@ function getCookiesForOA(host, userContextId) {
 
 add_task(async function setup() {
   // Make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-      [ "privacy.userContext.enabled", true ],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 });
 
 function checkCookies(ignoreContext = null) {
@@ -65,9 +64,18 @@ function checkCookies(ignoreContext = null) {
 function deleteCookies(onlyContext = null) {
   // Using getCookiesWithOriginAttributes() to get all cookies for a certain
   // domain by using the originAttributes pattern, and clear all these cookies.
-  for (let cookie of Services.cookies.getCookiesWithOriginAttributes(JSON.stringify({}), TEST_HOST)) {
+  for (let cookie of Services.cookies.getCookiesWithOriginAttributes(
+    JSON.stringify({}),
+    TEST_HOST
+  )) {
     if (!onlyContext || cookie.originAttributes.userContextId == onlyContext) {
-      Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+      Services.cookies.remove(
+        cookie.host,
+        cookie.name,
+        cookie.path,
+        false,
+        cookie.originAttributes
+      );
     }
   }
 }
@@ -81,7 +89,10 @@ add_task(async function test_cookie_getCookiesWithOriginAttributes() {
     let value = USER_CONTEXTS[userContextId];
 
     // Open our tab in the given user context.
-    tabs[userContextId] = await openTabInUserContext(TEST_URL + "file_reflect_cookie_into_title.html?" + value, userContextId);
+    tabs[userContextId] = await openTabInUserContext(
+      TEST_URL + "file_reflect_cookie_into_title.html?" + value,
+      userContextId
+    );
 
     // Close this tab.
     BrowserTestUtils.removeTab(tabs[userContextId].tab);

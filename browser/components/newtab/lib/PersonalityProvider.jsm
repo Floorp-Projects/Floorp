@@ -3,20 +3,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
 
-const {actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
-ChromeUtils.defineModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
+const { actionCreators: ac } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "perfService",
+  "resource://activity-stream/common/PerfService.jsm"
+);
 
-const {NaiveBayesTextTagger} = ChromeUtils.import("resource://activity-stream/lib/NaiveBayesTextTagger.jsm");
-const {NmfTextTagger} = ChromeUtils.import("resource://activity-stream/lib/NmfTextTagger.jsm");
-const {RecipeExecutor} = ChromeUtils.import("resource://activity-stream/lib/RecipeExecutor.jsm");
+const { NaiveBayesTextTagger } = ChromeUtils.import(
+  "resource://activity-stream/lib/NaiveBayesTextTagger.jsm"
+);
+const { NmfTextTagger } = ChromeUtils.import(
+  "resource://activity-stream/lib/NmfTextTagger.jsm"
+);
+const { RecipeExecutor } = ChromeUtils.import(
+  "resource://activity-stream/lib/RecipeExecutor.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm"
+);
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -24,27 +43,42 @@ XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
 
 XPCOMUtils.defineLazyGetter(this, "baseAttachmentsURL", async () => {
   const server = Services.prefs.getCharPref("services.settings.server");
-  const serverInfo = await (await fetch(`${server}/`, {credentials: "omit"})).json();
-  const {capabilities: {attachments: {base_url}}} = serverInfo;
+  const serverInfo = await (await fetch(`${server}/`, {
+    credentials: "omit",
+  })).json();
+  const {
+    capabilities: {
+      attachments: { base_url },
+    },
+  } = serverInfo;
   return base_url;
 });
 
-const PERSONALITY_PROVIDER_DIR = OS.Path.join(OS.Constants.Path.localProfileDir, "personality-provider");
+const PERSONALITY_PROVIDER_DIR = OS.Path.join(
+  OS.Constants.Path.localProfileDir,
+  "personality-provider"
+);
 const RECIPE_NAME = "personality-provider-recipe";
 const MODELS_NAME = "personality-provider-models";
 
 function getHash(aStr) {
   // return the two-digit hexadecimal code for a byte
-  let toHexString = charCode => (`0${charCode.toString(16)}`).slice(-2);
-  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  let toHexString = charCode => `0${charCode.toString(16)}`.slice(-2);
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hasher.init(Ci.nsICryptoHash.SHA256);
-  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stringStream.data = aStr;
   hasher.updateFromStream(stringStream, -1);
 
   // convert the binary hash data to a hex string.
   let binary = hasher.finish(false);
-  return Array.from(binary, (c, i) => toHexString(binary.charCodeAt(i))).join("").toLowerCase();
+  return Array.from(binary, (c, i) => toHexString(binary.charCodeAt(i)))
+    .join("")
+    .toLowerCase();
 }
 
 /**
@@ -59,7 +93,8 @@ this.PersonalityProvider = class PersonalityProvider {
     maxHistoryQueryResults,
     version,
     scores,
-    v2Params) {
+    v2Params
+  ) {
     this.v2Params = v2Params || {};
     this.dispatch = this.v2Params.dispatch || (() => {});
     this.modelKeys = this.v2Params.modelKeys;
@@ -77,7 +112,7 @@ this.PersonalityProvider = class PersonalityProvider {
 
   async onSync(event) {
     const {
-      data: {created, updated, deleted},
+      data: { created, updated, deleted },
     } = event;
 
     // Remove every removed attachment.
@@ -86,7 +121,9 @@ this.PersonalityProvider = class PersonalityProvider {
 
     // Download every new/updated attachment.
     const toDownload = created.concat(updated.map(u => u.new));
-    await Promise.all(toDownload.map(record => this.maybeDownloadAttachment(record)));
+    await Promise.all(
+      toDownload.map(record => this.maybeDownloadAttachment(record))
+    );
   }
 
   setupSyncAttachment(collection) {
@@ -98,45 +135,57 @@ this.PersonalityProvider = class PersonalityProvider {
    * and any existing files matching the filename are clobbered.
    */
   async _downloadAttachment(record) {
-    const {attachment: {location, filename}} = record;
+    const {
+      attachment: { location, filename },
+    } = record;
     const remoteFilePath = (await baseAttachmentsURL) + location;
     const localFilePath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
     const headers = new Headers();
     headers.set("Accept-Encoding", "gzip");
-    const resp = await fetch(remoteFilePath, {headers, credentials: "omit"});
+    const resp = await fetch(remoteFilePath, { headers, credentials: "omit" });
     if (!resp.ok) {
       Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
       return;
     }
     const buffer = await resp.arrayBuffer();
     const bytes = new Uint8Array(buffer);
-    await OS.File.writeAtomic(localFilePath, bytes, {tmpPath: `${localFilePath}.tmp`});
+    await OS.File.writeAtomic(localFilePath, bytes, {
+      tmpPath: `${localFilePath}.tmp`,
+    });
   }
 
   /**
    * Attempts to download the attachment, but only if it doesn't already exist.
    */
   async maybeDownloadAttachment(record, retries = 3) {
-    const {attachment: {filename, hash, size}} = record;
+    const {
+      attachment: { filename, hash, size },
+    } = record;
     await OS.File.makeDir(PERSONALITY_PROVIDER_DIR);
     const localFilePath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
 
     let retry = 0;
-    while ((retry++ < retries) &&
-        (!await OS.File.exists(localFilePath) ||
+    while (
+      retry++ < retries &&
+      (!(await OS.File.exists(localFilePath)) ||
         (await OS.File.stat(localFilePath)).size !== size ||
-        getHash(await this._getFileStr(localFilePath)) !== hash)) {
+        getHash(await this._getFileStr(localFilePath)) !== hash)
+    ) {
       await this._downloadAttachment(record);
     }
   }
 
   async deleteAttachment(record) {
-    const {attachment: {filename}} = record;
+    const {
+      attachment: { filename },
+    } = record;
     await OS.File.makeDir(PERSONALITY_PROVIDER_DIR);
     const path = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
 
-    await OS.File.remove(path, {ignoreAbsent: true});
-    return OS.File.removeEmptyDir(PERSONALITY_PROVIDER_DIR, {ignoreAbsent: true});
+    await OS.File.remove(path, { ignoreAbsent: true });
+    return OS.File.removeEmptyDir(PERSONALITY_PROVIDER_DIR, {
+      ignoreAbsent: true,
+    });
   }
 
   /**
@@ -144,7 +193,9 @@ this.PersonalityProvider = class PersonalityProvider {
    * and if not attempts to download it.
    */
   async getAttachment(record) {
-    const {attachment: {filename}} = record;
+    const {
+      attachment: { filename },
+    } = record;
     const filepath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
 
     try {
@@ -165,26 +216,39 @@ this.PersonalityProvider = class PersonalityProvider {
 
   async init(callback) {
     const perfStart = perfService.absNow();
-    this.interestConfig = this.interestConfig || await this.getRecipe();
+    this.interestConfig = this.interestConfig || (await this.getRecipe());
     if (!this.interestConfig) {
-      this.dispatch(ac.PerfEvent({event: "PERSONALIZATION_V2_GET_RECIPE_ERROR"}));
+      this.dispatch(
+        ac.PerfEvent({ event: "PERSONALIZATION_V2_GET_RECIPE_ERROR" })
+      );
       return;
     }
     this.recipeExecutor = await this.generateRecipeExecutor();
     if (!this.recipeExecutor) {
-      this.dispatch(ac.PerfEvent({event: "PERSONALIZATION_V2_GENERATE_RECIPE_EXECUTOR_ERROR"}));
+      this.dispatch(
+        ac.PerfEvent({
+          event: "PERSONALIZATION_V2_GENERATE_RECIPE_EXECUTOR_ERROR",
+        })
+      );
       return;
     }
-    this.interestVector = this.interestVector || await this.createInterestVector();
+    this.interestVector =
+      this.interestVector || (await this.createInterestVector());
     if (!this.interestVector) {
-      this.dispatch(ac.PerfEvent({event: "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_ERROR"}));
+      this.dispatch(
+        ac.PerfEvent({
+          event: "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_ERROR",
+        })
+      );
       return;
     }
 
-    this.dispatch(ac.PerfEvent({
-      event: "PERSONALIZATION_V2_TOTAL_DURATION",
-      value: Math.round(perfService.absNow() - perfStart),
-    }));
+    this.dispatch(
+      ac.PerfEvent({
+        event: "PERSONALIZATION_V2_TOTAL_DURATION",
+        value: Math.round(perfService.absNow() - perfStart),
+      })
+    );
 
     this.initialized = true;
     if (callback) {
@@ -194,7 +258,12 @@ this.PersonalityProvider = class PersonalityProvider {
 
   async getFromRemoteSettings(name) {
     const result = await RemoteSettings(name).get();
-    return Promise.all(result.map(async record => ({...await this.getAttachment(record), recordKey: record.key})));
+    return Promise.all(
+      result.map(async record => ({
+        ...(await this.getAttachment(record)),
+        recordKey: record.key,
+      }))
+    );
   }
 
   /**
@@ -205,10 +274,12 @@ this.PersonalityProvider = class PersonalityProvider {
     if (!this.recipes || !this.recipes.length) {
       const start = perfService.absNow();
       this.recipes = await this.getFromRemoteSettings(RECIPE_NAME);
-      this.dispatch(ac.PerfEvent({
-        event: "PERSONALIZATION_V2_GET_RECIPE_DURATION",
-        value: Math.round(perfService.absNow() - start),
-      }));
+      this.dispatch(
+        ac.PerfEvent({
+          event: "PERSONALIZATION_V2_GET_RECIPE_DURATION",
+          value: Math.round(perfService.absNow() - start),
+        })
+      );
     }
     return this.recipes[0];
   }
@@ -239,18 +310,25 @@ this.PersonalityProvider = class PersonalityProvider {
           nmfTaggers[model.parent_tag] = new NmfTextTagger(model);
         }
       }
-      this.dispatch(ac.PerfEvent({
-        event: "PERSONALIZATION_V2_TAGGERS_DURATION",
-        value: Math.round(perfService.absNow() - startTaggers),
-      }));
-      this.taggers = {nbTaggers, nmfTaggers};
+      this.dispatch(
+        ac.PerfEvent({
+          event: "PERSONALIZATION_V2_TAGGERS_DURATION",
+          value: Math.round(perfService.absNow() - startTaggers),
+        })
+      );
+      this.taggers = { nbTaggers, nmfTaggers };
     }
     const startRecipeExecutor = perfService.absNow();
-    const recipeExecutor = new RecipeExecutor(this.taggers.nbTaggers, this.taggers.nmfTaggers);
-    this.dispatch(ac.PerfEvent({
-      event: "PERSONALIZATION_V2_RECIPE_EXECUTOR_DURATION",
-      value: Math.round(perfService.absNow() - startRecipeExecutor),
-    }));
+    const recipeExecutor = new RecipeExecutor(
+      this.taggers.nbTaggers,
+      this.taggers.nmfTaggers
+    );
+    this.dispatch(
+      ac.PerfEvent({
+        event: "PERSONALIZATION_V2_RECIPE_EXECUTOR_DURATION",
+        value: Math.round(perfService.absNow() - startRecipeExecutor),
+      })
+    );
     return recipeExecutor;
   }
 
@@ -267,7 +345,7 @@ this.PersonalityProvider = class PersonalityProvider {
     });
     sql += " LIMIT 30000";
 
-    const {activityStreamProvider} = NewTabUtils;
+    const { activityStreamProvider } = NewTabUtils;
     const history = await activityStreamProvider.executePlacesQuery(sql, {
       columns,
       params: {},
@@ -282,27 +360,35 @@ this.PersonalityProvider = class PersonalityProvider {
    */
   async createInterestVector() {
     let interestVector = {};
-    let endTimeSecs = ((new Date()).getTime() / 1000);
+    let endTimeSecs = new Date().getTime() / 1000;
     let beginTimeSecs = endTimeSecs - this.interestConfig.history_limit_secs;
-    let history = await this.fetchHistory(this.interestConfig.history_required_fields, beginTimeSecs, endTimeSecs);
+    let history = await this.fetchHistory(
+      this.interestConfig.history_required_fields,
+      beginTimeSecs,
+      endTimeSecs
+    );
 
-    this.dispatch(ac.PerfEvent({
-      event: "PERSONALIZATION_V2_HISTORY_SIZE",
-      value: history.length,
-    }));
+    this.dispatch(
+      ac.PerfEvent({
+        event: "PERSONALIZATION_V2_HISTORY_SIZE",
+        value: history.length,
+      })
+    );
 
     const start = perfService.absNow();
     for (let historyRec of history) {
       let ivItem = this.recipeExecutor.executeRecipe(
         historyRec,
-        this.interestConfig.history_item_builder);
+        this.interestConfig.history_item_builder
+      );
       if (ivItem === null) {
         continue;
       }
       interestVector = this.recipeExecutor.executeCombinerRecipe(
         interestVector,
         ivItem,
-        this.interestConfig.interest_combiner);
+        this.interestConfig.interest_combiner
+      );
       if (interestVector === null) {
         return null;
       }
@@ -310,12 +396,15 @@ this.PersonalityProvider = class PersonalityProvider {
 
     const finalResult = this.recipeExecutor.executeRecipe(
       interestVector,
-      this.interestConfig.interest_finalizer);
+      this.interestConfig.interest_finalizer
+    );
 
-    this.dispatch(ac.PerfEvent({
-      event: "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_DURATION",
-      value: Math.round(perfService.absNow() - start),
-    }));
+    this.dispatch(
+      ac.PerfEvent({
+        event: "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_DURATION",
+        value: Math.round(perfService.absNow() - start),
+      })
+    );
     return finalResult;
   }
 
@@ -330,7 +419,8 @@ this.PersonalityProvider = class PersonalityProvider {
     }
     let scorableItem = this.recipeExecutor.executeRecipe(
       pocketItem,
-      this.interestConfig.item_to_rank_builder);
+      this.interestConfig.item_to_rank_builder
+    );
     if (scorableItem === null) {
       return -1;
     }
@@ -343,7 +433,8 @@ this.PersonalityProvider = class PersonalityProvider {
 
     rankingVector = this.recipeExecutor.executeRecipe(
       rankingVector,
-      this.interestConfig.item_ranker);
+      this.interestConfig.item_ranker
+    );
 
     if (rankingVector === null) {
       return -1;

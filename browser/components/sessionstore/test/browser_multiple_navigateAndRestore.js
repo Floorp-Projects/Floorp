@@ -1,7 +1,9 @@
 "use strict";
 
-const PAGE_1 = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
-const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
+const PAGE_1 =
+  "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
+const PAGE_2 =
+  "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
 add_task(async function() {
   // Load an empty, non-remote tab at about:blank...
@@ -24,12 +26,19 @@ add_task(async function() {
   let entries = state.entries;
   is(entries.length, 1, "There should only be one entry");
   is(entries[0].url, PAGE_2, "Should have PAGE_2 as the sole history entry");
-  is(browser.currentURI.spec, PAGE_2, "Should have PAGE_2 as the browser currentURI");
+  is(
+    browser.currentURI.spec,
+    PAGE_2,
+    "Should have PAGE_2 as the browser currentURI"
+  );
 
   await ContentTask.spawn(browser, PAGE_2, async function(expectedURL) {
     docShell.QueryInterface(Ci.nsIWebNavigation);
-    Assert.equal(docShell.currentURI.spec, expectedURL,
-       "Content should have PAGE_2 as the browser currentURI");
+    Assert.equal(
+      docShell.currentURI.spec,
+      expectedURL,
+      "Content should have PAGE_2 as the browser currentURI"
+    );
   });
 
   BrowserTestUtils.removeTab(tab);

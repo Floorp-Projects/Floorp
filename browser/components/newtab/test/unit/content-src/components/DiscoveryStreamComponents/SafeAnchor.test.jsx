@@ -1,6 +1,6 @@
 import React from "react";
-import {SafeAnchor} from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import {shallow} from "enzyme";
+import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
+import { shallow } from "enzyme";
 
 describe("Discovery Stream <SafeAnchor>", () => {
   let warnStub;
@@ -37,7 +37,7 @@ describe("Discovery Stream <SafeAnchor>", () => {
   });
   it("should dispatch an event on click", () => {
     const dispatchStub = sandbox.stub();
-    const fakeEvent = {preventDefault: sandbox.stub(), currentTarget: {}};
+    const fakeEvent = { preventDefault: sandbox.stub(), currentTarget: {} };
     const wrapper = shallow(<SafeAnchor dispatch={dispatchStub} />);
 
     wrapper.find("a").simulate("click", fakeEvent);

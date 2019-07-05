@@ -16,22 +16,30 @@ function test() {
       ss.setCustomWindowValue(window_B, uniqKey, uniqVal);
       let state = JSON.parse(ss.getBrowserState());
       let selectedWindow = state.windows[state.selectedWindow - 1];
-      is(selectedWindow.extData && selectedWindow.extData[uniqKey], uniqVal,
-         "selectedWindow is window_B");
+      is(
+        selectedWindow.extData && selectedWindow.extData[uniqKey],
+        uniqVal,
+        "selectedWindow is window_B"
+      );
 
       // Now minimize window_B. The selected window shouldn't have the secret data
       window_B.minimize();
       waitForFocus(function() {
         state = JSON.parse(ss.getBrowserState());
         selectedWindow = state.windows[state.selectedWindow - 1];
-        ok(!selectedWindow.extData || !selectedWindow.extData[uniqKey],
-           "selectedWindow is not window_B after minimizing it");
+        ok(
+          !selectedWindow.extData || !selectedWindow.extData[uniqKey],
+          "selectedWindow is not window_B after minimizing it"
+        );
 
         // Now minimize the last open window (assumes no other tests left windows open)
         window.minimize();
         state = JSON.parse(ss.getBrowserState());
-        is(state.selectedWindow, 0,
-           "selectedWindow should be 0 when all windows are minimized");
+        is(
+          state.selectedWindow,
+          0,
+          "selectedWindow should be 0 when all windows are minimized"
+        );
 
         // Cleanup
         window.restore();

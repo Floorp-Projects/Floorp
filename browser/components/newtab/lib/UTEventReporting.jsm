@@ -5,13 +5,19 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
-  * Note: the schema can be found in
-  * https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml
-  */
-const EXTRAS_FIELD_NAMES = ["addon_version", "session_id", "page", "user_prefs", "action_position"];
+ * Note: the schema can be found in
+ * https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml
+ */
+const EXTRAS_FIELD_NAMES = [
+  "addon_version",
+  "session_id",
+  "page",
+  "user_prefs",
+  "action_position",
+];
 
 this.UTEventReporting = class UTEventReporting {
   constructor() {
@@ -42,7 +48,8 @@ this.UTEventReporting = class UTEventReporting {
       "activity_stream",
       "event",
       ...eventFields,
-      this._createExtras(data));
+      this._createExtras(data)
+    );
   }
 
   sendSessionEndEvent(data) {
@@ -51,7 +58,8 @@ this.UTEventReporting = class UTEventReporting {
       "end",
       "session",
       String(data.session_duration),
-      this._createExtras(data));
+      this._createExtras(data)
+    );
   }
 
   sendTrailheadEnrollEvent(data) {

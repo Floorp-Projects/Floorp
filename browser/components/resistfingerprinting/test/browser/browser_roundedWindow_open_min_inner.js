@@ -4,7 +4,20 @@
  *   minimum values.
  */
 
-OpenTest.run([
-  {settingWidth: 199, settingHeight: 99, targetWidth: 200, targetHeight: 100},
-  {settingWidth: 10, settingHeight: 10, targetWidth: 200, targetHeight: 100},
-], false);
+OpenTest.run(
+  [
+    {
+      settingWidth: 199,
+      settingHeight: 99,
+      targetWidth: 200,
+      targetHeight: 100,
+    },
+    {
+      settingWidth: 10,
+      settingHeight: 10,
+      targetWidth: 200,
+      targetHeight: 100,
+    },
+  ],
+  false
+);

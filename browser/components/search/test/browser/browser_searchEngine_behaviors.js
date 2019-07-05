@@ -7,67 +7,74 @@
 
 "use strict";
 
-const SEARCH_ENGINE_DETAILS = [{
-  alias: "a",
-  baseURL: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
-  codes: {
-    context: "",
-    keyword: "",
-    newTab: "",
-    submission: "",
+const SEARCH_ENGINE_DETAILS = [
+  {
+    alias: "a",
+    baseURL:
+      "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
+    codes: {
+      context: "",
+      keyword: "",
+      newTab: "",
+      submission: "",
+    },
+    name: "Amazon.com",
   },
-  name: "Amazon.com",
-}, {
-  alias: "b",
-  baseURL: "https://www.bing.com/search?q=foo&pc=MOZI",
-  codes: {
-    context: "&form=MOZCON",
-    keyword: "&form=MOZLBR",
-    newTab: "&form=MOZTSB",
-    submission: "&form=MOZSBR",
+  {
+    alias: "b",
+    baseURL: "https://www.bing.com/search?q=foo&pc=MOZI",
+    codes: {
+      context: "&form=MOZCON",
+      keyword: "&form=MOZLBR",
+      newTab: "&form=MOZTSB",
+      submission: "&form=MOZSBR",
+    },
+    name: "Bing",
   },
-  name: "Bing",
-}, {
-  alias: "d",
-  baseURL: "https://duckduckgo.com/?q=foo",
-  codes: {
-    context: "&t=ffcm",
-    keyword: "&t=ffab",
-    newTab: "&t=ffnt",
-    submission: "&t=ffsb",
+  {
+    alias: "d",
+    baseURL: "https://duckduckgo.com/?q=foo",
+    codes: {
+      context: "&t=ffcm",
+      keyword: "&t=ffab",
+      newTab: "&t=ffnt",
+      submission: "&t=ffsb",
+    },
+    name: "DuckDuckGo",
   },
-  name: "DuckDuckGo",
-}, {
-  alias: "e",
-  baseURL: "https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com/sch/foo",
-  codes: {
-    context: "",
-    keyword: "",
-    newTab: "",
-    submission: "",
+  {
+    alias: "e",
+    baseURL:
+      "https://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.com/sch/foo",
+    codes: {
+      context: "",
+      keyword: "",
+      newTab: "",
+      submission: "",
+    },
+    name: "eBay",
   },
-  name: "eBay",
-},
-// {
-// TODO: Google is tested in browser_google_behaviors.js - we can't test it here
-// yet because of bug 1315953.
-//   alias: "g",
-//   baseURL: "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8",
-//   codes: {
-//     context: "",
-//     keyword: "",
-//     newTab: "",
-//     submission: "",
-//   },
-//   name: "Google",
-// },
+  // {
+  // TODO: Google is tested in browser_google_behaviors.js - we can't test it here
+  // yet because of bug 1315953.
+  //   alias: "g",
+  //   baseURL: "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8",
+  //   codes: {
+  //     context: "",
+  //     keyword: "",
+  //     newTab: "",
+  //     submission: "",
+  //   },
+  //   name: "Google",
+  // },
 ];
-
 
 function promiseContentSearchReady(browser) {
   return ContentTask.spawn(browser, {}, async function(args) {
-    await ContentTaskUtils.waitForCondition(() => content.wrappedJSObject.gContentSearchController &&
-      content.wrappedJSObject.gContentSearchController.defaultEngine
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.wrappedJSObject.gContentSearchController &&
+        content.wrappedJSObject.gContentSearchController.defaultEngine
     );
   });
 }
@@ -102,7 +109,11 @@ async function testSearchEngine(engineDetails) {
 
   // Test search URLs (including purposes).
   let url = engine.getSubmission("foo").uri.spec;
-  Assert.equal(url, base + engineDetails.codes.submission, "Check search URL for 'foo'");
+  Assert.equal(
+    url,
+    base + engineDetails.codes.submission,
+    "Check search URL for 'foo'"
+  );
   let sb = BrowserSearch.searchBar;
 
   let engineTests = [
@@ -112,7 +123,12 @@ async function testSearchEngine(engineDetails) {
       run() {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
-        BrowserSearch._loadSearch("foo", false, "contextmenu", Services.scriptSecurityManager.getSystemPrincipal());
+        BrowserSearch._loadSearch(
+          "foo",
+          false,
+          "contextmenu",
+          Services.scriptSecurityManager.getSystemPrincipal()
+        );
       },
     },
     {

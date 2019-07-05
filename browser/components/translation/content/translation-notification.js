@@ -6,7 +6,9 @@
 
 class MozTranslationNotification extends MozElements.Notification {
   connectedCallback() {
-    this.appendChild(MozXULElement.parseXULToFragment(`
+    this.appendChild(
+      MozXULElement.parseXULToFragment(
+        `
       <hbox anonid="details" align="center" flex="1">
         <image class="translate-infobar-element messageImage"/>
         <panel anonid="welcomePanel" class="translation-welcome-panel" type="arrow" align="start">
@@ -80,10 +82,13 @@ class MozTranslationNotification extends MozElements.Notification {
                      class="messageCloseButton close-icon tabbable"
                      tooltiptext="&closeNotification.tooltip;"
                      oncommand="this.parentNode.closeCommand();"/>
-    `, [
-      "chrome://global/locale/notification.dtd",
-      "chrome://browser/locale/translation.dtd",
-    ]));
+    `,
+        [
+          "chrome://global/locale/notification.dtd",
+          "chrome://browser/locale/translation.dtd",
+        ]
+      )
+    );
 
     for (let [propertyName, selector] of [
       ["details", "[anonid=details]"],
@@ -98,8 +103,9 @@ class MozTranslationNotification extends MozElements.Notification {
     let deck = this._getAnonElt("translationStates");
 
     let activeElt = document.activeElement;
-    if (activeElt && deck.contains(activeElt))
+    if (activeElt && deck.contains(activeElt)) {
       activeElt.blur();
+    }
 
     let stateName;
     for (let name of ["OFFER", "TRANSLATING", "TRANSLATED", "ERROR"]) {
@@ -110,8 +116,9 @@ class MozTranslationNotification extends MozElements.Notification {
     }
     this.setAttribute("state", stateName);
 
-    if (val == Translation.STATE_TRANSLATED)
+    if (val == Translation.STATE_TRANSLATED) {
       this._handleButtonHiding();
+    }
 
     deck.selectedIndex = val;
   }
@@ -125,15 +132,17 @@ class MozTranslationNotification extends MozElements.Notification {
 
     let sortByLocalizedName = function(aList) {
       let names = Services.intl.getLanguageDisplayNames(undefined, aList);
-      return aList.map((code, i) => [code, names[i]])
+      return aList
+        .map((code, i) => [code, names[i]])
         .sort((a, b) => a[1].localeCompare(b[1]));
     };
 
     // Fill the lists of supported source languages.
     let detectedLanguage = this._getAnonElt("detectedLanguage");
     let fromLanguage = this._getAnonElt("fromLanguage");
-    let sourceLanguages =
-      sortByLocalizedName(Translation.supportedSourceLanguages);
+    let sourceLanguages = sortByLocalizedName(
+      Translation.supportedSourceLanguages
+    );
     for (let [code, name] of sourceLanguages) {
       detectedLanguage.appendItem(name, code);
       fromLanguage.appendItem(name, code);
@@ -141,25 +150,31 @@ class MozTranslationNotification extends MozElements.Notification {
     detectedLanguage.value = this.translation.detectedLanguage;
 
     // translatedFrom is only set if we have already translated this page.
-    if (aTranslation.translatedFrom)
+    if (aTranslation.translatedFrom) {
       fromLanguage.value = aTranslation.translatedFrom;
+    }
 
     // Fill the list of supported target languages.
     let toLanguage = this._getAnonElt("toLanguage");
-    let targetLanguages =
-      sortByLocalizedName(Translation.supportedTargetLanguages);
-    for (let [code, name] of targetLanguages)
+    let targetLanguages = sortByLocalizedName(
+      Translation.supportedTargetLanguages
+    );
+    for (let [code, name] of targetLanguages) {
       toLanguage.appendItem(name, code);
+    }
 
-    if (aTranslation.translatedTo)
+    if (aTranslation.translatedTo) {
       toLanguage.value = aTranslation.translatedTo;
+    }
 
-    if (aTranslation.state)
+    if (aTranslation.state) {
       this.state = aTranslation.state;
+    }
 
     // Show attribution for the preferred translator.
-    let engineIndex = Object.keys(Translation.supportedEngines)
-      .indexOf(Translation.translationEngine);
+    let engineIndex = Object.keys(Translation.supportedEngines).indexOf(
+      Translation.translationEngine
+    );
     // We currently only have attribution for the Bing and Yandex engines.
     if (engineIndex >= 0) {
       --engineIndex;
@@ -179,62 +194,78 @@ class MozTranslationNotification extends MozElements.Notification {
     }
 
     const kWelcomePref = "browser.translation.ui.welcomeMessageShown";
-    if (Services.prefs.prefHasUserValue(kWelcomePref) ||
-      this.translation.browser != gBrowser.selectedBrowser)
+    if (
+      Services.prefs.prefHasUserValue(kWelcomePref) ||
+      this.translation.browser != gBrowser.selectedBrowser
+    ) {
       return;
+    }
 
-    this.addEventListener("transitionend", function() {
-      // These strings are hardcoded because they need to reach beta
-      // without riding the trains.
-      let localizedStrings = {
-        en: ["Hey look! It's something new!",
-          "Now the Web is even more accessible with our new in-page translation feature. Click the translate button to try it!",
-          "Learn more.",
-          "Thanks",
-        ],
-        "es-AR": ["\xA1Mir\xE1! \xA1Hay algo nuevo!",
-          "Ahora la web es a\xFAn m\xE1s accesible con nuestra nueva funcionalidad de traducci\xF3n integrada. \xA1Hac\xE9 clic en el bot\xF3n traducir para probarla!",
-          "Conoc\xE9 m\xE1s.",
-          "Gracias",
-        ],
-        "es-ES": ["\xA1Mira! \xA1Hay algo nuevo!",
-          "Con la nueva funcionalidad de traducci\xF3n integrada, ahora la Web es a\xFAn m\xE1s accesible. \xA1Pulsa el bot\xF3n Traducir y pru\xE9bala!",
-          "M\xE1s informaci\xF3n.",
-          "Gracias",
-        ],
-        pl: ["Sp\xF3jrz tutaj! To co\u015B nowego!",
-          "Sie\u0107 sta\u0142a si\u0119 w\u0142a\u015Bnie jeszcze bardziej dost\u0119pna dzi\u0119ki opcji bezpo\u015Bredniego t\u0142umaczenia stron. Kliknij przycisk t\u0142umaczenia, aby spr\xF3bowa\u0107!",
-          "Dowiedz si\u0119 wi\u0119cej",
-          "Dzi\u0119kuj\u0119",
-        ],
-        tr: ["Bak\u0131n, burada yeni bir \u015Fey var!",
-          "Yeni sayfa i\xE7i \xE7eviri \xF6zelli\u011Fimiz sayesinde Web art\u0131k \xE7ok daha anla\u015F\u0131l\u0131r olacak. Denemek i\xE7in \xC7evir d\xFC\u011Fmesine t\u0131klay\u0131n!",
-          "Daha fazla bilgi al\u0131n.",
-          "Te\u015Fekk\xFCrler",
-        ],
-        vi: ["Nh\xECn n\xE0y! \u0110\u1ED3 m\u1EDBi!",
-          "Gi\u1EDD \u0111\xE2y ch\xFAng ta c\xF3 th\u1EC3 ti\u1EBFp c\u1EADn web d\u1EC5 d\xE0ng h\u01A1n n\u1EEFa v\u1EDBi t\xEDnh n\u0103ng d\u1ECBch ngay trong trang.  Hay nh\u1EA5n n\xFAt d\u1ECBch \u0111\u1EC3 th\u1EED!",
-          "T\xECm hi\u1EC3u th\xEAm.",
-          "C\u1EA3m \u01A1n",
-        ],
-      };
+    this.addEventListener(
+      "transitionend",
+      function() {
+        // These strings are hardcoded because they need to reach beta
+        // without riding the trains.
+        let localizedStrings = {
+          en: [
+            "Hey look! It's something new!",
+            "Now the Web is even more accessible with our new in-page translation feature. Click the translate button to try it!",
+            "Learn more.",
+            "Thanks",
+          ],
+          "es-AR": [
+            "\xA1Mir\xE1! \xA1Hay algo nuevo!",
+            "Ahora la web es a\xFAn m\xE1s accesible con nuestra nueva funcionalidad de traducci\xF3n integrada. \xA1Hac\xE9 clic en el bot\xF3n traducir para probarla!",
+            "Conoc\xE9 m\xE1s.",
+            "Gracias",
+          ],
+          "es-ES": [
+            "\xA1Mira! \xA1Hay algo nuevo!",
+            "Con la nueva funcionalidad de traducci\xF3n integrada, ahora la Web es a\xFAn m\xE1s accesible. \xA1Pulsa el bot\xF3n Traducir y pru\xE9bala!",
+            "M\xE1s informaci\xF3n.",
+            "Gracias",
+          ],
+          pl: [
+            "Sp\xF3jrz tutaj! To co\u015B nowego!",
+            "Sie\u0107 sta\u0142a si\u0119 w\u0142a\u015Bnie jeszcze bardziej dost\u0119pna dzi\u0119ki opcji bezpo\u015Bredniego t\u0142umaczenia stron. Kliknij przycisk t\u0142umaczenia, aby spr\xF3bowa\u0107!",
+            "Dowiedz si\u0119 wi\u0119cej",
+            "Dzi\u0119kuj\u0119",
+          ],
+          tr: [
+            "Bak\u0131n, burada yeni bir \u015Fey var!",
+            "Yeni sayfa i\xE7i \xE7eviri \xF6zelli\u011Fimiz sayesinde Web art\u0131k \xE7ok daha anla\u015F\u0131l\u0131r olacak. Denemek i\xE7in \xC7evir d\xFC\u011Fmesine t\u0131klay\u0131n!",
+            "Daha fazla bilgi al\u0131n.",
+            "Te\u015Fekk\xFCrler",
+          ],
+          vi: [
+            "Nh\xECn n\xE0y! \u0110\u1ED3 m\u1EDBi!",
+            "Gi\u1EDD \u0111\xE2y ch\xFAng ta c\xF3 th\u1EC3 ti\u1EBFp c\u1EADn web d\u1EC5 d\xE0ng h\u01A1n n\u1EEFa v\u1EDBi t\xEDnh n\u0103ng d\u1ECBch ngay trong trang.  Hay nh\u1EA5n n\xFAt d\u1ECBch \u0111\u1EC3 th\u1EED!",
+            "T\xECm hi\u1EC3u th\xEAm.",
+            "C\u1EA3m \u01A1n",
+          ],
+        };
 
-      let locale = Services.locale.appLocaleAsLangTag;
-      if (!(locale in localizedStrings))
-        locale = "en";
-      let strings = localizedStrings[locale];
+        let locale = Services.locale.appLocaleAsLangTag;
+        if (!(locale in localizedStrings)) {
+          locale = "en";
+        }
+        let strings = localizedStrings[locale];
 
-      this._getAnonElt("welcomeHeadline").setAttribute("value", strings[0]);
-      this._getAnonElt("welcomeBody").textContent = strings[1];
-      this._getAnonElt("learnMore").setAttribute("value", strings[2]);
-      this._getAnonElt("thanksButton").setAttribute("label", strings[3]);
+        this._getAnonElt("welcomeHeadline").setAttribute("value", strings[0]);
+        this._getAnonElt("welcomeBody").textContent = strings[1];
+        this._getAnonElt("learnMore").setAttribute("value", strings[2]);
+        this._getAnonElt("thanksButton").setAttribute("label", strings[3]);
 
-      let panel = this._getAnonElt("welcomePanel");
-      panel.openPopup(this._getAnonElt("messageImage"),
-        "bottomcenter topleft");
+        let panel = this._getAnonElt("welcomePanel");
+        panel.openPopup(
+          this._getAnonElt("messageImage"),
+          "bottomcenter topleft"
+        );
 
-      Services.prefs.setBoolPref(kWelcomePref, true);
-    }, { once: true });
+        Services.prefs.setBoolPref(kWelcomePref, true);
+      },
+      { once: true }
+    );
   }
 
   _getAnonElt(aAnonId) {
@@ -243,14 +274,16 @@ class MozTranslationNotification extends MozElements.Notification {
 
   translate() {
     if (this.state == Translation.STATE_OFFER) {
-      this._getAnonElt("fromLanguage").value =
-        this._getAnonElt("detectedLanguage").value;
-      this._getAnonElt("toLanguage").value =
-        Translation.defaultTargetLanguage;
+      this._getAnonElt("fromLanguage").value = this._getAnonElt(
+        "detectedLanguage"
+      ).value;
+      this._getAnonElt("toLanguage").value = Translation.defaultTargetLanguage;
     }
 
-    this.translation.translate(this._getAnonElt("fromLanguage").value,
-      this._getAnonElt("toLanguage").value);
+    this.translation.translate(
+      this._getAnonElt("fromLanguage").value,
+      this._getAnonElt("toLanguage").value
+    );
   }
 
   /**
@@ -288,27 +321,34 @@ class MozTranslationNotification extends MozElements.Notification {
 
       // If we have never attempted to translate the page before the
       // service became unavailable, "fromLanguage" isn't set.
-      if (!lang && this.state == Translation.STATE_UNAVAILABLE)
+      if (!lang && this.state == Translation.STATE_UNAVAILABLE) {
         lang = this.translation.detectedLanguage;
+      }
     }
 
     let langName = Services.intl.getLanguageDisplayNames(undefined, [lang])[0];
 
     // Set the label and accesskey on the menuitem.
-    let bundle =
-      Services.strings.createBundle("chrome://browser/locale/translation.properties");
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/translation.properties"
+    );
     let item = this._getAnonElt("neverForLanguage");
     const kStrId = "translation.options.neverForLanguage";
-    item.setAttribute("label",
-      bundle.formatStringFromName(kStrId + ".label", [langName]));
-    item.setAttribute("accesskey",
-      bundle.GetStringFromName(kStrId + ".accesskey"));
+    item.setAttribute(
+      "label",
+      bundle.formatStringFromName(kStrId + ".label", [langName])
+    );
+    item.setAttribute(
+      "accesskey",
+      bundle.GetStringFromName(kStrId + ".accesskey")
+    );
     item.langCode = lang;
 
     // We may need to disable the menuitems if they have already been used.
     // Check if translation is already disabled for this language:
-    let neverForLangs =
-      Services.prefs.getCharPref("browser.translation.neverForLanguages");
+    let neverForLangs = Services.prefs.getCharPref(
+      "browser.translation.neverForLanguages"
+    );
     item.disabled = neverForLangs.split(",").includes(lang);
 
     // Check if translation is disabled for the domain:
@@ -316,15 +356,17 @@ class MozTranslationNotification extends MozElements.Notification {
     let perms = Services.perms;
     item = this._getAnonElt("neverForSite");
     item.disabled =
-      perms.testExactPermissionFromPrincipal(principal, "translate") == perms.DENY_ACTION;
+      perms.testExactPermissionFromPrincipal(principal, "translate") ==
+      perms.DENY_ACTION;
   }
 
   neverForLanguage() {
     const kPrefName = "browser.translation.neverForLanguages";
 
     let val = Services.prefs.getCharPref(kPrefName);
-    if (val)
+    if (val) {
       val += ",";
+    }
     val += this._getAnonElt("neverForLanguage").langCode;
 
     Services.prefs.setCharPref(kPrefName, val);
@@ -345,5 +387,6 @@ class MozTranslationNotification extends MozElements.Notification {
   }
 }
 
-customElements.define("translation-notification", MozTranslationNotification,
-                      { extends: "notification" });
+customElements.define("translation-notification", MozTranslationNotification, {
+  extends: "notification",
+});

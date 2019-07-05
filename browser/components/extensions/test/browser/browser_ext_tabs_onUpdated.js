@@ -11,21 +11,24 @@ add_task(async function() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
-      "content_scripts": [{
-        "matches": ["http://mochi.test/*/context_tabs_onUpdated_page.html"],
-        "js": ["content-script.js"],
-        "run_at": "document_start",
-      }],
+      permissions: ["tabs"],
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/*/context_tabs_onUpdated_page.html"],
+          js: ["content-script.js"],
+          run_at: "document_start",
+        },
+      ],
     },
 
     background: function() {
-      let pageURL = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+      let pageURL =
+        "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
 
       let expectedSequence = [
-        {status: "loading"},
-        {status: "loading", url: pageURL},
-        {status: "complete"},
+        { status: "loading" },
+        { status: "loading", url: pageURL },
+        { status: "complete" },
       ];
       let collectedSequence = [];
 
@@ -64,7 +67,7 @@ add_task(async function() {
         browser.test.notifyPass("tabs.onUpdated");
       });
 
-      browser.tabs.create({url: pageURL});
+      browser.tabs.create({ url: pageURL });
     },
     files: {
       "content-script.js": `
@@ -96,7 +99,7 @@ async function do_test_update(background, withPermissions = true) {
   if (withPermissions) {
     manifest.permissions = ["tabs", "http://mochi.test/"];
   }
-  let extension = ExtensionTestUtils.loadExtension({manifest, background});
+  let extension = ExtensionTestUtils.loadExtension({ manifest, background });
 
   await Promise.all([
     await extension.startup(),
@@ -124,7 +127,7 @@ add_task(async function test_pinned() {
           browser.test.notifyPass("finish");
         }
       });
-      browser.tabs.update(tab.id, {pinned: true});
+      browser.tabs.update(tab.id, { pinned: true });
     });
   });
 });
@@ -132,20 +135,23 @@ add_task(async function test_pinned() {
 add_task(async function test_unpinned() {
   await do_test_update(function background() {
     // Create a new tab for testing update.
-    browser.tabs.create({pinned: true}, function(tab) {
+    browser.tabs.create({ pinned: true }, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
         // Check callback
         browser.test.assertEq(tabId, tab.id, "Check tab id");
         browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
         if ("pinned" in changeInfo) {
-          browser.test.assertFalse(changeInfo.pinned, "Check changeInfo.pinned");
+          browser.test.assertFalse(
+            changeInfo.pinned,
+            "Check changeInfo.pinned"
+          );
           browser.tabs.onUpdated.removeListener(onUpdated);
           // Remove created tab.
           browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
         }
       });
-      browser.tabs.update(tab.id, {pinned: false});
+      browser.tabs.update(tab.id, { pinned: false });
     });
   });
 });
@@ -153,7 +159,7 @@ add_task(async function test_unpinned() {
 add_task(async function test_url() {
   await do_test_update(function background() {
     // Create a new tab for testing update.
-    browser.tabs.create({url: "about:blank?initial_url=1"}, function(tab) {
+    browser.tabs.create({ url: "about:blank?initial_url=1" }, function(tab) {
       const expectedUpdatedURL = "about:blank?updated_url=1";
 
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
@@ -162,8 +168,11 @@ add_task(async function test_url() {
         // the browser.tabs.create API call above before we are able to start
         // loading the new url from the browser.tabs.update API call below).
         if ("url" in changeInfo && changeInfo.url === expectedUpdatedURL) {
-          browser.test.assertEq(expectedUpdatedURL, changeInfo.url,
-                                "Got tabs.onUpdated event for the expected url");
+          browser.test.assertEq(
+            expectedUpdatedURL,
+            changeInfo.url,
+            "Got tabs.onUpdated event for the expected url"
+          );
           browser.tabs.onUpdated.removeListener(onUpdated);
           // Remove created tab.
           browser.tabs.remove(tabId);
@@ -174,15 +183,16 @@ add_task(async function test_url() {
         browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
       });
 
-      browser.tabs.update(tab.id, {url: expectedUpdatedURL});
+      browser.tabs.update(tab.id, { url: expectedUpdatedURL });
     });
   });
 });
 
 add_task(async function test_title() {
   await do_test_update(async function background() {
-    const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
-    const tab = await browser.tabs.create({url});
+    const url =
+      "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+    const tab = await browser.tabs.create({ url });
 
     browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
       browser.test.assertEq(tabId, tab.id, "Check tab id");
@@ -195,23 +205,35 @@ add_task(async function test_title() {
       }
     });
 
-    browser.tabs.executeScript(tab.id, {code: "document.title = 'New Message (1)'"});
+    browser.tabs.executeScript(tab.id, {
+      code: "document.title = 'New Message (1)'",
+    });
   });
 });
 
 add_task(async function test_without_tabs_permission() {
   await do_test_update(async function background() {
-    const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
-    const tab = await browser.tabs.create({url});
+    const url =
+      "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+    const tab = await browser.tabs.create({ url });
     let count = 0;
 
     browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
       browser.test.assertEq(tabId, tab.id, "Check tab id");
       browser.test.log(`onUpdated: ${JSON.stringify(changeInfo)}`);
 
-      browser.test.assertFalse("url" in changeInfo, "url should not be included without tabs permission");
-      browser.test.assertFalse("favIconUrl" in changeInfo, "favIconUrl should not be included without tabs permission");
-      browser.test.assertFalse("title" in changeInfo, "title should not be included without tabs permission");
+      browser.test.assertFalse(
+        "url" in changeInfo,
+        "url should not be included without tabs permission"
+      );
+      browser.test.assertFalse(
+        "favIconUrl" in changeInfo,
+        "favIconUrl should not be included without tabs permission"
+      );
+      browser.test.assertFalse(
+        "title" in changeInfo,
+        "title should not be included without tabs permission"
+      );
 
       if (changeInfo.status == "complete") {
         count++;

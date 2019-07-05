@@ -1,4 +1,4 @@
-import {FluentBundle} from "fluent";
+import { FluentBundle } from "fluent";
 
 /**
  * Properties that allow rich text MUST be added to this list.
@@ -6,13 +6,13 @@ import {FluentBundle} from "fluent";
  *   value: a property or array of properties on the message.content object
  */
 const RICH_TEXT_CONFIG = {
-  "text": ["text", "scene1_text"],
-  "success_text": "success_text",
-  "error_text": "error_text",
-  "scene2_text": "scene2_text",
-  "amo_html": "amo_html",
-  "privacy_html": "scene2_privacy_html",
-  "disclaimer_html": "scene2_disclaimer_html",
+  text: ["text", "scene1_text"],
+  success_text: "success_text",
+  error_text: "error_text",
+  scene2_text: "scene2_text",
+  amo_html: "amo_html",
+  privacy_html: "scene2_privacy_html",
+  disclaimer_html: "scene2_disclaimer_html",
 };
 
 export const RICH_TEXT_KEYS = Object.keys(RICH_TEXT_CONFIG);

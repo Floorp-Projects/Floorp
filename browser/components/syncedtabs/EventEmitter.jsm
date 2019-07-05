@@ -4,9 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "EventEmitter",
-];
+var EXPORTED_SYMBOLS = ["EventEmitter"];
 
 // Simple event emitter abstraction for storage objects to use.
 function EventEmitter() {
@@ -40,4 +38,3 @@ EventEmitter.prototype = {
     }
   },
 };
-

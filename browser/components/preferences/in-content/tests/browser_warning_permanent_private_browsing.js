@@ -5,14 +5,22 @@
 
 function checkForPrompt(prefVal) {
   return async function() {
-    await SpecialPowers.pushPrefEnv({set: [
-      ["privacy.history.custom", true],
-      ["browser.privatebrowsing.autostart", !prefVal],
-    ]});
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["privacy.history.custom", true],
+        ["browser.privatebrowsing.autostart", !prefVal],
+      ],
+    });
 
-    await openPreferencesViaOpenPreferencesAPI("panePrivacy", { leaveOpen: true });
+    await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+      leaveOpen: true,
+    });
     let doc = gBrowser.contentDocument;
-    is(doc.getElementById("historyMode").value, "custom", "Expect custom history mode");
+    is(
+      doc.getElementById("historyMode").value,
+      "custom",
+      "Expect custom history mode"
+    );
 
     // Stub out the prompt method as an easy way to check it was shown. We throw away
     // the tab straight after so don't need to bother restoring it.
@@ -27,8 +35,12 @@ function checkForPrompt(prefVal) {
     checkbox.doCommand();
 
     // Now the prompt should have shown.
-    ok(promptFired,
-      `Expect a prompt when turning permanent private browsing ${prefVal ? "on" : "off"}!`);
+    ok(
+      promptFired,
+      `Expect a prompt when turning permanent private browsing ${
+        prefVal ? "on" : "off"
+      }!`
+    );
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   };
 }

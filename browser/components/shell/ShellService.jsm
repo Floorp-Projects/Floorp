@@ -1,16 +1,23 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 var EXPORTED_SYMBOLS = ["ShellService"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
-                               "resource://gre/modules/WindowsRegistry.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "WindowsRegistry",
+  "resource://gre/modules/WindowsRegistry.jsm"
+);
 
 /**
  * Internal functionality to save and restore the docShell.allow* properties.
@@ -24,15 +31,15 @@ let ShellServiceInternal = {
    * environments.
    */
   get canSetDesktopBackground() {
-    if (AppConstants.platform == "win" ||
-        AppConstants.platform == "macosx") {
+    if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
       return true;
     }
 
     if (AppConstants.platform == "linux") {
       if (this.shellService) {
-        let linuxShellService = this.shellService
-                                    .QueryInterface(Ci.nsIGNOMEShellService);
+        let linuxShellService = this.shellService.QueryInterface(
+          Ci.nsIGNOMEShellService
+        );
         return linuxShellService.canSetDesktopBackground;
       }
     }
@@ -59,12 +66,16 @@ let ShellServiceInternal = {
     }
 
     if (AppConstants.platform == "win") {
-      let optOutValue = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                                   "Software\\Mozilla\\Firefox",
-                                                   "DefaultBrowserOptOut");
-      WindowsRegistry.removeRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                   "Software\\Mozilla\\Firefox",
-                                   "DefaultBrowserOptOut");
+      let optOutValue = WindowsRegistry.readRegKey(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        "Software\\Mozilla\\Firefox",
+        "DefaultBrowserOptOut"
+      );
+      WindowsRegistry.removeRegKey(
+        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+        "Software\\Mozilla\\Firefox",
+        "DefaultBrowserOptOut"
+      );
       if (optOutValue == "True") {
         Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", false);
         return false;
@@ -75,7 +86,10 @@ let ShellServiceInternal = {
   },
 
   set shouldCheckDefaultBrowser(shouldCheck) {
-    Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", !!shouldCheck);
+    Services.prefs.setBoolPref(
+      "browser.shell.checkDefaultBrowser",
+      !!shouldCheck
+    );
   },
 
   isDefaultBrowser(startupCheck, forAllTypes) {
@@ -92,8 +106,12 @@ let ShellServiceInternal = {
   },
 };
 
-XPCOMUtils.defineLazyServiceGetter(ShellServiceInternal, "shellService",
-  "@mozilla.org/browser/shell-service;1", Ci.nsIShellService);
+XPCOMUtils.defineLazyServiceGetter(
+  ShellServiceInternal,
+  "shellService",
+  "@mozilla.org/browser/shell-service;1",
+  Ci.nsIShellService
+);
 
 /**
  * The external API exported by this module.
@@ -106,7 +124,9 @@ var ShellService = new Proxy(ShellServiceInternal, {
     if (target.shellService) {
       return target.shellService[name];
     }
-    Services.console.logStringMessage(`${name} not found in ShellService: ${target.shellService}`);
+    Services.console.logStringMessage(
+      `${name} not found in ShellService: ${target.shellService}`
+    );
     return undefined;
   },
 });

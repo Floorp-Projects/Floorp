@@ -3,7 +3,11 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/",
+    true
+  );
 
   async function background() {
     let tasks = [
@@ -77,15 +81,23 @@ add_task(async function testExecuteScript() {
     }
 
     try {
-      for (let {promise, background, foreground} of tasks) {
+      for (let { promise, background, foreground } of tasks) {
         let result = await promise();
         browser.test.assertEq(undefined, result, "Expected callback result");
 
         [result] = await browser.tabs.executeScript({
           code: `(${checkCSS})()`,
         });
-        browser.test.assertEq(background, result[0], "Expected background color");
-        browser.test.assertEq(foreground, result[1], "Expected foreground color");
+        browser.test.assertEq(
+          background,
+          result[0],
+          "Expected background color"
+        );
+        browser.test.assertEq(
+          foreground,
+          result[1],
+          "Expected foreground color"
+        );
       }
 
       browser.test.notifyPass("removeCSS");
@@ -97,7 +109,7 @@ add_task(async function testExecuteScript() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["http://mochi.test/"],
+      permissions: ["http://mochi.test/"],
     },
 
     background,
@@ -113,10 +125,11 @@ add_task(async function testExecuteScript() {
 
   // Verify that scripts created by tabs.removeCSS are not added to the content scripts
   // that requires cleanup (Bug 1464711).
-  await ContentTask.spawn(tab.linkedBrowser, extension.id, async (extId) => {
-    const {
-      DocumentManager,
-    } = ChromeUtils.import("resource://gre/modules/ExtensionContent.jsm", null);
+  await ContentTask.spawn(tab.linkedBrowser, extension.id, async extId => {
+    const { DocumentManager } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm",
+      null
+    );
 
     let contentScriptContext = Array.from(
       DocumentManager.getContexts(content.window).values()

@@ -7,14 +7,20 @@
  * entries.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { SessionWorker } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionWorker.jsm"
+);
 
 const profd = do_get_profile();
-const {SessionFile} = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm");
-const {Paths} = SessionFile;
+const { SessionFile } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionFile.jsm"
+);
+const { Paths } = SessionFile;
 
-const {File} = OS;
+const { File } = OS;
 
 const MAX_ENTRIES = 9;
 const URL = "http://example.com/#";
@@ -59,17 +65,19 @@ add_task(async function setup() {
 function createSessionState(index) {
   // Generate the tab state entries and set the one-based
   // tab-state index to the middle session history entry.
-  let tabState = {entries: [], index};
+  let tabState = { entries: [], index };
   for (let i = 0; i < MAX_ENTRIES; i++) {
-    tabState.entries.push({url: URL + i});
+    tabState.entries.push({ url: URL + i });
   }
 
-  return {windows: [{tabs: [tabState]}]};
+  return { windows: [{ tabs: [tabState] }] };
 }
 
 async function writeAndParse(state, path, options = {}) {
   await SessionWorker.post("write", [state, options]);
-  return JSON.parse(await File.read(path, {encoding: "utf-8", compression: "lz4"}));
+  return JSON.parse(
+    await File.read(path, { encoding: "utf-8", compression: "lz4" })
+  );
 }
 
 add_task(async function test_shistory_cap_none() {
@@ -79,7 +87,9 @@ add_task(async function test_shistory_cap_none() {
   await prepareWithLimit(-1, -1);
 
   // Check that no caps are applied.
-  let diskState = await writeAndParse(state, Paths.clean, {isFinalWrite: true});
+  let diskState = await writeAndParse(state, Paths.clean, {
+    isFinalWrite: true,
+  });
   Assert.deepEqual(state, diskState, "no cap applied");
 });
 
@@ -93,7 +103,7 @@ add_task(async function test_shistory_cap_middle() {
 
   // Check that the right number of shistory entries was discarded
   // and the shistory index updated accordingly.
-  diskState = await writeAndParse(state, Paths.clean, {isFinalWrite: true});
+  diskState = await writeAndParse(state, Paths.clean, { isFinalWrite: true });
   let tabState = state.windows[0].tabs[0];
   tabState.entries = tabState.entries.slice(2, 8);
   tabState.index = 3;
@@ -109,7 +119,7 @@ add_task(async function test_shistory_cap_lower_bound() {
   Assert.deepEqual(state, diskState, "no cap applied");
 
   // Check that the right number of shistory entries was discarded.
-  diskState = await writeAndParse(state, Paths.clean, {isFinalWrite: true});
+  diskState = await writeAndParse(state, Paths.clean, { isFinalWrite: true });
   let tabState = state.windows[0].tabs[0];
   tabState.entries = tabState.entries.slice(0, 6);
   Assert.deepEqual(state, diskState, "cap applied");
@@ -125,7 +135,7 @@ add_task(async function test_shistory_cap_upper_bound() {
 
   // Check that the right number of shistory entries was discarded
   // and the shistory index updated accordingly.
-  diskState = await writeAndParse(state, Paths.clean, {isFinalWrite: true});
+  diskState = await writeAndParse(state, Paths.clean, { isFinalWrite: true });
   let tabState = state.windows[0].tabs[0];
   tabState.entries = tabState.entries.slice(3);
   tabState.index = 6;

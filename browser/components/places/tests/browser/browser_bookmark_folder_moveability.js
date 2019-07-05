@@ -24,11 +24,16 @@ add_task(async function() {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
     tree.selectItems([folder.guid]);
-    Assert.equal(tree.selectedNode.bookmarkGuid, folder.guid,
-                 "Selected the expected node");
+    Assert.equal(
+      tree.selectedNode.bookmarkGuid,
+      folder.guid,
+      "Selected the expected node"
+    );
     Assert.equal(tree.selectedNode.type, 6, "node is a folder");
-    Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
-              "can move regular folder node");
+    Assert.ok(
+      tree.controller.canMoveNode(tree.selectedNode),
+      "can move regular folder node"
+    );
 
     info("Test a folder shortcut");
     let shortcut = await PlacesUtils.bookmarks.insert({
@@ -37,13 +42,21 @@ add_task(async function() {
       url: `place:parent=${folder.guid}`,
     });
     tree.selectItems([shortcut.guid]);
-    Assert.equal(tree.selectedNode.bookmarkGuid, shortcut.guid,
-                 "Selected the expected node");
+    Assert.equal(
+      tree.selectedNode.bookmarkGuid,
+      shortcut.guid,
+      "Selected the expected node"
+    );
     Assert.equal(tree.selectedNode.type, 9, "node is a folder shortcut");
-    Assert.equal(PlacesUtils.getConcreteItemGuid(tree.selectedNode),
-                 folder.guid, "shortcut node guid and concrete guid match");
-    Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
-              "can move folder shortcut node");
+    Assert.equal(
+      PlacesUtils.getConcreteItemGuid(tree.selectedNode),
+      folder.guid,
+      "shortcut node guid and concrete guid match"
+    );
+    Assert.ok(
+      tree.controller.canMoveNode(tree.selectedNode),
+      "can move folder shortcut node"
+    );
 
     info("Test a query");
     let bookmark = await PlacesUtils.bookmarks.insert({
@@ -52,19 +65,26 @@ add_task(async function() {
       url: "http://foo.com",
     });
     tree.selectItems([bookmark.guid]);
-    Assert.equal(tree.selectedNode.bookmarkGuid, bookmark.guid,
-                 "Selected the expected node");
+    Assert.equal(
+      tree.selectedNode.bookmarkGuid,
+      bookmark.guid,
+      "Selected the expected node"
+    );
     let query = await PlacesUtils.bookmarks.insert({
       parentGuid: root.guid,
       title: "bar",
       url: `place:terms=foo`,
     });
     tree.selectItems([query.guid]);
-    Assert.equal(tree.selectedNode.bookmarkGuid, query.guid,
-                 "Selected the expected node");
-    Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
-              "can move query node");
-
+    Assert.equal(
+      tree.selectedNode.bookmarkGuid,
+      query.guid,
+      "Selected the expected node"
+    );
+    Assert.ok(
+      tree.controller.canMoveNode(tree.selectedNode),
+      "can move query node"
+    );
 
     info("Test a tag container");
     PlacesUtils.tagging.tagURI(Services.io.newURI(bookmark.url.href), ["bar"]);
@@ -78,11 +98,15 @@ add_task(async function() {
     PlacesUtils.asQuery(tree.selectedNode).containerOpen = true;
     Assert.equal(tree.selectedNode.childCount, 1, "has tags");
     let tagNode = tree.selectedNode.getChild(0);
-    Assert.ok(!tree.controller.canMoveNode(tagNode),
-              "should not be able to move tag container node");
+    Assert.ok(
+      !tree.controller.canMoveNode(tagNode),
+      "should not be able to move tag container node"
+    );
     tree.selectedNode.containerOpen = false;
 
-    info("Test that special folders and cannot be moved but other shortcuts can.");
+    info(
+      "Test that special folders and cannot be moved but other shortcuts can."
+    );
     let roots = [
       PlacesUtils.bookmarks.menuGuid,
       PlacesUtils.bookmarks.unfiledGuid,
@@ -91,18 +115,25 @@ add_task(async function() {
 
     for (let guid of roots) {
       tree.selectItems([guid]);
-      Assert.ok(!tree.controller.canMoveNode(tree.selectedNode),
-                "shouldn't be able to move default shortcuts to roots");
+      Assert.ok(
+        !tree.controller.canMoveNode(tree.selectedNode),
+        "shouldn't be able to move default shortcuts to roots"
+      );
       let s = await PlacesUtils.bookmarks.insert({
         parentGuid: root.guid,
         title: "bar",
         url: `place:parent=${guid}`,
       });
       tree.selectItems([s.guid]);
-      Assert.equal(tree.selectedNode.bookmarkGuid, s.guid,
-                   "Selected the expected node");
-      Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
-                "should be able to move user-created shortcuts to roots");
+      Assert.equal(
+        tree.selectedNode.bookmarkGuid,
+        s.guid,
+        "Selected the expected node"
+      );
+      Assert.ok(
+        tree.controller.canMoveNode(tree.selectedNode),
+        "should be able to move user-created shortcuts to roots"
+      );
     }
   });
 });

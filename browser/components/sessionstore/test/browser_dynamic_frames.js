@@ -10,18 +10,19 @@
 add_task(async function() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   // This URL has the following frames:
   //  + data:text/html,A (static)
   //  + data:text/html,B (static)
   //  + data:text/html,C (dynamic iframe)
-  const URL = "data:text/html;charset=utf-8," +
-              "<frameset cols=50%25,50%25><frame src='data:text/html,A'>" +
-              "<frame src='data:text/html,B'></frameset>" +
-              "<script>var i=document.createElement('iframe');" +
-              "i.setAttribute('src', 'data:text/html,C');" +
-              "document.body.appendChild(i);</script>";
+  const URL =
+    "data:text/html;charset=utf-8," +
+    "<frameset cols=50%25,50%25><frame src='data:text/html,A'>" +
+    "<frame src='data:text/html,B'></frameset>" +
+    "<script>var i=document.createElement('iframe');" +
+    "i.setAttribute('src', 'data:text/html,C');" +
+    "document.body.appendChild(i);</script>";
 
   // Add a new tab with two "static" and one "dynamic" frame.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
@@ -29,12 +30,20 @@ add_task(async function() {
   await promiseBrowserLoaded(browser);
 
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
 
   // Check URLs.
   ok(entries[0].url.startsWith("data:text/html"), "correct root url");
-  is(entries[0].children[0].url, "data:text/html,A", "correct url for 1st frame");
-  is(entries[0].children[1].url, "data:text/html,B", "correct url for 2nd frame");
+  is(
+    entries[0].children[0].url,
+    "data:text/html,A",
+    "correct url for 1st frame"
+  );
+  is(
+    entries[0].children[1].url,
+    "data:text/html,B",
+    "correct url for 2nd frame"
+  );
 
   // Check the number of children.
   is(entries.length, 1, "there is one root entry ...");
@@ -52,17 +61,18 @@ add_task(async function() {
 add_task(async function() {
   // allow top level data: URI navigations, otherwise clicking a data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
   // This URL has the following frames:
   //  + data:text/html,A (static)
   //  + data:text/html,C (dynamic iframe)
-  const URL = "data:text/html;charset=utf-8," +
-              "<iframe name=t src='data:text/html,A'></iframe>" +
-              "<a id=lnk href='data:text/html,B' target=t>clickme</a>" +
-              "<script>var i=document.createElement('iframe');" +
-              "i.setAttribute('src', 'data:text/html,C');" +
-              "document.body.appendChild(i);</script>";
+  const URL =
+    "data:text/html;charset=utf-8," +
+    "<iframe name=t src='data:text/html,A'></iframe>" +
+    "<a id=lnk href='data:text/html,B' target=t>clickme</a>" +
+    "<script>var i=document.createElement('iframe');" +
+    "i.setAttribute('src', 'data:text/html,C');" +
+    "document.body.appendChild(i);</script>";
 
   // Add a new tab with one "static" and one "dynamic" frame.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
@@ -70,18 +80,18 @@ add_task(async function() {
   await promiseBrowserLoaded(browser);
 
   await TabStateFlusher.flush(browser);
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  let { entries } = JSON.parse(ss.getTabState(tab));
 
   // Check URLs.
   ok(entries[0].url.startsWith("data:text/html"), "correct root url");
   ok(!entries[0].children, "no children collected");
 
   // Navigate the subframe.
-  browser.messageManager.sendAsyncMessage("ss-test:click", {id: "lnk"});
+  browser.messageManager.sendAsyncMessage("ss-test:click", { id: "lnk" });
   await promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   await TabStateFlusher.flush(browser);
-  ({entries} = JSON.parse(ss.getTabState(tab)));
+  ({ entries } = JSON.parse(ss.getTabState(tab)));
 
   // Check URLs.
   ok(entries[0].url.startsWith("data:text/html"), "correct 1st root url");

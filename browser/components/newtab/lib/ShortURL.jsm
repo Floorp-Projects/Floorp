@@ -1,7 +1,14 @@
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "IDNService", "@mozilla.org/network/idn-service;1", "nsIIDNService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "IDNService",
+  "@mozilla.org/network/idn-service;1",
+  "nsIIDNService"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -41,7 +48,7 @@ function getETLD(host) {
  *         {str} link.url (required)- The url of the link
  * @return {str}   A short url
  */
-function shortURL({url}) {
+function shortURL({ url }) {
   if (!url) {
     return "";
   }
@@ -63,8 +70,11 @@ function shortURL({url}) {
   const eTLDExtra = eTLD.length > 0 ? -(eTLD.length + 1) : Infinity;
 
   // Ideally get the short eTLD-less host but fall back to longer url parts
-  return handleIDNHost(hostname.slice(0, eTLDExtra) || hostname) ||
-    parsed.pathname || parsed.href;
+  return (
+    handleIDNHost(hostname.slice(0, eTLDExtra) || hostname) ||
+    parsed.pathname ||
+    parsed.href
+  );
 }
 
 const EXPORTED_SYMBOLS = ["shortURL", "getETLD"];

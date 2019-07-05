@@ -23,21 +23,23 @@ var EXPECTED_NOTIFICATIONS = [
   "places-connection-closed",
 ];
 
-const UNEXPECTED_NOTIFICATIONS = [
-  "xpcom-shutdown",
-];
+const UNEXPECTED_NOTIFICATIONS = ["xpcom-shutdown"];
 
 const FTP_URL = "ftp://localhost/clearHistoryOnShutdown/";
 
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
-var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
-                         getService(Ci.nsIObserver);
+var formHistoryStartup = Cc[
+  "@mozilla.org/satchel/form-history-startup;1"
+].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-                               "resource://gre/modules/FormHistory.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormHistory",
+  "resource://gre/modules/FormHistory.jsm"
+);
 
 var timeInMicroseconds = Date.now() * 1000;
 
@@ -45,27 +47,38 @@ add_task(async function test_execute() {
   info("Initialize browserglue before Places");
 
   // Avoid default bookmarks import.
-  let glue = Cc["@mozilla.org/browser/browserglue;1"].
-             getService(Ci.nsIObserver);
+  let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(
+    Ci.nsIObserver
+  );
   glue.observe(null, "initial-migration-will-import-default-bookmarks", null);
   Sanitizer.onStartup();
 
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "cache", true);
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "cookies", true);
-  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "offlineApps", true);
+  Services.prefs.setBoolPref(
+    Sanitizer.PREF_SHUTDOWN_BRANCH + "offlineApps",
+    true
+  );
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "history", true);
-  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "downloads", true);
+  Services.prefs.setBoolPref(
+    Sanitizer.PREF_SHUTDOWN_BRANCH + "downloads",
+    true
+  );
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "cookies", true);
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "formData", true);
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "sessions", true);
-  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "siteSettings", true);
+  Services.prefs.setBoolPref(
+    Sanitizer.PREF_SHUTDOWN_BRANCH + "siteSettings",
+    true
+  );
 
   Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, true);
 
   info("Add visits.");
   for (let aUrl of URIS) {
     await PlacesTestUtils.addVisits({
-      uri: uri(aUrl), visitDate: timeInMicroseconds++,
+      uri: uri(aUrl),
+      visitDate: timeInMicroseconds++,
       transition: PlacesUtils.history.TRANSITION_TYPED,
     });
   }
@@ -73,12 +86,12 @@ add_task(async function test_execute() {
   await storeCache(FTP_URL, "testData");
   info("Add form history.");
   await addFormHistory();
-  Assert.equal((await getFormHistoryCount()), 1, "Added form history");
+  Assert.equal(await getFormHistoryCount(), 1, "Added form history");
 
   info("Simulate and wait shutdown.");
   await shutdownPlaces();
 
-  Assert.equal((await getFormHistoryCount()), 0, "Form history cleared");
+  Assert.equal(await getFormHistoryCount(), 0, "Form history cleared");
 
   let stmt = DBConn(true).createStatement(
     "SELECT id FROM moz_places WHERE url = :page_url "
@@ -102,24 +115,38 @@ add_task(async function test_execute() {
 function addFormHistory() {
   return new Promise(resolve => {
     let now = Date.now() * 1000;
-    FormHistory.update({ op: "add",
-                         fieldname: "testfield",
-                         value: "test",
-                         timesUsed: 1,
-                         firstUsed: now,
-                         lastUsed: now,
-                       },
-                       { handleCompletion(reason) { resolve(); } });
+    FormHistory.update(
+      {
+        op: "add",
+        fieldname: "testfield",
+        value: "test",
+        timesUsed: 1,
+        firstUsed: now,
+        lastUsed: now,
+      },
+      {
+        handleCompletion(reason) {
+          resolve();
+        },
+      }
+    );
   });
 }
 
 function getFormHistoryCount() {
   return new Promise((resolve, reject) => {
     let count = -1;
-    FormHistory.count({ fieldname: "testfield" },
-                      { handleResult(result) { count = result; },
-                        handleCompletion(reason) { resolve(count); },
-                      });
+    FormHistory.count(
+      { fieldname: "testfield" },
+      {
+        handleResult(result) {
+          count = result;
+        },
+        handleCompletion(reason) {
+          resolve(count);
+        },
+      }
+    );
   });
 }
 
@@ -141,9 +168,15 @@ function storeCache(aURL, aContent) {
 
         var written = os.write(aContent, aContent.length);
         if (written != aContent.length) {
-          do_throw("os.write has not written all data!\n" +
-                   "  Expected: " + written + "\n" +
-                   "  Actual: " + aContent.length + "\n");
+          do_throw(
+            "os.write has not written all data!\n" +
+              "  Expected: " +
+              written +
+              "\n" +
+              "  Actual: " +
+              aContent.length +
+              "\n"
+          );
         }
         os.close();
         entry.close();
@@ -151,12 +184,14 @@ function storeCache(aURL, aContent) {
       },
     };
 
-    storage.asyncOpenURI(Services.io.newURI(aURL), "",
-                         Ci.nsICacheStorage.OPEN_NORMALLY,
-                         storeCacheListener);
+    storage.asyncOpenURI(
+      Services.io.newURI(aURL),
+      "",
+      Ci.nsICacheStorage.OPEN_NORMALLY,
+      storeCacheListener
+    );
   });
 }
-
 
 function checkCache(aURL) {
   let cache = Services.cache2;
@@ -170,8 +205,11 @@ function checkCache(aURL) {
       },
     };
 
-    storage.asyncOpenURI(Services.io.newURI(aURL), "",
-                         Ci.nsICacheStorage.OPEN_READONLY,
-                         checkCacheListener);
+    storage.asyncOpenURI(
+      Services.io.newURI(aURL),
+      "",
+      Ci.nsICacheStorage.OPEN_READONLY,
+      checkCacheListener
+    );
   });
 }

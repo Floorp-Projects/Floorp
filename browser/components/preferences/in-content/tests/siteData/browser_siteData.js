@@ -5,8 +5,14 @@
 
 function getPersistentStoragePermStatus(origin) {
   let uri = Services.io.newURI(origin);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-  return Services.perms.testExactPermissionFromPrincipal(principal, "persistent-storage");
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
+  return Services.perms.testExactPermissionFromPrincipal(
+    principal,
+    "persistent-storage"
+  );
 }
 
 // Test listing site using quota usage or site using appcache
@@ -19,7 +25,12 @@ add_task(async function() {
   // Open a test site which would save into quota manager
   BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
   await BrowserTestUtils.waitForContentEvent(
-    gBrowser.selectedBrowser, "test-indexedDB-done", false, null, true);
+    gBrowser.selectedBrowser,
+    "test-indexedDB-done",
+    false,
+    null,
+    true
+  );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   let updatedPromise = promiseSiteDataManagerSitesUpdated();
@@ -33,18 +44,28 @@ add_task(async function() {
   let siteItems = frameDoc.getElementsByTagName("richlistitem");
   is(siteItems.length, 2, "Should list sites using quota usage or appcache");
 
-  let appcacheSite = frameDoc.querySelector(`richlistitem[host="${TEST_OFFLINE_HOST}"]`);
+  let appcacheSite = frameDoc.querySelector(
+    `richlistitem[host="${TEST_OFFLINE_HOST}"]`
+  );
   ok(appcacheSite, "Should list site using appcache");
 
-  let qoutaUsageSite = frameDoc.querySelector(`richlistitem[host="${TEST_QUOTA_USAGE_HOST}"]`);
+  let qoutaUsageSite = frameDoc.querySelector(
+    `richlistitem[host="${TEST_QUOTA_USAGE_HOST}"]`
+  );
   ok(qoutaUsageSite, "Should list site using quota usage");
 
   // Always remember to clean up
   OfflineAppCacheHelper.clear();
   await new Promise(resolve => {
-    let principal = Services.scriptSecurityManager
-                            .createCodebasePrincipalFromOrigin(TEST_QUOTA_USAGE_ORIGIN);
-    let request = Services.qms.clearStoragesForPrincipal(principal, null, null, true);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      TEST_QUOTA_USAGE_ORIGIN
+    );
+    let request = Services.qms.clearStoragesForPrincipal(
+      principal,
+      null,
+      null,
+      true
+    );
     request.callback = resolve;
   });
 
@@ -63,36 +84,71 @@ add_task(async function() {
   let clearBtn = doc.getElementById("clearSiteDataButton");
   let settingsButton = doc.getElementById("siteDataSettings");
   let totalSiteDataSizeLabel = doc.getElementById("totalSiteDataSize");
-  is(clearBtn.disabled, false, "Should enable clear button after sites updated");
-  is(settingsButton.disabled, false, "Should enable settings button after sites updated");
-  await SiteDataManager.getTotalUsage()
-                       .then(usage => {
-                         let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
-                         Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
-                           id: "sitedata-total-size",
-                           args: {value, unit},
-                         }, "Should show the right total site data size");
-                       });
+  is(
+    clearBtn.disabled,
+    false,
+    "Should enable clear button after sites updated"
+  );
+  is(
+    settingsButton.disabled,
+    false,
+    "Should enable settings button after sites updated"
+  );
+  await SiteDataManager.getTotalUsage().then(usage => {
+    let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
+    Assert.deepEqual(
+      doc.l10n.getAttributes(totalSiteDataSizeLabel),
+      {
+        id: "sitedata-total-size",
+        args: { value, unit },
+      },
+      "Should show the right total site data size"
+    );
+  });
 
   Services.obs.notifyObservers(null, "sitedatamanager:updating-sites");
-  is(clearBtn.disabled, true, "Should disable clear button while updating sites");
-  is(settingsButton.disabled, true, "Should disable settings button while updating sites");
-  Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
-    id: "sitedata-total-size-calculating", args: null,
-  }, "Should show the loading message while updating");
+  is(
+    clearBtn.disabled,
+    true,
+    "Should disable clear button while updating sites"
+  );
+  is(
+    settingsButton.disabled,
+    true,
+    "Should disable settings button while updating sites"
+  );
+  Assert.deepEqual(
+    doc.l10n.getAttributes(totalSiteDataSizeLabel),
+    {
+      id: "sitedata-total-size-calculating",
+      args: null,
+    },
+    "Should show the loading message while updating"
+  );
 
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
-  is(clearBtn.disabled, false, "Should enable clear button after sites updated");
-  is(settingsButton.disabled, false, "Should enable settings button after sites updated");
+  is(
+    clearBtn.disabled,
+    false,
+    "Should enable clear button after sites updated"
+  );
+  is(
+    settingsButton.disabled,
+    false,
+    "Should enable settings button after sites updated"
+  );
   cacheSize = await SiteDataManager.getCacheSize();
-  await SiteDataManager.getTotalUsage()
-                       .then(usage => {
-                         let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
-                         Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
-                           id: "sitedata-total-size",
-                           args: {value, unit},
-                         }, "Should show the right total site data size");
-                       });
+  await SiteDataManager.getTotalUsage().then(usage => {
+    let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
+    Assert.deepEqual(
+      doc.l10n.getAttributes(totalSiteDataSizeLabel),
+      {
+        id: "sitedata-total-size",
+        args: { value, unit },
+      },
+      "Should show the right total site data size"
+    );
+  });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -135,20 +191,56 @@ add_task(async function() {
   // Add some test cookies.
   let uri = Services.io.newURI("https://example.com");
   let uri2 = Services.io.newURI("https://example.org");
-  Services.cookies.add(uri.host, uri.pathQueryRef, "test1", "1",
-    false, false, false, Date.now() + 1000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
-  Services.cookies.add(uri.host, uri.pathQueryRef, "test2", "2",
-    false, false, false, Date.now() + 1000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
-  Services.cookies.add(uri2.host, uri2.pathQueryRef, "test1", "1",
-    false, false, false, Date.now() + 1000 * 60 * 60, {},
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    uri.host,
+    uri.pathQueryRef,
+    "test1",
+    "1",
+    false,
+    false,
+    false,
+    Date.now() + 1000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  Services.cookies.add(
+    uri.host,
+    uri.pathQueryRef,
+    "test2",
+    "2",
+    false,
+    false,
+    false,
+    Date.now() + 1000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
+  Services.cookies.add(
+    uri2.host,
+    uri2.pathQueryRef,
+    "test1",
+    "1",
+    false,
+    false,
+    false,
+    Date.now() + 1000 * 60 * 60,
+    {},
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   // Ensure that private browsing cookies are ignored.
-  Services.cookies.add(uri.host, uri.pathQueryRef, "test3", "3",
-    false, false, false, Date.now() + 1000 * 60 * 60, { privateBrowsingId: 1 },
-    Ci.nsICookie.SAMESITE_NONE);
+  Services.cookies.add(
+    uri.host,
+    uri.pathQueryRef,
+    "test3",
+    "3",
+    false,
+    false,
+    false,
+    Date.now() + 1000 * 60 * 60,
+    { privateBrowsingId: 1 },
+    Ci.nsICookie.SAMESITE_NONE
+  );
 
   // Get the exact creation date from the cookies (to avoid intermittents
   // from minimal time differences, since we round up to minutes).
@@ -160,7 +252,8 @@ add_task(async function() {
   let cookie2 = cookiesEnum2.getNext().QueryInterface(Ci.nsICookie);
 
   let fullFormatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "short", timeStyle: "short",
+    dateStyle: "short",
+    timeStyle: "short",
   });
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -171,74 +264,119 @@ add_task(async function() {
   let creationDate1Formatted = fullFormatter.format(creationDate1);
   let creationDate2 = new Date(cookie2.lastAccessed / 1000);
   let creationDate2Formatted = fullFormatter.format(creationDate2);
-  let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
-  await ContentTask.spawn(gBrowser.selectedBrowser, {
-    creationDate1Formatted,
-    creationDate2Formatted,
-  }, function(args) {
-    let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
+  let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen(
+    "accept",
+    REMOVE_DIALOG_URL
+  );
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    {
+      creationDate1Formatted,
+      creationDate2Formatted,
+    },
+    function(args) {
+      let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
-    let siteItems = frameDoc.getElementsByTagName("richlistitem");
-    is(siteItems.length, 2, "Should list two sites with cookies");
-    let sitesList = frameDoc.getElementById("sitesList");
-    let site1 = sitesList.querySelector(`richlistitem[host="example.com"]`);
-    let site2 = sitesList.querySelector(`richlistitem[host="example.org"]`);
+      let siteItems = frameDoc.getElementsByTagName("richlistitem");
+      is(siteItems.length, 2, "Should list two sites with cookies");
+      let sitesList = frameDoc.getElementById("sitesList");
+      let site1 = sitesList.querySelector(`richlistitem[host="example.com"]`);
+      let site2 = sitesList.querySelector(`richlistitem[host="example.org"]`);
 
-    let columns = site1.querySelectorAll(".item-box > label");
-    let boxes = site1.querySelectorAll(".item-box");
-    is(columns[0].value, "example.com", "Should show the correct host.");
-    is(columns[1].value, "2", "Should show the correct number of cookies.");
-    is(columns[2].value, "", "Should show no site data.");
-    is(/(now|second)/.test(columns[3].value), true, "Should show the relative date.");
-    is(boxes[3].getAttribute("tooltiptext"), args.creationDate1Formatted, "Should show the correct date.");
+      let columns = site1.querySelectorAll(".item-box > label");
+      let boxes = site1.querySelectorAll(".item-box");
+      is(columns[0].value, "example.com", "Should show the correct host.");
+      is(columns[1].value, "2", "Should show the correct number of cookies.");
+      is(columns[2].value, "", "Should show no site data.");
+      is(
+        /(now|second)/.test(columns[3].value),
+        true,
+        "Should show the relative date."
+      );
+      is(
+        boxes[3].getAttribute("tooltiptext"),
+        args.creationDate1Formatted,
+        "Should show the correct date."
+      );
 
-    columns = site2.querySelectorAll(".item-box > label");
-    boxes = site2.querySelectorAll(".item-box");
-    is(columns[0].value, "example.org", "Should show the correct host.");
-    is(columns[1].value, "1", "Should show the correct number of cookies.");
-    is(columns[2].value, "", "Should show no site data.");
-    is(/(now|second)/.test(columns[3].value), true, "Should show the relative date.");
-    is(boxes[3].getAttribute("tooltiptext"), args.creationDate2Formatted, "Should show the correct date.");
+      columns = site2.querySelectorAll(".item-box > label");
+      boxes = site2.querySelectorAll(".item-box");
+      is(columns[0].value, "example.org", "Should show the correct host.");
+      is(columns[1].value, "1", "Should show the correct number of cookies.");
+      is(columns[2].value, "", "Should show no site data.");
+      is(
+        /(now|second)/.test(columns[3].value),
+        true,
+        "Should show the relative date."
+      );
+      is(
+        boxes[3].getAttribute("tooltiptext"),
+        args.creationDate2Formatted,
+        "Should show the correct date."
+      );
 
-    let removeBtn = frameDoc.getElementById("removeSelected");
-    let saveBtn = frameDoc.getElementById("save");
-    site2.click();
-    removeBtn.doCommand();
-    saveBtn.doCommand();
-  });
+      let removeBtn = frameDoc.getElementById("removeSelected");
+      let saveBtn = frameDoc.getElementById("save");
+      site2.click();
+      removeBtn.doCommand();
+      saveBtn.doCommand();
+    }
+  );
   await removeDialogOpenPromise;
 
-  await TestUtils.waitForCondition(() => Services.cookies.countCookiesFromHost(uri2.host) == 0, "Cookies from the first host should be cleared");
-  is(Services.cookies.countCookiesFromHost(uri.host), 2, "Cookies from the second host should not be cleared");
+  await TestUtils.waitForCondition(
+    () => Services.cookies.countCookiesFromHost(uri2.host) == 0,
+    "Cookies from the first host should be cleared"
+  );
+  is(
+    Services.cookies.countCookiesFromHost(uri.host),
+    2,
+    "Cookies from the second host should not be cleared"
+  );
 
   // Open the site data manager and remove another site.
   await openSiteDataSettingsDialog();
   let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
-  await ContentTask.spawn(gBrowser.selectedBrowser, {creationDate1Formatted}, function(args) {
-    let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    { creationDate1Formatted },
+    function(args) {
+      let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
 
-    let siteItems = frameDoc.getElementsByTagName("richlistitem");
-    is(siteItems.length, 1, "Should list one site with cookies");
-    let sitesList = frameDoc.getElementById("sitesList");
-    let site1 = sitesList.querySelector(`richlistitem[host="example.com"]`);
+      let siteItems = frameDoc.getElementsByTagName("richlistitem");
+      is(siteItems.length, 1, "Should list one site with cookies");
+      let sitesList = frameDoc.getElementById("sitesList");
+      let site1 = sitesList.querySelector(`richlistitem[host="example.com"]`);
 
-    let columns = site1.querySelectorAll(".item-box > label");
-    let boxes = site1.querySelectorAll(".item-box");
-    is(columns[0].value, "example.com", "Should show the correct host.");
-    is(columns[1].value, "2", "Should show the correct number of cookies.");
-    is(columns[2].value, "", "Should show no site data.");
-    is(/(now|second)/.test(columns[3].value), true, "Should show the relative date.");
-    is(boxes[3].getAttribute("tooltiptext"), args.creationDate1Formatted, "Should show the correct date.");
+      let columns = site1.querySelectorAll(".item-box > label");
+      let boxes = site1.querySelectorAll(".item-box");
+      is(columns[0].value, "example.com", "Should show the correct host.");
+      is(columns[1].value, "2", "Should show the correct number of cookies.");
+      is(columns[2].value, "", "Should show no site data.");
+      is(
+        /(now|second)/.test(columns[3].value),
+        true,
+        "Should show the relative date."
+      );
+      is(
+        boxes[3].getAttribute("tooltiptext"),
+        args.creationDate1Formatted,
+        "Should show the correct date."
+      );
 
-    let removeBtn = frameDoc.getElementById("removeSelected");
-    let saveBtn = frameDoc.getElementById("save");
-    site1.click();
-    removeBtn.doCommand();
-    saveBtn.doCommand();
-  });
+      let removeBtn = frameDoc.getElementById("removeSelected");
+      let saveBtn = frameDoc.getElementById("save");
+      site1.click();
+      removeBtn.doCommand();
+      saveBtn.doCommand();
+    }
+  );
   await acceptRemovePromise;
 
-  await TestUtils.waitForCondition(() => Services.cookies.countCookiesFromHost(uri.host) == 0, "Cookies from the second host should be cleared");
+  await TestUtils.waitForCondition(
+    () => Services.cookies.countCookiesFromHost(uri.host) == 0,
+    "Cookies from the second host should be cleared"
+  );
 
   await openSiteDataSettingsDialog();
 

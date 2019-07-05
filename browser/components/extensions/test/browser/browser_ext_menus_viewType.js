@@ -11,7 +11,11 @@
 add_task(async function extension_tab_viewType() {
   async function background() {
     browser.menus.onShown.addListener(info => {
-      browser.test.assertEq("tabonly", info.menuIds.join(","), "Expected menu items");
+      browser.test.assertEq(
+        "tabonly",
+        info.menuIds.join(","),
+        "Expected menu items"
+      );
       browser.test.sendMessage("shown");
     });
     browser.menus.onClicked.addListener(info => {
@@ -19,10 +23,17 @@ add_task(async function extension_tab_viewType() {
       browser.test.sendMessage("clicked");
     });
 
-    browser.menus.create({id: "sidebaronly", title: "sidebar-only", viewTypes: ["sidebar"]});
-    browser.menus.create({id: "tabonly", title: "click here", viewTypes: ["tab"]}, () => {
-      browser.tabs.create({url: "tab.html"});
+    browser.menus.create({
+      id: "sidebaronly",
+      title: "sidebar-only",
+      viewTypes: ["sidebar"],
     });
+    browser.menus.create(
+      { id: "tabonly", title: "click here", viewTypes: ["tab"] },
+      () => {
+        browser.tabs.create({ url: "tab.html" });
+      }
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -36,7 +47,11 @@ add_task(async function extension_tab_viewType() {
     background,
   });
 
-  let extensionTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  let extensionTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    null,
+    true
+  );
   await extension.startup();
   await extension.awaitMessage("ready");
   await extensionTabPromise;
@@ -54,16 +69,28 @@ add_task(async function extension_tab_viewType() {
 add_task(async function sidebar_panel_viewType() {
   async function sidebarJs() {
     browser.menus.onShown.addListener(info => {
-      browser.test.assertEq("sidebaronly", info.menuIds.join(","), "Expected menu items");
+      browser.test.assertEq(
+        "sidebaronly",
+        info.menuIds.join(","),
+        "Expected menu items"
+      );
       browser.test.assertEq("sidebar", info.viewType, "Expected viewType");
       browser.test.sendMessage("shown");
     });
 
     // Create menus and change their viewTypes using menus.update.
-    browser.menus.create({id: "sidebaronly", title: "sidebaronly", viewTypes: ["tab"]});
-    browser.menus.create({id: "tabonly", title: "tabonly", viewTypes: ["sidebar"]});
-    await browser.menus.update("sidebaronly", {viewTypes: ["sidebar"]});
-    await browser.menus.update("tabonly", {viewTypes: ["tab"]});
+    browser.menus.create({
+      id: "sidebaronly",
+      title: "sidebaronly",
+      viewTypes: ["tab"],
+    });
+    browser.menus.create({
+      id: "tabonly",
+      title: "tabonly",
+      viewTypes: ["sidebar"],
+    });
+    await browser.menus.update("sidebaronly", { viewTypes: ["sidebar"] });
+    await browser.menus.update("tabonly", { viewTypes: ["tab"] });
     browser.test.sendMessage("ready");
   }
 

@@ -4,26 +4,35 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
-let { getChromeWindow } = ChromeUtils.import("resource:///modules/syncedtabs/util.js");
+let { getChromeWindow } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/util.js"
+);
 
-let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
-            .Log.repository.getLogger("Sync.RemoteTabs");
+let log = ChromeUtils.import(
+  "resource://gre/modules/Log.jsm",
+  {}
+).Log.repository.getLogger("Sync.RemoteTabs");
 
-var EXPORTED_SYMBOLS = [
-  "TabListView",
-];
+var EXPORTED_SYMBOLS = ["TabListView"];
 
 function getContextMenu(window) {
-  return getChromeWindow(window).document.getElementById("SyncedTabsSidebarContext");
+  return getChromeWindow(window).document.getElementById(
+    "SyncedTabsSidebarContext"
+  );
 }
 
 function getTabsFilterContextMenu(window) {
-  return getChromeWindow(window).document.getElementById("SyncedTabsSidebarTabsFilterContext");
+  return getChromeWindow(window).document.getElementById(
+    "SyncedTabsSidebarTabsFilterContext"
+  );
 }
 
 /*
@@ -40,7 +49,9 @@ function TabListView(window, props) {
   this._window = window;
   this._doc = this._window.document;
 
-  this._tabsContainerTemplate = this._doc.getElementById("tabs-container-template");
+  this._tabsContainerTemplate = this._doc.getElementById(
+    "tabs-container-template"
+  );
   this._clientTemplate = this._doc.getElementById("client-template");
   this._emptyClientTemplate = this._doc.getElementById("empty-client-template");
   this._tabTemplate = this._doc.getElementById("tab-template");
@@ -74,7 +85,10 @@ TabListView.prototype = {
 
   // Create the initial DOM from templates
   _create(state) {
-    let wrapper = this._doc.importNode(this._tabsContainerTemplate.content, true).firstElementChild;
+    let wrapper = this._doc.importNode(
+      this._tabsContainerTemplate.content,
+      true
+    ).firstElementChild;
     this._clearChilden();
     this.container.appendChild(wrapper);
 
@@ -96,7 +110,9 @@ TabListView.prototype = {
       }
     }
     if (this.list.firstElementChild) {
-      const firstTab = this.list.firstElementChild.querySelector(".item.tab:first-child .item-title");
+      const firstTab = this.list.firstElementChild.querySelector(
+        ".item.tab:first-child .item-title"
+      );
       if (firstTab) {
         firstTab.setAttribute("tabindex", 2);
       }
@@ -117,7 +133,9 @@ TabListView.prototype = {
       }
 
       client.tabs.forEach((tab, index) => {
-        let tabNode = this._doc.getElementById("tab-" + client.id + "-" + index);
+        let tabNode = this._doc.getElementById(
+          "tab-" + client.id + "-" + index
+        );
         this._updateTab(tab, tabNode, index);
       });
     }
@@ -133,17 +151,20 @@ TabListView.prototype = {
 
   _updateLastSyncTitle(lastModified, itemNode) {
     let lastSync = new Date(lastModified);
-    let lastSyncTitle = getChromeWindow(this._window).gSync.formatLastSyncDate(lastSync);
+    let lastSyncTitle = getChromeWindow(this._window).gSync.formatLastSyncDate(
+      lastSync
+    );
     itemNode.setAttribute("title", lastSyncTitle);
   },
 
   _renderClient(client) {
-    let itemNode = client.tabs.length ?
-                    this._createClient(client) :
-                    this._createEmptyClient(client);
+    let itemNode = client.tabs.length
+      ? this._createClient(client)
+      : this._createEmptyClient(client);
 
     itemNode.addEventListener("mouseover", () =>
-      this._updateLastSyncTitle(client.lastModified, itemNode));
+      this._updateLastSyncTitle(client.lastModified, itemNode)
+    );
 
     this._updateClient(client, itemNode);
 
@@ -164,15 +185,18 @@ TabListView.prototype = {
   },
 
   _createClient() {
-    return this._doc.importNode(this._clientTemplate.content, true).firstElementChild;
+    return this._doc.importNode(this._clientTemplate.content, true)
+      .firstElementChild;
   },
 
   _createEmptyClient() {
-    return this._doc.importNode(this._emptyClientTemplate.content, true).firstElementChild;
+    return this._doc.importNode(this._emptyClientTemplate.content, true)
+      .firstElementChild;
   },
 
   _createTab() {
-    return this._doc.importNode(this._tabTemplate.content, true).firstElementChild;
+    return this._doc.importNode(this._tabTemplate.content, true)
+      .firstElementChild;
   },
 
   _clearChilden(node) {
@@ -267,7 +291,8 @@ TabListView.prototype = {
   },
 
   onMouseUp(event) {
-    if (event.which == 2) { // Middle click
+    if (event.which == 2) {
+      // Middle click
       this.onClick(event);
     }
   },
@@ -293,8 +318,10 @@ TabListView.prototype = {
       }
     }
 
-    if (event.target.classList.contains("item-twisty-container")
-        && event.which != 2) {
+    if (
+      event.target.classList.contains("item-twisty-container") &&
+      event.which != 2
+    ) {
       this.props.onToggleBranch(itemNode.dataset.id);
       return;
     }
@@ -400,7 +427,12 @@ TabListView.prototype = {
 
   // Set up the custom context menu
   _setupContextMenu() {
-    Services.els.addSystemEventListener(this._window, "contextmenu", this, false);
+    Services.els.addSystemEventListener(
+      this._window,
+      "contextmenu",
+      this,
+      false
+    );
     for (let getMenu of [getContextMenu, getTabsFilterContextMenu]) {
       let menu = getMenu(this._window);
       menu.addEventListener("popupshowing", this, true);
@@ -410,7 +442,12 @@ TabListView.prototype = {
 
   _teardownContextMenu() {
     // Tear down context menu
-    Services.els.removeSystemEventListener(this._window, "contextmenu", this, false);
+    Services.els.removeSystemEventListener(
+      this._window,
+      "contextmenu",
+      this,
+      false
+    );
     for (let getMenu of [getContextMenu, getTabsFilterContextMenu]) {
       let menu = getMenu(this._window);
       menu.removeEventListener("popupshowing", this, true);
@@ -425,7 +462,10 @@ TabListView.prototype = {
         break;
 
       case "popupshowing": {
-        if (event.target.getAttribute("id") == "SyncedTabsSidebarTabsFilterContext") {
+        if (
+          event.target.getAttribute("id") ==
+          "SyncedTabsSidebarTabsFilterContext"
+        ) {
           this.handleTabsFilterContextMenuShown(event);
         }
         break;
@@ -458,7 +498,9 @@ TabListView.prototype = {
         continue;
       }
       let command = item.getAttribute("cmd");
-      let controller = document.commandDispatcher.getControllerForCommand(command);
+      let controller = document.commandDispatcher.getControllerForCommand(
+        command
+      );
       if (controller.isCommandEnabled(command)) {
         item.removeAttribute("disabled");
       } else {
@@ -495,7 +537,9 @@ TabListView.prototype = {
   handleTabsFilterContextMenuCommand(event) {
     let command = event.target.getAttribute("cmd");
     let dispatcher = getChromeWindow(this._window).document.commandDispatcher;
-    let controller = dispatcher.focusedElement.controllers.getControllerForCommand(command);
+    let controller = dispatcher.focusedElement.controllers.getControllerForCommand(
+      command
+    );
     controller.doCommand(command);
   },
 
@@ -528,8 +572,10 @@ TabListView.prototype = {
       if (showTabOptions) {
         if (el.getAttribute("id") == "syncedTabsOpenSelectedInPrivateWindow") {
           show = PrivateBrowsingUtils.enabled;
-        } else if (el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
-                   el.getAttribute("id") != "syncedTabsManageDevices") {
+        } else if (
+          el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
+          el.getAttribute("id") != "syncedTabsManageDevices"
+        ) {
           show = true;
         }
       } else if (el.getAttribute("id") == "syncedTabsOpenAllInTabs") {
@@ -552,8 +598,12 @@ TabListView.prototype = {
    * @return {Element} Element for the item, or null if not found.
    */
   _findParentItemNode(node) {
-    while (node && node !== this.list && node !== this._doc.documentElement &&
-           !node.classList.contains("item")) {
+    while (
+      node &&
+      node !== this.list &&
+      node !== this._doc.documentElement &&
+      !node.classList.contains("item")
+    ) {
       node = node.parentNode;
     }
 
@@ -565,8 +615,12 @@ TabListView.prototype = {
   },
 
   _findParentBranchNode(node) {
-    while (node && !node.classList.contains("list") && node !== this._doc.documentElement &&
-           !node.parentNode.classList.contains("list")) {
+    while (
+      node &&
+      !node.classList.contains("list") &&
+      node !== this._doc.documentElement &&
+      !node.parentNode.classList.contains("list")
+    ) {
       node = node.parentNode;
     }
 

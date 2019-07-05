@@ -14,8 +14,11 @@ add_task(async function() {
   let customToolbar = document.getElementById(kTestToolbarId);
   simulateItemDrag(libraryButton, customToolbar);
   assertAreaPlacements(kTestToolbarId, ["library-button"]);
-  ok(libraryButton.parentNode && libraryButton.parentNode.parentNode == customToolbar,
-     "Button should really be in toolbar");
+  ok(
+    libraryButton.parentNode &&
+      libraryButton.parentNode.parentNode == customToolbar,
+    "Button should really be in toolbar"
+  );
   await endCustomizing();
   removeCustomToolbars();
 });

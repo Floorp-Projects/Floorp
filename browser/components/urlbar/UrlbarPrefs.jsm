@@ -11,8 +11,10 @@
 
 var EXPORTED_SYMBOLS = ["UrlbarPrefs"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -172,7 +174,10 @@ const PREF_TYPES = new Map([
 // First buckets. Anything with an Infinity frecency ends up here.
 const DEFAULT_BUCKETS_BEFORE = [
   [UrlbarUtils.RESULT_GROUP.HEURISTIC, 1],
-  [UrlbarUtils.RESULT_GROUP.EXTENSION, UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES - 1],
+  [
+    UrlbarUtils.RESULT_GROUP.EXTENSION,
+    UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES - 1,
+  ],
 ];
 // => USER DEFINED BUCKETS WILL BE INSERTED HERE <=
 //
@@ -209,8 +214,9 @@ class Preferences {
    * @returns {*} The preference value.
    */
   get(pref) {
-    if (!this._map.has(pref))
+    if (!this._map.has(pref)) {
       this._map.set(pref, this._getPrefValue(pref));
+    }
     return this._map.get(pref);
   }
 
@@ -223,8 +229,9 @@ class Preferences {
    */
   observe(subject, topic, data) {
     let pref = data.replace(PREF_URLBAR_BRANCH, "");
-    if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref))
+    if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref)) {
       return;
+    }
     this._map.delete(pref);
     // Some prefs may influence others.
     if (pref == "matchBuckets") {
@@ -250,8 +257,9 @@ class Preferences {
       prefs = Services.prefs;
       def = PREF_OTHER_DEFAULTS.get(pref);
     }
-    if (def === undefined)
+    if (def === undefined) {
       throw new Error("Trying to access an unknown pref " + pref);
+    }
     let getterName;
     if (!Array.isArray(def)) {
       getterName = `get${PREF_TYPES.get(typeof def)}Pref`;
@@ -277,7 +285,7 @@ class Preferences {
    *        The name of the preference to get.
    * @returns {*} The validated and/or fixed-up preference value.
    */
-   _getPrefValue(pref) {
+  _getPrefValue(pref) {
     switch (pref) {
       case "matchBuckets": {
         // Convert from pref char format to an array and add the default
@@ -286,11 +294,11 @@ class Preferences {
         try {
           val = PlacesUtils.convertMatchBucketsStringToArray(val);
         } catch (ex) {
-          val = PlacesUtils.convertMatchBucketsStringToArray(PREF_URLBAR_DEFAULTS.get(pref));
+          val = PlacesUtils.convertMatchBucketsStringToArray(
+            PREF_URLBAR_DEFAULTS.get(pref)
+          );
         }
-        return [ ...DEFAULT_BUCKETS_BEFORE,
-                ...val,
-                ...DEFAULT_BUCKETS_AFTER ];
+        return [...DEFAULT_BUCKETS_BEFORE, ...val, ...DEFAULT_BUCKETS_AFTER];
       }
       case "matchBucketsSearch": {
         // Convert from pref char format to an array and add the default
@@ -301,18 +309,25 @@ class Preferences {
           // buckets.
           try {
             val = PlacesUtils.convertMatchBucketsStringToArray(val);
-            return [ ...DEFAULT_BUCKETS_BEFORE,
-                    ...val,
-                    ...DEFAULT_BUCKETS_AFTER ];
-          } catch (ex) { /* invalid format, will just return matchBuckets */ }
+            return [
+              ...DEFAULT_BUCKETS_BEFORE,
+              ...val,
+              ...DEFAULT_BUCKETS_AFTER,
+            ];
+          } catch (ex) {
+            /* invalid format, will just return matchBuckets */
+          }
         }
         return this.get("matchBuckets");
       }
       case "defaultBehavior": {
         let val = 0;
         for (let type of Object.keys(SUGGEST_PREF_TO_BEHAVIOR)) {
-          let behavior = `BEHAVIOR_${SUGGEST_PREF_TO_BEHAVIOR[type].toUpperCase()}`;
-          val |= this.get("suggest." + type) && Ci.mozIPlacesAutoComplete[behavior];
+          let behavior = `BEHAVIOR_${SUGGEST_PREF_TO_BEHAVIOR[
+            type
+          ].toUpperCase()}`;
+          val |=
+            this.get("suggest." + type) && Ci.mozIPlacesAutoComplete[behavior];
         }
         return val;
       }

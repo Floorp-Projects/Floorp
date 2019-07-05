@@ -6,13 +6,13 @@
  * be resolved in bug 1539000.
  */
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Too many characters in placeable/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Too many characters in placeable/
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["test.aboutconfig.added", true],
-    ],
+    set: [["test.aboutconfig.added", true]],
   });
 });
 
@@ -25,8 +25,8 @@ add_task(async function test_accessible_value() {
     ]) {
       let span = this.getRow(name).valueCell.querySelector("span");
       let expectedL10nId = expectHasUserValue
-          ? "about-config-pref-accessible-value-custom"
-          : "about-config-pref-accessible-value-default";
+        ? "about-config-pref-accessible-value-custom"
+        : "about-config-pref-accessible-value-default";
       Assert.equal(span.getAttribute("data-l10n-id"), expectedL10nId);
     }
   });

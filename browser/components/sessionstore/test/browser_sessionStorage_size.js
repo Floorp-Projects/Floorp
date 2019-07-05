@@ -4,9 +4,11 @@
 "use strict";
 
 const RAND = Math.random();
-const URL = "http://mochi.test:8888/browser/" +
-            "browser/components/sessionstore/test/browser_sessionStorage.html" +
-            "?" + RAND;
+const URL =
+  "http://mochi.test:8888/browser/" +
+  "browser/components/sessionstore/test/browser_sessionStorage.html" +
+  "?" +
+  RAND;
 
 const OUTER_VALUE = "outer-value-" + RAND;
 

@@ -7,14 +7,18 @@
  * Tests that recently added bookmarks can be opened.
  */
 
-const BASE_URL = "http://example.org/browser/browser/components/places/tests/browser/";
-const bookmarkItems = [{
-  url: `${BASE_URL}bookmark_dummy_1.html`,
-  title: "Custom Title 1",
-}, {
-  url: `${BASE_URL}bookmark_dummy_2.html`,
-  title: "Custom Title 2",
-}];
+const BASE_URL =
+  "http://example.org/browser/browser/components/places/tests/browser/";
+const bookmarkItems = [
+  {
+    url: `${BASE_URL}bookmark_dummy_1.html`,
+    title: "Custom Title 1",
+  },
+  {
+    url: `${BASE_URL}bookmark_dummy_2.html`,
+    title: "Custom Title 2",
+  },
+];
 let openedTabs = [];
 
 async function openBookmarksPanelInLibraryToolbarButton() {
@@ -26,19 +30,27 @@ async function openBookmarksPanelInLibraryToolbarButton() {
 
   let bookmarksButton;
   await BrowserTestUtils.waitForCondition(() => {
-    bookmarksButton = document.getElementById("appMenu-library-bookmarks-button");
+    bookmarksButton = document.getElementById(
+      "appMenu-library-bookmarks-button"
+    );
     return bookmarksButton;
   }, "Should have the library bookmarks button");
 
   let BookmarksView = document.getElementById("PanelUI-bookmarks");
-  let viewRecentPromise = BrowserTestUtils.waitForEvent(BookmarksView, "ViewShown");
+  let viewRecentPromise = BrowserTestUtils.waitForEvent(
+    BookmarksView,
+    "ViewShown"
+  );
   bookmarksButton.click();
   await viewRecentPromise;
 }
 
 async function openBookmarkedItemInNewTab(itemFromMenu) {
   let placesContext = document.getElementById("placesContext");
-  let openContextMenuPromise = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
+  let openContextMenuPromise = BrowserTestUtils.waitForEvent(
+    placesContext,
+    "popupshown"
+  );
   EventUtils.synthesizeMouseAtCenter(itemFromMenu, {
     button: 2,
     type: "contextmenu",
@@ -55,7 +67,11 @@ async function openBookmarkedItemInNewTab(itemFromMenu) {
   info("Click open in new tab");
 
   let lastOpenedTab = await tabCreatedPromise;
-  Assert.equal(lastOpenedTab.linkedBrowser.currentURI.spec, itemFromMenu._placesNode.uri, "Should have opened the correct URI");
+  Assert.equal(
+    lastOpenedTab.linkedBrowser.currentURI.spec,
+    itemFromMenu._placesNode.uri,
+    "Should have opened the correct URI"
+  );
   openedTabs.push(lastOpenedTab);
 }
 
@@ -78,13 +94,32 @@ async function getRecentlyBookmarkedItems() {
   let items = historyMenu.querySelectorAll("toolbarbutton");
   Assert.ok(items, "Recently bookmarked items should exists");
 
-  await BrowserTestUtils.waitForCondition(() => items[0].attributes !== "undefined", "Custom bookmark exists");
+  await BrowserTestUtils.waitForCondition(
+    () => items[0].attributes !== "undefined",
+    "Custom bookmark exists"
+  );
 
   if (items) {
-    Assert.equal(items[0]._placesNode.uri, bookmarkItems[1].url, "Should match the expected url");
-    Assert.equal(items[0].getAttribute("label"), bookmarkItems[1].title, "Should be the expected title");
-    Assert.equal(items[1]._placesNode.uri, bookmarkItems[0].url, "Should match the expected url");
-    Assert.equal(items[1].getAttribute("label"), bookmarkItems[0].title, "Should be the expected title");
+    Assert.equal(
+      items[0]._placesNode.uri,
+      bookmarkItems[1].url,
+      "Should match the expected url"
+    );
+    Assert.equal(
+      items[0].getAttribute("label"),
+      bookmarkItems[1].title,
+      "Should be the expected title"
+    );
+    Assert.equal(
+      items[1]._placesNode.uri,
+      bookmarkItems[0].url,
+      "Should match the expected url"
+    );
+    Assert.equal(
+      items[1].getAttribute("label"),
+      bookmarkItems[0].title,
+      "Should be the expected title"
+    );
   }
   return Array.from(items).slice(0, 2);
 }
@@ -92,7 +127,10 @@ async function getRecentlyBookmarkedItems() {
 add_task(async function setup() {
   let libraryButton = CustomizableUI.getPlacementOfWidget("library-button");
   if (!libraryButton) {
-    CustomizableUI.addWidgetToArea("library-button", CustomizableUI.AREA_NAVBAR);
+    CustomizableUI.addWidgetToArea(
+      "library-button",
+      CustomizableUI.AREA_NAVBAR
+    );
   }
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,

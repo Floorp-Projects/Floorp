@@ -9,10 +9,13 @@ const TEST_URL2 = "http://example.com/2";
 add_task(async function setup() {
   let oldHomepagePref = Services.prefs.getCharPref("browser.startup.homepage");
 
-  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", { leaveOpen: true });
 
-  Assert.equal(gBrowser.currentURI.spec, "about:preferences#home",
-               "#home should be in the URI for about:preferences");
+  Assert.equal(
+    gBrowser.currentURI.spec,
+    "about:preferences#home",
+    "#home should be in the URI for about:preferences"
+  );
 
   registerCleanupFunction(async () => {
     Services.prefs.setCharPref("browser.startup.homepage", oldHomepagePref);
@@ -32,15 +35,20 @@ add_task(async function testSetHomepageFromBookmark() {
   // Select the custom URLs option.
   doc.getElementById("homeMode").value = 2;
 
-  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://browser/content/preferences/selectBookmark.xul");
+  let promiseSubDialogLoaded = promiseLoadSubDialog(
+    "chrome://browser/content/preferences/selectBookmark.xul"
+  );
   doc.getElementById("useBookmarkBtn").click();
 
   let dialog = await promiseSubDialogLoaded;
   dialog.document.getElementById("bookmarks").selectItems([bm.guid]);
   dialog.document.documentElement.getButton("accept").click();
 
-  Assert.equal(Services.prefs.getCharPref("browser.startup.homepage"), TEST_URL1,
-               "Should have set the homepage to the same as the bookmark.");
+  Assert.equal(
+    Services.prefs.getCharPref("browser.startup.homepage"),
+    TEST_URL1,
+    "Should have set the homepage to the same as the bookmark."
+  );
 });
 
 add_task(async function testSetHomepageFromTopLevelFolder() {
@@ -55,15 +63,20 @@ add_task(async function testSetHomepageFromTopLevelFolder() {
   // Select the custom URLs option.
   doc.getElementById("homeMode").value = 2;
 
-  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://browser/content/preferences/selectBookmark.xul");
+  let promiseSubDialogLoaded = promiseLoadSubDialog(
+    "chrome://browser/content/preferences/selectBookmark.xul"
+  );
   doc.getElementById("useBookmarkBtn").click();
 
   let dialog = await promiseSubDialogLoaded;
-  dialog.document.getElementById("bookmarks")
-        .selectItems([PlacesUtils.bookmarks.menuGuid]);
+  dialog.document
+    .getElementById("bookmarks")
+    .selectItems([PlacesUtils.bookmarks.menuGuid]);
   dialog.document.documentElement.getButton("accept").click();
 
-  Assert.equal(Services.prefs.getCharPref("browser.startup.homepage"),
-               `${TEST_URL1}|${TEST_URL2}`,
-               "Should have set the homepage to the same as the bookmark.");
+  Assert.equal(
+    Services.prefs.getCharPref("browser.startup.homepage"),
+    `${TEST_URL1}|${TEST_URL2}`,
+    "Should have set the homepage to the same as the bookmark."
+  );
 });

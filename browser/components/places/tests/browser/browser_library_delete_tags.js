@@ -16,11 +16,13 @@ registerCleanupFunction(async function() {
 add_task(async function test_tags() {
   const TEST_URI = Services.io.newURI("http://example.com/");
 
-  await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                       url: TEST_URI,
-                                       title: "example page",
-                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                       index: 0 });
+  await PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: TEST_URI,
+    title: "example page",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    index: 0,
+  });
   PlacesUtils.tagging.tagURI(TEST_URI, ["test"]);
 
   let library = await promiseLibrary();
@@ -32,15 +34,17 @@ add_task(async function test_tags() {
   let tagsNode = PO._places.selectedNode;
   Assert.notEqual(tagsNode, null, "Should have a valid selection");
   let tagsTitle = PlacesUtils.getString("TagsFolderTitle");
-  Assert.equal(tagsNode.title, tagsTitle,
-               "Should have selected the Tags node");
+  Assert.equal(tagsNode.title, tagsTitle, "Should have selected the Tags node");
 
   // Now select the tag.
   PlacesUtils.asContainer(tagsNode).containerOpen = true;
   let tag = tagsNode.getChild(0);
   PO._places.selectNode(tag);
-  Assert.equal(PO._places.selectedNode.title, "test",
-               "Should have selected the created tag");
+  Assert.equal(
+    PO._places.selectedNode.title,
+    "test",
+    "Should have selected the created tag"
+  );
 
   PO._places.controller.doCommand("cmd_delete");
 
@@ -48,8 +52,7 @@ add_task(async function test_tags() {
 
   let tags = PlacesUtils.tagging.getTagsForURI(TEST_URI);
 
-  Assert.equal(tags.length, 0,
-               "There should be no tags for the URI");
+  Assert.equal(tags.length, 0, "There should be no tags for the URI");
 
   tagsNode.containerOpen = false;
 

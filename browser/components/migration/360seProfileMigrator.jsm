@@ -4,43 +4,64 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {MigrationUtils, MigratorPrototype} = ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Sqlite",
-                               "resource://gre/modules/Sqlite.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sqlite",
+  "resource://gre/modules/Sqlite.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const kBookmarksFileName = "360sefav.db";
 
 function copyToTempUTF8File(file, charset) {
-  let inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Ci.nsIFileInputStream);
+  let inputStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   inputStream.init(file, -1, -1, 0);
   let inputStr = NetUtil.readInputStreamToString(
-    inputStream, inputStream.available(), { charset });
+    inputStream,
+    inputStream.available(),
+    { charset }
+  );
 
   // Use random to reduce the likelihood of a name collision in createUnique.
   let rand = Math.floor(Math.random() * Math.pow(2, 15));
   let leafName = "mozilla-temp-" + rand;
   let tempUTF8File = FileUtils.getFile(
-    "TmpD", ["mozilla-temp-files", leafName], true);
+    "TmpD",
+    ["mozilla-temp-files", leafName],
+    true
+  );
   tempUTF8File.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   let out = FileUtils.openAtomicFileOutputStream(tempUTF8File);
   try {
-    let bufferedOut = Cc["@mozilla.org/network/buffered-output-stream;1"]
-                        .createInstance(Ci.nsIBufferedOutputStream);
+    let bufferedOut = Cc[
+      "@mozilla.org/network/buffered-output-stream;1"
+    ].createInstance(Ci.nsIBufferedOutputStream);
     bufferedOut.init(out, 4096);
     try {
-      let converterOut = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                           .createInstance(Ci.nsIConverterOutputStream);
+      let converterOut = Cc[
+        "@mozilla.org/intl/converter-output-stream;1"
+      ].createInstance(Ci.nsIConverterOutputStream);
       converterOut.init(bufferedOut, "utf-8");
       try {
         converterOut.writeString(inputStr || "");
@@ -59,8 +80,9 @@ function copyToTempUTF8File(file, charset) {
 }
 
 function parseINIStrings(file) {
-  let factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
-                getService(Ci.nsIINIParserFactory);
+  let factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].getService(
+    Ci.nsIINIParserFactory
+  );
   let parser = factory.createINIParser(file);
   let obj = {};
   for (let section of parser.getSections()) {
@@ -77,17 +99,21 @@ function getHash(aStr) {
   // return the two-digit hexadecimal code for a byte
   let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
 
-  let hasher = Cc["@mozilla.org/security/hash;1"].
-               createInstance(Ci.nsICryptoHash);
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
   hasher.init(Ci.nsICryptoHash.MD5);
-  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].
-                     createInstance(Ci.nsIStringInputStream);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stringStream.data = aStr;
   hasher.updateFromStream(stringStream, -1);
 
   // convert the binary hash data to a hex string.
   let binary = hasher.finish(false);
-  return Array.from(binary, (c, i) => toHexString(binary.charCodeAt(i))).join("").toLowerCase();
+  return Array.from(binary, (c, i) => toHexString(binary.charCodeAt(i)))
+    .join("")
+    .toLowerCase();
 }
 
 function Bookmarks(aProfileFolder) {
@@ -123,7 +149,8 @@ Bookmarks.prototype = {
              JOIN bookmark AS b ON f.parent_id = b.id
              ORDER BY f.pos ASC
            )
-           SELECT id, parent_id, is_folder, title, url FROM bookmark WHERE id`);
+           SELECT id, parent_id, is_folder, title, url FROM bookmark WHERE id`
+        );
 
         for (let row of rows) {
           let id = parseInt(row.getResultByName("id"), 10);
@@ -145,7 +172,9 @@ Bookmarks.prototype = {
             try {
               new URL(url);
             } catch (ex) {
-              Cu.reportError(`Ignoring ${url} when importing from 360se because of exception: ${ex}`);
+              Cu.reportError(
+                `Ignoring ${url} when importing from 360se because of exception: ${ex}`
+              );
               continue;
             }
 
@@ -168,13 +197,20 @@ Bookmarks.prototype = {
       if (toolbarBMs.length) {
         let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
         if (!MigrationUtils.isStartupMigration) {
-          parentGuid =
-            await MigrationUtils.createImportedBookmarksFolder("360se", parentGuid);
+          parentGuid = await MigrationUtils.createImportedBookmarksFolder(
+            "360se",
+            parentGuid
+          );
         }
         await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
       }
-    })().then(() => aCallback(true),
-                        e => { Cu.reportError(e); aCallback(false); });
+    })().then(
+      () => aCallback(true),
+      e => {
+        Cu.reportError(e);
+        aCallback(false);
+      }
+    );
   },
 };
 
@@ -206,8 +242,9 @@ function Qihoo360seProfileMigrator() {
 Qihoo360seProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 Qihoo360seProfileMigrator.prototype.getSourceProfiles = function() {
-  if ("__sourceProfiles" in this)
+  if ("__sourceProfiles" in this) {
     return this.__sourceProfiles;
+  }
 
   if (!this._usersDir) {
     this.__sourceProfiles = [];
@@ -223,7 +260,9 @@ Qihoo360seProfileMigrator.prototype.getSourceProfiles = function() {
       throw new Error("360 Secure Browser's 'login.ini' does not exist.");
     }
     if (!loginIni.isReadable()) {
-      throw new Error("360 Secure Browser's 'login.ini' file could not be read.");
+      throw new Error(
+        "360 Secure Browser's 'login.ini' file could not be read."
+      );
     }
 
     let loginIniInUtf8 = copyToTempUTF8File(loginIni, "GBK");
@@ -255,8 +294,10 @@ Qihoo360seProfileMigrator.prototype.getSourceProfiles = function() {
     }
 
     for (let section in loginIniObj) {
-      if (!loginIniObj[section].email ||
-          (nowLoginEmail && loginIniObj[section].email == nowLoginEmail)) {
+      if (
+        !loginIniObj[section].email ||
+        (nowLoginEmail && loginIniObj[section].email == nowLoginEmail)
+      ) {
         continue;
       }
 
@@ -293,32 +334,36 @@ Qihoo360seProfileMigrator.prototype.getResources = function(aProfile) {
     return [];
   }
 
-  let resources = [
-    new Bookmarks(profileFolder),
-  ];
+  let resources = [new Bookmarks(profileFolder)];
   return resources.filter(r => r.exists);
 };
 
 Qihoo360seProfileMigrator.prototype.getLastUsedDate = async function() {
   let sourceProfiles = await this.getSourceProfiles();
-  let bookmarksPaths = sourceProfiles.map(({id}) => {
+  let bookmarksPaths = sourceProfiles.map(({ id }) => {
     return OS.Path.join(this._usersDir.path, id, kBookmarksFileName);
   });
   if (!bookmarksPaths.length) {
     return new Date(0);
   }
   let datePromises = bookmarksPaths.map(path => {
-    return OS.File.stat(path).catch(() => null).then(info => {
-      return info ? info.lastModificationDate : 0;
-    });
+    return OS.File.stat(path)
+      .catch(() => null)
+      .then(info => {
+        return info ? info.lastModificationDate : 0;
+      });
   });
   return Promise.all(datePromises).then(dates => {
     return new Date(Math.max.apply(Math, dates));
   });
 };
 
-Qihoo360seProfileMigrator.prototype.classDescription = "360 Secure Browser Profile Migrator";
-Qihoo360seProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=360se";
-Qihoo360seProfileMigrator.prototype.classID = Components.ID("{d0037b95-296a-4a4e-94b2-c3d075d20ab1}");
+Qihoo360seProfileMigrator.prototype.classDescription =
+  "360 Secure Browser Profile Migrator";
+Qihoo360seProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=360se";
+Qihoo360seProfileMigrator.prototype.classID = Components.ID(
+  "{d0037b95-296a-4a4e-94b2-c3d075d20ab1}"
+);
 
 var EXPORTED_SYMBOLS = ["Qihoo360seProfileMigrator"];

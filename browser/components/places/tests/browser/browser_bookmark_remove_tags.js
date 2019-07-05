@@ -52,21 +52,35 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
 
   // Check if the "Edit This Bookmark" panel is open.
   let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
-  Assert.equal(bookmarkPanelTitle.value, gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"), "Bookmark panel title is correct.");
+  Assert.equal(
+    bookmarkPanelTitle.value,
+    gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
+    "Bookmark panel title is correct."
+  );
 
-  let promiseTagsChange = PlacesTestUtils.waitForNotification("onItemChanged", (id, property) => property === "tags");
+  let promiseTagsChange = PlacesTestUtils.waitForNotification(
+    "onItemChanged",
+    (id, property) => property === "tags"
+  );
 
   // Update the "tags" field.
   fillBookmarkTextField("editBMPanel_tagsField", "tag1, tag2, tag3", window);
   let tagspicker = document.getElementById("editBMPanel_tagsField");
-  await waitForCondition(() => tagspicker.value === "tag1, tag2, tag3", "Tags are correct after update.");
+  await waitForCondition(
+    () => tagspicker.value === "tag1, tag2, tag3",
+    "Tags are correct after update."
+  );
 
   let doneButton = document.getElementById("editBookmarkPanelDoneButton");
   doneButton.click();
   await promiseTagsChange;
 
   let tags = PlacesUtils.tagging.getTagsForURI(TEST_URI);
-  Assert.deepEqual(tags, ["tag1", "tag2", "tag3"], "Should have updated the bookmark tags in the database.");
+  Assert.deepEqual(
+    tags,
+    ["tag1", "tag2", "tag3"],
+    "Should have updated the bookmark tags in the database."
+  );
 });
 
 add_task(async function test_remove_tags_from_Toolbar() {
@@ -82,7 +96,10 @@ add_task(async function test_remove_tags_from_Toolbar() {
     false,
     async function openPropertiesDialog() {
       let placesContext = document.getElementById("placesContext");
-      let promisePopup = BrowserTestUtils.waitForEvent(placesContext, "popupshown");
+      let promisePopup = BrowserTestUtils.waitForEvent(
+        placesContext,
+        "popupshown"
+      );
       EventUtils.synthesizeMouseAtCenter(toolbarNode, {
         button: 2,
         type: "contextmenu",
@@ -93,28 +110,51 @@ add_task(async function test_remove_tags_from_Toolbar() {
       EventUtils.synthesizeMouseAtCenter(properties, {});
     },
     async function test(dialogWin) {
-      let tagspicker = dialogWin.document.getElementById("editBMPanel_tagsField");
-      Assert.equal(tagspicker.value, "tag1, tag2, tag3", "Tags are correct before update.");
+      let tagspicker = dialogWin.document.getElementById(
+        "editBMPanel_tagsField"
+      );
+      Assert.equal(
+        tagspicker.value,
+        "tag1, tag2, tag3",
+        "Tags are correct before update."
+      );
 
-      let promiseTagsChange = PlacesTestUtils.waitForNotification("onItemChanged", (id, property) => property === "tags");
+      let promiseTagsChange = PlacesTestUtils.waitForNotification(
+        "onItemChanged",
+        (id, property) => property === "tags"
+      );
 
       // Update the "tags" field.
-      fillBookmarkTextField("editBMPanel_tagsField", "tag1, tag2", dialogWin, false);
-      await waitForCondition(() => tagspicker.value === "tag1, tag2", "Tags are correct after update.");
+      fillBookmarkTextField(
+        "editBMPanel_tagsField",
+        "tag1, tag2",
+        dialogWin,
+        false
+      );
+      await waitForCondition(
+        () => tagspicker.value === "tag1, tag2",
+        "Tags are correct after update."
+      );
 
       // Confirm and close the dialog.
       EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
       await promiseTagsChange;
 
       let tags = PlacesUtils.tagging.getTagsForURI(TEST_URI);
-      Assert.deepEqual(tags, ["tag1", "tag2"], "Should have updated the bookmark tags in the database.");
+      Assert.deepEqual(
+        tags,
+        ["tag1", "tag2"],
+        "Should have updated the bookmark tags in the database."
+      );
     }
   );
 });
 
 add_task(async function test_remove_tags_from_Sidebar() {
   let bookmarks = [];
-  await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm => bookmarks.push(bm));
+  await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm =>
+    bookmarks.push(bm)
+  );
 
   await withSidebarTree("bookmarks", async function(tree) {
     tree.selectItems([bookmarks[0].guid]);
@@ -125,21 +165,42 @@ add_task(async function test_remove_tags_from_Sidebar() {
         tree.controller.doCommand("placesCmd_show:info");
       },
       async function test(dialogWin) {
-        let tagspicker = dialogWin.document.getElementById("editBMPanel_tagsField");
-        Assert.equal(tagspicker.value, "tag1, tag2", "Tags are correct before update.");
+        let tagspicker = dialogWin.document.getElementById(
+          "editBMPanel_tagsField"
+        );
+        Assert.equal(
+          tagspicker.value,
+          "tag1, tag2",
+          "Tags are correct before update."
+        );
 
-        let promiseTagsChange = PlacesTestUtils.waitForNotification("onItemChanged", (id, property) => property === "tags");
+        let promiseTagsChange = PlacesTestUtils.waitForNotification(
+          "onItemChanged",
+          (id, property) => property === "tags"
+        );
 
         // Update the "tags" field.
-        fillBookmarkTextField("editBMPanel_tagsField", "tag1", dialogWin, false);
-        await waitForCondition(() => tagspicker.value === "tag1", "Tags are correct after update.");
+        fillBookmarkTextField(
+          "editBMPanel_tagsField",
+          "tag1",
+          dialogWin,
+          false
+        );
+        await waitForCondition(
+          () => tagspicker.value === "tag1",
+          "Tags are correct after update."
+        );
 
         // Confirm and close the dialog.
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
         await promiseTagsChange;
 
         let tags = PlacesUtils.tagging.getTagsForURI(TEST_URI);
-        Assert.deepEqual(tags, ["tag1"], "Should have updated the bookmark tags in the database.");
+        Assert.deepEqual(
+          tags,
+          ["tag1"],
+          "Should have updated the bookmark tags in the database."
+        );
       }
     );
   });

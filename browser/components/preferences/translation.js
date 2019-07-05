@@ -5,7 +5,7 @@
 
 "use strict";
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kPermissionType = "translate";
 const kLanguagesPref = "browser.translation.neverForLanguages";
@@ -31,10 +31,12 @@ Tree.prototype = {
 
     let rc = this.selection.getRangeCount();
     for (let i = 0; i < rc; ++i) {
-      let min = {}, max = {};
+      let min = {},
+        max = {};
       this.selection.getRangeAt(i, min, max);
-      for (let j = min.value; j <= max.value; ++j)
+      for (let j = min.value; j <= max.value; ++j) {
         result.push(this._data[j]);
+      }
     }
 
     return result;
@@ -93,8 +95,10 @@ var gTranslationExceptions = {
     // Load site permissions into an array.
     this._sites = [];
     for (let perm of Services.perms.enumerator) {
-      if (perm.type == kPermissionType &&
-          perm.capability == Services.perms.DENY_ACTION) {
+      if (
+        perm.type == kPermissionType &&
+        perm.capability == Services.perms.DENY_ACTION
+      ) {
         this._sites.push(perm.principal.origin);
       }
     }
@@ -113,11 +117,15 @@ var gTranslationExceptions = {
   // Get the list of languages we don't translate as an array.
   getLanguageExceptions() {
     let langs = Services.prefs.getCharPref(kLanguagesPref);
-    if (!langs)
+    if (!langs) {
       return [];
+    }
 
     let langArr = langs.split(",");
-    let displayNames = Services.intl.getLanguageDisplayNames(undefined, langArr);
+    let displayNames = Services.intl.getLanguageDisplayNames(
+      undefined,
+      langArr
+    );
     let result = langArr.map((lang, i) => new Lang(lang, displayNames[i]));
     result.sort();
 
@@ -127,18 +135,21 @@ var gTranslationExceptions = {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "perm-changed") {
       if (aData == "cleared") {
-        if (!this._sites.length)
+        if (!this._sites.length) {
           return;
+        }
         let removed = this._sites.splice(0, this._sites.length);
         this._siteTree.tree.rowCountChanged(0, -removed.length);
       } else {
         let perm = aSubject.QueryInterface(Ci.nsIPermission);
-        if (perm.type != kPermissionType)
+        if (perm.type != kPermissionType) {
           return;
+        }
 
         if (aData == "added") {
-          if (perm.capability != Services.perms.DENY_ACTION)
+          if (perm.capability != Services.perms.DENY_ACTION) {
             return;
+          }
           this._sites.push(perm.principal.origin);
           this._sites.sort();
           let tree = this._siteTree.tree;
@@ -146,8 +157,9 @@ var gTranslationExceptions = {
           tree.invalidate();
         } else if (aData == "deleted") {
           let index = this._sites.indexOf(perm.principal.origin);
-          if (index == -1)
+          if (index == -1) {
             return;
+          }
           this._sites.splice(index, 1);
           this._siteTree.tree.rowCountChanged(index, -1);
           this.onSiteSelected();
@@ -160,8 +172,9 @@ var gTranslationExceptions = {
       let change = this._langs.length - this._langTree.rowCount;
       this._langTree._data = this._langs;
       let tree = this._langTree.tree;
-      if (change)
+      if (change) {
         tree.rowCountChanged(0, change);
+      }
       tree.invalidate();
       this.onLanguageSelected();
     }
@@ -184,8 +197,9 @@ var gTranslationExceptions = {
 
   onLanguageDeleted() {
     let langs = Services.prefs.getCharPref(kLanguagesPref);
-    if (!langs)
+    if (!langs) {
       return;
+    }
 
     let removed = this._langTree.getSelectedItems().map(l => l.langCode);
 
@@ -200,20 +214,25 @@ var gTranslationExceptions = {
   onSiteDeleted() {
     let removedSites = this._siteTree.getSelectedItems();
     for (let origin of removedSites) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        origin
+      );
       Services.perms.removeFromPrincipal(principal, kPermissionType);
     }
   },
 
   onAllSitesDeleted() {
-    if (this._siteTree.isEmpty)
+    if (this._siteTree.isEmpty) {
       return;
+    }
 
     let removedSites = this._sites.splice(0, this._sites.length);
     this._siteTree.tree.rowCountChanged(0, -removedSites.length);
 
     for (let origin of removedSites) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+        origin
+      );
       Services.perms.removeFromPrincipal(principal, kPermissionType);
     }
 
@@ -221,18 +240,21 @@ var gTranslationExceptions = {
   },
 
   onSiteKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE)
+    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
       this.onSiteDeleted();
+    }
   },
 
   onLanguageKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE)
+    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
       this.onLanguageDeleted();
+    }
   },
 
   onWindowKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
+    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
+    }
   },
 
   uninit() {

@@ -3,43 +3,48 @@
 
 "use strict";
 
-const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
-const FAVICON_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=";
+const FAVICON_DATA =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gwMDAsTBZbkNwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAABNElEQVQ4y8WSsU0DURBE3yyWIaAJaqAAN4DPSL6AlIACKIEOyJEgRsIgOOkiInJqgAKowNg7BHdn7MOksNl+zZ//dvbDf5cAiklp22BdVtXdeTEpDYDB9m1VzU6OJuVp2NdEQCaI96fH2YHG4+mDduKYNMYINTcjcGbXzQVDEAphG0k48zUsajIbnAiMIXThpW8EICE0RAK4dvoKg9NIcTiQ589otyHOZLnwqK5nLwBFUZ4igc3iM0d1ff8CMC6mZ6Ihiaqq3gi1aUAnArD00SW1fq5OLBg0ymYmSZsR2/t4e/rGyCLW0sbp3oq+yTYqVgytQWui2FS7XYF7GFprY921T4CNQt8zr47dNzCkIX7y/jBtH+v+RGMQrc828W8pApnZbmEVQp/Ae7BlOy2ttib81/UFc+WRWEbjckIAAAAASUVORK5CYII=";
 
-const { BookmarksPolicies } = ChromeUtils.import("resource:///modules/policies/BookmarksPolicies.jsm");
+const { BookmarksPolicies } = ChromeUtils.import(
+  "resource:///modules/policies/BookmarksPolicies.jsm"
+);
 
 let CURRENT_POLICY;
 
 const BASE_POLICY = {
-  "policies": {
-    "DisplayBookmarksToolbar": true,
-    "Bookmarks": [
+  policies: {
+    DisplayBookmarksToolbar: true,
+    Bookmarks: [
       {
-        "Title": "Bookmark 1",
-        "URL": "https://bookmark1.example.com/",
-        "Favicon": FAVICON_DATA,
+        Title: "Bookmark 1",
+        URL: "https://bookmark1.example.com/",
+        Favicon: FAVICON_DATA,
       },
       {
-        "Title": "Bookmark 2",
-        "URL": "https://bookmark2.example.com/",
-        "Folder": "Folder 1",
+        Title: "Bookmark 2",
+        URL: "https://bookmark2.example.com/",
+        Folder: "Folder 1",
       },
       {
-        "Title": "Bookmark 3",
-        "URL": "https://bookmark3.example.com/",
-        "Placement": "menu",
+        Title: "Bookmark 3",
+        URL: "https://bookmark3.example.com/",
+        Placement: "menu",
       },
       {
-        "Title": "Bookmark 4",
-        "URL": "https://bookmark4.example.com/",
-        "Folder": "Folder 1",
+        Title: "Bookmark 4",
+        URL: "https://bookmark4.example.com/",
+        Folder: "Folder 1",
       },
       {
-        "Title": "Bookmark 5",
-        "URL": "https://bookmark5.example.com/",
-        "Placement": "menu",
-        "Folder": "Folder 2",
+        Title: "Bookmark 5",
+        URL: "https://bookmark5.example.com/",
+        Placement: "menu",
+        Folder: "Folder 2",
       },
     ],
   },
@@ -65,7 +70,7 @@ function findBookmarkInPolicy(bookmark) {
   return null;
 }
 
-async function promiseAllChangesMade({itemsToAdd, itemsToRemove}) {
+async function promiseAllChangesMade({ itemsToAdd, itemsToRemove }) {
   return new Promise(resolve => {
     let listener = events => {
       is(events.length, 1, "Should only have 1 event.");
@@ -105,32 +110,59 @@ async function promiseAllChangesMade({itemsToAdd, itemsToRemove}) {
  * Performs all the checks comparing what was given in
  * the policy JSON with what was retrieved from Places.
  */
-async function check({expectedNumberOfFolders}) {
-  let bookmarks = [], folders = [];
+async function check({ expectedNumberOfFolders }) {
+  let bookmarks = [],
+    folders = [];
 
-  await PlacesUtils.bookmarks.fetch({ guidPrefix: BookmarksPolicies.BOOKMARK_GUID_PREFIX }, (r) => {
-    bookmarks.push(r);
-  });
-  await PlacesUtils.bookmarks.fetch({ guidPrefix: BookmarksPolicies.FOLDER_GUID_PREFIX }, (r) => {
-    folders.push(r);
-  });
+  await PlacesUtils.bookmarks.fetch(
+    { guidPrefix: BookmarksPolicies.BOOKMARK_GUID_PREFIX },
+    r => {
+      bookmarks.push(r);
+    }
+  );
+  await PlacesUtils.bookmarks.fetch(
+    { guidPrefix: BookmarksPolicies.FOLDER_GUID_PREFIX },
+    r => {
+      folders.push(r);
+    }
+  );
 
   let foldersToGuids = new Map();
 
   for (let folder of folders) {
-    is(folder.type, PlacesUtils.bookmarks.TYPE_FOLDER, "Correct type for folder");
+    is(
+      folder.type,
+      PlacesUtils.bookmarks.TYPE_FOLDER,
+      "Correct type for folder"
+    );
     foldersToGuids.set(folder.title, folder.guid);
   }
 
   // For simplification and accuracy purposes, the number of expected
   // folders is manually specified in the test.
-  is(folders.length, expectedNumberOfFolders, "Correct number of folders expected");
-  is(foldersToGuids.size, expectedNumberOfFolders, "There aren't two different folders with the same name");
+  is(
+    folders.length,
+    expectedNumberOfFolders,
+    "Correct number of folders expected"
+  );
+  is(
+    foldersToGuids.size,
+    expectedNumberOfFolders,
+    "There aren't two different folders with the same name"
+  );
 
-  is(CURRENT_POLICY.policies.Bookmarks.length, bookmarks.length, "The correct number of bookmarks exist");
+  is(
+    CURRENT_POLICY.policies.Bookmarks.length,
+    bookmarks.length,
+    "The correct number of bookmarks exist"
+  );
 
   for (let bookmark of bookmarks) {
-    is(bookmark.type, PlacesUtils.bookmarks.TYPE_BOOKMARK, "Correct type for bookmark");
+    is(
+      bookmark.type,
+      PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      "Correct type for bookmark"
+    );
 
     let entry = findBookmarkInPolicy(bookmark);
 
@@ -141,9 +173,10 @@ async function check({expectedNumberOfFolders}) {
     if (entry.Folder) {
       expectedPlacementGuid = foldersToGuids.get(entry.Folder);
     } else {
-      expectedPlacementGuid = entry.Placement == "menu" ?
-                              PlacesUtils.bookmarks.menuGuid :
-                              PlacesUtils.bookmarks.toolbarGuid;
+      expectedPlacementGuid =
+        entry.Placement == "menu"
+          ? PlacesUtils.bookmarks.menuGuid
+          : PlacesUtils.bookmarks.toolbarGuid;
     }
 
     is(bookmark.parentGuid, expectedPlacementGuid, "Correctly placed");
@@ -164,8 +197,7 @@ add_task(async function test_initial_bookmarks() {
   // Make a copy of the policy because we will be adding/removing entries from it
   CURRENT_POLICY = deepClone(BASE_POLICY);
 
-  await Promise.all(
-  [
+  await Promise.all([
     promiseAllChangesMade({
       itemsToAdd: 7, // 5 bookmarks + 2 folders
       itemsToRemove: 0,
@@ -182,17 +214,23 @@ add_task(async function checkFavicon() {
   let result = await new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(
       Services.io.newURI(bookmark1url),
-      (uri, _, data) => resolve({uri, data})
+      (uri, _, data) => resolve({ uri, data })
     );
   });
 
-  is(result.uri.spec, "fake-favicon-uri:" + bookmark1url, "Favicon URI is correct");
+  is(
+    result.uri.spec,
+    "fake-favicon-uri:" + bookmark1url,
+    "Favicon URI is correct"
+  );
   // data is an array of octets, which will be a bit hard to compare against
   // FAVICON_DATA, which is base64 encoded. Checking the expected length should
   // be good indication that this is working properly.
   is(result.data.length, 464, "Favicon data has the correct length");
 
-  let faviconsExpiredNotification = TestUtils.topicObserved("places-favicons-expired");
+  let faviconsExpiredNotification = TestUtils.topicObserved(
+    "places-favicons-expired"
+  );
   PlacesUtils.favicons.expireAllFavicons();
   await faviconsExpiredNotification;
 });
@@ -204,8 +242,7 @@ add_task(async function test_remove_Bookmark_2() {
   // folder won't be empty, so it must not be removed.
   CURRENT_POLICY.policies.Bookmarks.splice(2, 1);
 
-  await Promise.all(
-  [
+  await Promise.all([
     promiseAllChangesMade({
       itemsToAdd: 0,
       itemsToRemove: 1, // 1 bookmark
@@ -223,8 +260,7 @@ add_task(async function test_remove_Bookmark_5() {
   // which means the "Folder 2" should also disappear
   CURRENT_POLICY.policies.Bookmarks.splice(-1, 1);
 
-  await Promise.all(
-  [
+  await Promise.all([
     promiseAllChangesMade({
       itemsToAdd: 0,
       itemsToRemove: 2, // 1 bookmark and 1 folder
@@ -243,8 +279,7 @@ add_task(async function test_revert_to_original_policy() {
   // - "Bookmark 5"
   // - "Folder 2"
   // should be recreated
-  await Promise.all(
-  [
+  await Promise.all([
     promiseAllChangesMade({
       itemsToAdd: 3, // 2 bookmarks and 1 folder
       itemsToRemove: 0,
@@ -258,10 +293,9 @@ add_task(async function test_revert_to_original_policy() {
 // Leave this one at the end, so that it cleans up any
 // bookmarks created during this test.
 add_task(async function test_empty_all_bookmarks() {
-  CURRENT_POLICY =  { policies: { Bookmarks: [] } };
+  CURRENT_POLICY = { policies: { Bookmarks: [] } };
 
-  await Promise.all(
-  [
+  await Promise.all([
     promiseAllChangesMade({
       itemsToAdd: 0,
       itemsToRemove: 7, // 5 bookmarks and 2 folders

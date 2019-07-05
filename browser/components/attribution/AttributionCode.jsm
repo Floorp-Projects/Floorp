@@ -5,13 +5,20 @@
 
 var EXPORTED_SYMBOLS = ["AttributionCode"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const ATTR_CODE_MAX_LENGTH = 200;
@@ -92,9 +99,11 @@ var AttributionCode = {
         }
       } else if (AppConstants.platform == "macosx") {
         try {
-          let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
-          let attributionSvc = Cc["@mozilla.org/mac-attribution;1"]
-                                  .getService(Ci.nsIMacAttributionService);
+          let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent
+            .path;
+          let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+            Ci.nsIMacAttributionService
+          );
           let referrer = attributionSvc.getReferrerUrl(appPath);
           let params = new URL(referrer).searchParams;
           for (let key of ATTR_CODE_KEYS) {
@@ -149,8 +158,9 @@ var AttributionCode = {
    * Does nothing if called from outside of an xpcshell test.
    */
   _clearCache() {
-    let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
     if (env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
       gCachedAttrData = null;
     }

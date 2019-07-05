@@ -9,11 +9,11 @@
  * extensions.
  */
 
-var EXPORTED_SYMBOLS = [
-  "UrlbarProviderExtension",
-];
+var EXPORTED_SYMBOLS = ["UrlbarProviderExtension"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
@@ -265,8 +265,10 @@ class UrlbarProviderExtension extends UrlbarProvider {
     return new UrlbarResult(
       UrlbarProviderExtension.RESULT_TYPES[extResult.type],
       UrlbarProviderExtension.SOURCE_TYPES[extResult.source],
-      ...UrlbarResult.payloadAndSimpleHighlights(context.tokens,
-                                                 extResult.payload || {})
+      ...UrlbarResult.payloadAndSimpleHighlights(
+        context.tokens,
+        extResult.payload || {}
+      )
     );
   }
 }

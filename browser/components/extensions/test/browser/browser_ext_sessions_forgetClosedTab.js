@@ -49,38 +49,57 @@ add_task(async function test_sessions_forget_closed_tab() {
   let recentlyClosedTab = recentlyClosed[0].tab;
 
   // Check that forgetting a tab works properly
-  extension.sendMessage("forget-tab",
-                        recentlyClosedTab.windowId,
-                        recentlyClosedTab.sessionId);
+  extension.sendMessage(
+    "forget-tab",
+    recentlyClosedTab.windowId,
+    recentlyClosedTab.sessionId
+  );
   await extension.awaitMessage("forgot-tab");
   extension.sendMessage("check-sessions");
   let remainingClosed = await extension.awaitMessage("recentlyClosed");
-  is(remainingClosed.length, recentlyClosedLength - 1,
-     "One tab was forgotten.");
-  is(remainingClosed[0].tab.sessionId, recentlyClosed[1].tab.sessionId,
-     "The correct tab was forgotten.");
+  is(
+    remainingClosed.length,
+    recentlyClosedLength - 1,
+    "One tab was forgotten."
+  );
+  is(
+    remainingClosed[0].tab.sessionId,
+    recentlyClosed[1].tab.sessionId,
+    "The correct tab was forgotten."
+  );
 
   // Check that re-forgetting the same tab fails properly
-  extension.sendMessage("forget-tab",
-                        recentlyClosedTab.windowId,
-                        recentlyClosedTab.sessionId);
+  extension.sendMessage(
+    "forget-tab",
+    recentlyClosedTab.windowId,
+    recentlyClosedTab.sessionId
+  );
   let errormsg = await extension.awaitMessage("forget-reject");
-  is(errormsg, `Could not find closed tab using sessionId ${recentlyClosedTab.sessionId}.`);
+  is(
+    errormsg,
+    `Could not find closed tab using sessionId ${recentlyClosedTab.sessionId}.`
+  );
 
   extension.sendMessage("check-sessions");
   remainingClosed = await extension.awaitMessage("recentlyClosed");
-  is(remainingClosed.length, recentlyClosedLength - 1,
-     "No extra tab was forgotten.");
-  is(remainingClosed[0].tab.sessionId, recentlyClosed[1].tab.sessionId,
-     "The correct tab remains.");
+  is(
+    remainingClosed.length,
+    recentlyClosedLength - 1,
+    "No extra tab was forgotten."
+  );
+  is(
+    remainingClosed[0].tab.sessionId,
+    recentlyClosed[1].tab.sessionId,
+    "The correct tab remains."
+  );
 
   await extension.unload();
 });
 
 add_task(async function test_sessions_forget_closed_tab_private() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   let pb_extension = getExtension("spanning");
   await pb_extension.startup();
@@ -88,12 +107,20 @@ add_task(async function test_sessions_forget_closed_tab_private() {
   await extension.startup();
 
   // Open a private browsing window.
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
 
   let tabUrl = "http://example.com";
-  let tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, tabUrl);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    tabUrl
+  );
   BrowserTestUtils.removeTab(tab);
-  tab = await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, tabUrl);
+  tab = await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    tabUrl
+  );
   let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
   BrowserTestUtils.removeTab(tab);
   await sessionUpdatePromise;
@@ -103,9 +130,11 @@ add_task(async function test_sessions_forget_closed_tab_private() {
   let recentlyClosedTab = recentlyClosed[0].tab;
 
   // Check that forgetting a tab works properly
-  extension.sendMessage("forget-tab",
-                        recentlyClosedTab.windowId,
-                        recentlyClosedTab.sessionId);
+  extension.sendMessage(
+    "forget-tab",
+    recentlyClosedTab.windowId,
+    recentlyClosedTab.sessionId
+  );
   let errormsg = await extension.awaitMessage("forget-reject");
   ok(/Invalid window ID/.test(errormsg), "could not access window");
 

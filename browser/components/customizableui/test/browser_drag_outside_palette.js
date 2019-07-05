@@ -14,26 +14,37 @@ add_task(async function() {
   let homeButton = document.getElementById("home-button");
   let oldNavbarPlacements = CustomizableUI.getWidgetIdsInArea("nav-bar");
   simulateItemDrag(homeButton, panelContainer);
-  assertAreaPlacements(CustomizableUI.AREA_NAVBAR,
-    oldNavbarPlacements.filter(w => w != "home-button"));
-  ok(homeButton.closest("#customization-palette"), "Button should be in the palette");
+  assertAreaPlacements(
+    CustomizableUI.AREA_NAVBAR,
+    oldNavbarPlacements.filter(w => w != "home-button")
+  );
+  ok(
+    homeButton.closest("#customization-palette"),
+    "Button should be in the palette"
+  );
 
   // Put it in the panel and try again from there:
   let panelHolder = document.getElementById("customization-panelHolder");
   simulateItemDrag(homeButton, panelHolder);
-  assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
-    ["home-button"]);
+  assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, [
+    "home-button",
+  ]);
 
   simulateItemDrag(homeButton, panelContainer);
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, []);
 
-  ok(homeButton.closest("#customization-palette"), "Button should be in the palette");
+  ok(
+    homeButton.closest("#customization-palette"),
+    "Button should be in the palette"
+  );
 
   // Check we can't move non-removable items like this:
   let urlbar = document.getElementById("urlbar-container");
   simulateItemDrag(urlbar, panelContainer);
-  assertAreaPlacements(CustomizableUI.AREA_NAVBAR,
-    oldNavbarPlacements.filter(w => w != "home-button"));
+  assertAreaPlacements(
+    CustomizableUI.AREA_NAVBAR,
+    oldNavbarPlacements.filter(w => w != "home-button")
+  );
 });
 
 registerCleanupFunction(async function() {

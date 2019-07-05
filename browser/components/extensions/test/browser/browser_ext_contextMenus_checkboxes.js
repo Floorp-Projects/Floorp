@@ -5,13 +5,14 @@
 add_task(async function() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
+    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html"
+  );
 
   gBrowser.selectedTab = tab1;
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["contextMenus"],
+      permissions: ["contextMenus"],
     },
 
     background: function() {
@@ -65,7 +66,11 @@ add_task(async function() {
       is(items.length, 1, "single checkbox should be in the submenu on Linux");
       await closeContextMenu();
     } else {
-      is(extensionMenuRoot, null, "there should be no submenu for a single checkbox item");
+      is(
+        extensionMenuRoot,
+        null,
+        "there should be no submenu for a single checkbox item"
+      );
       await closeContextMenu();
     }
   }
@@ -76,20 +81,47 @@ add_task(async function() {
   await extension.awaitFinish("contextmenus-checkboxes");
 
   function confirmCheckboxStates(extensionMenuRoot, expectedStates) {
-    let checkboxItems = extensionMenuRoot.getElementsByAttribute("type", "checkbox");
+    let checkboxItems = extensionMenuRoot.getElementsByAttribute(
+      "type",
+      "checkbox"
+    );
 
-    is(checkboxItems.length, 3, "there should be 3 checkbox items in the context menu");
+    is(
+      checkboxItems.length,
+      3,
+      "there should be 3 checkbox items in the context menu"
+    );
 
-    is(checkboxItems[0].hasAttribute("checked"), expectedStates[0], `checkbox item 1 has state (checked=${expectedStates[0]})`);
-    is(checkboxItems[1].hasAttribute("checked"), expectedStates[1], `checkbox item 2 has state (checked=${expectedStates[1]})`);
-    is(checkboxItems[2].hasAttribute("checked"), expectedStates[2], `checkbox item 3 has state (checked=${expectedStates[2]})`);
+    is(
+      checkboxItems[0].hasAttribute("checked"),
+      expectedStates[0],
+      `checkbox item 1 has state (checked=${expectedStates[0]})`
+    );
+    is(
+      checkboxItems[1].hasAttribute("checked"),
+      expectedStates[1],
+      `checkbox item 2 has state (checked=${expectedStates[1]})`
+    );
+    is(
+      checkboxItems[2].hasAttribute("checked"),
+      expectedStates[2],
+      `checkbox item 3 has state (checked=${expectedStates[2]})`
+    );
 
     return extensionMenuRoot.getElementsByAttribute("type", "checkbox");
   }
 
   function confirmOnClickData(onClickData, id, was, checked) {
-    is(onClickData.wasChecked, was, `checkbox item ${id} was ${was ? "" : "not "}checked before the click`);
-    is(onClickData.checked, checked, `checkbox item ${id} is ${checked ? "" : "not "}checked after the click`);
+    is(
+      onClickData.wasChecked,
+      was,
+      `checkbox item ${id} was ${was ? "" : "not "}checked before the click`
+    );
+    is(
+      onClickData.checked,
+      checked,
+      `checkbox item ${id} is ${checked ? "" : "not "}checked after the click`
+    );
   }
 
   let extensionMenuRoot = await openExtensionContextMenu();

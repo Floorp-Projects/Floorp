@@ -29,8 +29,7 @@ Object.defineProperty(document, "l10n", {
   configurable: true,
   writable: true,
   value: {
-    connectRoot() {
-    },
+    connectRoot() {},
     translateElements() {
       return Promise.resolve();
     },

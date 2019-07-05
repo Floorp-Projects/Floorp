@@ -1,7 +1,8 @@
 "use strict";
 
 const BASE_ORIGIN = "https://example.com";
-const URI = BASE_ORIGIN +
+const URI =
+  BASE_ORIGIN +
   "/browser/browser/components/contextualidentity/test/browser/saveLink.sjs";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
@@ -11,9 +12,9 @@ add_task(async function setup() {
   info("Setting the prefs.");
 
   // make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 });
 
 add_task(async function test() {
@@ -21,7 +22,9 @@ add_task(async function test() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   info("Opening tab with UCI: 1");
-  let tab = BrowserTestUtils.addTab(win.gBrowser, URI + "?UCI=1", {userContextId: 1});
+  let tab = BrowserTestUtils.addTab(win.gBrowser, URI + "?UCI=1", {
+    userContextId: 1,
+  });
 
   // select tab and make sure its browser is focused
   win.gBrowser.selectedTab = tab;
@@ -31,10 +34,16 @@ add_task(async function test() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(win.document, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    win.document,
+    "popupshown"
+  );
 
-  await BrowserTestUtils.synthesizeMouseAtCenter("#fff", {type: "contextmenu", button: 2},
-                                                 win.gBrowser.selectedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#fff",
+    { type: "contextmenu", button: 2 },
+    win.gBrowser.selectedBrowser
+  );
   info("Right clicked!");
 
   await popupShownPromise;
@@ -58,7 +67,7 @@ add_task(async function test() {
     info("MockFilePicker showCallback done");
   };
 
-  let transferCompletePromise = new Promise((resolve) => {
+  let transferCompletePromise = new Promise(resolve => {
     function onTransferComplete(downloadSuccess) {
       ok(downloadSuccess, "File should have been downloaded successfully");
       resolve();
@@ -80,7 +89,10 @@ add_task(async function test() {
   saveLinkCommand.doCommand();
 
   let contextMenu = win.document.getElementById("contentAreaContextMenu");
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
   contextMenu.hidePopup();
   await popupHiddenPromise;
   info("popup hidden");
@@ -97,7 +109,10 @@ add_task(async function test() {
 });
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+  this
+);
 
 function createTemporarySaveDirectory() {
   let saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);

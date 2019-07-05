@@ -3,8 +3,10 @@
 
 "use strict";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let delay = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -15,7 +17,12 @@ const kSearchTermIntl = "日";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 
 AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -25,16 +32,16 @@ add_task(async function setup() {
 add_task(async function test_extension_adding_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      "icons": {
+      icons: {
         "16": "foo.ico",
         "32": "foo32.ico",
       },
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": kSearchEngineURL,
-          "suggest_url": kSearchSuggestURL,
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: kSearchEngineURL,
+          suggest_url: kSearchSuggestURL,
         },
       },
     },
@@ -47,20 +54,37 @@ add_task(async function test_extension_adding_engine() {
   let engine = Services.search.getEngineByName("MozSearch");
   ok(engine, "Engine should exist.");
 
-  let {baseURI} = ext1.extension;
+  let { baseURI } = ext1.extension;
   equal(engine.iconURI.spec, baseURI.resolve("foo.ico"), "icon path matches");
   let icons = engine.getIcons();
   equal(icons.length, 2, "both icons avialable");
   equal(icons[0].url, baseURI.resolve("foo.ico"), "icon path matches");
   equal(icons[1].url, baseURI.resolve("foo32.ico"), "icon path matches");
 
-  let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
-  let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+  let expectedSuggestURL = kSearchSuggestURL.replace(
+    "{searchTerms}",
+    kSearchTerm
+  );
+  let submissionSuggest = engine.getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
   let encodedSubmissionURL = engine.getSubmission(kSearchTermIntl).uri.spec;
-  let testSubmissionURL = kSearchEngineURL.replace("{searchTerms}", encodeURIComponent(kSearchTermIntl));
-  equal(encodedSubmissionURL, testSubmissionURL, "Encoded UTF-8 URLs should match");
+  let testSubmissionURL = kSearchEngineURL.replace(
+    "{searchTerms}",
+    encodeURIComponent(kSearchTermIntl)
+  );
+  equal(
+    encodedSubmissionURL,
+    testSubmissionURL,
+    "Encoded UTF-8 URLs should match"
+  );
 
-  equal(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
+  equal(
+    submissionSuggest.uri.spec,
+    expectedSuggestURL,
+    "Suggest URLs should match"
+  );
 
   await ext1.unload();
   await delay();
@@ -72,11 +96,11 @@ add_task(async function test_extension_adding_engine() {
 add_task(async function test_extension_adding_engine_with_spaces() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch     ",
-          "keyword": "MozSearch",
-          "search_url": "https://example.com/?q={searchTerms}",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch     ",
+          keyword: "MozSearch",
+          search_url: "https://example.com/?q={searchTerms}",
         },
       },
     },
@@ -96,23 +120,22 @@ add_task(async function test_extension_adding_engine_with_spaces() {
   ok(!engine, "Engine should not exist");
 });
 
-
 add_task(async function test_upgrade_default_position_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": "https://example.com/?q={searchTerms}",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: "https://example.com/?q={searchTerms}",
         },
       },
-      "applications": {
-        "gecko": {
-          "id": "testengine@mozilla.com",
+      applications: {
+        gecko: {
+          id: "testengine@mozilla.com",
         },
       },
-      "version": "0.1",
+      version: "0.1",
     },
     useAddonManager: "temporary",
   });
@@ -126,28 +149,35 @@ add_task(async function test_upgrade_default_position_engine() {
 
   await ext1.upgrade({
     manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": "https://example.com/?q={searchTerms}",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: "https://example.com/?q={searchTerms}",
         },
       },
-      "applications": {
-        "gecko": {
-          "id": "testengine@mozilla.com",
+      applications: {
+        gecko: {
+          id: "testengine@mozilla.com",
         },
       },
-      "version": "0.2",
+      version: "0.2",
     },
     useAddonManager: "temporary",
   });
   await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   engine = Services.search.getEngineByName("MozSearch");
-  equal(Services.search.defaultEngine, engine, "Default engine should still be MozSearch");
-  equal((await Services.search.getEngines()).map(e => e.name).indexOf(engine.name),
-        1, "Engine is in position 1");
+  equal(
+    Services.search.defaultEngine,
+    engine,
+    "Default engine should still be MozSearch"
+  );
+  equal(
+    (await Services.search.getEngines()).map(e => e.name).indexOf(engine.name),
+    1,
+    "Engine is in position 1"
+  );
 
   await ext1.unload();
   await delay();
@@ -159,14 +189,14 @@ add_task(async function test_upgrade_default_position_engine() {
 add_task(async function test_extension_post_params() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": kSearchEngineURL,
-          "search_url_post_params": "foo=bar&bar=foo",
-          "suggest_url": kSearchSuggestURL,
-          "suggest_url_post_params": "foo=bar&bar=foo",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: kSearchEngineURL,
+          search_url_post_params: "foo=bar&bar=foo",
+          suggest_url: kSearchSuggestURL,
+          suggest_url_post_params: "foo=bar&bar=foo",
         },
       },
     },
@@ -186,12 +216,30 @@ add_task(async function test_extension_post_params() {
   let submission = engine.getSubmission(kSearchTerm);
   equal(submission.uri.spec, expectedURL, "Search URLs should match");
   // postData is a nsIMIMEInputStream which contains a nsIStringInputStream.
-  equal(submission.postData.data.data, "foo=bar&bar=foo", "Search postData should match");
+  equal(
+    submission.postData.data.data,
+    "foo=bar&bar=foo",
+    "Search postData should match"
+  );
 
-  let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
-  let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
-  equal(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
-  equal(submissionSuggest.postData.data.data, "foo=bar&bar=foo", "Suggest postData should match");
+  let expectedSuggestURL = kSearchSuggestURL.replace(
+    "{searchTerms}",
+    kSearchTerm
+  );
+  let submissionSuggest = engine.getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
+  equal(
+    submissionSuggest.uri.spec,
+    expectedSuggestURL,
+    "Suggest URLs should match"
+  );
+  equal(
+    submissionSuggest.postData.data.data,
+    "foo=bar&bar=foo",
+    "Suggest postData should match"
+  );
 
   await ext1.unload();
 });
@@ -199,12 +247,12 @@ add_task(async function test_extension_post_params() {
 add_task(async function test_extension_no_query_params() {
   const ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": "https://example.com/{searchTerms}",
-          "suggest_url": "https://example.com/suggest/{searchTerms}",
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: "https://example.com/{searchTerms}",
+          suggest_url: "https://example.com/suggest/{searchTerms}",
         },
       },
     },
@@ -218,12 +266,24 @@ add_task(async function test_extension_no_query_params() {
   ok(engine, "Engine should exist.");
 
   const encodedSubmissionURL = engine.getSubmission(kSearchTermIntl).uri.spec;
-  const testSubmissionURL = "https://example.com/" + encodeURIComponent(kSearchTermIntl);
-  equal(encodedSubmissionURL, testSubmissionURL, "Encoded UTF-8 URLs should match");
+  const testSubmissionURL =
+    "https://example.com/" + encodeURIComponent(kSearchTermIntl);
+  equal(
+    encodedSubmissionURL,
+    testSubmissionURL,
+    "Encoded UTF-8 URLs should match"
+  );
 
   const expectedSuggestURL = "https://example.com/suggest/" + kSearchTerm;
-  let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
-  equal(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
+  let submissionSuggest = engine.getSubmission(
+    kSearchTerm,
+    URLTYPE_SUGGEST_JSON
+  );
+  equal(
+    submissionSuggest.uri.spec,
+    expectedSuggestURL,
+    "Suggest URLs should match"
+  );
 
   await ext1.unload();
   await delay();

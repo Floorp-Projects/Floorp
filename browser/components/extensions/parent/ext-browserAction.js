@@ -2,28 +2,39 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
-                               "resource:///modules/CustomizableUI.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout",
-                               "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionTelemetry",
-                               "resource://gre/modules/ExtensionTelemetry.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-                               "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "ViewPopup",
-                               "resource:///modules/ExtensionPopups.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "clearTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTelemetry",
+  "resource://gre/modules/ExtensionTelemetry.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ViewPopup",
+  "resource:///modules/ExtensionPopups.jsm"
+);
 
-var {
-  DefaultWeakMap,
-  ExtensionError,
-} = ExtensionUtils;
+var { DefaultWeakMap, ExtensionError } = ExtensionUtils;
 
-var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
-var {
-  IconDetails,
-  StartupCache,
-} = ExtensionParent;
+var { IconDetails, StartupCache } = ExtensionParent;
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
@@ -34,10 +45,10 @@ const browserActionMap = new WeakMap();
 
 XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
   return {
-    "navbar": CustomizableUI.AREA_NAVBAR,
-    "menupanel": CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
-    "tabstrip": CustomizableUI.AREA_TABSTRIP,
-    "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
+    navbar: CustomizableUI.AREA_NAVBAR,
+    menupanel: CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    tabstrip: CustomizableUI.AREA_TABSTRIP,
+    personaltoolbar: CustomizableUI.AREA_BOOKMARKS,
   };
 });
 
@@ -47,7 +58,7 @@ this.browserAction = class extends ExtensionAPI {
   }
 
   async onManifestEntry(entryName) {
-    let {extension} = this;
+    let { extension } = this;
 
     let options = extension.manifest.browser_action;
 
@@ -81,18 +92,27 @@ this.browserAction = class extends ExtensionAPI {
     browserActionMap.set(extension, this);
 
     this.defaults.icon = await StartupCache.get(
-      extension, ["browserAction", "default_icon"],
-      () => IconDetails.normalize({
-        path: options.default_icon || extension.manifest.icons,
-        iconType: "browserAction",
-        themeIcons: options.theme_icons,
-      }, extension));
+      extension,
+      ["browserAction", "default_icon"],
+      () =>
+        IconDetails.normalize(
+          {
+            path: options.default_icon || extension.manifest.icons,
+            iconType: "browserAction",
+            themeIcons: options.theme_icons,
+          },
+          extension
+        )
+    );
 
     this.iconData.set(
       this.defaults.icon,
       await StartupCache.get(
-        extension, ["browserAction", "default_icon_data"],
-        () => this.getIconData(this.defaults.icon)));
+        extension,
+        ["browserAction", "default_icon_data"],
+        () => this.getIconData(this.defaults.icon)
+      )
+    );
 
     this.tabContext = new TabContext(target => {
       let window = target.ownerGlobal;
@@ -147,8 +167,10 @@ this.browserAction = class extends ExtensionAPI {
 
         document.getElementById("appMenu-viewCache").appendChild(view);
 
-        if (this.extension.hasPermission("menus") ||
-            this.extension.hasPermission("contextMenus")) {
+        if (
+          this.extension.hasPermission("menus") ||
+          this.extension.hasPermission("contextMenus")
+        ) {
           document.addEventListener("popupshowing", this);
         }
       },
@@ -178,9 +200,12 @@ this.browserAction = class extends ExtensionAPI {
       },
 
       onViewShowing: async event => {
-        const {extension} = this;
+        const { extension } = this;
 
-        ExtensionTelemetry.browserActionPopupOpen.stopwatchStart(extension, this);
+        ExtensionTelemetry.browserActionPopupOpen.stopwatchStart(
+          extension,
+          this
+        );
         let document = event.target.ownerDocument;
         let tabbrowser = document.defaultView.gBrowser;
 
@@ -197,7 +222,10 @@ this.browserAction = class extends ExtensionAPI {
             let attachPromise = popup.attach(event.target);
             event.detail.addBlocker(attachPromise);
             await attachPromise;
-            ExtensionTelemetry.browserActionPopupOpen.stopwatchFinish(extension, this);
+            ExtensionTelemetry.browserActionPopupOpen.stopwatchFinish(
+              extension,
+              this
+            );
             if (this.eventQueue.length) {
               ExtensionTelemetry.browserActionPreloadResult.histogramAdd({
                 category: "popupShown",
@@ -206,12 +234,18 @@ this.browserAction = class extends ExtensionAPI {
               this.eventQueue = [];
             }
           } catch (e) {
-            ExtensionTelemetry.browserActionPopupOpen.stopwatchCancel(extension, this);
+            ExtensionTelemetry.browserActionPopupOpen.stopwatchCancel(
+              extension,
+              this
+            );
             Cu.reportError(e);
             event.preventDefault();
           }
         } else {
-          ExtensionTelemetry.browserActionPopupOpen.stopwatchCancel(extension, this);
+          ExtensionTelemetry.browserActionPopupOpen.stopwatchCancel(
+            extension,
+            this
+          );
           // This isn't not a hack, but it seems to provide the correct behavior
           // with the fewest complications.
           event.preventDefault();
@@ -222,8 +256,12 @@ this.browserAction = class extends ExtensionAPI {
       },
     });
 
-    this.tabContext.on("tab-select", // eslint-disable-line mozilla/balanced-listeners
-                       (evt, tab) => { this.updateWindow(tab.ownerGlobal); });
+    this.tabContext.on(
+      "tab-select", // eslint-disable-line mozilla/balanced-listeners
+      (evt, tab) => {
+        this.updateWindow(tab.ownerGlobal);
+      }
+    );
 
     this.widget = widget;
   }
@@ -259,7 +297,10 @@ this.browserAction = class extends ExtensionAPI {
         await window.document.getElementById("nav-bar").overflowable.show();
       }
 
-      let event = new window.CustomEvent("command", {bubbles: true, cancelable: true});
+      let event = new window.CustomEvent("command", {
+        bubbles: true,
+        cancelable: true,
+      });
       widget.node.dispatchEvent(event);
     } else {
       this.tabManager.addActiveTabPermission(tab);
@@ -280,7 +321,11 @@ this.browserAction = class extends ExtensionAPI {
           let popupURL = this.getProperty(tab, "popup");
           let enabled = this.getProperty(tab, "enabled");
 
-          if (popupURL && enabled && (this.pendingPopup || !ViewPopup.for(this.extension, window))) {
+          if (
+            popupURL &&
+            enabled &&
+            (this.pendingPopup || !ViewPopup.for(this.extension, window))
+          ) {
             this.eventQueue.push("Mousedown");
             // Add permission for the active tab so it will exist for the popup.
             // Store the tab to revoke the permission during clearPopup.
@@ -305,8 +350,10 @@ this.browserAction = class extends ExtensionAPI {
           if (this.pendingPopup) {
             let node = window.gBrowser && this.widget.forWindow(window).node;
             if (node && node.contains(event.originalTarget)) {
-              this.pendingPopupTimeout = setTimeout(() => this.clearPopup(),
-                                                    POPUP_PRELOAD_TIMEOUT_MS);
+              this.pendingPopupTimeout = setTimeout(
+                () => this.clearPopup(),
+                POPUP_PRELOAD_TIMEOUT_MS
+              );
             } else {
               this.clearPopup();
             }
@@ -321,7 +368,11 @@ this.browserAction = class extends ExtensionAPI {
         let popupURL = this.getProperty(tab, "popup");
         let enabled = this.getProperty(tab, "enabled");
 
-        if (popupURL && enabled && (this.pendingPopup || !ViewPopup.for(this.extension, window))) {
+        if (
+          popupURL &&
+          enabled &&
+          (this.pendingPopup || !ViewPopup.for(this.extension, window))
+        ) {
           this.eventQueue.push("Hover");
           this.pendingPopup = this.getPopup(window, popupURL, true);
         }
@@ -341,12 +392,14 @@ this.browserAction = class extends ExtensionAPI {
         }
         break;
 
-
       case "popupshowing":
         const menu = event.target;
         const trigger = menu.triggerNode;
         const node = window.document.getElementById(this.id);
-        const contexts = ["toolbar-context-menu", "customizationPanelItemContextMenu"];
+        const contexts = [
+          "toolbar-context-menu",
+          "customizationPanelItemContextMenu",
+        ];
 
         if (contexts.includes(menu.id) && node && node.contains(trigger)) {
           global.actionContextMenu({
@@ -377,11 +430,14 @@ this.browserAction = class extends ExtensionAPI {
    */
   getPopup(window, popupURL, blockParser = false) {
     this.clearPopupTimeout();
-    let {pendingPopup} = this;
+    let { pendingPopup } = this;
     this.pendingPopup = null;
 
     if (pendingPopup) {
-      if (pendingPopup.window === window && pendingPopup.popupURL === popupURL) {
+      if (
+        pendingPopup.window === window &&
+        pendingPopup.popupURL === popupURL
+      ) {
         if (!blockParser) {
           pendingPopup.unblockParser();
         }
@@ -394,7 +450,14 @@ this.browserAction = class extends ExtensionAPI {
     let fixedWidth =
       this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL ||
       this.widget.forWindow(window).overflowed;
-    return new ViewPopup(this.extension, window, popupURL, this.browserStyle, fixedWidth, blockParser);
+    return new ViewPopup(
+      this.extension,
+      window,
+      popupURL,
+      this.browserStyle,
+      fixedWidth,
+      blockParser
+    );
   }
 
   /**
@@ -404,7 +467,9 @@ this.browserAction = class extends ExtensionAPI {
     this.clearPopupTimeout();
     if (this.pendingPopup) {
       if (this.tabToRevokeDuringClearPopup) {
-        this.tabManager.revokeActiveTabPermission(this.tabToRevokeDuringClearPopup);
+        this.tabManager.revokeActiveTabPermission(
+          this.tabToRevokeDuringClearPopup
+        );
       }
       this.pendingPopup.destroy();
       this.pendingPopup = null;
@@ -446,11 +511,15 @@ this.browserAction = class extends ExtensionAPI {
         node.setAttribute("disabled", "true");
       }
 
-      let serializeColor = ([r, g, b, a]) => `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      node.setAttribute("badgeStyle", [
-        `background-color: ${serializeColor(tabData.badgeBackgroundColor)}`,
-        `color: ${serializeColor(this.getTextColor(tabData))}`,
-      ].join("; "));
+      let serializeColor = ([r, g, b, a]) =>
+        `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+      node.setAttribute(
+        "badgeStyle",
+        [
+          `background-color: ${serializeColor(tabData.badgeBackgroundColor)}`,
+          `color: ${serializeColor(this.getTextColor(tabData))}`,
+        ].join("; ")
+      );
 
       let style = this.iconData.get(tabData.icon);
       node.setAttribute("style", style);
@@ -536,9 +605,11 @@ this.browserAction = class extends ExtensionAPI {
    *        If a `windowId` was specified, the corresponding ChromeWindow.
    *        Otherwise, `null`.
    */
-  getTargetFromDetails({tabId, windowId}) {
+  getTargetFromDetails({ tabId, windowId }) {
     if (tabId != null && windowId != null) {
-      throw new ExtensionError("Only one of tabId and windowId can be specified.");
+      throw new ExtensionError(
+        "Only one of tabId and windowId can be specified."
+      );
     }
     if (tabId != null) {
       return tabTracker.getTab(tabId);
@@ -620,26 +691,28 @@ this.browserAction = class extends ExtensionAPI {
    */
   getTextColor(values) {
     // If a text color has been explicitly provided, use it.
-    let {badgeTextColor} = values;
+    let { badgeTextColor } = values;
     if (badgeTextColor) {
       return badgeTextColor;
     }
 
     // Otherwise, check if the default color to be used has been cached previously.
-    let {badgeDefaultColor} = values;
+    let { badgeDefaultColor } = values;
     if (badgeDefaultColor) {
       return badgeDefaultColor;
     }
 
     // Choose a color among white and black, maximizing contrast with background
     // according to https://www.w3.org/TR/WCAG20-TECHS/G18.html#G18-procedure
-    let [r, g, b] = values.badgeBackgroundColor.slice(0, 3).map(function(channel) {
-      channel /= 255;
-      if (channel <= 0.03928) {
-        return channel / 12.92;
-      }
-      return ((channel + 0.055) / 1.055) ** 2.4;
-    });
+    let [r, g, b] = values.badgeBackgroundColor
+      .slice(0, 3)
+      .map(function(channel) {
+        channel /= 255;
+        if (channel <= 0.03928) {
+          return channel / 12.92;
+        }
+        return ((channel + 0.055) / 1.055) ** 2.4;
+      });
     let lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
     // The luminance is 0 for black, 1 for white, and `lum` for the background color.
@@ -659,8 +732,8 @@ this.browserAction = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    let {extension} = context;
-    let {tabManager} = extension;
+    let { extension } = context;
+    let { tabManager } = extension;
 
     let browserAction = this;
 
@@ -684,7 +757,8 @@ this.browserAction = class extends ExtensionAPI {
           register: fire => {
             let listener = (event, browser) => {
               context.withPendingBrowser(browser, () =>
-                fire.sync(tabManager.convert(tabTracker.activeTab)));
+                fire.sync(tabManager.convert(tabTracker.activeTab))
+              );
             };
             browserAction.on("click", listener);
             return () => {
@@ -694,11 +768,11 @@ this.browserAction = class extends ExtensionAPI {
         }).api(),
 
         enable: function(tabId) {
-          browserAction.setPropertyFromDetails({tabId}, "enabled", true);
+          browserAction.setPropertyFromDetails({ tabId }, "enabled", true);
         },
 
         disable: function(tabId) {
-          browserAction.setPropertyFromDetails({tabId}, "enabled", false);
+          browserAction.setPropertyFromDetails({ tabId }, "enabled", false);
         },
 
         isEnabled: function(details) {
@@ -724,7 +798,11 @@ this.browserAction = class extends ExtensionAPI {
         },
 
         setBadgeText: function(details) {
-          browserAction.setPropertyFromDetails(details, "badgeText", details.text);
+          browserAction.setPropertyFromDetails(
+            details,
+            "badgeText",
+            details.text
+          );
         },
 
         getBadgeText: function(details) {
@@ -739,7 +817,7 @@ this.browserAction = class extends ExtensionAPI {
           // calling context.
           let url = details.popup && context.uri.resolve(details.popup);
           if (url && !context.checkLoadURL(url)) {
-            return Promise.reject({message: `Access denied for URL ${url}`});
+            return Promise.reject({ message: `Access denied for URL ${url}` });
           }
           browserAction.setPropertyFromDetails(details, "popup", url);
         },
@@ -751,7 +829,10 @@ this.browserAction = class extends ExtensionAPI {
         setBadgeBackgroundColor: function(details) {
           let color = parseColor(details.color, "background");
           let values = browserAction.setPropertyFromDetails(
-            details, "badgeBackgroundColor", color);
+            details,
+            "badgeBackgroundColor",
+            color
+          );
           if (color === null) {
             // Let the default text color inherit after removing background color
             delete values.badgeDefaultColor;
@@ -762,12 +843,19 @@ this.browserAction = class extends ExtensionAPI {
         },
 
         getBadgeBackgroundColor: function(details, callback) {
-          return browserAction.getPropertyFromDetails(details, "badgeBackgroundColor");
+          return browserAction.getPropertyFromDetails(
+            details,
+            "badgeBackgroundColor"
+          );
         },
 
         setBadgeTextColor: function(details) {
           let color = parseColor(details.color, "text");
-          browserAction.setPropertyFromDetails(details, "badgeTextColor", color);
+          browserAction.setPropertyFromDetails(
+            details,
+            "badgeTextColor",
+            color
+          );
         },
 
         getBadgeTextColor: function(details) {

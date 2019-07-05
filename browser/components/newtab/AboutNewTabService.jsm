@@ -2,16 +2,23 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
+ */
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AboutNewTab",
-                               "resource:///modules/AboutNewTab.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
+);
 
 const TOPIC_APP_QUIT = "quit-application-granted";
 const TOPIC_CONTENT_DOCUMENT_INTERACTIVE = "content-document-interactive";
@@ -20,17 +27,23 @@ const ABOUT_URL = "about:newtab";
 const BASE_URL = "resource://activity-stream/";
 const ACTIVITY_STREAM_PAGES = new Set(["home", "newtab", "welcome"]);
 
-const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
-const IS_PRIVILEGED_PROCESS = Services.appinfo.remoteType === E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
+const IS_MAIN_PROCESS =
+  Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+const IS_PRIVILEGED_PROCESS =
+  Services.appinfo.remoteType === E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
-const PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS = "browser.tabs.remote.separatePrivilegedContentProcess";
+const PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS =
+  "browser.tabs.remote.separatePrivilegedContentProcess";
 const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 
 function AboutNewTabService() {
   Services.obs.addObserver(this, TOPIC_APP_QUIT);
-  Services.prefs.addObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
+  Services.prefs.addObserver(
+    PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS,
+    this
+  );
   if (!IS_RELEASE_OR_BETA) {
     Services.prefs.addObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
   }
@@ -79,7 +92,6 @@ function AboutNewTabService() {
  * to the redirector from browser chrome is avoided.
  */
 AboutNewTabService.prototype = {
-
   _newTabURL: ABOUT_URL,
   _activityStreamEnabled: false,
   _activityStreamDebug: false,
@@ -97,10 +109,15 @@ AboutNewTabService.prototype = {
     switch (topic) {
       case "nsPref:changed":
         if (data === PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS) {
-          this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
+          this._privilegedAboutContentProcess = Services.prefs.getBoolPref(
+            PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS
+          );
           this.notifyChange();
         } else if (!IS_RELEASE_OR_BETA && data === PREF_ACTIVITY_STREAM_DEBUG) {
-          this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
+          this._activityStreamDebug = Services.prefs.getBoolPref(
+            PREF_ACTIVITY_STREAM_DEBUG,
+            false
+          );
           this.notifyChange();
         }
         break;
@@ -145,7 +162,7 @@ AboutNewTabService.prototype = {
             Services.scriptloader.loadSubScript(script, win); // Synchronous call
           }
         };
-        subject.addEventListener("DOMContentLoaded", onLoaded, {once: true});
+        subject.addEventListener("DOMContentLoaded", onLoaded, { once: true });
 
         // There is a possibility that DOMContentLoaded won't be fired. This
         // unload event (which cannot be cancelled) will attempt to remove
@@ -153,7 +170,7 @@ AboutNewTabService.prototype = {
         const onUnloaded = () => {
           subject.removeEventListener("DOMContentLoaded", onLoaded);
         };
-        subject.addEventListener("unload", onUnloaded, {once: true});
+        subject.addEventListener("unload", onUnloaded, { once: true });
         break;
       }
       case TOPIC_APP_QUIT:
@@ -182,7 +199,10 @@ AboutNewTabService.prototype = {
    * @param {Boolean}   forceState      force state change
    */
   toggleActivityStream(stateEnabled, forceState = false) {
-    if (!forceState && (this.overridden || stateEnabled === this.activityStreamEnabled)) {
+    if (
+      !forceState &&
+      (this.overridden || stateEnabled === this.activityStreamEnabled)
+    ) {
       // exit there is no change of state
       return false;
     }
@@ -191,9 +211,14 @@ AboutNewTabService.prototype = {
     } else {
       this._activityStreamEnabled = false;
     }
-    this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
+    this._privilegedAboutContentProcess = Services.prefs.getBoolPref(
+      PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS
+    );
     if (!IS_RELEASE_OR_BETA) {
-      this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
+      this._activityStreamDebug = Services.prefs.getBoolPref(
+        PREF_ACTIVITY_STREAM_DEBUG,
+        false
+      );
     }
     this._newtabURL = ABOUT_URL;
     return true;
@@ -214,7 +239,9 @@ AboutNewTabService.prototype = {
       "resource://activity-stream/prerendered/",
       "activity-stream",
       // Debug version loads dev scripts but noscripts separately loads scripts
-      this._activityStreamDebug && !this._privilegedAboutContentProcess ? "-debug" : "",
+      this._activityStreamDebug && !this._privilegedAboutContentProcess
+        ? "-debug"
+        : "",
       this._privilegedAboutContentProcess ? "-noscripts" : "",
       ".html",
     ].join("");
@@ -287,7 +314,10 @@ AboutNewTabService.prototype = {
       return;
     }
     Services.obs.removeObserver(this, TOPIC_APP_QUIT);
-    Services.prefs.removeObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
+    Services.prefs.removeObserver(
+      PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS,
+      this
+    );
     if (!IS_RELEASE_OR_BETA) {
       Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
     }

@@ -8,10 +8,14 @@
 var windowsToClose = [];
 function testOnWindow(options, callback) {
   var win = OpenBrowserWindow(options);
-  win.addEventListener("load", function() {
-    windowsToClose.push(win);
-    executeSoon(() => callback(win));
-  }, {once: true});
+  win.addEventListener(
+    "load",
+    function() {
+      windowsToClose.push(win);
+      executeSoon(() => callback(win));
+    },
+    { once: true }
+  );
 }
 
 registerCleanupFunction(function() {
@@ -24,13 +28,18 @@ function test() {
   // initialization
   waitForExplicitFinish();
 
-  ok(!document.documentElement.hasAttribute("privatebrowsingmode"),
-    "privatebrowsingmode should not be present in normal mode");
+  ok(
+    !document.documentElement.hasAttribute("privatebrowsingmode"),
+    "privatebrowsingmode should not be present in normal mode"
+  );
 
   // open a private window
-  testOnWindow({private: true}, function(win) {
-    is(win.document.documentElement.getAttribute("privatebrowsingmode"), "temporary",
-      "privatebrowsingmode should be \"temporary\" inside the private browsing mode");
+  testOnWindow({ private: true }, function(win) {
+    is(
+      win.document.documentElement.getAttribute("privatebrowsingmode"),
+      "temporary",
+      'privatebrowsingmode should be "temporary" inside the private browsing mode'
+    );
 
     finish();
   });
