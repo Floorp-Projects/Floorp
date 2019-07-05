@@ -28,7 +28,9 @@ var MemoryObserver = {
 
   handleLowMemory: function() {
     // do things to reduce memory usage here
-    if (!Services.prefs.getBoolPref("browser.tabs.disableBackgroundZombification")) {
+    if (
+      !Services.prefs.getBoolPref("browser.tabs.disableBackgroundZombification")
+    ) {
       let tabs = BrowserApp.tabs;
       let selected = BrowserApp.selectedTab;
       for (let i = 0; i < tabs.length; i++) {
@@ -42,8 +44,14 @@ var MemoryObserver = {
     let defaults = Services.prefs.getDefaultBranch(null);
 
     // Stop using the bfcache
-    if (!Services.prefs.getBoolPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure")) {
-      this._defaultMaxContentViewers = defaults.getIntPref(MAX_CONTENT_VIEWERS_PREF);
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.sessionhistory.bfcacheIgnoreMemoryPressure"
+      )
+    ) {
+      this._defaultMaxContentViewers = defaults.getIntPref(
+        MAX_CONTENT_VIEWERS_PREF
+      );
       defaults.setIntPref(MAX_CONTENT_VIEWERS_PREF, 0);
     }
   },
@@ -51,8 +59,15 @@ var MemoryObserver = {
   handleEnoughMemory: function() {
     // Re-enable the bfcache
     let defaults = Services.prefs.getDefaultBranch(null);
-    if (!Services.prefs.getBoolPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure")) {
-      defaults.setIntPref(MAX_CONTENT_VIEWERS_PREF, this._defaultMaxContentViewers);
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.sessionhistory.bfcacheIgnoreMemoryPressure"
+      )
+    ) {
+      defaults.setIntPref(
+        MAX_CONTENT_VIEWERS_PREF,
+        this._defaultMaxContentViewers
+      );
     }
   },
 
@@ -62,8 +77,13 @@ var MemoryObserver = {
   },
 
   dumpMemoryStats: function(aLabel) {
-    let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
-    memDumper.dumpMemoryInfoToTempDir(aLabel, /* anonymize = */ false,
-                                      /* minimize = */ false);
+    let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(
+      Ci.nsIMemoryInfoDumper
+    );
+    memDumper.dumpMemoryInfoToTempDir(
+      aLabel,
+      /* anonymize = */ false,
+      /* minimize = */ false
+    );
   },
 };

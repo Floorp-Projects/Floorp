@@ -6,8 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["RuntimePermissions"];
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-                               "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
 const ACCESS_COARSE_LOCATION = "android.permission.ACCESS_COARSE_LOCATION";
@@ -44,11 +47,11 @@ var RuntimePermissions = {
   },
 
   /**
-    * Check whether the specified permissions have already been granted or not.
-    *
-    * @returns A promise resolving to true if all the permissions are already granted or false if any of the
-    *          permissions are not granted.
-    */
+   * Check whether the specified permissions have already been granted or not.
+   *
+   * @returns A promise resolving to true if all the permissions are already granted or false if any of the
+   *          permissions are not granted.
+   */
   checkPermissions: function(permission) {
     let permissions = [].concat(permission);
 

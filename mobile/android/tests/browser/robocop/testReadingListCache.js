@@ -5,8 +5,10 @@
 
 /* globals ReaderMode */
 
-const {ReaderMode} = ChromeUtils.import("resource://gre/modules/ReaderMode.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ReaderMode } = ChromeUtils.import(
+  "resource://gre/modules/ReaderMode.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 
@@ -26,11 +28,13 @@ var TEST_PAGES = [
     expected: null,
   },
   {
-    url: URL_PREFIX + "developer.mozilla.org/en/XULRunner/Build_Instructions.html",
+    url:
+      URL_PREFIX + "developer.mozilla.org/en/XULRunner/Build_Instructions.html",
     expected: {
       title: "Building XULRunner",
       byline: null,
-      excerpt: "XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites.",
+      excerpt:
+        "XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites.",
     },
   },
 ];

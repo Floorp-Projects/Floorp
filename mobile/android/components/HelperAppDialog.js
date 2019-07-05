@@ -15,7 +15,9 @@ const OMA_DRM_RIGHTS_MIME = "application/vnd.oma.drm.rights+wbxml";
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -34,11 +36,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   let ContentAreaUtils = {};
-  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
+  Services.scriptloader.loadSubScript(
+    "chrome://global/content/contentAreaUtils.js",
+    ContentAreaUtils
+  );
   return ContentAreaUtils;
 });
 
-function HelperAppLauncherDialog() { }
+function HelperAppLauncherDialog() {}
 
 HelperAppLauncherDialog.prototype = {
   classID: Components.ID("{e9d277a0-268a-4ec2-bb8c-10fdf3e44611}"),
@@ -52,17 +57,17 @@ HelperAppLauncherDialog.prototype = {
    */
   _canDownload: function(url, alreadyResolved = false) {
     // The common case.
-    if (url.schemeIs("http") ||
-        url.schemeIs("https") ||
-        url.schemeIs("ftp")) {
+    if (url.schemeIs("http") || url.schemeIs("https") || url.schemeIs("ftp")) {
       return true;
     }
 
     // The less-common opposite case.
-    if (url.schemeIs("chrome") ||
-        url.schemeIs("jar") ||
-        url.schemeIs("resource") ||
-        url.schemeIs("file")) {
+    if (
+      url.schemeIs("chrome") ||
+      url.schemeIs("jar") ||
+      url.schemeIs("resource") ||
+      url.schemeIs("file")
+    ) {
       return false;
     }
 
@@ -90,7 +95,9 @@ HelperAppLauncherDialog.prototype = {
     let mimeType = this._getMimeTypeFromLauncher(launcher);
 
     // Straight equality: nsIMIMEInfo normalizes.
-    return APK_MIME_TYPE == mimeType || OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE == mimeType;
+    return (
+      APK_MIME_TYPE == mimeType || OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE == mimeType
+    );
   },
 
   /**
@@ -98,10 +105,10 @@ HelperAppLauncherDialog.prototype = {
    * offer a "Save to disk" option.
    */
   _shouldAddSaveToDiskIntent: function(launcher) {
-      let mimeType = this._getMimeTypeFromLauncher(launcher);
+    let mimeType = this._getMimeTypeFromLauncher(launcher);
 
-      // We can't handle OMA downloads. So don't even try. (Bug 1219078)
-      return mimeType != OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE;
+    // We can't handle OMA downloads. So don't even try. (Bug 1219078)
+    return mimeType != OMA_DOWNLOAD_DESCRIPTOR_MIME_TYPE;
   },
 
   /**
@@ -109,7 +116,9 @@ HelperAppLauncherDialog.prototype = {
    * or a third-party app and instead be forwarded to Android's download manager.
    */
   _shouldForwardToAndroidDownloadManager: function(aLauncher) {
-    let forwardDownload = Services.prefs.getBoolPref("browser.download.forward_oma_android_download_manager");
+    let forwardDownload = Services.prefs.getBoolPref(
+      "browser.download.forward_oma_android_download_manager"
+    );
     if (!forwardDownload) {
       return false;
     }
@@ -136,7 +145,9 @@ HelperAppLauncherDialog.prototype = {
     if (this._shouldForwardToAndroidDownloadManager(aLauncher)) {
       (async () => {
         try {
-          let hasPermission = await RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE);
+          let hasPermission = await RuntimePermissions.waitForPermissions(
+            RuntimePermissions.WRITE_EXTERNAL_STORAGE
+          );
           if (hasPermission) {
             this._downloadWithAndroidDownloadManager(aLauncher);
           }
@@ -147,7 +158,9 @@ HelperAppLauncherDialog.prototype = {
       return;
     }
 
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/browser.properties"
+    );
 
     let apps = HelperApps.getAppsForUri(aLauncher.source, {
       mimeType: aLauncher.MIMEInfo.MIMEType,
@@ -200,7 +213,7 @@ HelperAppLauncherDialog.prototype = {
 
     // If there's only one choice, and we don't want to prompt, go right ahead
     // and choose that app automatically.
-    if (!this._shouldPrompt(aLauncher) && (apps.length === 1)) {
+    if (!this._shouldPrompt(aLauncher) && apps.length === 1) {
       callback(apps[0]);
       return;
     }
@@ -210,27 +223,31 @@ HelperAppLauncherDialog.prototype = {
     let justOnce = bundle.GetStringFromName("helperapps.useJustOnce");
     let newButtonOrder = this._useNewButtonOrder();
 
-    HelperApps.prompt(apps, {
-      window: aContext,
-      title: bundle.GetStringFromName("helperapps.pick"),
-      buttons: [
-        newButtonOrder ? alwaysUse : justOnce,
-        newButtonOrder ? justOnce : alwaysUse,
-      ],
-      // Tapping an app twice should choose "Just once".
-      doubleTapButton: newButtonOrder ? 1 : 0,
-    }, (data) => {
-      if (data.button < 0) {
-        aLauncher.cancel(Cr.NS_BINDING_ABORTED);
-        return;
-      }
+    HelperApps.prompt(
+      apps,
+      {
+        window: aContext,
+        title: bundle.GetStringFromName("helperapps.pick"),
+        buttons: [
+          newButtonOrder ? alwaysUse : justOnce,
+          newButtonOrder ? justOnce : alwaysUse,
+        ],
+        // Tapping an app twice should choose "Just once".
+        doubleTapButton: newButtonOrder ? 1 : 0,
+      },
+      data => {
+        if (data.button < 0) {
+          aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+          return;
+        }
 
-      callback(apps[data.icongrid0]);
+        callback(apps[data.icongrid0]);
 
-      if (data.button === (newButtonOrder ? 0 : 1)) {
-        this._setPreferredApp(aLauncher, apps[data.icongrid0]);
+        if (data.button === (newButtonOrder ? 0 : 1)) {
+          this._setPreferredApp(aLauncher, apps[data.icongrid0]);
+        }
       }
-    });
+    );
   },
 
   /**
@@ -244,9 +261,13 @@ HelperAppLauncherDialog.prototype = {
   _refuseDownload: function(aLauncher) {
     aLauncher.cancel(Cr.NS_BINDING_ABORTED);
 
-    Services.console.logStringMessage("Refusing download of non-downloadable file.");
+    Services.console.logStringMessage(
+      "Refusing download of non-downloadable file."
+    );
 
-    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let bundle = Services.strings.createBundle(
+      "chrome://browser/locale/browser.properties"
+    );
     let failedText = bundle.GetStringFromName("download.blocked");
 
     Snackbars.show(failedText, Snackbars.LENGTH_LONG);
@@ -259,10 +280,10 @@ HelperAppLauncherDialog.prototype = {
     }
 
     EventDispatcher.instance.sendRequest({
-      "type": "Download:AndroidDownloadManager",
-      "uri": aLauncher.source.spec,
-      "mimeType": mimeType,
-      "filename": aLauncher.suggestedFileName,
+      type: "Download:AndroidDownloadManager",
+      uri: aLauncher.source.spec,
+      mimeType: mimeType,
+      filename: aLauncher.suggestedFileName,
     });
   },
 
@@ -272,15 +293,17 @@ HelperAppLauncherDialog.prototype = {
 
   _getMimeTypeFromLauncher: function(launcher) {
     let mime = launcher.MIMEInfo.MIMEType;
-    if (!mime)
+    if (!mime) {
       mime = ContentAreaUtils.getMIMETypeForURI(launcher.source) || "";
+    }
     return mime;
   },
 
   _getPreferredApp: function getPreferredApp(launcher) {
     let mime = this._getMimeTypeFromLauncher(launcher);
-    if (!mime)
+    if (!mime) {
       return;
+    }
 
     try {
       return Services.prefs.getCharPref(this._getPrefName(mime));
@@ -292,28 +315,40 @@ HelperAppLauncherDialog.prototype = {
 
   _setPreferredApp: function setPreferredApp(launcher, app) {
     let mime = this._getMimeTypeFromLauncher(launcher);
-    if (!mime)
+    if (!mime) {
       return;
+    }
 
-    if (app)
+    if (app) {
       Services.prefs.setCharPref(this._getPrefName(mime), app.packageName);
-    else
+    } else {
       Services.prefs.clearUserPref(this._getPrefName(mime));
+    }
   },
 
-  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile,
-                                      aSuggestedFileExt, aForcePrompt) {
+  promptForSaveToFileAsync: function(
+    aLauncher,
+    aContext,
+    aDefaultFile,
+    aSuggestedFileExt,
+    aForcePrompt
+  ) {
     (async () => {
       let file = null;
       try {
-        let hasPermission = await RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE);
+        let hasPermission = await RuntimePermissions.waitForPermissions(
+          RuntimePermissions.WRITE_EXTERNAL_STORAGE
+        );
         if (hasPermission) {
           // If we do have the STORAGE permission then pick the public downloads directory as destination
           // for this file. Without the permission saveDestinationAvailable(null) will be called which
           // will effectively cancel the download.
           let preferredDir = await Downloads.getPreferredDownloadsDirectory();
-          file = this.validateLeafName(new FileUtils.File(preferredDir),
-                                       aDefaultFile, aSuggestedFileExt);
+          file = this.validateLeafName(
+            new FileUtils.File(preferredDir),
+            aDefaultFile,
+            aSuggestedFileExt
+          );
         }
       } finally {
         // The file argument will be null in case any exception occurred.
@@ -322,16 +357,22 @@ HelperAppLauncherDialog.prototype = {
     })().catch(Cu.reportError);
   },
 
-  validateLeafName: function hald_validateLeafName(aLocalFile, aLeafName, aFileExt) {
-    if (!(aLocalFile && this.isUsableDirectory(aLocalFile)))
+  validateLeafName: function hald_validateLeafName(
+    aLocalFile,
+    aLeafName,
+    aFileExt
+  ) {
+    if (!(aLocalFile && this.isUsableDirectory(aLocalFile))) {
       return null;
+    }
 
     // Remove any leading periods, since we don't want to save hidden files
     // automatically.
     aLeafName = aLeafName.replace(/^\.+/, "");
 
-    if (aLeafName == "")
+    if (aLeafName == "") {
       aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
+    }
     aLocalFile.append(aLeafName);
 
     this.makeFileUnique(aLocalFile);
@@ -350,32 +391,46 @@ HelperAppLauncherDialog.prototype = {
         if (collisionCount == 1) {
           // Append "(2)" before the last dot in (or at the end of) the filename
           // special case .ext.gz etc files so we don't wind up with .tar(2).gz
-          if (aLocalFile.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i))
-            aLocalFile.leafName = aLocalFile.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
-          else
-            aLocalFile.leafName = aLocalFile.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
+          if (aLocalFile.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i)) {
+            aLocalFile.leafName = aLocalFile.leafName.replace(
+              /\.[^\.]{1,3}\.(gz|bz2|Z)$/i,
+              "(2)$&"
+            );
+          } else {
+            aLocalFile.leafName = aLocalFile.leafName.replace(
+              /(\.[^\.]*)?$/,
+              "(2)$&"
+            );
+          }
         } else {
           // replace the last (n) in the filename with (n+1)
-          aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount + 1) + ")");
+          aLocalFile.leafName = aLocalFile.leafName.replace(
+            /^(.*\()\d+\)/,
+            "$1" + (collisionCount + 1) + ")"
+          );
         }
       }
       aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     } catch (e) {
       dump("*** exception in validateLeafName: " + e + "\n");
 
-      if (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED)
+      if (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED) {
         throw e;
+      }
 
       if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
         aLocalFile.append("unnamed");
-        if (aLocalFile.exists())
+        if (aLocalFile.exists()) {
           aLocalFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
+        }
       }
     }
   },
 
   isUsableDirectory: function hald_isUsableDirectory(aDirectory) {
-    return aDirectory.exists() && aDirectory.isDirectory() && aDirectory.isWritable();
+    return (
+      aDirectory.exists() && aDirectory.isDirectory() && aDirectory.isWritable()
+    );
   },
 };
 

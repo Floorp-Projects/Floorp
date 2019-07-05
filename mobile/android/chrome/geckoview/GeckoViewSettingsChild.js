@@ -3,33 +3,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {GeckoViewChildModule} = ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { GeckoViewChildModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewChildModule.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(
-  this, "MOBILE_USER_AGENT",
-  function() {
-    return Cc["@mozilla.org/network/protocol;1?name=http"]
-           .getService(Ci.nsIHttpProtocolHandler).userAgent;
-  });
+XPCOMUtils.defineLazyGetter(this, "MOBILE_USER_AGENT", function() {
+  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).userAgent;
+});
 
-XPCOMUtils.defineLazyGetter(
-  this, "DESKTOP_USER_AGENT",
-  function() {
-    return MOBILE_USER_AGENT
-           .replace(/Android \d.+?; [a-zA-Z]+/, "X11; Linux x86_64")
-           .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
-  });
+XPCOMUtils.defineLazyGetter(this, "DESKTOP_USER_AGENT", function() {
+  return MOBILE_USER_AGENT.replace(
+    /Android \d.+?; [a-zA-Z]+/,
+    "X11; Linux x86_64"
+  ).replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+});
 
-XPCOMUtils.defineLazyGetter(
-  this, "VR_USER_AGENT",
-  function() {
-    return MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
-  });
+XPCOMUtils.defineLazyGetter(this, "VR_USER_AGENT", function() {
+  return MOBILE_USER_AGENT.replace(/Mobile/, "Mobile VR");
+});
 
 // This needs to match GeckoSessionSettings.java
 const USER_AGENT_MODE_MOBILE = 0;
@@ -45,14 +45,14 @@ const VIEWPORT_MODE_DESKTOP = 1;
 // * user agent mode
 class GeckoViewSettingsChild extends GeckoViewChildModule {
   onInit() {
-    debug `onInit`;
+    debug`onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
     this._userAgentOverride = null;
     this._viewportMode = VIEWPORT_MODE_MOBILE;
   }
 
   onSettingsUpdate() {
-    debug `onSettingsUpdate ${this.settings}`;
+    debug`onSettingsUpdate ${this.settings}`;
 
     this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
@@ -96,7 +96,7 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     if (docShell) {
       docShell.customUserAgent = this.userAgent;
     } else {
-      warn `Failed to set custom user agent. Doc shell not found`;
+      warn`Failed to set custom user agent. Doc shell not found`;
     }
   }
 
@@ -113,14 +113,15 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     if (docShell) {
       docShell.customUserAgent = this.userAgent;
     } else {
-      warn `Failed to set custom user agent. Doc shell not found`;
+      warn`Failed to set custom user agent. Doc shell not found`;
     }
   }
 
   get displayMode() {
     const docShell = content && GeckoViewUtils.getRootDocShell(content);
-    return docShell ? docShell.displayMode
-                    : Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
+    return docShell
+      ? docShell.displayMode
+      : Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
   }
 
   set displayMode(aMode) {
@@ -152,5 +153,5 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
   }
 }
 
-const {debug, warn} = GeckoViewSettingsChild.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewSettingsChild.initLogging("GeckoViewSettings"); // eslint-disable-line no-unused-vars
 const module = GeckoViewSettingsChild.create(this);

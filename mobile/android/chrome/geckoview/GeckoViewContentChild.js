@@ -3,9 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {GeckoViewChildModule} = ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { GeckoViewChildModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewChildModule.jsm"
+);
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // This needs to match ScreenLength.java
 const SCREEN_LENGTH_TYPE_PIXEL = 0;
@@ -28,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 class GeckoViewContentChild extends GeckoViewChildModule {
   onInit() {
-    debug `onInit`;
+    debug`onInit`;
 
     // We don't load this in the global namespace because
     // a Utils.jsm in a11y will clobber us.
@@ -36,10 +40,14 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       Utils: "resource://gre/modules/sessionstore/Utils.jsm",
     });
 
-    this.messageManager.addMessageListener("GeckoView:DOMFullscreenEntered",
-                                           this);
-    this.messageManager.addMessageListener("GeckoView:DOMFullscreenExited",
-                                           this);
+    this.messageManager.addMessageListener(
+      "GeckoView:DOMFullscreenEntered",
+      this
+    );
+    this.messageManager.addMessageListener(
+      "GeckoView:DOMFullscreenExited",
+      this
+    );
     this.messageManager.addMessageListener("GeckoView:RestoreState", this);
     this.messageManager.addMessageListener("GeckoView:SetActive", this);
     this.messageManager.addMessageListener("GeckoView:UpdateInitData", this);
@@ -48,8 +56,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     this.messageManager.addMessageListener("GeckoView:ScrollTo", this);
 
     const options = {
-        mozSystemGroup: true,
-        capture: false,
+      mozSystemGroup: true,
+      capture: false,
     };
     addEventListener("DOMFormHasPassword", this, options);
     addEventListener("DOMInputPasswordAdded", this, options);
@@ -59,15 +67,21 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     addEventListener("focusout", this, options);
     addEventListener("mozcaretstatechanged", this, options);
 
-    XPCOMUtils.defineLazyGetter(this, "_autoFill", () =>
-        new GeckoViewAutoFill(this.eventDispatcher));
+    XPCOMUtils.defineLazyGetter(
+      this,
+      "_autoFill",
+      () => new GeckoViewAutoFill(this.eventDispatcher)
+    );
 
     // Notify WebExtension process script that this tab is ready for extension content to load.
-    Services.obs.notifyObservers(this.messageManager, "tab-content-frameloader-created");
+    Services.obs.notifyObservers(
+      this.messageManager,
+      "tab-content-frameloader-created"
+    );
   }
 
   onEnable() {
-    debug `onEnable`;
+    debug`onEnable`;
 
     addEventListener("DOMTitleChanged", this, false);
     addEventListener("DOMWindowClose", this, false);
@@ -80,7 +94,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug`onDisable`;
 
     removeEventListener("DOMTitleChanged", this);
     removeEventListener("DOMWindowClose", this);
@@ -108,7 +122,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     // Save some data that'll help in adjusting the zoom level
     // when restoring in a different screen orientation.
     let displaySize = {};
-    let width = {}, height = {};
+    let width = {},
+      height = {};
     domWindowUtils.getContentViewerSize(width, height);
 
     displaySize.width = width.value;
@@ -118,7 +133,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
     formdata = PrivacyFilter.filterFormData(formdata || {});
 
-    return {history, formdata, scrolldata};
+    return { history, formdata, scrolldata };
   }
 
   toPixels(aLength, aType) {
@@ -150,20 +165,18 @@ class GeckoViewContentChild extends GeckoViewChildModule {
   }
 
   receiveMessage(aMsg) {
-    debug `receiveMessage: ${aMsg.name}`;
+    debug`receiveMessage: ${aMsg.name}`;
 
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenEntered":
         if (content) {
-          content.windowUtils
-                 .handleFullscreenRequests();
+          content.windowUtils.handleFullscreenRequests();
         }
         break;
 
       case "GeckoView:DOMFullscreenExited":
         if (content) {
-          content.windowUtils
-                 .exitFullscreen();
+          content.windowUtils.exitFullscreen();
         }
         break;
       case "GeckoView:ZoomToInput": {
@@ -184,10 +197,16 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         let onResize = function() {
           gotResize = true;
           if (dwu.isMozAfterPaintPending) {
-            addEventListener("MozAfterPaint", function paintDone() {
-              removeEventListener("MozAfterPaint", paintDone, {capture: true});
-              zoomToFocusedInput();
-            }, {capture: true});
+            addEventListener(
+              "MozAfterPaint",
+              function paintDone() {
+                removeEventListener("MozAfterPaint", paintDone, {
+                  capture: true,
+                });
+                zoomToFocusedInput();
+              },
+              { capture: true }
+            );
           } else {
             zoomToFocusedInput();
           }
@@ -212,47 +231,69 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         this._savedState = aMsg.data;
 
         if (this._savedState.history) {
-          let restoredHistory = SessionHistory.restore(docShell, this._savedState.history);
+          let restoredHistory = SessionHistory.restore(
+            docShell,
+            this._savedState.history
+          );
 
-          addEventListener("load", _ => {
-            const formdata = this._savedState.formdata;
-            if (formdata) {
-              this.Utils.restoreFrameTreeData(content, formdata, (frame, data) => {
-                // restore() will return false, and thus abort restoration for the
-                // current |frame| and its descendants, if |data.url| is given but
-                // doesn't match the loaded document's URL.
-                return SessionStoreUtils.restoreFormData(frame.document, data);
-              });
-            }
-          }, {capture: true, mozSystemGroup: true, once: true});
+          addEventListener(
+            "load",
+            _ => {
+              const formdata = this._savedState.formdata;
+              if (formdata) {
+                this.Utils.restoreFrameTreeData(
+                  content,
+                  formdata,
+                  (frame, data) => {
+                    // restore() will return false, and thus abort restoration for the
+                    // current |frame| and its descendants, if |data.url| is given but
+                    // doesn't match the loaded document's URL.
+                    return SessionStoreUtils.restoreFormData(
+                      frame.document,
+                      data
+                    );
+                  }
+                );
+              }
+            },
+            { capture: true, mozSystemGroup: true, once: true }
+          );
 
           let scrollRestore = _ => {
             if (content.location != "about:blank") {
               const scrolldata = this._savedState.scrolldata;
               if (scrolldata) {
-                this.Utils.restoreFrameTreeData(content, scrolldata, (frame, data) => {
-                  if (data.scroll) {
-                    SessionStoreUtils.restoreScrollPosition(frame, data);
+                this.Utils.restoreFrameTreeData(
+                  content,
+                  scrolldata,
+                  (frame, data) => {
+                    if (data.scroll) {
+                      SessionStoreUtils.restoreScrollPosition(frame, data);
+                    }
                   }
-                });
+                );
               }
               delete this._savedState;
               removeEventListener("pageshow", scrollRestore);
             }
           };
 
-          addEventListener("pageshow", scrollRestore, {capture: true, mozSystemGroup: true});
+          addEventListener("pageshow", scrollRestore, {
+            capture: true,
+            mozSystemGroup: true,
+          });
 
           if (!this.progressFilter) {
-            this.progressFilter =
-              Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
-              .createInstance(Ci.nsIWebProgress);
+            this.progressFilter = Cc[
+              "@mozilla.org/appshell/component/browser-status-filter;1"
+            ].createInstance(Ci.nsIWebProgress);
             this.flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
           }
 
           this.progressFilter.addProgressListener(this, this.flags);
-          let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIWebProgress);
+          let webProgress = docShell
+            .QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIWebProgress);
           webProgress.addProgressListener(this.progressFilter, this.flags);
 
           restoredHistory.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
@@ -260,15 +301,19 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         break;
 
       case "GeckoView:SetActive":
-          if (content && aMsg.data.suspendMedia) {
-              content.windowUtils.mediaSuspend = aMsg.data.active ? Ci.nsISuspendedTypes.NONE_SUSPENDED : Ci.nsISuspendedTypes.SUSPENDED_PAUSE;
-          }
+        if (content && aMsg.data.suspendMedia) {
+          content.windowUtils.mediaSuspend = aMsg.data.active
+            ? Ci.nsISuspendedTypes.NONE_SUSPENDED
+            : Ci.nsISuspendedTypes.SUSPENDED_PAUSE;
+        }
         break;
 
       case "GeckoView:UpdateInitData":
         // Provide a hook for native code to detect a transfer.
         Services.obs.notifyObservers(
-            docShell, "geckoview-content-global-transferred");
+          docShell,
+          "geckoview-content-global-transferred"
+        );
         break;
       case "GeckoView:ScrollBy":
         let x = {};
@@ -294,13 +339,16 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
   // eslint-disable-next-line complexity
   handleEvent(aEvent) {
-    debug `handleEvent: ${aEvent.type}`;
+    debug`handleEvent: ${aEvent.type}`;
 
     switch (aEvent.type) {
       case "contextmenu":
         function nearestParentAttribute(aNode, aAttribute) {
-          while (aNode && aNode.hasAttribute &&
-                 !aNode.hasAttribute(aAttribute)) {
+          while (
+            aNode &&
+            aNode.hasAttribute &&
+            !aNode.hasAttribute(aAttribute)
+          ) {
             aNode = aNode.parentNode;
           }
           return aNode && aNode.getAttribute && aNode.getAttribute(aAttribute);
@@ -315,15 +363,19 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
         const node = aEvent.composedTarget;
         const baseUri = node.ownerDocument.baseURIObject;
-        const uri = createAbsoluteUri(baseUri,
-          nearestParentAttribute(node, "href"));
+        const uri = createAbsoluteUri(
+          baseUri,
+          nearestParentAttribute(node, "href")
+        );
         const title = nearestParentAttribute(node, "title");
         const alt = nearestParentAttribute(node, "alt");
         const elementType = ChromeUtils.getClassName(node);
         const isImage = elementType === "HTMLImageElement";
-        const isMedia = elementType === "HTMLVideoElement" ||
-                        elementType === "HTMLAudioElement";
-        const elementSrc = (isImage || isMedia) && (node.currentSrc || node.src);
+        const isMedia =
+          elementType === "HTMLVideoElement" ||
+          elementType === "HTMLAudioElement";
+        const elementSrc =
+          (isImage || isMedia) && (node.currentSrc || node.src);
 
         if (uri || isImage || isMedia) {
           const msg = {
@@ -344,7 +396,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         break;
       case "DOMFormHasPassword":
         this._autoFill.addElement(
-            FormLikeFactory.createFromForm(aEvent.composedTarget));
+          FormLikeFactory.createFromForm(aEvent.composedTarget)
+        );
         break;
       case "DOMInputPasswordAdded": {
         const input = aEvent.composedTarget;
@@ -364,7 +417,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         if (content && content.document.fullscreenElement) {
           break;
         }
-        // fall-through
+      // fall-through
       case "MozDOMFullscreen:Exit":
         sendAsyncMessage("GeckoView:DOMFullscreenExit");
         break;
@@ -405,7 +458,10 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         }
         break;
       case "mozcaretstatechanged":
-        if (aEvent.reason === "presscaret" || aEvent.reason === "releasecaret") {
+        if (
+          aEvent.reason === "presscaret" ||
+          aEvent.reason === "releasecaret"
+        ) {
           this.eventDispatcher.sendRequest({
             type: "GeckoView:PinOnScreen",
             pinned: aEvent.reason === "presscaret",
@@ -414,7 +470,9 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         break;
       case "DOMContentLoaded": {
         content.requestIdleCallback(async () => {
-          const manifest = await ManifestObtainer.contentObtainManifest(content);
+          const manifest = await ManifestObtainer.contentObtainManifest(
+            content
+          );
           if (manifest) {
             this.eventDispatcher.sendRequest({
               type: "GeckoView:WebAppManifest",
@@ -428,25 +486,28 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
   // WebProgress event handler.
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-    debug `onLocationChange`;
+    debug`onLocationChange`;
 
     if (this._savedState) {
       const scrolldata = this._savedState.scrolldata;
       if (scrolldata && scrolldata.zoom && scrolldata.zoom.displaySize) {
         let utils = content.windowUtils;
         // Restore zoom level.
-        utils.setRestoreResolution(scrolldata.zoom.resolution,
-                                   scrolldata.zoom.displaySize.width,
-                                   scrolldata.zoom.displaySize.height);
+        utils.setRestoreResolution(
+          scrolldata.zoom.resolution,
+          scrolldata.zoom.displaySize.width,
+          scrolldata.zoom.displaySize.height
+        );
       }
     }
 
     this.progressFilter.removeProgressListener(this);
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this.progressFilter);
   }
 }
 
-const {debug, warn} = GeckoViewContentChild.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewContentChild.initLogging("GeckoViewContent"); // eslint-disable-line no-unused-vars
 const module = GeckoViewContentChild.create(this);

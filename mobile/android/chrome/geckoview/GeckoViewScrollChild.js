@@ -3,16 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {GeckoViewChildModule} = ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
+const { GeckoViewChildModule } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewChildModule.jsm"
+);
 
 class GeckoViewScrollChild extends GeckoViewChildModule {
   onEnable() {
-    debug `onEnable`;
+    debug`onEnable`;
     addEventListener("mozvisualscroll", this, { mozSystemGroup: true });
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug`onDisable`;
     removeEventListener("mozvisualscroll", { mozSystemGroup: true });
   }
 
@@ -21,11 +23,12 @@ class GeckoViewScrollChild extends GeckoViewChildModule {
       return;
     }
 
-    debug `handleEvent: ${aEvent.type}`;
+    debug`handleEvent: ${aEvent.type}`;
 
     switch (aEvent.type) {
       case "mozvisualscroll":
-        let x = {}, y = {};
+        let x = {},
+          y = {};
         content.windowUtils.getVisualViewportOffset(x, y);
         this.eventDispatcher.sendRequest({
           type: "GeckoView:ScrollChanged",
@@ -37,5 +40,5 @@ class GeckoViewScrollChild extends GeckoViewChildModule {
   }
 }
 
-const {debug, warn} = GeckoViewScrollChild.initLogging("GeckoViewScroll"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewScrollChild.initLogging("GeckoViewScroll"); // eslint-disable-line no-unused-vars
 const module = GeckoViewScrollChild.create(this);
