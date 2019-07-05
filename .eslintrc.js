@@ -45,7 +45,6 @@ module.exports = {
   "overrides": [{
       "files": [
         "devtools/**",
-        "xpfe/**",
       ],
       "rules": {
         // Temporarily disable the curly everywhere, pending Prettier.
