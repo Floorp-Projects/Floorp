@@ -356,20 +356,18 @@ nsresult TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader* aReader,
   return NS_SUCCEEDED(rv) ? mReadSegmentReturnValue : rv;
 }
 
-nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
-                                                  uint32_t aCount,
-                                                  uint32_t* outCountWritten,
-                                                  bool* again) {
+nsresult TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter* aWriter,
+                                             uint32_t aCount,
+                                             uint32_t* outCountWritten) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("TLSFilterTransaction::WriteSegmentsAgain %p max=%d\n", this, aCount));
+  LOG(("TLSFilterTransaction::WriteSegments %p max=%d\n", this, aCount));
 
   if (!mTransaction) {
     return NS_ERROR_UNEXPECTED;
   }
 
   mSegmentWriter = aWriter;
-  nsresult rv =
-      mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten, again);
+  nsresult rv = mTransaction->WriteSegments(this, aCount, outCountWritten);
   if (NS_SUCCEEDED(rv) && NS_FAILED(mFilterReadCode) && !(*outCountWritten)) {
     // nsPipe turns failures into silent OK.. undo that!
     rv = mFilterReadCode;
@@ -381,13 +379,6 @@ nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
        " %d\n",
        this, static_cast<uint32_t>(rv), *outCountWritten));
   return rv;
-}
-
-nsresult TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter* aWriter,
-                                             uint32_t aCount,
-                                             uint32_t* outCountWritten) {
-  bool again = false;
-  return WriteSegmentsAgain(aWriter, aCount, outCountWritten, &again);
 }
 
 nsresult TLSFilterTransaction::GetTransactionSecurityInfo(
