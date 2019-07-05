@@ -40,8 +40,9 @@ var gBrowserThumbnails = {
     gBrowser.addTabsProgressListener(this);
     Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this);
 
-    this._sslDiskCacheEnabled =
-      Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
+    this._sslDiskCacheEnabled = Services.prefs.getBoolPref(
+      this.PREF_DISK_CACHE_SSL
+    );
 
     this._tabEvents.forEach(function(aEvent) {
       gBrowser.tabContainer.addEventListener(aEvent, this);
@@ -68,8 +69,9 @@ var gBrowserThumbnails = {
     switch (aEvent.type) {
       case "scroll":
         let browser = aEvent.currentTarget;
-        if (this._timeouts.has(browser))
+        if (this._timeouts.has(browser)) {
           this._delayedCapture(browser);
+        }
         break;
       case "TabSelect":
         this._delayedCapture(aEvent.target.linkedBrowser);
@@ -84,8 +86,9 @@ var gBrowserThumbnails = {
   observe: function Thumbnails_observe(subject, topic, data) {
     switch (data) {
       case this.PREF_DISK_CACHE_SSL:
-        this._sslDiskCacheEnabled =
-          Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
+        this._sslDiskCacheEnabled = Services.prefs.getBoolPref(
+          this.PREF_DISK_CACHE_SSL
+        );
         break;
     }
   },
@@ -108,19 +111,27 @@ var gBrowserThumbnails = {
   /**
    * State change progress listener for all tabs.
    */
-  onStateChange: function Thumbnails_onStateChange(aBrowser, aWebProgress,
-                                                   aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)
+  onStateChange: function Thumbnails_onStateChange(
+    aBrowser,
+    aWebProgress,
+    aRequest,
+    aStateFlags,
+    aStatus
+  ) {
+    if (
+      aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+      aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
+    ) {
       this._delayedCapture(aBrowser);
+    }
   },
 
   async _capture(aBrowser) {
     // Only capture about:newtab top sites.
     const topSites = await this._topSiteURLs;
-    if (!aBrowser.currentURI ||
-        !topSites.includes(aBrowser.currentURI.spec))
+    if (!aBrowser.currentURI || !topSites.includes(aBrowser.currentURI.spec)) {
       return;
+    }
     this._shouldCapture(aBrowser, function(aResult) {
       if (aResult) {
         PageThumbs.captureAndStoreIfStale(aBrowser);
@@ -154,8 +165,10 @@ var gBrowserThumbnails = {
 
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser, aCallback) {
     // Capture only if it's the currently selected tab and not an about: page.
-    if (aBrowser != gBrowser.selectedBrowser ||
-        gBrowser.currentURI.schemeIs("about")) {
+    if (
+      aBrowser != gBrowser.selectedBrowser ||
+      gBrowser.currentURI.schemeIs("about")
+    ) {
       aCallback(false);
       return;
     }
@@ -170,7 +183,9 @@ var gBrowserThumbnails = {
     }
   },
 
-  _cancelDelayedCallbacks: function Thumbnails_cancelDelayedCallbacks(aBrowser) {
+  _cancelDelayedCallbacks: function Thumbnails_cancelDelayedCallbacks(
+    aBrowser
+  ) {
     let timeoutData = this._timeouts.get(aBrowser);
 
     if (timeoutData.isTimeout) {
@@ -186,11 +201,14 @@ async function getTopSiteURLs() {
   // The _topSiteURLs getter can be expensive to run, but its return value can
   // change frequently on new profiles, so as a compromise we cache its return
   // value as a lazy getter for 1 minute every time it's called.
-  gBrowserThumbnails._topSiteURLsRefreshTimer =
-    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  gBrowserThumbnails._topSiteURLsRefreshTimer.initWithCallback(gBrowserThumbnails,
-                                                               60 * 1000,
-                                                               Ci.nsITimer.TYPE_ONE_SHOT);
+  gBrowserThumbnails._topSiteURLsRefreshTimer = Cc[
+    "@mozilla.org/timer;1"
+  ].createInstance(Ci.nsITimer);
+  gBrowserThumbnails._topSiteURLsRefreshTimer.initWithCallback(
+    gBrowserThumbnails,
+    60 * 1000,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
   let sites = [];
   // Get both the top sites returned by the query, and also any pinned sites
   // that the user might have added manually that also need a screenshot.
@@ -199,7 +217,9 @@ async function getTopSiteURLs() {
   sites.push(...topSites.filter(link => !(link.faviconSize >= 96)));
   sites.push(...NewTabUtils.pinnedLinks.links);
   return sites.reduce((urls, link) => {
-    if (link) urls.push(link.url);
+    if (link) {
+      urls.push(link.url);
+    }
     return urls;
   }, []);
 }

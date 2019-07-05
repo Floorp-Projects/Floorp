@@ -9,12 +9,14 @@
  */
 
 const rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 var gTestBrowser = null;
 
 const gTestcases = {
-
   // 10x10
   testcase1: {
     sizing: "blank",
@@ -46,7 +48,6 @@ const gTestcases = {
   },
 };
 
-
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
@@ -62,10 +63,19 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Sanity check, should not have a click-to-play notification");
+  let popupNotification = PopupNotifications.getNotification(
+    "click-to-play-plugins",
+    gTestBrowser
+  );
+  ok(
+    !popupNotification,
+    "Sanity check, should not have a click-to-play notification"
+  );
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_overlay_styles.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_overlay_styles.html"
+  );
 
   // Work around for delayed PluginBindingAttached
   await promiseUpdatePluginBindings(gTestBrowser);
@@ -80,14 +90,20 @@ add_task(async function() {
 
       let expectations = testcases[testcaseId];
 
-      Assert.ok(overlay.classList.contains("visible"),
-                `The expected visibility is correct in ${testcaseId}`);
+      Assert.ok(
+        overlay.classList.contains("visible"),
+        `The expected visibility is correct in ${testcaseId}`
+      );
 
-      Assert.ok(overlay.getAttribute("sizing") == expectations.sizing,
-                `The expected sizing is correct in ${testcaseId}`);
+      Assert.ok(
+        overlay.getAttribute("sizing") == expectations.sizing,
+        `The expected sizing is correct in ${testcaseId}`
+      );
 
-      Assert.ok(overlay.getAttribute("notext") == expectations.notext,
-                `The expected notext is correct in ${testcaseId}`);
+      Assert.ok(
+        overlay.getAttribute("notext") == expectations.notext,
+        `The expected notext is correct in ${testcaseId}`
+      );
     }
   });
 });

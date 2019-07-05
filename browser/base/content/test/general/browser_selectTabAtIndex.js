@@ -4,19 +4,26 @@ function test() {
   const isLinux = navigator.platform.indexOf("Linux") == 0;
 
   function assertTab(expectedTab) {
-    is(gBrowser.tabContainer.selectedIndex, expectedTab,
-       `tab index ${expectedTab} should be selected`);
+    is(
+      gBrowser.tabContainer.selectedIndex,
+      expectedTab,
+      `tab index ${expectedTab} should be selected`
+    );
   }
 
   function sendAccelKey(key) {
     // Make sure the keystroke goes to chrome.
     document.activeElement.blur();
-    EventUtils.synthesizeKey(key.toString(), { altKey: isLinux, accelKey: !isLinux });
+    EventUtils.synthesizeKey(key.toString(), {
+      altKey: isLinux,
+      accelKey: !isLinux,
+    });
   }
 
   function createTabs(count) {
-    for (let n = 0; n < count; n++)
+    for (let n = 0; n < count; n++) {
       BrowserTestUtils.addTab(gBrowser);
+    }
   }
 
   function testKey(key, expectedTab) {
@@ -75,7 +82,8 @@ function test() {
   testIndex(9, 9);
 
   // Clean up tabs.
-  for (let n = 15; n > 1; n--)
-    gBrowser.removeTab(gBrowser.selectedTab, {skipPermitUnload: true});
+  for (let n = 15; n > 1; n--) {
+    gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
+  }
   is(gBrowser.tabs.length, 1, "should have 1 tab");
 }

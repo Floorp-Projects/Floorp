@@ -1,4 +1,5 @@
-const TEST_PAGE = "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
+const TEST_PAGE =
+  "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
 
 var expectingDialog = false;
 var wantToClose = true;
@@ -18,7 +19,9 @@ function onTabModalDialogLoaded(node) {
   }
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+SpecialPowers.pushPrefEnv({
+  set: [["dom.require_user_interaction_for_beforeunload", false]],
+});
 
 // Listen for the dialog being created
 Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
@@ -45,7 +48,10 @@ add_task(async function closeWindowWithMultipleTabsIncludingOneBeforeUnload() {
   let newWin = await promiseOpenAndLoadWindow({}, true);
   let firstTab = newWin.gBrowser.selectedTab;
   await promiseTabLoadEvent(firstTab, TEST_PAGE);
-  await promiseTabLoadEvent(BrowserTestUtils.addTab(newWin.gBrowser), "http://example.com/");
+  await promiseTabLoadEvent(
+    BrowserTestUtils.addTab(newWin.gBrowser),
+    "http://example.com/"
+  );
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   newWin.BrowserTryToCloseWindow();
@@ -62,7 +68,9 @@ add_task(async function closeWindoWithSingleTabTwice() {
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   wantToClose = false;
-  let firstDialogShownPromise = new Promise((resolve, reject) => { resolveDialogPromise = resolve; });
+  let firstDialogShownPromise = new Promise((resolve, reject) => {
+    resolveDialogPromise = resolve;
+  });
   firstTab.closeButton.click();
   await firstDialogShownPromise;
   info("Got initial dialog, now trying again");

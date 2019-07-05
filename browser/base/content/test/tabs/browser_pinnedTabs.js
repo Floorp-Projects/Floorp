@@ -6,28 +6,42 @@ function index(tab) {
 
 function indexTest(tab, expectedIndex, msg) {
   var diag = "tab " + tab + " should be at index " + expectedIndex;
-  if (msg)
+  if (msg) {
     msg = msg + " (" + diag + ")";
-  else
+  } else {
     msg = diag;
+  }
   is(index(tabs[tab]), expectedIndex, msg);
 }
 
 function PinUnpinHandler(tab, eventName) {
   this.eventCount = 0;
   var self = this;
-  tab.addEventListener(eventName, function() {
-    self.eventCount++;
-  }, {capture: true, once: true});
-  gBrowser.tabContainer.addEventListener(eventName, function(e) {
-    if (e.originalTarget == tab) {
+  tab.addEventListener(
+    eventName,
+    function() {
       self.eventCount++;
-    }
-  }, {capture: true, once: true});
+    },
+    { capture: true, once: true }
+  );
+  gBrowser.tabContainer.addEventListener(
+    eventName,
+    function(e) {
+      if (e.originalTarget == tab) {
+        self.eventCount++;
+      }
+    },
+    { capture: true, once: true }
+  );
 }
 
 function test() {
-  tabs = [gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser), BrowserTestUtils.addTab(gBrowser), BrowserTestUtils.addTab(gBrowser)];
+  tabs = [
+    gBrowser.selectedTab,
+    BrowserTestUtils.addTab(gBrowser),
+    BrowserTestUtils.addTab(gBrowser),
+    BrowserTestUtils.addTab(gBrowser),
+  ];
   indexTest(0, 0);
   indexTest(1, 1);
   indexTest(2, 2);
@@ -58,12 +72,20 @@ function test() {
   eh = new PinUnpinHandler(tabs[1], "TabUnpinned");
   gBrowser.unpinTab(tabs[1]);
   is(eh.eventCount, 2, "TabUnpinned event should be fired");
-  indexTest(1, 1, "unpinning a tab should move a tab to the start of normal tabs");
+  indexTest(
+    1,
+    1,
+    "unpinning a tab should move a tab to the start of normal tabs"
+  );
 
   eh = new PinUnpinHandler(tabs[3], "TabUnpinned");
   gBrowser.unpinTab(tabs[3]);
   is(eh.eventCount, 2, "TabUnpinned event should be fired");
-  indexTest(3, 0, "unpinning a tab should move a tab to the start of normal tabs");
+  indexTest(
+    3,
+    0,
+    "unpinning a tab should move a tab to the start of normal tabs"
+  );
 
   gBrowser.removeTab(tabs[1]);
   gBrowser.removeTab(tabs[2]);

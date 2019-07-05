@@ -8,9 +8,12 @@
  */
 
 add_task(async function test() {
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  let tab = win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser, "about:addons");
+  let tab = (win.gBrowser.selectedTab = BrowserTestUtils.addTab(
+    win.gBrowser,
+    "about:addons"
+  ));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await promiseWaitForFocus(win);
 

@@ -9,47 +9,75 @@ const BAD_CERT_PAGE = "https://expired.example.com/";
 
 add_task(async function checkCaptivePortalCertErrorUI() {
   await SpecialPowers.pushPrefEnv({
-    set: [["captivedetect.canonicalURL", CANONICAL_URL],
-          ["captivedetect.canonicalContent", CANONICAL_CONTENT]],
+    set: [
+      ["captivedetect.canonicalURL", CANONICAL_URL],
+      ["captivedetect.canonicalContent", CANONICAL_CONTENT],
+    ],
   });
 
-  let captivePortalStatePropagated = TestUtils.topicObserved("ipc:network:captive-portal-set-state");
+  let captivePortalStatePropagated = TestUtils.topicObserved(
+    "ipc:network:captive-portal-set-state"
+  );
 
-  info("Checking that the alternate about:certerror UI is shown when we are behind a captive portal.");
+  info(
+    "Checking that the alternate about:certerror UI is shown when we are behind a captive portal."
+  );
   Services.obs.notifyObservers(null, "captive-portal-login");
 
-  info("Waiting for captive portal state to be propagated to the content process.");
+  info(
+    "Waiting for captive portal state to be propagated to the content process."
+  );
   await captivePortalStatePropagated;
 
   // Open a page with a cert error.
   let browser;
   let certErrorLoaded;
-  let errorTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
-    let tab = BrowserTestUtils.addTab(gBrowser, BAD_CERT_PAGE);
-    gBrowser.selectedTab = tab;
-    browser = gBrowser.selectedBrowser;
-    certErrorLoaded = BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
-    return tab;
-  }, false);
+  let errorTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    () => {
+      let tab = BrowserTestUtils.addTab(gBrowser, BAD_CERT_PAGE);
+      gBrowser.selectedTab = tab;
+      browser = gBrowser.selectedBrowser;
+      certErrorLoaded = BrowserTestUtils.waitForContentEvent(
+        browser,
+        "DOMContentLoaded"
+      );
+      return tab;
+    },
+    false
+  );
 
   info("Waiting for cert error page to load.");
   await certErrorLoaded;
 
-  let portalTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, CANONICAL_URL);
+  let portalTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    CANONICAL_URL
+  );
 
   await ContentTask.spawn(browser, null, () => {
     let doc = content.document;
-    ok(doc.body.classList.contains("captiveportal"),
-       "Captive portal error page UI is visible.");
+    ok(
+      doc.body.classList.contains("captiveportal"),
+      "Captive portal error page UI is visible."
+    );
 
     info("Clicking the Open Login Page button.");
     let loginButton = doc.getElementById("openPortalLoginPageButton");
-    is(loginButton.getAttribute("autofocus"), "true", "openPortalLoginPageButton has autofocus");
+    is(
+      loginButton.getAttribute("autofocus"),
+      "true",
+      "openPortalLoginPageButton has autofocus"
+    );
     loginButton.click();
   });
 
   let portalTab = await portalTabPromise;
-  is(gBrowser.selectedTab, portalTab, "Login page should be open in a new foreground tab.");
+  is(
+    gBrowser.selectedTab,
+    portalTab,
+    "Login page should be open in a new foreground tab."
+  );
 
   // Make sure clicking the "Open Login Page" button again focuses the existing portal tab.
   await BrowserTestUtils.switchTab(gBrowser, errorTab);
@@ -70,12 +98,16 @@ add_task(async function checkCaptivePortalCertErrorUI() {
   Services.obs.notifyObservers(null, "captive-portal-login-success");
   await portalTabClosing;
 
-  info("Waiting for error tab to be reloaded after the captive portal was freed.");
+  info(
+    "Waiting for error tab to be reloaded after the captive portal was freed."
+  );
   await errorTabReloaded;
   await ContentTask.spawn(browser, null, () => {
     let doc = content.document;
-    ok(!doc.body.classList.contains("captiveportal"),
-       "Captive portal error page UI is not visible.");
+    ok(
+      !doc.body.classList.contains("captiveportal"),
+      "Captive portal error page UI is not visible."
+    );
   });
 
   BrowserTestUtils.removeTab(errorTab);

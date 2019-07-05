@@ -1,7 +1,8 @@
 "use strict";
 
 var tab;
-var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
+var notificationURL =
+  "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 var alertWindowClosed = false;
 var permRemoved = false;
 
@@ -33,9 +34,16 @@ function onAlertShowing() {
     closeNotification(tab.linkedBrowser).then(finish);
     return;
   }
-  ok(Services.perms.testExactPermission(makeURI(notificationURL), "desktop-notification"),
-     "Permission should exist prior to removal");
-  let disableForOriginMenuItem = alertWindow.document.getElementById("disableForOriginMenuItem");
+  ok(
+    Services.perms.testExactPermission(
+      makeURI(notificationURL),
+      "desktop-notification"
+    ),
+    "Permission should exist prior to removal"
+  );
+  let disableForOriginMenuItem = alertWindow.document.getElementById(
+    "disableForOriginMenuItem"
+  );
   is(disableForOriginMenuItem.localName, "menuitem", "menuitem found");
   Services.obs.addObserver(permObserver, "perm-changed");
   alertWindow.addEventListener("beforeunload", onAlertClosing);
@@ -49,7 +57,11 @@ function permObserver(subject, topic, data) {
   }
 
   let permission = subject.QueryInterface(Ci.nsIPermission);
-  is(permission.type, "desktop-notification", "desktop-notification permission changed");
+  is(
+    permission.type,
+    "desktop-notification",
+    "desktop-notification permission changed"
+  );
   is(data, "deleted", "desktop-notification permission deleted");
 
   Services.obs.removeObserver(permObserver, "perm-changed");

@@ -1,5 +1,8 @@
 var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 var gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
 add_task(async function() {
@@ -13,7 +16,10 @@ add_task(async function() {
 
 add_task(async function() {
   Services.prefs.setCharPref("plugins.favorfallback.mode", "follow-ctp");
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Shockwave Flash");
+  setTestPluginEnabledState(
+    Ci.nsIPluginTag.STATE_CLICKTOPLAY,
+    "Shockwave Flash"
+  );
 });
 
 /* The expected behavior of each testcase is documented with its markup
@@ -48,7 +54,6 @@ const testcases = [
     name: "installinstructions",
     rule: "installinstructions,true",
   },
-
 ];
 
 add_task(async function() {
@@ -62,22 +67,42 @@ add_task(async function() {
       `${gTestRoot}plugin_favorfallback.html?testcase=${testcase.name}`
     );
 
-    await ContentTask.spawn(tab.linkedBrowser, testcase.name, async function testPlugins(name) {
-      let testcaseDiv = content.document.getElementById(`testcase_${name}`);
-      let ctpPlugins = testcaseDiv.querySelectorAll(".expected_ctp");
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      testcase.name,
+      async function testPlugins(name) {
+        let testcaseDiv = content.document.getElementById(`testcase_${name}`);
+        let ctpPlugins = testcaseDiv.querySelectorAll(".expected_ctp");
 
-      for (let ctpPlugin of ctpPlugins) {
-        ok(ctpPlugin instanceof Ci.nsIObjectLoadingContent, "This is a plugin object");
-        is(ctpPlugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Plugin is CTP");
+        for (let ctpPlugin of ctpPlugins) {
+          ok(
+            ctpPlugin instanceof Ci.nsIObjectLoadingContent,
+            "This is a plugin object"
+          );
+          is(
+            ctpPlugin.pluginFallbackType,
+            Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+            "Plugin is CTP"
+          );
+        }
+
+        let fallbackPlugins = testcaseDiv.querySelectorAll(
+          ".expected_fallback"
+        );
+
+        for (let fallbackPlugin of fallbackPlugins) {
+          ok(
+            fallbackPlugin instanceof Ci.nsIObjectLoadingContent,
+            "This is a plugin object"
+          );
+          is(
+            fallbackPlugin.pluginFallbackType,
+            Ci.nsIObjectLoadingContent.PLUGIN_ALTERNATE,
+            "Plugin fallback content was used"
+          );
+        }
       }
-
-      let fallbackPlugins = testcaseDiv.querySelectorAll(".expected_fallback");
-
-      for (let fallbackPlugin of fallbackPlugins) {
-        ok(fallbackPlugin instanceof Ci.nsIObjectLoadingContent, "This is a plugin object");
-        is(fallbackPlugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_ALTERNATE, "Plugin fallback content was used");
-      }
-    });
+    );
 
     BrowserTestUtils.removeTab(tab);
   }

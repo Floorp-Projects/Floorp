@@ -24,9 +24,16 @@ async function checkWindowMenu(labels) {
 
   let menuitems = [...menu.querySelectorAll("menuseparator ~ menuitem")];
   is(menuitems.length, labels.length, "Correct number of windows in the menu");
-  is(menuitems.map(item => item.label).join(","), labels.join(","), "Correct labels on menuitems");
+  is(
+    menuitems.map(item => item.label).join(","),
+    labels.join(","),
+    "Correct labels on menuitems"
+  );
   for (let menuitem of menuitems) {
-    ok(menuitem instanceof customElements.get("menuitem"), "sibling is menuitem");
+    ok(
+      menuitem instanceof customElements.get("menuitem"),
+      "sibling is menuitem"
+    );
   }
 
   // We can't toggle menubar items on OSX, so mocking instead.

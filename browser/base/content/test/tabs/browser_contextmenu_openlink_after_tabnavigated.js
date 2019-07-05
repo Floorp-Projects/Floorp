@@ -1,6 +1,7 @@
 "use strict";
 
-const example_base = "http://example.com/browser/browser/base/content/test/tabs/";
+const example_base =
+  "http://example.com/browser/browser/base/content/test/tabs/";
 
 add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   let url = example_base + "test_bug1358314.html";
@@ -8,11 +9,20 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   const contextMenu = document.getElementById("contentAreaContextMenu");
-  let awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouse("a", 0, 0, {
-    type: "contextmenu",
-    button: 2,
-  }, gBrowser.selectedBrowser);
+  let awaitPopupShown = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouse(
+    "a",
+    0,
+    0,
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    gBrowser.selectedBrowser
+  );
   await awaitPopupShown;
   info("Popup Shown");
 
@@ -20,7 +30,11 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  let awaitNewTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/", true);
+  let awaitNewTabOpen = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "http://example.com/",
+    true
+  );
 
   info("Click the 'open link in new tab' menu item");
   let openLinkMenuItem = contextMenu.querySelector("#context-openlinkintab");
@@ -32,8 +46,11 @@ add_task(async function test_contextmenu_openlink_after_tabnavigated() {
   // Close the contextMenu popup if it has not been closed yet.
   contextMenu.hidePopup();
 
-  is(newTab.linkedBrowser.currentURI.spec, "http://example.com/",
-     "Got the expected URL loaded in the new tab");
+  is(
+    newTab.linkedBrowser.currentURI.spec,
+    "http://example.com/",
+    "Got the expected URL loaded in the new tab"
+  );
 
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);

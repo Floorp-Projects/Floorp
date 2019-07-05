@@ -16,7 +16,9 @@ add_task(async function testPBNewTab() {
   async function doTest(aIsPrivateMode) {
     let newTabURL;
     let mode;
-    let win = await BrowserTestUtils.openNewBrowserWindow({private: aIsPrivateMode});
+    let win = await BrowserTestUtils.openNewBrowserWindow({
+      private: aIsPrivateMode,
+    });
     windowsToClose.push(win);
 
     if (aIsPrivateMode) {
@@ -28,8 +30,11 @@ add_task(async function testPBNewTab() {
     }
     await openNewTab(win, newTabURL);
 
-    is(win.gBrowser.currentURI.spec, newTabURL,
-      "URL of NewTab should be " + newTabURL + " in " + mode + " mode");
+    is(
+      win.gBrowser.currentURI.spec,
+      newTabURL,
+      "URL of NewTab should be " + newTabURL + " in " + mode + " mode"
+    );
   }
 
   await doTest(false);
@@ -42,7 +47,11 @@ async function openNewTab(aWindow, aExpectedURL) {
   aWindow.BrowserOpenTab();
 
   let browser = aWindow.gBrowser.selectedBrowser;
-  let loadPromise = BrowserTestUtils.browserLoaded(browser, false, aExpectedURL);
+  let loadPromise = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    aExpectedURL
+  );
   let alreadyLoaded = await ContentTask.spawn(browser, aExpectedURL, url => {
     let doc = content.document;
     return doc && doc.readyState === "complete" && doc.location.href == url;

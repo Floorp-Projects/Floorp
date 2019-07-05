@@ -9,7 +9,9 @@ const TEST_ENGINE_2_BASENAME = "searchSuggestionEngine2.xml";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
-let {SearchTestUtils} = ChromeUtils.import("resource://testing-common/SearchTestUtils.jsm");
+let { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
 
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
@@ -141,10 +143,10 @@ add_task(async function tabKey() {
   state = await msg("key", "VK_TAB");
   checkState(state, "x", ["xfoo", "xbar"], 3);
 
-  state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
+  state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true } });
   checkState(state, "x", ["xfoo", "xbar"], 2);
 
-  state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
+  state = await msg("key", { key: "VK_TAB", modifiers: { shiftKey: true } });
   checkState(state, "x", [], -1);
 
   await setUp();
@@ -352,13 +354,21 @@ add_task(async function formHistory() {
 
   // Type an X again.  The form history entry should appear.
   state = await msg("key", { key: "x", waitForSuggestions: true });
-  checkState(state, "x", [{ str: "x", type: "formHistory" }, "xfoo", "xbar"],
-             -1);
+  checkState(
+    state,
+    "x",
+    [{ str: "x", type: "formHistory" }, "xfoo", "xbar"],
+    -1
+  );
 
   // Select the form history entry and delete it.
   state = await msg("key", "VK_DOWN");
-  checkState(state, "x", [{ str: "x", type: "formHistory" }, "xfoo", "xbar"],
-             0);
+  checkState(
+    state,
+    "x",
+    [{ str: "x", type: "formHistory" }, "xfoo", "xbar"],
+    0
+  );
 
   // Wait for Satchel.
   deferred = PromiseUtils.defer();
@@ -403,12 +413,14 @@ add_task(async function cycleEngines() {
     });
   };
 
-  let p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME);
-  await msg("key", { key: "VK_DOWN", modifiers: { accelKey: true }});
+  let p = promiseEngineChange(
+    TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME
+  );
+  await msg("key", { key: "VK_DOWN", modifiers: { accelKey: true } });
   await p;
 
   p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME);
-  await msg("key", { key: "VK_UP", modifiers: { accelKey: true }});
+  await msg("key", { key: "VK_UP", modifiers: { accelKey: true } });
   await p;
 
   await msg("reset");
@@ -418,7 +430,9 @@ add_task(async function search() {
   await setUp();
 
   let modifiers = {};
-  ["altKey", "ctrlKey", "metaKey", "shiftKey"].forEach(k => modifiers[k] = true);
+  ["altKey", "ctrlKey", "metaKey", "shiftKey"].forEach(
+    k => (modifiers[k] = true)
+  );
 
   // Test typing a query and pressing enter.
   let p = msg("waitForSearch");
@@ -537,9 +551,20 @@ add_task(async function search() {
   // Test searching when using IME composition.
   let state = await msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
-  state = await msg("changeComposition", { data: "x", waitForSuggestions: true });
-  checkState(state, "x", [{ str: "x", type: "formHistory" },
-                          { str: "xfoo", type: "formHistory" }, "xbar"], -1);
+  state = await msg("changeComposition", {
+    data: "x",
+    waitForSuggestions: true,
+  });
+  checkState(
+    state,
+    "x",
+    [
+      { str: "x", type: "formHistory" },
+      { str: "xfoo", type: "formHistory" },
+      "xbar",
+    ],
+    -1
+  );
   await msg("commitComposition");
   delete modifiers.button;
   p = msg("waitForSearch");
@@ -556,19 +581,46 @@ add_task(async function search() {
 
   state = await msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
-  state = await msg("changeComposition", { data: "x", waitForSuggestions: true });
-  checkState(state, "x", [{ str: "x", type: "formHistory" },
-                          { str: "xfoo", type: "formHistory" }, "xbar"], -1);
+  state = await msg("changeComposition", {
+    data: "x",
+    waitForSuggestions: true,
+  });
+  checkState(
+    state,
+    "x",
+    [
+      { str: "x", type: "formHistory" },
+      { str: "xfoo", type: "formHistory" },
+      "xbar",
+    ],
+    -1
+  );
 
   // Mouse over the first suggestion.
   state = await msg("mousemove", 0);
-  checkState(state, "x", [{ str: "x", type: "formHistory" },
-                          { str: "xfoo", type: "formHistory" }, "xbar"], 0);
+  checkState(
+    state,
+    "x",
+    [
+      { str: "x", type: "formHistory" },
+      { str: "xfoo", type: "formHistory" },
+      "xbar",
+    ],
+    0
+  );
 
   // Mouse over the second suggestion.
   state = await msg("mousemove", 1);
-  checkState(state, "x", [{ str: "x", type: "formHistory" },
-                          { str: "xfoo", type: "formHistory" }, "xbar"], 1);
+  checkState(
+    state,
+    "x",
+    [
+      { str: "x", type: "formHistory" },
+      { str: "xfoo", type: "formHistory" },
+      "xbar",
+    ],
+    1
+  );
 
   modifiers.button = 0;
   p = msg("waitForSearch");
@@ -632,9 +684,12 @@ var gDidInitialSetUp = false;
 function setUp(aNoEngine) {
   return (async function() {
     if (!gDidInitialSetUp) {
-      var {ContentSearch} = ChromeUtils.import("resource:///modules/ContentSearch.jsm");
+      var { ContentSearch } = ChromeUtils.import(
+        "resource:///modules/ContentSearch.jsm"
+      );
       let originalOnMessageSearch = ContentSearch._onMessageSearch;
-      let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
+      let originalOnMessageManageEngines =
+        ContentSearch._onMessageManageEngines;
       ContentSearch._onMessageSearch = () => {};
       ContentSearch._onMessageManageEngines = () => {};
       registerCleanupFunction(() => {
@@ -665,25 +720,34 @@ function msg(type, data = null) {
   });
 }
 
-function checkState(actualState, expectedInputVal, expectedSuggestions,
-                    expectedSelectedIdx, expectedSelectedButtonIdx) {
+function checkState(
+  actualState,
+  expectedInputVal,
+  expectedSuggestions,
+  expectedSelectedIdx,
+  expectedSelectedButtonIdx
+) {
   expectedSuggestions = expectedSuggestions.map(sugg => {
-    return typeof(sugg) == "object" ? sugg : {
-      str: sugg,
-      type: "remote",
-    };
+    return typeof sugg == "object"
+      ? sugg
+      : {
+          str: sugg,
+          type: "remote",
+        };
   });
 
   if (expectedSelectedIdx == -1 && expectedSelectedButtonIdx != undefined) {
-    expectedSelectedIdx = expectedSuggestions.length + expectedSelectedButtonIdx;
+    expectedSelectedIdx =
+      expectedSuggestions.length + expectedSelectedButtonIdx;
   }
 
   let expectedState = {
     selectedIndex: expectedSelectedIdx,
     numSuggestions: expectedSuggestions.length,
     suggestionAtIndex: expectedSuggestions.map(s => s.str),
-    isFormHistorySuggestionAtIndex:
-      expectedSuggestions.map(s => s.type == "formHistory"),
+    isFormHistorySuggestionAtIndex: expectedSuggestions.map(
+      s => s.type == "formHistory"
+    ),
 
     tableHidden: expectedSuggestions.length == 0,
 
@@ -695,7 +759,8 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
   } else if (expectedSelectedIdx < expectedSuggestions.length) {
     expectedState.selectedButtonIndex = -1;
   } else {
-    expectedState.selectedButtonIndex = expectedSelectedIdx - expectedSuggestions.length;
+    expectedState.selectedButtonIndex =
+      expectedSelectedIdx - expectedSuggestions.length;
   }
 
   SimpleTest.isDeeply(actualState, expectedState, "State");
@@ -708,14 +773,19 @@ async function promiseTab() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
   let pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;
-  tab.linkedBrowser.addEventListener("load", function onLoad(event) {
-    tab.linkedBrowser.removeEventListener("load", onLoad, true);
-    gMsgMan = tab.linkedBrowser.messageManager;
+  tab.linkedBrowser.addEventListener(
+    "load",
+    function onLoad(event) {
+      tab.linkedBrowser.removeEventListener("load", onLoad, true);
+      gMsgMan = tab.linkedBrowser.messageManager;
 
-    let jsURL = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
-    gMsgMan.loadFrameScript(jsURL, false);
-    deferred.resolve(msg("init"));
-  }, true, true);
+      let jsURL = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
+      gMsgMan.loadFrameScript(jsURL, false);
+      deferred.resolve(msg("init"));
+    },
+    true,
+    true
+  );
   openTrustedLinkIn(pageURL, "current");
   return deferred.promise;
 }
@@ -741,16 +811,20 @@ function setUpEngines() {
     info("Adding test search engines");
     let rootDir = getRootDirectory(gTestPath);
     let engine1 = await SearchTestUtils.promiseNewSearchEngine(
-      rootDir + TEST_ENGINE_BASENAME);
+      rootDir + TEST_ENGINE_BASENAME
+    );
     await SearchTestUtils.promiseNewSearchEngine(
-      rootDir + TEST_ENGINE_2_BASENAME);
+      rootDir + TEST_ENGINE_2_BASENAME
+    );
     await Services.search.setDefault(engine1);
     for (let engine of currentEngines) {
       await Services.search.removeEngine(engine);
     }
     registerCleanupFunction(async () => {
       Services.search.restoreDefaultEngines();
-      await Services.search.setDefault(Services.search.getEngineByName(currentEngineName));
+      await Services.search.setDefault(
+        Services.search.getEngineByName(currentEngineName)
+      );
     });
   })();
 }

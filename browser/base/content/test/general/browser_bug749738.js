@@ -4,7 +4,8 @@
 
 "use strict";
 
-const DUMMY_PAGE = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+const DUMMY_PAGE =
+  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
 /**
  * This test checks that if you search for something on one tab, then close

@@ -9,15 +9,29 @@ add_task(async function() {
   let initialTabsLength = gBrowser.tabs.length;
 
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
-  let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
+  let tabMinWidth = parseInt(
+    getComputedStyle(gBrowser.selectedTab, null).minWidth
+  );
 
   let width = ele => ele.getBoundingClientRect().width;
 
   let tabCountForOverflow = Math.ceil(width(arrowScrollbox) / tabMinWidth);
 
-  let newTab1 = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:robots", {skipAnimation: true});
-  let newTab2 = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:about", {skipAnimation: true});
-  let newTab3 = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:config", {skipAnimation: true});
+  let newTab1 = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:robots",
+    { skipAnimation: true }
+  ));
+  let newTab2 = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:about",
+    { skipAnimation: true }
+  ));
+  let newTab3 = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "about:config",
+    { skipAnimation: true }
+  ));
 
   while (gBrowser.tabs.length < tabCountForOverflow) {
     BrowserTestUtils.addTab(gBrowser, "about:blank", { skipAnimation: true });
@@ -25,7 +39,9 @@ add_task(async function() {
 
   registerCleanupFunction(function() {
     while (gBrowser.tabs.length > initialTabsLength) {
-      gBrowser.removeTab(gBrowser.tabContainer.getItemAtIndex(initialTabsLength));
+      gBrowser.removeTab(
+        gBrowser.tabContainer.getItemAtIndex(initialTabsLength)
+      );
     }
   });
 

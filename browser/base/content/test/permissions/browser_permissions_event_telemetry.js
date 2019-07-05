@@ -4,18 +4,29 @@
 "use strict";
 
 const ORIGIN = "https://example.com";
-const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html";
+const PERMISSIONS_PAGE =
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
+  "permissions.html";
 
 async function showPermissionPrompt(browser) {
-  let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  let popupshown = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
 
   await ContentTask.spawn(browser, null, function() {
     E10SUtils.wrapHandlingUserInput(content, true, () => {
       // We need to synthesize the click instead of calling .click(),
       // otherwise the document will not correctly register the user gesture.
       let EventUtils = ContentTaskUtils.getEventUtils(content);
-      let notificationButton = content.document.getElementById("desktop-notification");
-      EventUtils.synthesizeMouseAtCenter(notificationButton, {isSynthesized: false}, content);
+      let notificationButton = content.document.getElementById(
+        "desktop-notification"
+      );
+      EventUtils.synthesizeMouseAtCenter(
+        notificationButton,
+        { isSynthesized: false },
+        content
+      );
     });
   });
 
@@ -25,13 +36,26 @@ async function showPermissionPrompt(browser) {
 }
 
 function checkEventTelemetry(method) {
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_ALL_CHANNELS, true).parent;
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_ALL_CHANNELS,
+    true
+  ).parent;
   events = events.filter(
-    e => e[1] == "security.ui.permissionprompt" && e[2] == method && e[3] == "notifications");
+    e =>
+      e[1] == "security.ui.permissionprompt" &&
+      e[2] == method &&
+      e[3] == "notifications"
+  );
   is(events.length, 1, "recorded telemetry for showing the prompt");
-  ok(typeof events[0][4] == "string", "recorded a hashed and salted variant of the domain");
+  ok(
+    typeof events[0][4] == "string",
+    "recorded a hashed and salted variant of the domain"
+  );
   is(events[0][4].length * 4, 256, "hash is a 256 bit string");
-  ok(!events[0][4].includes("example.com"), "we're not including the domain by accident");
+  ok(
+    !events[0][4].includes("example.com"),
+    "we're not including the domain by accident"
+  );
 
   // We assume that even the slowest infra machines are able to show
   // a permission prompt within five minutes.
@@ -39,16 +63,36 @@ function checkEventTelemetry(method) {
 
   let timeOnPage = Number(events[0][5].timeOnPage);
   let lastInteraction = Number(events[0][5].lastInteraction);
-  ok(timeOnPage > 0 && timeOnPage < FIVE_MINUTES, `Has recorded time on page (${timeOnPage})`);
+  ok(
+    timeOnPage > 0 && timeOnPage < FIVE_MINUTES,
+    `Has recorded time on page (${timeOnPage})`
+  );
   is(events[0][5].hasUserInput, "true", "Has recorded user input");
   is(events[0][5].allPermsDenied, "3", "Has recorded total denied permissions");
-  is(events[0][5].allPermsGranted, method == "accept" ? "3" : "2", "Has recorded total granted permissions");
-  is(events[0][5].thisPermDenied, "0", "Has recorded denied notification permissions");
-  is(events[0][5].thisPermGranted, method == "accept" ? "2" : "1",
-    "Has recorded granted notification permissions");
-  is(events[0][5].docHasUserInput, "true", "Has recorded user input on document");
-  ok(lastInteraction > (Date.now() - FIVE_MINUTES) &&
-     lastInteraction < Date.now(), `Has recorded last user input time (${lastInteraction})`);
+  is(
+    events[0][5].allPermsGranted,
+    method == "accept" ? "3" : "2",
+    "Has recorded total granted permissions"
+  );
+  is(
+    events[0][5].thisPermDenied,
+    "0",
+    "Has recorded denied notification permissions"
+  );
+  is(
+    events[0][5].thisPermGranted,
+    method == "accept" ? "2" : "1",
+    "Has recorded granted notification permissions"
+  );
+  is(
+    events[0][5].docHasUserInput,
+    "true",
+    "Has recorded user input on document"
+  );
+  ok(
+    lastInteraction > Date.now() - FIVE_MINUTES && lastInteraction < Date.now(),
+    `Has recorded last user input time (${lastInteraction})`
+  );
 }
 
 add_task(async function setup() {
@@ -88,7 +132,10 @@ add_task(async function testAccept() {
     checkEventTelemetry("accept");
 
     Services.telemetry.clearEvents();
-    Services.perms.remove(Services.io.newURI(PERMISSIONS_PAGE), "desktop-notification");
+    Services.perms.remove(
+      Services.io.newURI(PERMISSIONS_PAGE),
+      "desktop-notification"
+    );
   });
 });
 
@@ -104,12 +151,18 @@ add_task(async function testDeny() {
     checkEventTelemetry("deny");
 
     Services.telemetry.clearEvents();
-    Services.perms.remove(Services.io.newURI(PERMISSIONS_PAGE), "desktop-notification");
+    Services.perms.remove(
+      Services.io.newURI(PERMISSIONS_PAGE),
+      "desktop-notification"
+    );
   });
 });
 
 add_task(async function testLeave() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PERMISSIONS_PAGE);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    PERMISSIONS_PAGE
+  );
   await showPermissionPrompt(tab.linkedBrowser);
 
   checkEventTelemetry("show");
@@ -121,5 +174,8 @@ add_task(async function testLeave() {
   checkEventTelemetry("leave");
 
   Services.telemetry.clearEvents();
-  Services.perms.remove(Services.io.newURI(PERMISSIONS_PAGE), "desktop-notification");
+  Services.perms.remove(
+    Services.io.newURI(PERMISSIONS_PAGE),
+    "desktop-notification"
+  );
 });

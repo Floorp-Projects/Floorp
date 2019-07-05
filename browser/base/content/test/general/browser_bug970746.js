@@ -1,12 +1,15 @@
 /* Make sure context menu includes option to search hyperlink text on search engine */
 
 add_task(async function() {
-  const url = "http://mochi.test:8888/browser/browser/base/content/test/general/browser_bug970746.xhtml";
+  const url =
+    "http://mochi.test:8888/browser/browser/base/content/test/general/browser_bug970746.xhtml";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   const ellipsis = "\u2026";
 
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
 
   // Tests if the "Search <engine> for '<some terms>'" context menu item is shown for the
   // given query string of an element. Tests to make sure label includes the proper search terms.
@@ -86,32 +89,58 @@ add_task(async function() {
   ];
 
   for (let test of tests) {
-    await ContentTask.spawn(gBrowser.selectedBrowser,
-                            { selectElement: test.isSelected ? test.id : null },
-                            async function(arg) {
-      let selection = content.getSelection();
-      selection.removeAllRanges();
+    await ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      { selectElement: test.isSelected ? test.id : null },
+      async function(arg) {
+        let selection = content.getSelection();
+        selection.removeAllRanges();
 
-      if (arg.selectElement) {
-        selection.selectAllChildren(content.document.getElementById(arg.selectElement));
+        if (arg.selectElement) {
+          selection.selectAllChildren(
+            content.document.getElementById(arg.selectElement)
+          );
+        }
       }
-    });
+    );
 
-    let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-    await BrowserTestUtils.synthesizeMouseAtCenter("#" + test.id,
-          { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
+    let popupShownPromise = BrowserTestUtils.waitForEvent(
+      contentAreaContextMenu,
+      "popupshown"
+    );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + test.id,
+      { type: "contextmenu", button: 2 },
+      gBrowser.selectedBrowser
+    );
     await popupShownPromise;
 
     let menuItem = document.getElementById("context-searchselect");
-    is(menuItem.hidden, !test.shouldBeShown,
-        "search context menu item is shown for  '#" + test.id + "' and selected is '" + test.isSelected + "'");
+    is(
+      menuItem.hidden,
+      !test.shouldBeShown,
+      "search context menu item is shown for  '#" +
+        test.id +
+        "' and selected is '" +
+        test.isSelected +
+        "'"
+    );
 
     if (test.shouldBeShown) {
-      ok(menuItem.label.includes(test.expectedLabelContents),
-         "Menu item text '" + menuItem.label + "' contains the correct search terms '" + test.expectedLabelContents + "'");
+      ok(
+        menuItem.label.includes(test.expectedLabelContents),
+        "Menu item text '" +
+          menuItem.label +
+          "' contains the correct search terms '" +
+          test.expectedLabelContents +
+          "'"
+      );
     }
 
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+      contentAreaContextMenu,
+      "popuphidden"
+    );
     contentAreaContextMenu.hidePopup();
     await popupHiddenPromise;
   }

@@ -7,12 +7,15 @@
 /* import-globals-from aboutDialog-appUpdater.js */
 
 // Services = object with smart getters for common XPCOM services
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 async function init(aEvent) {
-  if (aEvent.target != document)
+  if (aEvent.target != document) {
     return;
+  }
 
   var distroId = Services.prefs.getCharPref("distribution.id", "");
   if (distroId) {
@@ -66,7 +69,9 @@ async function init(aEvent) {
   let relNotesLink = document.getElementById("releasenotes");
   let relNotesPrefType = Services.prefs.getPrefType("app.releaseNotesURL");
   if (relNotesPrefType != Services.prefs.PREF_INVALID) {
-    let relNotesURL = Services.urlFormatter.formatURLPref("app.releaseNotesURL");
+    let relNotesURL = Services.urlFormatter.formatURLPref(
+      "app.releaseNotesURL"
+    );
     if (relNotesURL != "about:blank") {
       relNotesLink.href = relNotesURL;
       relNotesLink.hidden = false;
@@ -79,8 +84,9 @@ async function init(aEvent) {
     let channelLabel = document.getElementById("currentChannel");
     let currentChannelText = document.getElementById("currentChannelText");
     channelLabel.value = UpdateUtils.UpdateChannel;
-    if (/^release($|\-)/.test(channelLabel.value))
-        currentChannelText.hidden = true;
+    if (/^release($|\-)/.test(channelLabel.value)) {
+      currentChannelText.hidden = true;
+    }
   }
 
   if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
@@ -90,6 +96,9 @@ async function init(aEvent) {
   window.sizeToContent();
 
   if (AppConstants.platform == "macosx") {
-    window.moveTo((screen.availWidth / 2) - (window.outerWidth / 2), screen.availHeight / 5);
+    window.moveTo(
+      screen.availWidth / 2 - window.outerWidth / 2,
+      screen.availHeight / 5
+    );
   }
 }

@@ -1,4 +1,7 @@
-var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 var gTestBrowser = null;
 var gConsoleErrors = 0;
 
@@ -6,7 +9,10 @@ add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
     Services.console.unregisterListener(errorListener);
     gBrowser.removeCurrentTab();
     window.focus();
@@ -18,16 +24,24 @@ add_task(async function() {
 
   let errorListener = {
     observe(aMessage) {
-      if (aMessage.message.includes("NS_ERROR_FAILURE"))
+      if (aMessage.message.includes("NS_ERROR_FAILURE")) {
         gConsoleErrors++;
+      }
     },
   };
   Services.console.registerListener(errorListener);
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug797677.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_bug797677.html"
+  );
 
   let pluginInfo = await promiseForPluginInfo("plugin");
-  is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "plugin should not have been found.");
+  is(
+    pluginInfo.pluginFallbackType,
+    Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED,
+    "plugin should not have been found."
+  );
 
   // simple cpows
   await ContentTask.spawn(gTestBrowser, null, function() {

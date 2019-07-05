@@ -1,4 +1,3 @@
-
 /* This test checks that the SidebarFocused event doesn't fire in adopted
  * windows when the sidebar gets opened during window opening, to make sure
  * that sidebars don't steal focus from the page in this case (Bug 1394207).
@@ -24,13 +23,18 @@ add_task(async function testAdoptedTwoWindows() {
   await BrowserTestUtils.closeWindow(win1);
 
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  ok(!win2.document.getElementById("sidebar-button").hasAttribute("checked"), "Sidebar button isn't checked");
+  ok(
+    !win2.document.getElementById("sidebar-button").hasAttribute("checked"),
+    "Sidebar button isn't checked"
+  );
   ok(!win2.SidebarUI.isOpen, "Sidebar is closed");
   await BrowserTestUtils.closeWindow(win2);
 });
 
 add_task(async function testEventsReceivedInMainWindow() {
-  info("Opening the sidebar and expecting both SidebarShown and SidebarFocused events");
+  info(
+    "Opening the sidebar and expecting both SidebarShown and SidebarFocused events"
+  );
 
   let initialShown = BrowserTestUtils.waitForEvent(window, "SidebarShown");
   let initialFocus = BrowserTestUtils.waitForEvent(window, "SidebarFocused");
@@ -43,7 +47,9 @@ add_task(async function testEventsReceivedInMainWindow() {
 });
 
 add_task(async function testEventReceivedInNewWindow() {
-  info("Opening a new window and expecting the SidebarFocused event to not fire");
+  info(
+    "Opening a new window and expecting the SidebarFocused event to not fire"
+  );
 
   let promiseNewWindow = BrowserTestUtils.waitForNewWindow();
   let win = OpenBrowserWindow();

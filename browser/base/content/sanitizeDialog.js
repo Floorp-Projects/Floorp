@@ -5,8 +5,8 @@
 
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 
-var {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Preferences.addAll([
   { id: "privacy.cpd.history", type: "bool" },
@@ -21,7 +21,6 @@ Preferences.addAll([
 ]);
 
 var gSanitizePromptDialog = {
-
   get selectedTimespan() {
     var durList = document.getElementById("sanitizeDurationChoice");
     return parseInt(durList.value);
@@ -38,18 +37,26 @@ var gSanitizePromptDialog = {
     let OKButton = document.documentElement.getButton("accept");
     document.l10n.setAttributes(OKButton, "sanitize-button-ok");
 
-    document.addEventListener("dialogaccept", function(e) { gSanitizePromptDialog.sanitize(e); });
+    document.addEventListener("dialogaccept", function(e) {
+      gSanitizePromptDialog.sanitize(e);
+    });
 
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
-      document.l10n.setAttributes(document.documentElement, "dialog-title-everything");
+      document.l10n.setAttributes(
+        document.documentElement,
+        "dialog-title-everything"
+      );
       let warningDesc = document.getElementById("sanitizeEverythingWarning");
       // Ensure we've translated and sized the warning.
-      document.mozSubdialogReady =
-        document.l10n.translateFragment(warningDesc).then(() => {
+      document.mozSubdialogReady = document.l10n
+        .translateFragment(warningDesc)
+        .then(() => {
           // And then ensure we've run layout.
-          let rootWin = window.docShell.rootTreeItem.QueryInterface(Ci.nsIDocShell).domWindow;
+          let rootWin = window.docShell.rootTreeItem.QueryInterface(
+            Ci.nsIDocShell
+          ).domWindow;
           return rootWin.promiseDocumentFlushed(() => {});
         });
     } else {
@@ -69,8 +76,9 @@ var gSanitizePromptDialog = {
   selectByTimespan() {
     // This method is the onselect handler for the duration dropdown.  As a
     // result it's called a couple of times before onload calls init().
-    if (!this._inited)
+    if (!this._inited) {
       return;
+    }
 
     var warningBox = this.warningBox;
 
@@ -81,7 +89,10 @@ var gSanitizePromptDialog = {
         warningBox.hidden = false;
         window.resizeBy(0, warningBox.getBoundingClientRect().height);
       }
-      document.l10n.setAttributes(document.documentElement, "dialog-title-everything");
+      document.l10n.setAttributes(
+        document.documentElement,
+        "dialog-title-everything"
+      );
       return;
     }
 
@@ -145,7 +156,9 @@ var gSanitizePromptDialog = {
    * of history.  The only pref this excludes is privacy.sanitize.timeSpan.
    */
   _getItemPrefs() {
-    return Preferences.getAll().filter(p => p.id !== "privacy.sanitize.timeSpan");
+    return Preferences.getAll().filter(
+      p => p.id !== "privacy.sanitize.timeSpan"
+    );
   },
 
   /**
@@ -155,11 +168,13 @@ var gSanitizePromptDialog = {
   onReadGeneric() {
     // Find any other pref that's checked and enabled (except for
     // privacy.sanitize.timeSpan, which doesn't affect the button's status).
-    var found = this._getItemPrefs().some(pref => !!pref.value && !pref.disabled);
+    var found = this._getItemPrefs().some(
+      pref => !!pref.value && !pref.disabled
+    );
 
     try {
       document.documentElement.getButton("accept").disabled = !found;
-    } catch (e) { }
+    } catch (e) {}
 
     // Update the warning prompt if needed
     this.prepareWarning();
@@ -178,8 +193,9 @@ var gSanitizePromptDialog = {
     Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, this.selectedTimespan);
 
     // Keep the pref for the download history in sync with the history pref.
-    Preferences.get("privacy.cpd.downloads").value =
-      Preferences.get("privacy.cpd.history").value;
+    Preferences.get("privacy.cpd.downloads").value = Preferences.get(
+      "privacy.cpd.history"
+    ).value;
 
     // Now manually set the prefs from their corresponding preference
     // elements.
@@ -197,8 +213,9 @@ var gSanitizePromptDialog = {
     let checkboxes = document.querySelectorAll("checkbox[preference]");
     for (let i = 0; i < checkboxes.length; ++i) {
       let pref = Preferences.get(checkboxes[i].getAttribute("preference"));
-      if (!pref.value)
+      if (!pref.value) {
         return true;
+      }
     }
     return false;
   },

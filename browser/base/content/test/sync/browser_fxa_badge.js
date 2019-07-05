@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+const { AppMenuNotifications } = ChromeUtils.import(
+  "resource://gre/modules/AppMenuNotifications.jsm"
+);
 
 add_task(async function test_unconfigured_no_badge() {
   const oldUIState = UIState.get;

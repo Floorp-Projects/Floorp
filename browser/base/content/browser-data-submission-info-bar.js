@@ -16,8 +16,10 @@ var gDataNotificationInfoBar = {
   get _log() {
     let { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
     delete this._log;
-    return this._log = Log.repository.getLoggerWithMessagePrefix(
-      "Toolkit.Telemetry", "DataNotificationInfoBar::");
+    return (this._log = Log.repository.getLoggerWithMessagePrefix(
+      "Toolkit.Telemetry",
+      "DataNotificationInfoBar::"
+    ));
   },
 
   init() {
@@ -47,19 +49,26 @@ var gDataNotificationInfoBar = {
 
     let message = gNavigatorBundle.getFormattedString(
       "dataReportingNotification.message",
-      [appName, vendorName]);
+      [appName, vendorName]
+    );
 
     this._actionTaken = false;
 
-    let buttons = [{
-      label: gNavigatorBundle.getString("dataReportingNotification.button.label"),
-      accessKey: gNavigatorBundle.getString("dataReportingNotification.button.accessKey"),
-      popup: null,
-      callback: () => {
-        this._actionTaken = true;
-        window.openPreferences("privacy-reports");
+    let buttons = [
+      {
+        label: gNavigatorBundle.getString(
+          "dataReportingNotification.button.label"
+        ),
+        accessKey: gNavigatorBundle.getString(
+          "dataReportingNotification.button.accessKey"
+        ),
+        popup: null,
+        callback: () => {
+          this._actionTaken = true;
+          window.openPreferences("privacy-reports");
+        },
       },
-    }];
+    ];
 
     this._log.info("Creating data reporting policy notification.");
     gNotificationBox.appendNotification(
@@ -70,7 +79,10 @@ var gDataNotificationInfoBar = {
       buttons,
       event => {
         if (event == "removed") {
-          Services.obs.notifyObservers(null, "datareporting:notify-data-policy:close");
+          Services.obs.notifyObservers(
+            null,
+            "datareporting:notify-data-policy:close"
+          );
         }
       }
     );

@@ -1,10 +1,13 @@
 "use strict";
 
-const URL_REPORTS = "https://example.com/browser/browser/base/content/test/general/ssl_error_reports.sjs?";
-const URL_BAD_CHAIN = "https://badchain.include-subdomains.pinning.example.com/";
+const URL_REPORTS =
+  "https://example.com/browser/browser/base/content/test/general/ssl_error_reports.sjs?";
+const URL_BAD_CHAIN =
+  "https://badchain.include-subdomains.pinning.example.com/";
 const URL_NO_CERT = "https://fail-handshake.example.com/";
 const URL_BAD_CERT = "https://expired.example.com/";
-const URL_BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443/";
+const URL_BAD_STS_CERT =
+  "https://badchain.include-subdomains.pinning.example.com:443/";
 const ROOT = getRootDirectory(gTestPath);
 const PREF_REPORT_ENABLED = "security.ssl.errorReporting.enabled";
 const PREF_REPORT_AUTOMATIC = "security.ssl.errorReporting.automatic";
@@ -59,7 +62,10 @@ async function testSendReportAutomatically(testURL, suffix, errorURISuffix) {
   Services.prefs.setCharPref(PREF_REPORT_URL, URL_REPORTS + suffix);
 
   // Add a tab and wait until it's loaded.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
   let browser = tab.linkedBrowser;
 
   // Load the page and wait for the error report submission.
@@ -67,8 +73,10 @@ async function testSendReportAutomatically(testURL, suffix, errorURISuffix) {
   BrowserTestUtils.loadURI(browser, testURL);
   await BrowserTestUtils.waitForErrorPage(browser);
 
-  ok(!isErrorStatus(await promiseStatus),
-     "SSL error report submitted successfully");
+  ok(
+    !isErrorStatus(await promiseStatus),
+    "SSL error report submitted successfully"
+  );
 
   // Check that we loaded the right error page.
   await checkErrorPage(browser, errorURISuffix);
@@ -84,7 +92,10 @@ async function testSetAutomatic(testURL, suffix, errorURISuffix) {
   Services.prefs.setCharPref(PREF_REPORT_URL, URL_REPORTS + suffix);
 
   // Add a tab and wait until it's loaded.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
   let browser = tab.linkedBrowser;
 
   // Load the page.
@@ -116,7 +127,10 @@ async function testSetAutomatic(testURL, suffix, errorURISuffix) {
   });
 
   // Check that the pref was flipped.
-  ok(!isAutomaticReportingEnabled(), "automatic SSL report submission disabled");
+  ok(
+    !isAutomaticReportingEnabled(),
+    "automatic SSL report submission disabled"
+  );
 
   // Cleanup.
   gBrowser.removeTab(tab);
@@ -125,7 +139,10 @@ async function testSetAutomatic(testURL, suffix, errorURISuffix) {
 
 async function testSendReportDisabled(testURL, errorURISuffix) {
   // Add a tab and wait until it's loaded.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
   let browser = tab.linkedBrowser;
 
   // Load the page.
@@ -138,8 +155,11 @@ async function testSendReportDisabled(testURL, errorURISuffix) {
   // Check that the error reporting section is hidden.
   await ContentTask.spawn(browser, null, async function() {
     let section = content.document.getElementById("certificateErrorReporting");
-    Assert.equal(content.getComputedStyle(section).display, "none",
-      "error reporting section should be hidden");
+    Assert.equal(
+      content.getComputedStyle(section).display,
+      "none",
+      "error reporting section should be hidden"
+    );
   });
 
   // Cleanup.
@@ -171,6 +191,9 @@ function createReportResponseStatusPromise(expectedURI) {
 function checkErrorPage(browser, suffix) {
   return ContentTask.spawn(browser, { suffix }, async function(args) {
     let uri = content.document.documentURI;
-    Assert.ok(uri.startsWith(`about:${args.suffix}`), `correct error page loaded: ${args.suffix}`);
+    Assert.ok(
+      uri.startsWith(`about:${args.suffix}`),
+      `correct error page loaded: ${args.suffix}`
+    );
   });
 }

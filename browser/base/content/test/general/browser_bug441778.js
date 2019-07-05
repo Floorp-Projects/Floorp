@@ -32,10 +32,15 @@ function test() {
       executeSoon(function() {
         BrowserTestUtils.browserLoaded(testBrowser, true).then(url => {
           is(url, TEST_IFRAME_URL, "got the load event for the iframe");
-          is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");
+          is(
+            ZoomManager.zoom,
+            zoomLevel,
+            "zoom is retained after sub-document load"
+          );
 
-          FullZoomHelper.removeTabAndWaitForLocationChange().
-            then(() => resolve());
+          FullZoomHelper.removeTabAndWaitForLocationChange().then(() =>
+            resolve()
+          );
         });
         ContentTask.spawn(testBrowser, TEST_IFRAME_URL, url => {
           content.document.querySelector("iframe").src = url;

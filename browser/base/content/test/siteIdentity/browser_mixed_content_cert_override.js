@@ -4,7 +4,11 @@
 
 "use strict";
 
-const MIXED_CONTENT_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://self-signed.example.com") + "test-mixedcontent-securityerrors.html";
+const MIXED_CONTENT_URL =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://self-signed.example.com"
+  ) + "test-mixedcontent-securityerrors.html";
 
 function getConnectionState() {
   return document.getElementById("identity-popup").getAttribute("connection");
@@ -15,15 +19,23 @@ function getPopupContentVerifier() {
 }
 
 function getConnectionIcon() {
-  return window.getComputedStyle(document.getElementById("connection-icon")).listStyleImage;
+  return window.getComputedStyle(document.getElementById("connection-icon"))
+    .listStyleImage;
 }
 
 function checkIdentityPopup(icon) {
   gIdentityHandler.refreshIdentityPopup();
   is(getConnectionIcon(), `url("chrome://browser/skin/${icon}")`);
   is(getConnectionState(), "secure-cert-user-overridden");
-  isnot(getPopupContentVerifier().style.display, "none", "Overridden certificate warning is shown");
-  ok(getPopupContentVerifier().textContent.includes("security exception"), "Text shows overridden certificate warning.");
+  isnot(
+    getPopupContentVerifier().style.display,
+    "none",
+    "Overridden certificate warning is shown"
+  );
+  ok(
+    getPopupContentVerifier().textContent.includes("security exception"),
+    "Text shows overridden certificate warning."
+  );
 }
 
 add_task(async function() {
@@ -40,15 +52,18 @@ add_task(async function() {
   checkIdentityPopup("connection-mixed-active-loaded.svg");
 
   // check that a warning is shown even without mixed content
-  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://self-signed.example.com");
+  await BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "https://self-signed.example.com"
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   checkIdentityPopup("connection-mixed-passive-loaded.svg");
 
   // remove cert exception
-  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                              .getService(Ci.nsICertOverrideService);
+  let certOverrideService = Cc[
+    "@mozilla.org/security/certoverride;1"
+  ].getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("self-signed.example.com", -1);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-

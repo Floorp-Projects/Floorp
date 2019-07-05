@@ -7,7 +7,10 @@ add_task(async function() {
   await pushPrefs([HOMEPAGE_PREF, "about:mozilla"]);
 
   let EventUtils = {};
-  Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+  Services.scriptloader.loadSubScript(
+    "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+    EventUtils
+  );
 
   // Since synthesizeDrop triggers the srcElement, need to use another button.
   let dragSrcElement = document.getElementById("downloads-button");
@@ -18,7 +21,13 @@ add_task(async function() {
   async function drop(dragData, homepage) {
     let setHomepageDialogPromise = BrowserTestUtils.domWindowOpened();
 
-    EventUtils.synthesizeDrop(dragSrcElement, homeButton, dragData, "copy", window);
+    EventUtils.synthesizeDrop(
+      dragSrcElement,
+      homeButton,
+      dragData,
+      "copy",
+      window
+    );
     // Ensure dnd suppression is cleared.
     EventUtils.synthesizeMouseAtCenter(homeButton, { type: "mouseup" }, window);
 
@@ -69,18 +78,38 @@ add_task(async function() {
         // The drop handler throws an exception when dragging URIs that inherit
         // principal, e.g. javascript:
         expectUncaughtException();
-        EventUtils.synthesizeDrop(dragSrcElement, homeButton, [[{type: "text/plain", data: "javascript:8888"}]], "copy", window);
+        EventUtils.synthesizeDrop(
+          dragSrcElement,
+          homeButton,
+          [[{ type: "text/plain", data: "javascript:8888" }]],
+          "copy",
+          window
+        );
         // Ensure dnd suppression is cleared.
-        EventUtils.synthesizeMouseAtCenter(homeButton, { type: "mouseup" }, window);
+        EventUtils.synthesizeMouseAtCenter(
+          homeButton,
+          { type: "mouseup" },
+          window
+        );
       });
     });
   }
 
-  await drop([[{type: "text/plain",
-                 data: "http://mochi.test:8888/"}]],
-              "http://mochi.test:8888/");
-  await drop([[{type: "text/plain",
-                 data: "http://mochi.test:8888/\nhttp://mochi.test:8888/b\nhttp://mochi.test:8888/c"}]],
-              "http://mochi.test:8888/|http://mochi.test:8888/b|http://mochi.test:8888/c");
+  await drop(
+    [[{ type: "text/plain", data: "http://mochi.test:8888/" }]],
+    "http://mochi.test:8888/"
+  );
+  await drop(
+    [
+      [
+        {
+          type: "text/plain",
+          data:
+            "http://mochi.test:8888/\nhttp://mochi.test:8888/b\nhttp://mochi.test:8888/c",
+        },
+      ],
+    ],
+    "http://mochi.test:8888/|http://mochi.test:8888/b|http://mochi.test:8888/c"
+  );
   await dropInvalidURI();
 });

@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+const { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 function promisePageActionPanelOpen() {
   let dwu = window.windowUtils;
@@ -10,21 +12,27 @@ function promisePageActionPanelOpen() {
     // some URIs, so depending on when this is called, it may not yet be quite
     // visible.  It's up to the caller to make sure it will be visible.
     info("Waiting for main page action button to have non-0 size");
-    let bounds = dwu.getBoundsWithoutFlushing(BrowserPageActions.mainButtonNode);
+    let bounds = dwu.getBoundsWithoutFlushing(
+      BrowserPageActions.mainButtonNode
+    );
     return bounds.width > 0 && bounds.height > 0;
-  }).then(() => {
-    // Wait for the panel to become open, by clicking the button if necessary.
-    info("Waiting for main page action panel to be open");
-    if (BrowserPageActions.panelNode.state == "open") {
-      return Promise.resolve();
-    }
-    let shownPromise = promisePageActionPanelShown();
-    EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
-    return shownPromise;
-  }).then(() => {
-    // Wait for items in the panel to become visible.
-    return promisePageActionViewChildrenVisible(BrowserPageActions.mainViewNode);
-  });
+  })
+    .then(() => {
+      // Wait for the panel to become open, by clicking the button if necessary.
+      info("Waiting for main page action panel to be open");
+      if (BrowserPageActions.panelNode.state == "open") {
+        return Promise.resolve();
+      }
+      let shownPromise = promisePageActionPanelShown();
+      EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+      return shownPromise;
+    })
+    .then(() => {
+      // Wait for items in the panel to become visible.
+      return promisePageActionViewChildrenVisible(
+        BrowserPageActions.mainViewNode
+      );
+    });
 }
 
 async function waitForActivatedActionPanel() {
@@ -47,8 +55,9 @@ async function waitForActivatedActionPanel() {
     await promisePanelShown(BrowserPageActions.activatedActionPanelNode);
     info("Got activated-action panel popupshown");
   }
-  let panelView =
-    BrowserPageActions.activatedActionPanelNode.querySelector("panelview");
+  let panelView = BrowserPageActions.activatedActionPanelNode.querySelector(
+    "panelview"
+  );
   if (panelView) {
     await BrowserTestUtils.waitForEvent(
       BrowserPageActions.activatedActionPanelNode,
@@ -84,20 +93,29 @@ function promisePanelEvent(panelIDOrNode, eventType) {
         throw new Error(`Panel with ID "${panelIDOrNode}" does not exist.`);
       }
     }
-    if ((eventType == "popupshown" && panel.state == "open") ||
-        (eventType == "popuphidden" && panel.state == "closed")) {
+    if (
+      (eventType == "popupshown" && panel.state == "open") ||
+      (eventType == "popuphidden" && panel.state == "closed")
+    ) {
       executeSoon(resolve);
       return;
     }
-    panel.addEventListener(eventType, () => {
-      executeSoon(resolve);
-    }, { once: true });
+    panel.addEventListener(
+      eventType,
+      () => {
+        executeSoon(resolve);
+      },
+      { once: true }
+    );
   });
 }
 
 function promisePageActionViewShown() {
   info("promisePageActionViewShown waiting for ViewShown");
-  return BrowserTestUtils.waitForEvent(BrowserPageActions.panelNode, "ViewShown").then(async event => {
+  return BrowserTestUtils.waitForEvent(
+    BrowserPageActions.panelNode,
+    "ViewShown"
+  ).then(async event => {
     let panelViewNode = event.originalTarget;
     await promisePageActionViewChildrenVisible(panelViewNode);
     return panelViewNode;
@@ -109,12 +127,20 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 }
 
 function promiseNodeVisible(node) {
-  info(`promiseNodeVisible waiting, node.id=${node.id} node.localeName=${node.localName}\n`);
+  info(
+    `promiseNodeVisible waiting, node.id=${node.id} node.localeName=${
+      node.localName
+    }\n`
+  );
   let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     let bounds = dwu.getBoundsWithoutFlushing(node);
     if (bounds.width > 0 && bounds.height > 0) {
-      info(`promiseNodeVisible OK, node.id=${node.id} node.localeName=${node.localName}\n`);
+      info(
+        `promiseNodeVisible OK, node.id=${node.id} node.localeName=${
+          node.localName
+        }\n`
+      );
       return true;
     }
     return false;

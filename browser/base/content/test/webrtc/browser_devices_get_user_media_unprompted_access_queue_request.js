@@ -2,33 +2,34 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var gTests = [
+  {
+    desc: "test queueing allow video behind allow video",
+    run: async function testQueuingAllowVideoBehindAllowVideo() {
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(false, true);
+      await promiseRequestDevice(false, true);
+      await promise;
+      checkDeviceSelectors(false, true);
+      await expectObserverCalled("getUserMedia:request");
 
-{
-  desc: "test queueing allow video behind allow video",
-  run: async function testQueuingAllowVideoBehindAllowVideo() {
-    let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    await promiseRequestDevice(false, true);
-    await promiseRequestDevice(false, true);
-    await promise;
-    checkDeviceSelectors(false, true);
-    await expectObserverCalled("getUserMedia:request");
+      let promiseOK = promiseSpecificMessageReceived("ok", 2);
+      PopupNotifications.panel.firstElementChild.button.click();
+      await promiseOK;
 
-    let promiseOK = promiseSpecificMessageReceived("ok", 2);
-    PopupNotifications.panel.firstElementChild.button.click();
-    await promiseOK;
+      await promiseNoPopupNotification("webRTC-shareDevices");
+      await expectObserverCalled("getUserMedia:request");
+      await expectObserverCalled("getUserMedia:response:allow", 2);
+      Assert.deepEqual(
+        await getMediaCaptureState(),
+        { video: true },
+        "expected camera to be shared"
+      );
+      await expectObserverCalled("recording-device-events", 2);
 
-    await promiseNoPopupNotification("webRTC-shareDevices");
-    await expectObserverCalled("getUserMedia:request");
-    await expectObserverCalled("getUserMedia:response:allow", 2);
-    Assert.deepEqual((await getMediaCaptureState()), {video: true},
-                     "expected camera to be shared");
-    await expectObserverCalled("recording-device-events", 2);
-
-    // close all streams
-    await closeStream();
+      // close all streams
+      await closeStream();
+    },
   },
-},
-
 ];
 
 add_task(async function test() {

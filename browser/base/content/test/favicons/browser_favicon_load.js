@@ -14,20 +14,27 @@ const TEST_PAGE =
 const FAVICON_URI =
   TEST_SITE + "/browser/browser/base/content/test/favicons/file_favicon.png";
 const TEST_THIRD_PARTY_PAGE =
-  TEST_SITE + "/browser/browser/base/content/test/favicons/file_favicon_thirdParty.html";
+  TEST_SITE +
+  "/browser/browser/base/content/test/favicons/file_favicon_thirdParty.html";
 const THIRD_PARTY_FAVICON_URI =
-  TEST_THIRD_PARTY_SITE + "/browser/browser/base/content/test/favicons/file_favicon.png";
+  TEST_THIRD_PARTY_SITE +
+  "/browser/browser/base/content/test/favicons/file_favicon.png";
 
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
-                               "resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 function clearAllImageCaches() {
-  var tools = Cc["@mozilla.org/image/tools;1"]
-                .getService(Ci.imgITools);
+  var tools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
   var imageCache = tools.getImgCacheForDocument(window.document);
   imageCache.clearCache(true); // true=chrome
   imageCache.clearCache(false); // false=content
@@ -94,9 +101,11 @@ FaviconObserver.prototype = {
 function waitOnFaviconLoaded(aFaviconURL) {
   return PlacesTestUtils.waitForNotification(
     "onPageChanged",
-    (uri, attr, value, id) => attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
-                              value === aFaviconURL,
-    "history");
+    (uri, attr, value, id) =>
+      attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+      value === aFaviconURL,
+    "history"
+  );
 }
 
 async function doTest(aTestPage, aFaviconURL, aTailingEnabled) {
@@ -124,9 +133,9 @@ async function doTest(aTestPage, aFaviconURL, aTailingEnabled) {
 }
 
 async function setupTailingPreference(aTailingEnabled) {
-  await SpecialPowers.pushPrefEnv({"set": [
-      ["network.http.tailing.enabled", aTailingEnabled],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.http.tailing.enabled", aTailingEnabled]],
+  });
 }
 
 async function cleanup() {

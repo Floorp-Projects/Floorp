@@ -1,8 +1,9 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 
-const uuidGenerator =
-  Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 const DUMMY_FILE = "dummy_page.html";
 
@@ -29,7 +30,9 @@ add_task(async function() {
   document.getElementById("reload-button").doCommand();
   await BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
-    ok(content.document.documentURI.startsWith("about:neterror"),
-       "Check that a neterror page was loaded.");
+    ok(
+      content.document.documentURI.startsWith("about:neterror"),
+      "Check that a neterror page was loaded."
+    );
   });
 });

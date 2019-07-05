@@ -10,8 +10,11 @@ function test() {
   gBrowser.pinTab(newTab1);
 
   // Check that there is only one closable tab from originalTab to the end
-  is(gBrowser.getTabsToTheEndFrom(originalTab).length, 1,
-    "One unpinned tab to the right");
+  is(
+    gBrowser.getTabsToTheEndFrom(originalTab).length,
+    1,
+    "One unpinned tab to the right"
+  );
 
   // Remove tabs to the end
   gBrowser.removeTabsToTheEndFrom(originalTab);

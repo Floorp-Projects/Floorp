@@ -13,24 +13,38 @@ const A11Y_INDICATOR_ENABLED_PREF = "accessibility.indicator.enabled";
  * @param  {Boolean} active   whether accessibility service is started or not.
  */
 function testIndicatorState(win, enabled, active) {
-  is(Services.prefs.getBoolPref(A11Y_INDICATOR_ENABLED_PREF), enabled,
-    `Indicator is ${enabled ? "enabled" : "disabled"}.`);
-  is(Services.appinfo.accessibilityEnabled, active,
-    `Accessibility service is ${active ? "enabled" : "disabled"}.`);
+  is(
+    Services.prefs.getBoolPref(A11Y_INDICATOR_ENABLED_PREF),
+    enabled,
+    `Indicator is ${enabled ? "enabled" : "disabled"}.`
+  );
+  is(
+    Services.appinfo.accessibilityEnabled,
+    active,
+    `Accessibility service is ${active ? "enabled" : "disabled"}.`
+  );
 
   let visible = enabled && active;
-  is(win.document.documentElement.hasAttribute("accessibilitymode"), visible,
-    `accessibilitymode flag is ${visible ? "set" : "unset"}.`);
+  is(
+    win.document.documentElement.hasAttribute("accessibilitymode"),
+    visible,
+    `accessibilitymode flag is ${visible ? "set" : "unset"}.`
+  );
 
   // Browser UI has 2 indicators in markup for OSX and Windows but only 1 is
   // shown depending on whether the titlebar is enabled.
   let expectedVisibleCount = visible ? 1 : 0;
   let visibleCount = 0;
-  [...win.document.querySelectorAll(".accessibility-indicator")].forEach(indicator =>
-    win.getComputedStyle(indicator).getPropertyValue("display") !== "none" &&
-    visibleCount++);
-  is(expectedVisibleCount, visibleCount,
-    `Indicator is ${visible ? "visible" : "invisible"}.`);
+  [...win.document.querySelectorAll(".accessibility-indicator")].forEach(
+    indicator =>
+      win.getComputedStyle(indicator).getPropertyValue("display") !== "none" &&
+      visibleCount++
+  );
+  is(
+    expectedVisibleCount,
+    visibleCount,
+    `Indicator is ${visible ? "visible" : "invisible"}.`
+  );
 }
 
 /**
@@ -39,7 +53,8 @@ function testIndicatorState(win, enabled, active) {
  */
 async function initAccessibilityService() {
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
-    Ci.nsIAccessibilityService);
+    Ci.nsIAccessibilityService
+  );
 
   if (!Services.appinfo.accessibilityEnabled) {
     await new Promise(resolve => {
@@ -90,13 +105,17 @@ add_task(async function test_accessibility_indicator() {
   testIndicatorState(window, true, false);
   testIndicatorState(newWin, true, false);
 
-  info("Enable accessibility and ensure the indicator is shown in all windows.");
+  info(
+    "Enable accessibility and ensure the indicator is shown in all windows."
+  );
   let accService = await initAccessibilityService(); // eslint-disable-line no-unused-vars
   testIndicatorState(window, true, true);
   testIndicatorState(newWin, true, true);
 
   info("Open a new window and ensure the indicator is shown there by default.");
-  let dynamicWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  let dynamicWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   testIndicatorState(dynamicWin, true, true);
   await BrowserTestUtils.closeWindow(dynamicWin);
 
@@ -113,7 +132,9 @@ add_task(async function test_accessibility_indicator() {
   testIndicatorState(newWin, true, true);
   testIndicatorState(dynamicWin, true, true);
 
-  info("Disable accessibility and ensure the indicator is hidden in all windows.");
+  info(
+    "Disable accessibility and ensure the indicator is hidden in all windows."
+  );
   accService = undefined;
   forceGC();
   await shutdownAccessibilityService();

@@ -1,7 +1,7 @@
 "use strict";
 
 // Allow to open popups without any kind of interaction.
-SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_flip", false]]});
+SpecialPowers.pushPrefEnv({ set: [["dom.disable_window_flip", false]] });
 
 const FILE = getRootDirectory(gTestPath) + "open_window_in_new_tab.html";
 
@@ -9,7 +9,11 @@ add_task(async function() {
   info("Opening first tab: " + FILE);
   let firstTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, FILE);
 
-  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, FILE + "?opened", true);
+  let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    FILE + "?opened",
+    true
+  );
   info("Opening second tab using a click");
   await ContentTask.spawn(firstTab.linkedBrowser, "", async function() {
     content.document.querySelector("#open").click();

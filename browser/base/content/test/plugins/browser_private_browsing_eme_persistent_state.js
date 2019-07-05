@@ -9,25 +9,36 @@
  */
 
 const TEST_URL =
-  getRootDirectory(gTestPath).replace("chrome://mochitests/content",
-  "https://example.com") + "empty_file.html";
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "empty_file.html";
 
 async function isEmePersistentStateSupported(mode) {
   let win = await BrowserTestUtils.openNewBrowserWindow(mode);
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
-  let persistentStateSupported = await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    try {
-      let config = [{
-        initDataTypes: ["webm"],
-        videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}],
-        persistentState: "required",
-      }];
-      await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey", config);
-    } catch (ex) {
-      return false;
+  let persistentStateSupported = await ContentTask.spawn(
+    tab.linkedBrowser,
+    {},
+    async function() {
+      try {
+        let config = [
+          {
+            initDataTypes: ["webm"],
+            videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }],
+            persistentState: "required",
+          },
+        ];
+        await content.navigator.requestMediaKeySystemAccess(
+          "org.w3.clearkey",
+          config
+        );
+      } catch (ex) {
+        return false;
+      }
+      return true;
     }
-    return true;
-  });
+  );
 
   await BrowserTestUtils.closeWindow(win);
 
@@ -35,10 +46,14 @@ async function isEmePersistentStateSupported(mode) {
 }
 
 add_task(async function test() {
-  is(await isEmePersistentStateSupported({private: true}),
-     false,
-     "EME persistentState should *NOT* be supported in private browsing window.");
-  is(await isEmePersistentStateSupported({private: false}),
-     true,
-     "EME persistentState *SHOULD* be supported in non private browsing window.");
+  is(
+    await isEmePersistentStateSupported({ private: true }),
+    false,
+    "EME persistentState should *NOT* be supported in private browsing window."
+  );
+  is(
+    await isEmePersistentStateSupported({ private: false }),
+    true,
+    "EME persistentState *SHOULD* be supported in non private browsing window."
+  );
 });
