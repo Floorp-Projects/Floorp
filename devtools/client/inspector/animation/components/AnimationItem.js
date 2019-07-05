@@ -5,7 +5,10 @@
 "use strict";
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -45,14 +48,18 @@ class AnimationItem extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.state.isSelected !== nextState.isSelected ||
-           this.props.animation !== nextProps.animation ||
-           this.props.timeScale !== nextProps.timeScale;
+    return (
+      this.state.isSelected !== nextState.isSelected ||
+      this.props.animation !== nextProps.animation ||
+      this.props.timeScale !== nextProps.timeScale
+    );
   }
 
   isSelected(props) {
-    return props.selectedAnimation &&
-           props.animation.actorID === props.selectedAnimation.actorID;
+    return (
+      props.selectedAnimation &&
+      props.animation.actorID === props.selectedAnimation.actorID
+    );
   }
 
   render() {
@@ -69,36 +76,31 @@ class AnimationItem extends Component {
       simulateAnimation,
       timeScale,
     } = this.props;
-    const {
-      isSelected,
-    } = this.state;
+    const { isSelected } = this.state;
 
     return dom.li(
       {
-        className: `animation-item ${ animation.state.type } ` +
-                   (isSelected ? "selected" : ""),
+        className:
+          `animation-item ${animation.state.type} ` +
+          (isSelected ? "selected" : ""),
       },
-      AnimationTarget(
-        {
-          animation,
-          emitEventForTest,
-          getNodeFromActor,
-          onHideBoxModelHighlighter,
-          onShowBoxModelHighlighterForNode,
-          setHighlightedNode,
-          setSelectedNode,
-        }
-      ),
-      SummaryGraph(
-        {
-          animation,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          selectAnimation,
-          simulateAnimation,
-          timeScale,
-        }
-      )
+      AnimationTarget({
+        animation,
+        emitEventForTest,
+        getNodeFromActor,
+        onHideBoxModelHighlighter,
+        onShowBoxModelHighlighterForNode,
+        setHighlightedNode,
+        setSelectedNode,
+      }),
+      SummaryGraph({
+        animation,
+        emitEventForTest,
+        getAnimatedPropertyMap,
+        selectAnimation,
+        simulateAnimation,
+        timeScale,
+      })
     );
   }
 }

@@ -17,27 +17,42 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
   await testPressingEscapeRevertsChanges(view);
 });
 
 async function testPressingEscapeRevertsChanges(view) {
-  const {propEditor} = await openCubicBezierAndChangeCoords(view, 1, 0,
-    [0.1, 2, 0.9, -1], {
+  const { propEditor } = await openCubicBezierAndChangeCoords(
+    view,
+    1,
+    0,
+    [0.1, 2, 0.9, -1],
+    {
       selector: "body",
       name: "animation-timing-function",
       value: "cubic-bezier(0.1, 2, 0.9, -1)",
-    });
+    }
+  );
 
-  is(propEditor.valueSpan.textContent, "cubic-bezier(.1,2,.9,-1)",
-    "Got expected property value.");
+  is(
+    propEditor.valueSpan.textContent,
+    "cubic-bezier(.1,2,.9,-1)",
+    "Got expected property value."
+  );
 
   await escapeTooltip(view);
 
-  await waitForComputedStyleProperty("body", null, "animation-timing-function",
-    "linear");
-  is(propEditor.valueSpan.textContent, "linear",
-    "Got expected property value.");
+  await waitForComputedStyleProperty(
+    "body",
+    null,
+    "animation-timing-function",
+    "linear"
+  );
+  is(
+    propEditor.valueSpan.textContent,
+    "linear",
+    "Got expected property value."
+  );
 }
 
 async function escapeTooltip(view) {

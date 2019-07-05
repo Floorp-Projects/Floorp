@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor, toolbox} = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  const { tab, monitor, toolbox } = await initNetMonitor(
+    CONTENT_TYPE_WITHOUT_CACHE_URL
+  );
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
@@ -19,12 +21,17 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[2]);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[2]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[2]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[2]
+  );
   await waitUntil(() =>
-    getContextMenuItem(monitor, "request-list-context-open-in-debugger"));
+    getContextMenuItem(monitor, "request-list-context-open-in-debugger")
+  );
 
   const onDebuggerReady = toolbox.once("jsdebugger-ready");
   getContextMenuItem(monitor, "request-list-context-open-in-debugger").click();

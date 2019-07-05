@@ -22,7 +22,7 @@ const TEST_DATA = [
     desc: "Move the focus away from breadcrumbs to a next focusable element",
     focused: false,
     key: "VK_TAB",
-    options: { },
+    options: {},
   },
   {
     desc: "Move the focus back to the breadcrumbs",
@@ -31,8 +31,9 @@ const TEST_DATA = [
     options: { shiftKey: true },
   },
   {
-    desc: "Move the focus back away from breadcrumbs to a previous focusable " +
-          "element",
+    desc:
+      "Move the focus back away from breadcrumbs to a previous focusable " +
+      "element",
     focused: false,
     key: "VK_TAB",
     options: { shiftKey: true },
@@ -41,14 +42,14 @@ const TEST_DATA = [
     desc: "Move the focus back to the breadcrumbs",
     focused: true,
     key: "VK_TAB",
-    options: { },
+    options: {},
   },
 ];
 
 add_task(async function() {
   const { toolbox, inspector } = await openInspectorForURL(TEST_URL);
   const doc = inspector.panelDoc;
-  const {breadcrumbs} = inspector;
+  const { breadcrumbs } = inspector;
 
   await selectNode("#i2", inspector);
 
@@ -62,8 +63,11 @@ add_task(async function() {
 
   // Ensure a breadcrumb is focused.
   is(doc.activeElement, container, "Focus is on selected breadcrumb");
-  is(container.getAttribute("aria-activedescendant"), button.id,
-    "aria-activedescendant is set correctly");
+  is(
+    container.getAttribute("aria-activedescendant"),
+    button.id,
+    "aria-activedescendant is set correctly"
+  );
 
   for (const { desc, focused, key, options } of TEST_DATA) {
     info(desc);
@@ -77,7 +81,10 @@ add_task(async function() {
     } else {
       ok(!containsFocus(doc, container), "Focus is outside of breadcrumbs");
     }
-    is(container.getAttribute("aria-activedescendant"), button.id,
-      "aria-activedescendant is set correctly");
+    is(
+      container.getAttribute("aria-activedescendant"),
+      button.id,
+      "aria-activedescendant is set correctly"
+    );
   }
 });

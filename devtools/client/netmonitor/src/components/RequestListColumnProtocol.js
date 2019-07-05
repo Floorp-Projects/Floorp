@@ -17,20 +17,21 @@ class RequestListColumnProtocol extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return getFormattedProtocol(this.props.item) !==
-      getFormattedProtocol(nextProps.item);
+    return (
+      getFormattedProtocol(this.props.item) !==
+      getFormattedProtocol(nextProps.item)
+    );
   }
 
   render() {
     const protocol = getFormattedProtocol(this.props.item);
 
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-protocol",
         title: protocol,
       },
-        protocol
-      )
+      protocol
     );
   }
 }

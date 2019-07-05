@@ -28,8 +28,7 @@ const store = createStore(combineReducers(reducers));
  * component: the MainFrame.
  */
 function DomView(localStore) {
-  addEventListener("devtools/chrome/message",
-    this.onMessage.bind(this), true);
+  addEventListener("devtools/chrome/message", this.onMessage.bind(this), true);
 
   // Make it local so, tests can access it.
   this.store = localStore;
@@ -43,9 +42,13 @@ DomView.prototype = {
     });
 
     // Render top level component
-    const provider = React.createElement(Provider, {
-      store: this.store,
-    }, mainFrame);
+    const provider = React.createElement(
+      Provider,
+      {
+        store: this.store,
+      },
+      mainFrame
+    );
 
     this.mainFrame = ReactDOM.render(provider, content);
   },

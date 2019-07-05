@@ -9,11 +9,11 @@
 
 const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
-var {PropertyView} = require("devtools/client/inspector/computed/computed");
+var { PropertyView } = require("devtools/client/inspector/computed/computed");
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("div", inspector);
   await checkPropertyView(view);
 });
@@ -27,10 +27,16 @@ function checkPropertyView(view) {
   return propertyView.refreshMatchedSelectors().then(() => {
     const numMatchedSelectors = propertyView.matchedSelectors.length;
 
-    is(numMatchedSelectors, 2,
-        "Property view has the correct number of matched selectors for div");
+    is(
+      numMatchedSelectors,
+      2,
+      "Property view has the correct number of matched selectors for div"
+    );
 
-    is(propertyView.hasMatchedSelectors, true,
-        "hasMatchedSelectors returns true");
+    is(
+      propertyView.hasMatchedSelectors,
+      true,
+      "hasMatchedSelectors returns true"
+    );
   });
 }

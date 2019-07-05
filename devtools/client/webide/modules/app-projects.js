@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cr} = require("chrome");
+const { Cc, Ci, Cr } = require("chrome");
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
+const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
+const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 
 /**
  * IndexedDB wrapper that just save project objects
@@ -23,8 +25,12 @@ const IDB = {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(IDB.databaseName, 5);
       request.onerror = function(event) {
-        reject("Unable to open AppProjects indexedDB: " +
-                        this.error.name + " - " + this.error.message);
+        reject(
+          "Unable to open AppProjects indexedDB: " +
+            this.error.name +
+            " - " +
+            this.error.message
+        );
       };
       request.onupgradeneeded = function(event) {
         const db = event.target.result;
@@ -32,7 +38,7 @@ const IDB = {
       };
 
       request.onsuccess = function() {
-        const db = IDB._db = request.result;
+        const db = (IDB._db = request.result);
         const objectStore = db.transaction("projects").objectStore("projects");
         const projects = [];
         const toRemove = [];
@@ -88,8 +94,12 @@ const IDB = {
         const objectStore = transaction.objectStore("projects");
         const request = objectStore.add(project);
         request.onerror = function(event) {
-          reject("Unable to add project to the AppProjects indexedDB: " +
-                 this.error.name + " - " + this.error.message);
+          reject(
+            "Unable to add project to the AppProjects indexedDB: " +
+              this.error.name +
+              " - " +
+              this.error.message
+          );
         };
         request.onsuccess = function() {
           resolve();
@@ -104,8 +114,12 @@ const IDB = {
       const objectStore = transaction.objectStore("projects");
       const request = objectStore.put(project);
       request.onerror = function(event) {
-        reject("Unable to update project to the AppProjects indexedDB: " +
-               this.error.name + " - " + this.error.message);
+        reject(
+          "Unable to update project to the AppProjects indexedDB: " +
+            this.error.name +
+            " - " +
+            this.error.message
+        );
       };
       request.onsuccess = function() {
         resolve();
@@ -115,15 +129,20 @@ const IDB = {
 
   remove: function(location) {
     return new Promise((resolve, reject) => {
-      const request = IDB._db.transaction(["projects"], "readwrite")
-                    .objectStore("projects")
-                    .delete(location);
+      const request = IDB._db
+        .transaction(["projects"], "readwrite")
+        .objectStore("projects")
+        .delete(location);
       request.onsuccess = function(event) {
         resolve();
       };
       request.onerror = function() {
-        reject("Unable to delete project to the AppProjects indexedDB: " +
-               this.error.name + " - " + this.error.message);
+        reject(
+          "Unable to delete project to the AppProjects indexedDB: " +
+            this.error.name +
+            " - " +
+            this.error.message
+        );
       };
     });
   },
@@ -158,7 +177,9 @@ const AppProjects = {
       // its manifest URL.
       // If the app ends up specifying an explicit origin in its manifest,
       // we will override this random UUID on app install.
-      packagedAppOrigin: generateUUID().toString().slice(1, -1),
+      packagedAppOrigin: generateUUID()
+        .toString()
+        .slice(1, -1),
     };
     return IDB.add(project).then(() => {
       this.projects.push(project);
@@ -186,11 +207,10 @@ const AppProjects = {
   },
 
   updateLocation: function(project, newLocation) {
-    return IDB.remove(project.location)
-              .then(() => {
-                project.location = newLocation;
-                return IDB.add(project);
-              });
+    return IDB.remove(project.location).then(() => {
+      project.location = newLocation;
+      return IDB.add(project);
+    });
   },
 
   remove: function(location) {

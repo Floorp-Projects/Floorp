@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { ERROR_TYPE: TASK_ERROR_TYPE } = require("devtools/client/shared/redux/middleware/task");
+const {
+  ERROR_TYPE: TASK_ERROR_TYPE,
+} = require("devtools/client/shared/redux/middleware/task");
 
 /**
  * Handle errors dispatched from task middleware and

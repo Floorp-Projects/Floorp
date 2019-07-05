@@ -30,7 +30,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("div", inspector);
 
   await assertPseudoPanelClosed(view);
@@ -65,8 +65,10 @@ add_task(async function() {
   info("Check that all pseudo locks are unchecked and disabled");
   for (const pseudo of PSEUDO_CLASSES) {
     const checkbox = getPseudoClassCheckbox(view, pseudo);
-    ok(!checkbox.checked && checkbox.disabled,
-      `${pseudo} checkbox is unchecked and disabled`);
+    ok(
+      !checkbox.checked && checkbox.disabled,
+      `${pseudo} checkbox is unchecked and disabled`
+    );
   }
 
   info("Toggle the pseudo class panel close");
@@ -84,21 +86,32 @@ async function togglePseudoClass(inspector, view, pseudoClass) {
   await onRefresh;
 }
 
-function assertPseudoAdded(inspector, view, pseudoClass, numRules,
-    childIndex) {
+function assertPseudoAdded(inspector, view, pseudoClass, numRules, childIndex) {
   info("Check that the ruleview contains the pseudo-class rule");
-  is(view.element.children.length, numRules,
-    "Should have " + numRules + " rules.");
-  is(getRuleViewRuleEditor(view, childIndex).rule.selectorText,
-    "div" + pseudoClass, "rule view is showing " + pseudoClass + " rule");
+  is(
+    view.element.children.length,
+    numRules,
+    "Should have " + numRules + " rules."
+  );
+  is(
+    getRuleViewRuleEditor(view, childIndex).rule.selectorText,
+    "div" + pseudoClass,
+    "rule view is showing " + pseudoClass + " rule"
+  );
 }
 
 function assertPseudoRemoved(inspector, view, numRules) {
   info("Check that the ruleview no longer contains the pseudo-class rule");
-  is(view.element.children.length, numRules,
-    "Should have " + numRules + " rules.");
-  is(getRuleViewRuleEditor(view, 1).rule.selectorText, "div",
-    "Second rule is div");
+  is(
+    view.element.children.length,
+    numRules,
+    "Should have " + numRules + " rules."
+  );
+  is(
+    getRuleViewRuleEditor(view, 1).rule.selectorText,
+    "div",
+    "Second rule is div"
+  );
 }
 
 function assertPseudoPanelOpened(view) {
@@ -109,8 +122,11 @@ function assertPseudoPanelOpened(view) {
   for (const pseudo of PSEUDO_CLASSES) {
     const checkbox = getPseudoClassCheckbox(view, pseudo);
     ok(!checkbox.disabled, `${pseudo} checkbox is not disabled`);
-    is(checkbox.getAttribute("tabindex"), "0",
-      `${pseudo} checkbox has a tabindex of 0`);
+    is(
+      checkbox.getAttribute("tabindex"),
+      "0",
+      `${pseudo} checkbox has a tabindex of 0`
+    );
   }
 }
 
@@ -121,7 +137,10 @@ function assertPseudoPanelClosed(view) {
 
   for (const pseudo of PSEUDO_CLASSES) {
     const checkbox = getPseudoClassCheckbox(view, pseudo);
-    is(checkbox.getAttribute("tabindex"), "-1",
-      `${pseudo} checkbox has a tabindex of -1`);
+    is(
+      checkbox.getAttribute("tabindex"),
+      "-1",
+      `${pseudo} checkbox has a tabindex of -1`
+    );
   }
 }

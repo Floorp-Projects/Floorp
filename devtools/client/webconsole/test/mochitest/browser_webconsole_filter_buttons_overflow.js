@@ -5,15 +5,18 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test the locations of the filter buttons in the Webconsole's Filter Bar.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-    "test/mochitest/test-console.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const win = hud.browserWindow;
   const initialWindowWidth = win.outerWidth;
 
-  info("Check filter buttons are inline with filter input when window is large.");
+  info(
+    "Check filter buttons are inline with filter input when window is large."
+  );
   resizeWindow(1500, win);
   await waitForFilterBarLayout(hud, ".wide");
   ok(true, "The filter bar has the wide layout");
@@ -28,16 +31,22 @@ add_task(async function() {
   await waitForFilterBarLayout(hud, ".wide");
   const onMessage = waitForMessage(hud, "world");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    content.console.log({hello: "world"});
+    content.console.log({ hello: "world" });
   });
-  const {node} = await onMessage;
+  const { node } = await onMessage;
   const object = node.querySelector(".object-inspector .objectBox-object");
   info("Ctrl+click on an object to put it in the sidebar");
-  const onSidebarShown = waitFor(() => hud.ui.document.querySelector(".sidebar"));
-  EventUtils.sendMouseEvent({
-    type: "click",
-    [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
-  }, object, hud.ui.window);
+  const onSidebarShown = waitFor(() =>
+    hud.ui.document.querySelector(".sidebar")
+  );
+  EventUtils.sendMouseEvent(
+    {
+      type: "click",
+      [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
+    },
+    object,
+    hud.ui.window
+  );
   const sidebar = await onSidebarShown;
   await waitForFilterBarLayout(hud, ".narrow");
   ok(true, "FilterBar layout changed when opening the sidebar");
@@ -61,5 +70,6 @@ function resizeWindow(width, win) {
 
 function waitForFilterBarLayout(hud, query) {
   return waitFor(() =>
-    hud.ui.outputNode.querySelector(`.webconsole-filteringbar-wrapper${query}`));
+    hud.ui.outputNode.querySelector(`.webconsole-filteringbar-wrapper${query}`)
+  );
 }

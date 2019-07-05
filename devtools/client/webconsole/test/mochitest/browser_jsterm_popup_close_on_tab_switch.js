@@ -7,9 +7,11 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
-                 "popup closes on tab switch";
-const TEST_URI_NAVIGATE = "data:text/html;charset=utf-8,<p>testing autocomplete closes";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
+  "popup closes on tab switch";
+const TEST_URI_NAVIGATE =
+  "data:text/html;charset=utf-8,<p>testing autocomplete closes";
 
 add_task(async function() {
   // Run test with legacy JsTerm

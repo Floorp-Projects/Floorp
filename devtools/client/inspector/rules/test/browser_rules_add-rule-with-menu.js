@@ -10,7 +10,7 @@ const TEST_URI = '<div id="testid">Test Node</div>';
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await selectNode("#testid", inspector);
   await addNewRuleFromContextMenu(inspector, view);
@@ -21,8 +21,11 @@ async function addNewRuleFromContextMenu(inspector, view) {
   info("Waiting for context menu to be shown");
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, view.element);
-  const menuitemAddRule = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.addNewRule"));
+  const menuitemAddRule = allMenuItems.find(
+    item =>
+      item.label ===
+      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.addNewRule")
+  );
 
   ok(menuitemAddRule.visible, "Add rule is visible");
 

@@ -34,7 +34,11 @@ add_task(async function() {
 
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Smoke message");
-  is(findMessage(hud, CACHED_MESSAGE), null, "The cached message is not visible anymore");
+  is(
+    findMessage(hud, CACHED_MESSAGE),
+    null,
+    "The cached message is not visible anymore"
+  );
 });
 
 function logTextToConsole(hud, text) {

@@ -103,18 +103,27 @@ async function testChangingValues(inspector, boxmodel, testActor) {
   const doc = boxmodel.document;
 
   const onUpdated = waitForUpdate(inspector);
-  await testActor.setAttribute("div", "style",
-                               "box-sizing:content-box;float:right;" +
-                               "line-height:10px;position:static;z-index:5;");
+  await testActor.setAttribute(
+    "div",
+    "style",
+    "box-sizing:content-box;float:right;" +
+      "line-height:10px;position:static;z-index:5;"
+  );
   await onUpdated;
 
   for (const { property, value } of res2) {
     const elt = doc.querySelector(getPropertySelector(property));
-    is(elt.textContent, value, property + " has the right value after style update.");
+    is(
+      elt.textContent,
+      value,
+      property + " has the right value after style update."
+    );
   }
 }
 
 function getPropertySelector(propertyName) {
-  return `.boxmodel-container .computed-property-view` +
-  `[data-property-name=${propertyName}] .computed-property-value`;
+  return (
+    `.boxmodel-container .computed-property-view` +
+    `[data-property-name=${propertyName}] .computed-property-value`
+  );
 }

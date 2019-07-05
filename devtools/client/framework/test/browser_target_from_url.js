@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_URI = "data:text/html;charset=utf-8," +
-  "<p>browser_target-from-url.js</p>";
+const TEST_URI =
+  "data:text/html;charset=utf-8," + "<p>browser_target-from-url.js</p>";
 
-const { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { DevToolsLoader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 const { targetFromURL } = require("devtools/client/framework/target-from-url");
 
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
@@ -37,7 +39,9 @@ add_task(async function() {
 
   info("Test browser window");
   let windowId = window.windowUtils.outerWindowID;
-  target = await targetFromURL(new URL("http://foo?type=window&id=" + windowId));
+  target = await targetFromURL(
+    new URL("http://foo?type=window&id=" + windowId)
+  );
   is(target.url, window.location.href);
   is(target.isLocalTab, false);
   is(target.chrome, true);
@@ -49,7 +53,9 @@ add_task(async function() {
   assertTarget(target, TEST_URI);
 
   info("Test tab with chrome privileges");
-  target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId + "&chrome"));
+  target = await targetFromURL(
+    new URL("http://foo?type=tab&id=" + windowId + "&chrome")
+  );
   assertTarget(target, TEST_URI, true);
 
   info("Test invalid tab id");
@@ -57,7 +63,10 @@ add_task(async function() {
     await targetFromURL(new URL("http://foo?type=tab&id=10000"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(e.message, "targetFromURL, tab with outerWindowID '10000' doesn't exist");
+    is(
+      e.message,
+      "targetFromURL, tab with outerWindowID '10000' doesn't exist"
+    );
   }
 
   info("Test parent process");
@@ -109,7 +118,9 @@ async function testRemoteTCP() {
   const server = await setupDebuggerServer(false);
 
   const { port } = server.listener;
-  const target = await targetFromURL(new URL("http://foo?type=process&host=127.0.0.1&port=" + port));
+  const target = await targetFromURL(
+    new URL("http://foo?type=process&host=127.0.0.1&port=" + port)
+  );
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
@@ -129,7 +140,9 @@ async function testRemoteWebSocket() {
   const server = await setupDebuggerServer(true);
 
   const { port } = server.listener;
-  const target = await targetFromURL(new URL("http://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true"));
+  const target = await targetFromURL(
+    new URL("http://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true")
+  );
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 

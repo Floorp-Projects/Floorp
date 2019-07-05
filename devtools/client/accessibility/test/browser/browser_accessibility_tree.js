@@ -23,39 +23,51 @@ const TEST_URI = `<html>
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
  */
-const tests = [{
-  desc: "Test the initial accessibility tree state.",
-  expected: {
-    tree: [{
-      role: "document",
-      name: `"Accessibility Panel Test"`,
-    }],
+const tests = [
+  {
+    desc: "Test the initial accessibility tree state.",
+    expected: {
+      tree: [
+        {
+          role: "document",
+          name: `"Accessibility Panel Test"`,
+        },
+      ],
+    },
   },
-}, {
-  desc: "Expand first tree node.",
-  setup: async ({ doc }) => toggleRow(doc, 0),
-  expected: {
-    tree: [{
-      role: "document",
-      name: `"Accessibility Panel Test"`,
-    }, {
-      role: "heading",
-      name: `"Top level header"`,
-    }, {
-      role: "paragraph",
-      name: `""`,
-    }],
+  {
+    desc: "Expand first tree node.",
+    setup: async ({ doc }) => toggleRow(doc, 0),
+    expected: {
+      tree: [
+        {
+          role: "document",
+          name: `"Accessibility Panel Test"`,
+        },
+        {
+          role: "heading",
+          name: `"Top level header"`,
+        },
+        {
+          role: "paragraph",
+          name: `""`,
+        },
+      ],
+    },
   },
-}, {
-  desc: "Collapse first tree node.",
-  setup: async ({ doc }) => toggleRow(doc, 0),
-  expected: {
-    tree: [{
-      role: "document",
-      name: `"Accessibility Panel Test"`,
-    }],
+  {
+    desc: "Collapse first tree node.",
+    setup: async ({ doc }) => toggleRow(doc, 0),
+    expected: {
+      tree: [
+        {
+          role: "document",
+          name: `"Accessibility Panel Test"`,
+        },
+      ],
+    },
   },
-}];
+];
 
 /**
  * Simple test that checks content of the Accessibility panel tree.

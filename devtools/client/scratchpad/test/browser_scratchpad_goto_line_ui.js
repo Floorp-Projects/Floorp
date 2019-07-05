@@ -11,7 +11,10 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test the 'Jump to line' feature in Scratchpad");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html,<p>test the 'Jump to line' feature in Scratchpad"
+  );
 }
 
 function runTests(aWindow, aScratchpad) {
@@ -28,11 +31,11 @@ function runTests(aWindow, aScratchpad) {
   };
 
   desiredValue = 3;
-  EventUtils.synthesizeKey("J", {accelKey: true}, aWindow);
+  EventUtils.synthesizeKey("J", { accelKey: true }, aWindow);
   is(editor.getCursor().line, 2, "line is correct");
 
   desiredValue = 2;
-  EventUtils.synthesizeKey("J", {accelKey: true}, aWindow);
+  EventUtils.synthesizeKey("J", { accelKey: true }, aWindow);
   is(editor.getCursor().line, 1, "line is correct (again)");
 
   editor.openDialog = oldPrompt;

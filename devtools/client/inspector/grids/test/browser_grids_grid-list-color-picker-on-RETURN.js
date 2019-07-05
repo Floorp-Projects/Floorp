@@ -25,12 +25,21 @@ add_task(async function() {
   const { store } = inspector;
   const cPicker = layoutView.swatchColorPickerTooltip;
   const spectrum = cPicker.spectrum;
-  const swatch = doc.querySelector("#layout-grid-container .layout-color-swatch");
+  const swatch = doc.querySelector(
+    "#layout-grid-container .layout-color-swatch"
+  );
 
   info("Checking the initial state of the Grid Inspector.");
-  is(swatch.style.backgroundColor, "rgb(148, 0, 255)",
-    "The color swatch's background is correct.");
-  is(store.getState().grids[0].color, "#9400FF", "The grid color state is correct.");
+  is(
+    swatch.style.backgroundColor,
+    "rgb(148, 0, 255)",
+    "The color swatch's background is correct."
+  );
+  is(
+    store.getState().grids[0].color,
+    "#9400FF",
+    "The grid color state is correct."
+  );
 
   info("Scrolling into view of the #grid color swatch.");
   swatch.scrollIntoView();
@@ -40,19 +49,27 @@ add_task(async function() {
   swatch.click();
   await onColorPickerReady;
 
-  await simulateColorPickerChange(cPicker, [0, 255, 0, .5]);
+  await simulateColorPickerChange(cPicker, [0, 255, 0, 0.5]);
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was updated.");
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was updated."
+  );
 
   info("Pressing RETURN to commit the color change.");
-  const onGridColorUpdate = waitUntilState(store, state =>
-    state.grids[0].color === "#00FF0080");
+  const onGridColorUpdate = waitUntilState(
+    store,
+    state => state.grids[0].color === "#00FF0080"
+  );
   const onColorPickerHidden = cPicker.tooltip.once("hidden");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   await onColorPickerHidden;
   await onGridColorUpdate;
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was kept after RETURN.");
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was kept after RETURN."
+  );
 });

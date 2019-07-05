@@ -8,10 +8,22 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
-const { getSelectedRecordingIndex, setSelectedRecording, getRecordingsCount } = require("devtools/client/performance/test/helpers/recording-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  getSelectedRecordingIndex,
+  setSelectedRecording,
+  getRecordingsCount,
+} = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
   // This test seems to take a very long time to finish on Linux VMs.
@@ -29,28 +41,42 @@ add_task(async function() {
 
   await startRecording(panel);
 
-  is(getRecordingsCount(panel), 2,
-    "There should be two recordings visible.");
-  is(getSelectedRecordingIndex(panel), 1,
-    "The new recording item should be selected.");
+  is(getRecordingsCount(panel), 2, "There should be two recordings visible.");
+  is(
+    getSelectedRecordingIndex(panel),
+    1,
+    "The new recording item should be selected."
+  );
 
   let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 0);
   await selected;
 
-  is(getRecordingsCount(panel), 2,
-    "There should still be two recordings visible.");
-  is(getSelectedRecordingIndex(panel), 0,
-    "The first recording item should be selected now.");
+  is(
+    getRecordingsCount(panel),
+    2,
+    "There should still be two recordings visible."
+  );
+  is(
+    getSelectedRecordingIndex(panel),
+    0,
+    "The first recording item should be selected now."
+  );
 
   selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   setSelectedRecording(panel, 1);
   await selected;
 
-  is(getRecordingsCount(panel), 2,
-    "There should still be two recordings visible.");
-  is(getSelectedRecordingIndex(panel), 1,
-    "The second recording item should be selected again.");
+  is(
+    getRecordingsCount(panel),
+    2,
+    "There should still be two recordings visible."
+  );
+  is(
+    getSelectedRecordingIndex(panel),
+    1,
+    "The second recording item should be selected again."
+  );
 
   await stopRecording(panel);
 

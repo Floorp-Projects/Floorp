@@ -3,12 +3,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-loader.lazyRequireGetter(this, "generateUUID", "devtools/shared/generate-uuid", true);
-loader.lazyRequireGetter(this, "entries", "devtools/shared/DevToolsUtils", true);
-loader.lazyRequireGetter(this, "executeSoon", "devtools/shared/DevToolsUtils", true);
-loader.lazyRequireGetter(this, "toObject", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(
+  this,
+  "generateUUID",
+  "devtools/shared/generate-uuid",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "entries",
+  "devtools/shared/DevToolsUtils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "executeSoon",
+  "devtools/shared/DevToolsUtils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "toObject",
+  "devtools/shared/DevToolsUtils",
+  true
+);
 
-const PROMISE = exports.PROMISE = "@@dispatch/promise";
+const PROMISE = (exports.PROMISE = "@@dispatch/promise");
 
 function promiseMiddleware({ dispatch, getState }) {
   return next => action => {
@@ -24,28 +44,36 @@ function promiseMiddleware({ dispatch, getState }) {
       // Create a new action that doesn't have the promise field and has
       // the `seqId` field that represents the sequence id
       action = Object.assign(
-        toObject(entries(action).filter(pair => pair[0] !== PROMISE)), { seqId }
+        toObject(entries(action).filter(pair => pair[0] !== PROMISE)),
+        { seqId }
       );
 
       dispatch(Object.assign({}, action, { status: "start" }));
 
-      promiseInst.then(value => {
-        executeSoon(() => {
-          dispatch(Object.assign({}, action, {
-            status: "done",
-            value: value,
-          }));
-          resolve(value);
-        });
-      }, error => {
-        executeSoon(() => {
-          dispatch(Object.assign({}, action, {
-            status: "error",
-            error: error.message || error,
-          }));
-          reject(error);
-        });
-      });
+      promiseInst.then(
+        value => {
+          executeSoon(() => {
+            dispatch(
+              Object.assign({}, action, {
+                status: "done",
+                value: value,
+              })
+            );
+            resolve(value);
+          });
+        },
+        error => {
+          executeSoon(() => {
+            dispatch(
+              Object.assign({}, action, {
+                status: "error",
+                error: error.message || error,
+              })
+            );
+            reject(error);
+          });
+        }
+      );
     });
   };
 }

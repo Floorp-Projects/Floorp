@@ -36,7 +36,7 @@ define(function(require, exports, module) {
     }
 
     render() {
-      return pre({className: "data"});
+      return pre({ className: "data" });
     }
   }
 

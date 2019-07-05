@@ -74,18 +74,23 @@ add_task(async function() {
     removeDecl = getRemovedDeclarations(doc);
 
     if (add) {
-      is(addDecl[0].value, add.value,
-        `Added declaration has expected value: ${add.value}`);
+      is(
+        addDecl[0].value,
+        add.value,
+        `Added declaration has expected value: ${add.value}`
+      );
       is(addDecl.length, 1, "Only one declaration was tracked as added.");
     } else {
       is(addDecl.length, 0, "Added declaration was cleared");
     }
 
     if (remove) {
-      is(removeDecl[0].value, remove.value,
-        `Removed declaration has expected value: ${remove.value}`);
-      is(removeDecl.length, 1,
-        "Only one declaration was tracked as removed.");
+      is(
+        removeDecl[0].value,
+        remove.value,
+        `Removed declaration has expected value: ${remove.value}`
+      );
+      is(removeDecl.length, 1, "Only one declaration was tracked as removed.");
     } else {
       is(removeDecl.length, 0, "Removed declaration was cleared");
     }

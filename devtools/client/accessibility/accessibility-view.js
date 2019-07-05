@@ -8,15 +8,19 @@
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // React & Redux
-const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 
 // Accessibility Panel
 const MainFrame = createFactory(require("./components/MainFrame"));
-const OldVersionDescription =
-  createFactory(require("./components/Description").OldVersionDescription);
+const OldVersionDescription = createFactory(
+  require("./components/Description").OldVersionDescription
+);
 
 // Store
 const createStore = require("devtools/client/shared/redux/create-store")();

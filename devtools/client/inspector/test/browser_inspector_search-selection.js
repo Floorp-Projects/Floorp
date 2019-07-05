@@ -4,12 +4,12 @@
 "use strict";
 
 // Testing navigation between nodes in search results
-const {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Focus the search box");
   await focusSearchBoxUsingShortcut(inspector.panelWin);
@@ -36,20 +36,35 @@ add_task(async function() {
     await sendKeyAndCheck(inspector, msg, "VK_G", { metaKey: true }, "#p2");
 
     msg = "Press shift+meta-g to select the previous node";
-    await sendKeyAndCheck(inspector, msg, "VK_G",
-                          { metaKey: true, shiftKey: true }, "#p1");
+    await sendKeyAndCheck(
+      inspector,
+      msg,
+      "VK_G",
+      { metaKey: true, shiftKey: true },
+      "#p1"
+    );
   } else {
     msg = "Press ctrl-g to cycle through multiple nodes";
     await sendKeyAndCheck(inspector, msg, "VK_G", { ctrlKey: true }, "#p2");
 
     msg = "Press shift+ctrl-g to select the previous node";
-    await sendKeyAndCheck(inspector, msg, "VK_G",
-                          { ctrlKey: true, shiftKey: true }, "#p1");
+    await sendKeyAndCheck(
+      inspector,
+      msg,
+      "VK_G",
+      { ctrlKey: true, shiftKey: true },
+      "#p1"
+    );
   }
 });
 
-const sendKeyAndCheck = async function(inspector, description, key,
-                                            modifiers, expectedId) {
+const sendKeyAndCheck = async function(
+  inspector,
+  description,
+  key,
+  modifiers,
+  expectedId
+) {
   info(description);
   const onSelect = inspector.once("inspector-updated");
   EventUtils.synthesizeKey(key, modifiers, inspector.panelWin);

@@ -10,10 +10,13 @@
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 const Editor = require("devtools/client/shared/sourceeditor/editor");
-const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
+const {
+  getClientCssProperties,
+} = require("devtools/shared/fronts/css-properties");
 
 function promiseWaitForFocus(el) {
   return new Promise(resolve => waitForFocus(resolve, el));
@@ -22,13 +25,22 @@ function promiseWaitForFocus(el) {
 async function setup(additionalOpts = {}) {
   try {
     const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
-    const win = Services.ww.openWindow(null, CHROME_URL_ROOT + "head.xul", "_blank", opt,
-                                      null);
+    const win = Services.ww.openWindow(
+      null,
+      CHROME_URL_ROOT + "head.xul",
+      "_blank",
+      opt,
+      null
+    );
     const opts = {
       value: "Hello.",
       lineNumbers: true,
       foldGutter: true,
-      gutters: ["CodeMirror-linenumbers", "breakpoints", "CodeMirror-foldgutter"],
+      gutters: [
+        "CodeMirror-linenumbers",
+        "breakpoints",
+        "CodeMirror-foldgutter",
+      ],
       cssProperties: getClientCssProperties(),
       ...additionalOpts,
     };
@@ -98,8 +110,9 @@ function limit(source, [line, char]) {
 }
 
 function read(url) {
-  const scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
-    .getService(Ci.nsIScriptableInputStream);
+  const scriptableStream = Cc[
+    "@mozilla.org/scriptableinputstream;1"
+  ].getService(Ci.nsIScriptableInputStream);
 
   const channel = NetUtil.newChannel({
     uri: url,

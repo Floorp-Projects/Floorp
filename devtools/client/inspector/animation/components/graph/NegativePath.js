@@ -73,16 +73,23 @@ class NegativePath extends PureComponent {
       return win.getComputedStyle(simulatedElement).opacity;
     };
 
-    const toPathStringFunc =
-      createSummaryGraphPathStringFunction(endTime, state.playbackRate);
-    const helper = new SummaryGraphHelper(state, keyframes,
-                                          totalDuration, durationPerPixel,
-                                          getValueFunc, toPathStringFunc);
+    const toPathStringFunc = createSummaryGraphPathStringFunction(
+      endTime,
+      state.playbackRate
+    );
+    const helper = new SummaryGraphHelper(
+      state,
+      keyframes,
+      totalDuration,
+      durationPerPixel,
+      getValueFunc,
+      toPathStringFunc
+    );
 
     return dom.g(
       {
         className: this.getClassName(),
-        transform: `translate(${ offset })`,
+        transform: `translate(${offset})`,
       },
       this.renderGraph(state, helper)
     );

@@ -14,7 +14,8 @@ const EXPECTED_SHEETS = [
     name: /^simple.css$/,
     rules: 1,
     active: true,
-  }, {
+  },
+  {
     sheetIndex: 1,
     name: /^<.*>$/,
     rules: 3,
@@ -35,7 +36,7 @@ add_task(async function() {
 
 async function openTabInUserContext(uri, userContextId) {
   // Open the tab in the correct userContextId.
-  const tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  const tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // Select tab and make sure its browser is focused.
   gBrowser.selectedTab = tab;
@@ -43,21 +44,28 @@ async function openTabInUserContext(uri, userContextId) {
 
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
-  return {tab, browser};
+  return { tab, browser };
 }
 
 function checkSheet(editor, expected) {
-  is(editor.styleSheet.styleSheetIndex, expected.sheetIndex,
-    "Style sheet has correct index.");
+  is(
+    editor.styleSheet.styleSheetIndex,
+    expected.sheetIndex,
+    "Style sheet has correct index."
+  );
 
   const summary = editor.summary;
-  const name = summary.querySelector(".stylesheet-name > label")
-                    .getAttribute("value");
+  const name = summary
+    .querySelector(".stylesheet-name > label")
+    .getAttribute("value");
   ok(expected.name.test(name), "The name '" + name + "' is correct.");
 
   const ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), expected.rules, "the rule count is correct");
 
-  is(summary.classList.contains("splitview-active"), expected.active,
-    "The active status for this sheet is correct.");
+  is(
+    summary.classList.contains("splitview-active"),
+    expected.active,
+    "The active status for this sheet is correct."
+  );
 }

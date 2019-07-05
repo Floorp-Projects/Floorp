@@ -14,41 +14,57 @@ add_task(async function() {
   // Only run test with legacy JsTerm
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
 
-  const {jsterm} = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const input = jsterm.inputNode;
 
   info("Test that the console input is not treated as a live region");
-  ok(!isElementInLiveRegion(input), "Console input is not treated as a live region");
+  ok(
+    !isElementInLiveRegion(input),
+    "Console input is not treated as a live region"
+  );
 
   info("Test the console input has no aria-activedescendant attribute");
   ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
 
   info("Type 'd' to open the autocomplete popup");
-  const {autocompletePopup} = jsterm;
+  const { autocompletePopup } = jsterm;
   const onPopupOpen = autocompletePopup.once("popup-opened");
   EventUtils.sendString("d");
   await onPopupOpen;
-  ok(autocompletePopup.isOpen && autocompletePopup.itemCount > 0,
-    "Autocomplete popup is open and contains suggestions");
+  ok(
+    autocompletePopup.isOpen && autocompletePopup.itemCount > 0,
+    "Autocomplete popup is open and contains suggestions"
+  );
 
   info("Test the console input has an aria-activedescendant attribute");
   ok(input.hasAttribute("aria-activedescendant"), "aria-activedescendant");
 
   // Add listeners for focus and blur events.
   let wasBlurred = false;
-  input.addEventListener("blur", () => {
-    wasBlurred = true;
-  }, {
-    once: true,
-  });
+  input.addEventListener(
+    "blur",
+    () => {
+      wasBlurred = true;
+    },
+    {
+      once: true,
+    }
+  );
 
   let wasFocused = false;
-  input.addEventListener("focus", () => {
-    ok(wasBlurred, "jsterm input received a blur event before received back the focus");
-    wasFocused = true;
-  }, {
-    once: true,
-  });
+  input.addEventListener(
+    "focus",
+    () => {
+      ok(
+        wasBlurred,
+        "jsterm input received a blur event before received back the focus"
+      );
+      wasFocused = true;
+    },
+    {
+      once: true,
+    }
+  );
 
   info("Close the autocomplete popup by simulating a TAB key event");
   const onPopupClosed = jsterm.autocompletePopup.once("popup-closed");

@@ -15,9 +15,7 @@ const {
 } = require("../utils/request-utils");
 const { buildHarLog } = require("./har-builder-utils");
 const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
-const {
-  TIMING_KEYS,
-} = require("../constants");
+const { TIMING_KEYS } = require("../constants");
 
 /**
  * This object is responsible for building HAR file. See HAR spec:
@@ -125,7 +123,7 @@ HarBuilder.prototype = {
     // handshake period.
     entry.time = TIMING_KEYS.reduce((sum, type) => {
       const time = entry.timings[type];
-      return (typeof time != "undefined") ? (sum + time) : sum;
+      return typeof time != "undefined" ? sum + time : sum;
     }, 0);
 
     // Security state isn't part of HAR spec, and so create
@@ -158,7 +156,9 @@ HarBuilder.prototype = {
 
     const getTimingMarker = this._options.getTimingMarker;
     if (getTimingMarker) {
-      timings.onContentLoad = getTimingMarker("firstDocumentDOMContentLoadedTimestamp");
+      timings.onContentLoad = getTimingMarker(
+        "firstDocumentDOMContentLoadedTimestamp"
+      );
       timings.onLoad = getTimingMarker("firstDocumentLoadTimestamp");
     }
 
@@ -172,12 +172,18 @@ HarBuilder.prototype = {
 
     let requestHeaders = file.requestHeaders;
     if (!requestHeaders && this._options.requestData) {
-      requestHeaders = await this._options.requestData(file.id, "requestHeaders");
+      requestHeaders = await this._options.requestData(
+        file.id,
+        "requestHeaders"
+      );
     }
 
     let requestCookies = file.requestCookies;
     if (!requestCookies && this._options.requestData) {
-      requestCookies = await this._options.requestData(file.id, "requestCookies");
+      requestCookies = await this._options.requestData(
+        file.id,
+        "requestCookies"
+      );
     }
 
     const request = {
@@ -268,7 +274,10 @@ HarBuilder.prototype = {
     let requestHeadersFromUploadStream;
 
     if (!requestPostData && this._options.requestData) {
-      requestPostData = await this._options.requestData(file.id, "requestPostData");
+      requestPostData = await this._options.requestData(
+        file.id,
+        "requestPostData"
+      );
       requestHeadersFromUploadStream = requestPostData.uploadHeaders;
     }
 
@@ -277,7 +286,10 @@ HarBuilder.prototype = {
     }
 
     if (!requestHeaders && this._options.requestData) {
-      requestHeaders = await this._options.requestData(file.id, "requestHeaders");
+      requestHeaders = await this._options.requestData(
+        file.id,
+        "requestHeaders"
+      );
     }
 
     const postData = {
@@ -292,20 +304,22 @@ HarBuilder.prototype = {
     }
 
     // If we are dealing with URL encoded body, parse parameters.
-    if (CurlUtils.isUrlEncodedRequest({
-      headers: requestHeaders.headers,
-      postDataText: postData.text,
-    })) {
+    if (
+      CurlUtils.isUrlEncodedRequest({
+        headers: requestHeaders.headers,
+        postDataText: postData.text,
+      })
+    ) {
       postData.mimeType = "application/x-www-form-urlencoded";
       // Extract form parameters and produce nice HAR array.
       const formDataSections = await getFormDataSections(
         requestHeaders,
         requestHeadersFromUploadStream,
         requestPostData,
-        this._options.getString,
+        this._options.getString
       );
 
-      formDataSections.forEach((section) => {
+      formDataSections.forEach(section => {
         const paramsArray = parseQueryString(section);
         if (paramsArray) {
           postData.params = [...postData.params, ...paramsArray];
@@ -323,12 +337,18 @@ HarBuilder.prototype = {
 
     let responseHeaders = file.responseHeaders;
     if (!responseHeaders && this._options.requestData) {
-      responseHeaders = await this._options.requestData(file.id, "responseHeaders");
+      responseHeaders = await this._options.requestData(
+        file.id,
+        "responseHeaders"
+      );
     }
 
     let responseCookies = file.responseCookies;
     if (!responseCookies && this._options.requestData) {
-      responseCookies = await this._options.requestData(file.id, "responseCookies");
+      responseCookies = await this._options.requestData(
+        file.id,
+        "responseCookies"
+      );
     }
 
     const response = {
@@ -356,7 +376,7 @@ HarBuilder.prototype = {
     // Set to zero in case of responses coming from the cache (304).
     // Set to -1 if the info is not available.
     if (typeof file.transferredSize != "number") {
-      response.bodySize = (response.status == 304) ? 0 : -1;
+      response.bodySize = response.status == 304 ? 0 : -1;
     } else {
       response.bodySize = file.transferredSize;
     }
@@ -375,7 +395,10 @@ HarBuilder.prototype = {
     // lazily, via requestData.
     let responseContent = file.responseContent;
     if (!responseContent && this._options.requestData) {
-      responseContent = await this._options.requestData(file.id, "responseContent");
+      responseContent = await this._options.requestData(
+        file.id,
+        "responseContent"
+      );
     }
     if (responseContent && responseContent.content) {
       content.size = responseContent.content.size;
@@ -383,8 +406,9 @@ HarBuilder.prototype = {
     }
 
     const includeBodies = this._options.includeResponseBodies;
-    const contentDiscarded = responseContent ?
-      responseContent.contentDiscarded : false;
+    const contentDiscarded = responseContent
+      ? responseContent.contentDiscarded
+      : false;
 
     // The comment is appended only if the response content
     // is explicitly discarded.
@@ -412,7 +436,10 @@ HarBuilder.prototype = {
     }
 
     if (file.responseCacheAvailable && this._options.requestData) {
-      const responseCache = await this._options.requestData(file.id, "responseCache");
+      const responseCache = await this._options.requestData(
+        file.id,
+        "responseCache"
+      );
       if (responseCache.cache) {
         cache.afterRequest = this.buildCacheEntry(responseCache.cache);
       }
@@ -438,7 +465,10 @@ HarBuilder.prototype = {
       // initial value comes from properties without underscores.
       // this checks for both in appropriate order.
       cache._dataSize = findKeys(cacheEntry, ["dataSize", "_dataSize"]);
-      cache._lastModified = findKeys(cacheEntry, ["lastModified", "_lastModified"]);
+      cache._lastModified = findKeys(cacheEntry, [
+        "lastModified",
+        "_lastModified",
+      ]);
       cache._device = findKeys(cacheEntry, ["device", "_device"]);
     }
 
@@ -458,8 +488,9 @@ HarBuilder.prototype = {
       return file.sendingTime;
     }
 
-    return (file.sendingTime > file.startTime) ?
-      file.sendingTime : file.waitingForTime;
+    return file.sendingTime > file.startTime
+      ? file.sendingTime
+      : file.waitingForTime;
   },
 
   // RDP Helpers
@@ -538,12 +569,19 @@ function dateToJSON(date) {
     return s;
   }
 
-  const result = date.getFullYear() + "-" +
-    f(date.getMonth() + 1) + "-" +
-    f(date.getDate()) + "T" +
-    f(date.getHours()) + ":" +
-    f(date.getMinutes()) + ":" +
-    f(date.getSeconds()) + "." +
+  const result =
+    date.getFullYear() +
+    "-" +
+    f(date.getMonth() + 1) +
+    "-" +
+    f(date.getDate()) +
+    "T" +
+    f(date.getHours()) +
+    ":" +
+    f(date.getMinutes()) +
+    ":" +
+    f(date.getSeconds()) +
+    "." +
     f(date.getMilliseconds(), 3);
 
   let offset = date.getTimezoneOffset();
@@ -553,8 +591,8 @@ function dateToJSON(date) {
   offset = Math.abs(offset);
   const offsetHours = Math.floor(offset / 60);
   const offsetMinutes = Math.floor(offset % 60);
-  const prettyOffset = (positive > 0 ? "-" : "+") + f(offsetHours) +
-    ":" + f(offsetMinutes);
+  const prettyOffset =
+    (positive > 0 ? "-" : "+") + f(offsetHours) + ":" + f(offsetMinutes);
 
   return result + prettyOffset;
 }

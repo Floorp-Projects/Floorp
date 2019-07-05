@@ -5,8 +5,16 @@
 
 // Test clearSnapshots preserves snapshots with state != READ or ERROR
 
-const { takeSnapshotAndCensus, clearSnapshots, takeSnapshot } = require("devtools/client/memory/actions/snapshot");
-const { snapshotState: states, treeMapState, actions } = require("devtools/client/memory/constants");
+const {
+  takeSnapshotAndCensus,
+  clearSnapshots,
+  takeSnapshot,
+} = require("devtools/client/memory/actions/snapshot");
+const {
+  snapshotState: states,
+  treeMapState,
+  actions,
+} = require("devtools/client/memory/constants");
 
 add_task(async function() {
   const front = new StubbedMemoryFront();
@@ -20,8 +28,10 @@ add_task(async function() {
   ok(true, "create a snapshot in SAVED state");
   dispatch(takeSnapshot(front));
   await waitUntilSnapshotState(store, [states.SAVED, states.SAVED]);
-  await waitUntilCensusState(store, snapshot => snapshot.treeMap,
-                             [treeMapState.SAVED, null]);
+  await waitUntilCensusState(store, snapshot => snapshot.treeMap, [
+    treeMapState.SAVED,
+    null,
+  ]);
   ok(true, "snapshots created with expected states");
 
   ok(true, "dispatch clearSnapshots action");
@@ -35,10 +45,16 @@ add_task(async function() {
 
   equal(getState().snapshots.length, 1, "one snapshot remaining");
   const remainingSnapshot = getState().snapshots[0];
-  equal(remainingSnapshot.treeMap, undefined,
-    "remaining snapshot doesn't have a treeMap property");
-  equal(remainingSnapshot.census, undefined,
-    "remaining snapshot doesn't have a census property");
+  equal(
+    remainingSnapshot.treeMap,
+    undefined,
+    "remaining snapshot doesn't have a treeMap property"
+  );
+  equal(
+    remainingSnapshot.census,
+    undefined,
+    "remaining snapshot doesn't have a census property"
+  );
 
   heapWorker.destroy();
   await front.detach();

@@ -41,19 +41,21 @@ class RecordingListItem extends Component {
     } else if (isRecording) {
       durationText = L10N.getStr("recordingsList.recordingLabel");
     } else {
-      durationText = L10N.getFormatStr("recordingsList.durationLabel", duration);
+      durationText = L10N.getFormatStr(
+        "recordingsList.durationLabel",
+        duration
+      );
     }
 
-    return (
-      li({ className, onClick: onSelect },
-        div({ className: "recording-list-item-label" },
-          label
-        ),
-        div({ className: "recording-list-item-footer" },
-          span({ className: "recording-list-item-duration" }, durationText),
-          button({ className: "recording-list-item-save", onClick: onSave },
-            L10N.getStr("recordingsList.saveLabel")
-          )
+    return li(
+      { className, onClick: onSelect },
+      div({ className: "recording-list-item-label" }, label),
+      div(
+        { className: "recording-list-item-footer" },
+        span({ className: "recording-list-item-duration" }, durationText),
+        button(
+          { className: "recording-list-item-save", onClick: onSave },
+          L10N.getStr("recordingsList.saveLabel")
         )
       )
     );

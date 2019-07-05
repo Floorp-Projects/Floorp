@@ -5,11 +5,16 @@
 
 "use strict";
 
-var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(Ci.nsISupports)
-  .wrappedJSObject;
-var {Toolbox} = require("devtools/client/framework/toolbox");
+var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
+  Ci.nsISupports
+).wrappedJSObject;
+var { Toolbox } = require("devtools/client/framework/toolbox");
 
-var toolbox, toolIDs, toolShortcuts = [], idIndex, modifiedPrefs = [];
+var toolbox,
+  toolIDs,
+  toolShortcuts = [],
+  idIndex,
+  modifiedPrefs = [];
 
 async function test() {
   addTab("about:blank").then(async function() {
@@ -34,8 +39,9 @@ async function test() {
     }
     const target = await TargetFactory.forTab(gBrowser.selectedTab);
     idIndex = 0;
-    gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.WINDOW)
-             .then(testShortcuts);
+    gDevTools
+      .showToolbox(target, toolIDs[0], Toolbox.HostType.WINDOW)
+      .then(testShortcuts);
   });
 }
 
@@ -61,16 +67,25 @@ function testShortcuts(aToolbox, aIndex) {
     shiftKey: toolModifiers.includes("shift"),
   };
   idIndex = aIndex;
-  info("Testing shortcut for tool " + aIndex + ":" + toolIDs[aIndex] +
-       " using key " + key);
+  info(
+    "Testing shortcut for tool " +
+      aIndex +
+      ":" +
+      toolIDs[aIndex] +
+      " using key " +
+      key
+  );
   EventUtils.synthesizeKey(key, modifiers, toolbox.win.parent);
 }
 
 function selectCB(id) {
   info("toolbox-select event from " + id);
 
-  is(toolIDs.indexOf(id), idIndex,
-     "Correct tool is selected on pressing the shortcut for " + id);
+  is(
+    toolIDs.indexOf(id),
+    idIndex,
+    "Correct tool is selected on pressing the shortcut for " + id
+  );
 
   testShortcuts(toolbox, idIndex + 1);
 }

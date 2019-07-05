@@ -6,10 +6,7 @@
 
 const { getSourceHash, getRuleHash } = require("../utils/changes-utils");
 
-const {
-  RESET_CHANGES,
-  TRACK_CHANGE,
-} = require("../actions/index");
+const { RESET_CHANGES, TRACK_CHANGE } = require("../actions/index");
 
 /**
  * Return a deep clone of the given state object.
@@ -68,54 +65,59 @@ function createRule(ruleData, rules) {
   // Append the rule data to the flattened CSS rule tree with its ancestors.
   const ruleAncestry = [...ruleData.ancestors, { ...ruleData }];
 
-  return ruleAncestry
-    .map((rule, index) => {
-      // Ensure each rule has ancestors excluding itself (expand the flattened rule tree).
-      rule.ancestors = ruleAncestry.slice(0, index);
-      // Ensure each rule has a selector text.
-      // For the purpose of displaying in the UI, we treat at-rules as selectors.
-      if (!rule.selectors || !rule.selectors.length) {
-        rule.selectors =
-          [`${rule.typeName} ${(rule.conditionText || rule.name || rule.keyText)}`];
-      }
+  return (
+    ruleAncestry
+      .map((rule, index) => {
+        // Ensure each rule has ancestors excluding itself (expand the flattened rule tree).
+        rule.ancestors = ruleAncestry.slice(0, index);
+        // Ensure each rule has a selector text.
+        // For the purpose of displaying in the UI, we treat at-rules as selectors.
+        if (!rule.selectors || !rule.selectors.length) {
+          rule.selectors = [
+            `${rule.typeName} ${rule.conditionText ||
+              rule.name ||
+              rule.keyText}`,
+          ];
+        }
 
-      // Bug 1525326: Remove getRuleHash() in Firefox 70. Until then, we fallback
-      // to the custom hashing method if the server did not provide a rule with an id.
-      return rule.id || getRuleHash(rule);
-    })
-    // Then, create new entries in the rules collection and assign dependencies.
-    .map((ruleId, index, array) => {
-      const { selectors } = ruleAncestry[index];
-      const prevRuleId = array[index - 1];
-      const nextRuleId = array[index + 1];
+        // Bug 1525326: Remove getRuleHash() in Firefox 70. Until then, we fallback
+        // to the custom hashing method if the server did not provide a rule with an id.
+        return rule.id || getRuleHash(rule);
+      })
+      // Then, create new entries in the rules collection and assign dependencies.
+      .map((ruleId, index, array) => {
+        const { selectors } = ruleAncestry[index];
+        const prevRuleId = array[index - 1];
+        const nextRuleId = array[index + 1];
 
-      // Create an entry for this ruleId if one does not exist.
-      if (!rules[ruleId]) {
-        rules[ruleId] = {
-          ruleId,
-          isNew: false,
-          selectors,
-          add: [],
-          remove: [],
-          children: [],
-          parent: null,
-        };
-      }
+        // Create an entry for this ruleId if one does not exist.
+        if (!rules[ruleId]) {
+          rules[ruleId] = {
+            ruleId,
+            isNew: false,
+            selectors,
+            add: [],
+            remove: [],
+            children: [],
+            parent: null,
+          };
+        }
 
-      // The next ruleId is lower in the rule tree, therefore it's a child of this rule.
-      if (nextRuleId && !rules[ruleId].children.includes(nextRuleId)) {
-        rules[ruleId].children.push(nextRuleId);
-      }
+        // The next ruleId is lower in the rule tree, therefore it's a child of this rule.
+        if (nextRuleId && !rules[ruleId].children.includes(nextRuleId)) {
+          rules[ruleId].children.push(nextRuleId);
+        }
 
-      // The previous ruleId is higher in the rule tree, therefore it's the parent.
-      if (prevRuleId) {
-        rules[ruleId].parent = prevRuleId;
-      }
+        // The previous ruleId is higher in the rule tree, therefore it's the parent.
+        if (prevRuleId) {
+          rules[ruleId].parent = prevRuleId;
+        }
 
-      return rules[ruleId];
-    })
-    // Finally, return the last rule in the array which is the rule we set out to create.
-    .pop();
+        return rules[ruleId];
+      })
+      // Finally, return the last rule in the array which is the rule we set out to create.
+      .pop()
+  );
 }
 
 function removeRule(ruleId, rules) {
@@ -123,9 +125,11 @@ function removeRule(ruleId, rules) {
 
   // First, remove this rule's id from its parent's list of children
   if (rule.parent && rules[rule.parent]) {
-    rules[rule.parent].children = rules[rule.parent].children.filter(childRuleId => {
-      return childRuleId !== ruleId;
-    });
+    rules[rule.parent].children = rules[rule.parent].children.filter(
+      childRuleId => {
+        return childRuleId !== ruleId;
+      }
+    );
 
     // Remove the parent rule if it has no children left.
     if (!rules[rule.parent].children.length) {
@@ -173,7 +177,6 @@ function removeRule(ruleId, rules) {
 const INITIAL_STATE = {};
 
 const reducers = {
-
   /**
    * CSS changes are collected on the server by the ChangesActor which dispatches them to
    * the client as atomic operations: a rule/declaration updated, added or removed.
@@ -226,7 +229,10 @@ const reducers = {
     // Reference or create object identifying the rule for this change.
     const rule = rules[ruleId]
       ? rules[ruleId]
-      : createRule({id: change.id, selectors: [selector], ancestors, ruleIndex}, rules);
+      : createRule(
+          { id: change.id, selectors: [selector], ancestors, ruleIndex },
+          rules
+        );
 
     // Mark the rule if it was created at runtime as a result of an "Add Rule" action.
     if (change.type === "rule-add") {
@@ -252,18 +258,22 @@ const reducers = {
         // Find the position of any added declaration which matches the incoming
         // declaration to be removed.
         const addIndex = rule.add.findIndex(addDecl => {
-          return addDecl.index === decl.index &&
-                 addDecl.property === decl.property &&
-                 addDecl.value === decl.value;
+          return (
+            addDecl.index === decl.index &&
+            addDecl.property === decl.property &&
+            addDecl.value === decl.value
+          );
         });
 
         // Find the position of any removed declaration which matches the incoming
         // declaration to be removed. It's possible to get duplicate remove operations
         // when, for example, disabling a declaration then deleting it.
         const removeIndex = rule.remove.findIndex(removeDecl => {
-          return removeDecl.index === decl.index &&
-                 removeDecl.property === decl.property &&
-                 removeDecl.value === decl.value;
+          return (
+            removeDecl.index === decl.index &&
+            removeDecl.property === decl.property &&
+            removeDecl.value === decl.value
+          );
         });
 
         // Track the remove operation only if the property was not previously introduced
@@ -282,21 +292,21 @@ const reducers = {
         // Update the indexes of previously tracked declarations which follow this removed
         // one so future tracking continues to point to the right declarations.
         if (change.type === "declaration-remove") {
-          rule.add = rule.add.map((addDecl => {
+          rule.add = rule.add.map(addDecl => {
             if (addDecl.index > decl.index) {
               addDecl.index--;
             }
 
             return addDecl;
-          }));
+          });
 
-          rule.remove = rule.remove.map((removeDecl => {
+          rule.remove = rule.remove.map(removeDecl => {
             if (removeDecl.index > decl.index) {
               removeDecl.index--;
             }
 
             return removeDecl;
-          }));
+          });
         }
       }
     }
@@ -306,16 +316,19 @@ const reducers = {
         // Find the position of any removed declaration which matches the incoming
         // declaration to be added.
         const removeIndex = rule.remove.findIndex(removeDecl => {
-          return removeDecl.index === decl.index &&
-                 removeDecl.value === decl.value &&
-                 removeDecl.property === decl.property;
+          return (
+            removeDecl.index === decl.index &&
+            removeDecl.value === decl.value &&
+            removeDecl.property === decl.property
+          );
         });
 
         // Find the position of any added declaration which matches the incoming
         // declaration to be added in case we need to replace it.
         const addIndex = rule.add.findIndex(addDecl => {
-          return addDecl.index === decl.index &&
-                 addDecl.property === decl.property;
+          return (
+            addDecl.index === decl.index && addDecl.property === decl.property
+          );
         });
 
         if (rule.remove[removeIndex]) {
@@ -335,8 +348,13 @@ const reducers = {
     // but skip cleanup if the selector is in process of being renamed (there are two
     // changes happening in quick succession: selector-remove + selector-add) or if the
     // rule was created at runtime (allow empty new rules to persist).
-    if (!rule.add.length && !rule.remove.length && rule.selectors.length === 1 &&
-        !change.type.startsWith("selector-") && !rule.isNew) {
+    if (
+      !rule.add.length &&
+      !rule.remove.length &&
+      rule.selectors.length === 1 &&
+      !change.type.startsWith("selector-") &&
+      !rule.isNew
+    ) {
       removeRule(ruleId, rules);
       source.rules = { ...rules };
     } else {
@@ -357,7 +375,6 @@ const reducers = {
   [RESET_CHANGES](state) {
     return INITIAL_STATE;
   },
-
 };
 
 module.exports = function(state = INITIAL_STATE, action) {

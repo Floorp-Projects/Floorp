@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
@@ -13,9 +16,12 @@ const Localized = createFactory(FluentReact.Localized);
 const Message = createFactory(require("./shared/Message"));
 
 const { MESSAGE_LEVEL } = require("../constants");
-const { COMPATIBILITY_STATUS } = require("devtools/client/shared/remote-debugging/version-checker");
+const {
+  COMPATIBILITY_STATUS,
+} = require("devtools/client/shared/remote-debugging/version-checker");
 
-const TROUBLESHOOTING_URL = "https://developer.mozilla.org/docs/Tools/about:debugging#Troubleshooting";
+const TROUBLESHOOTING_URL =
+  "https://developer.mozilla.org/docs/Tools/about:debugging#Troubleshooting";
 
 const Types = require("../types/index");
 
@@ -27,8 +33,14 @@ class CompatibilityWarning extends PureComponent {
   }
 
   render() {
-    const { localID, localVersion, minVersion, runtimeID, runtimeVersion, status } =
-      this.props.compatibilityReport;
+    const {
+      localID,
+      localVersion,
+      minVersion,
+      runtimeID,
+      runtimeVersion,
+      status,
+    } = this.props.compatibilityReport;
 
     if (status === COMPATIBILITY_STATUS.COMPATIBLE) {
       return null;
@@ -72,8 +84,8 @@ class CompatibilityWarning extends PureComponent {
           {
             className: `qa-compatibility-warning ${statusClassName}`,
           },
-          localizationId,
-        ),
+          localizationId
+        )
       )
     );
   }

@@ -22,16 +22,16 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
  */
 class BrowserConsole extends WebConsole {
   /*
-  * @constructor
-  * @param object target
-  *        The target that the browser console will connect to.
-  * @param nsIDOMWindow iframeWindow
-  *        The window where the browser console UI is already loaded.
-  * @param nsIDOMWindow chromeWindow
-  *        The window of the browser console owner.
-  * @param object hudService
-  *        The parent HUD Service
-  */
+   * @constructor
+   * @param object target
+   *        The target that the browser console will connect to.
+   * @param nsIDOMWindow iframeWindow
+   *        The window where the browser console UI is already loaded.
+   * @param nsIDOMWindow chromeWindow
+   *        The window of the browser console owner.
+   * @param object hudService
+   *        The parent HUD Service
+   */
   constructor(target, iframeWindow, chromeWindow, hudService) {
     super(target, iframeWindow, chromeWindow, hudService, true);
 
@@ -58,9 +58,13 @@ class BrowserConsole extends WebConsole {
 
     // Make sure that the closing of the Browser Console window destroys this
     // instance.
-    window.addEventListener("unload", () => {
-      this.destroy();
-    }, {once: true});
+    window.addEventListener(
+      "unload",
+      () => {
+        this.destroy();
+      },
+      { once: true }
+    );
 
     // browserconsole is not connected with a toolbox so we pass -1 as the
     // toolbox session id.

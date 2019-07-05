@@ -5,7 +5,11 @@
 "use strict";
 
 const Services = require("Services");
-const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -16,9 +20,15 @@ const {
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const Accordion = createFactory(require("./Accordion"));
-const BoxModel = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModel"));
-const Flexbox = createFactory(require("devtools/client/inspector/flexbox/components/Flexbox"));
-const Grid = createFactory(require("devtools/client/inspector/grids/components/Grid"));
+const BoxModel = createFactory(
+  require("devtools/client/inspector/boxmodel/components/BoxModel")
+);
+const Flexbox = createFactory(
+  require("devtools/client/inspector/flexbox/components/Flexbox")
+);
+const Grid = createFactory(
+  require("devtools/client/inspector/grids/components/Grid")
+);
 
 const BoxModelTypes = require("devtools/client/inspector/boxmodel/types");
 const FlexboxTypes = require("devtools/client/inspector/flexbox/types");
@@ -41,7 +51,8 @@ class LayoutApp extends PureComponent {
       flexbox: PropTypes.shape(FlexboxTypes.flexbox).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(GridTypes.grid)).isRequired,
-      highlighterSettings: PropTypes.shape(GridTypes.highlighterSettings).isRequired,
+      highlighterSettings: PropTypes.shape(GridTypes.highlighterSettings)
+        .isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
@@ -77,7 +88,10 @@ class LayoutApp extends PureComponent {
     }
 
     const grip = translateNodeFrontToGrip(flexContainer.nodeFront);
-    return LAYOUT_L10N.getFormatStr("flexbox.flexItemOf", getSelectorFromGrip(grip));
+    return LAYOUT_L10N.getFormatStr(
+      "flexbox.flexItemOf",
+      getSelectorFromGrip(grip)
+    );
   }
 
   /**
@@ -92,7 +106,9 @@ class LayoutApp extends PureComponent {
 
     const items = [
       {
-        className: `flex-accordion ${flexContainer.flexItemShown ? "item" : "container"}`,
+        className: `flex-accordion ${
+          flexContainer.flexItemShown ? "item" : "container"
+        }`,
         component: Flexbox,
         componentProps: {
           ...this.props,
@@ -102,8 +118,10 @@ class LayoutApp extends PureComponent {
         header: this.getFlexboxHeader(flexContainer),
         opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
         onToggled: () => {
-          Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF,
-            !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF));
+          Services.prefs.setBoolPref(
+            FLEXBOX_OPENED_PREF,
+            !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF)
+          );
         },
       },
       {
@@ -137,27 +155,32 @@ class LayoutApp extends PureComponent {
     // is assumed that they want to primarily see that element as a container, so the
     // container info should be at the top.
     if (flexItemContainer && flexItemContainer.actorID) {
-      items.splice(this.props.flexbox.initiatedByMarkupViewSelection ? 1 : 0, 0, {
-        className: "flex-accordion item",
-        component: Flexbox,
-        componentProps: {
-          ...this.props,
-          flexContainer: flexItemContainer,
-          scrollToTop: this.scrollToTop,
-        },
-        header: this.getFlexboxHeader(flexItemContainer),
-        opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-        onToggled: () => {
-          Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF,
-            !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF));
-        },
-      });
+      items.splice(
+        this.props.flexbox.initiatedByMarkupViewSelection ? 1 : 0,
+        0,
+        {
+          className: "flex-accordion item",
+          component: Flexbox,
+          componentProps: {
+            ...this.props,
+            flexContainer: flexItemContainer,
+            scrollToTop: this.scrollToTop,
+          },
+          header: this.getFlexboxHeader(flexItemContainer),
+          opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
+          onToggled: () => {
+            Services.prefs.setBoolPref(
+              FLEXBOX_OPENED_PREF,
+              !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF)
+            );
+          },
+        }
+      );
     }
 
-    return (
-      dom.div({ className: "layout-container", ref: this.containerRef },
-        Accordion({ items })
-      )
+    return dom.div(
+      { className: "layout-container", ref: this.containerRef },
+      Accordion({ items })
     );
   }
 }

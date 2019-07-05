@@ -8,7 +8,7 @@
 
 "use strict";
 
-const {PrefObserver} = require("devtools/client/shared/prefs");
+const { PrefObserver } = require("devtools/client/shared/prefs");
 
 const TEST_URI = `data:text/html;charset=utf-8,
   Web Console test for bug 1307871 - preference for toggling timestamps in messages`;
@@ -26,13 +26,15 @@ add_task(async function() {
 
   const prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
   ok(!prefValue, "Messages should have no timestamp by default (pref check)");
-  ok(!message.node.querySelector(".timestamp"),
-    "Messages should have no timestamp by default (element check)");
+  ok(
+    !message.node.querySelector(".timestamp"),
+    "Messages should have no timestamp by default (element check)"
+  );
 
   info("Open the settings panel");
   const observer = new PrefObserver("");
   const toolbox = gDevTools.getToolbox(hud.target);
-  const {panelDoc, panelWin} = await toolbox.selectTool("options");
+  const { panelDoc, panelWin } = await toolbox.selectTool("options");
 
   info("Change Timestamp preference");
   const prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
@@ -48,7 +50,10 @@ add_task(async function() {
   // Switch back to the console as it won't update when it is in background
   info("Go back to console");
   await toolbox.selectTool("webconsole");
-  ok(message.node.querySelector(".timestamp"), "Messages should have timestamp");
+  ok(
+    message.node.querySelector(".timestamp"),
+    "Messages should have timestamp"
+  );
 
   Services.prefs.clearUserPref(PREF_MESSAGE_TIMESTAMP);
 });

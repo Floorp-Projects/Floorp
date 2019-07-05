@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html;charset=utf8,<script>
   throw "Visit \u201c${url1}\u201d or \u201c${url2}\u201d to get more " +
         "information on this error.";
 </script>`;
-const {ELLIPSIS} = require("devtools/shared/l10n");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -27,8 +27,9 @@ add_task(async function() {
   const getCroppedUrl = origin => {
     const cropLimit = 120;
     const half = cropLimit / 2;
-    const params =
-      `?v=${"0".repeat(half - origin.length - 3)}${ELLIPSIS}${"0".repeat(half)}`;
+    const params = `?v=${"0".repeat(
+      half - origin.length - 3
+    )}${ELLIPSIS}${"0".repeat(half)}`;
     return `${origin}${params}`;
   };
 
@@ -40,11 +41,17 @@ add_task(async function() {
   const [comLink, orgLink] = Array.from(msg.querySelectorAll("a"));
   is(comLink.getAttribute("href"), url1, "First link has expected url");
   is(comLink.getAttribute("title"), url1, "First link has expected tooltip");
-  is(comLink.textContent, getCroppedUrl("https://example.com"),
-    "First link has expected text");
+  is(
+    comLink.textContent,
+    getCroppedUrl("https://example.com"),
+    "First link has expected text"
+  );
 
   is(orgLink.getAttribute("href"), url2, "Second link has expected url");
   is(orgLink.getAttribute("title"), url2, "Second link has expected tooltip");
-  is(orgLink.textContent, getCroppedUrl("https://example.org"),
-    "Second link has expected text");
+  is(
+    orgLink.textContent,
+    getCroppedUrl("https://example.org"),
+    "Second link has expected text"
+  );
 });

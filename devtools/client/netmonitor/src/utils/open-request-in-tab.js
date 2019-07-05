@@ -14,7 +14,12 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(
+  this,
+  "openContentLink",
+  "devtools/client/shared/link",
+  true
+);
 
 /**
  * Opens given request in a new tab.
@@ -23,7 +28,7 @@ loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link",
  */
 function openRequestInTab(url, requestHeaders, requestPostData) {
   if (!requestPostData) {
-    openContentLink(url, {relatedToCurrent: true});
+    openContentLink(url, { relatedToCurrent: true });
   } else {
     openPostRequestInTabHelper({
       url,
@@ -32,7 +37,7 @@ function openRequestInTab(url, requestHeaders, requestPostData) {
   }
 }
 
-function openPostRequestInTabHelper({url, data}) {
+function openPostRequestInTabHelper({ url, data }) {
   const form = document.createElement("form");
   form.target = "_blank";
   form.action = url;

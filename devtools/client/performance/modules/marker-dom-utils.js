@@ -9,7 +9,9 @@
  */
 
 const { L10N, PREFS } = require("devtools/client/performance/modules/global");
-const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
+const {
+  MarkerBlueprintUtils,
+} = require("devtools/client/performance/modules/marker-blueprint-utils");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 
 /**
@@ -26,7 +28,9 @@ exports.MarkerDOMUtils = {
    */
   buildFields: function(doc, marker) {
     const fields = MarkerBlueprintUtils.getMarkerFields(marker);
-    return fields.map(({ label, value }) => this.buildNameValueLabel(doc, label, value));
+    return fields.map(({ label, value }) =>
+      this.buildNameValueLabel(doc, label, value)
+    );
   },
 
   /**
@@ -43,7 +47,9 @@ exports.MarkerDOMUtils = {
     hbox.setAttribute("align", "center");
 
     const bullet = doc.createXULElement("hbox");
-    bullet.className = `marker-details-bullet marker-color-${blueprint.colorName}`;
+    bullet.className = `marker-details-bullet marker-color-${
+      blueprint.colorName
+    }`;
 
     const title = MarkerBlueprintUtils.getMarkerLabel(marker);
     const label = doc.createXULElement("label");
@@ -67,8 +73,10 @@ exports.MarkerDOMUtils = {
     const label = L10N.getStr("marker.field.duration");
     const start = L10N.getFormatStrWithNumbers("timeline.tick", marker.start);
     const end = L10N.getFormatStrWithNumbers("timeline.tick", marker.end);
-    const duration = L10N.getFormatStrWithNumbers("timeline.tick",
-                                                marker.end - marker.start);
+    const duration = L10N.getFormatStrWithNumbers(
+      "timeline.tick",
+      marker.end - marker.start
+    );
 
     const el = this.buildNameValueLabel(doc, label, duration);
     el.classList.add("marker-details-duration");
@@ -143,7 +151,10 @@ exports.MarkerDOMUtils = {
       // If the previous frame had an async parent, then the async
       // cause is in this frame and should be displayed.
       if (wasAsyncParent) {
-        const asyncStr = L10N.getFormatStr("marker.field.asyncStack", frame.asyncCause);
+        const asyncStr = L10N.getFormatStr(
+          "marker.field.asyncStack",
+          frame.asyncCause
+        );
         const asyncBox = doc.createXULElement("hbox");
         const asyncLabel = doc.createXULElement("label");
         asyncLabel.className = "devtools-monospace";
@@ -183,16 +194,22 @@ exports.MarkerDOMUtils = {
 
         // Clicking here will bubble up to the parent,
         // which handles the view source.
-        linkNode.setAttribute("data-action", JSON.stringify({
-          url: url,
-          line: line,
-          action: "view-source",
-        }));
+        linkNode.setAttribute(
+          "data-action",
+          JSON.stringify({
+            url: url,
+            line: line,
+            action: "view-source",
+          })
+        );
       }
 
       if (!displayName && !url) {
         const unknownLabel = doc.createXULElement("label");
-        unknownLabel.setAttribute("value", L10N.getStr("marker.value.unknownFrame"));
+        unknownLabel.setAttribute(
+          "value",
+          L10N.getStr("marker.value.unknownFrame")
+        );
         hbox.appendChild(unknownLabel);
       }
 
@@ -228,10 +245,13 @@ exports.MarkerDOMUtils = {
       label.className = "custom-button";
       label.setAttribute("value", "Show allocation triggers");
       label.setAttribute("type", "show-allocations");
-      label.setAttribute("data-action", JSON.stringify({
-        endTime: marker.start,
-        action: "show-allocations",
-      }));
+      label.setAttribute(
+        "data-action",
+        JSON.stringify({
+          endTime: marker.start,
+          action: "show-allocations",
+        })
+      );
 
       hbox.appendChild(label);
       elements.push(hbox);

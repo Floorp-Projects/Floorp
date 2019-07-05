@@ -42,20 +42,28 @@ const ToolbarView = {
 
     this._buildMarkersFilterPopup();
     this._updateHiddenMarkersPopup();
-    $("#performance-filter-menupopup").addEventListener("popupshowing",
-                                                        this._onFilterPopupShowing);
-    $("#performance-filter-menupopup").addEventListener("popuphiding",
-                                                        this._onFilterPopupHiding);
+    $("#performance-filter-menupopup").addEventListener(
+      "popupshowing",
+      this._onFilterPopupShowing
+    );
+    $("#performance-filter-menupopup").addEventListener(
+      "popuphiding",
+      this._onFilterPopupHiding
+    );
   },
 
   /**
    * Unbinds events and cleans up view.
    */
   destroy: function() {
-    $("#performance-filter-menupopup").removeEventListener("popupshowing",
-                                                           this._onFilterPopupShowing);
-    $("#performance-filter-menupopup").removeEventListener("popuphiding",
-                                                           this._onFilterPopupHiding);
+    $("#performance-filter-menupopup").removeEventListener(
+      "popupshowing",
+      this._onFilterPopupShowing
+    );
+    $("#performance-filter-menupopup").removeEventListener(
+      "popuphiding",
+      this._onFilterPopupHiding
+    );
     this._popup = null;
 
     this.optionsView.off("pref-changed", this._onPrefChanged);
@@ -66,14 +74,18 @@ const ToolbarView = {
    * Creates the timeline markers filter popup.
    */
   _buildMarkersFilterPopup: function() {
-    for (const [markerName, markerDetails] of Object.entries(TIMELINE_BLUEPRINT)) {
+    for (const [markerName, markerDetails] of Object.entries(
+      TIMELINE_BLUEPRINT
+    )) {
       const menuitem = document.createXULElement("menuitem");
       menuitem.setAttribute("closemenu", "none");
       menuitem.setAttribute("type", "checkbox");
       menuitem.setAttribute("align", "center");
       menuitem.setAttribute("flex", "1");
-      menuitem.setAttribute("label",
-                            MarkerBlueprintUtils.getMarkerGenericName(markerName));
+      menuitem.setAttribute(
+        "label",
+        MarkerBlueprintUtils.getMarkerGenericName(markerName)
+      );
       menuitem.setAttribute("marker-type", markerName);
       menuitem.className = `marker-color-${markerDetails.colorName}`;
 
@@ -141,10 +153,12 @@ const ToolbarView = {
    * Fired when a menu item in the markers filter popup is checked or unchecked.
    */
   _onHiddenMarkersChanged: function() {
-    const checkedMenuItems =
-      $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
-    const hiddenMarkers =
-      Array.from(checkedMenuItems, e => e.getAttribute("marker-type"));
+    const checkedMenuItems = $$(
+      "#performance-filter-menupopup menuitem[marker-type]:not([checked])"
+    );
+    const hiddenMarkers = Array.from(checkedMenuItems, e =>
+      e.getAttribute("marker-type")
+    );
     PerformanceController.setPref("hidden-markers", hiddenMarkers);
   },
 

@@ -35,9 +35,10 @@ add_task(async function() {
   info("Toggling ON the CSS grid highlighter from the layout panel.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
   const onGridOutlineRendered = waitForDOM(doc, ".grid-outline-text", 1);
-  const onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 &&
-    state.grids[0].highlighted);
+  const onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && state.grids[0].highlighted
+  );
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -45,8 +46,12 @@ add_task(async function() {
 
   const cannotShowGridOutline = elements[0];
 
-  info("Checking the grid outline is not rendered and an appropriate message is shown.");
+  info(
+    "Checking the grid outline is not rendered and an appropriate message is shown."
+  );
   ok(!outline, "Outline component is not shown.");
-  ok(cannotShowGridOutline,
-    "The message 'Cannot show outline for this grid' is displayed.");
+  ok(
+    cannotShowGridOutline,
+    "The message 'Cannot show outline for this grid' is displayed."
+  );
 });

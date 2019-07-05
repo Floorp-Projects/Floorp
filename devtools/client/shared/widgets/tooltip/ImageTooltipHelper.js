@@ -6,8 +6,10 @@
 
 "use strict";
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/inspector.properties"
+);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -60,8 +62,13 @@ function getImageDimensions(doc, imageUrl) {
                       the checkered background
  */
 function setImageTooltip(tooltip, doc, imageUrl, options) {
-  let {naturalWidth, naturalHeight, hideDimensionLabel,
-       hideCheckeredBackground, maxDim} = options;
+  let {
+    naturalWidth,
+    naturalHeight,
+    hideDimensionLabel,
+    hideCheckeredBackground,
+    maxDim,
+  } = options;
   maxDim = maxDim || MAX_DIMENSION;
 
   let imgHeight = naturalHeight;
@@ -118,7 +125,7 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
 
   tooltip.panel.innerHTML = "";
   tooltip.panel.appendChild(div);
-  tooltip.setContentSize({width, height});
+  tooltip.setContentSize({ width, height });
 }
 
 /*
@@ -138,7 +145,7 @@ function setBrokenImageTooltip(tooltip, doc) {
 
   tooltip.panel.innerHTML = "";
   tooltip.panel.appendChild(div);
-  tooltip.setContentSize({width: "auto", height: "auto"});
+  tooltip.setContentSize({ width: "auto", height: "auto" });
 }
 
 module.exports.getImageDimensions = getImageDimensions;

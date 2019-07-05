@@ -11,14 +11,15 @@
 
 const { Cc, Ci } = require("chrome");
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
+const FRAME_SCRIPT_UTILS_URL =
+  "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
 
 let gMM = null;
 
 /**
  * Loads the relevant frame scripts into the provided browser's message manager.
  */
-exports.pmmLoadFrameScripts = (gBrowser) => {
+exports.pmmLoadFrameScripts = gBrowser => {
   gMM = gBrowser.selectedBrowser.messageManager;
   gMM.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
 };
@@ -37,11 +38,14 @@ exports.pmmClearFrameScripts = () => {
  */
 exports.pmmUniqueMessage = function(message, payload) {
   if (!gMM) {
-    throw new Error("`pmmLoadFrameScripts()` must be called when using MessageManager.");
+    throw new Error(
+      "`pmmLoadFrameScripts()` must be called when using MessageManager."
+    );
   }
 
-  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator);
+  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
   payload.id = generateUUID().toString();
 
   return new Promise(resolve => {
@@ -68,8 +72,12 @@ exports.pmmIsProfilerActive = () => {
 exports.pmmStartProfiler = async function({ entries, interval, features }) {
   const isActive = (await exports.pmmSendProfilerCommand("IsActive")).isActive;
   if (!isActive) {
-    return exports.pmmSendProfilerCommand("StartProfiler", [entries, interval, features,
-                                                            features.length]);
+    return exports.pmmSendProfilerCommand("StartProfiler", [
+      entries,
+      interval,
+      features,
+      features.length,
+    ]);
   }
   return null;
 };
@@ -95,7 +103,7 @@ exports.pmmSendProfilerCommand = (method, args = []) => {
  * Evaluates a script in content, returning a promise resolved with the
  * returned result.
  */
-exports.pmmEvalInDebuggee = (script) => {
+exports.pmmEvalInDebuggee = script => {
   return exports.pmmUniqueMessage("devtools:test:eval", { script });
 };
 

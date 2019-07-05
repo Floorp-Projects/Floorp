@@ -26,14 +26,18 @@ add_task(async function() {
   await hideColumn(monitor, "waterfall");
 
   const onRequestsFinished = waitForRequestsFinished(monitor);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelector("#requests-list-contentSize-button"));
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelector("#requests-list-contentSize-button")
+  );
 
   getContextMenuItem(monitor, "request-list-header-reset-columns").click();
   await onRequestsFinished;
 
-  ok(JSON.stringify(prefBefore) === JSON.stringify(Prefs.visibleColumns),
-     "Reset columns item should reset columns pref");
+  ok(
+    JSON.stringify(prefBefore) === JSON.stringify(Prefs.visibleColumns),
+    "Reset columns item should reset columns pref"
+  );
 });
 
 /**

@@ -11,12 +11,17 @@
 add_task(async function() {
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
 
-  const contextMenu = gPanelWindow.document.getElementById("storage-tree-popup");
+  const contextMenu = gPanelWindow.document.getElementById(
+    "storage-tree-popup"
+  );
   const menuDeleteDb = contextMenu.querySelector("#storage-tree-popup-delete");
 
   info("test state before delete");
   await checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb1 (default)", "idb2 (default)"]],
+    [
+      ["indexedDB", "http://test1.example.org"],
+      ["idb1 (default)", "idb2 (default)"],
+    ],
   ]);
 
   info("do the delete");
@@ -27,7 +32,9 @@ add_task(async function() {
   // Wait once for update and another time for value fetching
   const eventWait = gUI.once("store-objects-updated");
 
-  const selector = `[data-id='${JSON.stringify(deletedDb)}'] > .tree-widget-item`;
+  const selector = `[data-id='${JSON.stringify(
+    deletedDb
+  )}'] > .tree-widget-item`;
   const target = gPanelWindow.document.querySelector(selector);
   ok(target, `tree item found in ${deletedDb.join(" > ")}`);
   await waitForContextMenu(contextMenu, target, () => {

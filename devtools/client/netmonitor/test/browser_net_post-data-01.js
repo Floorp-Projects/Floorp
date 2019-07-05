@@ -18,10 +18,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -69,18 +68,31 @@ add_task(async function() {
 
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#params-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#params-tab")
+  );
   await wait;
   await testParamsTab("urlencoded");
 
   // Wait for all tree sections and editor updated by react
-  const waitForSections = waitForDOM(document, "#params-panel .tree-section", 2);
-  const waitForSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[1]);
+  const waitForSections = waitForDOM(
+    document,
+    "#params-panel .tree-section",
+    2
+  );
+  const waitForSourceEditor = waitForDOM(
+    document,
+    "#params-panel .CodeMirror-code"
+  );
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]
+  );
   await Promise.all([waitForSections, waitForSourceEditor]);
   await testParamsTab("multipart");
 
@@ -90,68 +102,149 @@ add_task(async function() {
     const tabpanel = document.querySelector("#params-panel");
 
     function checkVisibility(box) {
-      is(!tabpanel.querySelector(".treeTable"), !box.includes("params"),
-        "The request params doesn't have the indended visibility.");
-      is(tabpanel.querySelector(".CodeMirror-code") === null,
+      is(
+        !tabpanel.querySelector(".treeTable"),
+        !box.includes("params"),
+        "The request params doesn't have the indended visibility."
+      );
+      is(
+        tabpanel.querySelector(".CodeMirror-code") === null,
         !box.includes("editor"),
-        "The request post data doesn't have the indended visibility.");
+        "The request post data doesn't have the indended visibility."
+      );
     }
 
-    is(tabpanel.querySelectorAll(".tree-section").length, 2,
-      "There should be 2 tree sections displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".empty-notice").length, 0,
-      "The empty notice should not be displayed in this tabpanel.");
+    is(
+      tabpanel.querySelectorAll(".tree-section").length,
+      2,
+      "There should be 2 tree sections displayed in this tabpanel."
+    );
+    is(
+      tabpanel.querySelectorAll(".empty-notice").length,
+      0,
+      "The empty notice should not be displayed in this tabpanel."
+    );
 
     const treeSections = tabpanel.querySelectorAll(".tree-section");
 
-    is(treeSections[0].querySelector(".treeLabel").textContent,
+    is(
+      treeSections[0].querySelector(".treeLabel").textContent,
       L10N.getStr("paramsQueryString"),
-      "The query section doesn't have the correct title.");
+      "The query section doesn't have the correct title."
+    );
 
-    is(treeSections[1].querySelector(".treeLabel").textContent,
-      L10N.getStr(type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"),
-      "The post section doesn't have the correct title.");
+    is(
+      treeSections[1].querySelector(".treeLabel").textContent,
+      L10N.getStr(
+        type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"
+      ),
+      "The post section doesn't have the correct title."
+    );
 
-    const labels = tabpanel
-      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    const values = tabpanel
-      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+    const labels = tabpanel.querySelectorAll(
+      "tr:not(.tree-section) .treeLabelCell .treeLabel"
+    );
+    const values = tabpanel.querySelectorAll(
+      "tr:not(.tree-section) .treeValueCell .objectBox"
+    );
 
-    is(labels[0].textContent, "foo", "The first query param name was incorrect.");
-    is(values[0].textContent, "bar", "The first query param value was incorrect.");
-    is(labels[1].textContent, "baz", "The second query param name was incorrect.");
-    is(values[1].textContent, "42", "The second query param value was incorrect.");
-    is(labels[2].textContent, "type", "The third query param name was incorrect.");
-    is(values[2].textContent, type, "The third query param value was incorrect.");
+    is(
+      labels[0].textContent,
+      "foo",
+      "The first query param name was incorrect."
+    );
+    is(
+      values[0].textContent,
+      "bar",
+      "The first query param value was incorrect."
+    );
+    is(
+      labels[1].textContent,
+      "baz",
+      "The second query param name was incorrect."
+    );
+    is(
+      values[1].textContent,
+      "42",
+      "The second query param value was incorrect."
+    );
+    is(
+      labels[2].textContent,
+      "type",
+      "The third query param name was incorrect."
+    );
+    is(
+      values[2].textContent,
+      type,
+      "The third query param value was incorrect."
+    );
 
     if (type == "urlencoded") {
       checkVisibility("params");
-      is(labels.length, 5, "There should be 5 param values displayed in this tabpanel.");
-      is(labels[3].textContent, "foo", "The first post param name was incorrect.");
-      is(values[3].textContent, "bar", "The first post param value was incorrect.");
-      is(labels[4].textContent, "baz", "The second post param name was incorrect.");
-      is(values[4].textContent, "123", "The second post param value was incorrect.");
+      is(
+        labels.length,
+        5,
+        "There should be 5 param values displayed in this tabpanel."
+      );
+      is(
+        labels[3].textContent,
+        "foo",
+        "The first post param name was incorrect."
+      );
+      is(
+        values[3].textContent,
+        "bar",
+        "The first post param value was incorrect."
+      );
+      is(
+        labels[4].textContent,
+        "baz",
+        "The second post param name was incorrect."
+      );
+      is(
+        values[4].textContent,
+        "123",
+        "The second post param value was incorrect."
+      );
     } else {
       checkVisibility("params editor");
 
-      is(labels.length, 3, "There should be 3 param values displayed in this tabpanel.");
+      is(
+        labels.length,
+        3,
+        "There should be 3 param values displayed in this tabpanel."
+      );
 
       const text = getCodeMirrorValue(monitor);
 
-      ok(text.includes("Content-Disposition: form-data; name=\"text\""),
-        "The text shown in the source editor is incorrect (1.1).");
-      ok(text.includes("Content-Disposition: form-data; name=\"email\""),
-        "The text shown in the source editor is incorrect (2.1).");
-      ok(text.includes("Content-Disposition: form-data; name=\"range\""),
-        "The text shown in the source editor is incorrect (3.1).");
-      ok(text.includes("Content-Disposition: form-data; name=\"Custom field\""),
-        "The text shown in the source editor is incorrect (4.1).");
-      ok(text.includes("Some text..."),
-        "The text shown in the source editor is incorrect (2.2).");
-      ok(text.includes("42"),
-        "The text shown in the source editor is incorrect (3.2).");
-      ok(text.includes("Extra data"),
-        "The text shown in the source editor is incorrect (4.2).");
+      ok(
+        text.includes('Content-Disposition: form-data; name="text"'),
+        "The text shown in the source editor is incorrect (1.1)."
+      );
+      ok(
+        text.includes('Content-Disposition: form-data; name="email"'),
+        "The text shown in the source editor is incorrect (2.1)."
+      );
+      ok(
+        text.includes('Content-Disposition: form-data; name="range"'),
+        "The text shown in the source editor is incorrect (3.1)."
+      );
+      ok(
+        text.includes('Content-Disposition: form-data; name="Custom field"'),
+        "The text shown in the source editor is incorrect (4.1)."
+      );
+      ok(
+        text.includes("Some text..."),
+        "The text shown in the source editor is incorrect (2.2)."
+      );
+      ok(
+        text.includes("42"),
+        "The text shown in the source editor is incorrect (3.2)."
+      );
+      ok(
+        text.includes("Extra data"),
+        "The text shown in the source editor is incorrect (4.2)."
+      );
     }
   }
 });

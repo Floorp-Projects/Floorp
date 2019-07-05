@@ -7,8 +7,9 @@
 
 // Check adding console calls as batch keep the order of the message.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-batching.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-batching.html";
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
 add_task(async function() {
@@ -19,24 +20,28 @@ add_task(async function() {
 });
 
 async function testSimpleBatchLogging(hud, messageNumber) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
-    function(numMessages) {
-      content.wrappedJSObject.batchLog(numMessages);
-    }
-  );
+  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber, function(
+    numMessages
+  ) {
+    content.wrappedJSObject.batchLog(numMessages);
+  });
 
   for (let i = 0; i < messageNumber; i++) {
     const node = await waitFor(() => findMessageAtIndex(hud, i, i));
-    is(node.textContent, i.toString(), `message at index "${i}" is the expected one`);
+    is(
+      node.textContent,
+      i.toString(),
+      `message at index "${i}" is the expected one`
+    );
   }
 }
 
 async function testBatchLoggingAndClear(hud, messageNumber) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
-    function(numMessages) {
-      content.wrappedJSObject.batchLogAndClear(numMessages);
-    }
-  );
+  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber, function(
+    numMessages
+  ) {
+    content.wrappedJSObject.batchLogAndClear(numMessages);
+  });
   await waitFor(() => findMessage(hud, l10n.getStr("consoleCleared")));
   ok(true, "console cleared message is displayed");
 

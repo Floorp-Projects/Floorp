@@ -47,7 +47,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
   </script>`;
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   // We expect that host children are correctly displayed when no slots are defined.
   const beforeTree = `
@@ -70,12 +70,16 @@ add_task(async function() {
           ::before`;
   await assertMarkupViewAsTree(beforeTree, ".root", inspector);
 
-  info("Move the non-slotted element with class has-before and check the pseudo appears");
+  info(
+    "Move the non-slotted element with class has-before and check the pseudo appears"
+  );
   const mutated = waitForNMutations(inspector, "childList", 2);
   const pseudoMutated = waitForMutation(inspector, "nativeAnonymousChildList");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     const root = content.document.querySelector(".root");
-    const hasBeforeEl = content.document.querySelector("no-slot-component .has-before");
+    const hasBeforeEl = content.document.querySelector(
+      "no-slot-component .has-before"
+    );
     root.appendChild(hasBeforeEl);
   });
   await mutated;

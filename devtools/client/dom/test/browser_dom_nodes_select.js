@@ -24,8 +24,10 @@ add_task(async function() {
   const openInInspectorIcon = node.querySelector(".open-inspector");
   ok(node !== null, "Node was logged as expected");
 
-  info("Clicking on the inspector icon and waiting for the " +
-       "inspector to be selected");
+  info(
+    "Clicking on the inspector icon and waiting for the " +
+      "inspector to be selected"
+  );
   const onInspectorSelected = toolbox.once("inspector-selected");
   const onInspectorUpdated = inspector.once("inspector-updated");
   const onNewNode = toolbox.selection.once("new-node-front");

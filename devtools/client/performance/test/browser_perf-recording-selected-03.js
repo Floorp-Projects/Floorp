@@ -9,10 +9,20 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
-const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  setSelectedRecording,
+} = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -33,10 +43,14 @@ add_task(async function() {
   setSelectedRecording(panel, 0);
   await selected;
 
-  ok($("#main-record-button").classList.contains("checked"),
-    "Button is still checked after selecting another item.");
-  ok(!$("#main-record-button").hasAttribute("disabled"),
-    "Button is not locked after selecting another item.");
+  ok(
+    $("#main-record-button").classList.contains("checked"),
+    "Button is still checked after selecting another item."
+  );
+  ok(
+    !$("#main-record-button").hasAttribute("disabled"),
+    "Button is not locked after selecting another item."
+  );
 
   await stopRecording(panel);
 

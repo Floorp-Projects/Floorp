@@ -95,7 +95,7 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
   // row ends up duplicating the popup. The newly inserted popup doesn't
   // dismiss the old one. So remove any previously displayed popup before
   // opening a new one.
-  let popup = popupset.querySelector("menupopup[menu-api=\"true\"]");
+  let popup = popupset.querySelector('menupopup[menu-api="true"]');
   if (popup) {
     popup.hidePopup();
   }
@@ -116,7 +116,7 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
   win.addEventListener("unload", onWindowUnload);
 
   // Remove the menu from the DOM once it's hidden.
-  popup.addEventListener("popuphidden", (e) => {
+  popup.addEventListener("popuphidden", e => {
     if (e.target === popup) {
       win.removeEventListener("unload", onWindowUnload);
       popup.remove();
@@ -124,7 +124,7 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
     }
   });
 
-  popup.addEventListener("popupshown", (e) => {
+  popup.addEventListener("popupshown", e => {
     if (e.target === popup) {
       this.emit("open");
     }

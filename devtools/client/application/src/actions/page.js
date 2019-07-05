@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  UPDATE_DOMAIN,
-} = require("../constants");
+const { UPDATE_DOMAIN } = require("../constants");
 
 function updateDomain(url) {
   return {

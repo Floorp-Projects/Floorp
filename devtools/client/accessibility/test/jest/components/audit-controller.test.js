@@ -9,36 +9,60 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const AuditController = createFactory(
-  require("devtools/client/accessibility/components/AuditController"));
-const { mockAccessible } = require("devtools/client/accessibility/test/jest/helpers");
+  require("devtools/client/accessibility/components/AuditController")
+);
+const {
+  mockAccessible,
+} = require("devtools/client/accessibility/test/jest/helpers");
 
 describe("AuditController component:", () => {
   it("dead accessible actor", () => {
     const accessible = mockAccessible();
-    const wrapper = mount(AuditController({
-      accessible,
-    }, span()));
+    const wrapper = mount(
+      AuditController(
+        {
+          accessible,
+        },
+        span()
+      )
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.find("span").length).toBe(1);
-    expect(wrapper.find("span").first().props()).toMatchObject({
+    expect(
+      wrapper
+        .find("span")
+        .first()
+        .props()
+    ).toMatchObject({
       checks: undefined,
     });
 
     const instance = wrapper.instance();
     expect(accessible.on.mock.calls.length).toBe(1);
     expect(accessible.off.mock.calls.length).toBe(1);
-    expect(accessible.on.mock.calls[0]).toEqual(["audited", instance.onAudited]);
-    expect(accessible.off.mock.calls[0]).toEqual(["audited", instance.onAudited]);
+    expect(accessible.on.mock.calls[0]).toEqual([
+      "audited",
+      instance.onAudited,
+    ]);
+    expect(accessible.off.mock.calls[0]).toEqual([
+      "audited",
+      instance.onAudited,
+    ]);
   });
 
   it("accessible without checks", () => {
     const accessible = mockAccessible({
       actorID: "1",
     });
-    const wrapper = mount(AuditController({
-      accessible,
-    }, span()));
+    const wrapper = mount(
+      AuditController(
+        {
+          accessible,
+        },
+        span()
+      )
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     expect(accessible.audit.mock.calls.length).toBe(1);
@@ -52,9 +76,14 @@ describe("AuditController component:", () => {
       actorID: "1",
       checks,
     });
-    const wrapper = mount(AuditController({
-      accessible,
-    }, span({ className: "child" })));
+    const wrapper = mount(
+      AuditController(
+        {
+          accessible,
+        },
+        span({ className: "child" })
+      )
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.state("checks")).toMatchObject(checks);

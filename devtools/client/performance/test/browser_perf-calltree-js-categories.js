@@ -8,11 +8,23 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_SHOW_PLATFORM_DATA_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { busyWait } = require("devtools/client/performance/test/helpers/wait-utils");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  UI_SHOW_PLATFORM_DATA_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  busyWait,
+} = require("devtools/client/performance/test/helpers/wait-utils");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -34,18 +46,28 @@ add_task(async function() {
   await DetailsView.selectView("js-calltree");
   await rendered;
 
-  is($(".call-tree-cells-container").hasAttribute("categories-hidden"), false,
-    "The call tree cells container should show the categories now.");
-  ok(geckoCategoryPresent($$),
-    "A category node with the text `Gecko` is displayed in the tree.");
+  is(
+    $(".call-tree-cells-container").hasAttribute("categories-hidden"),
+    false,
+    "The call tree cells container should show the categories now."
+  );
+  ok(
+    geckoCategoryPresent($$),
+    "A category node with the text `Gecko` is displayed in the tree."
+  );
 
   // Disable platform data to hide the categories.
   Services.prefs.setBoolPref(UI_SHOW_PLATFORM_DATA_PREF, false);
 
-  is($(".call-tree-cells-container").getAttribute("categories-hidden"), "",
-    "The call tree cells container should hide the categories now.");
-  ok(!geckoCategoryPresent($$),
-    "A category node with the text `Gecko` doesn't exist in the tree anymore.");
+  is(
+    $(".call-tree-cells-container").getAttribute("categories-hidden"),
+    "",
+    "The call tree cells container should hide the categories now."
+  );
+  ok(
+    !geckoCategoryPresent($$),
+    "A category node with the text `Gecko` doesn't exist in the tree anymore."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

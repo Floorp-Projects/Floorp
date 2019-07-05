@@ -11,12 +11,18 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const sourceUtils = require("devtools/client/shared/source-utils");
 
 const CHROME_URLS = [
-  "chrome://foo", "resource://baz", "jar:file:///Users/root",
+  "chrome://foo",
+  "resource://baz",
+  "jar:file:///Users/root",
 ];
 
 const CONTENT_URLS = [
-  "http://mozilla.org", "https://mozilla.org", "file:///Users/root", "app://fxosapp",
-  "blob:http://mozilla.org", "blob:https://mozilla.org",
+  "http://mozilla.org",
+  "https://mozilla.org",
+  "file:///Users/root",
+  "app://fxosapp",
+  "blob:http://mozilla.org",
+  "blob:https://mozilla.org",
 ];
 
 // Test `sourceUtils.parseURL`
@@ -26,98 +32,159 @@ add_task(async function() {
   equal(parsed.host, "foo.com:8888", "parseURL parsed valid host");
   equal(parsed.hostname, "foo.com", "parseURL parsed valid hostname");
   equal(parsed.port, "8888", "parseURL parsed valid port");
-  equal(parsed.href, "https://foo.com:8888/boo/bar.js?q=query", "parseURL parsed valid href");
+  equal(
+    parsed.href,
+    "https://foo.com:8888/boo/bar.js?q=query",
+    "parseURL parsed valid href"
+  );
 
   parsed = sourceUtils.parseURL("https://foo.com");
-  equal(parsed.host, "foo.com", "parseURL parsed valid host when no port given");
-  equal(parsed.hostname, "foo.com", "parseURL parsed valid hostname when no port given");
+  equal(
+    parsed.host,
+    "foo.com",
+    "parseURL parsed valid host when no port given"
+  );
+  equal(
+    parsed.hostname,
+    "foo.com",
+    "parseURL parsed valid hostname when no port given"
+  );
 
-  equal(sourceUtils.parseURL("self-hosted"), null,
-        "parseURL returns `null` for invalid URLs");
+  equal(
+    sourceUtils.parseURL("self-hosted"),
+    null,
+    "parseURL returns `null` for invalid URLs"
+  );
 });
 
 // Test `sourceUtils.isContentScheme`.
 add_task(async function() {
   for (const url of CHROME_URLS) {
-    ok(!sourceUtils.isContentScheme(url),
-       `${url} correctly identified as not content scheme`);
+    ok(
+      !sourceUtils.isContentScheme(url),
+      `${url} correctly identified as not content scheme`
+    );
   }
   for (const url of CONTENT_URLS) {
-    ok(sourceUtils.isContentScheme(url), `${url} correctly identified as content scheme`);
+    ok(
+      sourceUtils.isContentScheme(url),
+      `${url} correctly identified as content scheme`
+    );
   }
 });
 
 // Test `sourceUtils.isChromeScheme`.
 add_task(async function() {
   for (const url of CHROME_URLS) {
-    ok(sourceUtils.isChromeScheme(url), `${url} correctly identified as chrome scheme`);
+    ok(
+      sourceUtils.isChromeScheme(url),
+      `${url} correctly identified as chrome scheme`
+    );
   }
   for (const url of CONTENT_URLS) {
-    ok(!sourceUtils.isChromeScheme(url),
-       `${url} correctly identified as not chrome scheme`);
+    ok(
+      !sourceUtils.isChromeScheme(url),
+      `${url} correctly identified as not chrome scheme`
+    );
   }
 });
 
 // Test `sourceUtils.isWASM`.
 add_task(async function() {
-  ok(sourceUtils.isWASM("wasm-function[66240] (?:13870536)"),
-                        "wasm function correctly identified");
-  ok(!sourceUtils.isWASM(CHROME_URLS[0]), `A chrome url does not identify as wasm.`);
+  ok(
+    sourceUtils.isWASM("wasm-function[66240] (?:13870536)"),
+    "wasm function correctly identified"
+  );
+  ok(
+    !sourceUtils.isWASM(CHROME_URLS[0]),
+    `A chrome url does not identify as wasm.`
+  );
 });
 
 // Test `sourceUtils.isDataScheme`.
 add_task(async function() {
   const dataURI = "data:text/html;charset=utf-8,<!DOCTYPE html></html>";
-  ok(sourceUtils.isDataScheme(dataURI), `${dataURI} correctly identified as data scheme`);
+  ok(
+    sourceUtils.isDataScheme(dataURI),
+    `${dataURI} correctly identified as data scheme`
+  );
 
   for (const url of CHROME_URLS) {
-    ok(!sourceUtils.isDataScheme(url), `${url} correctly identified as not data scheme`);
+    ok(
+      !sourceUtils.isDataScheme(url),
+      `${url} correctly identified as not data scheme`
+    );
   }
   for (const url of CONTENT_URLS) {
-    ok(!sourceUtils.isDataScheme(url), `${url} correctly identified as not data scheme`);
+    ok(
+      !sourceUtils.isDataScheme(url),
+      `${url} correctly identified as not data scheme`
+    );
   }
 });
 
 // Test `sourceUtils.getSourceNames`.
 add_task(async function() {
-  testAbbreviation("http://example.com/foo/bar/baz/boo.js",
-                   "boo.js",
-                   "http://example.com/foo/bar/baz/boo.js",
-                   "example.com");
+  testAbbreviation(
+    "http://example.com/foo/bar/baz/boo.js",
+    "boo.js",
+    "http://example.com/foo/bar/baz/boo.js",
+    "example.com"
+  );
 });
 
 // Test `sourceUtils.isScratchpadTheme`
 add_task(async function() {
-  ok(sourceUtils.isScratchpadScheme("Scratchpad/1"),
-     "Scratchpad/1 identified as scratchpad");
-  ok(sourceUtils.isScratchpadScheme("Scratchpad/20"),
-     "Scratchpad/20 identified as scratchpad");
-  ok(!sourceUtils.isScratchpadScheme("http://www.mozilla.org"), "http://www.mozilla.org not identified as scratchpad");
+  ok(
+    sourceUtils.isScratchpadScheme("Scratchpad/1"),
+    "Scratchpad/1 identified as scratchpad"
+  );
+  ok(
+    sourceUtils.isScratchpadScheme("Scratchpad/20"),
+    "Scratchpad/20 identified as scratchpad"
+  );
+  ok(
+    !sourceUtils.isScratchpadScheme("http://www.mozilla.org"),
+    "http://www.mozilla.org not identified as scratchpad"
+  );
 });
 
 // Test `sourceUtils.getSourceNames`.
 add_task(async function() {
   // Check length
-  const longMalformedURL = `example.com${new Array(100).fill("/a").join("")}/file.js`;
-  ok(sourceUtils.getSourceNames(longMalformedURL).short.length <= 100,
-    "`short` names are capped at 100 characters");
+  const longMalformedURL = `example.com${new Array(100)
+    .fill("/a")
+    .join("")}/file.js`;
+  ok(
+    sourceUtils.getSourceNames(longMalformedURL).short.length <= 100,
+    "`short` names are capped at 100 characters"
+  );
 
   testAbbreviation("self-hosted", "self-hosted", "self-hosted");
   testAbbreviation("", "(unknown)", "(unknown)");
 
   // Test shortening data URIs, stripping mime/charset
-  testAbbreviation("data:text/html;charset=utf-8,<!DOCTYPE html></html>",
-                   "data:<!DOCTYPE html></html>",
-                   "data:text/html;charset=utf-8,<!DOCTYPE html></html>");
+  testAbbreviation(
+    "data:text/html;charset=utf-8,<!DOCTYPE html></html>",
+    "data:<!DOCTYPE html></html>",
+    "data:text/html;charset=utf-8,<!DOCTYPE html></html>"
+  );
 
-  const longDataURI = `data:image/png;base64,${new Array(100).fill("a").join("")}`;
+  const longDataURI = `data:image/png;base64,${new Array(100)
+    .fill("a")
+    .join("")}`;
   const longDataURIShort = sourceUtils.getSourceNames(longDataURI).short;
 
   // Test shortening data URIs and that the `short` result is capped
-  ok(longDataURIShort.length <= 100,
-    "`short` names are capped at 100 characters for data URIs");
-  equal(longDataURIShort.substr(0, 10), "data:aaaaa",
-    "truncated data URI short names still have `data:...`");
+  ok(
+    longDataURIShort.length <= 100,
+    "`short` names are capped at 100 characters for data URIs"
+  );
+  equal(
+    longDataURIShort.substr(0, 10),
+    "data:aaaaa",
+    "truncated data URI short names still have `data:...`"
+  );
 
   // Test simple URL and cache retrieval by calling the same input multiple times.
   const testUrl = "http://example.com/foo/bar/baz/boo.js";
@@ -125,40 +192,52 @@ add_task(async function() {
   testAbbreviation(testUrl, "boo.js", testUrl, "example.com");
 
   // Check query and hash and port
-  testAbbreviation("http://example.com:8888/foo/bar/baz.js?q=query#go",
-                   "baz.js",
-                   "http://example.com:8888/foo/bar/baz.js",
-                   "example.com:8888");
+  testAbbreviation(
+    "http://example.com:8888/foo/bar/baz.js?q=query#go",
+    "baz.js",
+    "http://example.com:8888/foo/bar/baz.js",
+    "example.com:8888"
+  );
 
   // Trailing "/" with nothing beyond host
-  testAbbreviation("http://example.com/",
-                   "/",
-                   "http://example.com/",
-                   "example.com");
+  testAbbreviation(
+    "http://example.com/",
+    "/",
+    "http://example.com/",
+    "example.com"
+  );
 
   // Trailing "/"
-  testAbbreviation("http://example.com/foo/bar/",
-                   "bar",
-                   "http://example.com/foo/bar/",
-                   "example.com");
+  testAbbreviation(
+    "http://example.com/foo/bar/",
+    "bar",
+    "http://example.com/foo/bar/",
+    "example.com"
+  );
 
   // Non-extension ending
-  testAbbreviation("http://example.com/bar",
-                   "bar",
-                   "http://example.com/bar",
-                   "example.com");
+  testAbbreviation(
+    "http://example.com/bar",
+    "bar",
+    "http://example.com/bar",
+    "example.com"
+  );
 
   // Check query
-  testAbbreviation("http://example.com/foo.js?bar=1&baz=2",
-                   "foo.js",
-                   "http://example.com/foo.js",
-                   "example.com");
+  testAbbreviation(
+    "http://example.com/foo.js?bar=1&baz=2",
+    "foo.js",
+    "http://example.com/foo.js",
+    "example.com"
+  );
 
   // Check query with trailing slash
-  testAbbreviation("http://example.com/foo/?bar=1&baz=2",
-                   "foo",
-                   "http://example.com/foo/",
-                   "example.com");
+  testAbbreviation(
+    "http://example.com/foo/?bar=1&baz=2",
+    "foo",
+    "http://example.com/foo/",
+    "example.com"
+  );
 });
 
 // Test for source mapped file name

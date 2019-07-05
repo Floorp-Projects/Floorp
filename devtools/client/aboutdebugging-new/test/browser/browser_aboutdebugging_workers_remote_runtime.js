@@ -14,11 +14,13 @@ const TESTS = [
     category: "Other Workers",
     propertyName: "otherWorkers",
     workerName: "other/worker/script.js",
-  }, {
+  },
+  {
     category: "Service Workers",
     propertyName: "serviceWorkers",
     workerName: "service/worker/script.js",
-  }, {
+  },
+  {
     category: "Shared Workers",
     propertyName: "sharedWorkers",
     workerName: "shared/worker/script.js",
@@ -35,8 +37,9 @@ const EMPTY_WORKERS_RESPONSE = {
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging({
+    enableWorkerUpdates: true,
+  });
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Prepare USB client mock");
@@ -50,8 +53,12 @@ add_task(async function() {
   await connectToRuntime(USB_RUNTIME_DEVICE_NAME, document);
   await selectRuntime(USB_RUNTIME_DEVICE_NAME, USB_RUNTIME_APP_NAME, document);
   for (const testData of TESTS) {
-    await testWorkerOnMockedRemoteClient(testData, usbClient, mocks.thisFirefoxClient,
-     document);
+    await testWorkerOnMockedRemoteClient(
+      testData,
+      usbClient,
+      mocks.thisFirefoxClient,
+      document
+    );
   }
 
   info("Prepare Network client mock");
@@ -64,8 +71,12 @@ add_task(async function() {
   await selectRuntime(NETWORK_RUNTIME_HOST, NETWORK_RUNTIME_APP_NAME, document);
 
   for (const testData of TESTS) {
-    await testWorkerOnMockedRemoteClient(testData, networkClient, mocks.thisFirefoxClient,
-     document);
+    await testWorkerOnMockedRemoteClient(
+      testData,
+      networkClient,
+      mocks.thisFirefoxClient,
+      document
+    );
   }
 
   await removeTab(tab);
@@ -74,30 +85,40 @@ add_task(async function() {
 /**
  * Check that workers are visible in the runtime page for a remote client.
  */
-async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxClient,
-  document) {
+async function testWorkerOnMockedRemoteClient(
+  testData,
+  remoteClient,
+  firefoxClient,
+  document
+) {
   const { category, propertyName, workerName } = testData;
   info(`Test workers for category [${category}] in remote runtime`);
 
   const workersPane = getDebugTargetPane(category, document);
   info("Check an empty target pane message is displayed");
-  ok(workersPane.querySelector(".qa-debug-target-list-empty"),
-    "Workers list is empty");
+  ok(
+    workersPane.querySelector(".qa-debug-target-list-empty"),
+    "Workers list is empty"
+  );
 
   info(`Add a worker of type [${propertyName}] to the remote client`);
   const workers = Object.assign({}, EMPTY_WORKERS_RESPONSE, {
-    [propertyName]: [{
-      name: workerName,
-      workerTargetFront: {
-        actorID: workerName,
+    [propertyName]: [
+      {
+        name: workerName,
+        workerTargetFront: {
+          actorID: workerName,
+        },
       },
-    }],
+    ],
   });
   remoteClient.listWorkers = () => workers;
   remoteClient._eventEmitter.emit("workersUpdated");
 
   info("Wait until the worker appears");
-  await waitUntil(() => !workersPane.querySelector(".qa-debug-target-list-empty"));
+  await waitUntil(
+    () => !workersPane.querySelector(".qa-debug-target-list-empty")
+  );
 
   const workerTarget = findDebugTargetByText(workerName, document);
   ok(workerTarget, "Worker target appeared for the remote runtime");
@@ -117,12 +138,18 @@ async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxCli
   const testTab = { outerWindowID: 0, url: "http://some.random/url.com" };
   remoteClient.listTabs = () => [testTab];
   remoteClient._eventEmitter.emit("tabListChanged");
-  await waitUntil(() => findDebugTargetByText("http://some.random/url.com", document));
+  await waitUntil(() =>
+    findDebugTargetByText("http://some.random/url.com", document)
+  );
 
-  ok(findDebugTargetByText(workerName, document),
-    "The test worker is still visible");
+  ok(
+    findDebugTargetByText(workerName, document),
+    "The test worker is still visible"
+  );
 
-  info("Emit `workersUpdated` on remoteClient and wait for the target list to update");
+  info(
+    "Emit `workersUpdated` on remoteClient and wait for the target list to update"
+  );
   remoteClient._eventEmitter.emit("workersUpdated");
   await waitUntil(() => !findDebugTargetByText(workerName, document));
 }

@@ -9,8 +9,10 @@
  */
 
 add_task(async function() {
-  Services.prefs.setCharPref("devtools.netmonitor.visibleColumns",
-    '["status", "contentSize", "waterfall"]');
+  Services.prefs.setCharPref(
+    "devtools.netmonitor.visibleColumns",
+    '["status", "contentSize", "waterfall"]'
+  );
 
   const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
@@ -23,10 +25,14 @@ add_task(async function() {
   tab.linkedBrowser.reload();
   await wait;
 
-  ok(document.querySelector("#requests-list-status-button"),
-     "Status column should be shown");
-  ok(document.querySelector("#requests-list-contentSize-button"),
-     "Content size column should be shown");
+  ok(
+    document.querySelector("#requests-list-status-button"),
+    "Status column should be shown"
+  );
+  ok(
+    document.querySelector("#requests-list-contentSize-button"),
+    "Content size column should be shown"
+  );
 
   await hideColumn(monitor, "status");
   await hideColumn(monitor, "contentSize");
@@ -35,10 +41,11 @@ add_task(async function() {
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
   );
 
-  ok(!visibleColumns.includes("status"),
-     "Pref should be synced for status");
-  ok(!visibleColumns.includes("contentSize"),
-    "Pref should be synced for contentSize");
+  ok(!visibleColumns.includes("status"), "Pref should be synced for status");
+  ok(
+    !visibleColumns.includes("contentSize"),
+    "Pref should be synced for contentSize"
+  );
 
   await showColumn(monitor, "status");
 
@@ -46,6 +53,5 @@ add_task(async function() {
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
   );
 
-  ok(visibleColumns.includes("status"),
-    "Pref should be synced for status");
+  ok(visibleColumns.includes("status"), "Pref should be synced for status");
 });

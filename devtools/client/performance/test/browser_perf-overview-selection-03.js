@@ -7,11 +7,24 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_ENABLE_MEMORY_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { times } = require("devtools/client/performance/test/helpers/event-utils");
-const { dragStartCanvasGraph, dragStopCanvasGraph } = require("devtools/client/performance/test/helpers/input-utils");
+const {
+  UI_ENABLE_MEMORY_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  times,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  dragStartCanvasGraph,
+  dragStopCanvasGraph,
+} = require("devtools/client/performance/test/helpers/input-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -39,12 +52,21 @@ add_task(async function() {
   dragStopCanvasGraph(framerateGraph, { x: width / 2 });
   await rangeSelected;
 
-  is(markersOverview.getSelection().toSource(), framerateGraph.getSelection().toSource(),
-    "The markers overview has a correct selection.");
-  is(memoryGraph.getSelection().toSource(), framerateGraph.getSelection().toSource(),
-    "The memory overview has a correct selection.");
-  is(framerateGraph.getSelection().toSource(), "({start:0, end:" + (width / 2) + "})",
-    "The framerate graph has a correct selection.");
+  is(
+    markersOverview.getSelection().toSource(),
+    framerateGraph.getSelection().toSource(),
+    "The markers overview has a correct selection."
+  );
+  is(
+    memoryGraph.getSelection().toSource(),
+    framerateGraph.getSelection().toSource(),
+    "The memory overview has a correct selection."
+  );
+  is(
+    framerateGraph.getSelection().toSource(),
+    "({start:0, end:" + width / 2 + "})",
+    "The framerate graph has a correct selection."
+  );
 
   // Perform a selection inside the markers overview.
 
@@ -55,12 +77,21 @@ add_task(async function() {
   dragStopCanvasGraph(markersOverview, { x: width / 4 });
   await rangeSelected;
 
-  is(markersOverview.getSelection().toSource(), framerateGraph.getSelection().toSource(),
-    "The markers overview has a correct selection.");
-  is(memoryGraph.getSelection().toSource(), framerateGraph.getSelection().toSource(),
-    "The memory overview has a correct selection.");
-  is(framerateGraph.getSelection().toSource(), "({start:0, end:" + (width / 4) + "})",
-    "The framerate graph has a correct selection.");
+  is(
+    markersOverview.getSelection().toSource(),
+    framerateGraph.getSelection().toSource(),
+    "The markers overview has a correct selection."
+  );
+  is(
+    memoryGraph.getSelection().toSource(),
+    framerateGraph.getSelection().toSource(),
+    "The memory overview has a correct selection."
+  );
+  is(
+    framerateGraph.getSelection().toSource(),
+    "({start:0, end:" + width / 4 + "})",
+    "The framerate graph has a correct selection."
+  );
 
   // Perform a selection inside the memory overview.
 
@@ -71,12 +102,21 @@ add_task(async function() {
   dragStopCanvasGraph(memoryGraph, { x: width / 10 });
   await rangeSelected;
 
-  is(markersOverview.getSelection().toSource(), framerateGraph.getSelection().toSource(),
-    "The markers overview has a correct selection.");
-  is(memoryGraph.getSelection().toSource(), framerateGraph.getSelection().toSource(),
-    "The memory overview has a correct selection.");
-  is(framerateGraph.getSelection().toSource(), "({start:0, end:" + (width / 10) + "})",
-    "The framerate graph has a correct selection.");
+  is(
+    markersOverview.getSelection().toSource(),
+    framerateGraph.getSelection().toSource(),
+    "The markers overview has a correct selection."
+  );
+  is(
+    memoryGraph.getSelection().toSource(),
+    framerateGraph.getSelection().toSource(),
+    "The memory overview has a correct selection."
+  );
+  is(
+    framerateGraph.getSelection().toSource(),
+    "({start:0, end:" + width / 10 + "})",
+    "The framerate graph has a correct selection."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

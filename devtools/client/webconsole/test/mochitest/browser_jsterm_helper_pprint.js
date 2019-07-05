@@ -16,7 +16,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   let onMessage = waitForMessage(hud, `"  b: 2\n  a: 1"`);
   jsterm.execute("pprint({b:2, a:1})");

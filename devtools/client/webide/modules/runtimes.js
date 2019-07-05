@@ -5,20 +5,31 @@
 "use strict";
 
 const Services = require("Services");
-const {DebuggerServer} = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/main");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {RuntimeTypes} = require("devtools/client/webide/modules/runtime-types");
+const {
+  RuntimeTypes,
+} = require("devtools/client/webide/modules/runtime-types");
 const promise = require("promise");
 
 loader.lazyRequireGetter(this, "adb", "devtools/shared/adb/adb", true);
 
-loader.lazyRequireGetter(this, "AuthenticationResult",
-  "devtools/shared/security/auth", true);
-loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/shared/DevToolsUtils");
+loader.lazyRequireGetter(
+  this,
+  "AuthenticationResult",
+  "devtools/shared/security/auth",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
 
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/webide.properties"
+);
 
 /**
  * Runtime and Scanner API
@@ -87,7 +98,6 @@ const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.p
 /* SCANNER REGISTRY */
 
 var RuntimeScanners = {
-
   _enabledCount: 0,
   _scanners: new Set(),
 
@@ -135,16 +145,19 @@ var RuntimeScanners = {
     this._scanPromise = promise.all(promises);
 
     // Reset pending promise
-    this._scanPromise.then(() => {
-      this._scanPromise = null;
-    }, () => {
-      this._scanPromise = null;
-    });
+    this._scanPromise.then(
+      () => {
+        this._scanPromise = null;
+      },
+      () => {
+        this._scanPromise = null;
+      }
+    );
 
     return this._scanPromise;
   },
 
-  listRuntimes: function* () {
+  listRuntimes: function*() {
     for (const scanner of this._scanners) {
       for (const runtime of scanner.listRuntimes()) {
         yield runtime;
@@ -186,7 +199,6 @@ var RuntimeScanners = {
     scanner.off("runtime-list-updated", this._emitUpdated);
     scanner.disable();
   },
-
 };
 
 EventEmitter.decorate(RuntimeScanners);
@@ -220,7 +232,6 @@ UsbScanner.init();
 RuntimeScanners.add(UsbScanner);
 
 var WiFiScanner = {
-
   _runtimes: [],
 
   init() {
@@ -284,7 +295,6 @@ var WiFiScanner = {
     }
     WiFiScanner.updateRegistration();
   },
-
 };
 
 EventEmitter.decorate(WiFiScanner);
@@ -379,14 +389,18 @@ WiFiRuntime.prototype = {
     const windowListener = {
       onOpenWindow(xulWindow) {
         const win = xulWindow.docShell.domWindow;
-        win.addEventListener("load", function() {
-          if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
-            return;
-          }
-          // Found the window
-          promptWindow = win;
-          Services.wm.removeListener(windowListener);
-        }, {once: true});
+        win.addEventListener(
+          "load",
+          function() {
+            if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
+              return;
+            }
+            // Found the window
+            promptWindow = win;
+            Services.wm.removeListener(windowListener);
+          },
+          { once: true }
+        );
       },
       onCloseWindow() {},
     };
@@ -400,9 +414,12 @@ WiFiRuntime.prototype = {
       const win = Services.wm.getMostRecentWindow("devtools:webide");
       const width = win.outerWidth * 0.8;
       const height = Math.max(win.outerHeight * 0.5, MIN_HEIGHT);
-      win.openDialog("chrome://webide/content/wifi-auth.xhtml",
-                     WINDOW_ID,
-                     "modal=yes,width=" + width + ",height=" + height, session);
+      win.openDialog(
+        "chrome://webide/content/wifi-auth.xhtml",
+        WINDOW_ID,
+        "modal=yes,width=" + width + ",height=" + height,
+        session
+      );
     });
 
     return {
@@ -449,13 +466,13 @@ var gRemoteRuntime = {
     if (!win) {
       return promise.reject(new Error("No WebIDE window found"));
     }
-    const ret = {value: connection.host + ":" + connection.port};
+    const ret = { value: connection.host + ":" + connection.port };
     const title = Strings.GetStringFromName("remote_runtime_promptTitle");
     const message = Strings.GetStringFromName("remote_runtime_promptMessage");
     const ok = Services.prompt.prompt(win, title, message, ret, null, {});
     const [host, port] = ret.value.split(":");
     if (!ok) {
-      return promise.reject({canceled: true});
+      return promise.reject({ canceled: true });
     }
     if (!host || !port) {
       return promise.reject(new Error("Invalid host or port"));

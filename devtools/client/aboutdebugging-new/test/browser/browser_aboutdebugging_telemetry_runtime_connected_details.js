@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-telemetry.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 const REMOTE_RUNTIME_ID = "remote-runtime";
 const REMOTE_RUNTIME = "Remote Runtime";
@@ -36,9 +39,15 @@ add_task(async function() {
 
   mocks.emitUSBUpdate();
   await connectToRuntime(REMOTE_DEVICE, document);
-  const evts = readAboutDebuggingEvents().filter(e => e.method === "runtime_connected");
+  const evts = readAboutDebuggingEvents().filter(
+    e => e.method === "runtime_connected"
+  );
 
-  is(evts.length, 1, "runtime_connected event logged when connecting to remote runtime");
+  is(
+    evts.length,
+    1,
+    "runtime_connected event logged when connecting to remote runtime"
+  );
   const {
     connection_type,
     device_name,
@@ -50,7 +59,11 @@ add_task(async function() {
   is(device_name, REMOTE_DEVICE, "Expected value for `device_name` extra");
   is(runtime_name, REMOTE_RUNTIME, "Expected value for `runtime_name` extra");
   is(runtime_os, REMOTE_OS, "Expected value for `runtime_os` extra");
-  is(runtime_version, REMOTE_VERSION, "Expected value for `runtime_version` extra");
+  is(
+    runtime_version,
+    REMOTE_VERSION,
+    "Expected value for `runtime_version` extra"
+  );
 
   await removeTab(tab);
 });

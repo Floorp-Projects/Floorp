@@ -8,10 +8,20 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
-const { setSelectedRecording } = require("devtools/client/performance/test/helpers/recording-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  setSelectedRecording,
+} = require("devtools/client/performance/test/helpers/recording-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -19,12 +29,7 @@ add_task(async function() {
     win: window,
   });
 
-  const {
-    EVENTS,
-    $,
-    PerformanceController,
-    PerformanceView,
-  } = panel.panelWin;
+  const { EVENTS, $, PerformanceController, PerformanceView } = panel.panelWin;
 
   const MAIN_CONTAINER = $("#performance-view");
   const CONTENT = $("#performance-view-content");
@@ -37,7 +42,11 @@ add_task(async function() {
 
   await startRecording(panel);
 
-  is(PerformanceView.getState(), "recording", "Correct state during recording.");
+  is(
+    PerformanceView.getState(),
+    "recording",
+    "Correct state during recording."
+  );
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, RECORDING, "Showing recording panel.");
 
@@ -45,8 +54,11 @@ add_task(async function() {
   setSelectedRecording(panel, 0);
   await selected;
 
-  is(PerformanceView.getState(), "recorded",
-     "Correct state during recording but selecting a completed recording.");
+  is(
+    PerformanceView.getState(),
+    "recorded",
+    "Correct state during recording but selecting a completed recording."
+  );
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, DETAILS, "Showing recorded panel.");
 
@@ -54,8 +66,11 @@ add_task(async function() {
   setSelectedRecording(panel, 1);
   await selected;
 
-  is(PerformanceView.getState(), "recording",
-     "Correct state when switching back to recording in progress.");
+  is(
+    PerformanceView.getState(),
+    "recording",
+    "Correct state when switching back to recording in progress."
+  );
   is(MAIN_CONTAINER.selectedPanel, CONTENT, "Showing main view with timeline.");
   is(DETAILS_CONTAINER.selectedPanel, RECORDING, "Showing recording panel.");
 

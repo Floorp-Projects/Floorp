@@ -44,10 +44,12 @@ add_task(async function() {
   async function testPasteOuterHTMLMenu() {
     info("Testing that 'Paste Outer HTML' menu item works.");
 
-    await SimpleTest.promiseClipboardChange("this was pasted (outerHTML)",
+    await SimpleTest.promiseClipboardChange(
+      "this was pasted (outerHTML)",
       () => {
         clipboard.copyString("this was pasted (outerHTML)");
-      });
+      }
+    );
 
     const outerHTMLSelector = "#paste-area h1";
 
@@ -65,22 +67,28 @@ add_task(async function() {
     await onNodeReselected;
 
     const outerHTML = await testActor.getProperty("body", "outerHTML");
-    ok(outerHTML.includes(clipboard.getText()),
-       "Clipboard content was pasted into the node's outer HTML.");
-    ok(!(await testActor.hasNode(outerHTMLSelector)),
-      "The original node was removed.");
+    ok(
+      outerHTML.includes(clipboard.getText()),
+      "Clipboard content was pasted into the node's outer HTML."
+    );
+    ok(
+      !(await testActor.hasNode(outerHTMLSelector)),
+      "The original node was removed."
+    );
   }
 
   async function testPasteInnerHTMLMenu() {
     info("Testing that 'Paste Inner HTML' menu item works.");
 
-    await SimpleTest.promiseClipboardChange("this was pasted (innerHTML)",
+    await SimpleTest.promiseClipboardChange(
+      "this was pasted (innerHTML)",
       () => {
         clipboard.copyString("this was pasted (innerHTML)");
-      });
+      }
+    );
     const innerHTMLSelector = "#paste-area .inner";
-    const getInnerHTML = () => testActor.getProperty(innerHTMLSelector,
-                                                   "innerHTML");
+    const getInnerHTML = () =>
+      testActor.getProperty(innerHTMLSelector, "innerHTML");
     const origInnerHTML = await getInnerHTML();
 
     const nodeFront = await getNodeFront(innerHTMLSelector, inspector);
@@ -95,13 +103,19 @@ add_task(async function() {
     info("Waiting for mutation to occur");
     await onMutation;
 
-    ok((await getInnerHTML()) === clipboard.getText(),
-       "Clipboard content was pasted into the node's inner HTML.");
-    ok((await testActor.hasNode(innerHTMLSelector)),
-       "The original node has been preserved.");
+    ok(
+      (await getInnerHTML()) === clipboard.getText(),
+      "Clipboard content was pasted into the node's inner HTML."
+    );
+    ok(
+      await testActor.hasNode(innerHTMLSelector),
+      "The original node has been preserved."
+    );
     await undoChange(inspector);
-    ok((await getInnerHTML()) === origInnerHTML,
-       "Previous innerHTML has been restored after undo");
+    ok(
+      (await getInnerHTML()) === origInnerHTML,
+      "Previous innerHTML has been restored after undo"
+    );
   }
 
   async function testPasteAdjacentHTMLMenu() {
@@ -109,7 +123,8 @@ add_task(async function() {
     const adjacentNodeSelector = "#paste-area .adjacent";
     const nodeFront = await getNodeFront(refSelector, inspector);
     await selectNode(nodeFront, inspector);
-    const markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
+    const markupTagLine = getContainerForNodeFront(nodeFront, inspector)
+      .tagLine;
 
     for (const { clipboardData, menuId } of PASTE_ADJACENT_HTML_DATA) {
       const allMenuItems = openContextMenuAndGetAllItems(inspector, {
@@ -117,10 +132,9 @@ add_task(async function() {
       });
       info(`Testing ${menuId} for ${clipboardData}`);
 
-      await SimpleTest.promiseClipboardChange(clipboardData,
-        () => {
-          clipboard.copyString(clipboardData);
-        });
+      await SimpleTest.promiseClipboardChange(clipboardData, () => {
+        clipboard.copyString(clipboardData);
+      });
 
       const onMutation = inspector.once("markupmutation");
       allMenuItems.find(item => item.id === menuId).click();
@@ -129,13 +143,17 @@ add_task(async function() {
     }
 
     let html = await testActor.getProperty(adjacentNodeSelector, "innerHTML");
-    ok(html.trim() === "1<span class=\"ref\">234</span><span>5</span>",
-       "The Paste as Last Child / as First Child / Before / After worked as " +
-       "expected");
+    ok(
+      html.trim() === '1<span class="ref">234</span><span>5</span>',
+      "The Paste as Last Child / as First Child / Before / After worked as " +
+        "expected"
+    );
     await undoChange(inspector);
 
     html = await testActor.getProperty(adjacentNodeSelector, "innerHTML");
-    ok(html.trim() === "1<span class=\"ref\">234</span>",
-       "Undo works for paste adjacent HTML");
+    ok(
+      html.trim() === '1<span class="ref">234</span>',
+      "Undo works for paste adjacent HTML"
+    );
   }
 });

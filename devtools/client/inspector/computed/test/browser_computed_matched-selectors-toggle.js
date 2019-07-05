@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("h1", inspector);
 
   await testExpandOnTwistyClick(view, inspector);
@@ -26,7 +26,10 @@ add_task(async function() {
   await testCollapseOnDblClick(view, inspector);
 });
 
-async function testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) {
+async function testExpandOnTwistyClick(
+  { styleDocument, styleWindow },
+  inspector
+) {
   info("Testing that a property expands on twisty click");
 
   info("Getting twisty element");
@@ -40,12 +43,19 @@ async function testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) 
   await onExpand;
 
   // Expanded means the matchedselectors div is not empty
-  const div = styleDocument.querySelector(".computed-property-content .matchedselectors");
-  ok(div.childNodes.length > 0,
-    "Matched selectors are expanded on twisty click");
+  const div = styleDocument.querySelector(
+    ".computed-property-content .matchedselectors"
+  );
+  ok(
+    div.childNodes.length > 0,
+    "Matched selectors are expanded on twisty click"
+  );
 }
 
-async function testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector) {
+async function testCollapseOnTwistyClick(
+  { styleDocument, styleWindow },
+  inspector
+) {
   info("Testing that a property collapses on twisty click");
 
   info("Getting twisty element");
@@ -59,48 +69,63 @@ async function testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector
   await onCollapse;
 
   // Collapsed means the matchedselectors div is empty
-  const div = styleDocument.querySelector(".computed-property-content .matchedselectors");
-  ok(div.childNodes.length === 0,
-    "Matched selectors are collapsed on twisty click");
+  const div = styleDocument.querySelector(
+    ".computed-property-content .matchedselectors"
+  );
+  ok(
+    div.childNodes.length === 0,
+    "Matched selectors are collapsed on twisty click"
+  );
 }
 
-async function testExpandOnDblClick({styleDocument, styleWindow}, inspector) {
+async function testExpandOnDblClick({ styleDocument, styleWindow }, inspector) {
   info("Testing that a property expands on container dbl-click");
 
   info("Getting computed property container");
   const container = styleDocument.querySelector(
-    "#computed-container .computed-property-view");
+    "#computed-container .computed-property-view"
+  );
   ok(container, "Container found");
 
   container.scrollIntoView();
 
   const onExpand = inspector.once("computed-view-property-expanded");
   info("Dbl-clicking on the container");
-  EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, styleWindow);
+  EventUtils.synthesizeMouseAtCenter(container, { clickCount: 2 }, styleWindow);
 
   await onExpand;
 
   // Expanded means the matchedselectors div is not empty
-  const div = styleDocument.querySelector(".computed-property-content .matchedselectors");
+  const div = styleDocument.querySelector(
+    ".computed-property-content .matchedselectors"
+  );
   ok(div.childNodes.length > 0, "Matched selectors are expanded on dblclick");
 }
 
-async function testCollapseOnDblClick({styleDocument, styleWindow}, inspector) {
+async function testCollapseOnDblClick(
+  { styleDocument, styleWindow },
+  inspector
+) {
   info("Testing that a property collapses on container dbl-click");
 
   info("Getting computed property container");
   const container = styleDocument.querySelector(
-    "#computed-container .computed-property-view");
+    "#computed-container .computed-property-view"
+  );
   ok(container, "Container found");
 
   const onCollapse = inspector.once("computed-view-property-collapsed");
   info("Dbl-clicking on the container");
-  EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, styleWindow);
+  EventUtils.synthesizeMouseAtCenter(container, { clickCount: 2 }, styleWindow);
 
   await onCollapse;
 
   // Collapsed means the matchedselectors div is empty
-  const div = styleDocument.querySelector(".computed-property-content .matchedselectors");
-  ok(div.childNodes.length === 0,
-    "Matched selectors are collapsed on dblclick");
+  const div = styleDocument.querySelector(
+    ".computed-property-content .matchedselectors"
+  );
+  ok(
+    div.childNodes.length === 0,
+    "Matched selectors are collapsed on dblclick"
+  );
 }

@@ -67,12 +67,10 @@ class ChromeConnector {
     switch (type) {
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED:
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT:
-        return this.connector.reset().then(
-          () => this.connector.Page.reload().then(
-            () => {
-              this.currentActivity = ACTIVITY_TYPE.NONE;
-            }
-          )
+        return this.connector.reset().then(() =>
+          this.connector.Page.reload().then(() => {
+            this.currentActivity = ACTIVITY_TYPE.NONE;
+          })
         );
     }
     this.currentActivity = ACTIVITY_TYPE.NONE;

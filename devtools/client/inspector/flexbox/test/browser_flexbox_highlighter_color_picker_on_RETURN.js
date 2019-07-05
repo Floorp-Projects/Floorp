@@ -21,8 +21,10 @@ add_task(async function() {
   const cPicker = layoutView.swatchColorPickerTooltip;
   const spectrum = cPicker.spectrum;
 
-  const onColorSwatchRendered = waitForDOM(doc,
-    ".layout-flexbox-wrapper .layout-color-swatch");
+  const onColorSwatchRendered = waitForDOM(
+    doc,
+    ".layout-flexbox-wrapper .layout-color-swatch"
+  );
   await selectNode("#container", inspector);
   const [swatch] = await onColorSwatchRendered;
 
@@ -30,13 +32,23 @@ add_task(async function() {
 
   info("Checking the initial state of the Flexbox Inspector color picker.");
   ok(!checkbox.checked, "Flexbox highlighter toggle is unchecked.");
-  is(swatch.style.backgroundColor, "rgb(148, 0, 255)",
-    "The color swatch's background is correct.");
-  is(store.getState().flexbox.color, "#9400FF", "The flexbox color state is correct.");
+  is(
+    swatch.style.backgroundColor,
+    "rgb(148, 0, 255)",
+    "The color swatch's background is correct."
+  );
+  is(
+    store.getState().flexbox.color,
+    "#9400FF",
+    "The flexbox color state is correct."
+  );
 
   info("Toggling ON the flexbox highlighter.");
   const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
-  const onCheckboxChange = waitUntilState(store, state => state.flexbox.highlighted);
+  const onCheckboxChange = waitUntilState(
+    store,
+    state => state.flexbox.highlighted
+  );
   checkbox.click();
   await onHighlighterShown;
   await onCheckboxChange;
@@ -46,21 +58,29 @@ add_task(async function() {
   swatch.click();
   await onColorPickerReady;
 
-  await simulateColorPickerChange(cPicker, [0, 255, 0, .5]);
+  await simulateColorPickerChange(cPicker, [0, 255, 0, 0.5]);
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was updated.");
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was updated."
+  );
 
   info("Pressing RETURN to commit the color change.");
-  const onColorUpdate = waitUntilState(store, state =>
-    state.flexbox.color === "#00FF0080");
+  const onColorUpdate = waitUntilState(
+    store,
+    state => state.flexbox.color === "#00FF0080"
+  );
   const onColorPickerHidden = cPicker.tooltip.once("hidden");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   await onColorPickerHidden;
   await onColorUpdate;
 
-  is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-    "The color swatch's background was kept after RETURN.");
+  is(
+    swatch.style.backgroundColor,
+    "rgba(0, 255, 0, 0.5)",
+    "The color swatch's background was kept after RETURN."
+  );
 
   info("Toggling OFF the flexbox highlighter.");
   const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");

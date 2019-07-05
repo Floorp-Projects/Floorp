@@ -43,7 +43,10 @@ function debugTargetsReducer(state = DebugTargetsState(), action) {
     }
     case REQUEST_EXTENSIONS_SUCCESS: {
       const { installedExtensions, temporaryExtensions } = action;
-      return Object.assign({}, state, { installedExtensions, temporaryExtensions });
+      return Object.assign({}, state, {
+        installedExtensions,
+        temporaryExtensions,
+      });
     }
     case REQUEST_PROCESSES_SUCCESS: {
       const { processes } = action;
@@ -55,18 +58,24 @@ function debugTargetsReducer(state = DebugTargetsState(), action) {
     }
     case REQUEST_WORKERS_SUCCESS: {
       const { otherWorkers, serviceWorkers, sharedWorkers } = action;
-      return Object.assign({}, state, { otherWorkers, serviceWorkers, sharedWorkers });
+      return Object.assign({}, state, {
+        otherWorkers,
+        serviceWorkers,
+        sharedWorkers,
+      });
     }
     case TEMPORARY_EXTENSION_RELOAD_FAILURE: {
       const { id, error } = action;
-      const temporaryExtensions =
-        updateTemporaryExtension(state, id, { reloadError: error.message });
+      const temporaryExtensions = updateTemporaryExtension(state, id, {
+        reloadError: error.message,
+      });
       return Object.assign({}, state, { temporaryExtensions });
     }
     case TEMPORARY_EXTENSION_RELOAD_START: {
       const { id } = action;
-      const temporaryExtensions =
-        updateTemporaryExtension(state, id, { reloadError: null });
+      const temporaryExtensions = updateTemporaryExtension(state, id, {
+        reloadError: null,
+      });
       return Object.assign({}, state, { temporaryExtensions });
     }
 

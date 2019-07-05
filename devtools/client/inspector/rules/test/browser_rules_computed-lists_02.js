@@ -19,7 +19,7 @@ var TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testComputedList(inspector, view);
 });
@@ -45,21 +45,34 @@ function testComputedList(inspector, view) {
   ];
 
   is(computed.length, propNames.length, "There should be 4 computed values");
-  is(computedDom.children.length, propNames.length,
-     "There should be 4 nodes in the DOM");
+  is(
+    computedDom.children.length,
+    propNames.length,
+    "There should be 4 nodes in the DOM"
+  );
 
   propNames.forEach((propName, i) => {
     const propValue = i + "px";
-    is(computed[i].name, propName,
-       "Computed property #" + i + " has name " + propName);
-    is(computed[i].value, propValue,
-       "Computed property #" + i + " has value " + propValue);
-    is(computedDom.querySelectorAll(".ruleview-propertyname")[i].textContent,
-       propName,
-       "Computed property #" + i + " in DOM has correct name");
-    is(computedDom.querySelectorAll(".ruleview-propertyvalue")[i].textContent,
-       propValue,
-       "Computed property #" + i + " in DOM has correct value");
+    is(
+      computed[i].name,
+      propName,
+      "Computed property #" + i + " has name " + propName
+    );
+    is(
+      computed[i].value,
+      propValue,
+      "Computed property #" + i + " has value " + propValue
+    );
+    is(
+      computedDom.querySelectorAll(".ruleview-propertyname")[i].textContent,
+      propName,
+      "Computed property #" + i + " in DOM has correct name"
+    );
+    is(
+      computedDom.querySelectorAll(".ruleview-propertyvalue")[i].textContent,
+      propValue,
+      "Computed property #" + i + " in DOM has correct value"
+    );
   });
 
   info("Closing the computed list of margin property");

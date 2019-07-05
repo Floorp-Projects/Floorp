@@ -12,7 +12,7 @@ const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode(".relative1", inspector);
   await testAddTextInFilter(inspector, view);
 });
@@ -22,6 +22,9 @@ async function testAddTextInFilter(inspector, view) {
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 1, "Should have 1 rules.");
-  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
-    "First rule is inline element.");
+  is(
+    getRuleViewRuleEditor(view, 0).rule.selectorText,
+    "element",
+    "First rule is inline element."
+  );
 }

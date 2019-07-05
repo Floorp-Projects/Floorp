@@ -34,7 +34,9 @@ server.registerPathHandler(filepath, (metadata, response) => {
   }, 2000);
 });
 
-const TEST_URL = "data:text/html," + encodeURIComponent(`
+const TEST_URL =
+  "data:text/html," +
+  encodeURIComponent(`
   <!DOCTYPE html>
   <html>
     <head>
@@ -48,7 +50,9 @@ const TEST_URL = "data:text/html," + encodeURIComponent(`
 
 add_task(async function() {
   info("Open the inspector to a blank page.");
-  const { inspector, tab, testActor } = await openInspectorForURL("about:blank");
+  const { inspector, tab, testActor } = await openInspectorForURL(
+    "about:blank"
+  );
 
   const pageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -61,6 +65,9 @@ add_task(async function() {
   await inspector.highlighter.showBoxModel(divFront);
 
   info("Check the node is highlighted.");
-  is(await testActor.isHighlighting(), true,
-    "Box Model highlighter is working as expected.");
+  is(
+    await testActor.isHighlighting(),
+    true,
+    "Box Model highlighter is working as expected."
+  );
 });

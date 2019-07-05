@@ -35,7 +35,9 @@ async function performTests(oldJsterm) {
   await checkArrowLeftDismissCompletion(hud);
   await checkArrowRightAcceptCompletion(hud);
 
-  info("Test that Ctrl/Cmd + Right closes the popup if there's text after cursor");
+  info(
+    "Test that Ctrl/Cmd + Right closes the popup if there's text after cursor"
+  );
   setInputValue(hud, ".");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   const onPopUpOpen = popup.once("popup-opened");
@@ -56,24 +58,31 @@ async function checkArrowLeftDismissPopup(hud) {
   const popup = hud.jsterm.autocompletePopup;
   let tests;
   if (Services.appinfo.OS == "Darwin") {
-    tests = [{
-      keyOption: null,
-      expectedInput: "window.foo.b|b",
-    }, {
-      keyOption: {metaKey: true},
-      expectedInput: "|window.foo.bb",
-    }, {
-      keyOption: {altKey: true},
-      expectedInput: "window.foo.|bb",
-    }];
+    tests = [
+      {
+        keyOption: null,
+        expectedInput: "window.foo.b|b",
+      },
+      {
+        keyOption: { metaKey: true },
+        expectedInput: "|window.foo.bb",
+      },
+      {
+        keyOption: { altKey: true },
+        expectedInput: "window.foo.|bb",
+      },
+    ];
   } else {
-    tests = [{
-      keyOption: null,
-      expectedInput: "window.foo.b|b",
-    }, {
-      keyOption: {ctrlKey: true},
-      expectedInput: "window.foo.|bb",
-    }];
+    tests = [
+      {
+        keyOption: null,
+        expectedInput: "window.foo.b|b",
+      },
+      {
+        keyOption: { ctrlKey: true },
+        expectedInput: "window.foo.|bb",
+      },
+    ];
   }
 
   for (const test of tests) {
@@ -85,9 +94,13 @@ async function checkArrowLeftDismissPopup(hud) {
     // checkInput is asserting the cursor position with the "|" char.
     checkInputValueAndCursorPosition(hud, "window.foo.bb|");
     is(popup.isOpen, true, "popup is open");
-    checkInputCompletionValue(hud, "             b", "completeNode has expected value");
+    checkInputCompletionValue(
+      hud,
+      "             b",
+      "completeNode has expected value"
+    );
 
-    const {keyOption, expectedInput} = test;
+    const { keyOption, expectedInput } = test;
     info(`Test that arrow left closes the popup and clears complete node`);
     const onPopUpClose = popup.once("popup-closed");
     EventUtils.synthesizeKey("KEY_ArrowLeft", keyOption);
@@ -103,33 +116,44 @@ async function checkArrowLeftDismissPopup(hud) {
 async function checkArrowLeftDismissCompletion(hud) {
   let tests;
   if (Services.appinfo.OS == "Darwin") {
-    tests = [{
-      keyOption: null,
-      expectedInput: "window.foo.|a",
-    }, {
-      keyOption: {metaKey: true},
-      expectedInput: "|window.foo.a",
-    }, {
-      keyOption: {altKey: true},
-      expectedInput: "window.foo.|a",
-    }];
+    tests = [
+      {
+        keyOption: null,
+        expectedInput: "window.foo.|a",
+      },
+      {
+        keyOption: { metaKey: true },
+        expectedInput: "|window.foo.a",
+      },
+      {
+        keyOption: { altKey: true },
+        expectedInput: "window.foo.|a",
+      },
+    ];
   } else {
-    tests = [{
-      keyOption: null,
-      expectedInput: "window.foo.|a",
-    }, {
-      keyOption: {ctrlKey: true},
-      expectedInput: "window.foo.|a",
-    }];
+    tests = [
+      {
+        keyOption: null,
+        expectedInput: "window.foo.|a",
+      },
+      {
+        keyOption: { ctrlKey: true },
+        expectedInput: "window.foo.|a",
+      },
+    ];
   }
 
   for (const test of tests) {
     await setInputValueForAutocompletion(hud, "window.foo.a");
     const prefix = getInputValue(hud).replace(/[\S]/g, " ");
-    checkInputCompletionValue(hud, prefix + "a", "completeNode has expected value");
+    checkInputCompletionValue(
+      hud,
+      prefix + "a",
+      "completeNode has expected value"
+    );
 
     info(`Test that arrow left dismiss the completion text`);
-    const {keyOption, expectedInput} = test;
+    const { keyOption, expectedInput } = test;
     EventUtils.synthesizeKey("KEY_ArrowLeft", keyOption);
 
     checkInputValueAndCursorPosition(hud, expectedInput);
@@ -142,19 +166,26 @@ async function checkArrowRightAcceptCompletion(hud) {
   const popup = hud.jsterm.autocompletePopup;
   let tests;
   if (Services.appinfo.OS == "Darwin") {
-    tests = [{
-      keyOption: null,
-    }, {
-      keyOption: {metaKey: true},
-    }, {
-      keyOption: {altKey: true},
-    }];
+    tests = [
+      {
+        keyOption: null,
+      },
+      {
+        keyOption: { metaKey: true },
+      },
+      {
+        keyOption: { altKey: true },
+      },
+    ];
   } else {
-    tests = [{
-      keyOption: null,
-    }, {
-      keyOption: {ctrlKey: true},
-    }];
+    tests = [
+      {
+        keyOption: null,
+      },
+      {
+        keyOption: { ctrlKey: true },
+      },
+    ];
   }
 
   for (const test of tests) {
@@ -166,9 +197,13 @@ async function checkArrowRightAcceptCompletion(hud) {
     // checkInput is asserting the cursor position with the "|" char.
     checkInputValueAndCursorPosition(hud, `window.foo.bb|`);
     is(popup.isOpen, true, "popup is open");
-    checkInputCompletionValue(hud, "             b", "completeNode has expected value");
+    checkInputCompletionValue(
+      hud,
+      "             b",
+      "completeNode has expected value"
+    );
 
-    const {keyOption} = test;
+    const { keyOption } = test;
     info(`Test that arrow right closes the popup and accepts the completion`);
     const onPopUpClose = popup.once("popup-closed");
     EventUtils.synthesizeKey("KEY_ArrowRight", keyOption);
@@ -182,11 +217,11 @@ async function checkArrowRightAcceptCompletion(hud) {
 }
 
 async function checkWordNavigation(hud, oldJsterm) {
-  const accelKey = Services.appinfo.OS == "Darwin"
-    ? "altKey"
-    : "ctrlKey";
-  const goLeft = () => EventUtils.synthesizeKey("KEY_ArrowLeft", {[accelKey]: true});
-  const goRight = () => EventUtils.synthesizeKey("KEY_ArrowRight", {[accelKey]: true});
+  const accelKey = Services.appinfo.OS == "Darwin" ? "altKey" : "ctrlKey";
+  const goLeft = () =>
+    EventUtils.synthesizeKey("KEY_ArrowLeft", { [accelKey]: true });
+  const goRight = () =>
+    EventUtils.synthesizeKey("KEY_ArrowRight", { [accelKey]: true });
   const isWindowsAndOldJsTerm = Services.appinfo.OS == "WINNT" && oldJsterm;
 
   setInputValue(hud, "aa bb cc dd");

@@ -44,14 +44,6 @@ module.exports = {
   ],
   "overrides": [{
       "files": [
-        "devtools/**",
-      ],
-      "rules": {
-        // Temporarily disable the curly everywhere, pending Prettier.
-        "curly": "off"
-      }
-    }, {
-      "files": [
         "*.html",
         "*.xhtml",
         "*.xul",

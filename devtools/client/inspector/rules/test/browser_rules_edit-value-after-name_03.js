@@ -24,7 +24,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Test click on color swatch while editing property name");
 
@@ -32,15 +32,18 @@ add_task(async function() {
   const ruleEditor = getRuleViewRuleEditor(view, 1);
   const propEditor = ruleEditor.rule.textProps[1].editor;
   const swatchSpan = propEditor.valueSpan.querySelectorAll(
-    ".ruleview-colorswatch")[3];
+    ".ruleview-colorswatch"
+  )[3];
   const colorPicker = view.tooltips.getTooltip("colorPicker");
 
   info("Focus the background name span");
   await focusEditableField(view, propEditor.nameSpan);
   const editor = inplaceEditor(propEditor.doc.activeElement);
 
-  info("Modify the background property to background-image to trigger the " +
-    "property-value-updated event");
+  info(
+    "Modify the background property to background-image to trigger the " +
+      "property-value-updated event"
+  );
   editor.input.value = "background-image";
 
   const onRuleViewChanged = view.once("ruleview-changed");
@@ -48,10 +51,15 @@ add_task(async function() {
   const onReady = colorPicker.once("ready");
 
   info("blur propEditor.nameSpan by clicking on the color swatch");
-  EventUtils.synthesizeMouseAtCenter(swatchSpan, {},
-    propEditor.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    swatchSpan,
+    {},
+    propEditor.doc.defaultView
+  );
 
-  info("wait for ruleview-changed event to be triggered to prevent pending requests");
+  info(
+    "wait for ruleview-changed event to be triggered to prevent pending requests"
+  );
   await onRuleViewChanged;
 
   info("wait for the property value to be updated");
@@ -61,8 +69,10 @@ add_task(async function() {
   await onReady;
 
   ok(true, "The color picker was shown on click of the color swatch");
-  ok(!inplaceEditor(propEditor.valueSpan),
-    "The inplace editor wasn't shown as a result of the color swatch click");
+  ok(
+    !inplaceEditor(propEditor.valueSpan),
+    "The inplace editor wasn't shown as a result of the color swatch click"
+  );
 
   const spectrum = colorPicker.spectrum;
   is(spectrum.rgb, "200,170,140,0.5", "The correct color picker was shown");

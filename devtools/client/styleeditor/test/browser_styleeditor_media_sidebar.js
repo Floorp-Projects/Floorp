@@ -9,9 +9,13 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
 
 const RESIZE = 300;
-const LABELS = ["not all", "all", "(max-width: 400px)",
-                "(min-height: 300px) and (max-height: 320px)",
-                "(max-width: 600px)"];
+const LABELS = [
+  "not all",
+  "all",
+  "(max-width: 400px)",
+  "(min-height: 300px) and (max-height: 320px)",
+  "(max-width: 600px)",
+];
 const LINE_NOS = [1, 7, 19, 25, 31];
 const NEW_RULE = "\n@media (max-width: 600px) { div { color: blue; } }";
 
@@ -73,10 +77,15 @@ function testMediaMatchChanged(editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
 
   const cond = sidebar.querySelectorAll(".media-rule-condition")[2];
-  is(cond.textContent, "(max-width: 400px)",
-     "third rule condition text is correct");
-  ok(!cond.classList.contains("media-condition-unmatched"),
-     "media rule is now matched after resizing");
+  is(
+    cond.textContent,
+    "(max-width: 400px)",
+    "third rule condition text is correct"
+  );
+  ok(
+    !cond.classList.contains("media-condition-unmatched"),
+    "media rule is now matched after resizing"
+  );
 }
 
 async function testShowHide(UI, editor) {
@@ -115,8 +124,10 @@ function testRule(rule, text, matches, lineno) {
   is(cond.textContent, text, "media label is correct for " + text);
 
   const matched = !cond.classList.contains("media-condition-unmatched");
-  ok(matches ? matched : !matched,
-     "media rule is " + (matches ? "matched" : "unmatched"));
+  ok(
+    matches ? matched : !matched,
+    "media rule is " + (matches ? "matched" : "unmatched")
+  );
 
   const line = rule.querySelector(".media-rule-line");
   is(line.textContent, ":" + lineno, "correct line number shown");

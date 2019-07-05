@@ -36,28 +36,43 @@ function testKeyboardNavigation(editor, panel) {
     EventUtils.synthesizeMouseAtCenter(summary, {}, panelWindow);
 
     let item = getStylesheetNameLinkFor(ui.editors[0]);
-    is(panelWindow.document.activeElement, item,
-       "editor 0 item is the active element");
+    is(
+      panelWindow.document.activeElement,
+      item,
+      "editor 0 item is the active element"
+    );
 
     EventUtils.synthesizeKey("VK_DOWN", {}, panelWindow);
     item = getStylesheetNameLinkFor(ui.editors[1]);
-    is(panelWindow.document.activeElement, item,
-       "editor 1 item is the active element");
+    is(
+      panelWindow.document.activeElement,
+      item,
+      "editor 1 item is the active element"
+    );
 
     EventUtils.synthesizeKey("VK_HOME", {}, panelWindow);
     item = getStylesheetNameLinkFor(ui.editors[0]);
-    is(panelWindow.document.activeElement, item,
-       "fist editor item is the active element");
+    is(
+      panelWindow.document.activeElement,
+      item,
+      "fist editor item is the active element"
+    );
 
     EventUtils.synthesizeKey("VK_END", {}, panelWindow);
     item = getStylesheetNameLinkFor(ui.editors[3]);
-    is(panelWindow.document.activeElement, item,
-       "last editor item is the active element");
+    is(
+      panelWindow.document.activeElement,
+      item,
+      "last editor item is the active element"
+    );
 
     EventUtils.synthesizeKey("VK_UP", {}, panelWindow);
     item = getStylesheetNameLinkFor(ui.editors[2]);
-    is(panelWindow.document.activeElement, item,
-       "editor 2 item is the active element");
+    is(
+      panelWindow.document.activeElement,
+      item,
+      "editor 2 item is the active element"
+    );
 
     EventUtils.synthesizeKey("VK_RETURN", {}, panelWindow);
     // this will attach and give focus editor 2

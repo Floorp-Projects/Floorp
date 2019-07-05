@@ -4,8 +4,8 @@
 "use strict";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "https://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/";
+const TEST_PATH =
+  "https://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
 requestLongerTimeout(2);
@@ -13,35 +13,43 @@ requestLongerTimeout(2);
 pushPref("devtools.webconsole.filter.net", false);
 pushPref("devtools.webconsole.filter.netxhr", true);
 
-const tabs = [{
-  id: "headers",
-  testEmpty: testEmptyHeaders,
-  testContent: testHeaders,
-}, {
-  id: "cookies",
-  testEmpty: testEmptyCookies,
-  testContent: testCookies,
-}, {
-  id: "params",
-  testEmpty: testEmptyParams,
-  testContent: testParams,
-}, {
-  id: "response",
-  testEmpty: testEmptyResponse,
-  testContent: testResponse,
-}, {
-  id: "timings",
-  testEmpty: testEmptyTimings,
-  testContent: testTimings,
-}, {
-  id: "stack-trace",
-  testEmpty: testEmptyStackTrace,
-  testContent: testStackTrace,
-}, {
-  id: "security",
-  testEmpty: testEmptySecurity,
-  testContent: testSecurity,
-}];
+const tabs = [
+  {
+    id: "headers",
+    testEmpty: testEmptyHeaders,
+    testContent: testHeaders,
+  },
+  {
+    id: "cookies",
+    testEmpty: testEmptyCookies,
+    testContent: testCookies,
+  },
+  {
+    id: "params",
+    testEmpty: testEmptyParams,
+    testContent: testParams,
+  },
+  {
+    id: "response",
+    testEmpty: testEmptyResponse,
+    testContent: testResponse,
+  },
+  {
+    id: "timings",
+    testEmpty: testEmptyTimings,
+    testContent: testTimings,
+  },
+  {
+    id: "stack-trace",
+    testEmpty: testEmptyStackTrace,
+    testContent: testStackTrace,
+  },
+  {
+    id: "security",
+    testEmpty: testEmptySecurity,
+    testContent: testSecurity,
+  },
+];
 
 /**
  * Main test for checking HTTP logs in the Console panel.
@@ -127,8 +135,11 @@ async function openRequestBeforeUpdates(target, hud, tab) {
   if (tab.id != "security") {
     // Make sure the current tab is the expected one.
     const currentTab = messageNode.querySelector(`#${tab.id}-tab`);
-    is(currentTab.getAttribute("aria-selected"), "true",
-      "The correct tab is selected");
+    is(
+      currentTab.getAttribute("aria-selected"),
+      "true",
+      "The correct tab is selected"
+    );
 
     // The tab should be empty now.
     tab.testEmpty(messageNode);
@@ -179,7 +190,9 @@ async function testHeaders(messageNode) {
 
   // Select Headers tab and check the content.
   headersTab.click();
-  await waitFor(() => messageNode.querySelector("#headers-panel .headers-overview"));
+  await waitFor(() =>
+    messageNode.querySelector("#headers-panel .headers-overview")
+  );
 }
 
 // Cookies
@@ -195,7 +208,9 @@ async function testCookies(messageNode) {
 
   // Select tab and check the content.
   cookiesTab.click();
-  await waitFor(() => messageNode.querySelector("#cookies-panel .treeValueCell"));
+  await waitFor(() =>
+    messageNode.querySelector("#cookies-panel .treeValueCell")
+  );
 }
 
 // Params
@@ -215,9 +230,13 @@ async function testParams(messageNode) {
   const paramsPanel = messageNode.querySelector("#params-panel");
   await waitForSourceEditor(paramsPanel);
   const paramsContent = messageNode.querySelector(
-    "#params-panel .panel-container .CodeMirror");
+    "#params-panel .panel-container .CodeMirror"
+  );
   ok(paramsContent, "Params content is available");
-  ok(paramsContent.textContent.includes("Hello world!"), "Post body is correct");
+  ok(
+    paramsContent.textContent.includes("Hello world!"),
+    "Post body is correct"
+  );
 }
 
 // Response
@@ -237,7 +256,8 @@ async function testResponse(messageNode) {
   const responsePanel = messageNode.querySelector("#response-panel");
   await waitForSourceEditor(responsePanel);
   const responseContent = messageNode.querySelector(
-    "#response-panel .editor-row-container .CodeMirror");
+    "#response-panel .editor-row-container .CodeMirror"
+  );
   ok(responseContent, "Response content is available");
   ok(responseContent.textContent, "Response text is available");
 }
@@ -256,9 +276,13 @@ async function testTimings(messageNode) {
   // Select Timings tab and check the content.
   timingsTab.click();
   await waitFor(() =>
-    messageNode.querySelector("#timings-panel .timings-container .timings-label"));
+    messageNode.querySelector(
+      "#timings-panel .timings-container .timings-label"
+    )
+  );
   const timingsContent = messageNode.querySelector(
-    "#timings-panel .timings-container .timings-label");
+    "#timings-panel .timings-container .timings-label"
+  );
   ok(timingsContent, "Timings content is available");
   ok(timingsContent.textContent, "Timings text is available");
 }
@@ -276,7 +300,9 @@ async function testStackTrace(messageNode) {
 
   // Select Timings tab and check the content.
   stackTraceTab.click();
-  await waitFor(() => messageNode.querySelector("#stack-trace-panel .frame-link"));
+  await waitFor(() =>
+    messageNode.querySelector("#stack-trace-panel .frame-link")
+  );
 }
 
 // Security
@@ -292,7 +318,9 @@ async function testSecurity(messageNode) {
 
   // Select Timings tab and check the content.
   securityTab.click();
-  await waitFor(() => messageNode.querySelector("#security-panel .treeTable .treeRow"));
+  await waitFor(() =>
+    messageNode.querySelector("#security-panel .treeTable .treeRow")
+  );
 }
 
 // Waiting helpers
@@ -312,7 +340,9 @@ async function waitForRequestUpdates(hud) {
 }
 
 function expandXhrMessage(node) {
-  info("Click on XHR message and wait for the network detail panel to be displayed");
+  info(
+    "Click on XHR message and wait for the network detail panel to be displayed"
+  );
   node.querySelector(".url").click();
   return waitFor(() => node.querySelector(".network-info"));
 }
@@ -322,7 +352,7 @@ function expandXhrMessage(node) {
  * Otherwise test will be shutdown too early and cause failure.
  */
 async function waitForLazyRequests(toolbox) {
-  const {ui} = toolbox.getCurrentPanel().hud;
+  const { ui } = toolbox.getCurrentPanel().hud;
   const proxy = ui.proxy;
   return waitUntil(() => {
     return !proxy.networkDataProvider.lazyRequestData.size;

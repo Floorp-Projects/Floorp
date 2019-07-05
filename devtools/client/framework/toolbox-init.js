@@ -39,8 +39,9 @@ const onLoad = new Promise(r => {
 
 async function showErrorPage(doc, errorMessage) {
   const win = doc.defaultView;
-  const { BrowserLoader } =
-    ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+  const { BrowserLoader } = ChromeUtils.import(
+    "resource://devtools/client/shared/browser-loader.js"
+  );
   const browserRequire = BrowserLoader({
     window: win,
     useOnlyShared: true,
@@ -49,9 +50,12 @@ async function showErrorPage(doc, errorMessage) {
   const React = browserRequire("devtools/client/shared/vendor/react");
   const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
   const DebugTargetErrorPage = React.createFactory(
-    require("devtools/client/framework/components/DebugTargetErrorPage"));
+    require("devtools/client/framework/components/DebugTargetErrorPage")
+  );
   const { LocalizationHelper } = browserRequire("devtools/shared/l10n");
-  const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+  const L10N = new LocalizationHelper(
+    "devtools/client/locales/toolbox.properties"
+  );
 
   // mount the React component into our XUL container once the DOM is ready
   await onLoad;
@@ -67,14 +71,20 @@ async function showErrorPage(doc, errorMessage) {
   ReactDOM.render(element, mountEl);
 
   // make sure we unmount the component when the page is destroyed
-  win.addEventListener("unload", () => {
-    ReactDOM.unmountComponentAtNode(mountEl);
-  }, { once: true });
+  win.addEventListener(
+    "unload",
+    () => {
+      ReactDOM.unmountComponentAtNode(mountEl);
+    },
+    { once: true }
+  );
 }
 
 async function initToolbox(url, host) {
   const { gDevTools } = require("devtools/client/framework/devtools");
-  const { targetFromURL } = require("devtools/client/framework/target-from-url");
+  const {
+    targetFromURL,
+  } = require("devtools/client/framework/target-from-url");
   const { Toolbox } = require("devtools/client/framework/toolbox");
   const { DebuggerServer } = require("devtools/server/main");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
@@ -89,8 +99,9 @@ async function initToolbox(url, host) {
       // mozbrowser>) whose reference is set on the host iframe.
 
       // `iframe` is the targeted document to debug
-      let iframe = host.wrappedJSObject ? host.wrappedJSObject.target
-                                        : host.target;
+      let iframe = host.wrappedJSObject
+        ? host.wrappedJSObject.target
+        : host.target;
       if (!iframe) {
         throw new Error("Unable to find the targeted iframe to debug");
       }
@@ -136,7 +147,7 @@ if (url.search.length > 1) {
   if (url.searchParams.has("disconnected")) {
     const error = new Error("Debug target was disconnected");
     showErrorPage(host.contentDocument, `${error}`);
-  // otherwise, try to init the toolbox
+    // otherwise, try to init the toolbox
   } else {
     initToolbox(url, host);
   }

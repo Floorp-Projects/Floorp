@@ -26,8 +26,11 @@ function testNavigate(target) {
   const outstanding = [promise.defer(), promise.defer()];
 
   target.on("tabNavigated", function onTabNavigated(packet) {
-    is(packet.url.split("/").pop(), TAB2_FILE,
-      "Got a tab navigation notification.");
+    is(
+      packet.url.split("/").pop(),
+      TAB2_FILE,
+      "Got a tab navigation notification."
+    );
 
     info(JSON.stringify(packet));
 

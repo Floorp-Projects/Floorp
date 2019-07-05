@@ -29,16 +29,19 @@ const KEY_STATES = [
   ["VK_BACK_SPACE", []],
   // Test that mixed tags, classes and ids are grouped by types, sorted by
   // count and alphabetical order
-  ["b", [
-    ["button", 3],
-    ["body", 1],
-    [".bc", 3],
-    [".ba", 1],
-    [".bb", 1],
-    ["#ba", 1],
-    ["#bb", 1],
-    ["#bc", 1],
-  ]],
+  [
+    "b",
+    [
+      ["button", 3],
+      ["body", 1],
+      [".bc", 3],
+      [".ba", 1],
+      [".bb", 1],
+      ["#ba", 1],
+      ["#bb", 1],
+      ["#bc", 1],
+    ],
+  ],
 ];
 
 const TEST_URL = `<span class="span" id="span">
@@ -49,18 +52,24 @@ const TEST_URL = `<span class="span" id="span">
                   <button class="bc" id="ba"></button>`;
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL("data:text/html;charset=utf-8," +
-                                              encodeURI(TEST_URL));
+  const { inspector } = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
+  );
 
   const searchBox = inspector.panelWin.document.getElementById(
-    "inspector-searchbox");
+    "inspector-searchbox"
+  );
   const popup = inspector.searchSuggestions.searchPopup;
 
   await focusSearchBoxUsingShortcut(inspector.panelWin);
 
   for (const [key, expectedSuggestions] of KEY_STATES) {
-    info("pressing key " + key + " to get suggestions " +
-         JSON.stringify(expectedSuggestions));
+    info(
+      "pressing key " +
+        key +
+        " to get suggestions " +
+        JSON.stringify(expectedSuggestions)
+    );
 
     const onCommand = once(searchBox, "input", true);
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
@@ -70,12 +79,18 @@ add_task(async function() {
     await inspector.searchSuggestions._lastQuery;
 
     const actualSuggestions = popup.getItems();
-    is(popup.isOpen ? actualSuggestions.length : 0, expectedSuggestions.length,
-       "There are expected number of suggestions");
+    is(
+      popup.isOpen ? actualSuggestions.length : 0,
+      expectedSuggestions.length,
+      "There are expected number of suggestions"
+    );
 
     for (let i = 0; i < expectedSuggestions.length; i++) {
-      is(expectedSuggestions[i][0], actualSuggestions[i].label,
-         "The suggestion at " + i + "th index is correct.");
+      is(
+        expectedSuggestions[i][0],
+        actualSuggestions[i].label,
+        "The suggestion at " + i + "th index is correct."
+      );
     }
   }
 });

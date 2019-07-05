@@ -51,8 +51,11 @@ async function testToolboxInitialization(tab, inspector, toolbox) {
 async function testMarkupView(selector, inspector) {
   const nodeFront = await getNodeFront(selector, inspector);
   try {
-    is(inspector.selection.nodeFront, nodeFront,
-       "Right node is selected in the markup view");
+    is(
+      inspector.selection.nodeFront,
+      nodeFront,
+      "Right node is selected in the markup view"
+    );
   } catch (ex) {
     ok(false, "Got exception while resolving selected node of markup view.");
     console.error(ex);

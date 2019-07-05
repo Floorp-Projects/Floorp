@@ -6,8 +6,14 @@
 /* global gToolbox */
 
 // React & Redux
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const { span, div } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
+const {
+  span,
+  div,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { reset } = require("../actions/ui");
@@ -25,7 +31,9 @@ const AuditProgressOverlay = createFactory(require("./AuditProgressOverlay"));
 const Description = createFactory(require("./Description").Description);
 const RightSidebar = createFactory(require("./RightSidebar"));
 const Toolbar = createFactory(require("./Toolbar"));
-const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
+const SplitBox = createFactory(
+  require("devtools/client/shared/components/splitter/SplitBox")
+);
 
 /**
  * Renders basic layout of the Accessibility panel. The Accessibility panel
@@ -96,7 +104,13 @@ class MainFrame extends Component {
    * Render Accessibility panel content
    */
   render() {
-    const { accessibility, walker, fluentBundles, enabled, auditing } = this.props;
+    const {
+      accessibility,
+      walker,
+      fluentBundles,
+      enabled,
+      auditing,
+    } = this.props;
 
     if (!enabled) {
       return Description({ accessibility });
@@ -105,15 +119,18 @@ class MainFrame extends Component {
     // Audit is currently running.
     const isAuditing = auditing.length > 0;
 
-    return LocalizationProvider({ messages: fluentBundles },
-      div({ className: "mainFrame", role: "presentation" },
+    return LocalizationProvider(
+      { messages: fluentBundles },
+      div(
+        { className: "mainFrame", role: "presentation" },
         Toolbar({ accessibility, walker }),
         isAuditing && AuditProgressOverlay(),
-        span({
-          "aria-hidden": isAuditing,
-          role: "presentation",
-          style: { display: "contents" },
-        },
+        span(
+          {
+            "aria-hidden": isAuditing,
+            role: "presentation",
+            style: { display: "contents" },
+          },
           SplitBox({
             ref: "splitBox",
             initialSize: SIDEBAR_WIDTH,
@@ -121,14 +138,17 @@ class MainFrame extends Component {
             maxSize: "80%",
             splitterSize: 1,
             endPanelControl: true,
-            startPanel: div({
-              className: "main-panel",
-              role: "presentation",
-            }, AccessibilityTree({ walker })),
+            startPanel: div(
+              {
+                className: "main-panel",
+                role: "presentation",
+              },
+              AccessibilityTree({ walker })
+            ),
             endPanel: RightSidebar({ walker }),
             vert: this.useLandscapeMode,
           })
-        ),
+        )
       )
     );
   }

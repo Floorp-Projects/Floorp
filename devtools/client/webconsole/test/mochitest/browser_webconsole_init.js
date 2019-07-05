@@ -5,21 +5,20 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-console.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {ui} = hud;
+  const { ui } = hud;
 
   ok(ui.jsterm, "jsterm exists");
   ok(ui.wrapper, "wrapper exists");
 
   const receievedMessages = waitForMessages({
     hud,
-    messages: [
-      { text: "19" },
-    ],
+    messages: [{ text: "19" }],
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
@@ -29,8 +28,14 @@ add_task(async function() {
   await receievedMessages;
 
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
-  is(outputContainer.querySelectorAll(".message.console-api").length, 20,
-    "Correct number of messages appear");
-  is(outputContainer.scrollWidth, outputContainer.clientWidth,
-    "No horizontal overflow");
+  is(
+    outputContainer.querySelectorAll(".message.console-api").length,
+    20,
+    "Correct number of messages appear"
+  );
+  is(
+    outputContainer.scrollWidth,
+    outputContainer.clientWidth,
+    "No horizontal overflow"
+  );
 });

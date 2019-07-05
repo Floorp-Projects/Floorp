@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
@@ -29,7 +32,8 @@ class Grid extends PureComponent {
     return {
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
-      highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
+      highlighterSettings: PropTypes.shape(Types.highlighterSettings)
+        .isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -44,10 +48,9 @@ class Grid extends PureComponent {
 
   render() {
     if (!this.props.grids.length) {
-      return (
-        dom.div({ className: "devtools-sidepanel-no-result" },
-          getStr("layout.noGridsOnThisPage")
-        )
+      return dom.div(
+        { className: "devtools-sidepanel-no-result" },
+        getStr("layout.noGridsOnThisPage")
       );
     }
 
@@ -67,33 +70,32 @@ class Grid extends PureComponent {
     } = this.props;
     const highlightedGrids = grids.filter(grid => grid.highlighted);
 
-    return (
-      dom.div({ id: "layout-grid-container" },
-        dom.div({ className: "grid-content" },
-          GridList({
-            getSwatchColorPickerTooltip,
-            grids,
-            onHideBoxModelHighlighter,
-            onSetGridOverlayColor,
-            onShowBoxModelHighlighterForNode,
-            onToggleGridHighlighter,
-            setSelectedNode,
-          }),
-          GridDisplaySettings({
-            highlighterSettings,
-            onToggleShowGridAreas,
-            onToggleShowGridLineNumbers,
-            onToggleShowInfiniteLines,
-          })
-        ),
-        highlightedGrids.length === 1 ?
-          GridOutline({
+    return dom.div(
+      { id: "layout-grid-container" },
+      dom.div(
+        { className: "grid-content" },
+        GridList({
+          getSwatchColorPickerTooltip,
+          grids,
+          onHideBoxModelHighlighter,
+          onSetGridOverlayColor,
+          onShowBoxModelHighlighterForNode,
+          onToggleGridHighlighter,
+          setSelectedNode,
+        }),
+        GridDisplaySettings({
+          highlighterSettings,
+          onToggleShowGridAreas,
+          onToggleShowGridLineNumbers,
+          onToggleShowInfiniteLines,
+        })
+      ),
+      highlightedGrids.length === 1
+        ? GridOutline({
             grids,
             onShowGridOutlineHighlight,
           })
-          :
-          null
-      )
+        : null
     );
   }
 }

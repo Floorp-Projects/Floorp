@@ -12,7 +12,8 @@
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 
 const {
   getFormattedIPAndPort,
@@ -37,17 +38,21 @@ const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 /* eslint-disable no-unused-vars, max-len */
-const EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/test/";
-const HTTPS_EXAMPLE_URL = "https://example.com/browser/devtools/client/netmonitor/test/";
+const EXAMPLE_URL =
+  "http://example.com/browser/devtools/client/netmonitor/test/";
+const HTTPS_EXAMPLE_URL =
+  "https://example.com/browser/devtools/client/netmonitor/test/";
 /* Since the test server will proxy `ws://example.com` to websocket server on 9988,
 so we must sepecify the port explicitly */
 const WS_URL = "ws://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
-const WS_HTTP_URL = "http://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
+const WS_HTTP_URL =
+  "http://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
 
 const API_CALLS_URL = EXAMPLE_URL + "html_api-calls-test-page.html";
 const SIMPLE_URL = EXAMPLE_URL + "html_simple-test-page.html";
 const NAVIGATE_URL = EXAMPLE_URL + "html_navigate-test-page.html";
-const CONTENT_TYPE_WITHOUT_CACHE_URL = EXAMPLE_URL + "html_content-type-without-cache-test-page.html";
+const CONTENT_TYPE_WITHOUT_CACHE_URL =
+  EXAMPLE_URL + "html_content-type-without-cache-test-page.html";
 const CONTENT_TYPE_WITHOUT_CACHE_REQUESTS = 8;
 const CYRILLIC_URL = EXAMPLE_URL + "html_cyrillic-test-page.html";
 const STATUS_CODES_URL = EXAMPLE_URL + "html_status-codes-test-page.html";
@@ -56,12 +61,14 @@ const POST_ARRAY_DATA_URL = EXAMPLE_URL + "html_post-array-data-test-page.html";
 const POST_JSON_URL = EXAMPLE_URL + "html_post-json-test-page.html";
 const POST_RAW_URL = EXAMPLE_URL + "html_post-raw-test-page.html";
 const POST_RAW_URL_WITH_HASH = EXAMPLE_URL + "html_header-test-page.html";
-const POST_RAW_WITH_HEADERS_URL = EXAMPLE_URL + "html_post-raw-with-headers-test-page.html";
+const POST_RAW_WITH_HEADERS_URL =
+  EXAMPLE_URL + "html_post-raw-with-headers-test-page.html";
 const PARAMS_URL = EXAMPLE_URL + "html_params-test-page.html";
 const JSONP_URL = EXAMPLE_URL + "html_jsonp-test-page.html";
 const JSON_LONG_URL = EXAMPLE_URL + "html_json-long-test-page.html";
 const JSON_MALFORMED_URL = EXAMPLE_URL + "html_json-malformed-test-page.html";
-const JSON_CUSTOM_MIME_URL = EXAMPLE_URL + "html_json-custom-mime-test-page.html";
+const JSON_CUSTOM_MIME_URL =
+  EXAMPLE_URL + "html_json-custom-mime-test-page.html";
 const JSON_TEXT_MIME_URL = EXAMPLE_URL + "html_json-text-mime-test-page.html";
 const JSON_B64_URL = EXAMPLE_URL + "html_json-b64.html";
 const JSON_BASIC_URL = EXAMPLE_URL + "html_json-basic.html";
@@ -81,14 +88,17 @@ const OPEN_REQUEST_IN_TAB_URL = EXAMPLE_URL + "html_open-request-in-tab.html";
 const CSP_URL = EXAMPLE_URL + "html_csp-test-page.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
-const SIMPLE_UNSORTED_COOKIES_SJS = EXAMPLE_URL + "sjs_simple-unsorted-cookies-test-server.sjs";
+const SIMPLE_UNSORTED_COOKIES_SJS =
+  EXAMPLE_URL + "sjs_simple-unsorted-cookies-test-server.sjs";
 const CONTENT_TYPE_SJS = EXAMPLE_URL + "sjs_content-type-test-server.sjs";
 const WS_CONTENT_TYPE_SJS = WS_HTTP_URL + "sjs_content-type-test-server.sjs";
-const HTTPS_CONTENT_TYPE_SJS = HTTPS_EXAMPLE_URL + "sjs_content-type-test-server.sjs";
+const HTTPS_CONTENT_TYPE_SJS =
+  HTTPS_EXAMPLE_URL + "sjs_content-type-test-server.sjs";
 const STATUS_CODES_SJS = EXAMPLE_URL + "sjs_status-codes-test-server.sjs";
 const SORTING_SJS = EXAMPLE_URL + "sjs_sorting-test-server.sjs";
 const HTTPS_REDIRECT_SJS = EXAMPLE_URL + "sjs_https-redirect-test-server.sjs";
-const CORS_SJS_PATH = "/browser/devtools/client/netmonitor/test/sjs_cors-test-server.sjs";
+const CORS_SJS_PATH =
+  "/browser/devtools/client/netmonitor/test/sjs_cors-test-server.sjs";
 const HSTS_SJS = EXAMPLE_URL + "sjs_hsts-test-server.sjs";
 const METHOD_SJS = EXAMPLE_URL + "sjs_method-test-server.sjs";
 const SLOW_SJS = EXAMPLE_URL + "sjs_slow-test-server.sjs";
@@ -98,7 +108,8 @@ const HSTS_BASE_URL = EXAMPLE_URL;
 const HSTS_PAGE_URL = CUSTOM_GET_URL;
 
 const TEST_IMAGE = EXAMPLE_URL + "test-image.png";
-const TEST_IMAGE_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg==";
+const TEST_IMAGE_DATA_URI =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg==";
 
 /* eslint-enable no-unused-vars, max-len */
 
@@ -113,28 +124,32 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
 // Always reset some prefs to their original values after the test finishes.
-const gDefaultFilters = Services.prefs.getCharPref("devtools.netmonitor.filters");
+const gDefaultFilters = Services.prefs.getCharPref(
+  "devtools.netmonitor.filters"
+);
 
 // Reveal many columns for test
 Services.prefs.setCharPref(
   "devtools.netmonitor.visibleColumns",
-  "[\"cause\",\"contentSize\",\"cookies\",\"domain\",\"duration\"," +
-  "\"endTime\",\"file\",\"url\",\"latency\",\"method\",\"protocol\"," +
-  "\"remoteip\",\"responseTime\",\"scheme\",\"setCookies\"," +
-  "\"startTime\",\"status\",\"transferred\",\"type\",\"waterfall\"]"
+  '["cause","contentSize","cookies","domain","duration",' +
+    '"endTime","file","url","latency","method","protocol",' +
+    '"remoteip","responseTime","scheme","setCookies",' +
+    '"startTime","status","transferred","type","waterfall"]'
 );
 
-Services.prefs.setCharPref("devtools.netmonitor.columnsData",
-'[{"name":"status","minWidth":30,"width":5},' +
-  '{"name":"method","minWidth":30,"width":5},' +
-  '{"name":"domain","minWidth":30,"width":10},' +
-  '{"name":"file","minWidth":30,"width":25},' +
-  '{"name":"url","minWidth":30,"width":25},' +
-  '{"name":"cause","minWidth":30,"width":10},' +
-  '{"name":"type","minWidth":30,"width":5},' +
-  '{"name":"transferred","minWidth":30,"width":10},' +
-  '{"name":"contentSize","minWidth":30,"width":5},' +
-  '{"name":"waterfall","minWidth":150,"width":25}]');
+Services.prefs.setCharPref(
+  "devtools.netmonitor.columnsData",
+  '[{"name":"status","minWidth":30,"width":5},' +
+    '{"name":"method","minWidth":30,"width":5},' +
+    '{"name":"domain","minWidth":30,"width":10},' +
+    '{"name":"file","minWidth":30,"width":25},' +
+    '{"name":"url","minWidth":30,"width":25},' +
+    '{"name":"cause","minWidth":30,"width":10},' +
+    '{"name":"type","minWidth":30,"width":5},' +
+    '{"name":"transferred","minWidth":30,"width":10},' +
+    '{"name":"contentSize","minWidth":30,"width":5},' +
+    '{"name":"waterfall","minWidth":150,"width":25}]'
+);
 
 // Increase UI limit for responses rendered using CodeMirror in tests.
 Services.prefs.setIntPref("devtools.netmonitor.response.ui.limit", 1024 * 105);
@@ -157,7 +172,7 @@ registerCleanupFunction(() => {
 });
 
 function waitForNavigation(target) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     target.once("will-navigate", () => {
       target.once("navigate", () => {
         resolve();
@@ -280,15 +295,19 @@ const updatedTypes = [
 // Start collecting all networkEventUpdate event when panel is opened.
 // removeTab() should be called once all corresponded RECEIVED_* events finished.
 function startNetworkEventUpdateObserver(panelWin) {
-  updatingTypes.forEach((type) => panelWin.api.on(type, actor => {
-    const key = actor + "-" + updatedTypes[updatingTypes.indexOf(type)];
-    finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] + 1 : 1;
-  }));
+  updatingTypes.forEach(type =>
+    panelWin.api.on(type, actor => {
+      const key = actor + "-" + updatedTypes[updatingTypes.indexOf(type)];
+      finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] + 1 : 1;
+    })
+  );
 
-  updatedTypes.forEach((type) => panelWin.api.on(type, actor => {
-    const key = actor + "-" + type;
-    finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] - 1 : -1;
-  }));
+  updatedTypes.forEach(type =>
+    panelWin.api.on(type, actor => {
+      const key = actor + "-" + type;
+      finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] - 1 : -1;
+    })
+  );
 }
 
 async function waitForAllNetworkUpdateEvents() {
@@ -325,18 +344,25 @@ function initNetMonitor(url, enableCache) {
     if (!enableCache) {
       const panel = monitor.panelWin;
       const { store, windowRequire } = panel;
-      const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+      const Actions = windowRequire(
+        "devtools/client/netmonitor/src/actions/index"
+      );
 
       info("Disabling cache and reloading page.");
       const requestsDone = waitForAllRequestsFinished(monitor);
       const markersDone = waitForTimelineMarkers(monitor);
       await toggleCache(target, true);
       await Promise.all([requestsDone, markersDone]);
-      info("Cache disabled when the current and all future toolboxes are open.");
+      info(
+        "Cache disabled when the current and all future toolboxes are open."
+      );
       // Remove any requests generated by the reload while toggling the cache to
       // avoid interfering with the test.
-      isnot([...target.activeConsole.getNetworkEvents()].length, 0,
-         "Request to reconfigure the tab was recorded.");
+      isnot(
+        [...target.activeConsole.getNetworkEvents()].length,
+        0,
+        "Request to reconfigure the tab was recorded."
+      );
       info("Clearing requests in the console client.");
       target.activeConsole.clearNetworkRequests();
       info("Clearing requests in the UI.");
@@ -344,7 +370,7 @@ function initNetMonitor(url, enableCache) {
       store.dispatch(Actions.clearRequests());
     }
 
-    return {tab, monitor, toolbox};
+    return { tab, monitor, toolbox };
   })();
 }
 
@@ -381,7 +407,7 @@ function teardown(monitor) {
 }
 
 function waitForNetworkEvents(monitor, getRequests) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const panel = monitor.panelWin;
     const { getNetworkRequest } = panel.connector;
     let networkEvent = 0;
@@ -410,10 +436,23 @@ function waitForNetworkEvents(monitor, getRequests) {
     }
 
     function maybeResolve(event, actor, networkInfo) {
-      info("> Network event progress: " +
-        "NetworkEvent: " + networkEvent + "/" + getRequests + ", " +
-        "PayloadReady: " + payloadReady + "/" + getRequests + ", " +
-        "got " + event + " for " + actor);
+      info(
+        "> Network event progress: " +
+          "NetworkEvent: " +
+          networkEvent +
+          "/" +
+          getRequests +
+          ", " +
+          "PayloadReady: " +
+          payloadReady +
+          "/" +
+          getRequests +
+          ", " +
+          "got " +
+          event +
+          " for " +
+          actor
+      );
 
       // Wait until networkEvent & payloadReady finish for each request.
       if (networkEvent >= getRequests && payloadReady >= getRequests) {
@@ -428,26 +467,46 @@ function waitForNetworkEvents(monitor, getRequests) {
   });
 }
 
-function verifyRequestItemTarget(document, requestList, requestItem, method,
-                                 url, data = {}) {
+function verifyRequestItemTarget(
+  document,
+  requestList,
+  requestItem,
+  method,
+  url,
+  data = {}
+) {
   info("> Verifying: " + method + " " + url + " " + data.toSource());
 
   const visibleIndex = requestList.indexOf(requestItem);
 
   info("Visible index of item: " + visibleIndex);
 
-  const { fuzzyUrl, status, statusText, cause, type, fullMimeType,
-        transferred, size, time, displayedStatus } = data;
+  const {
+    fuzzyUrl,
+    status,
+    statusText,
+    cause,
+    type,
+    fullMimeType,
+    transferred,
+    size,
+    time,
+    displayedStatus,
+  } = data;
 
   const target = document.querySelectorAll(".request-list-item")[visibleIndex];
   // Bug 1414981 - Request URL should not show #hash
   const unicodeUrl = getUnicodeUrl(url.split("#")[0]);
-  const ORIGINAL_FILE_URL = L10N.getFormatStr("netRequest.originalFileURL.tooltip",
-    url);
-  const DECODED_FILE_URL = L10N.getFormatStr("netRequest.decodedFileURL.tooltip",
-    unicodeUrl);
-  const fileToolTip = url === unicodeUrl ?
-    url : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
+  const ORIGINAL_FILE_URL = L10N.getFormatStr(
+    "netRequest.originalFileURL.tooltip",
+    url
+  );
+  const DECODED_FILE_URL = L10N.getFormatStr(
+    "netRequest.decodedFileURL.tooltip",
+    unicodeUrl
+  );
+  const fileToolTip =
+    url === unicodeUrl ? url : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
   const requestedFile = requestItem.urlDetails.baseNameWithQuery;
   const host = getUnicodeHostname(getUrlHost(url));
   const scheme = getUrlScheme(url);
@@ -464,85 +523,150 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   const protocol = getFormattedProtocol(requestItem);
 
   if (fuzzyUrl) {
-    ok(requestItem.method.startsWith(method), "The attached method is correct.");
+    ok(
+      requestItem.method.startsWith(method),
+      "The attached method is correct."
+    );
     ok(requestItem.url.startsWith(url), "The attached url is correct.");
   } else {
     is(requestItem.method, method, "The attached method is correct.");
     is(requestItem.url, url.split("#")[0], "The attached url is correct.");
   }
 
-  is(target.querySelector(".requests-list-method").textContent,
-    method, "The displayed method is correct.");
+  is(
+    target.querySelector(".requests-list-method").textContent,
+    method,
+    "The displayed method is correct."
+  );
 
   if (fuzzyUrl) {
-    ok(target.querySelector(".requests-list-file").textContent.startsWith(
-      requestedFile), "The displayed file is correct.");
-    ok(target.querySelector(".requests-list-file").getAttribute("title")
-                                                  .startsWith(fileToolTip),
-      "The tooltip file is correct.");
+    ok(
+      target
+        .querySelector(".requests-list-file")
+        .textContent.startsWith(requestedFile),
+      "The displayed file is correct."
+    );
+    ok(
+      target
+        .querySelector(".requests-list-file")
+        .getAttribute("title")
+        .startsWith(fileToolTip),
+      "The tooltip file is correct."
+    );
   } else {
-    is(target.querySelector(".requests-list-file").textContent,
+    is(
+      target.querySelector(".requests-list-file").textContent,
       requestedFile,
-      "The displayed file is correct.");
-    is(target.querySelector(".requests-list-file").getAttribute("title"),
-      fileToolTip, "The tooltip file is correct.");
+      "The displayed file is correct."
+    );
+    is(
+      target.querySelector(".requests-list-file").getAttribute("title"),
+      fileToolTip,
+      "The tooltip file is correct."
+    );
   }
 
-  is(target.querySelector(".requests-list-protocol").textContent,
-    protocol, "The displayed protocol is correct.");
+  is(
+    target.querySelector(".requests-list-protocol").textContent,
+    protocol,
+    "The displayed protocol is correct."
+  );
 
-  is(target.querySelector(".requests-list-protocol").getAttribute("title"),
-    protocol, "The tooltip protocol is correct.");
+  is(
+    target.querySelector(".requests-list-protocol").getAttribute("title"),
+    protocol,
+    "The tooltip protocol is correct."
+  );
 
-  is(target.querySelector(".requests-list-domain").textContent,
-    host, "The displayed domain is correct.");
+  is(
+    target.querySelector(".requests-list-domain").textContent,
+    host,
+    "The displayed domain is correct."
+  );
 
-  const domainTooltip = host + (remoteAddress ? " (" + formattedIPPort + ")" : "");
-  is(target.querySelector(".requests-list-domain").getAttribute("title"),
-    domainTooltip, "The tooltip domain is correct.");
+  const domainTooltip =
+    host + (remoteAddress ? " (" + formattedIPPort + ")" : "");
+  is(
+    target.querySelector(".requests-list-domain").getAttribute("title"),
+    domainTooltip,
+    "The tooltip domain is correct."
+  );
 
-  is(target.querySelector(".requests-list-remoteip").textContent,
-    remoteIP, "The displayed remote IP is correct.");
+  is(
+    target.querySelector(".requests-list-remoteip").textContent,
+    remoteIP,
+    "The displayed remote IP is correct."
+  );
 
-  is(target.querySelector(".requests-list-remoteip").getAttribute("title"),
-    remoteIP, "The tooltip remote IP is correct.");
+  is(
+    target.querySelector(".requests-list-remoteip").getAttribute("title"),
+    remoteIP,
+    "The tooltip remote IP is correct."
+  );
 
-  is(target.querySelector(".requests-list-scheme").textContent,
-    scheme, "The displayed scheme is correct.");
+  is(
+    target.querySelector(".requests-list-scheme").textContent,
+    scheme,
+    "The displayed scheme is correct."
+  );
 
-  is(target.querySelector(".requests-list-scheme").getAttribute("title"),
-    scheme, "The tooltip scheme is correct.");
+  is(
+    target.querySelector(".requests-list-scheme").getAttribute("title"),
+    scheme,
+    "The tooltip scheme is correct."
+  );
 
-  is(target.querySelector(".requests-list-duration-time").textContent,
-    duration, "The displayed duration is correct.");
+  is(
+    target.querySelector(".requests-list-duration-time").textContent,
+    duration,
+    "The displayed duration is correct."
+  );
 
-  is(target.querySelector(".requests-list-duration-time").getAttribute("title"),
-    duration, "The tooltip duration is correct.");
+  is(
+    target.querySelector(".requests-list-duration-time").getAttribute("title"),
+    duration,
+    "The tooltip duration is correct."
+  );
 
-  is(target.querySelector(".requests-list-latency-time").textContent,
-    latency, "The displayed latency is correct.");
+  is(
+    target.querySelector(".requests-list-latency-time").textContent,
+    latency,
+    "The displayed latency is correct."
+  );
 
-  is(target.querySelector(".requests-list-latency-time").getAttribute("title"),
-    latency, "The tooltip latency is correct.");
+  is(
+    target.querySelector(".requests-list-latency-time").getAttribute("title"),
+    latency,
+    "The tooltip latency is correct."
+  );
 
   if (status !== undefined) {
-    const value = target.querySelector(".requests-list-status-code")
-                      .getAttribute("data-status-code");
-    const codeValue = target.querySelector(".requests-list-status-code").textContent;
-    const tooltip = target.querySelector(".requests-list-status-code")
-                        .getAttribute("title");
+    const value = target
+      .querySelector(".requests-list-status-code")
+      .getAttribute("data-status-code");
+    const codeValue = target.querySelector(".requests-list-status-code")
+      .textContent;
+    const tooltip = target
+      .querySelector(".requests-list-status-code")
+      .getAttribute("title");
     info("Displayed status: " + value);
     info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);
-    is(value, displayedStatus ? displayedStatus : status,
-      "The displayed status is correct.");
+    is(
+      value,
+      displayedStatus ? displayedStatus : status,
+      "The displayed status is correct."
+    );
     is(codeValue, status, "The displayed status code is correct.");
     is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }
   if (cause !== undefined) {
-    const value = Array.from(target.querySelector(".requests-list-cause").childNodes)
-      .filter((node) => node.nodeType === Node.TEXT_NODE)[0].textContent;
-    const tooltip = target.querySelector(".requests-list-cause").getAttribute("title");
+    const value = Array.from(
+      target.querySelector(".requests-list-cause").childNodes
+    ).filter(node => node.nodeType === Node.TEXT_NODE)[0].textContent;
+    const tooltip = target
+      .querySelector(".requests-list-cause")
+      .getAttribute("title");
     info("Displayed cause: " + value);
     info("Tooltip cause: " + tooltip);
     is(value, cause.type, "The displayed cause is correct.");
@@ -550,16 +674,20 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   }
   if (type !== undefined) {
     const value = target.querySelector(".requests-list-type").textContent;
-    const tooltip = target.querySelector(".requests-list-type").getAttribute("title");
+    const tooltip = target
+      .querySelector(".requests-list-type")
+      .getAttribute("title");
     info("Displayed type: " + value);
     info("Tooltip type: " + tooltip);
     is(value, type, "The displayed type is correct.");
     is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
-    const value = target.querySelector(".requests-list-transferred").textContent;
-    const tooltip = target.querySelector(".requests-list-transferred")
-                        .getAttribute("title");
+    const value = target.querySelector(".requests-list-transferred")
+      .textContent;
+    const tooltip = target
+      .querySelector(".requests-list-transferred")
+      .getAttribute("title");
     info("Displayed transferred size: " + value);
     info("Tooltip transferred size: " + tooltip);
     is(value, transferred, "The displayed transferred size is correct.");
@@ -567,20 +695,24 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   }
   if (size !== undefined) {
     const value = target.querySelector(".requests-list-size").textContent;
-    const tooltip = target.querySelector(".requests-list-size").getAttribute("title");
+    const tooltip = target
+      .querySelector(".requests-list-size")
+      .getAttribute("title");
     info("Displayed size: " + value);
     info("Tooltip size: " + tooltip);
     is(value, size, "The displayed size is correct.");
     is(tooltip, size, "The tooltip size is correct.");
   }
   if (time !== undefined) {
-    const value = target.querySelector(".requests-list-timings-total").textContent;
-    const tooltip = target.querySelector(".requests-list-timings-total")
-                        .getAttribute("title");
+    const value = target.querySelector(".requests-list-timings-total")
+      .textContent;
+    const tooltip = target
+      .querySelector(".requests-list-timings-total")
+      .getAttribute("title");
     info("Displayed time: " + value);
     info("Tooltip time: " + tooltip);
-    ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is correct.");
-    ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is correct.");
+    ok(~~value.match(/[0-9]+/) >= 0, "The displayed time is correct.");
+    ok(~~tooltip.match(/[0-9]+/) >= 0, "The tooltip time is correct.");
   }
 
   if (visibleIndex !== -1) {
@@ -588,7 +720,10 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
       ok(target.classList.contains("even"), "Item should have 'even' class.");
       ok(!target.classList.contains("odd"), "Item shouldn't have 'odd' class.");
     } else {
-      ok(!target.classList.contains("even"), "Item shouldn't have 'even' class.");
+      ok(
+        !target.classList.contains("even"),
+        "Item shouldn't have 'even' class."
+      );
       ok(target.classList.contains("odd"), "Item should have 'odd' class.");
     }
   }
@@ -606,7 +741,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
  *        Returns a promise that resolves upon firing of the event.
  */
 function waitFor(subject, eventName) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     subject.once(eventName, resolve);
   });
 }
@@ -619,13 +754,17 @@ function waitFor(subject, eventName) {
  */
 function testFilterButtons(monitor, filterType) {
   const doc = monitor.panelWin.document;
-  const target = doc.querySelector(".requests-list-filter-" + filterType + "-button");
+  const target = doc.querySelector(
+    ".requests-list-filter-" + filterType + "-button"
+  );
   ok(target, `Filter button '${filterType}' was found`);
-  const buttons = [...doc.querySelectorAll(".requests-list-filter-buttons button")];
+  const buttons = [
+    ...doc.querySelectorAll(".requests-list-filter-buttons button"),
+  ];
   ok(buttons.length > 0, "More than zero filter buttons were found");
 
   // Only target should be checked.
-  const checkStatus = buttons.map(button => button == target ? 1 : 0);
+  const checkStatus = buttons.map(button => (button == target ? 1 : 0));
   testFilterButtonsCustom(monitor, checkStatus);
 }
 
@@ -643,11 +782,17 @@ function testFilterButtonsCustom(monitor, isChecked) {
   for (let i = 0; i < isChecked.length; i++) {
     const button = buttons[i];
     if (isChecked[i]) {
-      is(button.getAttribute("aria-pressed"), "true",
-        "The " + button.id + " button should set 'aria-pressed' = true.");
+      is(
+        button.getAttribute("aria-pressed"),
+        "true",
+        "The " + button.id + " button should set 'aria-pressed' = true."
+      );
     } else {
-      is(button.getAttribute("aria-pressed"), "false",
-        "The " + button.id + " button should set 'aria-pressed' = false.");
+      is(
+        button.getAttribute("aria-pressed"),
+        "false",
+        "The " + button.id + " button should set 'aria-pressed' = false."
+      );
     }
   }
 }
@@ -685,7 +830,12 @@ function performRequestsInContent(requests) {
  *         Resolves to the response data if a response is expected, immediately
  *         resolves otherwise
  */
-function executeInContent(name, data = {}, objects = {}, expectResponse = true) {
+function executeInContent(
+  name,
+  data = {},
+  objects = {},
+  expectResponse = true
+) {
   const mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
@@ -705,7 +855,7 @@ function executeInContent(name, data = {}, objects = {}, expectResponse = true) 
 function waitForContentMessage(name) {
   const mm = gBrowser.selectedBrowser.messageManager;
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     mm.addMessageListener(name, function onMessage(msg) {
       mm.removeMessageListener(name, onMessage);
       resolve(msg);
@@ -721,9 +871,10 @@ function testColumnsAlignment(headers, requestList) {
   for (let i = 0; i < numberOfColumns; i++) {
     const headerColumn = headers.childNodes[i];
     const requestColumn = firstRequestLine.childNodes[i];
-    is(headerColumn.getBoundingClientRect().left,
-       requestColumn.getBoundingClientRect().left,
-       "Headers for columns number " + i + " are aligned."
+    is(
+      headerColumn.getBoundingClientRect().left,
+      requestColumn.getBoundingClientRect().left,
+      "Headers for columns number " + i + " are aligned."
     );
   }
 }
@@ -732,30 +883,46 @@ async function hideColumn(monitor, column) {
   const { document } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelector(".requests-list-headers"));
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelector(".requests-list-headers")
+  );
 
-  const onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
+  const onHeaderRemoved = waitForDOM(
+    document,
+    `#requests-list-${column}-button`,
+    0
+  );
   getContextMenuItem(monitor, `request-list-header-${column}-toggle`).click();
   await onHeaderRemoved;
 
-  ok(!document.querySelector(`#requests-list-${column}-button`),
-     `Column ${column} should be hidden`);
+  ok(
+    !document.querySelector(`#requests-list-${column}-button`),
+    `Column ${column} should be hidden`
+  );
 }
 
 async function showColumn(monitor, column) {
   const { document } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelector(".requests-list-headers"));
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    document.querySelector(".requests-list-headers")
+  );
 
-  const onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
+  const onHeaderAdded = waitForDOM(
+    document,
+    `#requests-list-${column}-button`,
+    1
+  );
   getContextMenuItem(monitor, `request-list-header-${column}-toggle`).click();
   await onHeaderAdded;
 
-  ok(document.querySelector(`#requests-list-${column}-button`),
-     `Column ${column} should be visible`);
+  ok(
+    document.querySelector(`#requests-list-${column}-button`),
+    `Column ${column} should be visible`
+  );
 }
 
 /**
@@ -765,11 +932,15 @@ async function showColumn(monitor, column) {
  */
 async function selectIndexAndWaitForSourceEditor(monitor, index) {
   const document = monitor.panelWin.document;
-  const onResponseContent = monitor.panelWin.api.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
+  const onResponseContent = monitor.panelWin.api.once(
+    EVENTS.RECEIVED_RESPONSE_CONTENT
+  );
   // Select the request first, as it may try to fetch whatever is the current request's
   // responseContent if we select the ResponseTab first.
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[index]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[index]
+  );
   // We may already be on the ResponseTab, so only select it if needed.
   const editor = document.querySelector("#response-panel .CodeMirror-code");
   if (!editor) {
@@ -845,10 +1016,14 @@ function checkTelemetryEvent(expectedEvent, query) {
   ok(event.session_id > 0, "There is a valid session_id in the logged event");
 
   const f = e => JSON.stringify(e, null, 2);
-  is(f(event), f({
-    ...expectedEvent,
-    "session_id": event.session_id,
-  }), "The event has the expected data");
+  is(
+    f(event),
+    f({
+      ...expectedEvent,
+      session_id: event.session_id,
+    }),
+    "The event has the expected data"
+  );
 }
 
 function queryTelemetryEvents(query) {
@@ -857,10 +1032,9 @@ function queryTelemetryEvents(query) {
   const category = query.category || "devtools.main";
   const object = query.object || "netmonitor";
 
-  const filtersChangedEvents = snapshot.parent.filter(event =>
-    event[1] === category &&
-    event[2] === query.method &&
-    event[3] === object
+  const filtersChangedEvents = snapshot.parent.filter(
+    event =>
+      event[1] === category && event[2] === query.method && event[3] === object
   );
 
   // Return the `extra` field (which is event[5]e).
@@ -870,9 +1044,9 @@ function queryTelemetryEvents(query) {
 function validateRequests(requests, monitor) {
   const { document, store, windowRequire } = monitor.panelWin;
 
-  const {
-    getDisplayedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   requests.forEach((spec, i) => {
     const { method, url, causeType, causeUri, stack } = spec;
@@ -892,20 +1066,34 @@ function validateRequests(requests, monitor) {
 
     if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
-      ok(stackLen > 0,
-        `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`);
+      ok(
+        stackLen > 0,
+        `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`
+      );
 
       // if "stack" is array, check the details about the top stack frames
       if (Array.isArray(stack)) {
         stack.forEach((frame, j) => {
-          is(stacktrace[j].functionName, frame.fn,
-            `Request #${i} has the correct function on JS stack frame #${j}`);
-          is(stacktrace[j].filename.split("/").pop(), frame.file,
-            `Request #${i} has the correct file on JS stack frame #${j}`);
-          is(stacktrace[j].lineNumber, frame.line,
-            `Request #${i} has the correct line number on JS stack frame #${j}`);
-          is(stacktrace[j].asyncCause, frame.asyncCause,
-            `Request #${i} has the correct async cause on JS stack frame #${j}`);
+          is(
+            stacktrace[j].functionName,
+            frame.fn,
+            `Request #${i} has the correct function on JS stack frame #${j}`
+          );
+          is(
+            stacktrace[j].filename.split("/").pop(),
+            frame.file,
+            `Request #${i} has the correct file on JS stack frame #${j}`
+          );
+          is(
+            stacktrace[j].lineNumber,
+            frame.line,
+            `Request #${i} has the correct line number on JS stack frame #${j}`
+          );
+          is(
+            stacktrace[j].asyncCause,
+            frame.asyncCause,
+            `Request #${i} has the correct async cause on JS stack frame #${j}`
+          );
         });
       }
     } else {

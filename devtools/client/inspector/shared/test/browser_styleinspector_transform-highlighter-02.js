@@ -21,20 +21,20 @@ var TYPE = "CssTransformHighlighter";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   let hs = view.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
 
   info("Faking a mousemove on a non-transform property");
-  let {valueSpan} = getRuleViewProperty(view, "body", "color");
-  hs.onMouseMove({target: valueSpan});
+  let { valueSpan } = getRuleViewProperty(view, "body", "color");
+  hs.onMouseMove({ target: valueSpan });
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (2)");
 
   info("Faking a mousemove on a transform property");
-  ({valueSpan} = getRuleViewProperty(view, "body", "transform"));
+  ({ valueSpan } = getRuleViewProperty(view, "body", "transform"));
   let onHighlighterShown = hs.once("highlighter-shown");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
 
   const onComputedViewReady = inspector.once("computed-view-refreshed");
@@ -47,16 +47,18 @@ add_task(async function() {
   hs.highlighters[TYPE] = null;
 
   info("Faking a mousemove on a non-transform property");
-  ({valueSpan} = getComputedViewProperty(cView, "color"));
-  hs.onMouseMove({target: valueSpan});
+  ({ valueSpan } = getComputedViewProperty(cView, "color"));
+  hs.onMouseMove({ target: valueSpan });
   ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (3)");
 
   info("Faking a mousemove on a transform property");
-  ({valueSpan} = getComputedViewProperty(cView, "transform"));
+  ({ valueSpan } = getComputedViewProperty(cView, "transform"));
   onHighlighterShown = hs.once("highlighter-shown");
-  hs.onMouseMove({target: valueSpan});
+  hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
 
-  ok(hs.highlighters[TYPE],
-    "The highlighter has been created in the computed-view");
+  ok(
+    hs.highlighters[TYPE],
+    "The highlighter has been created in the computed-view"
+  );
 });

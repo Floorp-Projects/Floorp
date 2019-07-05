@@ -7,7 +7,9 @@
 // Test the markup view displaying the content of a <template> tag.
 
 add_task(async function() {
-  const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
+  const TEST_URL =
+    `data:text/html;charset=utf-8,` +
+    encodeURIComponent(`
     <div id="root">
       <template>
         <p>template content</p>
@@ -31,8 +33,8 @@ add_task(async function() {
       template-container
         p`;
 
-  const {inspector} = await openInspectorForURL(TEST_URL);
-  const {markup} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URL);
+  const { markup } = inspector;
 
   await assertMarkupViewAsTree(EXPECTED_TREE, "#root", inspector);
 
@@ -45,6 +47,9 @@ add_task(async function() {
   await selectNode(pContainer.node, inspector, "no-reason", false);
 
   const ruleView = inspector.getPanel("ruleview").view;
-  is(ruleView.element.querySelectorAll("#ruleview-no-results").length, 1,
-    "No rules are displayed for this p element");
+  is(
+    ruleView.element.querySelectorAll("#ruleview-no-results").length,
+    1,
+    "No rules are displayed for this p element"
+  );
 });

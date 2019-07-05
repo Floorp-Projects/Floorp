@@ -25,7 +25,7 @@ class ConnectSection extends PureComponent {
       {
         className: "connect-section__extra",
       },
-      extraContent,
+      extraContent
     );
   }
 
@@ -40,28 +40,26 @@ class ConnectSection extends PureComponent {
         {
           className: "connect-section__header",
         },
-        dom.img(
-          {
-            className: "connect-section__header__icon",
-            src: this.props.icon,
-          },
-        ),
+        dom.img({
+          className: "connect-section__header__icon",
+          src: this.props.icon,
+        }),
         dom.h1(
           {
             className: "card__heading connect-section__header__title",
           },
-          this.props.title,
-        ),
+          this.props.title
+        )
       ),
       this.props.children
         ? dom.div(
-          {
-            className: "connect-section__content",
-          },
-          this.props.children
-        )
+            {
+              className: "connect-section__content",
+            },
+            this.props.children
+          )
         : null,
-      extraContent ? this.renderExtraContent() : null,
+      extraContent ? this.renderExtraContent() : null
     );
   }
 }

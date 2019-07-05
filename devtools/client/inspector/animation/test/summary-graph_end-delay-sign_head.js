@@ -46,35 +46,58 @@ const TEST_DATA = [
 // eslint-disable-next-line no-unused-vars
 async function testSummaryGraphEndDelaySign() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedResult } of TEST_DATA) {
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
 
-    info(`Checking endDelay sign existance for ${ targetClass }`);
-    const endDelaySignEl = animationItemEl.querySelector(".animation-end-delay-sign");
+    info(`Checking endDelay sign existance for ${targetClass}`);
+    const endDelaySignEl = animationItemEl.querySelector(
+      ".animation-end-delay-sign"
+    );
 
     if (expectedResult) {
-      ok(endDelaySignEl, "The endDelay sign element should be in animation item element");
+      ok(
+        endDelaySignEl,
+        "The endDelay sign element should be in animation item element"
+      );
 
-      is(endDelaySignEl.style.marginInlineStart, expectedResult.marginInlineStart,
-        `marginInlineStart position should be ${ expectedResult.marginInlineStart }`);
-      is(endDelaySignEl.style.width, expectedResult.width,
-        `Width should be ${ expectedResult.width }`);
+      is(
+        endDelaySignEl.style.marginInlineStart,
+        expectedResult.marginInlineStart,
+        `marginInlineStart position should be ${
+          expectedResult.marginInlineStart
+        }`
+      );
+      is(
+        endDelaySignEl.style.width,
+        expectedResult.width,
+        `Width should be ${expectedResult.width}`
+      );
 
       if (expectedResult.additionalClass) {
-        ok(endDelaySignEl.classList.contains(expectedResult.additionalClass),
-          `endDelay sign element should have ${ expectedResult.additionalClass } class`);
+        ok(
+          endDelaySignEl.classList.contains(expectedResult.additionalClass),
+          `endDelay sign element should have ${
+            expectedResult.additionalClass
+          } class`
+        );
       } else {
-        ok(!endDelaySignEl.classList.contains(expectedResult.additionalClass),
-           "endDelay sign element should not have " +
-           `${ expectedResult.additionalClass } class`);
+        ok(
+          !endDelaySignEl.classList.contains(expectedResult.additionalClass),
+          "endDelay sign element should not have " +
+            `${expectedResult.additionalClass} class`
+        );
       }
     } else {
-      ok(!endDelaySignEl,
-        "The endDelay sign element should not be in animation item element");
+      ok(
+        !endDelaySignEl,
+        "The endDelay sign element should not be in animation item element"
+      );
     }
   }
 }

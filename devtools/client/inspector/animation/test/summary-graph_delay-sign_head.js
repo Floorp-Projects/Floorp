@@ -54,34 +54,56 @@ const TEST_DATA = [
 // eslint-disable-next-line no-unused-vars
 async function testSummaryGraphDelaySign() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedResult } of TEST_DATA) {
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
 
-    info(`Checking delay sign existance for ${ targetClass }`);
+    info(`Checking delay sign existance for ${targetClass}`);
     const delaySignEl = animationItemEl.querySelector(".animation-delay-sign");
 
     if (expectedResult) {
-      ok(delaySignEl, "The delay sign element should be in animation item element");
+      ok(
+        delaySignEl,
+        "The delay sign element should be in animation item element"
+      );
 
-      is(delaySignEl.style.marginInlineStart, expectedResult.marginInlineStart,
-        `marginInlineStart position should be ${ expectedResult.marginInlineStart }`);
-      is(delaySignEl.style.width, expectedResult.width,
-        `Width should be ${ expectedResult.width }`);
+      is(
+        delaySignEl.style.marginInlineStart,
+        expectedResult.marginInlineStart,
+        `marginInlineStart position should be ${
+          expectedResult.marginInlineStart
+        }`
+      );
+      is(
+        delaySignEl.style.width,
+        expectedResult.width,
+        `Width should be ${expectedResult.width}`
+      );
 
       if (expectedResult.additionalClass) {
-        ok(delaySignEl.classList.contains(expectedResult.additionalClass),
-          `delay sign element should have ${ expectedResult.additionalClass } class`);
+        ok(
+          delaySignEl.classList.contains(expectedResult.additionalClass),
+          `delay sign element should have ${
+            expectedResult.additionalClass
+          } class`
+        );
       } else {
-        ok(!delaySignEl.classList.contains(expectedResult.additionalClass),
-           "delay sign element should not have " +
-           `${ expectedResult.additionalClass } class`);
+        ok(
+          !delaySignEl.classList.contains(expectedResult.additionalClass),
+          "delay sign element should not have " +
+            `${expectedResult.additionalClass} class`
+        );
       }
     } else {
-      ok(!delaySignEl, "The delay sign element should not be in animation item element");
+      ok(
+        !delaySignEl,
+        "The delay sign element should not be in animation item element"
+      );
     }
   }
 }

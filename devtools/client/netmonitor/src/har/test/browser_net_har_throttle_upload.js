@@ -12,16 +12,19 @@ add_task(async function() {
 
 async function throttleUploadTest(actuallyThrottle) {
   const { tab, monitor } = await initNetMonitor(
-    HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
+    HAR_EXAMPLE_URL + "html_har_post-data-test-page.html"
+  );
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
   const { connector, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const { HarMenuUtils } = windowRequire(
-    "devtools/client/netmonitor/src/har/har-menu-utils");
+    "devtools/client/netmonitor/src/har/har-menu-utils"
+  );
   const { getSortedRequests } = windowRequire(
-    "devtools/client/netmonitor/src/selectors/index");
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -43,7 +46,9 @@ async function throttleUploadTest(actuallyThrottle) {
   await connector.setPreferences(request);
 
   // Execute one POST request on the page and wait till its done.
-  const onEventTimings = monitor.panelWin.api.once(EVENTS.RECEIVED_EVENT_TIMINGS);
+  const onEventTimings = monitor.panelWin.api.once(
+    EVENTS.RECEIVED_EVENT_TIMINGS
+  );
   const wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(tab.linkedBrowser, { size }, async function(args) {
     content.wrappedJSObject.executeTest2(args.size);
@@ -53,7 +58,9 @@ async function throttleUploadTest(actuallyThrottle) {
 
   // Copy HAR into the clipboard (asynchronous).
   const jsonString = await HarMenuUtils.copyAllAsHar(
-    getSortedRequests(store.getState()), connector);
+    getSortedRequests(store.getState()),
+    connector
+  );
   const har = JSON.parse(jsonString);
 
   // Check out the HAR log.
@@ -62,8 +69,7 @@ async function throttleUploadTest(actuallyThrottle) {
   is(har.log.entries.length, 1, "There must be one request");
 
   const entry = har.log.entries[0];
-  is(entry.request.postData.text, "x".repeat(size),
-     "Check post data payload");
+  is(entry.request.postData.text, "x".repeat(size), "Check post data payload");
 
   const wasTwoSeconds = entry.timings.send >= 2000;
   if (actuallyThrottle) {

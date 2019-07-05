@@ -33,14 +33,14 @@ add_task(async function() {
   const onHighlighted = editor.once("node-highlighted");
 
   info("Simulate a mousemove event on the div selector");
-  editor._onMouseMove({clientX: 56, clientY: 10});
+  editor._onMouseMove({ clientX: 56, clientY: 10 });
   await onHighlighted;
 
   ok(editor.highlighter.isShown, "The highlighter is now shown");
   is(editor.highlighter.options.selector, "div", "The selector is correct");
 
   info("Simulate a mousemove event elsewhere in the editor");
-  editor._onMouseMove({clientX: 16, clientY: 0});
+  editor._onMouseMove({ clientX: 16, clientY: 0 });
 
   ok(!editor.highlighter.isShown, "The highlighter is now hidden");
 });

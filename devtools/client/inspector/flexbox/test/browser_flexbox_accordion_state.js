@@ -27,21 +27,35 @@ function testAccordionStateAfterClickingHeader(doc) {
   const content = doc.querySelector(".flex-accordion ._content");
 
   info("Checking initial state of the flexbox panel.");
-  is(content.style.display, "block", "The flexbox panel content is 'display: block'.");
-  ok(Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-    `${FLEXBOX_OPENED_PREF} is pref on by default.`);
+  is(
+    content.style.display,
+    "block",
+    "The flexbox panel content is 'display: block'."
+  );
+  ok(
+    Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
+    `${FLEXBOX_OPENED_PREF} is pref on by default.`
+  );
 
   info("Clicking the flexbox header to hide the flexbox panel.");
   header.click();
 
   info("Checking the new state of the flexbox panel.");
-  is(content.style.display, "none", "The flexbox panel content is 'display: none'.");
-  ok(!Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-    `${FLEXBOX_OPENED_PREF} is pref off.`);
+  is(
+    content.style.display,
+    "none",
+    "The flexbox panel content is 'display: none'."
+  );
+  ok(
+    !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
+    `${FLEXBOX_OPENED_PREF} is pref off.`
+  );
 }
 
 function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
-  info("Checking the flexbox accordion state is persistent after switching sidebars.");
+  info(
+    "Checking the flexbox accordion state is persistent after switching sidebars."
+  );
 
   const content = doc.querySelector(".flex-accordion ._content");
 
@@ -52,14 +66,22 @@ function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   inspector.sidebar.select("layoutview");
 
   info("Checking the state of the flexbox panel.");
-  is(content.style.display, "none", "The flexbox panel content is 'display: none'.");
-  ok(!Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-    `${FLEXBOX_OPENED_PREF} is pref off.`);
+  is(
+    content.style.display,
+    "none",
+    "The flexbox panel content is 'display: none'."
+  );
+  ok(
+    !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
+    `${FLEXBOX_OPENED_PREF} is pref off.`
+  );
 }
 
 async function testAccordionStateAfterReopeningLayoutView(toolbox) {
-  info("Checking the flexbox accordion state is persistent after closing and re-opening "
-    + "the layout view.");
+  info(
+    "Checking the flexbox accordion state is persistent after closing and re-opening " +
+      "the layout view."
+  );
 
   info("Closing the toolbox.");
   await toolbox.destroy();
@@ -71,6 +93,8 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
 
   info("Checking the state of the flexbox panel.");
   ok(!content, "The flexbox panel content is not rendered.");
-  ok(!Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
-    `${FLEXBOX_OPENED_PREF} is pref off.`);
+  ok(
+    !Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
+    `${FLEXBOX_OPENED_PREF} is pref off.`
+  );
 }

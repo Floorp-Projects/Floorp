@@ -8,12 +8,23 @@ const expect = require("expect");
 const actions = require("devtools/client/webconsole/actions/index");
 const { messagesAdd } = require("devtools/client/webconsole/actions/index");
 const { ConsoleCommand } = require("devtools/client/webconsole/types");
-const { getVisibleMessages } = require("devtools/client/webconsole/selectors/messages");
-const { getAllFilters } = require("devtools/client/webconsole/selectors/filters");
-const { setupStore, getFiltersPrefs } = require("devtools/client/webconsole/test/helpers");
+const {
+  getVisibleMessages,
+} = require("devtools/client/webconsole/selectors/messages");
+const {
+  getAllFilters,
+} = require("devtools/client/webconsole/selectors/filters");
+const {
+  setupStore,
+  getFiltersPrefs,
+} = require("devtools/client/webconsole/test/helpers");
 const { FILTERS, PREFS } = require("devtools/client/webconsole/constants");
-const { stubPackets } = require("devtools/client/webconsole/test/fixtures/stubs/index");
-const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPackets,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 
 describe("Filtering", () => {
   let store;
@@ -147,10 +158,13 @@ describe("Filtering", () => {
 
     it("matches locations", () => {
       // Add a message with a different filename.
-      const locationMsg =
-        Object.assign({}, stubPackets.get("console.log('foobar', 'test')"));
-      locationMsg.message =
-        Object.assign({}, locationMsg.message, { filename: "search-location-test.js" });
+      const locationMsg = Object.assign(
+        {},
+        stubPackets.get("console.log('foobar', 'test')")
+      );
+      locationMsg.message = Object.assign({}, locationMsg.message, {
+        filename: "search-location-test.js",
+      });
       store.dispatch(messagesAdd([locationMsg]));
 
       store.dispatch(actions.filterTextSet("search-location-test.js"));
@@ -171,12 +185,11 @@ describe("Filtering", () => {
 
     it("matches stacktrace location", () => {
       const traceMessage = stubPackets.get("console.trace()");
-      traceMessage.message =
-        Object.assign({}, traceMessage.message, {
-          filename: "search-location-test.js",
-          lineNumber: 85,
-          columnNumber: 13,
-        });
+      traceMessage.message = Object.assign({}, traceMessage.message, {
+        filename: "search-location-test.js",
+        lineNumber: 85,
+        columnNumber: 13,
+      });
 
       store.dispatch(messagesAdd([traceMessage]));
 
@@ -188,19 +201,17 @@ describe("Filtering", () => {
 
     it("matches prefixed log message", () => {
       const stub = {
-        "level": "debug",
-        "filename": "resource:///modules/CustomizableUI.jsm",
-        "lineNumber": 181,
-        "functionName": "initialize",
-        "timeStamp": 1519311532912,
-        "arguments": [
-          "Initializing",
-        ],
-        "prefix": "MyNicePrefix",
-        "workerType": "none",
-        "styles": [],
-        "category": "webdev",
-        "_type": "ConsoleAPI",
+        level: "debug",
+        filename: "resource:///modules/CustomizableUI.jsm",
+        lineNumber: 181,
+        functionName: "initialize",
+        timeStamp: 1519311532912,
+        arguments: ["Initializing"],
+        prefix: "MyNicePrefix",
+        workerType: "none",
+        styles: [],
+        category: "webdev",
+        _type: "ConsoleAPI",
       };
       store.dispatch(messagesAdd([stub]));
 
@@ -316,7 +327,9 @@ function prepareBaseStore() {
   ]);
 
   // Console Command - never filtered
-  store.dispatch(messagesAdd([new ConsoleCommand({ messageText: `console.warn("x")` })]));
+  store.dispatch(
+    messagesAdd([new ConsoleCommand({ messageText: `console.warn("x")` })])
+  );
 
   return store;
 }

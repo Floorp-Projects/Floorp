@@ -18,20 +18,29 @@ add_task(async function() {
   let node = getRowByIndex(panel, 2).querySelector(".objectBox-node");
   // the inspector should be initialized first and then the node should
   // highlight after the hover effect.
-  let onNodeHighlight = toolbox.target.once("inspector")
+  let onNodeHighlight = toolbox.target
+    .once("inspector")
     .then(inspector => inspector.highlighter.once("node-highlight"));
-  EventUtils.synthesizeMouseAtCenter(node, {
-    type: "mouseover",
-  }, node.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    node,
+    {
+      type: "mouseover",
+    },
+    node.ownerDocument.defaultView
+  );
   let nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "h1", "The correct node was highlighted");
 
   info("Unhighlight the node by moving away from the node");
   let onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
   const btn = toolbox.doc.querySelector("#toolbox-meatball-menu-button");
-  EventUtils.synthesizeMouseAtCenter(btn, {
-    type: "mouseover",
-  }, btn.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    btn,
+    {
+      type: "mouseover",
+    },
+    btn.ownerDocument.defaultView
+  );
   await onNodeUnhighlight;
   ok(true, "node-unhighlight event was fired when moving away from the node");
 
@@ -41,17 +50,25 @@ add_task(async function() {
   info("Highlight the node by moving the cursor on it");
   node = getRowByIndex(panel, 3).querySelector(".objectBox-node");
 
-  EventUtils.synthesizeMouseAtCenter(node, {
-    type: "mouseover",
-  }, node.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    node,
+    {
+      type: "mouseover",
+    },
+    node.ownerDocument.defaultView
+  );
   onNodeHighlight = toolbox.highlighter.once("node-highlight");
   nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "h2", "The correct node was highlighted");
 
   info("Unhighlight the node by moving away from the node");
-  EventUtils.synthesizeMouseAtCenter(btn, {
-    type: "mouseover",
-  }, btn.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    btn,
+    {
+      type: "mouseover",
+    },
+    btn.ownerDocument.defaultView
+  );
   onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
   await onNodeUnhighlight;
   ok(true, "node-unhighlight event was fired when moving away from the node");

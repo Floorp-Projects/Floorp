@@ -39,7 +39,8 @@ add_task(async function() {
   is(entry.response.content.mimeType, // eslint-disable-line
     "text/html", "Check response content type"); // eslint-disable-line
   isnot(entry.response.content.text, undefined, // eslint-disable-line
-    "Check response body");
+    "Check response body"
+  );
   isnot(entry.timings, undefined, "Check timings");
 
   // Test response body limit (non zero).
@@ -47,14 +48,16 @@ add_task(async function() {
   har = await reloadAndCopyAllAsHar(tab, monitor);
   entry = har.log.entries[0];
   is(entry.response.content.text.length, 10, // eslint-disable-line
-    "Response body must be truncated");
+    "Response body must be truncated"
+  );
 
   // Test response body limit (zero).
   await pushPref("devtools.netmonitor.responseBodyLimit", 0);
   har = await reloadAndCopyAllAsHar(tab, monitor);
   entry = har.log.entries[0];
   is(entry.response.content.text.length, 465, // eslint-disable-line
-    "Response body must not be truncated");
+    "Response body must not be truncated"
+  );
 
   return teardown(monitor);
 });
@@ -66,9 +69,11 @@ async function reloadAndCopyAllAsHar(tab, monitor) {
   const { connector, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const { HarMenuUtils } = windowRequire(
-    "devtools/client/netmonitor/src/har/har-menu-utils");
+    "devtools/client/netmonitor/src/har/har-menu-utils"
+  );
   const { getSortedRequests } = windowRequire(
-    "devtools/client/netmonitor/src/selectors/index");
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -76,7 +81,10 @@ async function reloadAndCopyAllAsHar(tab, monitor) {
   tab.linkedBrowser.reload();
   await wait;
 
-  await HarMenuUtils.copyAllAsHar(getSortedRequests(store.getState()), connector);
+  await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()),
+    connector
+  );
 
   const jsonString = SpecialPowers.getClipboardData("text/unicode");
   return JSON.parse(jsonString);

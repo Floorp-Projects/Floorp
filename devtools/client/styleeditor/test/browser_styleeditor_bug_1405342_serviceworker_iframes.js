@@ -6,7 +6,8 @@
 // are correctly fetched via the service worker in the stylesheet editor.
 
 add_task(async function() {
-  const TEST_URL = "https://test1.example.com/browser/devtools/client/styleeditor/test/bug_1405342_serviceworker_iframes.html";
+  const TEST_URL =
+    "https://test1.example.com/browser/devtools/client/styleeditor/test/bug_1405342_serviceworker_iframes.html";
   const { ui } = await openStyleEditorForURL(TEST_URL);
 
   if (ui.editors.length != 1) {
@@ -18,6 +19,9 @@ add_task(async function() {
   await ui.selectStyleSheet(ui.editors[0].styleSheet);
   const editor = await ui.editors[0].getSourceEditor();
   const text = editor.sourceEditor.getText();
-  is(text, "* { color: green; }",
-    "stylesheet content is the one served by the service worker");
+  is(
+    text,
+    "* { color: green; }",
+    "stylesheet content is the one served by the service worker"
+  );
 });

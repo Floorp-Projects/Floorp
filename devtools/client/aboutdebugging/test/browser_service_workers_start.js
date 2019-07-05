@@ -31,8 +31,10 @@ add_task(async function() {
   info("Wait until the service worker appears in about:debugging");
   await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
-  info("Ensure that the registration resolved before trying to interact with " +
-    "the service worker.");
+  info(
+    "Ensure that the registration resolved before trying to interact with " +
+      "the service worker."
+  );
   await waitForServiceWorkerRegistered(swTab);
   ok(true, "Service worker registration resolved");
 
@@ -40,7 +42,9 @@ add_task(async function() {
 
   // Retrieve the Target element corresponding to the service worker.
   const names = [...document.querySelectorAll("#service-workers .target-name")];
-  const name = names.filter(element => element.textContent === SERVICE_WORKER)[0];
+  const name = names.filter(
+    element => element.textContent === SERVICE_WORKER
+  )[0];
   ok(name, "Found the service worker in the list");
   const targetElement = name.parentNode.parentNode;
 

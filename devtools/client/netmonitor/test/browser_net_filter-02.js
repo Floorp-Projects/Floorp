@@ -24,10 +24,12 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=flash" },
 ]);
 
-const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat([
-  /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
-  { url: "sjs_content-type-test-server.sjs?fmt=ws" },
-]);
+const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat(
+  [
+    /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
+    { url: "sjs_content-type-test-server.sjs?fmt=ws" },
+  ]
+);
 
 const EXPECTED_REQUESTS = [
   {
@@ -151,22 +153,35 @@ add_task(async function() {
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]
+  );
 
-  isnot(getSelectedRequest(store.getState()), null,
-    "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(store.getState()), 0,
-    "The first item should be selected in the requests menu.");
-  is(!!document.querySelector(".network-details-panel"), true,
-    "The network details panel should be visible after toggle button was pressed.");
+  isnot(
+    getSelectedRequest(store.getState()),
+    null,
+    "There should be a selected item in the requests menu."
+  );
+  is(
+    getSelectedIndex(store.getState()),
+    0,
+    "The first item should be selected in the requests menu."
+  );
+  is(
+    !!document.querySelector(".network-details-panel"),
+    true,
+    "The network details panel should be visible after toggle button was pressed."
+  );
 
   testFilterButtons(monitor, "all");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   info("Testing html filtering.");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-html-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-html-button")
+  );
   testFilterButtons(monitor, "html");
   await testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -186,15 +201,71 @@ add_task(async function() {
 
   info("Testing html filtering again.");
   testFilterButtons(monitor, "html");
-  await testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-                      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  ]);
 
   info("Resetting filters.");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-all-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-all-button")
+  );
   testFilterButtons(monitor, "all");
-  await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  await testContents([
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+  ]);
 
   await teardown(monitor);
 
@@ -202,7 +273,9 @@ add_task(async function() {
     if (!state.requests.selectedId) {
       return -1;
     }
-    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
+    return getSortedRequests(state).findIndex(
+      r => r.id === state.requests.selectedId
+    );
   }
 
   async function testContents(visibility) {
@@ -214,27 +287,45 @@ add_task(async function() {
       await waitUntil(() => requestsListStatus.title);
     }
 
-    isnot(getSelectedRequest(store.getState()), null,
-      "There should still be a selected item after filtering.");
-    is(getSelectedIndex(store.getState()), 0,
-      "The first item should be still selected after filtering.");
-    is(!!document.querySelector(".network-details-panel"), true,
-      "The network details panel should still be visible after filtering.");
+    isnot(
+      getSelectedRequest(store.getState()),
+      null,
+      "There should still be a selected item after filtering."
+    );
+    is(
+      getSelectedIndex(store.getState()),
+      0,
+      "The first item should be still selected after filtering."
+    );
+    is(
+      !!document.querySelector(".network-details-panel"),
+      true,
+      "The network details panel should still be visible after filtering."
+    );
 
     const items = getSortedRequests(store.getState());
     const visibleItems = getDisplayedRequests(store.getState());
 
-    is(items.size, visibility.length,
-      "There should be a specific amount of items in the requests menu.");
-    is(visibleItems.size, visibility.filter(e => e).length,
-      "There should be a specific amount of visible items in the requests menu.");
+    is(
+      items.size,
+      visibility.length,
+      "There should be a specific amount of items in the requests menu."
+    );
+    is(
+      visibleItems.size,
+      visibility.filter(e => e).length,
+      "There should be a specific amount of visible items in the requests menu."
+    );
 
     for (let i = 0; i < visibility.length; i++) {
       const itemId = items.get(i).id;
       const shouldBeVisible = !!visibility[i];
       const isThere = visibleItems.some(r => r.id == itemId);
-      is(isThere, shouldBeVisible,
-        `The item at index ${i} has visibility=${shouldBeVisible}`);
+      is(
+        isThere,
+        shouldBeVisible,
+        `The item at index ${i} has visibility=${shouldBeVisible}`
+      );
     }
 
     for (let i = 0; i < EXPECTED_REQUESTS.length; i++) {

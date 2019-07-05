@@ -9,7 +9,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_edit_imported_selector.html");
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Select the node styled by an @import'd rule");
   await selectNode("#target", inspector);
@@ -33,6 +33,10 @@ add_task(async function() {
   is(view._elementStyle.rules.length, 3, "The element still has 3 rules.");
 
   ruleEditor = getRuleViewRuleEditor(view, 1);
-  is(ruleEditor.element.getAttribute("unmatched"), "false", "Rule editor is matched.");
+  is(
+    ruleEditor.element.getAttribute("unmatched"),
+    "false",
+    "Rule editor is matched."
+  );
   is(ruleEditor.selectorText.textContent, "div", "The new selector is correct");
 });

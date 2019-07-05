@@ -13,7 +13,7 @@ async function createTestContent(style) {
       <div id="testid" class="testclass">Styled Node</div>`;
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   return view;
 }
@@ -22,15 +22,16 @@ add_task(async function() {
   const gradientText1 = "(orange, blue);";
   const gradientText2 = "(pink, teal);";
 
-  const view =
-      await createTestContent("#testid {" +
-                              "  background-image: linear-gradient" +
-                              gradientText1 +
-                              "  background-image: -ms-linear-gradient" +
-                              gradientText2 +
-                              "  background-image: linear-gradient" +
-                              gradientText2 +
-                              "} ");
+  const view = await createTestContent(
+    "#testid {" +
+      "  background-image: linear-gradient" +
+      gradientText1 +
+      "  background-image: -ms-linear-gradient" +
+      gradientText2 +
+      "  background-image: linear-gradient" +
+      gradientText2 +
+      "} "
+  );
 
   const elementStyle = view._elementStyle;
   const rule = elementStyle.rules[1];
@@ -47,7 +48,10 @@ add_task(async function() {
   // Now the first property should be active.
   for (let i = 0; i < 3; ++i) {
     const prop = rule.textProps[i];
-    is(prop.overridden || !prop.enabled, i !== 0,
-       "post-change check overridden for " + i);
+    is(
+      prop.overridden || !prop.enabled,
+      i !== 0,
+      "post-change check overridden for " + i
+    );
   }
 });

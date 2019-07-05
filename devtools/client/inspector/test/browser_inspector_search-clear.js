@@ -25,8 +25,8 @@ const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 // Type "d" in inspector-searchbox, Enter [Back space] key and check if the
 // clear button is shown correctly
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URI);
-  const {searchBox, searchClearButton} = inspector;
+  const { inspector } = await openInspectorForURL(TEST_URI);
+  const { searchBox, searchClearButton } = inspector;
 
   await focusSearchBoxUsingShortcut(inspector.panelWin);
 
@@ -39,8 +39,10 @@ add_task(async function() {
   info("Waiting for search query to complete and getting the suggestions");
   await inspector.searchSuggestions._lastQuery;
 
-  ok(!searchClearButton.hidden,
-    "The clear button is shown when some word is in searchBox");
+  ok(
+    !searchClearButton.hidden,
+    "The clear button is shown when some word is in searchBox"
+  );
 
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, inspector.panelWin);
   await command;
@@ -48,5 +50,8 @@ add_task(async function() {
   info("Waiting for search query to complete and getting the suggestions");
   await inspector.searchSuggestions._lastQuery;
 
-  ok(searchClearButton.hidden, "The clear button is hidden when no word is in searchBox");
+  ok(
+    searchClearButton.hidden,
+    "The clear button is hidden when no word is in searchBox"
+  );
 });

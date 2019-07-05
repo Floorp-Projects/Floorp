@@ -30,17 +30,27 @@ async function performTests() {
   await onPopUpOpen;
 
   const expectedCommands = [":help", ":screenshot"];
-  is(getPopupItems(autocompletePopup).join("\n"), expectedCommands.join("\n"),
-    "popup contains expected commands");
+  is(
+    getPopupItems(autocompletePopup).join("\n"),
+    expectedCommands.join("\n"),
+    "popup contains expected commands"
+  );
 
   let onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("s");
   await onAutocompleUpdated;
-  checkInputCompletionValue(hud, "  creenshot",
-    "completion node has expected :screenshot value");
+  checkInputCompletionValue(
+    hud,
+    "  creenshot",
+    "completion node has expected :screenshot value"
+  );
 
   EventUtils.synthesizeKey("KEY_Tab");
-  is(getInputValue(hud), ":screenshot", "Tab key correctly completed :screenshot");
+  is(
+    getInputValue(hud),
+    ":screenshot",
+    "Tab key correctly completed :screenshot"
+  );
 
   ok(!autocompletePopup.isOpen, "popup is closed after Tab");
 
@@ -50,7 +60,11 @@ async function performTests() {
   EventUtils.sendString("l");
 
   await onAutocompleUpdated;
-  checkInputCompletionValue(hud, "    p", "completion node has expected :help value");
+  checkInputCompletionValue(
+    hud,
+    "    p",
+    "completion node has expected :help value"
+  );
 
   EventUtils.synthesizeKey("KEY_Tab");
   is(getInputValue(hud), ":help", "Tab key correctly completes :help");

@@ -6,8 +6,9 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-duplicate-error.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-duplicate-error.html";
 
 add_task(async function() {
   // On e10s, the exception is triggered in child process
@@ -20,7 +21,14 @@ add_task(async function() {
   await waitFor(() => findMessage(hud, "fooDuplicateError1", ".message.error"));
 
   const errorMessages = hud.outputNode.querySelectorAll(".message.error");
-  is(errorMessages.length, 1, "There's only one error message for fooDuplicateError1");
-  is(errorMessages[0].querySelector(".message-repeats"), null,
-    "There is no repeat bubble on the error message");
+  is(
+    errorMessages.length,
+    1,
+    "There's only one error message for fooDuplicateError1"
+  );
+  is(
+    errorMessages[0].querySelector(".message-repeats"),
+    null,
+    "There is no repeat bubble on the error message"
+  );
 });

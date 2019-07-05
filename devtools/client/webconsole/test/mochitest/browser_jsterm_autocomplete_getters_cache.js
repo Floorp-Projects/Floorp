@@ -45,18 +45,30 @@ async function performTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
-  let tooltip = await setInputValueForGetterConfirmDialog(toolbox, hud, "foo.bar.");
+  let tooltip = await setInputValueForGetterConfirmDialog(
+    toolbox,
+    hud,
+    "foo.bar."
+  );
   let labelEl = tooltip.querySelector(".confirm-label");
-  is(labelEl.textContent, "Invoke getter foo.bar to retrieve the property list?",
-    "Dialog has expected text content");
+  is(
+    labelEl.textContent,
+    "Invoke getter foo.bar to retrieve the property list?",
+    "Dialog has expected text content"
+  );
 
-  info("Check that hitting Enter does invoke the getter and return its properties");
+  info(
+    "Check that hitting Enter does invoke the getter and return its properties"
+  );
   let onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey("KEY_Enter");
   await onPopUpOpen;
   ok(autocompletePopup.isOpen, "popup is open after Enter");
-  is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
-    "popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join("-"),
+    "baz-bloop",
+    "popup has expected items"
+  );
   checkInputValueAndCursorPosition(hud, "foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
@@ -65,40 +77,58 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_Escape");
   await onPopupClose;
 
-  info("Ctrl+Space again to ensure the autocomplete is shown, not the confirm dialog");
+  info(
+    "Ctrl+Space again to ensure the autocomplete is shown, not the confirm dialog"
+  );
   onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.synthesizeKey(" ", {ctrlKey: true});
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
   await onPopUpOpen;
-  is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
-    "popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join("-"),
+    "baz-bloop",
+    "popup has expected items"
+  );
   checkInputValueAndCursorPosition(hud, "foo.bar.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is not open");
 
-  info("Type a space, then backspace and ensure the autocomplete popup is displayed");
+  info(
+    "Type a space, then backspace and ensure the autocomplete popup is displayed"
+  );
   let onAutocompleteUpdate = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey(" ");
   await onAutocompleteUpdate;
   is(autocompletePopup.isOpen, true, "Autocomplete popup is still opened");
-  is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
-    "popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join("-"),
+    "baz-bloop",
+    "popup has expected items"
+  );
 
   onAutocompleteUpdate = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("KEY_Backspace");
   await onAutocompleteUpdate;
   is(autocompletePopup.isOpen, true, "Autocomplete popup is still opened");
-  is(getAutocompletePopupLabels(autocompletePopup).join("-"), "baz-bloop",
-    "popup has expected items");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join("-"),
+    "baz-bloop",
+    "popup has expected items"
+  );
 
-  info("Reload the page to ensure asking for autocomplete again show the confirm dialog");
+  info(
+    "Reload the page to ensure asking for autocomplete again show the confirm dialog"
+  );
   onPopupClose = autocompletePopup.once("popup-closed");
   await refreshTab();
   await onPopupClose;
 
-  EventUtils.synthesizeKey(" ", {ctrlKey: true});
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
   await waitFor(() => isConfirmDialogOpened(toolbox));
   ok(true, "Confirm Dialog is shown after tab navigation");
   tooltip = getConfirmDialog(toolbox);
   labelEl = tooltip.querySelector(".confirm-label");
-  is(labelEl.textContent, "Invoke getter foo.bar to retrieve the property list?",
-    "Dialog has expected text content");
+  is(
+    labelEl.textContent,
+    "Invoke getter foo.bar to retrieve the property list?",
+    "Dialog has expected text content"
+  );
 }
