@@ -99,7 +99,7 @@ inline Chunk* js::NurseryChunk::toChunk(JSRuntime* rt) {
   return chunk;
 }
 
-void js::NurseryDecommitChunksTask::queueChunk(
+void js::NurseryDecommitTask::queueChunk(
     NurseryChunk* nchunk, const AutoLockHelperThreadState& lock) {
   // Using the chunk pointers is infalliable.
   Chunk* chunk = nchunk->toChunk(runtime());
@@ -108,7 +108,7 @@ void js::NurseryDecommitChunksTask::queueChunk(
   queue = chunk;
 }
 
-Chunk* js::NurseryDecommitChunksTask::popChunk() {
+Chunk* js::NurseryDecommitTask::popChunk() {
   AutoLockHelperThreadState lock;
 
   if (!queue) {
@@ -125,7 +125,7 @@ Chunk* js::NurseryDecommitChunksTask::popChunk() {
   return chunk;
 }
 
-void js::NurseryDecommitChunksTask::run() {
+void js::NurseryDecommitTask::run() {
   Chunk* chunk;
 
   while ((chunk = popChunk())) {
@@ -133,7 +133,7 @@ void js::NurseryDecommitChunksTask::run() {
   }
 }
 
-void js::NurseryDecommitChunksTask::decommitChunk(Chunk* chunk) {
+void js::NurseryDecommitTask::decommitChunk(Chunk* chunk) {
   chunk->decommitAllArenas();
   {
     AutoLockGC lock(runtime());
@@ -157,7 +157,7 @@ js::Nursery::Nursery(JSRuntime* rt)
       canAllocateStrings_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
-      decommitChunksTask(rt)
+      decommitTask(rt)
 #ifdef JS_GC_ZEAL
       ,
       lastCanary_(nullptr)
@@ -273,7 +273,7 @@ void js::Nursery::disable() {
   position_ = 0;
   runtime()->gc.storeBuffer().disable();
 
-  decommitChunksTask.join();
+  decommitTask.join();
 }
 
 void js::Nursery::enableStrings() {
@@ -1381,13 +1381,13 @@ void js::Nursery::freeChunksFrom(unsigned firstFreeChunk) {
   if (CanUseExtraThreads()) {
     AutoLockHelperThreadState lock;
     for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
-      decommitChunksTask.queueChunk(chunks_[i], lock);
+      decommitTask.queueChunk(chunks_[i], lock);
     }
-    decommitChunksTask.startOrRunIfIdle(lock);
+    decommitTask.startOrRunIfIdle(lock);
   } else {
     // Sequential path
     for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
-      decommitChunksTask.decommitChunk(chunks_[i]->toChunk(runtime()));
+      decommitTask.decommitChunk(chunks_[i]->toChunk(runtime()));
     }
   }
 
