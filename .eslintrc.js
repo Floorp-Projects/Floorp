@@ -45,7 +45,6 @@ module.exports = {
   "overrides": [{
       "files": [
         "devtools/**",
-        "layout/**",
         "media/**",
         "memory/**",
         "mfbt/**",
