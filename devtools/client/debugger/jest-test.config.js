@@ -17,7 +17,7 @@ module.exports = {
     "package.json",
     "<rootDir>/packages",
   ],
-  modulePathIgnorePatterns: ["test/mochitest", "firefox/"],
+  modulePathIgnorePatterns: ["test/mochitest", "<rootDir>/firefox/"],
   collectCoverageFrom: [
     "src/**/*.js",
     "!src/**/fixtures/*.js",
