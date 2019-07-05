@@ -32,7 +32,9 @@ function test_lazy_api() {
     type: { global: true, target: true },
   });
   // The actor is immediatly registered, but not loaded
-  Assert.ok(ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(
+    ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor")
+  );
   Assert.ok(ActorRegistry.globalActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(!isActorLoaded);
   Assert.ok(!isActorInstantiated);
@@ -48,7 +50,7 @@ function test_lazy_api() {
     Assert.ok(!isActorInstantiated);
     Assert.ok("lazyActor" in response);
 
-    const {LazyFront} = require("xpcshell-test/registertestactors-lazy");
+    const { LazyFront } = require("xpcshell-test/registertestactors-lazy");
     const front = new LazyFront(client);
     // As this Front isn't instantiated by protocol.js, we have to manually
     // set its actor ID and manage it:
@@ -82,9 +84,10 @@ function cleanup() {
   DebuggerServer.destroy();
 
   // Check that all actors are unregistered on server destruction
-  Assert.ok(!ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(
+    !ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor")
+  );
   Assert.ok(!ActorRegistry.globalActorFactories.hasOwnProperty("lazyActor"));
 
   run_next_test();
 }
-

@@ -33,13 +33,18 @@ add_task(async function() {
 
       const stack = getInflatedStackLocations(thread, sample);
       if (stack[0] != "(root)") {
-        ok(false, "The sample " + stack.toSource() + " doesn't have a root node.");
+        ok(
+          false,
+          "The sample " + stack.toSource() + " doesn't have a root node."
+        );
       }
     }
   }
 
-  ok(sampleCount > 0,
-    "At least some samples have been iterated over, checking for root nodes.");
+  ok(
+    sampleCount > 0,
+    "At least some samples have been iterated over, checking for root nodes."
+  );
 
   await target.getFront("performance");
   gBrowser.removeCurrentTab();

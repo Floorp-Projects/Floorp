@@ -4,18 +4,41 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
+const { Cu } = require("chrome");
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
-loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "nodeFilterConstants", "devtools/shared/dom-node-filter-constants");
+loader.lazyRequireGetter(
+  this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
+loader.lazyRequireGetter(
+  this,
+  "nodeFilterConstants",
+  "devtools/shared/dom-node-filter-constants"
+);
 
-loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/utils", true);
-loader.lazyRequireGetter(this, "isXBLAnonymous", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "isNativeAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isXBLAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
 
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
+loader.lazyRequireGetter(
+  this,
+  "CssLogic",
+  "devtools/server/actors/inspector/css-logic",
+  true
+);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -73,8 +96,9 @@ function nodeDocument(node) {
   if (Cu.isDeadWrapper(node)) {
     return null;
   }
-  return node.ownerDocument ||
-         (node.nodeType == Node.DOCUMENT_NODE ? node : null);
+  return (
+    node.ownerDocument || (node.nodeType == Node.DOCUMENT_NODE ? node : null)
+  );
 }
 
 function isNodeDead(node) {
@@ -83,9 +107,9 @@ function isNodeDead(node) {
 
 function isInXULDocument(el) {
   const doc = nodeDocument(el);
-  return doc &&
-         doc.documentElement &&
-         doc.documentElement.namespaceURI === XUL_NS;
+  return (
+    doc && doc.documentElement && doc.documentElement.namespaceURI === XUL_NS
+  );
 }
 
 /**
@@ -96,24 +120,28 @@ function isInXULDocument(el) {
 function standardTreeWalkerFilter(node) {
   // ::marker, ::before, and ::after are native anonymous content, but we always
   // want to show them
-  if (node.nodeName === "_moz_generated_content_marker" ||
-      node.nodeName === "_moz_generated_content_before" ||
-      node.nodeName === "_moz_generated_content_after") {
+  if (
+    node.nodeName === "_moz_generated_content_marker" ||
+    node.nodeName === "_moz_generated_content_before" ||
+    node.nodeName === "_moz_generated_content_after"
+  ) {
     return nodeFilterConstants.FILTER_ACCEPT;
   }
 
   // Ignore empty whitespace text nodes that do not impact the layout.
   if (isWhitespaceTextNode(node)) {
     return nodeHasSize(node)
-           ? nodeFilterConstants.FILTER_ACCEPT
-           : nodeFilterConstants.FILTER_SKIP;
+      ? nodeFilterConstants.FILTER_ACCEPT
+      : nodeFilterConstants.FILTER_SKIP;
   }
 
   // Ignore all native and XBL anonymous content inside a non-XUL document.
   // We need to do this to skip things like form controls, scrollbars,
   // video controls, etc (see bug 1187482).
-  if (!isInXULDocument(node) && (isXBLAnonymous(node) ||
-                                  isNativeAnonymous(node))) {
+  if (
+    !isInXULDocument(node) &&
+    (isXBLAnonymous(node) || isNativeAnonymous(node))
+  ) {
     return nodeFilterConstants.FILTER_SKIP;
   }
 
@@ -128,8 +156,8 @@ function allAnonymousContentTreeWalkerFilter(node) {
   // Ignore empty whitespace text nodes that do not impact the layout.
   if (isWhitespaceTextNode(node)) {
     return nodeHasSize(node)
-           ? nodeFilterConstants.FILTER_ACCEPT
-           : nodeFilterConstants.FILTER_SKIP;
+      ? nodeFilterConstants.FILTER_ACCEPT
+      : nodeFilterConstants.FILTER_SKIP;
   }
   return nodeFilterConstants.FILTER_ACCEPT;
 }
@@ -335,7 +363,9 @@ function getClosestBackgroundImage(node) {
   while (current) {
     const computedStyle = CssLogic.getComputedStyle(current);
     if (computedStyle) {
-      const currentBackgroundImage = computedStyle.getPropertyValue("background-image");
+      const currentBackgroundImage = computedStyle.getPropertyValue(
+        "background-image"
+      );
       if (currentBackgroundImage !== "none") {
         return currentBackgroundImage;
       }

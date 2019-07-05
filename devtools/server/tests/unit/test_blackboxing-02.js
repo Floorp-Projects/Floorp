@@ -20,11 +20,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_black_box();
-                           });
+    attachTestTabAndResume(gClient, "test-black-box", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_black_box();
+    });
   });
   do_test_pending();
 }
@@ -40,10 +43,12 @@ function test_black_box() {
 
   /* eslint-disable no-multi-spaces, no-undef */
   Cu.evalInSandbox(
-    "" + function doStuff(k) { // line 1
-      const arg = 15;            // line 2 - Break here
-      k(arg);                  // line 3
-    },                         // line 4
+    "" +
+      function doStuff(k) {
+        // line 1
+        const arg = 15; // line 2 - Break here
+        k(arg); // line 3
+      }, // line 4
     gDebuggee,
     "1.8",
     BLACK_BOXED_URL,
@@ -51,14 +56,18 @@ function test_black_box() {
   );
 
   Cu.evalInSandbox(
-    "" + function runTest() { // line 1
-      doStuff(                // line 2
-        function(n) {        // line 3
-          debugger;           // line 5
-        }                     // line 6
-      );                      // line 7
-    }                         // line 8
-    + "\n debugger;",         // line 9
+    "" +
+    function runTest() {
+      // line 1
+      doStuff(
+        // line 2
+        function(n) {
+          // line 3
+          debugger; // line 5
+        } // line 6
+      ); // line 7
+    } + // line 8
+      "\n debugger;", // line 9
     gDebuggee,
     "1.8",
     SOURCE_URL,
@@ -68,7 +77,7 @@ function test_black_box() {
 }
 
 function test_black_box_breakpoint() {
-  gThreadClient.getSources().then(async function({error, sources}) {
+  gThreadClient.getSources().then(async function({ error, sources }) {
     Assert.ok(!error, "Should not get an error: " + error);
     const sourceFront = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
@@ -78,9 +87,13 @@ function test_black_box_breakpoint() {
 
     gThreadClient.once("paused", function(packet) {
       Assert.equal(
-        packet.why.type, "debuggerStatement",
-        "We should pass over the breakpoint since the source is black boxed.");
-      gThreadClient.resume().then(test_unblack_box_breakpoint.bind(null, sourceFront));
+        packet.why.type,
+        "debuggerStatement",
+        "We should pass over the breakpoint since the source is black boxed."
+      );
+      gThreadClient
+        .resume()
+        .then(test_unblack_box_breakpoint.bind(null, sourceFront));
     });
     gDebuggee.runTest();
   });
@@ -89,18 +102,18 @@ function test_black_box_breakpoint() {
 async function test_unblack_box_breakpoint(sourceFront) {
   await unBlackBox(sourceFront);
   gThreadClient.once("paused", async function(packet) {
-    Assert.equal(packet.why.type, "breakpoint",
-                 "We should hit the breakpoint again");
+    Assert.equal(
+      packet.why.type,
+      "breakpoint",
+      "We should hit the breakpoint again"
+    );
 
     // We will hit the debugger statement on resume, so do this
     // nastiness to skip over it.
-    gThreadClient.once(
-      "paused",
-      async () => {
-        await gThreadClient.resume();
-        finishClient(gClient);
-      }
-    );
+    gThreadClient.once("paused", async () => {
+      await gThreadClient.resume();
+      finishClient(gClient);
+    });
     await gThreadClient.resume();
   });
   gDebuggee.runTest();

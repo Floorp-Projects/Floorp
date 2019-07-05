@@ -16,11 +16,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             testSameBreakpoint();
-                           });
+    attachTestTabAndResume(gClient, "test-stack", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      testSameBreakpoint();
+    });
   });
   do_test_pending();
 }
@@ -28,11 +31,11 @@ function run_test() {
 const SOURCE_URL = "http://example.com/source.js";
 
 const testSameBreakpoint = async function() {
-  const packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadClient);
-  const source = await getSourceById(
-    gThreadClient,
-    packet.frame.where.actor
+  const packet = await executeOnNextTickAndWaitForPause(
+    evalCode,
+    gThreadClient
   );
+  const source = await getSourceById(gThreadClient, packet.frame.where.actor);
 
   // Whole line
   const wholeLineLocation = {
@@ -42,8 +45,11 @@ const testSameBreakpoint = async function() {
   let [, firstBpClient] = await setBreakpoint(source, wholeLineLocation);
   let [, secondBpClient] = await setBreakpoint(source, wholeLineLocation);
 
-  Assert.equal(firstBpClient.actor, secondBpClient.actor,
-               "Should get the same actor w/ whole line breakpoints");
+  Assert.equal(
+    firstBpClient.actor,
+    secondBpClient.actor,
+    "Should get the same actor w/ whole line breakpoints"
+  );
 
   // Specific column
 
@@ -55,8 +61,11 @@ const testSameBreakpoint = async function() {
   [, firstBpClient] = await setBreakpoint(source, columnLocation);
   [, secondBpClient] = await setBreakpoint(source, columnLocation);
 
-  Assert.equal(secondBpClient.actor, secondBpClient.actor,
-               "Should get the same actor column breakpoints");
+  Assert.equal(
+    secondBpClient.actor,
+    secondBpClient.actor,
+    "Should get the same actor column breakpoints"
+  );
 
   finishClient(gClient);
 };

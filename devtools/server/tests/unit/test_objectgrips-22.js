@@ -9,30 +9,40 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
-  await new Promise(function(resolve) {
-    threadClient.once("paused", async function(packet) {
-      const [grip] = packet.frame.arguments;
-      const objClient = threadClient.pauseGrip(grip);
-      const {iterator} = await objClient.enumSymbols();
-      const {ownSymbols} = await iterator.slice(0, iterator.count);
+add_task(
+  threadClientTest(async ({ threadClient, debuggee, client }) => {
+    await new Promise(function(resolve) {
+      threadClient.once("paused", async function(packet) {
+        const [grip] = packet.frame.arguments;
+        const objClient = threadClient.pauseGrip(grip);
+        const { iterator } = await objClient.enumSymbols();
+        const { ownSymbols } = await iterator.slice(0, iterator.count);
 
-      strictEqual(ownSymbols.length, 1, "There is 1 symbol property.");
-      const {name, descriptor} = ownSymbols[0];
-      strictEqual(name, "Symbol(sym)", "Got right symbol name.");
-      deepEqual(descriptor, {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: 1,
-      }, "Got right property descriptor.");
+        strictEqual(ownSymbols.length, 1, "There is 1 symbol property.");
+        const { name, descriptor } = ownSymbols[0];
+        strictEqual(name, "Symbol(sym)", "Got right symbol name.");
+        deepEqual(
+          descriptor,
+          {
+            configurable: false,
+            enumerable: false,
+            writable: false,
+            value: 1,
+          },
+          "Got right property descriptor."
+        );
 
-      await threadClient.resume();
-      resolve();
+        await threadClient.resume();
+        resolve();
+      });
+      debuggee.eval(
+        function stopMe(arg1) {
+          debugger;
+        }.toString()
+      );
+      debuggee.eval(
+        `stopMe(Object.defineProperty({}, Symbol("sym"), {value: 1}));`
+      );
     });
-    debuggee.eval(function stopMe(arg1) {
-      debugger;
-    }.toString());
-    debuggee.eval(`stopMe(Object.defineProperty({}, Symbol("sym"), {value: 1}));`);
-  });
-}));
+  })
+);

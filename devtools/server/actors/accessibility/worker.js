@@ -19,7 +19,8 @@ const { createTask } = require("resource://devtools/shared/worker/helper.js");
  * @param number duration
  */
 createTask(self, "getBgRGBA", ({ dataTextBuf, dataBackgroundBuf }) =>
-  getBgRGBA(dataTextBuf, dataBackgroundBuf));
+  getBgRGBA(dataTextBuf, dataBackgroundBuf)
+);
 
 /**
  * Calculates the luminance of a rgba tuple based on the formula given in
@@ -31,8 +32,10 @@ createTask(self, "getBgRGBA", ({ dataTextBuf, dataBackgroundBuf }) =>
 function calculateLuminance(rgba) {
   for (let i = 0; i < 3; i++) {
     rgba[i] /= 255;
-    rgba[i] = (rgba[i] < 0.03928) ? (rgba[i] / 12.92) :
-                                    Math.pow(((rgba[i] + 0.055) / 1.055), 2.4);
+    rgba[i] =
+      rgba[i] < 0.03928
+        ? rgba[i] / 12.92
+        : Math.pow((rgba[i] + 0.055) / 1.055, 2.4);
   }
   return 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2];
 }

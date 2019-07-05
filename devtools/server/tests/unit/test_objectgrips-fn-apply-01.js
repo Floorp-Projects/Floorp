@@ -9,13 +9,17 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
-  debuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+add_task(
+  threadClientTest(async ({ threadClient, debuggee, client }) => {
+    debuggee.eval(
+      function stopMe(arg1) {
+        debugger;
+      }.toString()
+    );
 
-  await test_object_grip(debuggee, threadClient);
-}));
+    await test_object_grip(debuggee, threadClient);
+  })
+);
 
 async function test_object_grip(debuggee, threadClient) {
   await assert_object_argument(
@@ -37,17 +41,19 @@ async function test_object_grip(debuggee, threadClient) {
       });
     `,
     async objClient => {
-      const obj1 = (await objClient.getPropertyValue("obj1", null)).value.return;
-      const obj2 = (await objClient.getPropertyValue("obj2", null)).value.return;
+      const obj1 = (await objClient.getPropertyValue("obj1", null)).value
+        .return;
+      const obj2 = (await objClient.getPropertyValue("obj2", null)).value
+        .return;
 
       const context = threadClient.pauseGrip(
-        (await objClient.getPropertyValue("context", null)).value.return,
+        (await objClient.getPropertyValue("context", null)).value.return
       );
       const sum = threadClient.pauseGrip(
-        (await objClient.getPropertyValue("sum", null)).value.return,
+        (await objClient.getPropertyValue("sum", null)).value.return
       );
       const error = threadClient.pauseGrip(
-        (await objClient.getPropertyValue("error", null)).value.return,
+        (await objClient.getPropertyValue("error", null)).value.return
       );
 
       assert_response(await context.apply(obj1, [obj1]), {
@@ -70,7 +76,7 @@ async function test_object_grip(debuggee, threadClient) {
       assert_response(await error.apply(null, []), {
         throw: "an error",
       });
-    },
+    }
   );
 }
 

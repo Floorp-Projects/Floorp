@@ -1,9 +1,9 @@
 /* exported attachURL, evaluateJS */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {DebuggerServer} = require("devtools/server/main");
-const {TargetFactory} = require("devtools/client/framework/target");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { DebuggerServer } = require("devtools/server/main");
+const { TargetFactory } = require("devtools/client/framework/target");
 
 const Services = require("Services");
 
@@ -48,8 +48,10 @@ async function attachURL(url) {
  */
 async function addTab(url) {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-  const {BrowserTestUtils} = require("resource://testing-common/BrowserTestUtils.jsm");
-  const tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
+  const {
+    BrowserTestUtils,
+  } = require("resource://testing-common/BrowserTestUtils.jsm");
+  const tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   return tab;
 }

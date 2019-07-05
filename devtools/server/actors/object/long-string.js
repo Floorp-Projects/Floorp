@@ -41,11 +41,13 @@ LongStringActor.prototype = {
    */
   grip: function() {
     return {
-      "type": "longString",
-      "initial": this.string.substring(
-        0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
-      "length": this.stringLength,
-      "actor": this.actorID,
+      type: "longString",
+      initial: this.string.substring(
+        0,
+        DebuggerServer.LONG_STRING_INITIAL_LENGTH
+      ),
+      length: this.stringLength,
+      actor: this.actorID,
     };
   },
 
@@ -57,8 +59,8 @@ LongStringActor.prototype = {
    */
   onSubstring: function(request) {
     return {
-      "from": this.actorID,
-      "substring": this.string.substring(request.start, request.end),
+      from: this.actorID,
+      substring: this.string.substring(request.start, request.end),
     };
   },
 
@@ -82,8 +84,8 @@ LongStringActor.prototype = {
 };
 
 LongStringActor.prototype.requestTypes = {
-  "substring": LongStringActor.prototype.onSubstring,
-  "release": LongStringActor.prototype.onRelease,
+  substring: LongStringActor.prototype.onSubstring,
+  release: LongStringActor.prototype.onRelease,
 };
 
 /**

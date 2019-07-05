@@ -15,12 +15,14 @@ function run_test() {
   const client = new DebuggerClient(DebuggerServer.connectPipe());
 
   client.connect().then(function() {
-    attachTestTabAndResume(client, "test-symbols",
-                           function(response, targetFront, threadClient) {
-                             add_task(testSymbols.bind(
-                               null, threadClient, client, debuggee));
-                             run_next_test();
-                           });
+    attachTestTabAndResume(client, "test-symbols", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      add_task(testSymbols.bind(null, threadClient, client, debuggee));
+      run_next_test();
+    });
   });
 
   do_test_pending();

@@ -87,7 +87,10 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
 
     // NOTE: ignoreFrameEnvironment lets the client explicitly avoid
     // populating form environments on pause.
-    if (!this.threadActor._options.ignoreFrameEnvironment && this.frame.environment) {
+    if (
+      !this.threadActor._options.ignoreFrameEnvironment &&
+      this.frame.environment
+    ) {
       form.environment = this.getEnvironment();
     }
 
@@ -123,7 +126,11 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
     }
 
     return this.frame.arguments.map(arg =>
-      createValueGrip(arg, this.threadActor._pausePool, this.threadActor.objectGrip)
+      createValueGrip(
+        arg,
+        this.threadActor._pausePool,
+        this.threadActor.objectGrip
+      )
     );
   },
 });

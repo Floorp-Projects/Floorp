@@ -16,8 +16,11 @@ add_task(async function() {
 
   const sheets = await front.getStyleSheets();
   ok(sheets, "getStyleSheets() succeeded");
-  is(sheets.length, 1,
-     "getStyleSheets() returned the correct number of sheets");
+  is(
+    sheets.length,
+    1,
+    "getStyleSheets() returned the correct number of sheets"
+  );
 
   const sheet = sheets[0];
   await sheet.update("", false);

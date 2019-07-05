@@ -20,12 +20,14 @@
 this.rpc = function(method, ...params) {
   const id = nextId++;
 
-  postMessage(JSON.stringify({
-    type: "rpc",
-    method: method,
-    params: params,
-    id: id,
-  }));
+  postMessage(
+    JSON.stringify({
+      type: "rpc",
+      method: method,
+      params: params,
+      id: id,
+    })
+  );
 
   const deferred = defer();
   rpcDeferreds[id] = deferred;
@@ -106,12 +108,14 @@ this.addEventListener("message", function(event) {
 
       // Step 5: Send a response packet to the parent to notify
       // it that a connection has been established.
-      postMessage(JSON.stringify({
-        type: "connected",
-        id: packet.id,
-        threadActor: threadActor.actorID,
-        consoleActor: consoleActor.actorID,
-      }));
+      postMessage(
+        JSON.stringify({
+          type: "connected",
+          id: packet.id,
+          threadActor: threadActor.actorID,
+          consoleActor: consoleActor.actorID,
+        })
+      );
       break;
 
     case "disconnect":

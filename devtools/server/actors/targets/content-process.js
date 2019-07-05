@@ -22,9 +22,24 @@ const { Pool } = require("devtools/shared/protocol");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("devtools/server/actors/utils/TabSources");
 
-loader.lazyRequireGetter(this, "WorkerTargetActorList", "devtools/server/actors/worker/worker-target-actor-list", true);
-loader.lazyRequireGetter(this, "MemoryActor", "devtools/server/actors/memory", true);
-loader.lazyRequireGetter(this, "PromisesActor", "devtools/server/actors/promises", true);
+loader.lazyRequireGetter(
+  this,
+  "WorkerTargetActorList",
+  "devtools/server/actors/worker/worker-target-actor-list",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "MemoryActor",
+  "devtools/server/actors/memory",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "PromisesActor",
+  "devtools/server/actors/promises",
+  true
+);
 
 function ContentProcessTargetActor(connection) {
   this.conn = connection;
@@ -40,15 +55,18 @@ function ContentProcessTargetActor(connection) {
 
   const sandboxPrototype = {
     get tabs() {
-      return Array.from(Services.ww.getWindowEnumerator(),
-                        win => win.docShell.messageManager);
+      return Array.from(
+        Services.ww.getWindowEnumerator(),
+        win => win.docShell.messageManager
+      );
     },
   };
 
   // Scope into which the webconsole executes:
   // A sandbox with chrome privileges with a `tabs` getter.
-  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
-    .createInstance(Ci.nsIPrincipal);
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
   const sandbox = Cu.Sandbox(systemPrincipal, {
     sandboxPrototype,
     wantGlobalProperties: ["ChromeUtils"],
@@ -82,7 +100,10 @@ ContentProcessTargetActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      assert(this.threadActor, "threadActor should exist when creating sources.");
+      assert(
+        this.threadActor,
+        "threadActor should exist when creating sources."
+      );
       this._sources = new TabSources(this.threadActor);
     }
     return this._sources;
@@ -144,8 +165,8 @@ ContentProcessTargetActor.prototype = {
       this._workerList.onListChanged = this._onWorkerListChanged;
 
       return {
-        "from": this.actorID,
-        "workers": actors.map(actor => actor.form()),
+        from: this.actorID,
+        workers: actors.map(actor => actor.form()),
       };
     });
   },
@@ -171,10 +192,9 @@ ContentProcessTargetActor.prototype = {
     // it doesn't throw, but doesn't return any window
   },
 
-  postNest: function() {
-  },
+  postNest: function() {},
 };
 
 ContentProcessTargetActor.prototype.requestTypes = {
-  "listWorkers": ContentProcessTargetActor.prototype.onListWorkers,
+  listWorkers: ContentProcessTargetActor.prototype.onListWorkers,
 };
