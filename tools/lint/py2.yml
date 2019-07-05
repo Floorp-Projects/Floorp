@@ -29,8 +29,6 @@ py2:
         - servo
         - taskcluster/docker/funsize-update-generator
         - testing/awsy
-        - testing/firefox-ui
-        - testing/geckodriver
         - testing/gtest
         - testing/mochitest
         - testing/mozharness
