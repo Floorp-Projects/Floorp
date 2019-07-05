@@ -13,18 +13,49 @@ const {
   gridSpec,
   layoutSpec,
 } = require("devtools/shared/specs/layout");
-const { getStringifiableFragments } =
-  require("devtools/server/actors/utils/css-grid-utils");
+const {
+  getStringifiableFragments,
+} = require("devtools/server/actors/utils/css-grid-utils");
 
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "findGridParentContainerForNode", "devtools/server/actors/inspector/utils", true);
-loader.lazyRequireGetter(this, "getCSSStyleRules", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "isCssPropertyKnown", "devtools/server/actors/css-properties", true);
-loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
-loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
+loader.lazyRequireGetter(
+  this,
+  "CssLogic",
+  "devtools/server/actors/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "findGridParentContainerForNode",
+  "devtools/server/actors/inspector/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "getCSSStyleRules",
+  "devtools/shared/inspector/css-logic",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isCssPropertyKnown",
+  "devtools/server/actors/css-properties",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "parseDeclarations",
+  "devtools/shared/css/parsing-utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "nodeConstants",
+  "devtools/shared/dom-node-constants"
+);
 
-const SUBGRID_ENABLED =
-  Services.prefs.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
+const SUBGRID_ENABLED = Services.prefs.getBoolPref(
+  "layout.css.grid-template-subgrid-value.enabled"
+);
 
 /**
  * Set of actors the expose the CSS layout information to the devtools protocol clients.
@@ -107,18 +138,20 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
 
     for (const line of flex.getLines()) {
       for (const item of line.getItems()) {
-        flexItemActors.push(new FlexItemActor(this, item.node, {
-          crossAxisDirection,
-          mainAxisDirection,
-          crossMaxSize: item.crossMaxSize,
-          crossMinSize: item.crossMinSize,
-          mainBaseSize: item.mainBaseSize,
-          mainDeltaSize: item.mainDeltaSize,
-          mainMaxSize: item.mainMaxSize,
-          mainMinSize: item.mainMinSize,
-          lineGrowthState: line.growthState,
-          clampState: item.clampState,
-        }));
+        flexItemActors.push(
+          new FlexItemActor(this, item.node, {
+            crossAxisDirection,
+            mainAxisDirection,
+            crossMaxSize: item.crossMaxSize,
+            crossMinSize: item.crossMinSize,
+            mainBaseSize: item.mainBaseSize,
+            mainDeltaSize: item.mainDeltaSize,
+            mainMaxSize: item.mainMaxSize,
+            mainMinSize: item.mainMinSize,
+            lineGrowthState: line.growthState,
+            clampState: item.clampState,
+          })
+        );
       }
     }
 
@@ -158,7 +191,9 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
 
   form() {
     const { mainAxisDirection } = this.flexItemSizing;
-    const dimension = mainAxisDirection.startsWith("horizontal") ? "width" : "height";
+    const dimension = mainAxisDirection.startsWith("horizontal")
+      ? "width"
+      : "height";
 
     // Find the authored sizing properties for this item.
     const properties = {
@@ -178,22 +213,31 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
         const cssRules = getCSSStyleRules(this.element);
 
         for (const rule of cssRules) {
-        // For each rule, go through *all* properties, because there may be several of
-        // them in the same rule and some with !important flags (which would be more
-        // important even if placed before another property with the same name)
-          const declarations = parseDeclarations(isCssPropertyKnown, rule.style.cssText);
+          // For each rule, go through *all* properties, because there may be several of
+          // them in the same rule and some with !important flags (which would be more
+          // important even if placed before another property with the same name)
+          const declarations = parseDeclarations(
+            isCssPropertyKnown,
+            rule.style.cssText
+          );
 
           for (const declaration of declarations) {
             if (declaration.name === name && declaration.value !== "auto") {
-              values.push({ value: declaration.value, priority: declaration.priority });
+              values.push({
+                value: declaration.value,
+                priority: declaration.priority,
+              });
             }
           }
         }
 
         // Then go through the element style because it's usually more important, but
         // might not be if there is a prior !important property
-        if (this.element.style && this.element.style[name] &&
-          this.element.style[name] !== "auto") {
+        if (
+          this.element.style &&
+          this.element.style[name] &&
+          this.element.style[name] !== "auto"
+        ) {
           values.push({
             value: this.element.style.getPropertyValue(name),
             priority: this.element.style.getPropertyPriority(name),
@@ -301,8 +345,8 @@ const GridActor = ActorClassWithSpec(gridSpec, {
     }
 
     if (SUBGRID_ENABLED) {
-      form.isSubgrid = gridTemplateRows === "subgrid" ||
-                       gridTemplateColumns === "subgrid";
+      form.isSubgrid =
+        gridTemplateRows === "subgrid" || gridTemplateColumns === "subgrid";
     }
 
     return form;

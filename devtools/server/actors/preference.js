@@ -4,10 +4,10 @@
 
 "use strict";
 
-const {Ci} = require("chrome");
+const { Ci } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
-const {preferenceSpec} = require("devtools/shared/specs/preference");
+const { preferenceSpec } = require("devtools/shared/specs/preference");
 
 /**
  * Normally the preferences are set using Services.prefs, but this actor allows
@@ -20,7 +20,6 @@ const {preferenceSpec} = require("devtools/shared/specs/preference");
  * individual tab.
  */
 var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
-
   typeName: "preference",
 
   getBoolPref: function(name) {

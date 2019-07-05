@@ -14,8 +14,18 @@ const {
 const { TEXT_NODE } = require("devtools/shared/dom-node-constants");
 const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 
-loader.lazyRequireGetter(this, "getBounds", "devtools/server/actors/highlighters/utils/accessibility", true);
-loader.lazyRequireGetter(this, "Infobar", "devtools/server/actors/highlighters/utils/accessibility", true);
+loader.lazyRequireGetter(
+  this,
+  "getBounds",
+  "devtools/server/actors/highlighters/utils/accessibility",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "Infobar",
+  "devtools/server/actors/highlighters/utils/accessibility",
+  true
+);
 
 /**
  * The AccessibleHighlighter draws the bounds of an accessible object.
@@ -65,8 +75,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     this.ID_CLASS_PREFIX = "accessible-";
     this.accessibleInfobar = new Infobar(this);
 
-    this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
-      this._buildMarkup.bind(this));
+    this.markup = new CanvasFrameAnonymousContentHelper(
+      this.highlighterEnv,
+      this._buildMarkup.bind(this)
+    );
 
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
@@ -85,7 +97,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container",
+        class: "highlighter-container",
         "aria-hidden": "true",
       },
     });
@@ -93,8 +105,8 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     const root = createNode(this.win, {
       parent: container,
       attributes: {
-        "id": "root",
-        "class": "root",
+        id: "root",
+        class: "root",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -104,10 +116,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       nodeType: "svg",
       parent: root,
       attributes: {
-        "id": "elements",
-        "width": "100%",
-        "height": "100%",
-        "hidden": "true",
+        id: "elements",
+        width: "100%",
+        height: "100%",
+        hidden: "true",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -116,8 +128,8 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       nodeType: "path",
       parent: svg,
       attributes: {
-        "class": "bounds",
-        "id": "bounds",
+        class: "bounds",
+        id: "bounds",
       },
       prefix: this.ID_CLASS_PREFIX,
     });
@@ -184,7 +196,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     const { duration } = this.options;
     const shown = this._update();
     if (shown) {
-      this.emit("highlighter-event", { options: this.options, type: "shown"});
+      this.emit("highlighter-event", { options: this.options, type: "shown" });
       if (duration) {
         this._highlightTimer = setTimeout(() => {
           this.hide();
@@ -215,8 +227,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       this.hide();
     }
 
-    setIgnoreLayoutChanges(false,
-                           this.highlighterEnv.window.document.documentElement);
+    setIgnoreLayoutChanges(
+      false,
+      this.highlighterEnv.window.document.documentElement
+    );
 
     return shown;
   }
@@ -228,8 +242,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     setIgnoreLayoutChanges(true);
     this._hideAccessibleBounds();
     this.accessibleInfobar.hide();
-    setIgnoreLayoutChanges(false,
-                           this.highlighterEnv.window.document.documentElement);
+    setIgnoreLayoutChanges(
+      false,
+      this.highlighterEnv.window.document.documentElement
+    );
   }
 
   /**
@@ -262,8 +278,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     this._shouldRestoreBoundsVisibility = null;
     setIgnoreLayoutChanges(true);
     this.getElement("elements").setAttribute("hidden", "true");
-    setIgnoreLayoutChanges(false,
-      this.highlighterEnv.window.document.documentElement);
+    setIgnoreLayoutChanges(
+      false,
+      this.highlighterEnv.window.document.documentElement
+    );
   }
 
   /**
@@ -277,8 +295,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
 
     setIgnoreLayoutChanges(true);
     this.getElement("elements").removeAttribute("hidden");
-    setIgnoreLayoutChanges(false,
-      this.highlighterEnv.window.document.documentElement);
+    setIgnoreLayoutChanges(
+      false,
+      this.highlighterEnv.window.document.documentElement
+    );
   }
 
   /**
@@ -306,8 +326,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
 
     const boundsEl = this.getElement("bounds");
     const { left, right, top, bottom } = bounds;
-    const path =
-      `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom}`;
+    const path = `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom}`;
     boundsEl.setAttribute("d", path);
 
     // Un-zoom the root wrapper if the page was zoomed.

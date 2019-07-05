@@ -21,6 +21,9 @@ function check_actor_for_list(nodelist) {
 
   // No exception occured as a exceptions abort the test.
   ok(true, "No exceptions occured.");
-  equal(form.length, nodelist ? nodelist.length : 0,
-    "NodeListActor reported correct length.");
+  equal(
+    form.length,
+    nodelist ? nodelist.length : 0,
+    "NodeListActor reported correct length."
+  );
 }

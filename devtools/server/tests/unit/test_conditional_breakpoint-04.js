@@ -19,11 +19,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-conditional-breakpoint");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-conditional-breakpoint",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_simple_breakpoint();
-                           });
+    attachTestTabAndResume(gClient, "test-conditional-breakpoint", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_simple_breakpoint();
+    });
   });
   do_test_pending();
 }
@@ -44,9 +47,10 @@ async function test_simple_breakpoint() {
     Assert.equal(pausedPacket.why.type, "debuggerStatement");
 
     // Remove the breakpoint.
-    await gThreadClient.removeBreakpoint(
-      { sourceUrl: "conditional_breakpoint-04.js", line: 3 }
-    );
+    await gThreadClient.removeBreakpoint({
+      sourceUrl: "conditional_breakpoint-04.js",
+      line: 3,
+    });
     await gThreadClient.resume();
     finishClient(gClient);
   });

@@ -7,8 +7,11 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 add_task(async function() {
   const timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
@@ -45,8 +48,10 @@ async function testPromiseCreationTimestamp(front, makePromise) {
   const onNewPromise = new Promise(resolve => {
     front.on("new-promises", promises => {
       for (const p of promises) {
-        if (p.promiseState.state === "fulfilled" &&
-            p.promiseState.value === resolution) {
+        if (
+          p.promiseState.state === "fulfilled" &&
+          p.promiseState.value === resolution
+        ) {
           resolve(p);
         }
       }
@@ -62,9 +67,15 @@ async function testPromiseCreationTimestamp(front, makePromise) {
 
   const creationTimestamp = grip.promiseState.creationTimestamp;
 
-  ok(start - 1 <= creationTimestamp && creationTimestamp <= end + 1,
+  ok(
+    start - 1 <= creationTimestamp && creationTimestamp <= end + 1,
     "Expect promise creation timestamp to be within elapsed time range: " +
-     (start - 1) + " <= " + creationTimestamp + " <= " + (end + 1));
+      (start - 1) +
+      " <= " +
+      creationTimestamp +
+      " <= " +
+      (end + 1)
+  );
 
   await front.detach();
   // Appease eslint

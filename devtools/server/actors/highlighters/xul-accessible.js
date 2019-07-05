@@ -13,7 +13,9 @@ const { TEXT_NODE } = require("devtools/shared/dom-node-constants");
  * Stylesheet used for highlighter styling of accessible objects in chrome. It
  * is consistent with the styling of an in-content accessible highlighter.
  */
-const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURIComponent(`
+const ACCESSIBLE_BOUNDS_SHEET =
+  "data:text/css;charset=utf-8," +
+  encodeURIComponent(`
   .highlighter-container {
     --highlighter-bubble-background-color: hsl(214, 13%, 24%);
     --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
@@ -218,7 +220,7 @@ class XULWindowAccessibleHighlighter {
     this.container = createNode(this.win, {
       parent: doc.body || doc.documentElement,
       attributes: {
-        "class": "highlighter-container",
+        class: "highlighter-container",
         "aria-hidden": "true",
       },
     });
@@ -226,7 +228,7 @@ class XULWindowAccessibleHighlighter {
     this.bounds = createNode(this.win, {
       parent: this.container,
       attributes: {
-        "class": "accessible-bounds",
+        class: "accessible-bounds",
       },
     });
 
@@ -273,10 +275,12 @@ class XULWindowAccessibleHighlighter {
    */
   show(node, options = {}) {
     const isSameNode = node === this.currentNode;
-    const hasBounds = options && typeof options.x == "number" &&
-                               typeof options.y == "number" &&
-                               typeof options.w == "number" &&
-                               typeof options.h == "number";
+    const hasBounds =
+      options &&
+      typeof options.x == "number" &&
+      typeof options.y == "number" &&
+      typeof options.w == "number" &&
+      typeof options.h == "number";
     if (!hasBounds || !this._isNodeValid(node) || isSameNode) {
       return false;
     }

@@ -5,17 +5,20 @@
 "use strict";
 
 /* import-globals-from inspector-helpers.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/server/tests/browser/inspector-helpers.js",
+  this
+);
 
 add_task(async function testRemoveSubtree() {
-  const { target, walker } =
-    await initInspectorFront(MAIN_DOMAIN + "inspector-traversal-data.html");
+  const { target, walker } = await initInspectorFront(
+    MAIN_DOMAIN + "inspector-traversal-data.html"
+  );
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     function ignoreNode(node) {
       // Duplicate the walker logic to skip blank nodes...
-      return node.nodeType === Node.TEXT_NODE &&
-        !/[^\s]/.test(node.nodeValue);
+      return node.nodeType === Node.TEXT_NODE && !/[^\s]/.test(node.nodeValue);
     }
 
     let nextSibling = content.document.querySelector("#longlist").nextSibling;
@@ -23,7 +26,8 @@ add_task(async function testRemoveSubtree() {
       nextSibling = nextSibling.nextSibling;
     }
 
-    let previousSibling = content.document.querySelector("#longlist").previousSibling;
+    let previousSibling = content.document.querySelector("#longlist")
+      .previousSibling;
     while (previousSibling && ignoreNode(previousSibling)) {
       previousSibling = previousSibling.previousSibling;
     }
@@ -51,30 +55,46 @@ add_task(async function testRemoveSubtree() {
   const onMutation = waitForMutation(walker, isChildList);
   const siblings = await walker.removeNode(longlist);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser,
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
     [siblings.previousSibling.actorID, siblings.nextSibling.actorID],
     function([previousActorID, nextActorID]) {
-      const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      const { require } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
       const { DebuggerServer } = require("devtools/server/main");
 
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       previousActorID = String(previousActorID);
       nextActorID = String(nextActorID);
-      const previous = DebuggerServer.searchAllConnectionsForActor(previousActorID);
+      const previous = DebuggerServer.searchAllConnectionsForActor(
+        previousActorID
+      );
       const next = DebuggerServer.searchAllConnectionsForActor(nextActorID);
 
-      is(previous.rawNode, content.previousSibling,
-        "Should have returned the previous sibling.");
-      is(next.rawNode, content.nextSibling, "Should have returned the next sibling.");
-    });
+      is(
+        previous.rawNode,
+        content.previousSibling,
+        "Should have returned the previous sibling."
+      );
+      is(
+        next.rawNode,
+        content.nextSibling,
+        "Should have returned the next sibling."
+      );
+    }
+  );
   await onMutation;
   // Our ownership size should now be 51 fewer (we forgot about #longlist + 26
   // children + 26 singleTextChild nodes, but learned about #longlist's
   // prev/next sibling)
   const newOwnershipSize = await assertOwnershipTrees(walker);
-  is(newOwnershipSize, originalOwnershipSize - 51,
-    "Ownership tree should be lower");
+  is(
+    newOwnershipSize,
+    originalOwnershipSize - 51,
+    "Ownership tree should be lower"
+  );
   // Now verify that some nodes have gone away
   return checkMissing(target, longlistID);
 });

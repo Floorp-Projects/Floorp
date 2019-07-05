@@ -7,8 +7,9 @@
 // Simple checks for the LayoutActor and GridActor
 
 add_task(async function() {
-  const {target, walker, layout} = await initLayoutFrontForUrl(
-    "data:text/html;charset=utf-8,<title>test</title><div></div>");
+  const { target, walker, layout } = await initLayoutFrontForUrl(
+    "data:text/html;charset=utf-8,<title>test</title><div></div>"
+  );
 
   ok(layout, "The LayoutFront was created");
   ok(layout.getGrids, "The getGrids method exists");

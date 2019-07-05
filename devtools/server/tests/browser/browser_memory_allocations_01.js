@@ -13,28 +13,38 @@ add_task(async function() {
   ok(true, "Can start recording allocations");
 
   // Allocate some objects.
-  const [line1, line2, line3] =
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  const [line1, line2, line3] = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
+    function() {
       // Use eval to ensure allocating the object in the page's compartment
-      return content.eval("(" + function() {
-        let alloc1, alloc2, alloc3;
+      return content.eval(
+        "(" +
+          function() {
+            let alloc1, alloc2, alloc3;
 
-        /* eslint-disable max-nested-callbacks */
-        (function outer() {
-          (function middle() {
-            (function inner() {
-              alloc1 = {}; alloc1.line = Error().lineNumber;
-              alloc2 = []; alloc2.line = Error().lineNumber;
-              // eslint-disable-next-line new-parens
-              alloc3 = new function() {}; alloc3.line = Error().lineNumber;
-            }());
-          }());
-        }());
-        /* eslint-enable max-nested-callbacks */
+            /* eslint-disable max-nested-callbacks */
+            (function outer() {
+              (function middle() {
+                (function inner() {
+                  alloc1 = {};
+                  alloc1.line = Error().lineNumber;
+                  alloc2 = [];
+                  alloc2.line = Error().lineNumber;
+                  // eslint-disable-next-line new-parens
+                  alloc3 = new (function() {})();
+                  alloc3.line = Error().lineNumber;
+                })();
+              })();
+            })();
+            /* eslint-enable max-nested-callbacks */
 
-        return [ alloc1.line, alloc2.line, alloc3.line ];
-      } + ")()");
-    });
+            return [alloc1.line, alloc2.line, alloc3.line];
+          } +
+          ")()"
+      );
+    }
+  );
 
   const response = await memory.getAllocations();
 
@@ -46,17 +56,19 @@ add_task(async function() {
 
   function isTestAllocation(alloc) {
     const frame = response.frames[alloc];
-    return frame
-      && frame.functionDisplayName === "inner"
-      && (frame.line === line1
-          || frame.line === line2
-          || frame.line === line3);
+    return (
+      frame &&
+      frame.functionDisplayName === "inner" &&
+      (frame.line === line1 || frame.line === line2 || frame.line === line3)
+    );
   }
 
   const testAllocations = response.allocations.filter(isTestAllocation);
-  ok(testAllocations.length >= 3,
-     "Should find our 3 test allocations (plus some allocations for the error "
-     + "objects used to get line numbers)");
+  ok(
+    testAllocations.length >= 3,
+    "Should find our 3 test allocations (plus some allocations for the error " +
+      "objects used to get line numbers)"
+  );
 
   // For each of the test case's allocations, ensure that the parent frame
   // indices are correct. Also test that we did get an allocation at each
@@ -86,8 +98,7 @@ add_task(async function() {
     // added or removed stack frames here.
   }
 
-  is(expectedLines.size, 0,
-     "Should have found all the expected lines");
+  is(expectedLines.size, 0, "Should have found all the expected lines");
 
   await memory.detach();
 

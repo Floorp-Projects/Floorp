@@ -42,7 +42,6 @@ toolkit/components/telemetry/healthreport-prefs.js
 # Ignore all devtools directories for now, except the debugger.
 devtools/docs/**
 devtools/platform/**
-devtools/server/**
 devtools/shared/**
 devtools/startup/**
 

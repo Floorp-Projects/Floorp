@@ -32,7 +32,9 @@ class Framerate {
     this._recording = true;
     this._ticks = [];
     this._startTime = this.targetActor.docShell.now();
-    this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
+    this._rafID = this._contentWin.requestAnimationFrame(
+      this._onRefreshDriverTick
+    );
   }
 
   /**
@@ -81,7 +83,9 @@ class Framerate {
     if (!this._recording) {
       return;
     }
-    this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
+    this._rafID = this._contentWin.requestAnimationFrame(
+      this._onRefreshDriverTick
+    );
     this._ticks.push(this.targetActor.docShell.now() - this._startTime);
   }
 
@@ -91,7 +95,9 @@ class Framerate {
   _onGlobalCreated(win) {
     if (this._recording) {
       this._contentWin.cancelAnimationFrame(this._rafID);
-      this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
+      this._rafID = this._contentWin.requestAnimationFrame(
+        this._onRefreshDriverTick
+      );
     }
   }
 }

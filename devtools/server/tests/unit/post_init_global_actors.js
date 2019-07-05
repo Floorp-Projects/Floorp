@@ -16,6 +16,6 @@ PostInitGlobalActor.prototype = {
 };
 
 PostInitGlobalActor.prototype.requestTypes = {
-  "ping": PostInitGlobalActor.prototype.onPing,
+  ping: PostInitGlobalActor.prototype.onPing,
 };
 exports.PostInitGlobalActor = PostInitGlobalActor;

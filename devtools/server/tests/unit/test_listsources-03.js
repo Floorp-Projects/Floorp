@@ -20,11 +20,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-sources");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-sources",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_simple_listsources();
-                           });
+    attachTestTabAndResume(gClient, "test-sources", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      test_simple_listsources();
+    });
   });
   do_test_pending();
 }
@@ -34,11 +37,14 @@ function test_simple_listsources() {
     gThreadClient.getSources().then(function(response) {
       Assert.ok(
         !response.error,
-        "There shouldn't be an error fetching large amounts of sources.");
+        "There shouldn't be an error fetching large amounts of sources."
+      );
 
-      Assert.ok(response.sources.some(function(s) {
-        return s.url.match(/foo-999.js$/);
-      }));
+      Assert.ok(
+        response.sources.some(function(s) {
+          return s.url.match(/foo-999.js$/);
+        })
+      );
 
       gThreadClient.resume().then(function() {
         finishClient(gClient);
@@ -47,11 +53,13 @@ function test_simple_listsources() {
   });
 
   for (let i = 0; i < 1000; i++) {
-    Cu.evalInSandbox("function foo###() {return ###;}".replace(/###/g, i),
-                     gDebuggee,
-                     "1.8",
-                     "http://example.com/foo-" + i + ".js",
-                     1);
+    Cu.evalInSandbox(
+      "function foo###() {return ###;}".replace(/###/g, i),
+      gDebuggee,
+      "1.8",
+      "http://example.com/foo-" + i + ".js",
+      1
+    );
   }
   gDebuggee.eval("debugger;");
 }

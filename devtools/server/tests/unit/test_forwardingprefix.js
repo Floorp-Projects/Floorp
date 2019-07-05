@@ -72,9 +72,13 @@ function tryActors(reachables, completed) {
   let count = 0;
 
   let outerActor;
-  for (outerActor of [ "root",
-                       "prefix1/root", "prefix1/actor",
-                       "prefix2/root", "prefix2/actor" ]) {
+  for (outerActor of [
+    "root",
+    "prefix1/root",
+    "prefix1/actor",
+    "prefix2/root",
+    "prefix2/actor",
+  ]) {
     /*
      * Let each callback capture its own iteration's value; outerActor is
      * local to the whole loop, not to a single iteration.
@@ -88,15 +92,23 @@ function tryActors(reachables, completed) {
     if (actor == "root") {
       promise = gClient.mainRoot.echo({ value: "tango" });
     } else {
-      promise = gClient.request({ to: actor, type: "echo", value: "tango"});
+      promise = gClient.request({ to: actor, type: "echo", value: "tango" });
     }
-    const callback = (response) => {
+    const callback = response => {
       if (reachables.has(actor)) {
-        Assert.deepEqual({ from: actor, to: actor,
-                           type: "echo", value: "tango" }, response);
+        Assert.deepEqual(
+          { from: actor, to: actor, type: "echo", value: "tango" },
+          response
+        );
       } else {
-        Assert.deepEqual({ from: actor, error: "noSuchActor",
-                           message: "No such actor for ID: " + actor }, response);
+        Assert.deepEqual(
+          {
+            from: actor,
+            error: "noSuchActor",
+            message: "No such actor for ID: " + actor,
+          },
+          response
+        );
       }
 
       if (--count == 0) {
@@ -126,7 +138,7 @@ function TestNoForwardingYet() {
 function newSubconnection(prefix) {
   const { conn, transport } = newConnection(prefix);
   transport.hooks = {
-    onPacket: (packet) => gMainConnection.send(packet),
+    onPacket: packet => gMainConnection.send(packet),
     onClosed: () => {},
   };
   gMainConnection.setForwarding(prefix, transport);
@@ -139,7 +151,7 @@ function createSubconnection1() {
   const { conn, transport } = newSubconnection("prefix1");
   gSubconnection1 = conn;
   transport.ready();
-  gClient.expectReply("prefix1/root", (reply) => run_next_test());
+  gClient.expectReply("prefix1/root", reply => run_next_test());
 }
 
 // Establish forwarding, but don't put any actors in that server.
@@ -152,7 +164,7 @@ function createSubconnection2() {
   const { conn, transport } = newSubconnection("prefix2");
   gSubconnection2 = conn;
   transport.ready();
-  gClient.expectReply("prefix2/root", (reply) => run_next_test());
+  gClient.expectReply("prefix2/root", reply => run_next_test());
 }
 
 function TestForwardPrefix12OnlyRoot() {
@@ -177,7 +189,7 @@ EchoActor.prototype.onEcho = function(request) {
   return JSON.parse(JSON.stringify(request));
 };
 EchoActor.prototype.requestTypes = {
-  "echo": EchoActor.prototype.onEcho,
+  echo: EchoActor.prototype.onEcho,
 };
 
 function TestForwardPrefix12WithActor1() {
@@ -197,7 +209,13 @@ function TestForwardPrefix12WithActor12() {
   gSubconnection2.addActor(actor);
 
   tryActors(
-    new Set(["root", "prefix1/root", "prefix1/actor", "prefix2/root", "prefix2/actor"]),
+    new Set([
+      "root",
+      "prefix1/root",
+      "prefix1/actor",
+      "prefix2/root",
+      "prefix2/actor",
+    ]),
     run_next_test
   );
 }

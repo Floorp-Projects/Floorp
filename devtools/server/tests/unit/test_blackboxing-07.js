@@ -17,11 +17,14 @@ function run_test() {
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             testBlackBox();
-                           });
+    attachTestTabAndResume(gClient, "test-black-box", function(
+      response,
+      targetFront,
+      threadClient
+    ) {
+      gThreadClient = threadClient;
+      testBlackBox();
+    });
   });
   do_test_pending();
 }
@@ -55,8 +58,7 @@ function evalCode() {
   );
 
   Cu.evalInSandbox(
-    "" + function source() {}
-      + "\ndebugger;",
+    "" + function source() {} + "\ndebugger;",
     gDebuggee,
     "1.8",
     SOURCE_URL,

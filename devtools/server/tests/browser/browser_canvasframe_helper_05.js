@@ -7,13 +7,18 @@
 // Test some edge cases of the CanvasFrameAnonymousContentHelper event handling
 // mechanism.
 
-const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
+const TEST_URL =
+  "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
 
 add_task(async function() {
   const browser = await addTab(TEST_URL);
   await ContentTask.spawn(browser, null, async function() {
-    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-    const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
+    const {
+      HighlighterEnvironment,
+    } = require("devtools/server/actors/highlighters");
     const {
       CanvasFrameAnonymousContentHelper,
     } = require("devtools/server/actors/highlighters/utils/markup");
@@ -23,12 +28,14 @@ add_task(async function() {
       const root = doc.createElement("div");
 
       const parent = doc.createElement("div");
-      parent.style = "pointer-events:auto;width:300px;height:300px;background:yellow;";
+      parent.style =
+        "pointer-events:auto;width:300px;height:300px;background:yellow;";
       parent.id = "parent-element";
       root.appendChild(parent);
 
       const child = doc.createElement("div");
-      child.style = "pointer-events:auto;width:200px;height:200px;background:red;";
+      child.style =
+        "pointer-events:auto;width:200px;height:200px;background:red;";
       child.id = "child-element";
       parent.appendChild(child);
 
@@ -64,10 +71,16 @@ add_task(async function() {
     await onDocMouseDown;
 
     is(mouseDownHandled.length, 2, "The mousedown event was handled twice");
-    is(mouseDownHandled[0], "child-element",
-      "The mousedown event was handled on the child element");
-    is(mouseDownHandled[1], "parent-element",
-      "The mousedown event was handled on the parent element");
+    is(
+      mouseDownHandled[0],
+      "child-element",
+      "The mousedown event was handled on the child element"
+    );
+    is(
+      mouseDownHandled[1],
+      "parent-element",
+      "The mousedown event was handled on the parent element"
+    );
 
     info("Synthesizing an event on the parent, outside of the child element");
     mouseDownHandled = [];
@@ -76,8 +89,11 @@ add_task(async function() {
     await onDocMouseDown;
 
     is(mouseDownHandled.length, 1, "The mousedown event was handled only once");
-    is(mouseDownHandled[0], "parent-element",
-      "The mousedown event was handled on the parent element");
+    is(
+      mouseDownHandled[0],
+      "parent-element",
+      "The mousedown event was handled on the parent element"
+    );
 
     info("Removing the event listener");
     parentEl.removeEventListener("mousedown", onMouseDown);
@@ -93,8 +109,11 @@ add_task(async function() {
     await onDocMouseDown;
 
     is(mouseDownHandled.length, 1, "The mousedown event was handled once");
-    is(mouseDownHandled[0], "parent-element",
-      "The mousedown event did bubble to the parent element");
+    is(
+      mouseDownHandled[0],
+      "parent-element",
+      "The mousedown event did bubble to the parent element"
+    );
 
     info("Removing the parent listener");
     parentEl.removeEventListener("mousedown", onMouseDown);
@@ -114,8 +133,11 @@ add_task(async function() {
         _EU_Ci: Ci,
         _EU_Cc: Cc,
       };
-      Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
-      EventUtils.synthesizeMouseAtPoint(x, y, {type: "mousedown"}, win);
+      Services.scriptloader.loadSubScript(
+        "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+        EventUtils
+      );
+      EventUtils.synthesizeMouseAtPoint(x, y, { type: "mousedown" }, win);
     }
   });
 

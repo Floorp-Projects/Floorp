@@ -26,16 +26,16 @@
 const CC = Components.Constructor;
 
 // Create a sandbox with the resources we need. require() doesn't work here.
-const sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(), {
-  wantGlobalProperties: [
-    "InspectorUtils",
-    "CSSRule",
-  ],
-});
+const sandbox = Cu.Sandbox(
+  CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+  {
+    wantGlobalProperties: ["InspectorUtils", "CSSRule"],
+  }
+);
 Cu.evalInSandbox(
   "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-  "Components.utils.import('resource://gre/modules/Services.jsm');" +
-  "addDebuggerToGlobal(this);",
+    "Components.utils.import('resource://gre/modules/Services.jsm');" +
+    "addDebuggerToGlobal(this);",
   sandbox
 );
 const {
@@ -56,7 +56,9 @@ dbg.onNewGlobalObject = function(global) {
   } catch (e) {
     // Ignore errors related to adding a same-compartment debuggee.
     // See bug 1523755.
-    if (!/debugger and debuggee must be in different compartments/.test("" + e)) {
+    if (
+      !/debugger and debuggee must be in different compartments/.test("" + e)
+    ) {
       throw e;
     }
   }
@@ -82,7 +84,7 @@ function throwError(v) {
 
 // Bidirectional map between objects and IDs.
 function IdMap() {
-  this._idToObject = [ undefined ];
+  this._idToObject = [undefined];
   this._objectToId = new Map();
 }
 
@@ -97,7 +99,7 @@ IdMap.prototype = {
 
   getId(object) {
     const id = this._objectToId.get(object);
-    return (id === undefined) ? 0 : id;
+    return id === undefined ? 0 : id;
   },
 
   getObject(id) {
@@ -219,7 +221,7 @@ dbg.onNewScript = function(script) {
 // answers to the client about the object's contents, without having to consult
 // a child process.
 
-function snapshotObjectProperty([ name, desc ]) {
+function snapshotObjectProperty([name, desc]) {
   // Only capture primitive properties in object snapshots.
   if ("value" in desc && !convertedValueIsObject(desc.value)) {
     return { name, desc };
@@ -249,7 +251,9 @@ function makeObjectSnapshot(object) {
     isExtensible: object.isExtensible(),
     isSealed: object.isSealed(),
     isFrozen: object.isFrozen(),
-    properties: Object.entries(getObjectProperties(object)).map(snapshotObjectProperty),
+    properties: Object.entries(getObjectProperties(object)).map(
+      snapshotObjectProperty
+    ),
   };
 }
 
@@ -288,7 +292,7 @@ function convertStack(stack) {
 
 // Map from warp target values attached to messages to the associated execution
 // point.
-const gWarpTargetPoints = [ null ];
+const gWarpTargetPoints = [null];
 
 // Listen to all console messages in the process.
 Services.console.registerListener({
@@ -309,29 +313,32 @@ Services.console.registerListener({
 });
 
 // Listen to all console API messages in the process.
-Services.obs.addObserver({
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+Services.obs.addObserver(
+  {
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
-  observe(message, topic, data) {
-    const apiMessage = message.wrappedJSObject;
+    observe(message, topic, data) {
+      const apiMessage = message.wrappedJSObject;
 
-    const contents = {};
-    for (const id in apiMessage) {
-      if (id != "wrappedJSObject" && id != "arguments") {
-        contents[id] = JSON.parse(JSON.stringify(apiMessage[id]));
+      const contents = {};
+      for (const id in apiMessage) {
+        if (id != "wrappedJSObject" && id != "arguments") {
+          contents[id] = JSON.parse(JSON.stringify(apiMessage[id]));
+        }
       }
-    }
 
-    // Message arguments are preserved as debuggee values.
-    if (apiMessage.arguments) {
-      contents.arguments = apiMessage.arguments.map(v => {
-        return convertValue(makeDebuggeeValue(v), { snapshot: true });
-      });
-    }
+      // Message arguments are preserved as debuggee values.
+      if (apiMessage.arguments) {
+        contents.arguments = apiMessage.arguments.map(v => {
+          return convertValue(makeDebuggeeValue(v), { snapshot: true });
+        });
+      }
 
-    newConsoleMessage("ConsoleAPI", null, contents);
+      newConsoleMessage("ConsoleAPI", null, contents);
+    },
   },
-}, "console-api-log-event");
+  "console-api-log-event"
+);
 
 // eslint-disable-next-line no-unused-vars
 function NewTimeWarpTarget() {
@@ -350,7 +357,8 @@ const gScannedScripts = new Set();
 function startScanningScript(script) {
   const id = gScripts.getId(script);
   const offsets = script.getPossibleBreakpointOffsets();
-  let lastFrame = null, lastFrameIndex = 0;
+  let lastFrame = null,
+    lastFrameIndex = 0;
   for (const offset of offsets) {
     const handler = {
       hit(frame) {
@@ -456,46 +464,52 @@ function ensurePositionHandler(position) {
   gPositionHandlerKinds[position.kind] = true;
 
   switch (position.kind) {
-  case "Break":
-  case "OnStep":
-    let debugScript;
-    if (position.script) {
-      debugScript = gScripts.getObject(position.script);
-      if (!debugScript) {
-        // The script referred to in this position does not exist yet, so we
-        // can't install a handler for it. Add a pending handler so that we
-        // can install the handler once the script is created.
-        gPendingPcHandlers.push(position);
+    case "Break":
+    case "OnStep":
+      let debugScript;
+      if (position.script) {
+        debugScript = gScripts.getObject(position.script);
+        if (!debugScript) {
+          // The script referred to in this position does not exist yet, so we
+          // can't install a handler for it. Add a pending handler so that we
+          // can install the handler once the script is created.
+          gPendingPcHandlers.push(position);
+          return;
+        }
+      }
+
+      const match = function({ script, offset }) {
+        return script == position.script && offset == position.offset;
+      };
+      if (gInstalledPcHandlers.some(match)) {
         return;
       }
-    }
+      gInstalledPcHandlers.push({
+        script: position.script,
+        offset: position.offset,
+      });
 
-    const match = function({script, offset}) {
-      return script == position.script && offset == position.offset;
-    };
-    if (gInstalledPcHandlers.some(match)) {
-      return;
-    }
-    gInstalledPcHandlers.push({ script: position.script, offset: position.offset });
-
-    debugScript.setBreakpoint(position.offset, {
-      hit(frame) {
-        positionHit({
-          kind: "OnStep",
-          script: position.script,
-          offset: position.offset,
-          frameIndex: countScriptFrames() - 1,
-        }, frame);
-      },
-    });
-    break;
-  case "OnPop":
-    assert(position.script);
-    addOnPopFilter(frame => gScripts.getId(frame.script) == position.script);
-    break;
-  case "EnterFrame":
-    dbg.onEnterFrame = onEnterFrame;
-    break;
+      debugScript.setBreakpoint(position.offset, {
+        hit(frame) {
+          positionHit(
+            {
+              kind: "OnStep",
+              script: position.script,
+              offset: position.offset,
+              frameIndex: countScriptFrames() - 1,
+            },
+            frame
+          );
+        },
+      });
+      break;
+    case "OnPop":
+      assert(position.script);
+      addOnPopFilter(frame => gScripts.getId(frame.script) == position.script);
+      break;
+    case "EnterFrame":
+      dbg.onEnterFrame = onEnterFrame;
+      break;
   }
 }
 
@@ -509,8 +523,9 @@ let gDereferencedObjects = new Map();
 function getObjectId(obj) {
   const id = gPausedObjects.getId(obj);
   if (!id && obj) {
-    assert((obj instanceof Debugger.Object) ||
-           (obj instanceof Debugger.Environment));
+    assert(
+      obj instanceof Debugger.Object || obj instanceof Debugger.Environment
+    );
 
     // There can be multiple Debugger.Objects for the same dereferenced object.
     // gDereferencedObjects is used to make sure the IDs we send to the
@@ -536,11 +551,13 @@ function convertValue(value, options) {
     }
     return { object: getObjectId(value) };
   }
-  if (value === undefined ||
-      value == Infinity ||
-      value == -Infinity ||
-      Object.is(value, NaN) ||
-      Object.is(value, -0)) {
+  if (
+    value === undefined ||
+    value == Infinity ||
+    value == -Infinity ||
+    Object.is(value, NaN) ||
+    Object.is(value, -0)
+  ) {
     return { special: "" + value };
   }
   return value;
@@ -567,11 +584,16 @@ function convertValueFromParent(value) {
       return gPausedObjects.getObject(value.object);
     }
     switch (value.special) {
-    case "undefined": return undefined;
-    case "Infinity": return Infinity;
-    case "-Infinity": return -Infinity;
-    case "NaN": return NaN;
-    case "0": return -0;
+      case "undefined":
+        return undefined;
+      case "Infinity":
+        return Infinity;
+      case "-Infinity":
+        return -Infinity;
+      case "NaN":
+        return NaN;
+      case "0":
+        return -0;
     }
   }
   return value;
@@ -651,17 +673,17 @@ const gManifestStartHandlers = {
     for (const { checkpoint, progress, frameIndex } of allHits) {
       if (checkpoint >= startpoint && checkpoint < endpoint) {
         switch (kind) {
-        case "OnStep":
-          if (bpFrameIndex != frameIndex) {
-            continue;
-          }
+          case "OnStep":
+            if (bpFrameIndex != frameIndex) {
+              continue;
+            }
           // FALLTHROUGH
-        case "Break":
-          hits.push({
-            checkpoint,
-            progress,
-            position: { kind: "OnStep", script, offset, frameIndex },
-          });
+          case "Break":
+            hits.push({
+              checkpoint,
+              progress,
+              position: { kind: "OnStep", script, offset, frameIndex },
+            });
         }
       }
     }
@@ -679,7 +701,7 @@ const gManifestStartHandlers = {
     ensurePositionHandler({ kind: "EnterFrame" });
     ensurePositionHandler({ kind: "OnPop", script, frameIndex });
 
-    gFrameSteps = [ entryPoint ];
+    gFrameSteps = [entryPoint];
     gFrameStepsFrameIndex = frameIndex;
     RecordReplayControl.resumeExecution();
   },
@@ -878,8 +900,10 @@ const gManifestPositionHandlers = {
   },
 
   runToPoint({ endpoint }, point) {
-    if (point.progress == endpoint.progress &&
-        point.position.frameIndex == endpoint.position.frameIndex) {
+    if (
+      point.progress == endpoint.progress &&
+      point.position.frameIndex == endpoint.position.frameIndex
+    ) {
       clearPositionHandlers();
       RecordReplayControl.manifestFinished({ point });
     }
@@ -887,19 +911,22 @@ const gManifestPositionHandlers = {
 
   findFrameSteps(_, point) {
     switch (point.position.kind) {
-    case "OnStep":
-      gFrameSteps.push(point);
-      break;
-    case "EnterFrame":
-      if (countScriptFrames() == gFrameStepsFrameIndex + 2) {
+      case "OnStep":
         gFrameSteps.push(point);
-      }
-      break;
-    case "OnPop":
-      gFrameSteps.push(point);
-      clearPositionHandlers();
-      RecordReplayControl.manifestFinished({ point, frameSteps: gFrameSteps });
-      break;
+        break;
+      case "EnterFrame":
+        if (countScriptFrames() == gFrameStepsFrameIndex + 2) {
+          gFrameSteps.push(point);
+        }
+        break;
+      case "OnPop":
+        gFrameSteps.push(point);
+        clearPositionHandlers();
+        RecordReplayControl.manifestFinished({
+          point,
+          frameSteps: gFrameSteps,
+        });
+        break;
     }
   },
 };
@@ -944,7 +971,9 @@ function getSourceData(id) {
     displayURL: source.displayURL,
     elementAttributeName: source.elementAttributeName,
     introductionScript,
-    introductionOffset: introductionScript ? source.introductionOffset : undefined,
+    introductionOffset: introductionScript
+      ? source.introductionOffset
+      : undefined,
     introductionType: source.introductionType,
     sourceMapURL: source.sourceMapURL,
   };
@@ -980,13 +1009,15 @@ function getFrameData(index) {
 }
 
 function unknownObjectProperties(why) {
-  return [{
-    name: "Unknown properties",
-    desc: {
-      value: why,
-      enumerable: true,
+  return [
+    {
+      name: "Unknown properties",
+      desc: {
+        value: why,
+        enumerable: true,
+      },
     },
-  }];
+  ];
 }
 
 function getObjectData(id) {
@@ -1076,8 +1107,12 @@ function getEnvironmentNames(env) {
       return { name, value: convertValue(env.getVariable(name)) };
     });
   } catch (e) {
-    return [{name: "Unknown names",
-             value: "Exception thrown in getEnvironmentNames" }];
+    return [
+      {
+        name: "Unknown names",
+        value: "Exception thrown in getEnvironmentNames",
+      },
+    ];
   }
 }
 
@@ -1177,7 +1212,7 @@ function getPauseData() {
       // objects like Windows, most of which will not be used.
       const enumerableOwnProperties = Object.create(null);
       let enumerablePropertyCount = 0;
-      for (const [ name, desc ] of propertyEntries) {
+      for (const [name, desc] of propertyEntries) {
         if (desc.enumerable) {
           enumerableOwnProperties[name] = desc;
           addPropertyDescriptor(desc, false);
@@ -1261,7 +1296,6 @@ function divergeFromRecording() {
 }
 
 const gRequestHandlers = {
-
   repaint() {
     divergeFromRecording();
     return RecordReplayControl.repaint();
@@ -1302,7 +1336,7 @@ const gRequestHandlers = {
 
   findSources(request) {
     const sources = [];
-    gScriptSources.forEach((id) => {
+    gScriptSources.forEach(id => {
       sources.push(getSourceData(id));
     });
     return sources;
@@ -1398,8 +1432,9 @@ const gRequestHandlers = {
 
   newDeepTreeWalker(request) {
     divergeFromRecording();
-    const walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-      .createInstance(Ci.inIDeepTreeWalker);
+    const walker = Cc[
+      "@mozilla.org/inspector/deep-tree-walker;1"
+    ].createInstance(Ci.inIDeepTreeWalker);
     return { id: getObjectId(makeDebuggeeValue(walker)) };
   },
 
@@ -1409,9 +1444,9 @@ const gRequestHandlers = {
 
     try {
       const rv = object.unsafeDereference()[request.name];
-      return { "return": convertValue(makeDebuggeeValue(rv)) };
+      return { return: convertValue(makeDebuggeeValue(rv)) };
     } catch (e) {
-      return { "throw": "" + e };
+      return { throw: "" + e };
     }
   },
 
@@ -1422,9 +1457,9 @@ const gRequestHandlers = {
 
     try {
       object.unsafeDereference()[request.name] = value;
-      return { "return": request.value };
+      return { return: request.value };
     } catch (e) {
-      return { "throw": "" + e };
+      return { throw: "" + e };
     }
   },
 
@@ -1435,8 +1470,10 @@ const gRequestHandlers = {
   },
 
   findEventTarget(request) {
-    const element =
-      getWindow().document.elementFromPoint(request.clientX, request.clientY);
+    const element = getWindow().document.elementFromPoint(
+      request.clientX,
+      request.clientY
+    );
     if (!element) {
       return { id: 0 };
     }
