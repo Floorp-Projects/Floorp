@@ -6,7 +6,9 @@
 
 var FormAutofillNameUtils;
 add_task(async function() {
-  ({FormAutofillNameUtils} = ChromeUtils.import("resource://formautofill/FormAutofillNameUtils.jsm"));
+  ({ FormAutofillNameUtils } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillNameUtils.jsm"
+  ));
 });
 
 // Test cases initially copied from
@@ -81,7 +83,7 @@ const TESTCASES = [
     expectedFullName: "孫德明",
   },
   {
-    description: "Chinese name, Unihan, \"IDEOGRAPHIC SPACE\"",
+    description: 'Chinese name, Unihan, "IDEOGRAPHIC SPACE"',
     fullName: "孫　德明",
     nameParts: {
       given: "德明",

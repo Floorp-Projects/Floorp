@@ -1,9 +1,10 @@
-
 "use strict";
 
 var FormAutofillUtils;
 add_task(async function() {
-  ({FormAutofillUtils} = ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm"));
+  ({ FormAutofillUtils } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillUtils.jsm"
+  ));
 });
 
 add_task(async function test_isAddressField_isCreditCardField() {
@@ -12,7 +13,7 @@ add_task(async function test_isAddressField_isCreditCardField() {
       isAddressField: true,
       isCreditCardField: false,
     },
-    "organization": {
+    organization: {
       isAddressField: true,
       isCreditCardField: false,
     },
@@ -20,11 +21,11 @@ add_task(async function test_isAddressField_isCreditCardField() {
       isAddressField: true,
       isCreditCardField: false,
     },
-    "tel": {
+    tel: {
       isAddressField: true,
       isCreditCardField: false,
     },
-    "email": {
+    email: {
       isAddressField: true,
       isCreditCardField: false,
     },
@@ -32,7 +33,7 @@ add_task(async function test_isAddressField_isCreditCardField() {
       isAddressField: false,
       isCreditCardField: true,
     },
-    "UNKNOWN": {
+    UNKNOWN: {
       isAddressField: false,
       isCreditCardField: false,
     },
@@ -45,12 +46,16 @@ add_task(async function test_isAddressField_isCreditCardField() {
   for (let fieldName of Object.keys(TEST_CASES)) {
     info("Starting testcase: " + fieldName);
     let field = TEST_CASES[fieldName];
-    Assert.equal(FormAutofillUtils.isAddressField(fieldName),
-                 field.isAddressField,
-                 "isAddressField");
-    Assert.equal(FormAutofillUtils.isCreditCardField(fieldName),
-                 field.isCreditCardField,
-                 "isCreditCardField");
+    Assert.equal(
+      FormAutofillUtils.isAddressField(fieldName),
+      field.isAddressField,
+      "isAddressField"
+    );
+    Assert.equal(
+      FormAutofillUtils.isCreditCardField(fieldName),
+      field.isCreditCardField,
+      "isCreditCardField"
+    );
   }
 });
 
@@ -61,7 +66,14 @@ add_task(async function test_getCategoriesFromFieldNames() {
       set: ["name", "tel", "organization"],
     },
     {
-      fieldNames: ["address-line2", "family-name", "name", "tel", "organization", "email"],
+      fieldNames: [
+        "address-line2",
+        "family-name",
+        "name",
+        "tel",
+        "organization",
+        "email",
+      ],
       set: ["address", "name", "tel", "organization", "email"],
     },
     {
@@ -75,7 +87,9 @@ add_task(async function test_getCategoriesFromFieldNames() {
   ];
 
   for (let tc of TEST_CASES) {
-    let categories = FormAutofillUtils.getCategoriesFromFieldNames(tc.fieldNames);
+    let categories = FormAutofillUtils.getCategoriesFromFieldNames(
+      tc.fieldNames
+    );
     Assert.deepEqual(Array.from(categories), tc.set);
   }
 });

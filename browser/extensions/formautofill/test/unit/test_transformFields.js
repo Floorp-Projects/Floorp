@@ -6,7 +6,10 @@
 
 let FormAutofillStorage;
 add_task(async function setup() {
-  ({FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", null));
+  ({ FormAutofillStorage } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillStorage.jsm",
+    null
+  ));
 });
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
@@ -24,7 +27,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
       "given-name": "Timothy",
       "additional-name": "John",
       "family-name": "Berners-Lee",
-      "name": "Timothy John Berners-Lee",
+      name: "Timothy John Berners-Lee",
     },
   },
   {
@@ -36,13 +39,13 @@ const ADDRESS_COMPUTE_TESTCASES = [
     expectedResult: {
       "given-name": "德明",
       "family-name": "孫",
-      "name": "孫德明",
+      name: "孫德明",
     },
   },
 
   // Address
   {
-    description: "\"street-address\" with single line",
+    description: '"street-address" with single line',
     address: {
       "street-address": "single line",
     },
@@ -52,7 +55,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"street-address\" with multiple lines",
+    description: '"street-address" with multiple lines',
     address: {
       "street-address": "line1\nline2\nline3",
     },
@@ -64,7 +67,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"street-address\" with multiple lines but line2 is omitted",
+    description: '"street-address" with multiple lines but line2 is omitted',
     address: {
       "street-address": "line1\n\nline3",
     },
@@ -76,7 +79,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"street-address\" with 4 lines",
+    description: '"street-address" with 4 lines',
     address: {
       "street-address": "line1\nline2\nline3\nline4",
     },
@@ -88,7 +91,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"street-address\" with blank lines",
+    description: '"street-address" with blank lines',
     address: {
       "street-address": "line1\n \nline3\n \nline5",
     },
@@ -102,24 +105,24 @@ const ADDRESS_COMPUTE_TESTCASES = [
 
   // Country
   {
-    description: "Has \"country\"",
+    description: 'Has "country"',
     address: {
-      "country": "US",
+      country: "US",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
       "country-name": "United States",
     },
   },
 
   // Tel
   {
-    description: "\"tel\" with US country code",
+    description: '"tel" with US country code',
     address: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
     },
     expectedResult: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
       "tel-country-code": "+1",
       "tel-national": "6172535702",
       "tel-area-code": "617",
@@ -129,12 +132,12 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"tel\" with TW country code (the components won't be parsed)",
+    description: '"tel" with TW country code (the components won\'t be parsed)',
     address: {
-      "tel": "+886212345678",
+      tel: "+886212345678",
     },
     expectedResult: {
-      "tel": "+886212345678",
+      tel: "+886212345678",
       "tel-country-code": "+886",
       "tel-national": "0212345678",
       "tel-area-code": undefined,
@@ -144,12 +147,12 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"tel\" without country code so use \"US\" as default resion",
+    description: '"tel" without country code so use "US" as default resion',
     address: {
-      "tel": "6172535702",
+      tel: "6172535702",
     },
     expectedResult: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
       "tel-country-code": "+1",
       "tel-national": "6172535702",
       "tel-area-code": "617",
@@ -159,13 +162,13 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"tel\" without country code but \"country\" is \"TW\"",
+    description: '"tel" without country code but "country" is "TW"',
     address: {
-      "tel": "0212345678",
-      "country": "TW",
+      tel: "0212345678",
+      country: "TW",
     },
     expectedResult: {
-      "tel": "+886212345678",
+      tel: "+886212345678",
       "tel-country-code": "+886",
       "tel-national": "0212345678",
       "tel-area-code": undefined,
@@ -175,12 +178,12 @@ const ADDRESS_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "\"tel\" can't be parsed so leave it as-is",
+    description: '"tel" can\'t be parsed so leave it as-is',
     address: {
-      "tel": "12345",
+      tel: "12345",
     },
     expectedResult: {
-      "tel": "12345",
+      tel: "12345",
       "tel-country-code": undefined,
       "tel-national": "12345",
       "tel-area-code": undefined,
@@ -194,9 +197,9 @@ const ADDRESS_COMPUTE_TESTCASES = [
 const ADDRESS_NORMALIZE_TESTCASES = [
   // Name
   {
-    description: "Has \"name\", and the split names are omitted",
+    description: 'Has "name", and the split names are omitted',
     address: {
-      "name": "Timothy John Berners-Lee",
+      name: "Timothy John Berners-Lee",
     },
     expectedResult: {
       "given-name": "Timothy",
@@ -205,9 +208,9 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has both \"name\" and split names",
+    description: 'Has both "name" and split names',
     address: {
-      "name": "John Doe",
+      name: "John Doe",
       "given-name": "Timothy",
       "additional-name": "John",
       "family-name": "Berners-Lee",
@@ -219,9 +222,9 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"name\", and some of split names are omitted",
+    description: 'Has "name", and some of split names are omitted',
     address: {
-      "name": "John Doe",
+      name: "John Doe",
       "given-name": "Timothy",
     },
     expectedResult: {
@@ -232,7 +235,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
 
   // Address
   {
-    description: "Has \"address-line1~3\" and \"street-address\" is omitted",
+    description: 'Has "address-line1~3" and "street-address" is omitted',
     address: {
       "address-line1": "line1",
       "address-line2": "line2",
@@ -243,7 +246,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has both \"address-line1~3\" and \"street-address\"",
+    description: 'Has both "address-line1~3" and "street-address"',
     address: {
       "street-address": "street address",
       "address-line1": "line1",
@@ -255,7 +258,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"address-line2~3\" and single-line \"street-address\"",
+    description: 'Has "address-line2~3" and single-line "street-address"',
     address: {
       "street-address": "street address",
       "address-line2": "line2",
@@ -266,7 +269,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"address-line2~3\" and multiple-line \"street-address\"",
+    description: 'Has "address-line2~3" and multiple-line "street-address"',
     address: {
       "street-address": "street address\nstreet address line 2",
       "address-line2": "line2",
@@ -277,7 +280,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"address-line1~2\"",
+    description: 'Has only "address-line1~2"',
     address: {
       "address-line1": "line1",
       "address-line2": "line2",
@@ -287,7 +290,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"address-line1\"",
+    description: 'Has only "address-line1"',
     address: {
       "address-line1": "line1",
     },
@@ -296,7 +299,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"address-line2~3\"",
+    description: 'Has only "address-line2~3"',
     address: {
       "address-line2": "line2",
       "address-line3": "line3",
@@ -306,7 +309,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"address-line2\"",
+    description: 'Has only "address-line2"',
     address: {
       "address-line2": "line2",
     },
@@ -317,208 +320,210 @@ const ADDRESS_NORMALIZE_TESTCASES = [
 
   // Country
   {
-    description: "Has \"country\" in lowercase",
+    description: 'Has "country" in lowercase',
     address: {
-      "country": "us",
+      country: "us",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
     },
   },
   {
-    description: "Has unknown \"country\"",
+    description: 'Has unknown "country"',
     address: {
       "given-name": "John", // Make sure it won't be an empty record.
-      "country": "AA",
+      country: "AA",
     },
     expectedResult: {
-      "country": undefined,
+      country: undefined,
     },
   },
   {
-    description: "Has \"country-name\"",
+    description: 'Has "country-name"',
     address: {
       "country-name": "united states",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
       "country-name": "United States",
     },
   },
   {
-    description: "Has alternative \"country-name\"",
+    description: 'Has alternative "country-name"',
     address: {
       "country-name": "america",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
       "country-name": "United States",
     },
   },
   {
-    description: "Has \"country-name\" as a substring",
+    description: 'Has "country-name" as a substring',
     address: {
       "country-name": "test america test",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
       "country-name": "United States",
     },
   },
   {
-    description: "Has \"country-name\" as part of a word",
+    description: 'Has "country-name" as part of a word',
     address: {
       "given-name": "John", // Make sure it won't be an empty record.
       "country-name": "TRUST",
     },
     expectedResult: {
-      "country": undefined,
+      country: undefined,
       "country-name": undefined,
     },
   },
   {
-    description: "Has unknown \"country-name\"",
+    description: 'Has unknown "country-name"',
     address: {
       "given-name": "John", // Make sure it won't be an empty record.
       "country-name": "unknown country name",
     },
     expectedResult: {
-      "country": undefined,
+      country: undefined,
       "country-name": undefined,
     },
   },
   {
-    description: "Has \"country\" and unknown \"country-name\"",
+    description: 'Has "country" and unknown "country-name"',
     address: {
-      "country": "us",
+      country: "us",
       "country-name": "unknown country name",
     },
     expectedResult: {
-      "country": "US",
+      country: "US",
       "country-name": "United States",
     },
   },
   {
-    description: "Has \"country-name\" and unknown \"country\"",
+    description: 'Has "country-name" and unknown "country"',
     address: {
       "given-name": "John", // Make sure it won't be an empty record.
-      "country": "AA",
+      country: "AA",
       "country-name": "united states",
     },
     expectedResult: {
-      "country": undefined,
+      country: undefined,
       "country-name": undefined,
     },
   },
   {
-    description: "Has unsupported \"country\"",
+    description: 'Has unsupported "country"',
     address: {
       "given-name": "John", // Make sure it won't be an empty record.
-      "country": "XX",
+      country: "XX",
     },
     expectedResult: {
-      "country": undefined,
+      country: undefined,
       "country-name": undefined,
     },
   },
 
   // Tel
   {
-    description: "Has \"tel\" with country code",
+    description: 'Has "tel" with country code',
     address: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
     },
     expectedResult: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
     },
   },
   {
-    description: "Has \"tel\" without country code but \"country\" is set",
+    description: 'Has "tel" without country code but "country" is set',
     address: {
-      "tel": "0212345678",
-      "country": "TW",
+      tel: "0212345678",
+      country: "TW",
     },
     expectedResult: {
-      "tel": "+886212345678",
+      tel: "+886212345678",
     },
   },
   {
-    description: "Has \"tel\" without country code and \"country\" so use \"US\" as default region",
+    description:
+      'Has "tel" without country code and "country" so use "US" as default region',
     address: {
-      "tel": "6172535702",
+      tel: "6172535702",
     },
     expectedResult: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
     },
   },
   {
-    description: "\"tel\" can't be parsed so leave it as-is",
+    description: '"tel" can\'t be parsed so leave it as-is',
     address: {
-      "tel": "12345",
+      tel: "12345",
     },
     expectedResult: {
-      "tel": "12345",
+      tel: "12345",
     },
   },
   {
-    description: "Has a valid tel-local format \"tel\"",
+    description: 'Has a valid tel-local format "tel"',
     address: {
-      "tel": "1234567",
+      tel: "1234567",
     },
     expectedResult: {
-      "tel": "1234567",
+      tel: "1234567",
     },
   },
   {
-    description: "Has \"tel-national\" and \"tel-country-code\"",
-    address: {
-      "tel-national": "0212345678",
-      "tel-country-code": "+886",
-    },
-    expectedResult: {
-      "tel": "+886212345678",
-    },
-  },
-  {
-    description: "Has \"tel-national\" and \"country\"",
-    address: {
-      "tel-national": "0212345678",
-      "country": "TW",
-    },
-    expectedResult: {
-      "tel": "+886212345678",
-    },
-  },
-  {
-    description: "Has \"tel-national\", \"tel-country-code\" and \"country\"",
+    description: 'Has "tel-national" and "tel-country-code"',
     address: {
       "tel-national": "0212345678",
       "tel-country-code": "+886",
-      "country": "US",
     },
     expectedResult: {
-      "tel": "+886212345678",
+      tel: "+886212345678",
     },
   },
   {
-    description: "Has \"tel-area-code\" and \"tel-local\"",
+    description: 'Has "tel-national" and "country"',
+    address: {
+      "tel-national": "0212345678",
+      country: "TW",
+    },
+    expectedResult: {
+      tel: "+886212345678",
+    },
+  },
+  {
+    description: 'Has "tel-national", "tel-country-code" and "country"',
+    address: {
+      "tel-national": "0212345678",
+      "tel-country-code": "+886",
+      country: "US",
+    },
+    expectedResult: {
+      tel: "+886212345678",
+    },
+  },
+  {
+    description: 'Has "tel-area-code" and "tel-local"',
     address: {
       "tel-area-code": "617",
       "tel-local": "2535702",
     },
     expectedResult: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
     },
   },
   {
-    description: "Has \"tel-area-code\", \"tel-local-prefix\" and \"tel-local-suffix\"",
+    description:
+      'Has "tel-area-code", "tel-local-prefix" and "tel-local-suffix"',
     address: {
       "tel-area-code": "617",
       "tel-local-prefix": "253",
       "tel-local-suffix": "5702",
     },
     expectedResult: {
-      "tel": "+16172535702",
+      tel: "+16172535702",
     },
   },
 ];
@@ -526,7 +531,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
 const CREDIT_CARD_COMPUTE_TESTCASES = [
   // Name
   {
-    description: "Has \"cc-name\"",
+    description: 'Has "cc-name"',
     creditCard: {
       "cc-name": "Timothy John Berners-Lee",
       "cc-number": "4929001587121045",
@@ -553,7 +558,7 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
 
   // Expiration Date
   {
-    description: "Has \"cc-exp-year\" and \"cc-exp-month\"",
+    description: 'Has "cc-exp-year" and "cc-exp-month"',
     creditCard: {
       "cc-exp-month": 12,
       "cc-exp-year": 2022,
@@ -567,7 +572,7 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"cc-exp-month\"",
+    description: 'Has only "cc-exp-month"',
     creditCard: {
       "cc-exp-month": 12,
       "cc-number": "4929001587121045",
@@ -579,7 +584,7 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"cc-exp-year\"",
+    description: 'Has only "cc-exp-year"',
     creditCard: {
       "cc-exp-year": 2022,
       "cc-number": "4929001587121045",
@@ -595,7 +600,7 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
 const CREDIT_CARD_NORMALIZE_TESTCASES = [
   // Name
   {
-    description: "Has both \"cc-name\" and the split name fields",
+    description: 'Has both "cc-name" and the split name fields',
     creditCard: {
       "cc-name": "Timothy John Berners-Lee",
       "cc-given-name": "John",
@@ -651,7 +656,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
 
   // Expiration Date
   {
-    description: "Has \"cc-exp\" formatted \"yyyy-mm\"",
+    description: 'Has "cc-exp" formatted "yyyy-mm"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "2022-12",
@@ -663,7 +668,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"yyyy/mm\"",
+    description: 'Has "cc-exp" formatted "yyyy/mm"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "2022/12",
@@ -675,7 +680,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"yyyy-m\"",
+    description: 'Has "cc-exp" formatted "yyyy-m"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "2022-3",
@@ -687,7 +692,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"yyyy/m\"",
+    description: 'Has "cc-exp" formatted "yyyy/m"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "2022/3",
@@ -699,7 +704,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"mm-yyyy\"",
+    description: 'Has "cc-exp" formatted "mm-yyyy"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "12-2022",
@@ -711,7 +716,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"mm/yyyy\"",
+    description: 'Has "cc-exp" formatted "mm/yyyy"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "12/2022",
@@ -723,7 +728,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"m-yyyy\"",
+    description: 'Has "cc-exp" formatted "m-yyyy"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "3-2022",
@@ -735,7 +740,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"m/yyyy\"",
+    description: 'Has "cc-exp" formatted "m/yyyy"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "3/2022",
@@ -747,7 +752,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"mm-yy\"",
+    description: 'Has "cc-exp" formatted "mm-yy"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "12-22",
@@ -759,7 +764,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"mm/yy\"",
+    description: 'Has "cc-exp" formatted "mm/yy"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "12/22",
@@ -771,7 +776,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"yy-mm\"",
+    description: 'Has "cc-exp" formatted "yy-mm"',
     creditCard: {
       "cc-number": "4929001587121045",
       "cc-exp": "22-12",
@@ -783,7 +788,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"yy/mm\"",
+    description: 'Has "cc-exp" formatted "yy/mm"',
     creditCard: {
       "cc-exp": "22/12",
       "cc-number": "4929001587121045",
@@ -795,7 +800,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"mmyy\"",
+    description: 'Has "cc-exp" formatted "mmyy"',
     creditCard: {
       "cc-exp": "1222",
       "cc-number": "4929001587121045",
@@ -807,7 +812,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" formatted \"yymm\"",
+    description: 'Has "cc-exp" formatted "yymm"',
     creditCard: {
       "cc-exp": "2212",
       "cc-number": "4929001587121045",
@@ -819,7 +824,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has \"cc-exp\" with spaces",
+    description: 'Has "cc-exp" with spaces',
     creditCard: {
       "cc-exp": "  2033-11  ",
       "cc-number": "4929001587121045",
@@ -831,7 +836,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has invalid \"cc-exp\"",
+    description: 'Has invalid "cc-exp"',
     creditCard: {
       "cc-number": "4111111111111111", // Make sure it won't be an empty record.
       "cc-exp": "99-9999",
@@ -842,7 +847,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has both \"cc-exp-*\" and \"cc-exp\"",
+    description: 'Has both "cc-exp-*" and "cc-exp"',
     creditCard: {
       "cc-exp": "2022-12",
       "cc-exp-month": 3,
@@ -856,7 +861,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"cc-exp-year\" and \"cc-exp\"",
+    description: 'Has only "cc-exp-year" and "cc-exp"',
     creditCard: {
       "cc-exp": "2022-12",
       "cc-exp-year": 2030,
@@ -869,7 +874,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     },
   },
   {
-    description: "Has only \"cc-exp-month\" and \"cc-exp\"",
+    description: 'Has only "cc-exp-month" and "cc-exp"',
     creditCard: {
       "cc-exp": "2022-12",
       "cc-exp-month": 3,
@@ -956,7 +961,9 @@ add_task(async function test_normalizeCreditCardFields() {
     info("Verify testcase: " + testcase.description);
 
     let guid = await profileStorage.creditCards.add(testcase.creditCard);
-    let creditCard = await profileStorage.creditCards.get(guid, {rawData: true});
+    let creditCard = await profileStorage.creditCards.get(guid, {
+      rawData: true,
+    });
     do_check_record_matches(testcase.expectedResult, creditCard);
 
     profileStorage.creditCards.remove(guid);

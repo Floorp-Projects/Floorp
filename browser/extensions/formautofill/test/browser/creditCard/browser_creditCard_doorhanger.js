@@ -3,14 +3,15 @@
 
 add_task(async function test_submit_creditCard_cancel_saving() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -25,8 +26,10 @@ add_task(async function test_submit_creditCard_cancel_saving() {
         form.querySelector("input[type=submit]").click();
       });
 
-      ok(!SpecialPowers.Services.prefs.prefHasUserValue(SYNC_USERNAME_PREF),
-         "Sync account should not exist by default");
+      ok(
+        !SpecialPowers.Services.prefs.prefHasUserValue(SYNC_USERNAME_PREF),
+        "Sync account should not exist by default"
+      );
       let cb = getDoorhangerCheckbox();
       ok(cb.hidden, "Sync checkbox should be hidden");
       await promiseShown;
@@ -37,20 +40,25 @@ add_task(async function test_submit_creditCard_cancel_saving() {
   await sleep(1000);
   let creditCards = await getCreditCards();
   is(creditCards.length, 0, "No credit card saved");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 2, "User has seen the doorhanger");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
 });
 
 add_task(async function test_submit_creditCard_saved() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
@@ -78,30 +86,38 @@ add_task(async function test_submit_creditCard_saved() {
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
   is(creditCards[0]["cc-type"], "mastercard", "Verify the cc-type field");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 2, "User has seen the doorhanger");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_submit_untouched_creditCard_form() {
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    todo(OSKeyStoreTestUtils.canTestOSKeyStoreLogin(), "Cannot test OS key store login on official builds.");
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
     return;
   }
 
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved("formautofill-storage-changed",
-                                       (subject, data) => data == "notifyUsed");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -124,27 +140,34 @@ add_task(async function test_submit_untouched_creditCard_form() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
   is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 3, "User has used autofill");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_submit_changed_subset_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let onUsed = TestUtils.topicObserved("formautofill-storage-changed",
-                                       (subject, data) => data == "notifyUsed");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -155,7 +178,9 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
 
         form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
-        form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
+        form
+          .querySelector("#cc-exp-year")
+          .setUserInput(new Date().getFullYear());
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
@@ -169,22 +194,29 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
-  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD_1["cc-name"], "name field still exists");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 2, "User has seen the doorhanger");
+  is(
+    creditCards[0]["cc-name"],
+    TEST_CREDIT_CARD_1["cc-name"],
+    "name field still exists"
+  );
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_submit_duplicate_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
@@ -194,7 +226,9 @@ add_task(async function test_submit_duplicate_creditCard_form() {
         name.setUserInput("John Doe");
         form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
-        form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
+        form
+          .querySelector("#cc-exp-year")
+          .setUserInput(new Date().getFullYear());
         form.querySelector("#cc-type").value = "visa";
 
         // Wait 1000ms before submission to make sure the input value applied
@@ -209,10 +243,17 @@ add_task(async function test_submit_duplicate_creditCard_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
-  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD_1["cc-name"], "Verify the name field");
+  is(
+    creditCards[0]["cc-name"],
+    TEST_CREDIT_CARD_1["cc-name"],
+    "Verify the name field"
+  );
   is(creditCards[0].timesUsed, 1, "timesUsed field set to 1");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 1,
-    "User neither sees the doorhanger nor uses autofill but somehow has a record in the storage");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    1,
+    "User neither sees the doorhanger nor uses autofill but somehow has a record in the storage"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
@@ -221,7 +262,8 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
@@ -232,7 +274,12 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
         form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
         // Set unnormalized year
-        form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear().toString().substr(2, 2));
+        form.querySelector("#cc-exp-year").setUserInput(
+          new Date()
+            .getFullYear()
+            .toString()
+            .substr(2, 2)
+        );
         form.querySelector("#cc-type").value = "visa";
 
         // Wait 1000ms before submission to make sure the input value applied
@@ -247,20 +294,25 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
-  is(creditCards[0]["cc-exp-year"], new Date().getFullYear(), "Verify the expiry year field");
+  is(
+    creditCards[0]["cc-exp-year"],
+    new Date().getFullYear(),
+    "Verify the expiry year field"
+  );
   await removeAllRecords();
 });
 
 add_task(async function test_submit_creditCard_never_save() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -283,26 +335,35 @@ add_task(async function test_submit_creditCard_never_save() {
 
   await sleep(1000);
   let creditCards = await getCreditCards();
-  let creditCardPref = SpecialPowers.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  let creditCardPref = SpecialPowers.getBoolPref(
+    ENABLED_AUTOFILL_CREDITCARDS_PREF
+  );
   is(creditCards.length, 0, "No credit card in storage");
   is(creditCardPref, false, "Credit card is disabled");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 2, "User has seen the doorhanger");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 });
 
 add_task(async function test_submit_creditCard_with_sync_account() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       [SYNC_USERNAME_PREF, "foo@bar.com"],
       [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
     ],
   });
 
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -320,27 +381,64 @@ add_task(async function test_submit_creditCard_with_sync_account() {
       await promiseShown;
       let cb = getDoorhangerCheckbox();
       ok(!cb.hidden, "Sync checkbox should be visible");
-      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF), false,
-         "creditCards sync should be disabled by default");
+      is(
+        SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF),
+        false,
+        "creditCards sync should be disabled by default"
+      );
 
       // Verify if the checkbox and button state is changed.
       let secondaryButton = getDoorhangerButton(SECONDARY_BUTTON);
       let menuButton = getDoorhangerButton(MENU_BUTTON);
-      is(cb.checked, false, "Checkbox state should match creditCards sync state");
-      is(secondaryButton.disabled, false, "Not saving button should be enabled");
-      is(menuButton.disabled, false, "Never saving menu button should be enabled");
+      is(
+        cb.checked,
+        false,
+        "Checkbox state should match creditCards sync state"
+      );
+      is(
+        secondaryButton.disabled,
+        false,
+        "Not saving button should be enabled"
+      );
+      is(
+        menuButton.disabled,
+        false,
+        "Never saving menu button should be enabled"
+      );
       // Click the checkbox to enable credit card sync.
       cb.click();
-      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF), true,
-         "creditCards sync should be enabled after checked");
-      is(secondaryButton.disabled, true, "Not saving button should be disabled");
-      is(menuButton.disabled, true, "Never saving menu button should be disabled");
+      is(
+        SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF),
+        true,
+        "creditCards sync should be enabled after checked"
+      );
+      is(
+        secondaryButton.disabled,
+        true,
+        "Not saving button should be disabled"
+      );
+      is(
+        menuButton.disabled,
+        true,
+        "Never saving menu button should be disabled"
+      );
       // Click the checkbox again to disable credit card sync.
       cb.click();
-      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF), false,
-         "creditCards sync should be disabled after unchecked");
-      is(secondaryButton.disabled, false, "Not saving button should be enabled again");
-      is(menuButton.disabled, false, "Never saving menu button should be enabled again");
+      is(
+        SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF),
+        false,
+        "creditCards sync should be disabled after unchecked"
+      );
+      is(
+        secondaryButton.disabled,
+        false,
+        "Not saving button should be enabled again"
+      );
+      is(
+        menuButton.disabled,
+        false,
+        "Never saving menu button should be enabled again"
+      );
       await clickDoorhangerButton(SECONDARY_BUTTON);
     }
   );
@@ -348,17 +446,20 @@ add_task(async function test_submit_creditCard_with_sync_account() {
 
 add_task(async function test_submit_creditCard_with_synced_already() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
+    set: [
       [SYNC_CREDITCARDS_PREF, true],
       [SYNC_USERNAME_PREF, "foo@bar.com"],
       [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
     ],
   });
 
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -383,19 +484,22 @@ add_task(async function test_submit_creditCard_with_synced_already() {
 
 add_task(async function test_submit_manual_mergeable_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_3);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let onUsed = TestUtils.topicObserved("formautofill-storage-changed",
-                                       (subject, data) => data == "notifyUsed");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let name = form.querySelector("#cc-name");
@@ -419,32 +523,42 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 3", "Verify the name field");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 2, "User has seen the doorhanger");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    2,
+    "User has seen the doorhanger"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_update_autofill_form_name() {
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    todo(OSKeyStoreTestUtils.canTestOSKeyStoreLogin(), "Cannot test OS key store login on official builds.");
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
     return;
   }
 
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved("formautofill-storage-changed",
-                                       (subject, data) => data == "notifyUsed");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -472,33 +586,47 @@ add_task(async function test_update_autofill_form_name() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
   is(creditCards[0]["cc-name"], "User 1", "cc-name field is updated");
-  is(creditCards[0]["cc-number"], "************1111", "Verify the card number field");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 3, "User has used autofill");
+  is(
+    creditCards[0]["cc-number"],
+    "************1111",
+    "Verify the card number field"
+  );
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_update_autofill_form_exp_date() {
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    todo(OSKeyStoreTestUtils.canTestOSKeyStoreLogin(), "Cannot test OS key store login on official builds.");
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
     return;
   }
 
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved("formautofill-storage-changed",
-                                       (subject, data) => data == "notifyUsed");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -527,31 +655,43 @@ add_task(async function test_update_autofill_form_exp_date() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
   is(creditCards[0]["cc-exp-year"], "2020", "cc-exp-year field is updated");
-  is(creditCards[0]["cc-number"], "************1111", "Verify the card number field");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 3, "User has used autofill");
+  is(
+    creditCards[0]["cc-number"],
+    "************1111",
+    "Verify the card number field"
+  );
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_create_new_autofill_form() {
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    todo(OSKeyStoreTestUtils.canTestOSKeyStoreLogin(), "Cannot test OS key store login on official builds.");
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
     return;
   }
 
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -580,24 +720,32 @@ add_task(async function test_create_new_autofill_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit cards in storage");
-  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD_1["cc-name"],
-     "Original record's cc-name field is unchanged");
+  is(
+    creditCards[0]["cc-name"],
+    TEST_CREDIT_CARD_1["cc-name"],
+    "Original record's cc-name field is unchanged"
+  );
   is(creditCards[1]["cc-name"], "User 1", "cc-name field in the new record");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 3, "User has used autofill");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    3,
+    "User has used autofill"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_update_duplicate_autofill_form() {
   if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    todo(OSKeyStoreTestUtils.canTestOSKeyStoreLogin(), "Cannot test OS key store login on official builds.");
+    todo(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
     return;
   }
 
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      [CREDITCARDS_USED_STATUS_PREF, 0],
-    ],
+    set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
   await saveCreditCard({
     "cc-number": "6387060366272981",
@@ -608,9 +756,12 @@ add_task(async function test_update_duplicate_autofill_form() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit card in storage");
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  let onUsed = TestUtils.topicObserved("formautofill-storage-changed",
-                                       (subject, data) => data == "notifyUsed");
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  let onUsed = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) => data == "notifyUsed"
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
       await openPopupOn(browser, "form #cc-number");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -641,17 +792,23 @@ add_task(async function test_update_duplicate_autofill_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 2, "Still 2 credit card");
-  is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 1,
-    "User neither sees the doorhanger nor uses autofill but somehow has a record in the storage");
+  is(
+    SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF),
+    1,
+    "User neither sees the doorhanger nor uses autofill but somehow has a record in the storage"
+  );
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
 
 add_task(async function test_submit_creditCard_with_invalid_network() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "popupshown");
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
       let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
@@ -678,9 +835,12 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 1", "Verify the name field");
-  is(creditCards[0]["cc-type"], undefined, "Invalid network/cc-type was not saved");
+  is(
+    creditCards[0]["cc-type"],
+    undefined,
+    "Invalid network/cc-type was not saved"
+  );
 
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
 });
-

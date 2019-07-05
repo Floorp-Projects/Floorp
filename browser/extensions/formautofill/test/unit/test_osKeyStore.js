@@ -8,7 +8,9 @@ let OSKeyStore;
 add_task(async function setup() {
   Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
 
-  ({OSKeyStore} = ChromeUtils.import("resource://formautofill/OSKeyStore.jsm"));
+  ({ OSKeyStore } = ChromeUtils.import(
+    "resource://formautofill/OSKeyStore.jsm"
+  ));
 });
 
 // Ensure that the appropriate initialization has happened.
@@ -30,8 +32,10 @@ add_task(async function test_encrypt_decrypt() {
 add_task(async function test_reauth() {
   let canTest = OSKeyStoreTestUtils.canTestOSKeyStoreLogin();
   if (!canTest) {
-    todo_check_true(canTest,
-      "test_reauth: Cannot test OS key store login on official builds.");
+    todo_check_true(
+      canTest,
+      "test_reauth: Cannot test OS key store login on official builds."
+    );
     return;
   }
 
@@ -48,7 +52,11 @@ add_task(async function test_reauth() {
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
-  Assert.equal(await OSKeyStore.ensureLoggedIn(true), false, "Reauth cancelled.");
+  Assert.equal(
+    await OSKeyStore.ensureLoggedIn(true),
+    false,
+    "Reauth cancelled."
+  );
   await reauthObserved;
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
@@ -59,12 +67,19 @@ add_task(async function test_reauth() {
 
   reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
   await new Promise(resolve => TestUtils.executeSoon(resolve));
-  Assert.equal(await OSKeyStore.ensureLoggedIn(true), true, "Reauth logged in.");
+  Assert.equal(
+    await OSKeyStore.ensureLoggedIn(true),
+    true,
+    "Reauth logged in."
+  );
   await reauthObserved;
 
   Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", false);
-  Assert.equal(await OSKeyStore.ensureLoggedIn(true), true,
-               "Reauth disabled so logged in without prompt");
+  Assert.equal(
+    await OSKeyStore.ensureLoggedIn(true),
+    true,
+    "Reauth disabled so logged in without prompt"
+  );
   Services.prefs.setBoolPref("extensions.formautofill.reauth.enabled", true);
 });
 

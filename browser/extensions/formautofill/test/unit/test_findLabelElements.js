@@ -2,7 +2,9 @@
 
 var LabelUtils;
 add_task(async function() {
-  ({LabelUtils} = ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm"));
+  ({ LabelUtils } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillHeuristics.jsm"
+  ));
 });
 
 const TESTCASES = [
@@ -27,14 +29,14 @@ const TESTCASES = [
     expectedLabelIds: ["labelB"],
   },
   {
-    description: "\"for\" attribute used to indicate input by one label.",
+    description: '"for" attribute used to indicate input by one label.',
     document: `<label id="labelC" for="typeC">label type C</label>
                <input id="typeC" type="text">`,
     inputId: "typeC",
     expectedLabelIds: ["labelC"],
   },
   {
-    description: "\"for\" attribute used to indicate input by multiple labels.",
+    description: '"for" attribute used to indicate input by multiple labels.',
     document: `<form>
                  <label id="labelD1" for="typeD">label type D1</label>
                  <label id="labelD2" for="typeD">label type D2</label>
@@ -45,7 +47,8 @@ const TESTCASES = [
     expectedLabelIds: ["labelD1", "labelD2", "labelD3"],
   },
   {
-    description: "\"for\" attribute used to indicate input by multiple labels with space prefix/postfix.",
+    description:
+      '"for" attribute used to indicate input by multiple labels with space prefix/postfix.',
     document: `<label id="labelE1" for="typeE">label type E1</label>
                <label id="labelE2" for="typeE  ">label type E2</label>
                <label id="labelE3" for="  TYPEe">label type E3</label>
@@ -66,7 +69,8 @@ const TESTCASES = [
     expectedLabelIds: ["labelF"],
   },
   {
-    description: "\"for\" attribute used to indicate input by labels out of the form.",
+    description:
+      '"for" attribute used to indicate input by labels out of the form.',
     document: `<label id="labelG1" for="typeG">label type G1</label>
                <form>
                  <label id="labelG2" for="typeG">label type G2</label>
@@ -83,7 +87,9 @@ TESTCASES.forEach(testcase => {
     info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(
-      "http://localhost:8080/test/", testcase.document);
+      "http://localhost:8080/test/",
+      testcase.document
+    );
 
     let input = doc.getElementById(testcase.inputId);
     let labels = LabelUtils.findLabelElements(input);

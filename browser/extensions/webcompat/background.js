@@ -17,7 +17,7 @@ function getOverrideOrInterventionById(id) {
   })) {
     for (const what of things) {
       if (what.id === id) {
-        return {type, what};
+        return { type, what };
       }
     }
   }
@@ -40,51 +40,62 @@ const portsToAboutCompatTabs = (function() {
     }
   }
 
-  return {broadcast};
-}());
+  return { broadcast };
+})();
 
 function filterOverrides(overrides) {
-  return overrides.filter(override => override.availableOnPlatform).map(override => {
-    const {id, active, bug, domain} = override;
-    return {id, active, bug, domain};
-  });
+  return overrides
+    .filter(override => override.availableOnPlatform)
+    .map(override => {
+      const { id, active, bug, domain } = override;
+      return { id, active, bug, domain };
+    });
 }
 
 browser.runtime.onMessage.addListener(msg => {
   switch (msg.command || msg) {
     case "toggle": {
       const id = msg.id;
-      const {type, what} = getOverrideOrInterventionById(id);
+      const { type, what } = getOverrideOrInterventionById(id);
       if (!what) {
-        return Promise.reject(`No such override or intervention to toggle: ${id}`);
+        return Promise.reject(
+          `No such override or intervention to toggle: ${id}`
+        );
       }
-      portsToAboutCompatTabs.broadcast({toggling: id, active: what.active}).then(async () => {
-        switch (type) {
-          case "interventions": {
-            if (what.active) {
-              await disableInjection(what);
-            } else {
-              await enableInjection(what);
+      portsToAboutCompatTabs
+        .broadcast({ toggling: id, active: what.active })
+        .then(async () => {
+          switch (type) {
+            case "interventions": {
+              if (what.active) {
+                await disableInjection(what);
+              } else {
+                await enableInjection(what);
+              }
+              break;
             }
-            break;
-          }
-          case "overrides": {
-            if (what.active) {
-              await disableOverride(what);
-            } else {
-              await enableOverride(what);
+            case "overrides": {
+              if (what.active) {
+                await disableOverride(what);
+              } else {
+                await enableOverride(what);
+              }
+              break;
             }
-            break;
           }
-        }
-        portsToAboutCompatTabs.broadcast({toggled: id, active: what.active});
-      });
+          portsToAboutCompatTabs.broadcast({
+            toggled: id,
+            active: what.active,
+          });
+        });
       break;
     }
     case "getOverridesAndInterventions": {
       return Promise.resolve({
-        overrides: UAOverridesEnabled && filterOverrides(UAOverrides) || false,
-        interventions: InjectionsEnabled && filterOverrides(Injections) || false,
+        overrides:
+          (UAOverridesEnabled && filterOverrides(UAOverrides)) || false,
+        interventions:
+          (InjectionsEnabled && filterOverrides(Injections)) || false,
       });
     }
   }
