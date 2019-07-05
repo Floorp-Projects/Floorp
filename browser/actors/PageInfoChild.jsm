@@ -4,10 +4,14 @@
 
 var EXPORTED_SYMBOLS = ["PageInfoChild"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -31,9 +35,11 @@ class PageInfoChild extends ActorChild {
 
     let document = window.document;
 
-    let pageInfoData = {metaViewRows: this.getMetaInfo(document),
-                        docInfo: this.getDocumentInfo(document),
-                        windowInfo: this.getWindowInfo(window)};
+    let pageInfoData = {
+      metaViewRows: this.getMetaInfo(document),
+      docInfo: this.getDocumentInfo(document),
+      windowInfo: this.getWindowInfo(window),
+    };
 
     message.target.sendAsyncMessage("PageInfo:data", pageInfoData);
 
@@ -48,8 +54,12 @@ class PageInfoChild extends ActorChild {
     let metaNodes = document.getElementsByTagName("meta");
 
     for (let metaNode of metaNodes) {
-      metaViewRows.push([metaNode.name || metaNode.httpEquiv || metaNode.getAttribute("property"),
-                        metaNode.content]);
+      metaViewRows.push([
+        metaNode.name ||
+          metaNode.httpEquiv ||
+          metaNode.getAttribute("property"),
+        metaNode.content,
+      ]);
     }
 
     return metaViewRows;
@@ -62,7 +72,7 @@ class PageInfoChild extends ActorChild {
     let hostName = null;
     try {
       hostName = Services.io.newURI(window.location.href).displayHost;
-    } catch (exception) { }
+    } catch (exception) {}
 
     windowInfo.hostName = hostName;
     return windowInfo;
@@ -73,14 +83,16 @@ class PageInfoChild extends ActorChild {
     docInfo.title = document.title;
     docInfo.location = document.location.toString();
     try {
-      docInfo.location = Services.io.newURI(document.location.toString()).displaySpec;
-    } catch (exception) { }
+      docInfo.location = Services.io.newURI(
+        document.location.toString()
+      ).displaySpec;
+    } catch (exception) {}
     docInfo.referrer = document.referrer;
     try {
       if (document.referrer) {
         docInfo.referrer = Services.io.newURI(document.referrer).displaySpec;
       }
-    } catch (exception) { }
+    } catch (exception) {}
     docInfo.compatMode = document.compatMode;
     docInfo.contentType = document.contentType;
     docInfo.characterSet = document.characterSet;
@@ -91,7 +103,9 @@ class PageInfoChild extends ActorChild {
     documentURIObject.spec = document.documentURIObject.spec;
     docInfo.documentURIObject = documentURIObject;
 
-    docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(document.ownerGlobal);
+    docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(
+      document.ownerGlobal
+    );
 
     return docInfo;
   }
@@ -108,8 +122,9 @@ class PageInfoChild extends ActorChild {
       let num = window.frames.length;
       for (let i = 0; i < num; i++) {
         // Recurse through the frames.
-        frameList = frameList.concat(this.goThroughFrames(window.frames[i].document,
-                                              window.frames[i]));
+        frameList = frameList.concat(
+          this.goThroughFrames(window.frames[i].document, window.frames[i])
+        );
       }
     }
     return frameList;
@@ -123,11 +138,17 @@ class PageInfoChild extends ActorChild {
 
       // Goes through all the elements on the doc. imageViewRows takes only the media elements.
       while (iterator.nextNode()) {
-        let mediaItems = this.getMediaItems(document, strings, iterator.currentNode);
+        let mediaItems = this.getMediaItems(
+          document,
+          strings,
+          iterator.currentNode
+        );
 
         if (mediaItems.length) {
-          mm.sendAsyncMessage("PageInfo:mediaData",
-                           {mediaItems, isComplete: false});
+          mm.sendAsyncMessage("PageInfo:mediaData", {
+            mediaItems,
+            isComplete: false,
+          });
         }
 
         if (++nodeCount % 500 == 0) {
@@ -137,7 +158,7 @@ class PageInfoChild extends ActorChild {
       }
     }
     // Send that page info media fetching has finished.
-    mm.sendAsyncMessage("PageInfo:mediaData", {isComplete: true});
+    mm.sendAsyncMessage("PageInfo:mediaData", { isComplete: true });
   }
 
   getMediaItems(document, strings, elem) {
@@ -149,7 +170,14 @@ class PageInfoChild extends ActorChild {
     let content = document.ownerGlobal;
 
     let addImage = (url, type, alt, el, isBg) => {
-      let element = this.serializeElementInfo(document, url, type, alt, el, isBg);
+      let element = this.serializeElementInfo(
+        document,
+        url,
+        type,
+        alt,
+        el,
+        isBg
+      );
       mediaItems.push([url, type, alt, element, isBg]);
     };
 
@@ -164,25 +192,43 @@ class PageInfoChild extends ActorChild {
       //
       // If you don't care about the message you can also pass "all" here and
       // get all the ones the browser knows about.
-      addImgFunc(strings.mediaBGImg, computedStyle.getCSSImageURLs("background-image"));
-      addImgFunc(strings.mediaBorderImg, computedStyle.getCSSImageURLs("border-image-source"));
-      addImgFunc(strings.mediaListImg, computedStyle.getCSSImageURLs("list-style-image"));
+      addImgFunc(
+        strings.mediaBGImg,
+        computedStyle.getCSSImageURLs("background-image")
+      );
+      addImgFunc(
+        strings.mediaBorderImg,
+        computedStyle.getCSSImageURLs("border-image-source")
+      );
+      addImgFunc(
+        strings.mediaListImg,
+        computedStyle.getCSSImageURLs("list-style-image")
+      );
       addImgFunc(strings.mediaCursor, computedStyle.getCSSImageURLs("cursor"));
     }
 
     // One swi^H^H^Hif-else to rule them all.
     if (elem instanceof content.HTMLImageElement) {
-      addImage(elem.src, strings.mediaImg,
-               (elem.hasAttribute("alt")) ? elem.alt : strings.notSet, elem, false);
+      addImage(
+        elem.src,
+        strings.mediaImg,
+        elem.hasAttribute("alt") ? elem.alt : strings.notSet,
+        elem,
+        false
+      );
     } else if (elem instanceof content.SVGImageElement) {
       try {
         // Note: makeURLAbsolute will throw if either the baseURI is not a valid URI
         //       or the URI formed from the baseURI and the URL is not a valid URI.
         if (elem.href.baseVal) {
-          let href = Services.io.newURI(elem.href.baseVal, null, Services.io.newURI(elem.baseURI)).spec;
+          let href = Services.io.newURI(
+            elem.href.baseVal,
+            null,
+            Services.io.newURI(elem.baseURI)
+          ).spec;
           addImage(href, strings.mediaImg, "", elem, false);
         }
-      } catch (e) { }
+      } catch (e) {}
     } else if (elem instanceof content.HTMLVideoElement) {
       addImage(elem.currentSrc, strings.mediaVideo, "", elem, false);
     } else if (elem instanceof content.HTMLAudioElement) {
@@ -191,13 +237,27 @@ class PageInfoChild extends ActorChild {
       if (elem.rel && /\bicon\b/i.test(elem.rel)) {
         addImage(elem.href, strings.mediaLink, "", elem, false);
       }
-    } else if (elem instanceof content.HTMLInputElement || elem instanceof content.HTMLButtonElement) {
+    } else if (
+      elem instanceof content.HTMLInputElement ||
+      elem instanceof content.HTMLButtonElement
+    ) {
       if (elem.type.toLowerCase() == "image") {
-        addImage(elem.src, strings.mediaInput,
-                 (elem.hasAttribute("alt")) ? elem.alt : strings.notSet, elem, false);
+        addImage(
+          elem.src,
+          strings.mediaInput,
+          elem.hasAttribute("alt") ? elem.alt : strings.notSet,
+          elem,
+          false
+        );
       }
     } else if (elem instanceof content.HTMLObjectElement) {
-      addImage(elem.data, strings.mediaObject, this.getValueText(elem), elem, false);
+      addImage(
+        elem.data,
+        strings.mediaObject,
+        this.getValueText(elem),
+        elem,
+        false
+      );
     } else if (elem instanceof content.HTMLEmbedElement) {
       addImage(elem.src, strings.mediaEmbed, "", elem, false);
     }
@@ -215,9 +275,11 @@ class PageInfoChild extends ActorChild {
     let content = document.ownerGlobal;
 
     let imageText;
-    if (!isBG &&
-        !(item instanceof content.SVGImageElement) &&
-        !(document instanceof content.ImageDocument)) {
+    if (
+      !isBG &&
+      !(item instanceof content.SVGImageElement) &&
+      !(document instanceof content.ImageDocument)
+    ) {
       imageText = item.title || item.alt;
 
       if (!imageText && !(item instanceof content.HTMLImageElement)) {
@@ -229,18 +291,28 @@ class PageInfoChild extends ActorChild {
     result.longDesc = item.longDesc;
     result.numFrames = 1;
 
-    if (item instanceof content.HTMLObjectElement ||
+    if (
+      item instanceof content.HTMLObjectElement ||
       item instanceof content.HTMLEmbedElement ||
-      item instanceof content.HTMLLinkElement) {
+      item instanceof content.HTMLLinkElement
+    ) {
       result.mimeType = item.type;
     }
 
-    if (!result.mimeType && !isBG && item instanceof Ci.nsIImageLoadingContent) {
+    if (
+      !result.mimeType &&
+      !isBG &&
+      item instanceof Ci.nsIImageLoadingContent
+    ) {
       // Interface for image loading content.
-      let imageRequest = item.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+      let imageRequest = item.getRequest(
+        Ci.nsIImageLoadingContent.CURRENT_REQUEST
+      );
       if (imageRequest) {
         result.mimeType = imageRequest.mimeType;
-        let image = !(imageRequest.imageStatus & imageRequest.STATUS_ERROR) && imageRequest.image;
+        let image =
+          !(imageRequest.imageStatus & imageRequest.STATUS_ERROR) &&
+          imageRequest.image;
         if (image) {
           result.numFrames = image.numFrames;
         }
@@ -250,8 +322,9 @@ class PageInfoChild extends ActorChild {
     // If we have a data url, get the MIME type from the url.
     if (!result.mimeType && url.startsWith("data:")) {
       let dataMimeType = /^data:(image\/[^;,]+)/i.exec(url);
-      if (dataMimeType)
+      if (dataMimeType) {
         result.mimeType = dataMimeType[1].toLowerCase();
+      }
     }
 
     result.HTMLLinkElement = item instanceof content.HTMLLinkElement;
@@ -296,9 +369,11 @@ class PageInfoChild extends ActorChild {
     let content = node.ownerGlobal;
 
     // Form input elements don't generally contain information that is useful to our callers, so return nothing.
-    if (node instanceof content.HTMLInputElement ||
-        node instanceof content.HTMLSelectElement ||
-        node instanceof content.HTMLTextAreaElement) {
+    if (
+      node instanceof content.HTMLInputElement ||
+      node instanceof content.HTMLSelectElement ||
+      node instanceof content.HTMLTextAreaElement
+    ) {
       return valueText;
     }
 
@@ -336,7 +411,8 @@ class PageInfoChild extends ActorChild {
     }
     let length = node.childNodes.length;
     for (let i = 0; i < length; i++) {
-      if ((altText = this.getAltText(node.childNodes[i]) != undefined)) { // stupid js warning...
+      if ((altText = this.getAltText(node.childNodes[i]) != undefined)) {
+        // stupid js warning...
         return altText;
       }
     }

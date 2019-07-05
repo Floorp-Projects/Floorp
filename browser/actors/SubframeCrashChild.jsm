@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["SubframeCrashChild"];
 
-let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class SubframeCrashChild extends JSWindowActorChild {
   receiveMessage(message) {

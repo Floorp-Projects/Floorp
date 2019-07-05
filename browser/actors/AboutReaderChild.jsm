@@ -6,14 +6,25 @@
 
 var EXPORTED_SYMBOLS = ["AboutReaderChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AboutReader",
-                               "resource://gre/modules/AboutReader.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderMode",
-                               "resource://gre/modules/ReaderMode.jsm");
-ChromeUtils.defineModuleGetter(this, "Readerable",
-                               "resource://gre/modules/Readerable.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutReader",
+  "resource://gre/modules/AboutReader.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Readerable",
+  "resource://gre/modules/Readerable.jsm"
+);
 
 class AboutReaderChild extends ActorChild {
   constructor(dispatcher) {
@@ -27,7 +38,9 @@ class AboutReaderChild extends ActorChild {
     switch (message.name) {
       case "Reader:ToggleReaderMode":
         if (!this.isAboutReader) {
-          this._articlePromise = ReaderMode.parseDocument(this.content.document).catch(Cu.reportError);
+          this._articlePromise = ReaderMode.parseDocument(
+            this.content.document
+          ).catch(Cu.reportError);
           ReaderMode.enterReaderMode(this.mm.docShell, this.content);
         } else {
           this._isLeavingReaderableReaderMode = this.isReaderableAboutReader;
@@ -49,8 +62,10 @@ class AboutReaderChild extends ActorChild {
   }
 
   get isReaderableAboutReader() {
-    return this.isAboutReader &&
-      !this.content.document.documentElement.dataset.isError;
+    return (
+      this.isAboutReader &&
+      !this.content.document.documentElement.dataset.isError
+    );
   }
 
   handleEvent(aEvent) {
@@ -77,7 +92,9 @@ class AboutReaderChild extends ActorChild {
         // this._isLeavingReaderableReaderMode is used here to keep the Reader Mode icon
         // visible in the location bar when transitioning from reader-mode page
         // back to the readable source page.
-        this.mm.sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: this._isLeavingReaderableReaderMode });
+        this.mm.sendAsyncMessage("Reader:UpdateReaderButton", {
+          isArticle: this._isLeavingReaderableReaderMode,
+        });
         if (this._isLeavingReaderableReaderMode) {
           this._isLeavingReaderableReaderMode = false;
         }
@@ -103,9 +120,13 @@ class AboutReaderChild extends ActorChild {
    * painted is not going to work.
    */
   updateReaderButton(forceNonArticle) {
-    if (!Readerable.isEnabledForParseOnLoad || this.isAboutReader ||
-        !this.content || !(this.content.document instanceof this.content.HTMLDocument) ||
-        this.content.document.mozSyntheticDocument) {
+    if (
+      !Readerable.isEnabledForParseOnLoad ||
+      this.isAboutReader ||
+      !this.content ||
+      !(this.content.document instanceof this.content.HTMLDocument) ||
+      this.content.document.mozSyntheticDocument
+    ) {
       return;
     }
 
@@ -114,7 +135,10 @@ class AboutReaderChild extends ActorChild {
 
   cancelPotentialPendingReadabilityCheck() {
     if (this._pendingReadabilityCheck) {
-      this.mm.removeEventListener("MozAfterPaint", this._pendingReadabilityCheck);
+      this.mm.removeEventListener(
+        "MozAfterPaint",
+        this._pendingReadabilityCheck
+      );
       delete this._pendingReadabilityCheck;
     }
   }
@@ -125,7 +149,10 @@ class AboutReaderChild extends ActorChild {
       // if forceNonArticle was true or false last time.
       this.cancelPotentialPendingReadabilityCheck();
     }
-    this._pendingReadabilityCheck = this.onPaintWhenWaitedFor.bind(this, forceNonArticle);
+    this._pendingReadabilityCheck = this.onPaintWhenWaitedFor.bind(
+      this,
+      forceNonArticle
+    );
     this.mm.addEventListener("MozAfterPaint", this._pendingReadabilityCheck);
   }
 
@@ -143,9 +170,13 @@ class AboutReaderChild extends ActorChild {
     // Only send updates when there are articles; there's no point updating with
     // |false| all the time.
     if (Readerable.isProbablyReaderable(this.content.document)) {
-      this.mm.sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
+      this.mm.sendAsyncMessage("Reader:UpdateReaderButton", {
+        isArticle: true,
+      });
     } else if (forceNonArticle) {
-      this.mm.sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
+      this.mm.sendAsyncMessage("Reader:UpdateReaderButton", {
+        isArticle: false,
+      });
     }
   }
 }

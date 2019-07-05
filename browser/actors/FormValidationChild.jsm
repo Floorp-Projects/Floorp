@@ -10,9 +10,13 @@
 
 var EXPORTED_SYMBOLS = ["FormValidationChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {BrowserUtils} = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { BrowserUtils } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class FormValidationChild extends ActorChild {
   constructor(dispatcher) {
@@ -61,10 +65,14 @@ class FormValidationChild extends ActorChild {
         return;
       }
 
-      if (!(ChromeUtils.getClassName(element) === "HTMLInputElement" ||
-            ChromeUtils.getClassName(element) === "HTMLTextAreaElement" ||
-            ChromeUtils.getClassName(element) === "HTMLSelectElement" ||
-            ChromeUtils.getClassName(element) === "HTMLButtonElement")) {
+      if (
+        !(
+          ChromeUtils.getClassName(element) === "HTMLInputElement" ||
+          ChromeUtils.getClassName(element) === "HTMLTextAreaElement" ||
+          ChromeUtils.getClassName(element) === "HTMLSelectElement" ||
+          ChromeUtils.getClassName(element) === "HTMLButtonElement"
+        )
+      ) {
         continue;
       }
 
@@ -152,14 +160,17 @@ class FormValidationChild extends ActorChild {
     // and where the content begin for the other elements.
     let offset = 0;
 
-    if (aElement.tagName == "INPUT" &&
-        (aElement.type == "radio" || aElement.type == "checkbox")) {
+    if (
+      aElement.tagName == "INPUT" &&
+      (aElement.type == "radio" || aElement.type == "checkbox")
+    ) {
       panelData.position = "bottomcenter topleft";
     } else {
       let win = aElement.ownerGlobal;
       let style = win.getComputedStyle(aElement);
       if (style.direction == "rtl") {
-        offset = parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
+        offset =
+          parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
       } else {
         offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);
       }
@@ -179,7 +190,9 @@ class FormValidationChild extends ActorChild {
       return true;
     }
     let target = aEvent.originalTarget;
-    return (target == this.content.document ||
-            (target.ownerDocument && target.ownerDocument == this.content.document));
+    return (
+      target == this.content.document ||
+      (target.ownerDocument && target.ownerDocument == this.content.document)
+    );
   }
 }

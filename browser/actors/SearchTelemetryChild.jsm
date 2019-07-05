@@ -5,8 +5,10 @@
 
 var EXPORTED_SYMBOLS = ["SearchTelemetryChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SHARED_DATA_KEY = "SearchTelemetry:ProviderInfo";
 
@@ -91,8 +93,8 @@ class SearchTelemetryChild extends ActorChild {
    *   of provider name and the provider information.
    */
   _getProviderInfoForUrl(url) {
-    return Object.entries(searchProviders.info || []).find(
-      ([_, info]) => info.regexp.test(url)
+    return Object.entries(searchProviders.info || []).find(([_, info]) =>
+      info.regexp.test(url)
     );
   }
 
