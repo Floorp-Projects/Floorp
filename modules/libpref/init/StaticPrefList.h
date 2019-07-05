@@ -2409,6 +2409,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  Live,
+  "privacy.file_unique_origin",
+   privacy_file_unique_origin,
+  bool, true
+)
+
 // Annotate trackers using the strict list. If set to false, the basic list will
 // be used instead.
 #ifdef EARLY_BETA_OR_EARLIER

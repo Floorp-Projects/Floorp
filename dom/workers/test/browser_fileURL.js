@@ -7,6 +7,10 @@ const WORKER_BODY = "postMessage(42);\n";
 
 // file:// tests.
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.file_unique_origin", false]],
+  });
+
   info("Creating the tmp directory.");
   let parent = Cc["@mozilla.org/file/directory_service;1"]
                  .getService(Ci.nsIDirectoryService)
