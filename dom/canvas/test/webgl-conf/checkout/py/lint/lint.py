@@ -157,7 +157,7 @@ def check_regexp_line(path, f):
 
 def output_errors(errors):
     for error_type, error, line_number in errors:
-        print "%s: %s" % (error_type, error)
+        print("{}: {}".format(error_type, error))
 
 
 def output_error_count(error_count):
@@ -167,9 +167,9 @@ def output_error_count(error_count):
     by_type = " ".join("%s: %d" % item for item in error_count.iteritems())
     count = sum(error_count.values())
     if count == 1:
-        print "There was 1 error (%s)" % (by_type,)
+        print("There was 1 error ({})".format(by_type))
     else:
-        print "There were %d errors (%s)" % (count, by_type)
+        print("There were {} errors ({})".format(count, by_type))
 
 
 def main():
