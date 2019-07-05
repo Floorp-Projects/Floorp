@@ -2402,33 +2402,35 @@ bool NS_RelaxStrictFileOriginPolicy(nsIURI* aTargetURI, nsIURI* aSourceURI,
     return false;
   }
 
-  //
-  // If the file to be loaded is in a subdirectory of the source
-  // (or same-dir if source is not a directory) then it will
-  // inherit its source principal and be scriptable by that source.
-  //
-  bool sourceIsDir;
-  bool allowed = false;
-  nsresult rv = sourceFile->IsDirectory(&sourceIsDir);
-  if (NS_SUCCEEDED(rv) && sourceIsDir) {
-    rv = sourceFile->Contains(targetFile, &allowed);
-  } else {
-    nsCOMPtr<nsIFile> sourceParent;
-    rv = sourceFile->GetParent(getter_AddRefs(sourceParent));
-    if (NS_SUCCEEDED(rv) && sourceParent) {
-      rv = sourceParent->Equals(targetFile, &allowed);
-      if (NS_FAILED(rv) || !allowed) {
-        rv = sourceParent->Contains(targetFile, &allowed);
-      } else {
-        MOZ_ASSERT(aAllowDirectoryTarget,
-                   "sourceFile->Parent == targetFile, but targetFile "
-                   "should've been disallowed if it is a directory");
+  if (!StaticPrefs::privacy_file_unique_origin()) {
+    //
+    // If the file to be loaded is in a subdirectory of the source
+    // (or same-dir if source is not a directory) then it will
+    // inherit its source principal and be scriptable by that source.
+    //
+    bool sourceIsDir;
+    bool allowed = false;
+    nsresult rv = sourceFile->IsDirectory(&sourceIsDir);
+    if (NS_SUCCEEDED(rv) && sourceIsDir) {
+      rv = sourceFile->Contains(targetFile, &allowed);
+    } else {
+      nsCOMPtr<nsIFile> sourceParent;
+      rv = sourceFile->GetParent(getter_AddRefs(sourceParent));
+      if (NS_SUCCEEDED(rv) && sourceParent) {
+        rv = sourceParent->Equals(targetFile, &allowed);
+        if (NS_FAILED(rv) || !allowed) {
+          rv = sourceParent->Contains(targetFile, &allowed);
+        } else {
+          MOZ_ASSERT(aAllowDirectoryTarget,
+                     "sourceFile->Parent == targetFile, but targetFile "
+                     "should've been disallowed if it is a directory");
+        }
       }
     }
-  }
 
-  if (NS_SUCCEEDED(rv) && allowed) {
-    return true;
+    if (NS_SUCCEEDED(rv) && allowed) {
+      return true;
+    }
   }
 
   return false;
