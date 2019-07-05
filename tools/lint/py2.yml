@@ -22,7 +22,6 @@ py2:
         - nsprpub
         - other-licenses
         - python/devtools
-        - python/mach
         - security
         - servo
         - taskcluster/docker/funsize-update-generator
