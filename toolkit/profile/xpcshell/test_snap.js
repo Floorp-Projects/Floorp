@@ -15,11 +15,13 @@ add_task(async () => {
   writeCompatibilityIni(defaultProfile, greDir, greDir);
 
   writeProfilesIni({
-    profiles: [{
-      name: PROFILE_DEFAULT,
-      path: defaultProfile.leafName,
-      default: true,
-    }],
+    profiles: [
+      {
+        name: PROFILE_DEFAULT,
+        path: defaultProfile.leafName,
+        default: true,
+      },
+    ],
   });
 
   simulateSnapEnvironment();
@@ -30,19 +32,36 @@ add_task(async () => {
   let profileData = readProfilesIni();
   let installsINI = gDataHome.clone();
   installsINI.append("installs.ini");
-  Assert.ok(!installsINI.exists(), "Installs database should not have been created.");
+  Assert.ok(
+    !installsINI.exists(),
+    "Installs database should not have been created."
+  );
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
-  Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
+  Assert.ok(
+    profileData.options.startWithLastProfile,
+    "Should be set to start with the last profile."
+  );
+  Assert.equal(
+    profileData.profiles.length,
+    1,
+    "Should have the right number of profiles."
+  );
 
   let profile = profileData.profiles[0];
   Assert.equal(profile.name, PROFILE_DEFAULT, "Should have the right name.");
-  Assert.equal(profile.path, defaultProfile.leafName, "Should be the original default profile.");
+  Assert.equal(
+    profile.path,
+    defaultProfile.leafName,
+    "Should be the original default profile."
+  );
   Assert.ok(profile.default, "Should be marked as the old-style default.");
 
   checkProfileService(profileData);
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  Assert.ok(selectedProfile.rootDir.equals(defaultProfile), "Should be using the right directory.");
+  Assert.ok(
+    selectedProfile.rootDir.equals(defaultProfile),
+    "Should be using the right directory."
+  );
   Assert.equal(selectedProfile.name, PROFILE_DEFAULT);
 });
