@@ -6,7 +6,8 @@
 setExpectedFailuresForSelfTest(8);
 
 // Keep "JSMPromise" separate so "Promise" still refers to native Promises.
-let JSMPromise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {}).Promise;
+let JSMPromise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {})
+  .Promise;
 
 async function rejectOnNextTick(error) {
   await Promise.resolve();

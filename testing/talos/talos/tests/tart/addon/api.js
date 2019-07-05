@@ -1,18 +1,26 @@
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
-                                   "@mozilla.org/addons/addon-manager-startup;1",
-                                   "amIAddonManagerStartup");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "aomStartup",
+  "@mozilla.org/addons/addon-manager-startup;1",
+  "amIAddonManagerStartup"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
-                                   "@mozilla.org/widget/clipboardhelper;1",
-                                   "nsIClipboardHelper");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
 
 /* globals ExtensionAPI */
 
@@ -25,12 +33,18 @@ this.tart = class extends ExtensionAPI {
   }
 
   onStartup() {
-    const manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+    const manifestURI = Services.io.newURI(
+      "manifest.json",
+      null,
+      this.extension.rootURI
+    );
     this.chromeHandle = aomStartup.registerChrome(manifestURI, [
       ["content", "tart", "chrome/"],
     ]);
 
-    this.framescriptURL = this.extension.baseURI.resolve("/content/framescript.js");
+    this.framescriptURL = this.extension.baseURI.resolve(
+      "/content/framescript.js"
+    );
     Services.mm.loadFrameScript(this.framescriptURL, true);
     Services.mm.addMessageListener(`${PREFIX}:chrome-exec-message`, this);
   }
@@ -41,21 +55,29 @@ this.tart = class extends ExtensionAPI {
     this.chromeHandle.destruct();
   }
 
-  receiveMessage({target, data}) {
+  receiveMessage({ target, data }) {
     let win = target.ownerGlobal;
     if (!this.loadedWindows.has(win)) {
-      let {baseURI} = this.extension;
-      Services.scriptloader.loadSubScript(baseURI.resolve("/content/Profiler.js"), win);
-      Services.scriptloader.loadSubScript(baseURI.resolve("/content/tart.js"), win);
+      let { baseURI } = this.extension;
+      Services.scriptloader.loadSubScript(
+        baseURI.resolve("/content/Profiler.js"),
+        win
+      );
+      Services.scriptloader.loadSubScript(
+        baseURI.resolve("/content/tart.js"),
+        win
+      );
       this.loadedWindows.add(win);
     }
 
     function sendResult(result) {
-      target.messageManager.sendAsyncMessage(`${PREFIX}:chrome-exec-reply`,
-                                             {id: data.id, result});
+      target.messageManager.sendAsyncMessage(`${PREFIX}:chrome-exec-reply`, {
+        id: data.id,
+        result,
+      });
     }
 
-    let {command} = data;
+    let { command } = data;
 
     switch (command.name) {
       case "ping":
@@ -63,7 +85,7 @@ this.tart = class extends ExtensionAPI {
         break;
 
       case "runTest":
-        (new win.Tart()).startTest(sendResult, command.data);
+        new win.Tart().startTest(sendResult, command.data);
         break;
 
       case "setASAP":

@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  InvalidArgumentError,
-  WebDriverError,
-} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {Command, Message, Response} = ChromeUtils.import("chrome://marionette/content/message.js");
+const { InvalidArgumentError, WebDriverError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { Command, Message, Response } = ChromeUtils.import(
+  "chrome://marionette/content/message.js"
+);
 
 add_test(function test_Message_Origin() {
   equal(0, Message.Origin.Client);
@@ -22,17 +23,19 @@ add_test(function test_Message_fromPacket() {
 
   ok(Message.fromPacket(cmd.toPacket()) instanceof Command);
   ok(Message.fromPacket(resp.toPacket()) instanceof Response);
-  Assert.throws(() => Message.fromPacket([3, 4, 5, 6]),
-      /Unrecognised message type in packet/);
+  Assert.throws(
+    () => Message.fromPacket([3, 4, 5, 6]),
+    /Unrecognised message type in packet/
+  );
 
   run_next_test();
 });
 
 add_test(function test_Command() {
-  let cmd = new Command(42, "foo", {bar: "baz"});
+  let cmd = new Command(42, "foo", { bar: "baz" });
   equal(42, cmd.id);
   equal("foo", cmd.name);
-  deepEqual({bar: "baz"}, cmd.parameters);
+  deepEqual({ bar: "baz" }, cmd.parameters);
   equal(null, cmd.onerror);
   equal(null, cmd.onresult);
   equal(Message.Origin.Client, cmd.origin);
@@ -46,8 +49,8 @@ add_test(function test_Command_onresponse() {
   let onresultOk = false;
 
   let cmd = new Command(7, "foo");
-  cmd.onerror = () => onerrorOk = true;
-  cmd.onresult = () => onresultOk = true;
+  cmd.onerror = () => (onerrorOk = true);
+  cmd.onresult = () => (onresultOk = true);
 
   let errorResp = new Response(8, () => {});
   errorResp.error = new WebDriverError("foo");
@@ -66,7 +69,7 @@ add_test(function test_Command_onresponse() {
 });
 
 add_test(function test_Command_ctor() {
-  let cmd = new Command(42, "bar", {bar: "baz"});
+  let cmd = new Command(42, "bar", { bar: "baz" });
   let msg = cmd.toPacket();
 
   equal(Command.Type, msg[0]);
@@ -78,14 +81,14 @@ add_test(function test_Command_ctor() {
 });
 
 add_test(function test_Command_toString() {
-  let cmd = new Command(42, "foo", {bar: "baz"});
+  let cmd = new Command(42, "foo", { bar: "baz" });
   equal(JSON.stringify(cmd.toPacket()), cmd.toString());
 
   run_next_test();
 });
 
 add_test(function test_Command_fromPacket() {
-  let c1 = new Command(42, "foo", {bar: "baz"});
+  let c1 = new Command(42, "foo", { bar: "baz" });
 
   let msg = c1.toPacket();
   let c2 = Command.fromPacket(msg);
@@ -94,14 +97,32 @@ add_test(function test_Command_fromPacket() {
   equal(c1.name, c2.name);
   equal(c1.parameters, c2.parameters);
 
-  Assert.throws(() => Command.fromPacket([null, 2, "foo", {}]), /InvalidArgumentError/);
-  Assert.throws(() => Command.fromPacket([1, 2, "foo", {}]), /InvalidArgumentError/);
-  Assert.throws(() => Command.fromPacket([0, null, "foo", {}]), /InvalidArgumentError/);
-  Assert.throws(() => Command.fromPacket([0, 2, null, {}]), /InvalidArgumentError/);
-  Assert.throws(() => Command.fromPacket([0, 2, "foo", false]), /InvalidArgumentError/);
+  Assert.throws(
+    () => Command.fromPacket([null, 2, "foo", {}]),
+    /InvalidArgumentError/
+  );
+  Assert.throws(
+    () => Command.fromPacket([1, 2, "foo", {}]),
+    /InvalidArgumentError/
+  );
+  Assert.throws(
+    () => Command.fromPacket([0, null, "foo", {}]),
+    /InvalidArgumentError/
+  );
+  Assert.throws(
+    () => Command.fromPacket([0, 2, null, {}]),
+    /InvalidArgumentError/
+  );
+  Assert.throws(
+    () => Command.fromPacket([0, 2, "foo", false]),
+    /InvalidArgumentError/
+  );
 
   let nullParams = Command.fromPacket([0, 2, "foo", null]);
-  equal("[object Object]", Object.prototype.toString.call(nullParams.parameters));
+  equal(
+    "[object Object]",
+    Object.prototype.toString.call(nullParams.parameters)
+  );
 
   run_next_test();
 });
@@ -127,7 +148,7 @@ add_test(function test_Response_ctor() {
 
 add_test(function test_Response_sendConditionally() {
   let fired = false;
-  let resp = new Response(42, () => fired = true);
+  let resp = new Response(42, () => (fired = true));
   resp.sendConditionally(() => false);
   equal(false, resp.sent);
   equal(false, fired);
@@ -140,7 +161,7 @@ add_test(function test_Response_sendConditionally() {
 
 add_test(function test_Response_send() {
   let fired = false;
-  let resp = new Response(42, () => fired = true);
+  let resp = new Response(42, () => (fired = true));
   resp.send();
   equal(true, resp.sent);
   equal(true, fired);
@@ -231,10 +252,22 @@ add_test(function test_Response_fromPacket() {
   equal(r1.error, r2.error);
   equal(r1.body, r2.body);
 
-  Assert.throws(() => Response.fromPacket([null, 2, "foo", {}]), InvalidArgumentError);
-  Assert.throws(() => Response.fromPacket([0, 2, "foo", {}]), InvalidArgumentError);
-  Assert.throws(() => Response.fromPacket([1, null, "foo", {}]), InvalidArgumentError);
-  Assert.throws(() => Response.fromPacket([1, 2, null, {}]), InvalidArgumentError);
+  Assert.throws(
+    () => Response.fromPacket([null, 2, "foo", {}]),
+    InvalidArgumentError
+  );
+  Assert.throws(
+    () => Response.fromPacket([0, 2, "foo", {}]),
+    InvalidArgumentError
+  );
+  Assert.throws(
+    () => Response.fromPacket([1, null, "foo", {}]),
+    InvalidArgumentError
+  );
+  Assert.throws(
+    () => Response.fromPacket([1, 2, null, {}]),
+    InvalidArgumentError
+  );
   Response.fromPacket([1, 2, "foo", null]);
 
   run_next_test();

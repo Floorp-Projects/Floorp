@@ -8,9 +8,12 @@ const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/filepicker;1";
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
@@ -18,12 +21,15 @@ Cu.forcePermissiveCOWs();
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID;
-var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
+var newClassID = Cc["@mozilla.org/uuid-generator;1"]
+  .getService(Ci.nsIUUIDGenerator)
+  .generateUUID();
 var newFactory = function(window) {
   return {
     createInstance(aOuter, aIID) {
-      if (aOuter)
+      if (aOuter) {
         throw Cr.NS_ERROR_NO_AGGREGATION;
+      }
       return new MockFilePickerInstance(window).QueryInterface(aIID);
     },
     lockFactory(aLock) {
@@ -101,11 +107,12 @@ var MockFilePicker = {
     file.append("testfile");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
     let promise = this.window.File.createFromNsIFile(file)
-                  .then(domFile => domFile, () => null)
-                  // domFile can be null.
-                  .then(domFile => {
-                    this.returnData = [this.internalFileData({ nsIFile: file, domFile })];
-                  }).then(() => file);
+      .then(domFile => domFile, () => null)
+      // domFile can be null.
+      .then(domFile => {
+        this.returnData = [this.internalFileData({ nsIFile: file, domFile })];
+      })
+      .then(() => file);
 
     this.pendingPromises = [promise];
 
@@ -115,7 +122,9 @@ var MockFilePicker = {
 
   useBlobFile() {
     var blob = new this.window.Blob([]);
-    var file = new this.window.File([blob], "helloworld.txt", { type: "plain/text" });
+    var file = new this.window.File([blob], "helloworld.txt", {
+      type: "plain/text",
+    });
     this.returnData = [this.internalFileData({ domFile: file })];
     this.pendingPromises = [];
   },
@@ -134,10 +143,14 @@ var MockFilePicker = {
       if (file instanceof this.window.File) {
         this.returnData.push(this.internalFileData({ domFile: file }));
       } else {
-        let promise = this.window.File.createFromNsIFile(file, { existenceCheck: false });
+        let promise = this.window.File.createFromNsIFile(file, {
+          existenceCheck: false,
+        });
 
         promise.then(domFile => {
-          this.returnData.push(this.internalFileData({ nsIFile: file, domFile }));
+          this.returnData.push(
+            this.internalFileData({ nsIFile: file, domFile })
+          );
         });
         this.pendingPromises.push(promise);
       }
@@ -163,12 +176,14 @@ MockFilePickerInstance.prototype = {
     this.parent = aParent;
   },
   appendFilter(aTitle, aFilter) {
-    if (typeof MockFilePicker.appendFilterCallback == "function")
+    if (typeof MockFilePicker.appendFilterCallback == "function") {
       MockFilePicker.appendFilterCallback(this, aTitle, aFilter);
+    }
   },
   appendFilters(aFilterMask) {
-    if (typeof MockFilePicker.appendFiltersCallback == "function")
+    if (typeof MockFilePicker.appendFiltersCallback == "function") {
       MockFilePicker.appendFiltersCallback(this, aFilterMask);
+    }
   },
   defaultString: "",
   defaultExtension: "",
@@ -201,14 +216,16 @@ MockFilePickerInstance.prototype = {
     return null;
   },
   get fileURL() {
-    if (MockFilePicker.returnData.length >= 1 &&
-        MockFilePicker.returnData[0].nsIFile) {
+    if (
+      MockFilePicker.returnData.length >= 1 &&
+      MockFilePicker.returnData[0].nsIFile
+    ) {
       return Services.io.newFileURI(MockFilePicker.returnData[0].nsIFile);
     }
 
     return null;
   },
-  * getFiles(asDOM) {
+  *getFiles(asDOM) {
     for (let d of MockFilePicker.returnData) {
       if (asDOM) {
         yield d.domFile || d.domDirectory;
@@ -229,54 +246,64 @@ MockFilePickerInstance.prototype = {
     MockFilePicker.showing = true;
     this.window.setTimeout(() => {
       // Maybe all the pending promises are already resolved, but we want to be sure.
-      Promise.all(MockFilePicker.pendingPromises).then(() => {
-        return Ci.nsIFilePicker.returnOK;
-      }, () => {
-        return Ci.nsIFilePicker.returnCancel;
-      }).then(result => {
-        // Nothing else has to be done.
-        MockFilePicker.pendingPromises = [];
-
-        if (result == Ci.nsIFilePicker.returnCancel) {
-          return result;
-        }
-
-        MockFilePicker.displayDirectory = this.displayDirectory;
-        MockFilePicker.displaySpecialDirectory = this.displaySpecialDirectory;
-        MockFilePicker.shown = true;
-        if (typeof MockFilePicker.showCallback == "function") {
-          try {
-            var returnValue = MockFilePicker.showCallback(this);
-            if (typeof returnValue != "undefined") {
-              return returnValue;
-            }
-          } catch (ex) {
+      Promise.all(MockFilePicker.pendingPromises)
+        .then(
+          () => {
+            return Ci.nsIFilePicker.returnOK;
+          },
+          () => {
             return Ci.nsIFilePicker.returnCancel;
           }
-        }
+        )
+        .then(result => {
+          // Nothing else has to be done.
+          MockFilePicker.pendingPromises = [];
 
-        return MockFilePicker.returnValue;
-      }).then(result => {
-        // Some additional result file can be set by the callback. Let's
-        // resolve the pending promises again.
-        return Promise.all(MockFilePicker.pendingPromises).then(() => {
-          return result;
-        }, () => {
-          return Ci.nsIFilePicker.returnCancel;
+          if (result == Ci.nsIFilePicker.returnCancel) {
+            return result;
+          }
+
+          MockFilePicker.displayDirectory = this.displayDirectory;
+          MockFilePicker.displaySpecialDirectory = this.displaySpecialDirectory;
+          MockFilePicker.shown = true;
+          if (typeof MockFilePicker.showCallback == "function") {
+            try {
+              var returnValue = MockFilePicker.showCallback(this);
+              if (typeof returnValue != "undefined") {
+                return returnValue;
+              }
+            } catch (ex) {
+              return Ci.nsIFilePicker.returnCancel;
+            }
+          }
+
+          return MockFilePicker.returnValue;
+        })
+        .then(result => {
+          // Some additional result file can be set by the callback. Let's
+          // resolve the pending promises again.
+          return Promise.all(MockFilePicker.pendingPromises).then(
+            () => {
+              return result;
+            },
+            () => {
+              return Ci.nsIFilePicker.returnCancel;
+            }
+          );
+        })
+        .then(result => {
+          MockFilePicker.pendingPromises = [];
+
+          if (aFilePickerShownCallback) {
+            aFilePickerShownCallback.done(result);
+          }
+
+          if (typeof MockFilePicker.afterOpenCallback == "function") {
+            this.window.setTimeout(() => {
+              MockFilePicker.afterOpenCallback(this);
+            }, 0);
+          }
         });
-      }).then(result => {
-        MockFilePicker.pendingPromises = [];
-
-        if (aFilePickerShownCallback) {
-          aFilePickerShownCallback.done(result);
-        }
-
-        if (typeof MockFilePicker.afterOpenCallback == "function") {
-          this.window.setTimeout(() => {
-            MockFilePicker.afterOpenCallback(this);
-          }, 0);
-        }
-      });
     });
   },
 };

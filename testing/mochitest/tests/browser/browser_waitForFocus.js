@@ -1,4 +1,3 @@
-
 const gBaseURL = "https://example.com/browser/testing/mochitest/tests/browser/";
 
 function promiseTabLoadEvent(tab, url) {
@@ -18,7 +17,11 @@ add_task(async function() {
   let browser = gBrowser.selectedBrowser;
   await SimpleTest.promiseFocus(browser, true);
 
-  is(document.activeElement, browser, "Browser is focused when about:blank is loaded");
+  is(
+    document.activeElement,
+    browser,
+    "Browser is focused when about:blank is loaded"
+  );
 
   gBrowser.removeCurrentTab();
   gURLBar.focus();
@@ -35,7 +38,11 @@ add_task(async function() {
   if (browser.contentWindow) {
     await SimpleTest.promiseFocus(browser.contentWindow, true);
 
-    is(document.activeElement, browser, "Browser is focused when about:blank is loaded");
+    is(
+      document.activeElement,
+      browser,
+      "Browser is focused when about:blank is loaded"
+    );
   }
 
   gBrowser.removeCurrentTab();
@@ -55,11 +62,19 @@ add_task(async function() {
 
     await SimpleTest.promiseFocus(browser.contentWindow);
 
-    is(document.activeElement, browser, "Browser is focused when page is loaded");
+    is(
+      document.activeElement,
+      browser,
+      "Browser is focused when page is loaded"
+    );
 
     await SimpleTest.promiseFocus(browser.contentWindow.frames[0]);
 
-    is(browser.contentWindow.document.activeElement.localName, "iframe", "Child iframe is focused");
+    is(
+      browser.contentWindow.document.activeElement.localName,
+      "iframe",
+      "Child iframe is focused"
+    );
   }
 
   gBrowser.removeCurrentTab();
@@ -67,13 +82,20 @@ add_task(async function() {
 
 // Pass a browser to promiseFocus
 add_task(async function() {
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "waitForFocusPage.html");
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    gBaseURL + "waitForFocusPage.html"
+  );
 
   gURLBar.focus();
 
   await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
-  is(document.activeElement, gBrowser.selectedBrowser, "Browser is focused when promiseFocus is passed a browser");
+  is(
+    document.activeElement,
+    gBrowser.selectedBrowser,
+    "Browser is focused when promiseFocus is passed a browser"
+  );
 
   gBrowser.removeCurrentTab();
 });

@@ -18,12 +18,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TestUtils",
-];
+var EXPORTED_SYMBOLS = ["TestUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {clearInterval, setInterval} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 var TestUtils = {
   executeSoon(callbackFn) {
@@ -89,19 +89,23 @@ var TestUtils = {
    */
   waitForPrefChange(prefName, checkFn) {
     return new Promise((resolve, reject) => {
-      Services.prefs.addObserver(prefName, function observer(subject, topic, data) {
+      Services.prefs.addObserver(prefName, function observer(
+        subject,
+        topic,
+        data
+      ) {
         try {
           let prefValue = null;
           switch (Services.prefs.getPrefType(prefName)) {
-          case Services.prefs.PREF_STRING:
-            prefValue = Services.prefs.getStringPref(prefName);
-            break;
-          case Services.prefs.PREF_INT:
-            prefValue = Services.prefs.getIntPref(prefName);
-            break;
-          case Services.prefs.PREF_BOOL:
-            prefValue = Services.prefs.getBoolPref(prefName);
-            break;
+            case Services.prefs.PREF_STRING:
+              prefValue = Services.prefs.getStringPref(prefName);
+              break;
+            case Services.prefs.PREF_INT:
+              prefValue = Services.prefs.getIntPref(prefName);
+              break;
+            case Services.prefs.PREF_BOOL:
+              prefValue = Services.prefs.getBoolPref(prefName);
+              break;
           }
           if (checkFn && !checkFn(prefValue)) {
             return;
@@ -129,7 +133,10 @@ var TestUtils = {
       eltOrRect = eltOrRect.getBoundingClientRect();
     }
     let { left, top, width, height } = eltOrRect;
-    let canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    let canvas = win.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "canvas"
+    );
     let ctx = canvas.getContext("2d");
     let ratio = win.devicePixelRatio;
     canvas.width = width * ratio;
@@ -139,7 +146,7 @@ var TestUtils = {
     return canvas.toDataURL();
   },
 
-    /**
+  /**
    * Will poll a condition function until it returns true.
    *
    * @param condition

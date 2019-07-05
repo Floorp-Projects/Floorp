@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function check_profile_dir(profd) {
   Assert.ok(profd.exists());
@@ -21,7 +21,7 @@ function check_do_get_profile(fireProfileAfterChange) {
   ]);
   const expectedTopics = new Map(observedTopics);
 
-  for (let [topic ] of observedTopics) {
+  for (let [topic] of observedTopics) {
     Services.obs.addObserver(() => {
       let val = observedTopics.get(topic) + 1;
       observedTopics.set(topic, val);
