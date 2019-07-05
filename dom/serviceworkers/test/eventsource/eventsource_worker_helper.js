@@ -5,7 +5,12 @@ function ok(aCondition, aMessage) {
         reject();
         return;
       }
-      res[0].postMessage({status: "callback", data: "ok", condition: aCondition, message: aMessage});
+      res[0].postMessage({
+        status: "callback",
+        data: "ok",
+        condition: aCondition,
+        message: aMessage,
+      });
       resolve();
     });
   });

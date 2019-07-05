@@ -9,8 +9,8 @@ function _getPath() {
     return "/chrome/dom/browser-element/mochitest";
   }
   return window.location.pathname
-               .substring(0, window.location.pathname.lastIndexOf("/"))
-               .replace("/priority", "");
+    .substring(0, window.location.pathname.lastIndexOf("/"))
+    .replace("/priority", "");
 }
 
 const browserElementTestHelpers = {
@@ -25,15 +25,24 @@ const browserElementTestHelpers = {
   _setPref(pref, value) {
     this.lockTestReady();
     if (value !== undefined && value !== null) {
-      SpecialPowers.pushPrefEnv({"set": [[pref, value]]}, this.unlockTestReady.bind(this));
+      SpecialPowers.pushPrefEnv(
+        { set: [[pref, value]] },
+        this.unlockTestReady.bind(this)
+      );
     } else {
-      SpecialPowers.pushPrefEnv({"clear": [[pref]]}, this.unlockTestReady.bind(this));
+      SpecialPowers.pushPrefEnv(
+        { clear: [[pref]] },
+        this.unlockTestReady.bind(this)
+      );
     }
   },
 
   _setPrefs() {
     this.lockTestReady();
-    SpecialPowers.pushPrefEnv({"set": Array.from(arguments)}, this.unlockTestReady.bind(this));
+    SpecialPowers.pushPrefEnv(
+      { set: Array.from(arguments) },
+      this.unlockTestReady.bind(this)
+    );
   },
 
   _testReadyLockCount: 0,
@@ -62,8 +71,10 @@ const browserElementTestHelpers = {
   },
 
   setEnabledPref(value) {
-    this._setPrefs(["dom.mozBrowserFramesEnabled", value],
-                   ["network.disable.ipc.security", value]);
+    this._setPrefs(
+      ["dom.mozBrowserFramesEnabled", value],
+      ["network.disable.ipc.security", value]
+    );
   },
 
   setupAccessibleCaretPref() {
@@ -80,12 +91,16 @@ const browserElementTestHelpers = {
   addPermission() {
     this.lockTestReady();
     SpecialPowers.pushPermissions(
-      [{"type": "browser", "allow": 1, "context": document}],
-      this.unlockTestReady.bind(this));
+      [{ type: "browser", allow: 1, context: document }],
+      this.unlockTestReady.bind(this)
+    );
   },
 
   allowTopLevelDataURINavigation() {
-    this._setPref("security.data_uri.block_toplevel_data_uri_navigations", false);
+    this._setPref(
+      "security.data_uri.block_toplevel_data_uri_navigations",
+      false
+    );
   },
 
   _observers: [],
@@ -110,17 +125,19 @@ const browserElementTestHelpers = {
 
   cleanUp() {
     for (var i = 0; i < this._observers.length; i++) {
-      SpecialPowers.removeObserver(this._observers[i][0],
-                                   this._observers[i][1]);
+      SpecialPowers.removeObserver(
+        this._observers[i][0],
+        this._observers[i][1]
+      );
     }
   },
 
   // Some basically-empty pages from different domains you can load.
-  "emptyPage1": "http://example.com" + _getPath() + "/file_empty.html",
-  "fileEmptyPage1": "file_empty.html",
-  "emptyPage2": "http://example.org" + _getPath() + "/file_empty.html",
-  "emptyPage3": "http://test1.example.org" + _getPath() + "/file_empty.html",
-  "focusPage": "http://example.org" + _getPath() + "/file_focus.html",
+  emptyPage1: "http://example.com" + _getPath() + "/file_empty.html",
+  fileEmptyPage1: "file_empty.html",
+  emptyPage2: "http://example.org" + _getPath() + "/file_empty.html",
+  emptyPage3: "http://test1.example.org" + _getPath() + "/file_empty.html",
+  focusPage: "http://example.org" + _getPath() + "/file_focus.html",
 };
 
 // Returns a promise which is resolved when a subprocess is created.  The
@@ -187,9 +204,14 @@ function expectPriorityChange(childID, expectedPriority) {
         // we'll expect /every/ priority change to match expectedPriority.
         observed = true;
 
-        is(priority, expectedPriority,
-           "Expected priority of childID " + childID +
-           " to change to " + expectedPriority);
+        is(
+          priority,
+          expectedPriority,
+          "Expected priority of childID " +
+            childID +
+            " to change to " +
+            expectedPriority
+        );
 
         if (priority == expectedPriority) {
           resolve();
@@ -252,11 +274,17 @@ function expectMozbrowserEvent(iframe, eventName) {
 
   browserElementTestHelpers.lockTestReady();
   SpecialPowers.setBoolPref("network.disable.ipc.security", true);
-  SpecialPowers.pushPrefEnv({set: [["browser.pagethumbnails.capturing_disabled", true],
-                                   ["dom.ipc.browser_frames.oop_by_default", oop],
-                                   ["dom.ipc.tabs.disabled", false],
-                                   ["security.mixed_content.block_active_content", false]]},
-                            browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers));
+  SpecialPowers.pushPrefEnv(
+    {
+      set: [
+        ["browser.pagethumbnails.capturing_disabled", true],
+        ["dom.ipc.browser_frames.oop_by_default", oop],
+        ["dom.ipc.tabs.disabled", false],
+        ["security.mixed_content.block_active_content", false],
+      ],
+    },
+    browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers)
+  );
 })();
 
 addEventListener("unload", function() {
@@ -266,5 +294,7 @@ addEventListener("unload", function() {
 // Wait for the load event before unlocking the test-ready event.
 browserElementTestHelpers.lockTestReady();
 addEventListener("load", function() {
-  SimpleTest.executeSoon(browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers));
+  SimpleTest.executeSoon(
+    browserElementTestHelpers.unlockTestReady.bind(browserElementTestHelpers)
+  );
 });

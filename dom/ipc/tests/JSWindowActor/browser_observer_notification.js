@@ -11,9 +11,13 @@ declTest("test observer triggering actor creation", {
       let child = content.window.getWindowGlobalChild();
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
-      let {subject, topic, data} = actorChild.lastObserved;
+      let { subject, topic, data } = actorChild.lastObserved;
 
-      is(subject.getWindowGlobalChild().getActor("Test"), actorChild, "Should have been recieved on the right actor");
+      is(
+        subject.getWindowGlobalChild().getActor("Test"),
+        actorChild,
+        "Should have been recieved on the right actor"
+      );
       is(topic, TOPIC, "Topic matches");
       is(data, "dataString", "Data matches");
     });
@@ -29,9 +33,13 @@ declTest("test observers with null data", {
       let child = content.window.getWindowGlobalChild();
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
-      let {subject, topic, data} = actorChild.lastObserved;
+      let { subject, topic, data } = actorChild.lastObserved;
 
-      is(subject.getWindowGlobalChild().getActor("Test"), actorChild, "Should have been recieved on the right actor");
+      is(
+        subject.getWindowGlobalChild().getActor("Test"),
+        actorChild,
+        "Should have been recieved on the right actor"
+      );
       is(topic, TOPIC, "Topic matches");
       is(data, null, "Data matches");
     });
@@ -46,7 +54,11 @@ declTest("observers don't notify with wrong window", {
       let child = content.window.getWindowGlobalChild();
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
-      is(actorChild.lastObserved, undefined, "Should not receive wrong window's observer notification!");
+      is(
+        actorChild.lastObserved,
+        undefined,
+        "Should not receive wrong window's observer notification!"
+      );
     });
   },
 });

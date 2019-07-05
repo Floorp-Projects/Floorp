@@ -6,7 +6,8 @@
 add_task(async function() {
   await BrowserTestUtils.withNewTab("about:blank", async function(aBrowser) {
     let duration = await ContentTask.spawn(aBrowser, null, function(opts) {
-      const TEST_URI = "http://example.com/browser/dom/tests/browser/test_bug1004814.html";
+      const TEST_URI =
+        "http://example.com/browser/dom/tests/browser/test_bug1004814.html";
 
       return new Promise(resolve => {
         let ConsoleObserver = {
@@ -14,8 +15,11 @@ add_task(async function() {
 
           observe(aSubject, aTopic, aData) {
             var obj = aSubject.wrappedJSObject;
-            if (obj.arguments.length != 1 || obj.arguments[0] != "bug1004814" ||
-                obj.level != "timeEnd") {
+            if (
+              obj.arguments.length != 1 ||
+              obj.arguments[0] != "bug1004814" ||
+              obj.level != "timeEnd"
+            ) {
               return;
             }
 
@@ -31,6 +35,9 @@ add_task(async function() {
       });
     });
 
-    ok(duration > 0, "ConsoleEvent.timer.duration > 0: " + duration + " ~ 200ms");
+    ok(
+      duration > 0,
+      "ConsoleEvent.timer.duration > 0: " + duration + " ~ 200ms"
+    );
   });
 });

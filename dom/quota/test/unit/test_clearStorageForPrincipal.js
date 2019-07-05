@@ -9,19 +9,18 @@
  * expected to remove the origin directory as well.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const testingOrigins = [
     {
       origin: "http://example.com",
       path: "storage/default/http+++example.com/",
-      only_idb: false
+      only_idb: false,
     },
     {
       origin: "http://www.mozilla.org",
       path: "storage/default/http+++www.mozilla.org/",
-      only_idb: true
-    }
+      only_idb: true,
+    },
   ];
   const removingClient = "idb";
 
@@ -36,8 +35,11 @@ async function testSteps()
   let file;
   for (let i = 0; i < testingOrigins.length; ++i) {
     info("Clearing");
-    request = clearClient(getPrincipal(testingOrigins[i].origin), null,
-                          removingClient);
+    request = clearClient(
+      getPrincipal(testingOrigins[i].origin),
+      null,
+      removingClient
+    );
     await requestFinished(request);
 
     info("Verifying");

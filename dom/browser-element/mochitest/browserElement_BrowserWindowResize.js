@@ -12,16 +12,18 @@ browserElementTestHelpers.addPermission();
 browserElementTestHelpers.allowTopLevelDataURINavigation();
 
 function runTest() {
-  var srcResizeTo = "data:text/html,       \
+  var srcResizeTo =
+    "data:text/html,       \
     <script type='application/javascript'> \
       window.resizeTo(300, 300);           \
-    <\/script>                             \
+    </script>                             \
   ";
 
-  var srcResizeBy = "data:text/html,       \
+  var srcResizeBy =
+    "data:text/html,       \
     <script type='application/javascript'> \
       window.resizeBy(-100, -100);         \
-    <\/script>                             \
+    </script>                             \
   ";
 
   var count = 0;

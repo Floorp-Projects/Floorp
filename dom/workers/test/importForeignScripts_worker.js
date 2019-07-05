@@ -10,13 +10,13 @@ function runTests() {
   response = "good";
   try {
     importScripts("http://example.org/tests/dom/workers/test/foreign.js");
-  } catch(e) {
+  } catch (e) {
     dump("Got error " + e + " when calling importScripts");
   }
   if (response === "good") {
     try {
       importScripts("redirect_to_foreign.sjs");
-    } catch(e) {
+    } catch (e) {
       dump("Got error " + e + " when calling importScripts");
     }
   }
@@ -29,11 +29,11 @@ function runTests() {
     worker.onmessage = function(e) {
       target.postMessage(e.data);
       target.postMessage("finish");
-    }
+    };
 
     worker.onerror = function() {
       target.postMessage("nested worker error");
-    }
+    };
 
     worker.postMessage("start");
   }

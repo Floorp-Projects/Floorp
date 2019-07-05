@@ -1,4 +1,4 @@
-(new BroadcastChannel("foobar")).onmessage = function(event) {
+new BroadcastChannel("foobar").onmessage = function(event) {
   event.target.postMessage(event.data);
 };
 

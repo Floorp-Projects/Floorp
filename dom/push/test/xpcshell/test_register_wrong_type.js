@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService} = serviceExports;
+const { PushDB, PushService } = serviceExports;
 
 const userAgentID = "c293fdc5-a75e-4eb1-af88-a203991c0787";
 
@@ -19,7 +19,7 @@ function run_test() {
 add_task(async function test_register_wrong_type() {
   let registers = 0;
   let helloDone;
-  let helloPromise = new Promise(resolve => helloDone = after(2, resolve));
+  let helloPromise = new Promise(resolve => (helloDone = after(2, resolve)));
 
   PushService._generateID = () => "1234";
   PushService.init({
@@ -27,22 +27,26 @@ add_task(async function test_register_wrong_type() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
           helloDone();
         },
         onRegister(request) {
           registers++;
-          this.serverSendMsg(JSON.stringify({
-            messageType: "register",
-            status: 200,
-            channelID: 1234,
-            uaid: userAgentID,
-            pushEndpoint: "https://example.org/update/wrong-type",
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "register",
+              status: 200,
+              channelID: 1234,
+              uaid: userAgentID,
+              pushEndpoint: "https://example.org/update/wrong-type",
+            })
+          );
         },
       });
     },
@@ -51,8 +55,9 @@ add_task(async function test_register_wrong_type() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.com/mistyped",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for non-string channel ID"

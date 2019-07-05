@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   const objectStoreName = "People";
@@ -46,12 +45,11 @@ function* testSteps()
 
   let db = event.target.result;
 
-  let objectStore = db.createObjectStore(objectStoreName, { } );
+  let objectStore = db.createObjectStore(objectStoreName, {});
 
   let addedData = 0;
   for (let i in objectStoreData) {
-    request = objectStore.add(objectStoreData[i].value,
-                              objectStoreData[i].key);
+    request = objectStore.add(objectStoreData[i].value, objectStoreData[i].key);
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == objectStoreData.length) {
@@ -62,26 +60,32 @@ function* testSteps()
   event = yield undefined;
 
   for (let i in indexData) {
-    objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                            indexData[i].options);
+    objectStore.createIndex(
+      indexData[i].name,
+      indexData[i].keyPath,
+      indexData[i].options
+    );
   }
 
   addedData = 0;
   for (let i in badObjectStoreData) {
-    request = objectStore.add(badObjectStoreData[i].value,
-                              badObjectStoreData[i].key);
+    request = objectStore.add(
+      badObjectStoreData[i].value,
+      badObjectStoreData[i].key
+    );
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       if (++addedData == badObjectStoreData.length) {
-        executeSoon(function() { testGenerator.next(); });
+        executeSoon(function() {
+          testGenerator.next();
+        });
       }
     };
   }
   yield undefined;
   yield undefined;
 
-  objectStore = db.transaction(objectStoreName)
-                  .objectStore(objectStoreName);
+  objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
 
   let keyIndex = 0;
 
@@ -90,15 +94,20 @@ function* testSteps()
   request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
-      is(cursor.key, objectStoreDataWeightSort[keyIndex].value.weight,
-         "Correct key");
-      is(cursor.primaryKey, objectStoreDataWeightSort[keyIndex].key,
-         "Correct value");
+      is(
+        cursor.key,
+        objectStoreDataWeightSort[keyIndex].value.weight,
+        "Correct key"
+      );
+      is(
+        cursor.primaryKey,
+        objectStoreDataWeightSort[keyIndex].key,
+        "Correct value"
+      );
       keyIndex++;
 
       cursor.continue();
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
@@ -115,15 +124,17 @@ function* testSteps()
     if (cursor) {
       keyIndex++;
       cursor.continue();
-    }
-    else {
+    } else {
       testGenerator.next();
     }
   };
   yield undefined;
 
-  is(keyIndex, objectStoreData.length + badObjectStoreData.length,
-     "Saw all people");
+  is(
+    keyIndex,
+    objectStoreData.length + badObjectStoreData.length,
+    "Saw all people"
+  );
 
   finishTest();
 }

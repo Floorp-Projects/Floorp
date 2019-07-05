@@ -1,3 +1,3 @@
-this.addEventListener('install', function(event) {
+this.addEventListener("install", function(event) {
   close();
 });

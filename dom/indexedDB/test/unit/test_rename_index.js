@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const storeName = "test store";
   const indexName_ToBeDeleted = "test index to be deleted";
@@ -30,7 +29,11 @@ function* testSteps()
 
   let objectStore = db.createObjectStore(storeName, { keyPath: "foo" });
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
-  is(db.objectStoreNames.item(0), objectStore.name, "Correct object store name");
+  is(
+    db.objectStoreNames.item(0),
+    objectStore.name,
+    "Correct object store name"
+  );
 
   // create index to be deleted later in v3.
   objectStore.createIndex(indexName_ToBeDeleted, "foo");

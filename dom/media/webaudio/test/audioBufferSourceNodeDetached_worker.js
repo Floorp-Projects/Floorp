@@ -1,3 +1,3 @@
-onmessage = function (event) {
+onmessage = function(event) {
   postMessage("Pong");
 };

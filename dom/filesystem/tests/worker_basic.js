@@ -18,10 +18,18 @@ function isnot(a, b, msg) {
 }
 
 var tests = [
-  function() { test_basic(directory, next); },
-  function() { test_getFilesAndDirectories(directory, true, next); },
-  function() { test_getFiles(directory, false, next); },
-  function() { test_getFiles(directory, true, next); },
+  function() {
+    test_basic(directory, next);
+  },
+  function() {
+    test_getFilesAndDirectories(directory, true, next);
+  },
+  function() {
+    test_getFiles(directory, false, next);
+  },
+  function() {
+    test_getFiles(directory, true, next);
+  },
 ];
 
 function next() {

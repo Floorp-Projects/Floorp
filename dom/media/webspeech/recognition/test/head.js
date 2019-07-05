@@ -1,21 +1,23 @@
 "use strict";
 
 const DEFAULT_AUDIO_SAMPLE_FILE = "hello.ogg";
-const SPEECH_RECOGNITION_TEST_REQUEST_EVENT_TOPIC = "SpeechRecognitionTest:RequestEvent";
+const SPEECH_RECOGNITION_TEST_REQUEST_EVENT_TOPIC =
+  "SpeechRecognitionTest:RequestEvent";
 const SPEECH_RECOGNITION_TEST_END_TOPIC = "SpeechRecognitionTest:End";
 
 var errorCodes = {
-  NO_SPEECH : "no-speech",
-  ABORTED : "aborted",
-  AUDIO_CAPTURE : "audio-capture",
-  NETWORK : "network",
-  NOT_ALLOWED : "not-allowed",
-  SERVICE_NOT_ALLOWED : "service-not-allowed",
-  BAD_GRAMMAR : "bad-grammar",
-  LANGUAGE_NOT_SUPPORTED : "language-not-supported"
+  NO_SPEECH: "no-speech",
+  ABORTED: "aborted",
+  AUDIO_CAPTURE: "audio-capture",
+  NETWORK: "network",
+  NOT_ALLOWED: "not-allowed",
+  SERVICE_NOT_ALLOWED: "service-not-allowed",
+  BAD_GRAMMAR: "bad-grammar",
+  LANGUAGE_NOT_SUPPORTED: "language-not-supported",
 };
 
-var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
+var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm")
+  .Services;
 
 function EventManager(sr) {
   var self = this;
@@ -33,13 +35,13 @@ function EventManager(sr) {
     "nomatch",
     "error",
     "start",
-    "end"
+    "end",
   ];
 
   var eventDependencies = {
-    "speechend": "speechstart",
-    "soundend": "soundstart",
-    "audioend": "audiostart"
+    speechend: "speechstart",
+    soundend: "soundstart",
+    audioend: "audiostart",
   };
 
   var isDone = false;
@@ -57,8 +59,8 @@ function EventManager(sr) {
 
   // register default handlers
   for (var i = 0; i < allEvents.length; i++) {
-    (function (eventName) {
-      sr["on" + eventName] = function (evt) {
+    (function(eventName) {
+      sr["on" + eventName] = function(evt) {
         var message = "unexpected event: " + eventName;
         if (eventName == "error") {
           message += " -- " + evt.message;
@@ -82,18 +84,23 @@ function EventManager(sr) {
 
       var dep = eventDependencies[eventName];
       if (dep) {
-        ok(self.eventsReceived.includes(dep),
-           eventName + " must come after " + dep);
+        ok(
+          self.eventsReceived.includes(dep),
+          eventName + " must come after " + dep
+        );
       }
 
       cb && cb(evt, sr);
-      if (self.doneFunc && !isDone &&
-          nEventsExpected === self.eventsReceived.length) {
+      if (
+        self.doneFunc &&
+        !isDone &&
+        nEventsExpected === self.eventsReceived.length
+      ) {
         isDone = true;
         self.doneFunc();
       }
-    }
-  }
+    };
+  };
 
   self.start = function EventManager_start() {
     isSendingAudioData = true;
@@ -111,36 +118,40 @@ function EventManager(sr) {
 
     audioTag.play();
     sr.start(stream);
-  }
+  };
 
   self.requestFSMEvent = function EventManager_requestFSMEvent(eventName) {
     if (isSendingAudioData) {
-      info("Queuing event " + eventName + " until we're done sending audio data");
+      info(
+        "Queuing event " + eventName + " until we're done sending audio data"
+      );
       queuedEventRequests.push(eventName);
       return;
     }
 
     info("requesting " + eventName);
-    Services.obs.notifyObservers(null,
-                                 SPEECH_RECOGNITION_TEST_REQUEST_EVENT_TOPIC,
-                                 eventName);
-  }
+    Services.obs.notifyObservers(
+      null,
+      SPEECH_RECOGNITION_TEST_REQUEST_EVENT_TOPIC,
+      eventName
+    );
+  };
 
   self.requestTestEnd = function EventManager_requestTestEnd() {
     Services.obs.notifyObservers(null, SPEECH_RECOGNITION_TEST_END_TOPIC);
-  }
+  };
 }
 
 function buildResultCallback(transcript) {
-  return (function(evt) {
+  return function(evt) {
     is(evt.results[0][0].transcript, transcript, "expect correct transcript");
-  });
+  };
 }
 
 function buildErrorCallback(errcode) {
-  return (function(err) {
+  return function(err) {
     is(err.error, errcode, "expect correct error code");
-  });
+  };
 }
 
 function performTest(options) {
@@ -151,7 +162,7 @@ function performTest(options) {
     ["media.webspeech.test.enable", true]
   );
 
-  SpecialPowers.pushPrefEnv({set: prefs}, function() {
+  SpecialPowers.pushPrefEnv({ set: prefs }, function() {
     var sr = new SpeechRecognition();
     var em = new EventManager(sr);
 
@@ -165,7 +176,7 @@ function performTest(options) {
       if (options.doneFunc) {
         options.doneFunc();
       }
-    }
+    };
 
     em.audioSampleFile = DEFAULT_AUDIO_SAMPLE_FILE;
     if (options.audioSampleFile) {

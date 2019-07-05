@@ -6,17 +6,24 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function TestInterfaceJS(anyArg, objectArg) {}
 
 TestInterfaceJS.prototype = {
   classID: Components.ID("{2ac4e026-cf25-47d5-b067-78d553c3cad8}"),
   contractID: "@mozilla.org/dom/test-interface-js;1",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer, Ci.mozITestInterfaceJS]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIDOMGlobalPropertyInitializer,
+    Ci.mozITestInterfaceJS,
+  ]),
 
-  init(win) { this._win = win; },
+  init(win) {
+    this._win = win;
+  },
 
   __init(anyArg, objectArg, dictionaryArg) {
     this._anyAttr = undefined;
@@ -26,33 +33,78 @@ TestInterfaceJS.prototype = {
     this._dictionaryArg = dictionaryArg;
   },
 
-  get anyArg() { return this._anyArg; },
-  get objectArg() { return this._objectArg; },
-  getDictionaryArg() { return this._dictionaryArg; },
-  get anyAttr() { return this._anyAttr; },
-  set anyAttr(val) { this._anyAttr = val; },
-  get objectAttr() { return this._objectAttr; },
-  set objectAttr(val) { this._objectAttr = val; },
-  getDictionaryAttr() { return this._dictionaryAttr; },
-  setDictionaryAttr(val) { this._dictionaryAttr = val; },
-  pingPongAny(any) { return any; },
-  pingPongObject(obj) { return obj; },
-  pingPongObjectOrString(objectOrString) { return objectOrString; },
-  pingPongDictionary(dict) { return dict; },
-  pingPongDictionaryOrLong(dictOrLong) { return dictOrLong.anyMember || dictOrLong; },
-  pingPongRecord(rec) { return JSON.stringify(rec); },
-  objectSequenceLength(seq) { return seq.length; },
-  anySequenceLength(seq) { return seq.length; },
+  get anyArg() {
+    return this._anyArg;
+  },
+  get objectArg() {
+    return this._objectArg;
+  },
+  getDictionaryArg() {
+    return this._dictionaryArg;
+  },
+  get anyAttr() {
+    return this._anyAttr;
+  },
+  set anyAttr(val) {
+    this._anyAttr = val;
+  },
+  get objectAttr() {
+    return this._objectAttr;
+  },
+  set objectAttr(val) {
+    this._objectAttr = val;
+  },
+  getDictionaryAttr() {
+    return this._dictionaryAttr;
+  },
+  setDictionaryAttr(val) {
+    this._dictionaryAttr = val;
+  },
+  pingPongAny(any) {
+    return any;
+  },
+  pingPongObject(obj) {
+    return obj;
+  },
+  pingPongObjectOrString(objectOrString) {
+    return objectOrString;
+  },
+  pingPongDictionary(dict) {
+    return dict;
+  },
+  pingPongDictionaryOrLong(dictOrLong) {
+    return dictOrLong.anyMember || dictOrLong;
+  },
+  pingPongRecord(rec) {
+    return JSON.stringify(rec);
+  },
+  objectSequenceLength(seq) {
+    return seq.length;
+  },
+  anySequenceLength(seq) {
+    return seq.length;
+  },
 
+  getCallerPrincipal() {
+    return Cu.getWebIDLCallerPrincipal().origin;
+  },
 
-  getCallerPrincipal() { return Cu.getWebIDLCallerPrincipal().origin; },
+  convertSVS(svs) {
+    return svs;
+  },
 
-  convertSVS(svs) { return svs; },
-
-  pingPongUnion(x) { return x; },
-  pingPongUnionContainingNull(x) { return x; },
-  pingPongNullableUnion(x) { return x; },
-  returnBadUnion(x) { return 3; },
+  pingPongUnion(x) {
+    return x;
+  },
+  pingPongUnionContainingNull(x) {
+    return x;
+  },
+  pingPongNullableUnion(x) {
+    return x;
+  },
+  returnBadUnion(x) {
+    return 3;
+  },
 
   testSequenceOverload(arg) {},
   testSequenceUnion(arg) {},
@@ -62,8 +114,10 @@ TestInterfaceJS.prototype = {
   },
 
   testThrowDOMException() {
-    throw new this._win.DOMException("We are a DOMException",
-                                     "NotSupportedError");
+    throw new this._win.DOMException(
+      "We are a DOMException",
+      "NotSupportedError"
+    );
   },
 
   testThrowTypeError() {
@@ -71,7 +125,7 @@ TestInterfaceJS.prototype = {
   },
 
   testThrowNsresult() {
-      throw Cr.NS_BINDING_ABORTED;
+    throw Cr.NS_BINDING_ABORTED;
   },
 
   testThrowNsresultFromNative(x) {
@@ -99,13 +153,15 @@ TestInterfaceJS.prototype = {
   },
 
   testPromiseWithThrowingContentPromiseInit(func) {
-      return new this._win.Promise(func);
+    return new this._win.Promise(func);
   },
 
   testPromiseWithDOMExceptionThrowingPromiseInit() {
     return new this._win.Promise(() => {
-      throw new this._win.DOMException("We are a second DOMException",
-                                       "NotFoundError");
+      throw new this._win.DOMException(
+        "We are a second DOMException",
+        "NotFoundError"
+      );
     });
   },
 
@@ -121,13 +177,15 @@ TestInterfaceJS.prototype = {
 
   testPromiseWithDOMExceptionThrowingThenFunction() {
     return this._win.Promise.resolve(5).then(() => {
-      throw new this._win.DOMException("We are a third DOMException",
-                                       "NetworkError");
+      throw new this._win.DOMException(
+        "We are a third DOMException",
+        "NetworkError"
+      );
     });
   },
 
   testPromiseWithThrowingChromeThenable() {
-    var thenable =  {
+    var thenable = {
       then() {
         noSuchMethodExistsYo3();
       },
@@ -146,10 +204,12 @@ TestInterfaceJS.prototype = {
   },
 
   testPromiseWithDOMExceptionThrowingThenable() {
-    var thenable =  {
+    var thenable = {
       then: () => {
-        throw new this._win.DOMException("We are a fourth DOMException",
-                                         "TypeMismatchError");
+        throw new this._win.DOMException(
+          "We are a fourth DOMException",
+          "TypeMismatchError"
+        );
       },
     };
     return new this._win.Promise(function(resolve) {

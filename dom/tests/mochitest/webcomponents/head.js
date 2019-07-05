@@ -10,10 +10,14 @@
  * @return {Promise} promise that resolves when iframe is loaded.
  */
 function createIframe(aSrcDoc) {
-  return new Promise(function (aResolve, aReject) {
+  return new Promise(function(aResolve, aReject) {
     let iframe = document.createElement("iframe");
-    iframe.onload = function () { aResolve(iframe.contentDocument); }
-    iframe.onerror = function () { aReject('Failed to load iframe'); }
+    iframe.onload = function() {
+      aResolve(iframe.contentDocument);
+    };
+    iframe.onerror = function() {
+      aReject("Failed to load iframe");
+    };
     if (aSrcDoc) {
       iframe.srcdoc = aSrcDoc;
     }

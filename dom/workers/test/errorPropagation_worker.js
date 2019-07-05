@@ -8,7 +8,7 @@ onerror = function(message, filename, lineno) {
     seenScopeError = true;
     postMessage({
       type: "scope",
-      data: { message: message, filename: filename, lineno: lineno }
+      data: { message: message, filename: filename, lineno: lineno },
     });
     return true;
   }
@@ -33,8 +33,8 @@ onmessage = function(event) {
           data: {
             message: error.message,
             filename: error.filename,
-            lineno: error.lineno
-          }
+            lineno: error.lineno,
+          },
         });
         error.preventDefault();
       }

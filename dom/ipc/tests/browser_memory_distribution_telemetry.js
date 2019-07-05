@@ -1,6 +1,9 @@
 "use strict";
 
-var session = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", null);
+var session = ChromeUtils.import(
+  "resource://gre/modules/TelemetrySession.jsm",
+  null
+);
 
 const DUMMY_PAGE_DATA_URI = `data:text/html,
     <html>
@@ -28,12 +31,23 @@ add_task(async function test_memory_distribution() {
 
   Services.telemetry.canRecordExtended = true;
 
-  let histogram = Services.telemetry.getKeyedHistogramById("MEMORY_DISTRIBUTION_AMONG_CONTENT");
+  let histogram = Services.telemetry.getKeyedHistogramById(
+    "MEMORY_DISTRIBUTION_AMONG_CONTENT"
+  );
   histogram.clear();
 
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
-  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
-  let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    DUMMY_PAGE_DATA_URI
+  );
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    DUMMY_PAGE_DATA_URI
+  );
+  let tab3 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    DUMMY_PAGE_DATA_URI
+  );
 
   let finishedGathering = new Promise(resolve => {
     let obs = function() {
@@ -52,8 +66,14 @@ add_task(async function test_memory_distribution() {
   for (var key in s) {
     is(key, "0 - 10 tabs");
     let fewTabsSnapshot = s[key];
-    ok(fewTabsSnapshot.sum > 0, "Zero difference between all the content processes is unlikely, what happened?");
-    ok(fewTabsSnapshot.sum < 80, "20 percentage difference on average is unlikely, what happened?");
+    ok(
+      fewTabsSnapshot.sum > 0,
+      "Zero difference between all the content processes is unlikely, what happened?"
+    );
+    ok(
+      fewTabsSnapshot.sum < 80,
+      "20 percentage difference on average is unlikely, what happened?"
+    );
     let values = fewTabsSnapshot.values;
     for (let [bucket, value] of Object.entries(values)) {
       if (bucket >= 10) {

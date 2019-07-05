@@ -17,7 +17,7 @@ self.onconnect = function(event) {
 
   if (registeredPorts.length) {
     let data = {
-      type: "connect"
+      type: "connect",
     };
 
     registeredPorts.forEach(function(registeredPort) {
@@ -40,7 +40,7 @@ self.onconnect = function(event) {
       case "retrieve":
         var data = {
           type: "result",
-          data: storedData
+          data: storedData,
         };
         port.postMessage(data);
         break;
@@ -59,10 +59,10 @@ self.onerror = function(message, filename, lineno) {
       type: "worker-error",
       message: message,
       filename: filename,
-      lineno: lineno
+      lineno: lineno,
     };
 
-    registeredPorts.forEach(function (registeredPort) {
+    registeredPorts.forEach(function(registeredPort) {
       registeredPort.postMessage(data);
     });
 

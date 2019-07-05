@@ -1,5 +1,5 @@
 "use strict";
 
-onmessage = function () {};
+onmessage = function() {};
 
 postMessage("ready");

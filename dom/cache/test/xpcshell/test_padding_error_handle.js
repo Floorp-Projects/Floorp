@@ -14,8 +14,10 @@ function createTempPaddingFile() {
   let temporaryPaddingFile = getTempPaddingFilePath();
   temporaryPaddingFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
 
-  ok(temporaryPaddingFile.exists(),
-     "Temporary padding file does be created by test");
+  ok(
+    temporaryPaddingFile.exists(),
+    "Temporary padding file does be created by test"
+  );
 }
 
 async function run_test() {
@@ -34,14 +36,18 @@ async function run_test() {
   // remove unexpected temporary padding file when writting an opaque response
   // into the file-system. Cache read actions(e.g. cache.keys/match) won't.
   let temporaryPaddingFile = getTempPaddingFilePath();
-  ok(temporaryPaddingFile.exists(),
-     "Temporary padding file doesn't be removed by cache.match");
+  ok(
+    temporaryPaddingFile.exists(),
+    "Temporary padding file doesn't be removed by cache.match"
+  );
 
   // Step 2: Verify cache.put won't fail when there is a temporary padding
   // file
   await cache.put("https://foo.com", response);
-  ok(!temporaryPaddingFile.exists(),
-     "Temporary padding file does be removed by cache.put");
+  ok(
+    !temporaryPaddingFile.exists(),
+    "Temporary padding file does be removed by cache.put"
+  );
 
   // Step 3: Verify cache.keys won't fail when there is a temporary padding
   // file
@@ -50,14 +56,18 @@ async function run_test() {
   let cacheEntries = await cache.keys("https://foo.com");
   ok(cacheEntries.length === 1, "Cache.put does succeed");
 
-  ok(temporaryPaddingFile.exists(),
-     "Temporary padding file doesn't be removed by cache.keys");
+  ok(
+    temporaryPaddingFile.exists(),
+    "Temporary padding file doesn't be removed by cache.keys"
+  );
 
   // Step 4: Verify cache.delete won't fail when there is a temporary padding
   // file
   await cache.delete("https://foo.com");
-  ok(!temporaryPaddingFile.exists(),
-     "Temporary padding file does be removed by cache.delete");
+  ok(
+    !temporaryPaddingFile.exists(),
+    "Temporary padding file does be removed by cache.delete"
+  );
 
   await caches.delete("test");
 

@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = "test_wasm_recompile.js";
 
   const objectStoreName = "Wasm";
@@ -21,7 +20,9 @@ function* testSteps()
     yield undefined;
   }
 
-  getWasmBinary('(module (func $f (result i32) (i32.const 42)) (func (export "run") (result i32) (call $f)))');
+  getWasmBinary(
+    '(module (func $f (result i32) (i32.const 42)) (func (export "run") (result i32) (call $f)))'
+  );
   let binary = yield undefined;
 
   wasmData.wasm = getWasmModule(binary);
@@ -71,8 +72,10 @@ function* testSteps()
 
   info("Getting wasm");
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName).get(wasmData.key);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(wasmData.key);
   request.onsuccess = continueToNextStepSync;
   yield undefined;
 
@@ -100,8 +103,10 @@ function* testSteps()
 
   info("Getting wasm again");
 
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName).get(wasmData.key);
+  request = db
+    .transaction([objectStoreName])
+    .objectStore(objectStoreName)
+    .get(wasmData.key);
   request.onsuccess = continueToNextStepSync;
   yield undefined;
 
@@ -125,8 +130,10 @@ function* testSteps()
 
   info("Verifying blob didn't change");
 
-  ok(compareBuffers(newCompiledBuffer2, newCompiledBuffer),
-     "Blob didn't change");
+  ok(
+    compareBuffers(newCompiledBuffer2, newCompiledBuffer),
+    "Blob didn't change"
+  );
 
   finishTest();
   yield undefined;

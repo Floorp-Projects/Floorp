@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceHttp2} = serviceExports;
+const { PushDB, PushService, PushServiceHttp2 } = serviceExports;
 
 var serverPort = -1;
 
@@ -23,31 +23,38 @@ add_task(async function test_pushNotifications() {
 
   var serverURL = "https://localhost:" + serverPort;
 
-  let records = [{
-    subscriptionUri: serverURL + "/subscriptionA",
-    pushEndpoint: serverURL + "/pushEndpointA",
-    pushReceiptEndpoint: serverURL + "/pushReceiptEndpointA",
-    scope: "https://example.net/a",
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { inIsolatedMozBrowser: false }),
-    quota: Infinity,
-  }, {
-    subscriptionUri: serverURL + "/subscriptionB",
-    pushEndpoint: serverURL + "/pushEndpointB",
-    pushReceiptEndpoint: serverURL + "/pushReceiptEndpointB",
-    scope: "https://example.net/b",
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { inIsolatedMozBrowser: false }),
-    quota: Infinity,
-  }, {
-    subscriptionUri: serverURL + "/subscriptionC",
-    pushEndpoint: serverURL + "/pushEndpointC",
-    pushReceiptEndpoint: serverURL + "/pushReceiptEndpointC",
-    scope: "https://example.net/c",
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { inIsolatedMozBrowser: false }),
-    quota: Infinity,
-  }];
+  let records = [
+    {
+      subscriptionUri: serverURL + "/subscriptionA",
+      pushEndpoint: serverURL + "/pushEndpointA",
+      pushReceiptEndpoint: serverURL + "/pushReceiptEndpointA",
+      scope: "https://example.net/a",
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
+      quota: Infinity,
+    },
+    {
+      subscriptionUri: serverURL + "/subscriptionB",
+      pushEndpoint: serverURL + "/pushEndpointB",
+      pushReceiptEndpoint: serverURL + "/pushReceiptEndpointB",
+      scope: "https://example.net/b",
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
+      quota: Infinity,
+    },
+    {
+      subscriptionUri: serverURL + "/subscriptionC",
+      pushEndpoint: serverURL + "/pushEndpointC",
+      pushReceiptEndpoint: serverURL + "/pushReceiptEndpointC",
+      scope: "https://example.net/c",
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
+      quota: Infinity,
+    },
+  ];
 
   for (let record of records) {
     await db.put(record);
@@ -60,8 +67,9 @@ add_task(async function test_pushNotifications() {
 
   let registration = await PushService.registration({
     scope: "https://example.net/a",
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { inIsolatedMozBrowser: false }),
+    originAttributes: ChromeUtils.originAttributesToSuffix({
+      inIsolatedMozBrowser: false,
+    }),
   });
   equal(
     registration.endpoint,

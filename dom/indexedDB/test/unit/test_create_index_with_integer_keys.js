@@ -5,12 +5,16 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const data = { id: new Date().getTime(),
-                 num: parseInt(Math.random() * 1000) };
+function* testSteps() {
+  const data = {
+    id: new Date().getTime(),
+    num: parseInt(Math.random() * 1000),
+  };
 
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield undefined;
@@ -26,7 +30,10 @@ function* testSteps()
   yield undefined;
   db.close();
 
-  request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
+  request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    2
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   event = yield undefined;
@@ -43,17 +50,18 @@ function* testSteps()
   // Make sure our object made it into the index.
   let seenCount = 0;
 
-
-  db2.transaction("foo").objectStore("foo").index("foo")
-     .openKeyCursor().onsuccess = function(event) {
+  db2
+    .transaction("foo")
+    .objectStore("foo")
+    .index("foo")
+    .openKeyCursor().onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, data.num, "Good key");
       is(cursor.primaryKey, data.id, "Good value");
       seenCount++;
       cursor.continue();
-    }
-    else {
+    } else {
       continueToNextStep();
     }
   };

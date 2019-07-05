@@ -5,32 +5,35 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   var data = [
-    { name: "inline key; key generator",
+    {
+      name: "inline key; key generator",
       autoIncrement: true,
-      storedObject: {name: "Lincoln"},
+      storedObject: { name: "Lincoln" },
       keyName: "id",
       keyValue: undefined,
     },
-    { name: "inline key; no key generator",
+    {
+      name: "inline key; no key generator",
       autoIncrement: false,
-      storedObject: {id: 1, name: "Lincoln"},
+      storedObject: { id: 1, name: "Lincoln" },
       keyName: "id",
       keyValue: undefined,
     },
-    { name: "out of line key; key generator",
+    {
+      name: "out of line key; key generator",
       autoIncrement: true,
-      storedObject: {name: "Lincoln"},
+      storedObject: { name: "Lincoln" },
       keyName: undefined,
       keyValue: undefined,
     },
-    { name: "out of line key; no key generator",
+    {
+      name: "out of line key; no key generator",
       autoIncrement: false,
-      storedObject: {name: "Lincoln"},
+      storedObject: { name: "Lincoln" },
       keyName: null,
       keyValue: 1,
     },
@@ -50,9 +53,10 @@ function* testSteps()
       event.target.close();
     };
 
-    let objectStore = db.createObjectStore(test.name,
-                                           { keyPath: test.keyName,
-                                             autoIncrement: test.autoIncrement });
+    let objectStore = db.createObjectStore(test.name, {
+      keyPath: test.keyName,
+      autoIncrement: test.autoIncrement,
+    });
 
     request = objectStore.add(test.storedObject, test.keyValue);
     request.onerror = errorHandler;
@@ -66,8 +70,11 @@ function* testSteps()
     event = yield undefined;
 
     // Sanity check!
-    is(test.storedObject.name, event.target.result.name,
-                  "The correct object was stored.");
+    is(
+      test.storedObject.name,
+      event.target.result.name,
+      "The correct object was stored."
+    );
 
     request = objectStore.delete(id);
     request.onerror = errorHandler;
@@ -88,4 +95,3 @@ function* testSteps()
 
   finishTest();
 }
-

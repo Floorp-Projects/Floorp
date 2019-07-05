@@ -3,44 +3,60 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
+const paymentSrv = Cc[
+  "@mozilla.org/dom/payments/payment-request-service;1"
+].getService(Ci.nsIPaymentRequestService);
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
 }
 
-const shippingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"].
-                           createInstance(Ci.nsIPaymentAddress);
-const addressLine = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-const address = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+const shippingAddress = Cc[
+  "@mozilla.org/dom/payments/payment-address;1"
+].createInstance(Ci.nsIPaymentAddress);
+const addressLine = Cc["@mozilla.org/array;1"].createInstance(
+  Ci.nsIMutableArray
+);
+const address = Cc["@mozilla.org/supports-string;1"].createInstance(
+  Ci.nsISupportsString
+);
 address.data = "Easton Ave";
 addressLine.appendElement(address);
-shippingAddress.init("",  // country
-                     addressLine, // address line
-                     "",  // region
-                     "",  // region code
-                     "",  // city
-                     "",  // dependent locality
-                     "",  // postal code
-                     "",  // sorting code
-                     "",  // organization
-                     "",  // recipient
-                     ""); // phone
+shippingAddress.init(
+  "", // country
+  addressLine, // address line
+  "", // region
+  "", // region code
+  "", // city
+  "", // dependent locality
+  "", // postal code
+  "", // sorting code
+  "", // organization
+  "", // recipient
+  ""
+); // phone
 
 const NormalUIService = {
   shippingOptionChanged: false,
   showPayment: function(requestId) {
     paymentSrv.changeShippingAddress(requestId, shippingAddress);
   },
-  abortPayment: function(requestId) {
-  },
+  abortPayment: function(requestId) {},
   completePayment: function(requestId) {
-    let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
-                           createInstance(Ci.nsIPaymentCompleteActionResponse);
-    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
-    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+    let completeResponse = Cc[
+      "@mozilla.org/dom/payments/payment-complete-action-response;1"
+    ].createInstance(Ci.nsIPaymentCompleteActionResponse);
+    completeResponse.init(
+      requestId,
+      Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED
+    );
+    paymentSrv.respondPayment(
+      completeResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+    );
   },
   updatePayment: function(requestId) {
     let showResponse = null;
@@ -51,36 +67,47 @@ const NormalUIService = {
       emitTestFail("Wrong length for shippingOptions.");
     }
 
-    const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                                createInstance(Ci.nsIGeneralResponseData);
+    const showResponseData = Cc[
+      "@mozilla.org/dom/payments/general-response-data;1"
+    ].createInstance(Ci.nsIGeneralResponseData);
 
     try {
-      showResponseData.initData({ paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",});
+      showResponseData.initData({
+        paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",
+      });
     } catch (e) {
-      emitTestFail("Fail to initialize response data with { paymentToken: \"6880281f-0df3-4b8e-916f-66575e2457c1\",}");
+      emitTestFail(
+        'Fail to initialize response data with { paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",}'
+      );
     }
 
-    showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                   createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(requestId,
-                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
-                      "testing-payment-method",   // payment method
-                      showResponseData,           // payment method data
-                      "",                         // payer name
-                      "",                         // payer email
-                      "");                        // payer phone
-    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+    showResponse = Cc[
+      "@mozilla.org/dom/payments/payment-show-action-response;1"
+    ].createInstance(Ci.nsIPaymentShowActionResponse);
+    showResponse.init(
+      requestId,
+      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+      "testing-payment-method", // payment method
+      showResponseData, // payment method data
+      "", // payer name
+      "", // payer email
+      ""
+    ); // payer phone
+    paymentSrv.respondPayment(
+      showResponse.QueryInterface(Ci.nsIPaymentActionResponse)
+    );
   },
-  closePayment: function(requestId) {
-  },
+  closePayment: function(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 addMessageListener("set-normal-ui-service", function() {
-  paymentSrv.setTestingUIService(NormalUIService.QueryInterface(Ci.nsIPaymentUIService));
+  paymentSrv.setTestingUIService(
+    NormalUIService.QueryInterface(Ci.nsIPaymentUIService)
+  );
 });
 
 addMessageListener("teardown", function() {
   paymentSrv.setTestingUIService(null);
-  sendAsyncMessage('teardown-complete');
+  sendAsyncMessage("teardown-complete");
 });

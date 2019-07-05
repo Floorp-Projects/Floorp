@@ -2,11 +2,10 @@
 
 // Globals
 var testPath = "http://mochi.test:8888/browser/dom/html/test/";
-var ctx = {loadsDone : 0};
+var ctx = { loadsDone: 0 };
 
 // Entry point from Mochikit
 function test() {
-
   waitForExplicitFinish();
 
   ctx.tab1 = BrowserTestUtils.addTab(gBrowser, testPath + "bug592641_img.jpg");
@@ -15,10 +14,13 @@ function test() {
 }
 
 function checkTitle(title) {
-
   ctx.loadsDone++;
-  ok(/^bug592641_img\.jpg \(JPEG Image, 1500\u00A0\u00D7\u00A01500 pixels\)/.test(title),
-     "Title should be correct on load #" + ctx.loadsDone);
+  ok(
+    /^bug592641_img\.jpg \(JPEG Image, 1500\u00A0\u00D7\u00A01500 pixels\)/.test(
+      title
+    ),
+    "Title should be correct on load #" + ctx.loadsDone
+  );
 }
 
 function load1Soon() {

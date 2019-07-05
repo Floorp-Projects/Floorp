@@ -30,34 +30,55 @@ function test_generate_xpath() {
   let inputWithId = doc.getElementById("input1");
   let inputWithIdXPath = inputWithId.generateXPath();
   let inputWithIdExpXPath = "//xhtml:input[@id='input1']";
-  equal(inputWithIdExpXPath, inputWithIdXPath, " xpath generated for input with id");
+  equal(
+    inputWithIdExpXPath,
+    inputWithIdXPath,
+    " xpath generated for input with id"
+  );
 
   // Test generate xpath for input with id has single quote.
   info("Test generate xpath for input with id has single quote");
   let inputWithIdSingleQuote = doc.getElementsByTagName("input")[1];
   let inputWithIdXPathSingleQuote = inputWithIdSingleQuote.generateXPath();
   let inputWithIdExpXPathSingleQuote = '//xhtml:input[@id="input2\'"]';
-  equal(inputWithIdExpXPathSingleQuote, inputWithIdXPathSingleQuote, " xpath generated for input with id");
+  equal(
+    inputWithIdExpXPathSingleQuote,
+    inputWithIdXPathSingleQuote,
+    " xpath generated for input with id"
+  );
 
   // Test generate xpath for input with id has double quote.
   info("Test generate xpath for input with id has double quote");
   let inputWithIdDoubleQuote = doc.getElementsByTagName("input")[2];
   let inputWithIdXPathDoubleQuote = inputWithIdDoubleQuote.generateXPath();
   let inputWithIdExpXPathDoubleQuote = "//xhtml:input[@id='\"input3\"']";
-  equal(inputWithIdExpXPathDoubleQuote, inputWithIdXPathDoubleQuote, " xpath generated for input with id");
+  equal(
+    inputWithIdExpXPathDoubleQuote,
+    inputWithIdXPathDoubleQuote,
+    " xpath generated for input with id"
+  );
 
   // Test generate xpath for input with id has both single and double quote.
   info("Test generate xpath for input with id has single and double quote");
   let inputWithIdSingleDoubleQuote = doc.getElementsByTagName("input")[3];
   inputWithIdSingleDoubleQuote.setAttribute("id", "\"input'4");
   let inputWithIdXPathSingleDoubleQuote = inputWithIdSingleDoubleQuote.generateXPath();
-  let inputWithIdExpXPathSingleDoubleQuote = "//xhtml:input[@id=concat('\"input',\"'\",'4')]";
-  equal(inputWithIdExpXPathSingleDoubleQuote, inputWithIdXPathSingleDoubleQuote, " xpath generated for input with id");
+  let inputWithIdExpXPathSingleDoubleQuote =
+    "//xhtml:input[@id=concat('\"input',\"'\",'4')]";
+  equal(
+    inputWithIdExpXPathSingleDoubleQuote,
+    inputWithIdXPathSingleDoubleQuote,
+    " xpath generated for input with id"
+  );
 
   // Test generate xpath for input without id.
   info("Test generate xpath for input without id");
   let inputNoId = doc.getElementsByTagName("input")[4];
   let inputNoIdXPath = inputNoId.generateXPath();
   let inputNoIdExpXPath = "/xhtml:html/xhtml:body/xhtml:label[5]/xhtml:input";
-  equal(inputNoIdExpXPath, inputNoIdXPath, " xpath generated for input without id");
+  equal(
+    inputNoIdExpXPath,
+    inputNoIdXPath,
+    " xpath generated for input without id"
+  );
 }

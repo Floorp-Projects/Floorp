@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "52b2b04c-b6cc-42c6-abdf-bef9cbdbea00";
 const channelID = "cafed00d";
@@ -16,7 +16,9 @@ function run_test() {
 
 add_task(async function test_register_invalid_channel() {
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
@@ -25,19 +27,23 @@ add_task(async function test_register_invalid_channel() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            uaid: userAgentID,
-            status: 200,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              uaid: userAgentID,
+              status: 200,
+            })
+          );
         },
         onRegister(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "register",
-            status: 403,
-            channelID,
-            error: "Invalid channel ID",
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "register",
+              status: 403,
+              channelID,
+              error: "Invalid channel ID",
+            })
+          );
         },
       });
     },
@@ -46,8 +52,9 @@ add_task(async function test_register_invalid_channel() {
   await Assert.rejects(
     PushService.register({
       scope: "https://example.com/invalid-channel",
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { inIsolatedMozBrowser: false }),
+      originAttributes: ChromeUtils.originAttributesToSuffix({
+        inIsolatedMozBrowser: false,
+      }),
     }),
     /Registration error/,
     "Expected error for invalid channel ID"

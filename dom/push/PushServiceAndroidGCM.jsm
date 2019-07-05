@@ -4,24 +4,48 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "PushDB", "resource://gre/modules/PushDB.jsm");
-ChromeUtils.defineModuleGetter(this, "PushRecord", "resource://gre/modules/PushRecord.jsm");
-ChromeUtils.defineModuleGetter(this, "PushCrypto", "resource://gre/modules/PushCrypto.jsm");
-ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PushDB",
+  "resource://gre/modules/PushDB.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PushRecord",
+  "resource://gre/modules/PushRecord.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PushCrypto",
+  "resource://gre/modules/PushCrypto.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "Log", () => {
-  return ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {})
-    .AndroidLog.bind("Push");
+  return ChromeUtils.import(
+    "resource://gre/modules/AndroidLog.jsm",
+    {}
+  ).AndroidLog.bind("Push");
 });
 
 const EXPORTED_SYMBOLS = ["PushServiceAndroidGCM"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
-  let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     dump: Log.i,
     maxLogLevelPref: "dom.push.loglevel",
@@ -46,11 +70,13 @@ var PushServiceAndroidGCM = {
   _serverURI: null,
 
   newPushDB() {
-    return new PushDB(kPUSHANDROIDGCMDB_DB_NAME,
-                      kPUSHANDROIDGCMDB_DB_VERSION,
-                      kPUSHANDROIDGCMDB_STORE_NAME,
-                      "channelID",
-                      PushRecordAndroidGCM);
+    return new PushDB(
+      kPUSHANDROIDGCMDB_DB_NAME,
+      kPUSHANDROIDGCMDB_DB_VERSION,
+      kPUSHANDROIDGCMDB_STORE_NAME,
+      "channelID",
+      PushRecordAndroidGCM
+    );
   },
 
   validServerURI(serverURI) {
@@ -65,7 +91,10 @@ var PushServiceAndroidGCM = {
       // Allow insecure server URLs for development and testing.
       return !!prefs.get("testing.allowInsecureServerURL");
     }
-    console.info("Unsupported Android GCM dom.push.serverURL scheme", serverURI.scheme);
+    console.info(
+      "Unsupported Android GCM dom.push.serverURL scheme",
+      serverURI.scheme
+    );
     return false;
   },
 
@@ -75,7 +104,10 @@ var PushServiceAndroidGCM = {
         if (data == "dom.push.debug") {
           // Reconfigure.
           let debug = !!prefs.get("debug");
-          console.info("Debug parameter changed; updating configuration with new debug", debug);
+          console.info(
+            "Debug parameter changed; updating configuration with new debug",
+            debug
+          );
           this._configure(this._serverURI, debug);
         }
         break;
@@ -105,10 +137,15 @@ var PushServiceAndroidGCM = {
 
     console.debug("Delivering message to main PushService:", message, headers);
     this._mainPushService.receivedPushMessage(
-      data.channelID, "", headers, message, (record) => {
+      data.channelID,
+      "",
+      headers,
+      message,
+      record => {
         // Always update the stored record.
         return record;
-      });
+      }
+    );
   },
 
   _messageAndHeaders(data) {
@@ -169,7 +206,10 @@ var PushServiceAndroidGCM = {
     });
 
     this._mainPushService = null;
-    Services.obs.removeObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage");
+    Services.obs.removeObserver(
+      this,
+      "PushServiceAndroidGCM:ReceivedPushMessage"
+    );
     prefs.ignore("debug", this);
   },
 
@@ -182,26 +222,34 @@ var PushServiceAndroidGCM = {
     // It's possible for the registration or subscriptions backing the
     // PushService to not be registered with the underlying AndroidPushService.
     // Expire those that are unrecognized.
-    return EventDispatcher.instance.sendRequestForResult({
-      type: "PushServiceAndroidGCM:DumpSubscriptions",
-    })
-    .then(subscriptions => {
-      subscriptions = JSON.parse(subscriptions);
-      console.debug("connect:", subscriptions);
-      // subscriptions maps chid => subscription data.
-      return Promise.all(records.map(record => {
-        if (subscriptions.hasOwnProperty(record.keyID)) {
-          console.debug("connect:", "hasOwnProperty", record.keyID);
-          return Promise.resolve();
-        }
-        console.debug("connect:", "!hasOwnProperty", record.keyID);
-        // Subscription is known to PushService.jsm but not to AndroidPushService.  Drop it.
-        return this._mainPushService.dropRegistrationAndNotifyApp(record.keyID)
-          .catch(error => {
-            console.error("connect: Error dropping registration", record.keyID, error);
-          });
-      }));
-    });
+    return EventDispatcher.instance
+      .sendRequestForResult({
+        type: "PushServiceAndroidGCM:DumpSubscriptions",
+      })
+      .then(subscriptions => {
+        subscriptions = JSON.parse(subscriptions);
+        console.debug("connect:", subscriptions);
+        // subscriptions maps chid => subscription data.
+        return Promise.all(
+          records.map(record => {
+            if (subscriptions.hasOwnProperty(record.keyID)) {
+              console.debug("connect:", "hasOwnProperty", record.keyID);
+              return Promise.resolve();
+            }
+            console.debug("connect:", "!hasOwnProperty", record.keyID);
+            // Subscription is known to PushService.jsm but not to AndroidPushService.  Drop it.
+            return this._mainPushService
+              .dropRegistrationAndNotifyApp(record.keyID)
+              .catch(error => {
+                console.error(
+                  "connect: Error dropping registration",
+                  record.keyID,
+                  error
+                );
+              });
+          })
+        );
+      });
   },
 
   async sendSubscribeBroadcast(serviceId, version) {
@@ -219,11 +267,12 @@ var PushServiceAndroidGCM = {
   register(record) {
     console.debug("register:", record);
     let ctime = Date.now();
-    let appServerKey = record.appServerKey ?
-      ChromeUtils.base64URLEncode(record.appServerKey, {
-        // The Push server requires padding.
-        pad: true,
-      }) : null;
+    let appServerKey = record.appServerKey
+      ? ChromeUtils.base64URLEncode(record.appServerKey, {
+          // The Push server requires padding.
+          pad: true,
+        })
+      : null;
     let message = {
       type: "PushServiceAndroidGCM:SubscribeChannel",
       appServerKey,
@@ -232,12 +281,11 @@ var PushServiceAndroidGCM = {
       message.service = "fxa";
     }
     // Caller handles errors.
-    return EventDispatcher.instance.sendRequestForResult(message)
-    .then(data => {
+    return EventDispatcher.instance.sendRequestForResult(message).then(data => {
       data = JSON.parse(data);
       console.debug("Got data:", data);
-      return PushCrypto.generateKeys()
-        .then(exportedKeys =>
+      return PushCrypto.generateKeys().then(
+        exportedKeys =>
           new PushRecordAndroidGCM({
             // Straight from autopush.
             channelID: data.channelID,
@@ -266,8 +314,11 @@ var PushServiceAndroidGCM = {
   },
 
   reportDeliveryError(messageID, reason) {
-    console.warn("reportDeliveryError: Ignoring message delivery error",
-      messageID, reason);
+    console.warn(
+      "reportDeliveryError: Ignoring message delivery error",
+      messageID,
+      reason
+    );
   },
 };
 

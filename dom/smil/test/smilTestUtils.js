@@ -11,35 +11,29 @@ const XLINK_NS = "http://www.w3.org/1999/xlink";
 
 const MPATH_TARGET_ID = "smilTestUtilsTestingPath";
 
-function extend(child, supertype)
-{
-   child.prototype.__proto__ = supertype.prototype;
+function extend(child, supertype) {
+  child.prototype.__proto__ = supertype.prototype;
 }
 
 // General Utility Methods
-var SMILUtil =
-{
+var SMILUtil = {
   // Returns the first matched <svg> node in the document
-  getSVGRoot : function()
-  {
+  getSVGRoot: function() {
     return SMILUtil.getFirstElemWithTag("svg");
   },
 
   // Returns the first element in the document with the matching tag
-  getFirstElemWithTag : function(aTargetTag)
-  {
+  getFirstElemWithTag: function(aTargetTag) {
     var elemList = document.getElementsByTagName(aTargetTag);
-    return (elemList.length == 0 ? null : elemList[0]);
+    return elemList.length == 0 ? null : elemList[0];
   },
 
   // Simple wrapper for getComputedStyle
-  getComputedStyleSimple: function(elem, prop)
-  {
+  getComputedStyleSimple: function(elem, prop) {
     return window.getComputedStyle(elem).getPropertyValue(prop);
   },
 
-  getAttributeValue: function(elem, attr)
-  {
+  getAttributeValue: function(elem, attr) {
     if (attr.attrName == SMILUtil.getMotionFakeAttributeName()) {
       // Fake motion "attribute" -- "computed value" is the element's CTM
       return elem.getCTM();
@@ -56,14 +50,19 @@ var SMILUtil =
 
   // Smart wrapper for getComputedStyle, which will generate a "fake" computed
   // style for recognized shorthand properties (font, font-variant, overflow, marker)
-  getComputedStyleWrapper : function(elem, propName)
-  {
+  getComputedStyleWrapper: function(elem, propName) {
     // Special cases for shorthand properties (which aren't directly queriable
     // via getComputedStyle)
     var computedStyle;
     if (propName == "font") {
-      var subProps = ["font-style", "font-variant-caps", "font-weight",
-                      "font-size", "line-height", "font-family"];
+      var subProps = [
+        "font-style",
+        "font-variant-caps",
+        "font-weight",
+        "font-size",
+        "line-height",
+        "font-family",
+      ];
       for (var i in subProps) {
         var subPropStyle = SMILUtil.getComputedStyleSimple(elem, subProps[i]);
         if (subPropStyle) {
@@ -81,16 +80,22 @@ var SMILUtil =
     } else if (propName == "font-variant") {
       // xxx - this isn't completely correct but it's sufficient for what's
       //       being tested here
-      computedStyle = SMILUtil.getComputedStyleSimple(elem, "font-variant-caps");
+      computedStyle = SMILUtil.getComputedStyleSimple(
+        elem,
+        "font-variant-caps"
+      );
     } else if (propName == "marker") {
       var subProps = ["marker-end", "marker-mid", "marker-start"];
       for (var i in subProps) {
         if (!computedStyle) {
           computedStyle = SMILUtil.getComputedStyleSimple(elem, subProps[i]);
         } else {
-          is(computedStyle, SMILUtil.getComputedStyleSimple(elem, subProps[i]),
-             "marker sub-properties should match each other " +
-             "(they shouldn't be individually set)");
+          is(
+            computedStyle,
+            SMILUtil.getComputedStyleSimple(elem, subProps[i]),
+            "marker sub-properties should match each other " +
+              "(they shouldn't be individually set)"
+          );
         }
       }
     } else if (propName == "overflow") {
@@ -99,9 +104,12 @@ var SMILUtil =
         if (!computedStyle) {
           computedStyle = SMILUtil.getComputedStyleSimple(elem, subProps[i]);
         } else {
-          is(computedStyle, SMILUtil.getComputedStyleSimple(elem, subProps[i]),
-             "overflow sub-properties should match each other " +
-             "(they shouldn't be individually set)");
+          is(
+            computedStyle,
+            SMILUtil.getComputedStyleSimple(elem, subProps[i]),
+            "overflow sub-properties should match each other " +
+              "(they shouldn't be individually set)"
+          );
         }
       }
     } else {
@@ -110,24 +118,21 @@ var SMILUtil =
     return computedStyle;
   },
 
-  getMotionFakeAttributeName : function() {
+  getMotionFakeAttributeName: function() {
     return "_motion";
   },
 
   // Return stripped px value from specified value.
-  stripPx: str => str.replace(/px\s*$/, ''),
+  stripPx: str => str.replace(/px\s*$/, ""),
 };
 
-
-var CTMUtil =
-{
-  CTM_COMPONENTS_ALL    : ["a", "b", "c", "d", "e", "f"],
-  CTM_COMPONENTS_ROTATE : ["a", "b", "c", "d" ],
+var CTMUtil = {
+  CTM_COMPONENTS_ALL: ["a", "b", "c", "d", "e", "f"],
+  CTM_COMPONENTS_ROTATE: ["a", "b", "c", "d"],
 
   // Function to generate a CTM Matrix from a "summary"
   // (a 3-tuple containing [tX, tY, theta])
-  generateCTM : function(aCtmSummary)
-  {
+  generateCTM: function(aCtmSummary) {
     if (!aCtmSummary || aCtmSummary.length != 3) {
       ok(false, "Unexpected CTM summary tuple length: " + aCtmSummary.length);
     }
@@ -136,28 +141,44 @@ var CTMUtil =
     var theta = aCtmSummary[2];
     var cosTheta = Math.cos(theta);
     var sinTheta = Math.sin(theta);
-    var newCtm = { a : cosTheta,  c: -sinTheta,  e: tX,
-                   b : sinTheta,  d:  cosTheta,  f: tY  };
+    var newCtm = {
+      a: cosTheta,
+      c: -sinTheta,
+      e: tX,
+      b: sinTheta,
+      d: cosTheta,
+      f: tY,
+    };
     return newCtm;
   },
 
   /// Helper for isCtmEqual
-  isWithinDelta : function(aTestVal, aExpectedVal, aErrMsg, aIsTodo) {
+  isWithinDelta: function(aTestVal, aExpectedVal, aErrMsg, aIsTodo) {
     var testFunc = aIsTodo ? todo : ok;
     const delta = 0.00001; // allowing margin of error = 10^-5
-    ok(aTestVal >= aExpectedVal - delta &&
-       aTestVal <= aExpectedVal + delta,
-       aErrMsg + " | got: " + aTestVal + ", expected: " + aExpectedVal);
+    ok(
+      aTestVal >= aExpectedVal - delta && aTestVal <= aExpectedVal + delta,
+      aErrMsg + " | got: " + aTestVal + ", expected: " + aExpectedVal
+    );
   },
 
-  assertCTMEqual : function(aLeftCtm, aRightCtm, aComponentsToCheck,
-                            aErrMsg, aIsTodo) {
+  assertCTMEqual: function(
+    aLeftCtm,
+    aRightCtm,
+    aComponentsToCheck,
+    aErrMsg,
+    aIsTodo
+  ) {
     var foundCTMDifference = false;
     for (var j in aComponentsToCheck) {
       var curComponent = aComponentsToCheck[j];
       if (!aIsTodo) {
-        CTMUtil.isWithinDelta(aLeftCtm[curComponent], aRightCtm[curComponent],
-                              aErrMsg + " | component: " + curComponent, false);
+        CTMUtil.isWithinDelta(
+          aLeftCtm[curComponent],
+          aRightCtm[curComponent],
+          aErrMsg + " | component: " + curComponent,
+          false
+        );
       } else if (aLeftCtm[curComponent] != aRightCtm[curComponent]) {
         foundCTMDifference = true;
       }
@@ -168,8 +189,13 @@ var CTMUtil =
     }
   },
 
-  assertCTMNotEqual : function(aLeftCtm, aRightCtm, aComponentsToCheck,
-                               aErrMsg, aIsTodo) {
+  assertCTMNotEqual: function(
+    aLeftCtm,
+    aRightCtm,
+    aComponentsToCheck,
+    aErrMsg,
+    aIsTodo
+  ) {
     // CTM should not match initial one
     var foundCTMDifference = false;
     for (var j in aComponentsToCheck) {
@@ -188,25 +214,27 @@ var CTMUtil =
   },
 };
 
-
 // Wrapper for timing information
-function SMILTimingData(aBegin, aDur)
-{
+function SMILTimingData(aBegin, aDur) {
   this._begin = aBegin;
   this._dur = aDur;
 }
-SMILTimingData.prototype =
-{
+SMILTimingData.prototype = {
   _begin: null,
   _dur: null,
-  getBeginTime      : function() { return this._begin; },
-  getDur            : function() { return this._dur; },
-  getEndTime        : function() { return this._begin + this._dur; },
-  getFractionalTime : function(aPortion)
-  {
+  getBeginTime: function() {
+    return this._begin;
+  },
+  getDur: function() {
+    return this._dur;
+  },
+  getEndTime: function() {
+    return this._begin + this._dur;
+  },
+  getFractionalTime: function(aPortion) {
     return this._begin + aPortion * this._dur;
   },
-}
+};
 
 /**
  * Attribute: a container for information about an attribute we'll
@@ -224,37 +252,37 @@ SMILTimingData.prototype =
  * @param aIsAdditive   A bool indicating whether this attribute is defined as
  *                      additive (i.e. supports "by" animation) in the SVG spec.
  */
-function Attribute(aAttrName, aAttrType, aTargetTag,
-                   aIsAnimatable, aIsAdditive)
-{
+function Attribute(
+  aAttrName,
+  aAttrType,
+  aTargetTag,
+  aIsAnimatable,
+  aIsAdditive
+) {
   this.attrName = aAttrName;
   this.attrType = aAttrType;
   this.targetTag = aTargetTag;
   this.isAnimatable = aIsAnimatable;
   this.isAdditive = aIsAdditive;
 }
-Attribute.prototype =
-{
+Attribute.prototype = {
   // Member variables
-  attrName     : null,
-  attrType     : null,
-  isAnimatable : null,
-  testcaseList : null,
+  attrName: null,
+  attrType: null,
+  isAnimatable: null,
+  testcaseList: null,
 };
 
 // Generators for Attribute objects.  These allow lists of attribute
 // definitions to be more human-readible than if we were using Attribute() with
 // boolean flags, e.g. "Attribute(..., true, true), Attribute(..., true, false)
-function NonAnimatableAttribute(aAttrName, aAttrType, aTargetTag)
-{
+function NonAnimatableAttribute(aAttrName, aAttrType, aTargetTag) {
   return new Attribute(aAttrName, aAttrType, aTargetTag, false, false);
 }
-function NonAdditiveAttribute(aAttrName, aAttrType, aTargetTag)
-{
+function NonAdditiveAttribute(aAttrName, aAttrType, aTargetTag) {
   return new Attribute(aAttrName, aAttrType, aTargetTag, true, false);
 }
-function AdditiveAttribute(aAttrName, aAttrType, aTargetTag)
-{
+function AdditiveAttribute(aAttrName, aAttrType, aTargetTag) {
   return new Attribute(aAttrName, aAttrType, aTargetTag, true, true);
 }
 
@@ -264,53 +292,77 @@ function AdditiveAttribute(aAttrName, aAttrType, aTargetTag)
  * @param aAttribute An Attribute object for the attribute
  * @param aTestcaseList An array of AnimTestcase objects
  */
-function TestcaseBundle(aAttribute, aTestcaseList, aSkipReason)
-{
+function TestcaseBundle(aAttribute, aTestcaseList, aSkipReason) {
   this.animatedAttribute = aAttribute;
   this.testcaseList = aTestcaseList;
   this.skipReason = aSkipReason;
 }
-TestcaseBundle.prototype =
-{
+TestcaseBundle.prototype = {
   // Member variables
-  animatedAttribute : null,
-  testcaseList      : null,
-  skipReason        : null,
+  animatedAttribute: null,
+  testcaseList: null,
+  skipReason: null,
 
   // Methods
-  go : function(aTimingData) {
+  go: function(aTimingData) {
     if (this.skipReason) {
-      todo(false, "Skipping a bundle for '" + this.animatedAttribute.attrName +
-           "' because: " + this.skipReason);
+      todo(
+        false,
+        "Skipping a bundle for '" +
+          this.animatedAttribute.attrName +
+          "' because: " +
+          this.skipReason
+      );
     } else {
       // Sanity Check: Bundle should have > 0 testcases
       if (!this.testcaseList || !this.testcaseList.length) {
-        ok(false, "a bundle for '" + this.animatedAttribute.attrName +
-           "' has no testcases");
+        ok(
+          false,
+          "a bundle for '" +
+            this.animatedAttribute.attrName +
+            "' has no testcases"
+        );
       }
 
-      var targetElem =
-        SMILUtil.getFirstElemWithTag(this.animatedAttribute.targetTag);
+      var targetElem = SMILUtil.getFirstElemWithTag(
+        this.animatedAttribute.targetTag
+      );
 
       if (!targetElem) {
-        ok(false, "Error: can't find an element of type '" +
-           this.animatedAttribute.targetTag +
-           "', so I can't test property '" +
-           this.animatedAttribute.attrName + "'");
+        ok(
+          false,
+          "Error: can't find an element of type '" +
+            this.animatedAttribute.targetTag +
+            "', so I can't test property '" +
+            this.animatedAttribute.attrName +
+            "'"
+        );
         return;
       }
 
       for (var testcaseIdx in this.testcaseList) {
         var testcase = this.testcaseList[testcaseIdx];
         if (testcase.skipReason) {
-          todo(false, "Skipping a testcase for '" +
-               this.animatedAttribute.attrName +
-               "' because: " + testcase.skipReason);
+          todo(
+            false,
+            "Skipping a testcase for '" +
+              this.animatedAttribute.attrName +
+              "' because: " +
+              testcase.skipReason
+          );
         } else {
-          testcase.runTest(targetElem, this.animatedAttribute,
-                           aTimingData, false);
-          testcase.runTest(targetElem, this.animatedAttribute,
-                           aTimingData, true);
+          testcase.runTest(
+            targetElem,
+            this.animatedAttribute,
+            aTimingData,
+            false
+          );
+          testcase.runTest(
+            targetElem,
+            this.animatedAttribute,
+            aTimingData,
+            true
+          );
         }
       }
     }
@@ -322,12 +374,11 @@ TestcaseBundle.prototype =
  * (e.g. a set of "from"/"to" values to test)
  */
 function AnimTestcase() {} // abstract => no constructor
-AnimTestcase.prototype =
-{
+AnimTestcase.prototype = {
   // Member variables
-  _animElementTagName : "animate", // Can be overridden for e.g. animateColor
-  computedValMap      : null,
-  skipReason          : null,
+  _animElementTagName: "animate", // Can be overridden for e.g. animateColor
+  computedValMap: null,
+  skipReason: null,
 
   // Methods
   /**
@@ -341,8 +392,7 @@ AnimTestcase.prototype =
    * @param aIsFreeze If true, indicates that our test animation should use
    *                  fill="freeze"; otherwise, we'll default to fill="remove".
    */
-  runTest : function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze)
-  {
+  runTest: function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze) {
     // SANITY CHECKS
     if (!SMILUtil.getSVGRoot().animationsPaused()) {
       ok(false, "Should start each test with animations paused");
@@ -360,7 +410,12 @@ AnimTestcase.prototype =
     aTargetElem.appendChild(anim);
 
     // Build a list of [seek-time, expectedValue, errorMessage] triplets
-    var seekList = this.buildSeekList(aTargetAttr, baseVal, aTimeData, aIsFreeze);
+    var seekList = this.buildSeekList(
+      aTargetAttr,
+      baseVal,
+      aTimeData,
+      aIsFreeze
+    );
 
     // DO THE ACTUAL TESTING
     this.seekAndTest(seekList, aTargetElem, aTargetAttr);
@@ -373,10 +428,11 @@ AnimTestcase.prototype =
   // HELPER FUNCTIONS
   // setupAnimationElement: <animate> element
   // Subclasses should extend this parent method
-  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
-  {
-    var animElement = document.createElementNS(SVG_NS,
-                                               this._animElementTagName);
+  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+    var animElement = document.createElementNS(
+      SVG_NS,
+      this._animElementTagName
+    );
     animElement.setAttribute("attributeName", aAnimAttr.attrName);
     animElement.setAttribute("attributeType", aAnimAttr.attrType);
     animElement.setAttribute("begin", aTimeData.getBeginTime());
@@ -387,22 +443,32 @@ AnimTestcase.prototype =
     return animElement;
   },
 
-  buildSeekList : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
-  {
+  buildSeekList: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     if (!aAnimAttr.isAnimatable) {
-      return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
-                                      "defined as non-animatable in SVG spec");
+      return this.buildSeekListStatic(
+        aAnimAttr,
+        aBaseVal,
+        aTimeData,
+        "defined as non-animatable in SVG spec"
+      );
     }
     if (this.computedValMap.noEffect) {
-      return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
-                                      "testcase specified to have no effect");
+      return this.buildSeekListStatic(
+        aAnimAttr,
+        aBaseVal,
+        aTimeData,
+        "testcase specified to have no effect"
+      );
     }
-    return this.buildSeekListAnimated(aAnimAttr, aBaseVal,
-                                      aTimeData, aIsFreeze)
+    return this.buildSeekListAnimated(
+      aAnimAttr,
+      aBaseVal,
+      aTimeData,
+      aIsFreeze
+    );
   },
 
-  seekAndTest : function(aSeekList, aTargetElem, aTargetAttr)
-  {
+  seekAndTest: function(aSeekList, aTargetElem, aTargetAttr) {
     var svg = document.getElementById("svg");
     for (var i in aSeekList) {
       var entry = aSeekList[i];
@@ -411,80 +477,106 @@ AnimTestcase.prototype =
       // Bug 1379908: The computed value of stroke-* properties should be
       // serialized with px units, but currently Gecko and Servo don't do that
       // when animating these values.
-      if (['stroke-width',
-           'stroke-dasharray',
-           'stroke-dashoffset'].includes(aTargetAttr.attrName)) {
+      if (
+        ["stroke-width", "stroke-dasharray", "stroke-dashoffset"].includes(
+          aTargetAttr.attrName
+        )
+      ) {
         var attr = SMILUtil.stripPx(
-          SMILUtil.getAttributeValue(aTargetElem, aTargetAttr));
+          SMILUtil.getAttributeValue(aTargetElem, aTargetAttr)
+        );
         var expectedVal = SMILUtil.stripPx(entry[1]);
         is(attr, expectedVal, entry[2]);
         return;
       }
-      is(SMILUtil.getAttributeValue(aTargetElem, aTargetAttr),
-         entry[1], entry[2]);
+      is(
+        SMILUtil.getAttributeValue(aTargetElem, aTargetAttr),
+        entry[1],
+        entry[2]
+      );
     }
   },
 
   // methods that expect to be overridden in subclasses
-  buildSeekListStatic : function(aAnimAttr, aBaseVal,
-                                 aTimeData, aReasonStatic) {},
-  buildSeekListAnimated : function(aAnimAttr, aBaseVal,
-                                   aTimeData, aIsFreeze) {},
+  buildSeekListStatic: function(
+    aAnimAttr,
+    aBaseVal,
+    aTimeData,
+    aReasonStatic
+  ) {},
+  buildSeekListAnimated: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {},
 };
-
 
 // Abstract parent class to share code between from-to & from-by testcases.
 function AnimTestcaseFrom() {} // abstract => no constructor
-AnimTestcaseFrom.prototype =
-{
+AnimTestcaseFrom.prototype = {
   // Member variables
-  from           : null,
+  from: null,
 
   // Methods
-  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
-  {
+  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
-    var animElem = AnimTestcase.prototype.setupAnimationElement.apply(this,
-                                         [aAnimAttr, aTimeData, aIsFreeze]);
-    animElem.setAttribute("from", this.from)
+    var animElem = AnimTestcase.prototype.setupAnimationElement.apply(this, [
+      aAnimAttr,
+      aTimeData,
+      aIsFreeze,
+    ]);
+    animElem.setAttribute("from", this.from);
     return animElem;
   },
 
-  buildSeekListStatic : function(aAnimAttr, aBaseVal, aTimeData, aReasonStatic)
-  {
+  buildSeekListStatic: function(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {
     var seekList = new Array();
-    var msgPrefix = aAnimAttr.attrName +
-      ": shouldn't be affected by animation ";
-    seekList.push([aTimeData.getBeginTime(), aBaseVal,
-                   msgPrefix + "(at animation begin) - " + aReasonStatic]);
-    seekList.push([aTimeData.getFractionalTime(1/2), aBaseVal,
-                   msgPrefix + "(at animation mid) - " + aReasonStatic]);
-    seekList.push([aTimeData.getEndTime(), aBaseVal,
-                   msgPrefix + "(at animation end) - " + aReasonStatic]);
-    seekList.push([aTimeData.getEndTime() + aTimeData.getDur(), aBaseVal,
-                   msgPrefix + "(after animation end) - " + aReasonStatic]);
+    var msgPrefix =
+      aAnimAttr.attrName + ": shouldn't be affected by animation ";
+    seekList.push([
+      aTimeData.getBeginTime(),
+      aBaseVal,
+      msgPrefix + "(at animation begin) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 2),
+      aBaseVal,
+      msgPrefix + "(at animation mid) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getEndTime(),
+      aBaseVal,
+      msgPrefix + "(at animation end) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getEndTime() + aTimeData.getDur(),
+      aBaseVal,
+      msgPrefix + "(after animation end) - " + aReasonStatic,
+    ]);
     return seekList;
   },
 
-  buildSeekListAnimated : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
-  {
+  buildSeekListAnimated: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     var seekList = new Array();
     var msgPrefix = aAnimAttr.attrName + ": ";
     if (aTimeData.getBeginTime() > 0.1) {
-      seekList.push([aTimeData.getBeginTime() - 0.1,
-                    aBaseVal,
-                     msgPrefix + "checking that base value is set " +
-                     "before start of animation"]);
+      seekList.push([
+        aTimeData.getBeginTime() - 0.1,
+        aBaseVal,
+        msgPrefix +
+          "checking that base value is set " +
+          "before start of animation",
+      ]);
     }
 
-    seekList.push([aTimeData.getBeginTime(),
-                   this.computedValMap.fromComp || this.from,
-                   msgPrefix + "checking that 'from' value is set " +
-                   "at start of animation"]);
-    seekList.push([aTimeData.getFractionalTime(1/2),
-                   this.computedValMap.midComp ||
-                   this.computedValMap.toComp || this.to,
-                   msgPrefix + "checking value halfway through animation"]);
+    seekList.push([
+      aTimeData.getBeginTime(),
+      this.computedValMap.fromComp || this.from,
+      msgPrefix +
+        "checking that 'from' value is set " +
+        "at start of animation",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 2),
+      this.computedValMap.midComp || this.computedValMap.toComp || this.to,
+      msgPrefix + "checking value halfway through animation",
+    ]);
 
     var finalMsg;
     var expectedEndVal;
@@ -493,16 +585,22 @@ AnimTestcaseFrom.prototype =
       finalMsg = msgPrefix + "[freeze-mode] checking that final value is set ";
     } else {
       expectedEndVal = aBaseVal;
-      finalMsg = msgPrefix +
-        "[remove-mode] checking that animation is cleared ";
+      finalMsg =
+        msgPrefix + "[remove-mode] checking that animation is cleared ";
     }
-    seekList.push([aTimeData.getEndTime(),
-                   expectedEndVal, finalMsg + "at end of animation"]);
-    seekList.push([aTimeData.getEndTime() + aTimeData.getDur(),
-                   expectedEndVal, finalMsg + "after end of animation"]);
+    seekList.push([
+      aTimeData.getEndTime(),
+      expectedEndVal,
+      finalMsg + "at end of animation",
+    ]);
+    seekList.push([
+      aTimeData.getEndTime() + aTimeData.getDur(),
+      expectedEndVal,
+      finalMsg + "after end of animation",
+    ]);
     return seekList;
   },
-}
+};
 extend(AnimTestcaseFrom, AnimTestcase);
 
 /*
@@ -523,28 +621,27 @@ extend(AnimTestcaseFrom, AnimTestcase);
  *                     Otherwise, this value should be null (or omitted).
  *
  */
-function AnimTestcaseFromTo(aFrom, aTo, aComputedValMap, aSkipReason)
-{
-  this.from           = aFrom;
-  this.to             = aTo;
+function AnimTestcaseFromTo(aFrom, aTo, aComputedValMap, aSkipReason) {
+  this.from = aFrom;
+  this.to = aTo;
   this.computedValMap = aComputedValMap || {}; // Let aComputedValMap be omitted
-  this.skipReason     = aSkipReason;
+  this.skipReason = aSkipReason;
 }
-AnimTestcaseFromTo.prototype =
-{
+AnimTestcaseFromTo.prototype = {
   // Member variables
-  to : null,
+  to: null,
 
   // Methods
-  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
-  {
+  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
-    var animElem = AnimTestcaseFrom.prototype.setupAnimationElement.apply(this,
-                                            [aAnimAttr, aTimeData, aIsFreeze]);
-    animElem.setAttribute("to", this.to)
+    var animElem = AnimTestcaseFrom.prototype.setupAnimationElement.apply(
+      this,
+      [aAnimAttr, aTimeData, aIsFreeze]
+    );
+    animElem.setAttribute("to", this.to);
     return animElem;
   },
-}
+};
 extend(AnimTestcaseFromTo, AnimTestcaseFrom);
 
 /*
@@ -567,42 +664,51 @@ extend(AnimTestcaseFromTo, AnimTestcaseFrom);
  *                     parameter should be a string explaining why.
  *                     Otherwise, this value should be null (or omitted).
  */
-function AnimTestcaseFromBy(aFrom, aBy, aComputedValMap, aSkipReason)
-{
-  this.from           = aFrom;
-  this.by             = aBy;
+function AnimTestcaseFromBy(aFrom, aBy, aComputedValMap, aSkipReason) {
+  this.from = aFrom;
+  this.by = aBy;
   this.computedValMap = aComputedValMap;
-  this.skipReason     = aSkipReason;
-  if (this.computedValMap &&
-      !this.computedValMap.noEffect && !this.computedValMap.toComp) {
+  this.skipReason = aSkipReason;
+  if (
+    this.computedValMap &&
+    !this.computedValMap.noEffect &&
+    !this.computedValMap.toComp
+  ) {
     ok(false, "AnimTestcaseFromBy needs expected computed final value");
   }
 }
-AnimTestcaseFromBy.prototype =
-{
+AnimTestcaseFromBy.prototype = {
   // Member variables
-  by : null,
+  by: null,
 
   // Methods
-  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
-  {
+  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
-    var animElem = AnimTestcaseFrom.prototype.setupAnimationElement.apply(this,
-                                            [aAnimAttr, aTimeData, aIsFreeze]);
-    animElem.setAttribute("by", this.by)
+    var animElem = AnimTestcaseFrom.prototype.setupAnimationElement.apply(
+      this,
+      [aAnimAttr, aTimeData, aIsFreeze]
+    );
+    animElem.setAttribute("by", this.by);
     return animElem;
   },
-  buildSeekList : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
-  {
+  buildSeekList: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     if (!aAnimAttr.isAdditive) {
-      return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
-                                      "defined as non-additive in SVG spec");
+      return this.buildSeekListStatic(
+        aAnimAttr,
+        aBaseVal,
+        aTimeData,
+        "defined as non-additive in SVG spec"
+      );
     }
     // Just use inherited method
-    return AnimTestcaseFrom.prototype.buildSeekList.apply(this,
-                                [aAnimAttr, aBaseVal, aTimeData, aIsFreeze]);
+    return AnimTestcaseFrom.prototype.buildSeekList.apply(this, [
+      aAnimAttr,
+      aBaseVal,
+      aTimeData,
+      aIsFreeze,
+    ]);
   },
-}
+};
 extend(AnimTestcaseFromBy, AnimTestcaseFrom);
 
 /*
@@ -629,89 +735,120 @@ extend(AnimTestcaseFromBy, AnimTestcaseFrom);
  *                     parameter should be a string explaining why.
  *                     Otherwise, this value should be null (or omitted).
  */
-function AnimTestcasePaced(aValuesString, aComputedValMap, aSkipReason)
-{
-  this.valuesString   = aValuesString;
+function AnimTestcasePaced(aValuesString, aComputedValMap, aSkipReason) {
+  this.valuesString = aValuesString;
   this.computedValMap = aComputedValMap;
-  this.skipReason     = aSkipReason;
-  if (this.computedValMap &&
-      (!this.computedValMap.comp0 ||
-       !this.computedValMap.comp1_6 ||
-       !this.computedValMap.comp1_3 ||
-       !this.computedValMap.comp2_3 ||
-       !this.computedValMap.comp1)) {
+  this.skipReason = aSkipReason;
+  if (
+    this.computedValMap &&
+    (!this.computedValMap.comp0 ||
+      !this.computedValMap.comp1_6 ||
+      !this.computedValMap.comp1_3 ||
+      !this.computedValMap.comp2_3 ||
+      !this.computedValMap.comp1)
+  ) {
     ok(false, "This AnimTestcasePaced has an incomplete computed value map");
   }
 }
-AnimTestcasePaced.prototype =
-{
+AnimTestcasePaced.prototype = {
   // Member variables
-  valuesString : null,
+  valuesString: null,
 
   // Methods
-  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
-  {
+  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
-    var animElem = AnimTestcase.prototype.setupAnimationElement.apply(this,
-                                            [aAnimAttr, aTimeData, aIsFreeze]);
-    animElem.setAttribute("values", this.valuesString)
+    var animElem = AnimTestcase.prototype.setupAnimationElement.apply(this, [
+      aAnimAttr,
+      aTimeData,
+      aIsFreeze,
+    ]);
+    animElem.setAttribute("values", this.valuesString);
     animElem.setAttribute("calcMode", "paced");
     return animElem;
   },
-  buildSeekListAnimated : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
-  {
+  buildSeekListAnimated: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     var seekList = new Array();
     var msgPrefix = aAnimAttr.attrName + ": checking value ";
-    seekList.push([aTimeData.getBeginTime(),
-                   this.computedValMap.comp0,
-                   msgPrefix + "at start of animation"]);
-    seekList.push([aTimeData.getFractionalTime(1/6),
-                   this.computedValMap.comp1_6,
-                   msgPrefix + "1/6 of the way through animation."]);
-    seekList.push([aTimeData.getFractionalTime(1/3),
-                   this.computedValMap.comp1_3,
-                   msgPrefix + "1/3 of the way through animation."]);
-    seekList.push([aTimeData.getFractionalTime(2/3),
-                   this.computedValMap.comp2_3,
-                   msgPrefix + "2/3 of the way through animation."]);
+    seekList.push([
+      aTimeData.getBeginTime(),
+      this.computedValMap.comp0,
+      msgPrefix + "at start of animation",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 6),
+      this.computedValMap.comp1_6,
+      msgPrefix + "1/6 of the way through animation.",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 3),
+      this.computedValMap.comp1_3,
+      msgPrefix + "1/3 of the way through animation.",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(2 / 3),
+      this.computedValMap.comp2_3,
+      msgPrefix + "2/3 of the way through animation.",
+    ]);
 
     var finalMsg;
     var expectedEndVal;
     if (aIsFreeze) {
       expectedEndVal = this.computedValMap.comp1;
-      finalMsg = aAnimAttr.attrName +
+      finalMsg =
+        aAnimAttr.attrName +
         ": [freeze-mode] checking that final value is set ";
     } else {
       expectedEndVal = aBaseVal;
-      finalMsg = aAnimAttr.attrName +
+      finalMsg =
+        aAnimAttr.attrName +
         ": [remove-mode] checking that animation is cleared ";
     }
-    seekList.push([aTimeData.getEndTime(),
-                   expectedEndVal, finalMsg + "at end of animation"]);
-    seekList.push([aTimeData.getEndTime() + aTimeData.getDur(),
-                   expectedEndVal, finalMsg + "after end of animation"]);
+    seekList.push([
+      aTimeData.getEndTime(),
+      expectedEndVal,
+      finalMsg + "at end of animation",
+    ]);
+    seekList.push([
+      aTimeData.getEndTime() + aTimeData.getDur(),
+      expectedEndVal,
+      finalMsg + "after end of animation",
+    ]);
     return seekList;
   },
-  buildSeekListStatic : function(aAnimAttr, aBaseVal, aTimeData, aReasonStatic)
-  {
+  buildSeekListStatic: function(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {
     var seekList = new Array();
     var msgPrefix =
       aAnimAttr.attrName + ": shouldn't be affected by animation ";
-    seekList.push([aTimeData.getBeginTime(), aBaseVal,
-                   msgPrefix + "(at animation begin) - " + aReasonStatic]);
-    seekList.push([aTimeData.getFractionalTime(1/6), aBaseVal,
-                   msgPrefix + "(1/6 of the way through animation) - " +
-                   aReasonStatic]);
-    seekList.push([aTimeData.getFractionalTime(1/3), aBaseVal,
-                   msgPrefix + "(1/3 of the way through animation) - " +
-                   aReasonStatic]);
-    seekList.push([aTimeData.getFractionalTime(2/3), aBaseVal,
-                   msgPrefix + "(2/3 of the way through animation) - " +
-                   aReasonStatic]);
-    seekList.push([aTimeData.getEndTime(), aBaseVal,
-                   msgPrefix + "(at animation end) - " + aReasonStatic]);
-    seekList.push([aTimeData.getEndTime() + aTimeData.getDur(), aBaseVal,
-                   msgPrefix + "(after animation end) - " + aReasonStatic]);
+    seekList.push([
+      aTimeData.getBeginTime(),
+      aBaseVal,
+      msgPrefix + "(at animation begin) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 6),
+      aBaseVal,
+      msgPrefix + "(1/6 of the way through animation) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 3),
+      aBaseVal,
+      msgPrefix + "(1/3 of the way through animation) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(2 / 3),
+      aBaseVal,
+      msgPrefix + "(2/3 of the way through animation) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getEndTime(),
+      aBaseVal,
+      msgPrefix + "(at animation end) - " + aReasonStatic,
+    ]);
+    seekList.push([
+      aTimeData.getEndTime() + aTimeData.getDur(),
+      aBaseVal,
+      msgPrefix + "(after animation end) - " + aReasonStatic,
+    ]);
     return seekList;
   },
 };
@@ -743,31 +880,32 @@ extend(AnimTestcasePaced, AnimTestcase);
  *                     parameter should be a string explaining why.
  *                     Otherwise, this value should be null (or omitted).
  */
-function AnimMotionTestcase(aAttrValueHash, aCtmMap, aSkipReason)
-{
+function AnimMotionTestcase(aAttrValueHash, aCtmMap, aSkipReason) {
   this.attrValueHash = aAttrValueHash;
-  this.ctmMap        = aCtmMap;
-  this.skipReason    = aSkipReason;
-  if (this.ctmMap &&
-      (!this.ctmMap.ctm0 ||
-       !this.ctmMap.ctm1_6 ||
-       !this.ctmMap.ctm1_3 ||
-       !this.ctmMap.ctm2_3 ||
-       !this.ctmMap.ctm1)) {
+  this.ctmMap = aCtmMap;
+  this.skipReason = aSkipReason;
+  if (
+    this.ctmMap &&
+    (!this.ctmMap.ctm0 ||
+      !this.ctmMap.ctm1_6 ||
+      !this.ctmMap.ctm1_3 ||
+      !this.ctmMap.ctm2_3 ||
+      !this.ctmMap.ctm1)
+  ) {
     ok(false, "This AnimMotionTestcase has an incomplete CTM map");
   }
 }
-AnimMotionTestcase.prototype =
-{
+AnimMotionTestcase.prototype = {
   // Member variables
-  _animElementTagName : "animateMotion",
+  _animElementTagName: "animateMotion",
 
   // Implementations of inherited methods that we need to override:
   // --------------------------------------------------------------
-  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
-  {
-    var animElement = document.createElementNS(SVG_NS,
-                                               this._animElementTagName);
+  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+    var animElement = document.createElementNS(
+      SVG_NS,
+      this._animElementTagName
+    );
     animElement.setAttribute("begin", aTimeData.getBeginTime());
     animElement.setAttribute("dur", aTimeData.getDur());
     if (aIsFreeze) {
@@ -784,16 +922,14 @@ AnimMotionTestcase.prototype =
     return animElement;
   },
 
-  createPath : function(aPathDescription)
-  {
+  createPath: function(aPathDescription) {
     var path = document.createElementNS(SVG_NS, "path");
     path.setAttribute("d", aPathDescription);
     path.setAttribute("id", MPATH_TARGET_ID);
     return SMILUtil.getSVGRoot().appendChild(path);
   },
 
-  createMpath : function(aAnimElement)
-  {
+  createMpath: function(aAnimElement) {
     var mpath = document.createElementNS(SVG_NS, "mpath");
     mpath.setAttributeNS(XLINK_NS, "href", "#" + MPATH_TARGET_ID);
     return aAnimElement.appendChild(mpath);
@@ -802,72 +938,93 @@ AnimMotionTestcase.prototype =
   // Override inherited seekAndTest method since...
   // (a) it expects a computedValMap and we have a computed-CTM map instead
   // and (b) it expects we might have no effect (for non-animatable attrs)
-  buildSeekList : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
-  {
+  buildSeekList: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     var seekList = new Array();
     var msgPrefix = "CTM mismatch ";
-    seekList.push([aTimeData.getBeginTime(),
-                   CTMUtil.generateCTM(this.ctmMap.ctm0),
-                   msgPrefix + "at start of animation"]);
-    seekList.push([aTimeData.getFractionalTime(1/6),
-                   CTMUtil.generateCTM(this.ctmMap.ctm1_6),
-                   msgPrefix + "1/6 of the way through animation."]);
-    seekList.push([aTimeData.getFractionalTime(1/3),
-                   CTMUtil.generateCTM(this.ctmMap.ctm1_3),
-                   msgPrefix + "1/3 of the way through animation."]);
-    seekList.push([aTimeData.getFractionalTime(2/3),
-                   CTMUtil.generateCTM(this.ctmMap.ctm2_3),
-                   msgPrefix + "2/3 of the way through animation."]);
+    seekList.push([
+      aTimeData.getBeginTime(),
+      CTMUtil.generateCTM(this.ctmMap.ctm0),
+      msgPrefix + "at start of animation",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 6),
+      CTMUtil.generateCTM(this.ctmMap.ctm1_6),
+      msgPrefix + "1/6 of the way through animation.",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(1 / 3),
+      CTMUtil.generateCTM(this.ctmMap.ctm1_3),
+      msgPrefix + "1/3 of the way through animation.",
+    ]);
+    seekList.push([
+      aTimeData.getFractionalTime(2 / 3),
+      CTMUtil.generateCTM(this.ctmMap.ctm2_3),
+      msgPrefix + "2/3 of the way through animation.",
+    ]);
 
     var finalMsg;
     var expectedEndVal;
     if (aIsFreeze) {
       expectedEndVal = CTMUtil.generateCTM(this.ctmMap.ctm1);
-      finalMsg = aAnimAttr.attrName +
+      finalMsg =
+        aAnimAttr.attrName +
         ": [freeze-mode] checking that final value is set ";
     } else {
       expectedEndVal = aBaseVal;
-      finalMsg = aAnimAttr.attrName +
+      finalMsg =
+        aAnimAttr.attrName +
         ": [remove-mode] checking that animation is cleared ";
     }
-    seekList.push([aTimeData.getEndTime(),
-                   expectedEndVal, finalMsg + "at end of animation"]);
-    seekList.push([aTimeData.getEndTime() + aTimeData.getDur(),
-                   expectedEndVal, finalMsg + "after end of animation"]);
+    seekList.push([
+      aTimeData.getEndTime(),
+      expectedEndVal,
+      finalMsg + "at end of animation",
+    ]);
+    seekList.push([
+      aTimeData.getEndTime() + aTimeData.getDur(),
+      expectedEndVal,
+      finalMsg + "after end of animation",
+    ]);
     return seekList;
   },
 
   // Override inherited seekAndTest method
   // (Have to use assertCTMEqual() instead of is() for comparison, to check each
   // component of the CTM and to allow for a small margin of error.)
-  seekAndTest : function(aSeekList, aTargetElem, aTargetAttr)
-  {
+  seekAndTest: function(aSeekList, aTargetElem, aTargetAttr) {
     var svg = document.getElementById("svg");
     for (var i in aSeekList) {
       var entry = aSeekList[i];
       SMILUtil.getSVGRoot().setCurrentTime(entry[0]);
-      CTMUtil.assertCTMEqual(aTargetElem.getCTM(), entry[1],
-                             CTMUtil.CTM_COMPONENTS_ALL, entry[2], false);
+      CTMUtil.assertCTMEqual(
+        aTargetElem.getCTM(),
+        entry[1],
+        CTMUtil.CTM_COMPONENTS_ALL,
+        entry[2],
+        false
+      );
     }
   },
 
   // Override "runTest" method so we can remove any <path> element that we
   // created at the end of each test.
-  runTest : function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze)
-  {
-    AnimTestcase.prototype.runTest.apply(this,
-                             [aTargetElem, aTargetAttr, aTimeData, aIsFreeze]);
+  runTest: function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze) {
+    AnimTestcase.prototype.runTest.apply(this, [
+      aTargetElem,
+      aTargetAttr,
+      aTimeData,
+      aIsFreeze,
+    ]);
     var pathElem = document.getElementById(MPATH_TARGET_ID);
     if (pathElem) {
       SMILUtil.getSVGRoot().removeChild(pathElem);
     }
-  }
+  },
 };
 extend(AnimMotionTestcase, AnimTestcase);
 
 // MAIN METHOD
-function testBundleList(aBundleList, aTimingData)
-{
+function testBundleList(aBundleList, aTimingData) {
   for (var bundleIdx in aBundleList) {
     aBundleList[bundleIdx].go(aTimingData);
   }

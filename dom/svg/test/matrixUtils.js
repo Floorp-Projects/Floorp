@@ -31,41 +31,48 @@ function MatrixFromArray(a) {
 }
 
 function cmpMatrix(a, b, msg) {
-  if (a.constructor === Array)
+  if (a.constructor === Array) {
     a = new MatrixFromArray(a);
-  if (b.constructor === Array)
+  }
+  if (b.constructor === Array) {
     b = new MatrixFromArray(b);
+  }
 
-  ok(a.a == b.a &&
-     a.b == b.b &&
-     a.c == b.c &&
-     a.d == b.d &&
-     a.e == b.e &&
-     a.f == b.f,
-     msg + " - got " + formatMatrix(a)
-         + ", expected " + formatMatrix(b));
+  ok(
+    a.a == b.a &&
+      a.b == b.b &&
+      a.c == b.c &&
+      a.d == b.d &&
+      a.e == b.e &&
+      a.f == b.f,
+    msg + " - got " + formatMatrix(a) + ", expected " + formatMatrix(b)
+  );
 }
 
 function roughCmpMatrix(a, b, msg) {
-  if (a.constructor === Array)
+  if (a.constructor === Array) {
     a = new MatrixFromArray(a);
-  if (b.constructor === Array)
+  }
+  if (b.constructor === Array) {
     b = new MatrixFromArray(b);
+  }
 
   const tolerance = 1 / 65535;
-  ok(Math.abs(b.a - a.a) < tolerance &&
-     Math.abs(b.b - a.b) < tolerance &&
-     Math.abs(b.c - a.c) < tolerance &&
-     Math.abs(b.d - a.d) < tolerance &&
-     Math.abs(b.e - a.e) < tolerance &&
-     Math.abs(b.f - a.f) < tolerance,
-     msg + " - got " + formatMatrix(a)
-         + ", expected " + formatMatrix(b));
+  ok(
+    Math.abs(b.a - a.a) < tolerance &&
+      Math.abs(b.b - a.b) < tolerance &&
+      Math.abs(b.c - a.c) < tolerance &&
+      Math.abs(b.d - a.d) < tolerance &&
+      Math.abs(b.e - a.e) < tolerance &&
+      Math.abs(b.f - a.f) < tolerance,
+    msg + " - got " + formatMatrix(a) + ", expected " + formatMatrix(b)
+  );
 }
 
 function formatMatrix(m) {
-  if (m.constructor != Array)
+  if (m.constructor != Array) {
     return "(" + [m.a, m.b, m.c, m.d, m.e, m.f].join(", ") + ")";
+  }
 
   return "(" + m.join(", ") + ")";
 }

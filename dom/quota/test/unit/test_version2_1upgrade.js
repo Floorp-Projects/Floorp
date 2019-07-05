@@ -5,11 +5,10 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const origins = [
     "storage/default/chrome/",
-    "storage/default/http+++www.mozilla.org/"
+    "storage/default/http+++www.mozilla.org/",
   ];
   const paddingFilePath = "cache/.padding";
 

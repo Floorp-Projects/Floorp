@@ -16,7 +16,10 @@ function finishTest() {
 
 // Workers don't have access to localstorage or sessionstorage
 ok(typeof self.localStorage == "undefined", "localStorage should be undefined");
-ok(typeof self.sessionStorage == "undefined", "sessionStorage should be undefined");
+ok(
+  typeof self.sessionStorage == "undefined",
+  "sessionStorage should be undefined"
+);
 
 // Make sure that we can access indexedDB
 try {
@@ -31,31 +34,41 @@ try {
   var promise = caches.keys();
   ok(true, "WORKER getting caches didn't throw");
 
-  promise.then(function() {
-    ok(location.protocol == "https:", "WORKER The promise was not rejected");
-    workerTest();
-  }, function() {
-    ok(location.protocol != "https:", "WORKER The promise should not have been rejected");
-    workerTest();
-  });
+  promise.then(
+    function() {
+      ok(location.protocol == "https:", "WORKER The promise was not rejected");
+      workerTest();
+    },
+    function() {
+      ok(
+        location.protocol != "https:",
+        "WORKER The promise should not have been rejected"
+      );
+      workerTest();
+    }
+  );
 } catch (e) {
   ok(false, "WORKER getting caches should not have thrown");
 }
 
 // Try to spawn an inner worker, and make sure that it can also access storage
 function workerTest() {
-  if (location.hash == "#inner") { // Don't recurse infinitely, if we are the inner worker, don't spawn another
+  if (location.hash == "#inner") {
+    // Don't recurse infinitely, if we are the inner worker, don't spawn another
     finishTest();
     return;
   }
   // Create the inner worker, and listen for test messages from it
   var worker = new Worker("workerStorageAllowed.js#inner");
-  worker.addEventListener('message', function(e) {
+  worker.addEventListener("message", function(e) {
     if (e.data == "done") {
       finishTest();
       return;
     }
 
-    ok(!e.data.match(/^FAILURE/), e.data + " (WORKER = workerStorageAllowed.js#inner)");
+    ok(
+      !e.data.match(/^FAILURE/),
+      e.data + " (WORKER = workerStorageAllowed.js#inner)"
+    );
   });
 }

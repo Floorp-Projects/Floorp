@@ -5,7 +5,7 @@ async function testBlobText(blob, content) {
 
 async function testBlobArrayBuffer(blob, content) {
   let ab = await blob.arrayBuffer();
-  is (ab.byteLength, content.length, "blob.arrayBuffer()");
+  is(ab.byteLength, content.length, "blob.arrayBuffer()");
 }
 
 async function testBlobStream(blob, content) {
@@ -23,28 +23,28 @@ function workify(func, blob, content) {
   info("Workifying " + func);
 
   return new Promise((resolve, reject) => {
-    let worker = new Worker('worker_blob_reading.js');
+    let worker = new Worker("worker_blob_reading.js");
     worker.postMessage({ func, blob, content });
     worker.onmessage = function(e) {
-      if (e.data.type == 'done') {
+      if (e.data.type == "done") {
         resolve();
         return;
       }
 
-      if (e.data.type == 'error') {
+      if (e.data.type == "error") {
         reject(e.data.message);
         return;
       }
 
-      if (e.data.type == 'test') {
+      if (e.data.type == "test") {
         ok(e.data.test, e.data.message);
         return;
       }
 
-      if (e.data.type == 'info') {
+      if (e.data.type == "info") {
         info(e.data.message);
         return;
       }
-    }
+    };
   });
 }

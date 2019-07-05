@@ -1,5 +1,5 @@
 function ok(v, msg) {
-  client.postMessage({status: "ok", result: !!v, message: msg});
+  client.postMessage({ status: "ok", result: !!v, message: msg });
 }
 
 var client;
@@ -11,9 +11,12 @@ onmessage = function(e) {
         close();
         ok(false, "close() should throw");
       } catch (ex) {
-        ok(ex.name === "InvalidAccessError", "close() should throw InvalidAccessError");
+        ok(
+          ex.name === "InvalidAccessError",
+          "close() should throw InvalidAccessError"
+        );
       }
-      client.postMessage({status: "done"});
+      client.postMessage({ status: "done" });
     });
   }
-}
+};

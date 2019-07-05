@@ -13,7 +13,11 @@ declTest("getActor on both sides", {
     await ContentTask.spawn(browser, {}, async function() {
       let child = content.window.getWindowGlobalChild();
       ok(child, "WindowGlobalChild should have value.");
-      is(child.isInProcess, false, "Actor should be loaded in the content process.");
+      is(
+        child.isInProcess,
+        false,
+        "Actor should be loaded in the content process."
+      );
       let actorChild = child.getActor("Test");
       is(actorChild.show(), "TestChild", "actor show should have vaule.");
       is(actorChild.manager, child, "manager should match WindowGlobalChild.");

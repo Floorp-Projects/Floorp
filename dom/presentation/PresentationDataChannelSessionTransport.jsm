@@ -1,28 +1,36 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Bug 1228209 - plan to remove this eventually
 function log(aMsg) {
   // dump("-*- PresentationDataChannelSessionTransport.js : " + aMsg + "\n");
 }
 
-const PRESENTATIONTRANSPORT_CID = Components.ID("{dd2bbf2f-3399-4389-8f5f-d382afb8b2d6}");
-const PRESENTATIONTRANSPORT_CONTRACTID = "mozilla.org/presentation/datachanneltransport;1";
+const PRESENTATIONTRANSPORT_CID = Components.ID(
+  "{dd2bbf2f-3399-4389-8f5f-d382afb8b2d6}"
+);
+const PRESENTATIONTRANSPORT_CONTRACTID =
+  "mozilla.org/presentation/datachanneltransport;1";
 
-const PRESENTATIONTRANSPORTBUILDER_CID = Components.ID("{215b2f62-46e2-4004-a3d1-6858e56c20f3}");
-const PRESENTATIONTRANSPORTBUILDER_CONTRACTID = "mozilla.org/presentation/datachanneltransportbuilder;1";
+const PRESENTATIONTRANSPORTBUILDER_CID = Components.ID(
+  "{215b2f62-46e2-4004-a3d1-6858e56c20f3}"
+);
+const PRESENTATIONTRANSPORTBUILDER_CONTRACTID =
+  "mozilla.org/presentation/datachanneltransportbuilder;1";
 
 function PresentationDataChannelDescription(aDataChannelSDP) {
   this._dataChannelSDP = JSON.stringify(aDataChannelSDP);
 }
 
 PresentationDataChannelDescription.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationChannelDescription,
+  ]),
   get type() {
     return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
   },
@@ -45,9 +53,11 @@ function PresentationTransportBuilder() {
 PresentationTransportBuilder.prototype = {
   classID: PRESENTATIONTRANSPORTBUILDER_CID,
   contractID: PRESENTATIONTRANSPORTBUILDER_CONTRACTID,
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilder,
-                                          Ci.nsIPresentationDataChannelSessionTransportBuilder,
-                                          Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationSessionTransportBuilder,
+    Ci.nsIPresentationDataChannelSessionTransportBuilder,
+    Ci.nsITimerCallback,
+  ]),
 
   buildDataChannelTransport(aRole, aWindow, aListener) {
     if (!aRole || !aWindow || !aListener) {
@@ -63,14 +73,17 @@ PresentationTransportBuilder.prototype = {
     log("buildDataChannelTransport with role " + aRole);
     this._role = aRole;
     this._window = aWindow;
-    this._listener = aListener.QueryInterface(Ci.nsIPresentationSessionTransportBuilderListener);
+    this._listener = aListener.QueryInterface(
+      Ci.nsIPresentationSessionTransportBuilderListener
+    );
 
     // TODO bug 1227053 set iceServers from |nsIPresentationDevice|
     this._peerConnection = new this._window.RTCPeerConnection();
 
     // |this._listener == null| will throw since the control channel is
     // abnormally closed.
-    this._peerConnection.onicecandidate = aEvent => aEvent.candidate &&
+    this._peerConnection.onicecandidate = aEvent =>
+      aEvent.candidate &&
       this._listener.sendIceCandidate(JSON.stringify(aEvent.candidate));
 
     this._peerConnection.onnegotiationneeded = () => {
@@ -79,16 +92,24 @@ PresentationTransportBuilder.prototype = {
         log("ignoring negotiationneeded without PeerConnection");
         return;
       }
-      this._peerConnection.createOffer()
-          .then(aOffer => this._peerConnection.setLocalDescription(aOffer))
-          .then(() => this._listener
-                          .sendOffer(new PresentationDataChannelDescription(this._peerConnection.localDescription)))
-          .catch(e => this._reportError(e));
+      this._peerConnection
+        .createOffer()
+        .then(aOffer => this._peerConnection.setLocalDescription(aOffer))
+        .then(() =>
+          this._listener.sendOffer(
+            new PresentationDataChannelDescription(
+              this._peerConnection.localDescription
+            )
+          )
+        )
+        .catch(e => this._reportError(e));
     };
 
     switch (this._role) {
       case Ci.nsIPresentationService.ROLE_CONTROLLER:
-        this._dataChannel = this._peerConnection.createDataChannel("presentationAPI");
+        this._dataChannel = this._peerConnection.createDataChannel(
+          "presentationAPI"
+        );
         this._setDataChannel();
         break;
 
@@ -101,12 +122,15 @@ PresentationTransportBuilder.prototype = {
         };
         break;
       default:
-       throw Cr.NS_ERROR_ILLEGAL_VALUE;
+        throw Cr.NS_ERROR_ILLEGAL_VALUE;
     }
 
     // TODO bug 1228235 we should have a way to let device providers customize
     // the time-out duration.
-    let timeout = Services.prefs.getIntPref("presentation.receiver.loading.timeout", 10000);
+    let timeout = Services.prefs.getIntPref(
+      "presentation.receiver.loading.timeout",
+      10000
+    );
 
     // The timer is to check if the negotiation finishes on time.
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -131,7 +155,11 @@ PresentationTransportBuilder.prototype = {
       // Handoff the ownership of _peerConnection and _dataChannel to
       // _sessionTransport
       this._sessionTransport = new PresentationTransport();
-      this._sessionTransport.init(this._peerConnection, this._dataChannel, this._window);
+      this._sessionTransport.init(
+        this._peerConnection,
+        this._dataChannel,
+        this._window
+      );
       this._peerConnection.onicecandidate = null;
       this._peerConnection.onnegotiationneeded = null;
       this._peerConnection = this._dataChannel = null;
@@ -177,41 +205,57 @@ PresentationTransportBuilder.prototype = {
 
   // nsIPresentationControlChannelListener
   onOffer(aOffer) {
-    if (this._role !== Ci.nsIPresentationService.ROLE_RECEIVER ||
-          this._sessionTransport) {
+    if (
+      this._role !== Ci.nsIPresentationService.ROLE_RECEIVER ||
+      this._sessionTransport
+    ) {
       log("onOffer status error");
       this._cleanup(Cr.NS_ERROR_FAILURE);
     }
 
     log("onOffer: " + aOffer.dataChannelSDP + " with role " + this._role);
 
-    let offer = new this._window
-                        .RTCSessionDescription(JSON.parse(aOffer.dataChannelSDP));
+    let offer = new this._window.RTCSessionDescription(
+      JSON.parse(aOffer.dataChannelSDP)
+    );
 
-    this._peerConnection.setRemoteDescription(offer)
-        .then(() => this._peerConnection.signalingState == "stable" ||
-                      this._peerConnection.createAnswer())
-        .then(aAnswer => this._peerConnection.setLocalDescription(aAnswer))
-        .then(() => {
-          this._isControlChannelNeeded = false;
-          this._listener
-              .sendAnswer(new PresentationDataChannelDescription(this._peerConnection.localDescription));
-        }).catch(e => this._reportError(e));
+    this._peerConnection
+      .setRemoteDescription(offer)
+      .then(
+        () =>
+          this._peerConnection.signalingState == "stable" ||
+          this._peerConnection.createAnswer()
+      )
+      .then(aAnswer => this._peerConnection.setLocalDescription(aAnswer))
+      .then(() => {
+        this._isControlChannelNeeded = false;
+        this._listener.sendAnswer(
+          new PresentationDataChannelDescription(
+            this._peerConnection.localDescription
+          )
+        );
+      })
+      .catch(e => this._reportError(e));
   },
 
   onAnswer(aAnswer) {
-    if (this._role !== Ci.nsIPresentationService.ROLE_CONTROLLER ||
-          this._sessionTransport) {
+    if (
+      this._role !== Ci.nsIPresentationService.ROLE_CONTROLLER ||
+      this._sessionTransport
+    ) {
       log("onAnswer status error");
       this._cleanup(Cr.NS_ERROR_FAILURE);
     }
 
     log("onAnswer: " + aAnswer.dataChannelSDP + " with role " + this._role);
 
-    let answer = new this._window
-                         .RTCSessionDescription(JSON.parse(aAnswer.dataChannelSDP));
+    let answer = new this._window.RTCSessionDescription(
+      JSON.parse(aAnswer.dataChannelSDP)
+    );
 
-    this._peerConnection.setRemoteDescription(answer).catch(e => this._reportError(e));
+    this._peerConnection
+      .setRemoteDescription(answer)
+      .catch(e => this._reportError(e));
     this._isControlChannelNeeded = false;
   },
 
@@ -222,7 +266,9 @@ PresentationTransportBuilder.prototype = {
       return;
     }
     let candidate = new this._window.RTCIceCandidate(JSON.parse(aCandidate));
-    this._peerConnection.addIceCandidate(candidate).catch(e => this._reportError(e));
+    this._peerConnection
+      .addIceCandidate(candidate)
+      .catch(e => this._reportError(e));
   },
 
   notifyDisconnected(aReason) {
@@ -361,7 +407,7 @@ PresentationTransport.prototype = {
 
     if (aData instanceof this._window.Blob) {
       let reader = new this._window.FileReader();
-      reader.addEventListener("load", (aEvent) => {
+      reader.addEventListener("load", aEvent => {
         this._callback.notifyData(aEvent.target.result, true);
       });
       reader.readAsBinaryString(aData);
@@ -371,4 +417,7 @@ PresentationTransport.prototype = {
   },
 };
 
-var EXPORTED_SYMBOLS = ["PresentationTransportBuilder", "PresentationTransport"];
+var EXPORTED_SYMBOLS = [
+  "PresentationTransportBuilder",
+  "PresentationTransport",
+];

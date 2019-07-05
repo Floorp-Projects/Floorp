@@ -5,10 +5,9 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const objectStores = [ "foo", "bar" ];
+  const objectStores = ["foo", "bar"];
 
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
@@ -24,15 +23,19 @@ function* testSteps()
   }
   event = yield undefined;
 
-  is(db.objectStoreNames.length, objectStores.length,
-     "Correct objectStoreNames list");
+  is(
+    db.objectStoreNames.length,
+    objectStores.length,
+    "Correct objectStoreNames list"
+  );
 
   for (let i = 0; i < 50; i++) {
     let stepNumber = 0;
 
-    request = db.transaction(["foo"], "readwrite")
-                .objectStore("foo")
-                .add({});
+    request = db
+      .transaction(["foo"], "readwrite")
+      .objectStore("foo")
+      .add({});
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       is(stepNumber, 1, "This callback came first");
@@ -40,9 +43,10 @@ function* testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     };
 
-    request = db.transaction(["foo"], "readwrite")
-                .objectStore("foo")
-                .add({});
+    request = db
+      .transaction(["foo"], "readwrite")
+      .objectStore("foo")
+      .add({});
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       is(stepNumber, 2, "This callback came second");
@@ -50,9 +54,10 @@ function* testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     };
 
-    request = db.transaction(["foo", "bar"], "readwrite")
-                .objectStore("bar")
-                .add({});
+    request = db
+      .transaction(["foo", "bar"], "readwrite")
+      .objectStore("bar")
+      .add({});
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       is(stepNumber, 3, "This callback came third");
@@ -60,9 +65,10 @@ function* testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     };
 
-    request = db.transaction(["foo", "bar"], "readwrite")
-                .objectStore("bar")
-                .add({});
+    request = db
+      .transaction(["foo", "bar"], "readwrite")
+      .objectStore("bar")
+      .add({});
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       is(stepNumber, 4, "This callback came fourth");
@@ -70,9 +76,10 @@ function* testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     };
 
-    request = db.transaction(["bar"], "readwrite")
-                .objectStore("bar")
-                .add({});
+    request = db
+      .transaction(["bar"], "readwrite")
+      .objectStore("bar")
+      .add({});
     request.onerror = errorHandler;
     request.onsuccess = function(event) {
       is(stepNumber, 5, "This callback came fifth");
@@ -81,11 +88,14 @@ function* testSteps()
     };
 
     stepNumber++;
-    yield undefined; yield undefined; yield undefined; yield undefined; yield undefined;
+    yield undefined;
+    yield undefined;
+    yield undefined;
+    yield undefined;
+    yield undefined;
 
     is(stepNumber, 6, "All callbacks received");
   }
 
   finishTest();
 }
-

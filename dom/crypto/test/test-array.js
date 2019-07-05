@@ -60,7 +60,9 @@ function Test(name, test) {
   };
 
   this.draw = function() {
-    if (!this.row) return;
+    if (!this.row) {
+      return;
+    }
 
     // Print the name of the test
     if (this.name) {
@@ -87,7 +89,7 @@ function Test(name, test) {
 
     // Print the elapsed time, if known
     if (this.startTime && this.endTime) {
-      this.row[2].textContent = (this.endTime - this.startTime) + " ms";
+      this.row[2].textContent = this.endTime - this.startTime + " ms";
     } else {
       this.row[2].innerHTML = "";
     }
@@ -149,9 +151,15 @@ var TestArray = {
   updateSummary() {
     this.pass = this.fail = this.pending = 0;
     for (var i = 0; i < this.tests.length; ++i) {
-      if (this.tests[i].result === true) this.pass++;
-      if (this.tests[i].result === false) this.fail++;
-      if (this.tests[i].result == null) this.pending++;
+      if (this.tests[i].result === true) {
+        this.pass++;
+      }
+      if (this.tests[i].result === false) {
+        this.fail++;
+      }
+      if (this.tests[i].result == null) {
+        this.pending++;
+      }
     }
     this.passSpan.textContent = this.pass;
     this.failSpan.textContent = this.fail;

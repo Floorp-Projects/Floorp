@@ -1,7 +1,7 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -9,10 +9,11 @@
 
 const Cm = Components.manager;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                      .getService(Ci.nsIUUIDGenerator);
+const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
 
 function debug(str) {
   // dump('DEBUG -*- PresentationSessionChromeScript1UA -*-: ' + str + '\n');
@@ -40,14 +41,14 @@ const mockControlChannelOfSender = {
   notifyConnected() {
     // send offer after notifyConnected immediately
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyConnected();
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .notifyConnected();
   },
   notifyReconnected() {
     // send offer after notifyOpened immediately
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyReconnected();
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .notifyReconnected();
   },
   sendOffer(offer) {
     Services.tm.dispatchToMainThread(() => {
@@ -56,8 +57,8 @@ const mockControlChannelOfSender = {
   },
   onAnswer(answer) {
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .onAnswer(answer);
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .onAnswer(answer);
   },
   launch(presentationId, url) {
     sessionId = presentationId;
@@ -68,8 +69,8 @@ const mockControlChannelOfSender = {
       return;
     }
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyDisconnected(reason);
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .notifyDisconnected(reason);
     mockControlChannelOfReceiver.disconnect();
   },
   terminate(presentationId) {
@@ -87,8 +88,8 @@ const mockControlChannelOfSender = {
     }
 
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .onIceCandidate(candidate);
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .onIceCandidate(candidate);
   },
 };
 
@@ -119,13 +120,13 @@ const mockControlChannelOfReceiver = {
       return;
     }
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyConnected();
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .notifyConnected();
   },
   onOffer(offer) {
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .onOffer(offer);
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .onOffer(offer);
   },
   sendAnswer(answer) {
     Services.tm.dispatchToMainThread(() => {
@@ -138,12 +139,11 @@ const mockControlChannelOfReceiver = {
     }
 
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyDisconnected(reason);
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .notifyDisconnected(reason);
     sendAsyncMessage("control-channel-receiver-closed", reason);
   },
-  terminate(presentaionId) {
-  },
+  terminate(presentaionId) {},
   sendIceCandidate(candidate) {
     mockControlChannelOfSender.notifyIceCandidate(candidate);
   },
@@ -153,14 +153,14 @@ const mockControlChannelOfReceiver = {
     }
 
     this._listener
-        .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .onIceCandidate(candidate);
+      .QueryInterface(Ci.nsIPresentationControlChannelListener)
+      .onIceCandidate(candidate);
   },
 };
 
 const mockDevice = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
-  id:   "id",
+  id: "id",
   name: "name",
   type: "type",
   establishControlChannel(url, presentationId) {
@@ -179,8 +179,10 @@ const mockDevice = {
 };
 
 const mockDevicePrompt = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevicePrompt,
-                                          Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationDevicePrompt,
+    Ci.nsIFactory,
+  ]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -206,8 +208,10 @@ const mockDevicePrompt = {
 };
 
 const mockRequestUIGlue = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue,
-                                          Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationRequestUIGlue,
+    Ci.nsIFactory,
+  ]),
   set promise(aPromise) {
     this._promise = aPromise;
   },
@@ -244,26 +248,38 @@ function initMockAndListener() {
       registrar.registerFactory(mockClassId, "", contractId, mockFactory);
     }
 
-    return { contractId,
-             mockClassId,
-             mockFactory,
-             originalClassId,
-             originalFactory };
+    return {
+      contractId,
+      mockClassId,
+      mockFactory,
+      originalClassId,
+      originalFactory,
+    };
   }
   // Register mock factories.
-  originalFactoryData.push(registerMockFactory("@mozilla.org/presentation-device/prompt;1",
-                                               uuidGenerator.generateUUID(),
-                                               mockDevicePrompt));
-  originalFactoryData.push(registerMockFactory("@mozilla.org/presentation/requestuiglue;1",
-                                               uuidGenerator.generateUUID(),
-                                               mockRequestUIGlue));
+  originalFactoryData.push(
+    registerMockFactory(
+      "@mozilla.org/presentation-device/prompt;1",
+      uuidGenerator.generateUUID(),
+      mockDevicePrompt
+    )
+  );
+  originalFactoryData.push(
+    registerMockFactory(
+      "@mozilla.org/presentation/requestuiglue;1",
+      uuidGenerator.generateUUID(),
+      mockRequestUIGlue
+    )
+  );
 
   addMessageListener("trigger-device-add", function() {
     debug("Got message: trigger-device-add");
-    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
-                        .getService(Ci.nsIPresentationDeviceManager);
-    deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-                 .addDevice(mockDevice);
+    var deviceManager = Cc[
+      "@mozilla.org/presentation-device/manager;1"
+    ].getService(Ci.nsIPresentationDeviceManager);
+    deviceManager
+      .QueryInterface(Ci.nsIPresentationDeviceListener)
+      .addDevice(mockDevice);
   });
 
   addMessageListener("trigger-device-prompt-select", function() {
@@ -273,24 +289,32 @@ function initMockAndListener() {
 
   addMessageListener("trigger-on-session-request", function(url) {
     debug("Got message: trigger-on-session-request");
-    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
-                          .getService(Ci.nsIPresentationDeviceManager);
-    deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-                 .onSessionRequest(mockDevice,
-                                   url,
-                                   sessionId,
-                                   mockControlChannelOfReceiver);
+    var deviceManager = Cc[
+      "@mozilla.org/presentation-device/manager;1"
+    ].getService(Ci.nsIPresentationDeviceManager);
+    deviceManager
+      .QueryInterface(Ci.nsIPresentationDeviceListener)
+      .onSessionRequest(
+        mockDevice,
+        url,
+        sessionId,
+        mockControlChannelOfReceiver
+      );
   });
 
   addMessageListener("trigger-on-terminate-request", function() {
     debug("Got message: trigger-on-terminate-request");
-    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
-                          .getService(Ci.nsIPresentationDeviceManager);
-    deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-                 .onTerminateRequest(mockDevice,
-                                     sessionId,
-                                     mockControlChannelOfReceiver,
-                                     false);
+    var deviceManager = Cc[
+      "@mozilla.org/presentation-device/manager;1"
+    ].getService(Ci.nsIPresentationDeviceManager);
+    deviceManager
+      .QueryInterface(Ci.nsIPresentationDeviceListener)
+      .onTerminateRequest(
+        mockDevice,
+        sessionId,
+        mockControlChannelOfReceiver,
+        false
+      );
   });
 
   addMessageListener("trigger-control-channel-open", function(reason) {
@@ -307,13 +331,17 @@ function initMockAndListener() {
   addMessageListener("trigger-reconnected-acked", function(url) {
     debug("Got message: trigger-reconnected-acked");
     mockControlChannelOfSender.notifyReconnected();
-    var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
-                          .getService(Ci.nsIPresentationDeviceManager);
-    deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-                 .onReconnectRequest(mockDevice,
-                                     url,
-                                     sessionId,
-                                     mockControlChannelOfReceiver);
+    var deviceManager = Cc[
+      "@mozilla.org/presentation-device/manager;1"
+    ].getService(Ci.nsIPresentationDeviceManager);
+    deviceManager
+      .QueryInterface(Ci.nsIPresentationDeviceListener)
+      .onReconnectRequest(
+        mockDevice,
+        url,
+        sessionId,
+        mockControlChannelOfReceiver
+      );
   });
 
   // Used to call sendAsyncMessage in chrome script from receiver.
@@ -324,37 +352,59 @@ function initMockAndListener() {
 
   addMessageListener("teardown", teardown);
 
-  Services.obs.addObserver(function setupRequestPromiseHandler(aSubject, aTopic, aData) {
+  Services.obs.addObserver(function setupRequestPromiseHandler(
+    aSubject,
+    aTopic,
+    aData
+  ) {
     debug("Got observer: setup-request-promise");
     Services.obs.removeObserver(setupRequestPromiseHandler, aTopic);
     mockRequestUIGlue.promise = aSubject;
     sendAsyncMessage("promise-setup-ready");
-  }, "setup-request-promise");
+  },
+  "setup-request-promise");
 }
 
 function teardown() {
-  function registerOriginalFactory(contractId, mockedClassId, mockedFactory, originalClassId, originalFactory) {
+  function registerOriginalFactory(
+    contractId,
+    mockedClassId,
+    mockedFactory,
+    originalClassId,
+    originalFactory
+  ) {
     if (originalFactory) {
       var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
       registrar.unregisterFactory(mockedClassId, mockedFactory);
-      registrar.registerFactory(originalClassId, "", contractId, originalFactory);
+      registrar.registerFactory(
+        originalClassId,
+        "",
+        contractId,
+        originalFactory
+      );
     }
   }
 
-  mockRequestUIGlue.promise               = null;
-  mockControlChannelOfSender.listener     = null;
-  mockControlChannelOfReceiver.listener   = null;
-  mockDevicePrompt.request                = null;
+  mockRequestUIGlue.promise = null;
+  mockControlChannelOfSender.listener = null;
+  mockControlChannelOfReceiver.listener = null;
+  mockDevicePrompt.request = null;
 
-  var deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
-                      .getService(Ci.nsIPresentationDeviceManager);
-  deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
-               .removeDevice(mockDevice);
+  var deviceManager = Cc[
+    "@mozilla.org/presentation-device/manager;1"
+  ].getService(Ci.nsIPresentationDeviceManager);
+  deviceManager
+    .QueryInterface(Ci.nsIPresentationDeviceListener)
+    .removeDevice(mockDevice);
   // Register original factories.
   for (var data of originalFactoryData) {
-    registerOriginalFactory(data.contractId, data.mockClassId,
-                            data.mockFactory, data.originalClassId,
-                            data.originalFactory);
+    registerOriginalFactory(
+      data.contractId,
+      data.mockClassId,
+      data.mockFactory,
+      data.originalClassId,
+      data.originalFactory
+    );
   }
   sendAsyncMessage("teardown-complete");
 }

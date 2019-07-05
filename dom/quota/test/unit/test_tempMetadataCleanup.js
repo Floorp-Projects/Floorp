@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const tempMetadataFiles = [
     "storage/permanent/chrome/.metadata-tmp",
     "storage/permanent/chrome/.metadata-v2-tmp",

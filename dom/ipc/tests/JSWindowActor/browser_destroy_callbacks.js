@@ -43,8 +43,11 @@ declTest("destroy actor by iframe remove", {
       content.document.getElementById("frame").remove();
       await Promise.all([willDestroyPromise, didDestroyPromise]);
 
-      Assert.throws(() => child.getActor("Test"),
-        /InvalidStateError/, "Should throw if frame destroy.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /InvalidStateError/,
+        "Should throw if frame destroy."
+      );
     });
   },
 });
@@ -69,8 +72,11 @@ declTest("destroy actor by page navigates", {
       ok(actorChild, "JSWindowActorChild should have value.");
       await ContentTaskUtils.waitForEvent(frame, "load");
 
-      Assert.throws(() => child.getActor("Test"),
-              /InvalidStateError/, "Should throw if frame destroy.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /InvalidStateError/,
+        "Should throw if frame destroy."
+      );
     });
   },
 });
