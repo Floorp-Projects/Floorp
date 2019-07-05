@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Toolbars"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Toolbars = {
   init(libDir) {},
@@ -15,8 +15,12 @@ var Toolbars = {
     onlyNavBar: {
       selectors: ["#navigator-toolbox"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let personalToolbar = browserWindow.document.getElementById("PersonalToolbar");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
+        let personalToolbar = browserWindow.document.getElementById(
+          "PersonalToolbar"
+        );
         browserWindow.setToolbarVisibility(personalToolbar, false);
         toggleMenubarIfNecessary(false);
       },
@@ -24,25 +28,30 @@ var Toolbars = {
 
     allToolbars: {
       selectors: ["#navigator-toolbox"],
-      async applyConfig() { // Boookmarks and menubar
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let personalToolbar = browserWindow.document.getElementById("PersonalToolbar");
+      async applyConfig() {
+        // Boookmarks and menubar
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
+        let personalToolbar = browserWindow.document.getElementById(
+          "PersonalToolbar"
+        );
         browserWindow.setToolbarVisibility(personalToolbar, true);
         toggleMenubarIfNecessary(true);
       },
 
       async verifyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
         if (browserWindow.fullScreen) {
           return "The bookmark toolbar and menubar are not shown in fullscreen.";
         }
         return undefined;
       },
     },
-
   },
 };
-
 
 // helpers
 

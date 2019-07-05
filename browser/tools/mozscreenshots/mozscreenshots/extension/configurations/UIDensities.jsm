@@ -6,34 +6,45 @@
 
 var EXPORTED_SYMBOLS = ["UIDensities"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var UIDensities = {
-
   init(libDir) {},
 
   configurations: {
     compactDensity: {
       selectors: ["#navigator-toolbox, #appMenu-popup, #widget-overflow"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        browserWindow.gCustomizeMode.setUIDensity(browserWindow.gUIDensity.MODE_COMPACT);
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
+        browserWindow.gCustomizeMode.setUIDensity(
+          browserWindow.gUIDensity.MODE_COMPACT
+        );
       },
     },
 
     normalDensity: {
       selectors: ["#navigator-toolbox, #appMenu-popup, #widget-overflow"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        browserWindow.gCustomizeMode.setUIDensity(browserWindow.gUIDensity.MODE_NORMAL);
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
+        browserWindow.gCustomizeMode.setUIDensity(
+          browserWindow.gUIDensity.MODE_NORMAL
+        );
       },
     },
 
     touchDensity: {
       selectors: ["#navigator-toolbox, #appMenu-popup, #widget-overflow"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        browserWindow.gCustomizeMode.setUIDensity(browserWindow.gUIDensity.MODE_TOUCH);
+        let browserWindow = Services.wm.getMostRecentWindow(
+          "navigator:browser"
+        );
+        browserWindow.gCustomizeMode.setUIDensity(
+          browserWindow.gUIDensity.MODE_TOUCH
+        );
       },
     },
   },

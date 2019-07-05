@@ -6,17 +6,20 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemes"];
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 var LightweightThemes = {
-  init(libDir) {
-  },
+  init(libDir) {},
 
   configurations: {
     noLWT: {
       selectors: [],
       async applyConfig() {
-        let addon = await AddonManager.getAddonByID("default-theme@mozilla.org");
+        let addon = await AddonManager.getAddonByID(
+          "default-theme@mozilla.org"
+        );
         await addon.enable();
       },
     },
@@ -24,7 +27,9 @@ var LightweightThemes = {
     compactLight: {
       selectors: [],
       async applyConfig() {
-        let addon = await AddonManager.getAddonByID("firefox-compact-light@mozilla.org");
+        let addon = await AddonManager.getAddonByID(
+          "firefox-compact-light@mozilla.org"
+        );
         await addon.enable();
       },
     },
@@ -32,7 +37,9 @@ var LightweightThemes = {
     compactDark: {
       selectors: [],
       async applyConfig() {
-        let addon = await AddonManager.getAddonByID("firefox-compact-dark@mozilla.org");
+        let addon = await AddonManager.getAddonByID(
+          "firefox-compact-dark@mozilla.org"
+        );
         await addon.enable();
       },
     },

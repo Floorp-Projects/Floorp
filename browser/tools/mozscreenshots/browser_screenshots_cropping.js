@@ -14,7 +14,10 @@ async function draw(window, src) {
 
     img.onload = function() {
       // Create a new offscreen canvas
-      const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      const canvas = document.createElementNS(
+        "http://www.w3.org/1999/xhtml",
+        "canvas"
+      );
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       const ctx = canvas.getContext("2d");
@@ -39,8 +42,16 @@ async function compareImages(window, expected, test) {
   const testCanvas = await draw(window, test);
   const expectedCanvas = await draw(window, expected);
 
-  is(testCanvas.width, expectedCanvas.width, "The test and expected images must be the same size");
-  is(testCanvas.height, expectedCanvas.height, "The test and expected images must be the same size");
+  is(
+    testCanvas.width,
+    expectedCanvas.width,
+    "The test and expected images must be the same size"
+  );
+  is(
+    testCanvas.height,
+    expectedCanvas.height,
+    "The test and expected images must be the same size"
+  );
 
   return window.windowUtils.compareCanvases(expectedCanvas, testCanvas, {});
 }
@@ -55,34 +66,47 @@ add_task(async function crop() {
   const window = Services.wm.getMostRecentWindow("navigator:browser");
 
   const tmp = OS.Constants.Path.tmpDir;
-  is(await cropAndCompare(
+  is(
+    await cropAndCompare(
       window,
       "resource://mozscreenshots/lib/robot.png",
       "resource://mozscreenshots/lib/robot_upperleft.png",
       OS.Path.join(tmp, "test_cropped_upperleft.png"),
       new Rect(0, 0, 32, 32),
       [new Rect(0, 0, 32, 32)]
-  ), 0, "The image should be cropped to the upper left quadrant");
+    ),
+    0,
+    "The image should be cropped to the upper left quadrant"
+  );
 
-  is(await cropAndCompare(
+  is(
+    await cropAndCompare(
       window,
       "resource://mozscreenshots/lib/robot.png",
       "resource://mozscreenshots/lib/robot_center.png",
       OS.Path.join(tmp, "test_cropped_center.png"),
       new Rect(16, 16, 32, 32),
       [new Rect(16, 16, 32, 32)]
-  ), 0, "The image should be cropped to the center of the image");
+    ),
+    0,
+    "The image should be cropped to the center of the image"
+  );
 
-  is(await cropAndCompare(
+  is(
+    await cropAndCompare(
       window,
       "resource://mozscreenshots/lib/robot.png",
       "resource://mozscreenshots/lib/robot_uncropped.png",
       OS.Path.join(tmp, "test_uncropped.png"),
       new Rect(-8, -9, 80, 80),
       [new Rect(-8, -9, 80, 80)]
-  ), 0, "The image should be not be cropped, and the cropping region should be clipped to the size of the image");
+    ),
+    0,
+    "The image should be not be cropped, and the cropping region should be clipped to the size of the image"
+  );
 
-  is(await cropAndCompare(
+  is(
+    await cropAndCompare(
       window,
       "resource://mozscreenshots/lib/robot.png",
       "resource://mozscreenshots/lib/robot_diagonal.png",
@@ -94,17 +118,21 @@ add_task(async function crop() {
         new Rect(32, 32, 16, 16),
         new Rect(48, 48, 16, 16),
       ]
-  ), 0, "The image should be contain squares across the diagonal");
+    ),
+    0,
+    "The image should be contain squares across the diagonal"
+  );
 
-  is(await cropAndCompare(
+  is(
+    await cropAndCompare(
       window,
       "resource://mozscreenshots/lib/robot.png",
       "resource://mozscreenshots/lib/robot_cropped_diagonal.png",
       OS.Path.join(tmp, "test_cropped_diagonal.png"),
       new Rect(16, 16, 48, 48),
-      [
-        new Rect(16, 16, 16, 16),
-        new Rect(32, 32, 16, 16),
-      ]
-  ), 0, "The image should be cropped with squares across the diagonal");
+      [new Rect(16, 16, 16, 16), new Rect(32, 32, 16, 16)]
+    ),
+    0,
+    "The image should be cropped with squares across the diagonal"
+  );
 });
