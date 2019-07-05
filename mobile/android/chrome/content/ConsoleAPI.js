@@ -7,38 +7,83 @@ var ConsoleAPI = {
   observe: function observe(aMessage, aTopic, aData) {
     aMessage = aMessage.wrappedJSObject;
 
-    let mappedArguments = Array.from(aMessage.arguments, this.formatResult, this);
+    let mappedArguments = Array.from(
+      aMessage.arguments,
+      this.formatResult,
+      this
+    );
     let joinedArguments = mappedArguments.join(" ");
 
     if (aMessage.level == "error" || aMessage.level == "warn") {
-      let flag = (aMessage.level == "error" ? Ci.nsIScriptError.errorFlag : Ci.nsIScriptError.warningFlag);
-      let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-      consoleMsg.init(joinedArguments, null, null, 0, 0, flag, "content javascript");
+      let flag =
+        aMessage.level == "error"
+          ? Ci.nsIScriptError.errorFlag
+          : Ci.nsIScriptError.warningFlag;
+      let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
+        Ci.nsIScriptError
+      );
+      consoleMsg.init(
+        joinedArguments,
+        null,
+        null,
+        0,
+        0,
+        flag,
+        "content javascript"
+      );
       Services.console.logMessage(consoleMsg);
     } else if (aMessage.level == "trace") {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+      let bundle = Services.strings.createBundle(
+        "chrome://browser/locale/browser.properties"
+      );
       let args = aMessage.arguments;
       let filename = this.abbreviateSourceURL(args[0].filename);
-      let functionName = args[0].functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
+      let functionName =
+        args[0].functionName ||
+        bundle.GetStringFromName("stacktrace.anonymousFunction");
       let lineNumber = args[0].lineNumber;
 
-      let body = bundle.formatStringFromName("stacktrace.outputMessage", [filename, functionName, lineNumber]);
+      let body = bundle.formatStringFromName("stacktrace.outputMessage", [
+        filename,
+        functionName,
+        lineNumber,
+      ]);
       body += "\n";
       args.forEach(function(aFrame) {
-        let functionName = aFrame.functionName || bundle.GetStringFromName("stacktrace.anonymousFunction");
-        body += "  " + aFrame.filename + " :: " + functionName + " :: " + aFrame.lineNumber + "\n";
+        let functionName =
+          aFrame.functionName ||
+          bundle.GetStringFromName("stacktrace.anonymousFunction");
+        body +=
+          "  " +
+          aFrame.filename +
+          " :: " +
+          functionName +
+          " :: " +
+          aFrame.lineNumber +
+          "\n";
       });
 
       Services.console.logStringMessage(body);
     } else if (aMessage.level == "time" && aMessage.arguments) {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let body = bundle.formatStringFromName("timer.start", [aMessage.arguments.name]);
+      let bundle = Services.strings.createBundle(
+        "chrome://browser/locale/browser.properties"
+      );
+      let body = bundle.formatStringFromName("timer.start", [
+        aMessage.arguments.name,
+      ]);
       Services.console.logStringMessage(body);
     } else if (aMessage.level == "timeEnd" && aMessage.arguments) {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      let body = bundle.formatStringFromName("timer.end", [aMessage.arguments.name, aMessage.arguments.duration]);
+      let bundle = Services.strings.createBundle(
+        "chrome://browser/locale/browser.properties"
+      );
+      let body = bundle.formatStringFromName("timer.end", [
+        aMessage.arguments.name,
+        aMessage.arguments.duration,
+      ]);
       Services.console.logStringMessage(body);
-    } else if (["group", "groupCollapsed", "groupEnd"].includes(aMessage.level)) {
+    } else if (
+      ["group", "groupCollapsed", "groupEnd"].includes(aMessage.level)
+    ) {
       // Do nothing yet
     } else {
       Services.console.logStringMessage(joinedArguments);
@@ -47,8 +92,9 @@ var ConsoleAPI = {
 
   getResultType: function getResultType(aResult) {
     let type = aResult === null ? "null" : typeof aResult;
-    if (type == "object" && aResult.constructor && aResult.constructor.name)
+    if (type == "object" && aResult.constructor && aResult.constructor.name) {
       type = aResult.constructor.name;
+    }
     return type.toLowerCase();
   },
 
@@ -79,17 +125,20 @@ var ConsoleAPI = {
   abbreviateSourceURL: function abbreviateSourceURL(aSourceURL) {
     // Remove any query parameters.
     let hookIndex = aSourceURL.indexOf("?");
-    if (hookIndex > -1)
+    if (hookIndex > -1) {
       aSourceURL = aSourceURL.substring(0, hookIndex);
+    }
 
     // Remove a trailing "/".
-    if (aSourceURL[aSourceURL.length - 1] == "/")
+    if (aSourceURL[aSourceURL.length - 1] == "/") {
       aSourceURL = aSourceURL.substring(0, aSourceURL.length - 1);
+    }
 
     // Remove all but the last path component.
     let slashIndex = aSourceURL.lastIndexOf("/");
-    if (slashIndex > -1)
+    if (slashIndex > -1) {
       aSourceURL = aSourceURL.substring(slashIndex + 1);
+    }
 
     return aSourceURL;
   },

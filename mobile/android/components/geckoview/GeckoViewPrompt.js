@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
@@ -11,8 +13,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen",
-                                   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 function PromptFactory() {
   this.wrappedJSObject = this;
@@ -22,7 +28,9 @@ PromptFactory.prototype = {
   classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
 
   QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIPromptFactory, Ci.nsIPromptService]),
+    Ci.nsIPromptFactory,
+    Ci.nsIPromptService,
+  ]),
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
@@ -40,8 +48,13 @@ PromptFactory.prototype = {
 
   _handleClick: function(aEvent) {
     let target = aEvent.composedTarget;
-    if (aEvent.defaultPrevented || target.isContentEditable ||
-        target.disabled || target.readOnly || !target.willValidate) {
+    if (
+      aEvent.defaultPrevented ||
+      target.isContentEditable ||
+      target.disabled ||
+      target.readOnly ||
+      !target.willValidate
+    ) {
       // target.willValidate is false when any associated fieldset is disabled,
       // in which case this element is treated as disabled per spec.
       return;
@@ -53,8 +66,13 @@ PromptFactory.prototype = {
       aEvent.preventDefault();
     } else if (target instanceof win.HTMLInputElement) {
       let type = target.type;
-      if (type === "date" || type === "month" || type === "week" ||
-          type === "time" || type === "datetime-local") {
+      if (
+        type === "date" ||
+        type === "month" ||
+        type === "week" ||
+        type === "time" ||
+        type === "datetime-local"
+      ) {
         this._handleDateTime(target, type);
         aEvent.preventDefault();
       }
@@ -94,76 +112,96 @@ PromptFactory.prototype = {
     })(aElement);
 
     let prompt = new PromptDelegate(win);
-    prompt.asyncShowPrompt({
-      type: "choice",
-      mode: aElement.multiple ? "multiple" : "single",
-      choices: items,
-    }, result => {
-      // OK: result
-      // Cancel: !result
-      if (!result || result.choices === undefined) {
-        return;
-      }
+    prompt.asyncShowPrompt(
+      {
+        type: "choice",
+        mode: aElement.multiple ? "multiple" : "single",
+        choices: items,
+      },
+      result => {
+        // OK: result
+        // Cancel: !result
+        if (!result || result.choices === undefined) {
+          return;
+        }
 
-      let dispatchEvents = false;
-      if (!aElement.multiple) {
-        let elem = map[result.choices[0]];
-        if (elem && elem instanceof win.HTMLOptionElement) {
-          dispatchEvents = !elem.selected;
-          elem.selected = true;
+        let dispatchEvents = false;
+        if (!aElement.multiple) {
+          let elem = map[result.choices[0]];
+          if (elem && elem instanceof win.HTMLOptionElement) {
+            dispatchEvents = !elem.selected;
+            elem.selected = true;
+          } else {
+            Cu.reportError(
+              "Invalid id for select result: " + result.choices[0]
+            );
+          }
         } else {
-          Cu.reportError("Invalid id for select result: " + result.choices[0]);
-        }
-      } else {
-        for (let i = 0; i < id; i++) {
-          let elem = map[i];
-          let index = result.choices.indexOf(String(i));
-          if (elem instanceof win.HTMLOptionElement &&
-              elem.selected !== (index >= 0)) {
-            // Current selected is not the same as the new selected state.
-            dispatchEvents = true;
-            elem.selected = !elem.selected;
+          for (let i = 0; i < id; i++) {
+            let elem = map[i];
+            let index = result.choices.indexOf(String(i));
+            if (
+              elem instanceof win.HTMLOptionElement &&
+              elem.selected !== index >= 0
+            ) {
+              // Current selected is not the same as the new selected state.
+              dispatchEvents = true;
+              elem.selected = !elem.selected;
+            }
+            result.choices[index] = undefined;
           }
-          result.choices[index] = undefined;
-        }
-        for (let i = 0; i < result.choices.length; i++) {
-          if (result.choices[i] !== undefined && result.choices[i] !== null) {
-            Cu.reportError("Invalid id for select result: " + result.choices[i]);
-            break;
+          for (let i = 0; i < result.choices.length; i++) {
+            if (result.choices[i] !== undefined && result.choices[i] !== null) {
+              Cu.reportError(
+                "Invalid id for select result: " + result.choices[i]
+              );
+              break;
+            }
           }
         }
-      }
 
-      if (dispatchEvents) {
-        this._dispatchEvents(aElement);
+        if (dispatchEvents) {
+          this._dispatchEvents(aElement);
+        }
       }
-    });
+    );
   },
 
   _handleDateTime: function(aElement, aType) {
     let prompt = new PromptDelegate(aElement.ownerGlobal);
-    prompt.asyncShowPrompt({
-      type: "datetime",
-      mode: aType,
-      value: aElement.value,
-      min: aElement.min,
-      max: aElement.max,
-    }, result => {
-      // OK: result
-      // Cancel: !result
-      if (!result || result.datetime === undefined || result.datetime === aElement.value) {
-        return;
+    prompt.asyncShowPrompt(
+      {
+        type: "datetime",
+        mode: aType,
+        value: aElement.value,
+        min: aElement.min,
+        max: aElement.max,
+      },
+      result => {
+        // OK: result
+        // Cancel: !result
+        if (
+          !result ||
+          result.datetime === undefined ||
+          result.datetime === aElement.value
+        ) {
+          return;
+        }
+        aElement.value = result.datetime;
+        this._dispatchEvents(aElement);
       }
-      aElement.value = result.datetime;
-      this._dispatchEvents(aElement);
-    });
+    );
   },
 
   _dispatchEvents: function(aElement) {
     // Fire both "input" and "change" events for <select> and <input> for
     // date/time.
-    aElement.dispatchEvent(new aElement.ownerGlobal.Event("input", { bubbles: true }));
-    aElement.dispatchEvent(new aElement.ownerGlobal.Event("change", { bubbles: true }));
+    aElement.dispatchEvent(
+      new aElement.ownerGlobal.Event("input", { bubbles: true })
+    );
+    aElement.dispatchEvent(
+      new aElement.ownerGlobal.Event("change", { bubbles: true })
+    );
   },
 
   _handleContextMenu: function(aEvent) {
@@ -210,8 +248,10 @@ PromptFactory.prototype = {
       addItemFor: function(aElement, aCanLoadIcon) {
         this._cursor.items.push({
           disabled: aElement.disabled,
-          icon: aCanLoadIcon && aElement.icon &&
-                aElement.icon.length ? aElement.icon : null,
+          icon:
+            aCanLoadIcon && aElement.icon && aElement.icon.length
+              ? aElement.icon
+              : null,
           id: String(this._id),
           label: aElement.label,
           selected: aElement.checked,
@@ -235,10 +275,14 @@ PromptFactory.prototype = {
       },
 
       closeContainer: function() {
-        let childItems = (this._cursor.label === "") ? this._cursor.items : null;
+        let childItems = this._cursor.label === "" ? this._cursor.items : null;
         this._cursor = this._stack.pop();
 
-        if (childItems !== null && this._cursor && this._cursor.items.length === 1) {
+        if (
+          childItems !== null &&
+          this._cursor &&
+          this._cursor.items.length === 1
+        ) {
           // Merge a single nameless child container into the parent container.
           // This lets us build an HTML contextmenu within a submenu.
           this._cursor.items = childItems;
@@ -262,34 +306,46 @@ PromptFactory.prototype = {
     menu.build(builder);
 
     let prompt = new PromptDelegate(target.ownerGlobal);
-    prompt.asyncShowPrompt({
-      type: "choice",
-      mode: "menu",
-      choices: builder.items,
-    }, result => {
-      // OK: result
-      // Cancel: !result
-      if (result && result.choices !== undefined) {
-        builder.click(result.choices[0]);
+    prompt.asyncShowPrompt(
+      {
+        type: "choice",
+        mode: "menu",
+        choices: builder.items,
+      },
+      result => {
+        // OK: result
+        // Cancel: !result
+        if (result && result.choices !== undefined) {
+          builder.click(result.choices[0]);
+        }
       }
-    });
+    );
 
     aEvent.preventDefault();
   },
 
   _handlePopupBlocked: function(aEvent) {
     const dwi = aEvent.requestingWindow;
-    const popupWindowURISpec = aEvent.popupWindowURI ? aEvent.popupWindowURI.spec : "about:blank";
+    const popupWindowURISpec = aEvent.popupWindowURI
+      ? aEvent.popupWindowURI.spec
+      : "about:blank";
 
     let prompt = new PromptDelegate(aEvent.requestingWindow);
-    prompt.asyncShowPrompt({
-      type: "popup",
-      targetUri: popupWindowURISpec,
-    }, allowed => {
-      if (allowed && dwi) {
-        dwi.open(popupWindowURISpec, aEvent.popupWindowName, aEvent.popupWindowFeatures);
+    prompt.asyncShowPrompt(
+      {
+        type: "popup",
+        targetUri: popupWindowURISpec,
+      },
+      allowed => {
+        if (allowed && dwi) {
+          dwi.open(
+            popupWindowURISpec,
+            aEvent.popupWindowName,
+            aEvent.popupWindowFeatures
+          );
+        }
       }
-    });
+    );
   },
 
   /* ----------  nsIPromptFactory  ---------- */
@@ -297,7 +353,9 @@ PromptFactory.prototype = {
     // Delegated to login manager here, which in turn calls back into us via nsIPromptService.
     if (aIID.equals(Ci.nsIAuthPrompt2) || aIID.equals(Ci.nsIAuthPrompt)) {
       try {
-        let pwmgr = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].getService(Ci.nsIPromptFactory);
+        let pwmgr = Cc[
+          "@mozilla.org/passwordmanager/authpromptfactory;1"
+        ].getService(Ci.nsIPromptFactory);
         return pwmgr.getPrompt(aDOMWin, aIID);
       } catch (e) {
         Cu.reportError("Delegation to password manager failed: " + e);
@@ -314,7 +372,10 @@ PromptFactory.prototype = {
   // nsIPromptService methods proxy to our Prompt class
   callProxy: function(aMethod, aArguments) {
     let prompt = new PromptDelegate(aArguments[0]);
-    return prompt[aMethod].apply(prompt, Array.prototype.slice.call(aArguments, 1));
+    return prompt[aMethod].apply(
+      prompt,
+      Array.prototype.slice.call(aArguments, 1)
+    );
   },
 
   /* ----------  nsIPromptService  ---------- */
@@ -363,8 +424,10 @@ function PromptDelegate(aDomWin) {
   }
 
   if (!this._dispatcher) {
-    [this._dispatcher, this._domWin] =
-        GeckoViewUtils.getActiveDispatcherAndWindow();
+    [
+      this._dispatcher,
+      this._domWin,
+    ] = GeckoViewUtils.getActiveDispatcherAndWindow();
   }
 }
 
@@ -390,8 +453,11 @@ PromptDelegate.prototype = {
       }
 
       let event = this._domWin.document.createEvent("Events");
-      event.initEvent(aEntering ? "DOMWillOpenModalDialog" : "DOMModalDialogClosed",
-                      true, true);
+      event.initEvent(
+        aEntering ? "DOMWillOpenModalDialog" : "DOMModalDialogClosed",
+        true,
+        true
+      );
       winUtils.dispatchEventToChromeOnly(this._domWin, event);
 
       if (aEntering) {
@@ -414,11 +480,12 @@ PromptDelegate.prototype = {
       return;
     }
     try {
-      this.asyncShowPrompt(aMsg, res => result = res);
+      this.asyncShowPrompt(aMsg, res => (result = res));
 
       // Spin this thread while we wait for a result
-      Services.tm.spinEventLoopUntil(() =>
-          this._domWin.closed || result !== undefined);
+      Services.tm.spinEventLoopUntil(
+        () => this._domWin.closed || result !== undefined
+      );
     } finally {
       this._changeModalState(/* aEntering */ false);
     }
@@ -478,10 +545,15 @@ PromptDelegate.prototype = {
   },
 
   alertCheck: function(aTitle, aText, aCheckMsg, aCheckState) {
-    let result = this._showPrompt(this._addText(aTitle, aText,
-                                  this._addCheck(aCheckMsg, aCheckState, {
-                                    type: "alert",
-                                  })));
+    let result = this._showPrompt(
+      this._addText(
+        aTitle,
+        aText,
+        this._addCheck(aCheckMsg, aCheckState, {
+          type: "alert",
+        })
+      )
+    );
     if (result && aCheckState) {
       aCheckState.value = !!result.checkValue;
     }
@@ -494,13 +566,30 @@ PromptDelegate.prototype = {
 
   confirmCheck: function(aTitle, aText, aCheckMsg, aCheckState) {
     // Button 0 is OK.
-    return this.confirmEx(aTitle, aText, Ci.nsIPrompt.STD_OK_CANCEL_BUTTONS,
-                          /* aButton0 */ null, /* aButton1 */ null, /* aButton2 */ null,
-                          aCheckMsg, aCheckState) == 0;
+    return (
+      this.confirmEx(
+        aTitle,
+        aText,
+        Ci.nsIPrompt.STD_OK_CANCEL_BUTTONS,
+        /* aButton0 */ null,
+        /* aButton1 */ null,
+        /* aButton2 */ null,
+        aCheckMsg,
+        aCheckState
+      ) == 0
+    );
   },
 
-  confirmEx: function(aTitle, aText, aButtonFlags, aButton0,
-                      aButton1, aButton2, aCheckMsg, aCheckState) {
+  confirmEx: function(
+    aTitle,
+    aText,
+    aButtonFlags,
+    aButton0,
+    aButton1,
+    aButton2,
+    aCheckMsg,
+    aCheckState
+  ) {
     let btnMap = Array(3).fill(null);
     let btnTitle = Array(3).fill(null);
     let btnCustomTitle = Array(3).fill(null);
@@ -508,30 +597,30 @@ PromptDelegate.prototype = {
     for (let i = 0; i < 3; i++) {
       let btnFlags = aButtonFlags >> (i * 8);
       switch (btnFlags & 0xff) {
-        case Ci.nsIPrompt.BUTTON_TITLE_OK :
+        case Ci.nsIPrompt.BUTTON_TITLE_OK:
           btnMap[this.BUTTON_TYPE_POSITIVE] = i;
           btnTitle[this.BUTTON_TYPE_POSITIVE] = "ok";
           break;
-        case Ci.nsIPrompt.BUTTON_TITLE_CANCEL :
+        case Ci.nsIPrompt.BUTTON_TITLE_CANCEL:
           btnMap[this.BUTTON_TYPE_NEGATIVE] = i;
           btnTitle[this.BUTTON_TYPE_NEGATIVE] = "cancel";
           break;
-        case Ci.nsIPrompt.BUTTON_TITLE_YES :
+        case Ci.nsIPrompt.BUTTON_TITLE_YES:
           btnMap[this.BUTTON_TYPE_POSITIVE] = i;
           btnTitle[this.BUTTON_TYPE_POSITIVE] = "yes";
           break;
-        case Ci.nsIPrompt.BUTTON_TITLE_NO :
+        case Ci.nsIPrompt.BUTTON_TITLE_NO:
           btnMap[this.BUTTON_TYPE_NEGATIVE] = i;
           btnTitle[this.BUTTON_TYPE_NEGATIVE] = "no";
           break;
-        case Ci.nsIPrompt.BUTTON_TITLE_IS_STRING :
+        case Ci.nsIPrompt.BUTTON_TITLE_IS_STRING:
           // We don't know if this is positive/negative/neutral, so save for later.
           savedButtonId.push(i);
           break;
-        case Ci.nsIPrompt.BUTTON_TITLE_SAVE :
-        case Ci.nsIPrompt.BUTTON_TITLE_DONT_SAVE :
-        case Ci.nsIPrompt.BUTTON_TITLE_REVERT :
-          // Not supported; fall-through.
+        case Ci.nsIPrompt.BUTTON_TITLE_SAVE:
+        case Ci.nsIPrompt.BUTTON_TITLE_DONT_SAVE:
+        case Ci.nsIPrompt.BUTTON_TITLE_REVERT:
+        // Not supported; fall-through.
         default:
           break;
       }
@@ -546,24 +635,34 @@ PromptDelegate.prototype = {
       }
     }
 
-    let result = this._showPrompt(this._addText(aTitle, aText,
-                                  this._addCheck(aCheckMsg, aCheckState, {
-                                    type: "button",
-                                    btnTitle: btnTitle,
-                                    btnCustomTitle: btnCustomTitle,
-                                  })));
+    let result = this._showPrompt(
+      this._addText(
+        aTitle,
+        aText,
+        this._addCheck(aCheckMsg, aCheckState, {
+          type: "button",
+          btnTitle: btnTitle,
+          btnCustomTitle: btnCustomTitle,
+        })
+      )
+    );
     if (result && aCheckState) {
       aCheckState.value = !!result.checkValue;
     }
-    return (result && result.button in btnMap) ? btnMap[result.button] : -1;
+    return result && result.button in btnMap ? btnMap[result.button] : -1;
   },
 
   prompt: function(aTitle, aText, aValue, aCheckMsg, aCheckState) {
-    let result = this._showPrompt(this._addText(aTitle, aText,
-                                  this._addCheck(aCheckMsg, aCheckState, {
-                                    type: "text",
-                                    value: aValue.value,
-                                  })));
+    let result = this._showPrompt(
+      this._addText(
+        aTitle,
+        aText,
+        this._addCheck(aCheckMsg, aCheckState, {
+          type: "text",
+          value: aValue.value,
+        })
+      )
+    );
     // OK: result && result.text !== undefined
     // Cancel: result && result.text === undefined
     // Error: !result
@@ -578,12 +677,24 @@ PromptDelegate.prototype = {
   },
 
   promptPassword: function(aTitle, aText, aPassword, aCheckMsg, aCheckState) {
-    return this._promptUsernameAndPassword(aTitle, aText, /* aUsername */ undefined,
-                                           aPassword, aCheckMsg, aCheckState);
+    return this._promptUsernameAndPassword(
+      aTitle,
+      aText,
+      /* aUsername */ undefined,
+      aPassword,
+      aCheckMsg,
+      aCheckState
+    );
   },
 
-  promptUsernameAndPassword: function(aTitle, aText, aUsername, aPassword,
-                                      aCheckMsg, aCheckState) {
+  promptUsernameAndPassword: function(
+    aTitle,
+    aText,
+    aUsername,
+    aPassword,
+    aCheckMsg,
+    aCheckState
+  ) {
     let msg = {
       type: "auth",
       mode: aUsername ? "auth" : "password",
@@ -593,8 +704,9 @@ PromptDelegate.prototype = {
         password: aPassword.value,
       },
     };
-    let result = this._showPrompt(this._addText(aTitle, aText,
-                                  this._addCheck(aCheckMsg, aCheckState, msg)));
+    let result = this._showPrompt(
+      this._addText(aTitle, aText, this._addCheck(aCheckMsg, aCheckState, msg))
+    );
     // OK: result && result.password !== undefined
     // Cancel: result && result.password === undefined
     // Error: !result
@@ -618,11 +730,13 @@ PromptDelegate.prototype = {
       disabled: false,
       selected: false,
     }));
-    let result = this._showPrompt(this._addText(aTitle, aText, {
-                                    type: "choice",
-                                    mode: "single",
-                                    choices: choices,
-                                  }));
+    let result = this._showPrompt(
+      this._addText(aTitle, aText, {
+        type: "choice",
+        mode: "single",
+        choices: choices,
+      })
+    );
     // OK: result
     // Cancel: !result
     if (!result || result.choices === undefined) {
@@ -634,22 +748,32 @@ PromptDelegate.prototype = {
 
   _getAuthMsg: function(aChannel, aLevel, aAuthInfo) {
     let username;
-    if ((aAuthInfo.flags & Ci.nsIAuthInformation.NEED_DOMAIN) && aAuthInfo.domain) {
+    if (
+      aAuthInfo.flags & Ci.nsIAuthInformation.NEED_DOMAIN &&
+      aAuthInfo.domain
+    ) {
       username = aAuthInfo.domain + "\\" + aAuthInfo.username;
     } else {
       username = aAuthInfo.username;
     }
-    return this._addText(/* title */ null, this._getAuthText(aChannel, aAuthInfo), {
-      type: "auth",
-      mode: aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD ? "password" : "auth",
-      options: {
-        flags: aAuthInfo.flags,
-        uri: aChannel && aChannel.URI.displaySpec,
-        level: aLevel,
-        username: username,
-        password: aAuthInfo.password,
-      },
-    });
+    return this._addText(
+      /* title */ null,
+      this._getAuthText(aChannel, aAuthInfo),
+      {
+        type: "auth",
+        mode:
+          aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD
+            ? "password"
+            : "auth",
+        options: {
+          flags: aAuthInfo.flags,
+          uri: aChannel && aChannel.URI.displaySpec,
+          level: aLevel,
+          username: username,
+          password: aAuthInfo.password,
+        },
+      }
+    );
   },
 
   _fillAuthInfo: function(aAuthInfo, aCheckState, aResult) {
@@ -680,16 +804,28 @@ PromptDelegate.prototype = {
   },
 
   promptAuth: function(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
-    let result = this._showPrompt(this._addCheck(aCheckMsg, aCheckState,
-                                  this._getAuthMsg(aChannel, aLevel, aAuthInfo)));
+    let result = this._showPrompt(
+      this._addCheck(
+        aCheckMsg,
+        aCheckState,
+        this._getAuthMsg(aChannel, aLevel, aAuthInfo)
+      )
+    );
     // OK: result && result.password !== undefined
     // Cancel: result && result.password === undefined
     // Error: !result
     return this._fillAuthInfo(aAuthInfo, aCheckState, result);
   },
 
-  asyncPromptAuth: function(aChannel, aCallback, aContext, aLevel, aAuthInfo,
-                            aCheckMsg, aCheckState) {
+  asyncPromptAuth: function(
+    aChannel,
+    aCallback,
+    aContext,
+    aLevel,
+    aAuthInfo,
+    aCheckMsg,
+    aCheckState
+  ) {
     let responded = false;
     let callback = result => {
       // OK: result && result.password !== undefined
@@ -705,8 +841,14 @@ PromptDelegate.prototype = {
         aCallback.onAuthCancelled(aContext, /* userCancel */ true);
       }
     };
-    this.asyncShowPrompt(this._addCheck(aCheckMsg, aCheckState,
-                          this._getAuthMsg(aChannel, aLevel, aAuthInfo)), callback);
+    this.asyncShowPrompt(
+      this._addCheck(
+        aCheckMsg,
+        aCheckState,
+        this._getAuthMsg(aChannel, aLevel, aAuthInfo)
+      ),
+      callback
+    );
     return {
       QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
       cancel: function() {
@@ -720,9 +862,10 @@ PromptDelegate.prototype = {
   },
 
   _getAuthText: function(aChannel, aAuthInfo) {
-    let isProxy = (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY);
-    let isPassOnly = (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD);
-    let isCrossOrig = (aAuthInfo.flags & Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE);
+    let isProxy = aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY;
+    let isPassOnly = aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD;
+    let isCrossOrig =
+      aAuthInfo.flags & Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE;
 
     let username = aAuthInfo.username;
     let [displayHost, realm] = this._getAuthTarget(aChannel, aAuthInfo);
@@ -738,18 +881,32 @@ PromptDelegate.prototype = {
     }
 
     let bundle = Services.strings.createBundle(
-        "chrome://global/locale/commonDialogs.properties");
+      "chrome://global/locale/commonDialogs.properties"
+    );
     let text;
     if (isProxy) {
-      text = bundle.formatStringFromName("EnterLoginForProxy3", [realm, displayHost]);
+      text = bundle.formatStringFromName("EnterLoginForProxy3", [
+        realm,
+        displayHost,
+      ]);
     } else if (isPassOnly) {
-      text = bundle.formatStringFromName("EnterPasswordFor", [username, displayHost]);
+      text = bundle.formatStringFromName("EnterPasswordFor", [
+        username,
+        displayHost,
+      ]);
     } else if (isCrossOrig) {
-      text = bundle.formatStringFromName("EnterUserPasswordForCrossOrigin2", [displayHost]);
+      text = bundle.formatStringFromName("EnterUserPasswordForCrossOrigin2", [
+        displayHost,
+      ]);
     } else if (!realm) {
-      text = bundle.formatStringFromName("EnterUserPasswordFor2", [displayHost]);
+      text = bundle.formatStringFromName("EnterUserPasswordFor2", [
+        displayHost,
+      ]);
     } else {
-      text = bundle.formatStringFromName("EnterLoginForRealm3", [realm, displayHost]);
+      text = bundle.formatStringFromName("EnterLoginForRealm3", [
+        realm,
+        displayHost,
+      ]);
     }
 
     return text;
@@ -768,8 +925,14 @@ PromptDelegate.prototype = {
       }
       // Proxies don't have a scheme, but we'll use "moz-proxy://"
       // so that it's more obvious what the login is for.
-      let idnService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
-      let hostname = "moz-proxy://" + idnService.convertUTF8toACE(info.host) + ":" + info.port;
+      let idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+        Ci.nsIIDNService
+      );
+      let hostname =
+        "moz-proxy://" +
+        idnService.convertUTF8toACE(info.host) +
+        ":" +
+        info.port;
       let realm = aAuthInfo.realm;
       if (!realm) {
         realm = hostname;
@@ -789,8 +952,7 @@ PromptDelegate.prototype = {
   },
 };
 
-function FilePickerDelegate() {
-}
+function FilePickerDelegate() {}
 
 FilePickerDelegate.prototype = {
   classID: Components.ID("{e4565e36-f101-4bf5-950b-4be0887785a9}"),
@@ -799,15 +961,17 @@ FilePickerDelegate.prototype = {
 
   /* ----------  nsIFilePicker  ---------- */
   init: function(aParent, aTitle, aMode) {
-    if (aMode === Ci.nsIFilePicker.modeGetFolder ||
-        aMode === Ci.nsIFilePicker.modeSave) {
+    if (
+      aMode === Ci.nsIFilePicker.modeGetFolder ||
+      aMode === Ci.nsIFilePicker.modeSave
+    ) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     }
     this._prompt = new PromptDelegate(aParent);
     this._msg = {
       type: "file",
       title: aTitle,
-      mode: (aMode === Ci.nsIFilePicker.modeOpenMultiple) ? "multiple" : "single",
+      mode: aMode === Ci.nsIFilePicker.modeOpenMultiple ? "multiple" : "single",
     };
     this._mode = aMode;
     this._mimeTypes = [];
@@ -850,7 +1014,7 @@ FilePickerDelegate.prototype = {
     return Services.io.newFileURI(this.file);
   },
 
-  * _getEnumerator(aDOMFile) {
+  *_getEnumerator(aDOMFile) {
     if (!this._files) {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
@@ -889,54 +1053,46 @@ FilePickerDelegate.prototype = {
     return "";
   },
 
-  set defaultString(aValue) {
-  },
+  set defaultString(aValue) {},
 
   get defaultExtension() {
     return "";
   },
 
-  set defaultExtension(aValue) {
-  },
+  set defaultExtension(aValue) {},
 
   get filterIndex() {
     return 0;
   },
 
-  set filterIndex(aValue) {
-  },
+  set filterIndex(aValue) {},
 
   get displayDirectory() {
     return null;
   },
 
-  set displayDirectory(aValue) {
-  },
+  set displayDirectory(aValue) {},
 
   get displaySpecialDirectory() {
     return "";
   },
 
-  set displaySpecialDirectory(aValue) {
-  },
+  set displaySpecialDirectory(aValue) {},
 
   get addToRecentDocs() {
     return false;
   },
 
-  set addToRecentDocs(aValue) {
-  },
+  set addToRecentDocs(aValue) {},
 
   get okButtonLabel() {
     return "";
   },
 
-  set okButtonLabel(aValue) {
-  },
+  set okButtonLabel(aValue) {},
 };
 
-function ColorPickerDelegate() {
-}
+function ColorPickerDelegate() {}
 
 ColorPickerDelegate.prototype = {
   classID: Components.ID("{aa0dd6fc-73dd-4621-8385-c0b377e02cee}"),
@@ -962,4 +1118,7 @@ ColorPickerDelegate.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  ColorPickerDelegate, FilePickerDelegate, PromptFactory]);
+  ColorPickerDelegate,
+  FilePickerDelegate,
+  PromptFactory,
+]);

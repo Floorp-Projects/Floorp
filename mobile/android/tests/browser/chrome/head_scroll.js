@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function fuzzyEquals(a, b) {
-  return (Math.abs(a - b) < 1e-6);
+  return Math.abs(a - b) < 1e-6;
 }
 
 function getFrame(browser, { frame = null }) {
@@ -15,9 +15,8 @@ function getFrame(browser, { frame = null }) {
   return window;
 }
 
-function setScrollPosition(browser,
-                           { x = 0, y = 0, zoom = 0, frame = null }) {
-  let window = getFrame(browser, {frame});
+function setScrollPosition(browser, { x = 0, y = 0, zoom = 0, frame = null }) {
+  let window = getFrame(browser, { frame });
   let topLevelUtils = browser.contentWindow.windowUtils;
   if (zoom) {
     topLevelUtils.setResolutionAndScaleTo(zoom);
@@ -29,13 +28,17 @@ function setScrollPosition(browser,
   if (frame !== null) {
     window.scrollTo(x, y);
   } else {
-    topLevelUtils.scrollToVisual(x, y, topLevelUtils.UPDATE_TYPE_MAIN_THREAD,
-                                 topLevelUtils.SCROLL_MODE_INSTANT);
+    topLevelUtils.scrollToVisual(
+      x,
+      y,
+      topLevelUtils.UPDATE_TYPE_MAIN_THREAD,
+      topLevelUtils.SCROLL_MODE_INSTANT
+    );
   }
 }
 
 function checkScroll(browser, data) {
-  let {x, y, zoom} = data;
+  let { x, y, zoom } = data;
   let scrollPos = getScrollPosition(browser, data);
 
   if (data.hasOwnProperty("x")) {
@@ -51,7 +54,8 @@ function checkScroll(browser, data) {
 
 function getScrollPosition(browser, data = {}) {
   let utils = getFrame(browser, data).windowUtils;
-  let x = {}, y = {};
+  let x = {},
+    y = {};
 
   let zoom = utils.getResolution();
   utils.getVisualViewportOffset(x, y);
@@ -69,10 +73,12 @@ function presStateToCSSPx(presState) {
   // Conversion factor taken from gfx/src/AppUnits.h.
   const APP_UNITS_PER_CSS_PX = 60;
 
-  let state = {...presState};
+  let state = { ...presState };
   if (state.scroll) {
     let scroll = state.scroll.split(",").map(pos => parseInt(pos, 10) || 0);
-    scroll = scroll.map(appUnits => Math.round(appUnits / APP_UNITS_PER_CSS_PX));
+    scroll = scroll.map(appUnits =>
+      Math.round(appUnits / APP_UNITS_PER_CSS_PX)
+    );
     state.scroll = getScrollString({ x: scroll[0], y: scroll[1] });
   }
 

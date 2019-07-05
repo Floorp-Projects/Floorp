@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 if (!("SpecialPowers" in window)) {
-  dump("Robocop robocop_testharness.js found SpecialPowers unavailable: reloading...\n");
+  dump(
+    "Robocop robocop_testharness.js found SpecialPowers unavailable: reloading...\n"
+  );
   setTimeout(() => {
     window.location.reload();
   }, 1000);
@@ -19,19 +21,36 @@ function _evalURI(uri, sandbox) {
   // testing, but we allow relative URLs by maintaining our baseURI.
   let req = new XMLHttpRequest();
 
-  let baseURI = SpecialPowers.Services.io
-                             .newURI(window.document.baseURI, window.document.characterSet);
-  let theURI = SpecialPowers.Services.io
-                            .newURI(uri, window.document.characterSet, baseURI);
+  let baseURI = SpecialPowers.Services.io.newURI(
+    window.document.baseURI,
+    window.document.characterSet
+  );
+  let theURI = SpecialPowers.Services.io.newURI(
+    uri,
+    window.document.characterSet,
+    baseURI
+  );
 
   // We append a random slug to avoid caching: see
   // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache.
-  req.open("GET", theURI.spec + ((/\?/).test(theURI.spec) ? "&slug=" : "?slug=") + (new Date()).getTime(), false);
+  req.open(
+    "GET",
+    theURI.spec +
+      (/\?/.test(theURI.spec) ? "&slug=" : "?slug=") +
+      new Date().getTime(),
+    false
+  );
   req.setRequestHeader("Cache-Control", "no-cache");
   req.setRequestHeader("Pragma", "no-cache");
   req.send();
 
-  return SpecialPowers.Cu.evalInSandbox(req.responseText, sandbox, "1.8", uri, 1);
+  return SpecialPowers.Cu.evalInSandbox(
+    req.responseText,
+    sandbox,
+    "1.8",
+    uri,
+    1
+  );
 }
 
 /**
@@ -45,10 +64,7 @@ function _evalURI(uri, sandbox) {
  * Robocop:Java messages.
  */
 function testOneFile(uri) {
-  let HEAD_JS = [
-    "head.js",
-    "robocop_head.js",
-  ];
+  let HEAD_JS = ["head.js", "robocop_head.js"];
 
   // System principal.  This is dangerous, but this is test code that
   // should only run on developer and build farm machines, and the
@@ -56,12 +72,14 @@ function testOneFile(uri) {
   // including Components.stack.  Wrapping Components.stack in
   // SpecialPowers magic obfuscates stack traces wonderfully,
   // defeating much of the point of the test harness.
-  let principal = SpecialPowers.Cc["@mozilla.org/systemprincipal;1"]
-                               .createInstance(SpecialPowers.Ci.nsIPrincipal);
+  let principal = SpecialPowers.Cc[
+    "@mozilla.org/systemprincipal;1"
+  ].createInstance(SpecialPowers.Ci.nsIPrincipal);
 
-  let testScope =
-    SpecialPowers.Cu.Sandbox(principal, { sandboxName: uri,
-                                          wantGlobalProperties: ["ChromeUtils"] });
+  let testScope = SpecialPowers.Cu.Sandbox(principal, {
+    sandboxName: uri,
+    wantGlobalProperties: ["ChromeUtils"],
+  });
 
   // Populate test environment with test harness prerequisites.
   testScope.SpecialPowers = SpecialPowers;
@@ -71,10 +89,7 @@ function testOneFile(uri) {
   // Output from robocop_head.js is fed, line by line, to this function.
   // We send any such output back to the Java Robocop harness.
   testScope.dump = function(str) {
-    let message = { type: "Robocop:Java",
-                    innerType: "progress",
-                    message: str,
-                  };
+    let message = { type: "Robocop:Java", innerType: "progress", message: str };
     sendMessageToJava(message);
   };
 

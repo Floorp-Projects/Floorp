@@ -1,12 +1,18 @@
-
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.roboextender = class extends ExtensionAPI {
   onStartup() {
-    let aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"]
-                                 .getService(Ci.amIAddonManagerStartup);
-    const manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+    let aomStartup = Cc[
+      "@mozilla.org/addons/addon-manager-startup;1"
+    ].getService(Ci.amIAddonManagerStartup);
+    const manifestURI = Services.io.newURI(
+      "manifest.json",
+      null,
+      this.extension.rootURI
+    );
     const targetURL = this.extension.rootURI.resolve("base/");
     this.chromeHandle = aomStartup.registerChrome(manifestURI, [
       ["content", "roboextender", targetURL],

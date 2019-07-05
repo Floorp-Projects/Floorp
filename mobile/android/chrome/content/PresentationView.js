@@ -7,10 +7,11 @@
 
 const TOPIC_PRESENTATION_VIEW_READY = "presentation-view-ready";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
-const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";
+const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE =
+  "presentation-receiver:launch:response";
 
 // globals Services
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function log(str) {
   // dump("-*- PresentationView.js -*-: " + str + "\n");
@@ -47,15 +48,17 @@ let PresentationView = {
     browser.setAttribute("mozpresentation", requestData.url);
     try {
       browser.loadURI(requestData.url);
-      Services.obs.notifyObservers(browser,
-                                  TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE,
-                                  JSON.stringify({ result: "success",
-                                                   requestId: requestData.requestId }));
+      Services.obs.notifyObservers(
+        browser,
+        TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE,
+        JSON.stringify({ result: "success", requestId: requestData.requestId })
+      );
     } catch (e) {
-      Services.obs.notifyObservers(null,
-                                   TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE,
-                                   JSON.stringify({ result: "error",
-                                                    reason: e.message }));
+      Services.obs.notifyObservers(
+        null,
+        TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE,
+        JSON.stringify({ result: "error", reason: e.message })
+      );
     }
   },
 };

@@ -7,12 +7,14 @@
 
 var EXPORTED_SYMBOLS = ["SharedPreferences"];
 
-const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
 
 var Scope = Object.freeze({
-  APP:          "app",
-  PROFILE:      "profile",
-  GLOBAL:       "global",
+  APP: "app",
+  PROFILE: "profile",
+  GLOBAL: "global",
 });
 
 /**
@@ -32,7 +34,10 @@ var SharedPreferences = {
    * returns the preferences for the current profile (just like |forProfile|).
    */
   forProfileName: function(profileName) {
-    return new SharedPreferencesImpl({ scope: Scope.PROFILE, profileName: profileName });
+    return new SharedPreferencesImpl({
+      scope: Scope.PROFILE,
+      profileName: profileName,
+    });
   },
 
   /**
@@ -113,24 +118,34 @@ SharedPreferencesImpl.prototype = Object.freeze({
     // Use dispatch instead of sendRequestForResult because callbacks for
     // Gecko thread events are synchronous when used with dispatch(), so we
     // don't have to spin the event loop here to wait for a result.
-    EventDispatcher.instance.dispatch("SharedPreferences:Get", {
-      preferences: prefs,
-      scope: this._scope,
-      profileName: this._profileName,
-      branch: this._branch,
-    }, {
-      onSuccess: values => { result = values; },
-      onError: msg => { throw new Error("Cannot get preference: " + msg); },
-    });
+    EventDispatcher.instance.dispatch(
+      "SharedPreferences:Get",
+      {
+        preferences: prefs,
+        scope: this._scope,
+        profileName: this._profileName,
+        branch: this._branch,
+      },
+      {
+        onSuccess: values => {
+          result = values;
+        },
+        onError: msg => {
+          throw new Error("Cannot get preference: " + msg);
+        },
+      }
+    );
 
     return result;
   },
 
   _getOne: function _getOne(prefName, type) {
-    let prefs = [{
-      name: prefName,
-      type: type,
-    }];
+    let prefs = [
+      {
+        name: prefName,
+        type: type,
+      },
+    ];
     let values = this._get(prefs);
     if (values.length != 1) {
       throw new Error("Got too many values: " + values.length);
@@ -161,17 +176,22 @@ SharedPreferencesImpl.prototype = Object.freeze({
    * `observer` should implement the nsIObserver.observe interface.
    */
   addObserver: function addObserver(domain, observer, holdWeak) {
-    if (!domain)
+    if (!domain) {
       throw new Error("domain must not be null");
-    if (!observer)
+    }
+    if (!observer) {
       throw new Error("observer must not be null");
-    if (holdWeak)
+    }
+    if (holdWeak) {
       throw new Error("Weak references not yet implemented.");
+    }
 
-    if (!this._observers.hasOwnProperty(domain))
+    if (!this._observers.hasOwnProperty(domain)) {
       this._observers[domain] = [];
-    if (this._observers[domain].indexOf(observer) > -1)
+    }
+    if (this._observers[domain].indexOf(observer) > -1) {
       return;
+    }
 
     this._observers[domain].push(observer);
 
@@ -183,32 +203,41 @@ SharedPreferencesImpl.prototype = Object.freeze({
    * `domain` in the current branch.
    */
   removeObserver: function removeObserver(domain, observer) {
-    if (!this._observers.hasOwnProperty(domain))
+    if (!this._observers.hasOwnProperty(domain)) {
       return;
+    }
     let index = this._observers[domain].indexOf(observer);
-    if (index < 0)
+    if (index < 0) {
       return;
+    }
 
     this._observers[domain].splice(index, 1);
-    if (this._observers[domain].length < 1)
+    if (this._observers[domain].length < 1) {
       delete this._observers[domain];
+    }
 
     this._updateAndroidListener();
   },
 
   _updateAndroidListener: function _updateAndroidListener() {
-    if (this._listening && Object.keys(this._observers).length < 1)
+    if (this._listening && Object.keys(this._observers).length < 1) {
       this._uninstallAndroidListener();
-    if (!this._listening && Object.keys(this._observers).length > 0)
+    }
+    if (!this._listening && Object.keys(this._observers).length > 0) {
       this._installAndroidListener();
+    }
   },
 
   _installAndroidListener: function _installAndroidListener() {
-    if (this._listening)
+    if (this._listening) {
       return;
+    }
     this._listening = true;
 
-    EventDispatcher.instance.registerListener(this, "SharedPreferences:Changed");
+    EventDispatcher.instance.registerListener(
+      this,
+      "SharedPreferences:Changed"
+    );
 
     EventDispatcher.instance.sendRequest({
       type: "SharedPreferences:Observe",
@@ -224,9 +253,12 @@ SharedPreferencesImpl.prototype = Object.freeze({
       return;
     }
 
-    if (msg.scope !== this._scope ||
-        ((this._scope === Scope.PROFILE) && (msg.profileName !== this._profileName)) ||
-        ((this._scope === Scope.GLOBAL) && (msg.branch !== this._branch))) {
+    if (
+      msg.scope !== this._scope ||
+      (this._scope === Scope.PROFILE &&
+        msg.profileName !== this._profileName) ||
+      (this._scope === Scope.GLOBAL && msg.branch !== this._branch)
+    ) {
       return;
     }
 
@@ -241,11 +273,15 @@ SharedPreferencesImpl.prototype = Object.freeze({
   },
 
   _uninstallAndroidListener: function _uninstallAndroidListener() {
-    if (!this._listening)
+    if (!this._listening) {
       return;
+    }
     this._listening = false;
 
-    EventDispatcher.instance.unregisterListener(this, "SharedPreferences:Changed");
+    EventDispatcher.instance.unregisterListener(
+      this,
+      "SharedPreferences:Changed"
+    );
 
     EventDispatcher.instance.sendRequest({
       type: "SharedPreferences:Observe",

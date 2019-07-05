@@ -1,34 +1,58 @@
 /* Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://services-common/utils.js"); /* global: CommonUtils */
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Accounts} = ChromeUtils.import("resource://gre/modules/Accounts.jsm");
+ChromeUtils.import(
+  "resource://services-common/utils.js"
+); /* global: CommonUtils */
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Accounts } = ChromeUtils.import("resource://gre/modules/Accounts.jsm");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
-  window.docShell.rootTreeItem.domWindow
-    .QueryInterface(Ci.nsIDOMChromeWindow));
+  window.docShell.rootTreeItem.domWindow.QueryInterface(Ci.nsIDOMChromeWindow)
+);
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-                               "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
-ChromeUtils.defineModuleGetter(this, "Prompt",
-                               "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Snackbars",
+  "resource://gre/modules/Snackbars.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
 
-var debug = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "AboutLogins");
+var debug = ChromeUtils.import(
+  "resource://gre/modules/AndroidLog.jsm",
+  {}
+).AndroidLog.d.bind(null, "AboutLogins");
 
-var gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutLogins.properties");
+var gStringBundle = Services.strings.createBundle(
+  "chrome://browser/locale/aboutLogins.properties"
+);
 
 function copyStringShowSnackbar(string, notifyString) {
   try {
-    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
+      Ci.nsIClipboardHelper
+    );
     clipboard.copyString(string);
     Snackbars.show(notifyString, Snackbars.LENGTH_LONG);
   } catch (e) {
     debug("Error copying from about:logins");
-    Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), Snackbars.LENGTH_LONG);
+    Snackbars.show(
+      gStringBundle.GetStringFromName("loginsDetails.copyFailed"),
+      Snackbars.LENGTH_LONG
+    );
   }
 }
 
@@ -64,7 +88,9 @@ var Logins = {
       } catch (e) {
         // It's likely that the Master Password was not entered; give
         // a hint to the next person.
-        throw new Error("Possible Master Password permissions error: " + e.toString());
+        throw new Error(
+          "Possible Master Password permissions error: " + e.toString()
+        );
       }
 
       logins.sort((a, b) => a.origin.localeCompare(b.origin));
@@ -72,7 +98,7 @@ var Logins = {
       return logins;
     };
 
-    let hideSpinner = (logins) => {
+    let hideSpinner = logins => {
       this._toggleListBody(false);
 
       if (!logins.length) {
@@ -118,11 +144,11 @@ var Logins = {
   // Update the stored and displayed list upon completion.
   _reloadList: function() {
     this._promiseLogins()
-      .then((logins) => {
+      .then(logins => {
         this._logins = logins;
         this._loadList(logins);
       })
-      .catch((e) => {
+      .catch(e => {
         // There's no way to recover from errors, sadly.  Log and make
         // it obvious that something is up.
         this._logins = [];
@@ -148,13 +174,17 @@ var Logins = {
     window.addEventListener("popstate", this);
 
     Services.obs.addObserver(this, "passwordmgr-storage-changed");
-    document.getElementById("update-btn").addEventListener("click", this._onSaveEditLogin.bind(this));
-    document.getElementById("password-btn").addEventListener("click", this._onPasswordBtn.bind(this));
+    document
+      .getElementById("update-btn")
+      .addEventListener("click", this._onSaveEditLogin.bind(this));
+    document
+      .getElementById("password-btn")
+      .addEventListener("click", this._onPasswordBtn.bind(this));
 
     let filterInput = document.getElementById("filter-input");
     let filterContainer = document.getElementById("filter-input-container");
 
-    filterInput.addEventListener("input", (event) => {
+    filterInput.addEventListener("input", event => {
       // Stop any in-progress filter timer
       if (this._filterTimer) {
         clearTimeout(this._filterTimer);
@@ -167,16 +197,18 @@ var Logins = {
       }, FILTER_DELAY);
     });
 
-    filterInput.addEventListener("blur", (event) => {
+    filterInput.addEventListener("blur", event => {
       filterContainer.setAttribute("hidden", true);
     });
 
-    document.getElementById("filter-button").addEventListener("click", (event) => {
-      filterContainer.removeAttribute("hidden");
-      filterInput.focus();
-    });
+    document
+      .getElementById("filter-button")
+      .addEventListener("click", event => {
+        filterContainer.removeAttribute("hidden");
+        filterInput.focus();
+      });
 
-    document.getElementById("filter-clear").addEventListener("click", (event) => {
+    document.getElementById("filter-clear").addEventListener("click", event => {
       // Stop any in-progress filter timer
       if (this._filterTimer) {
         clearTimeout(this._filterTimer);
@@ -252,20 +284,22 @@ var Logins = {
     this._loadFavicon(img, login.origin);
 
     let headerText = document.getElementById("edit-login-header-text");
-    if (login.origin && (login.origin != "")) {
+    if (login.origin && login.origin != "") {
       headerText.textContent = login.origin;
     } else {
-      headerText.textContent = gStringBundle.GetStringFromName("editLogin.fallbackTitle");
+      headerText.textContent = gStringBundle.GetStringFromName(
+        "editLogin.fallbackTitle"
+      );
     }
 
-    passwordField.addEventListener("input", (event) => {
+    passwordField.addEventListener("input", event => {
       let newPassword = passwordField.value;
       let updateBtn = document.getElementById("update-btn");
 
       if (newPassword === "") {
         updateBtn.disabled = true;
         updateBtn.classList.add("disabled-btn");
-      } else if ((newPassword !== "") && (updateBtn.disabled === true)) {
+      } else if (newPassword !== "" && updateBtn.disabled === true) {
         updateBtn.disabled = false;
         updateBtn.classList.remove("disabled-btn");
       }
@@ -279,18 +313,26 @@ var Logins = {
     let origPassword = this._selectedLogin.password;
 
     try {
-      if ((newUsername === origUsername) && (newPassword === origPassword)) {
-        Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_LONG);
+      if (newUsername === origUsername && newPassword === origPassword) {
+        Snackbars.show(
+          gStringBundle.GetStringFromName("editLogin.saved1"),
+          Snackbars.LENGTH_LONG
+        );
         this._showList();
         return;
       }
 
-      let logins = Services.logins.findLogins(this._selectedLogin.origin, this._selectedLogin.formActionOrigin, this._selectedLogin.httpRealm);
+      let logins = Services.logins.findLogins(
+        this._selectedLogin.origin,
+        this._selectedLogin.formActionOrigin,
+        this._selectedLogin.httpRealm
+      );
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == origUsername) {
-          let propBag = Cc["@mozilla.org/hash-property-bag;1"].
-            createInstance(Ci.nsIWritablePropertyBag);
+          let propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+            Ci.nsIWritablePropertyBag
+          );
           if (newUsername !== origUsername) {
             propBag.setProperty("username", newUsername);
           }
@@ -305,10 +347,16 @@ var Logins = {
         }
       }
     } catch (e) {
-      Snackbars.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), Snackbars.LENGTH_LONG);
+      Snackbars.show(
+        gStringBundle.GetStringFromName("editLogin.couldNotSave"),
+        Snackbars.LENGTH_LONG
+      );
       return;
     }
-    Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_LONG);
+    Snackbars.show(
+      gStringBundle.GetStringFromName("editLogin.saved1"),
+      Snackbars.LENGTH_LONG
+    );
     this._showList();
   },
 
@@ -343,14 +391,18 @@ var Logins = {
       message: password,
       buttons: [
         gStringBundle.GetStringFromName("loginsDialog.copy"),
-        gStringBundle.GetStringFromName("loginsDialog.cancel") ],
-      }).show((data) => {
-        switch (data.button) {
-          case 0:
+        gStringBundle.GetStringFromName("loginsDialog.cancel"),
+      ],
+    }).show(data => {
+      switch (data.button) {
+        case 0:
           // Corresponds to "Copy password" button.
-          copyStringShowSnackbar(password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
-        }
-     });
+          copyStringShowSnackbar(
+            password,
+            gStringBundle.GetStringFromName("loginsDetails.passwordCopied")
+          );
+      }
+    });
   },
 
   _onLoginClick: function(event) {
@@ -374,17 +426,23 @@ var Logins = {
     ];
 
     prompt.setSingleChoiceItems(menuItems);
-    prompt.show((data) => {
+    prompt.show(data => {
       // Switch on indices of buttons, as they were added when creating login item.
       switch (data.button) {
         case 0:
           this._showPassword(login.password);
           break;
         case 1:
-          copyStringShowSnackbar(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
+          copyStringShowSnackbar(
+            login.password,
+            gStringBundle.GetStringFromName("loginsDetails.passwordCopied")
+          );
           break;
         case 2:
-          copyStringShowSnackbar(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
+          copyStringShowSnackbar(
+            login.username,
+            gStringBundle.GetStringFromName("loginsDetails.usernameCopied")
+          );
           break;
         case 3:
           this._selectedLogin = login;
@@ -393,63 +451,89 @@ var Logins = {
           break;
         case 4:
           Accounts.getFirefoxAccount().then(user => {
-             const promptMessage = user ? gStringBundle.GetStringFromName("loginsDialog.confirmDeleteForFxaUser")
-                                        : gStringBundle.GetStringFromName("loginsDialog.confirmDelete");
-             const confirmationMessage = gStringBundle.GetStringFromName("loginsDetails.deleted");
+            const promptMessage = user
+              ? gStringBundle.GetStringFromName(
+                  "loginsDialog.confirmDeleteForFxaUser"
+                )
+              : gStringBundle.GetStringFromName("loginsDialog.confirmDelete");
+            const confirmationMessage = gStringBundle.GetStringFromName(
+              "loginsDetails.deleted"
+            );
 
-             this._showConfirmationPrompt(promptMessage,
-                                          confirmationMessage,
-                                          () => Services.logins.removeLogin(login));
+            this._showConfirmationPrompt(
+              promptMessage,
+              confirmationMessage,
+              () => Services.logins.removeLogin(login)
+            );
           });
           break;
         case 5:
           Accounts.getFirefoxAccount().then(user => {
-             const promptMessage = user ? gStringBundle.GetStringFromName("loginsDialog.confirmDeleteAllForFxaUser")
-                                        : gStringBundle.GetStringFromName("loginsDialog.confirmDeleteAll");
-             const confirmationMessage = gStringBundle.GetStringFromName("loginsDetails.deletedAll");
+            const promptMessage = user
+              ? gStringBundle.GetStringFromName(
+                  "loginsDialog.confirmDeleteAllForFxaUser"
+                )
+              : gStringBundle.GetStringFromName(
+                  "loginsDialog.confirmDeleteAll"
+                );
+            const confirmationMessage = gStringBundle.GetStringFromName(
+              "loginsDetails.deletedAll"
+            );
 
-             this._showConfirmationPrompt(promptMessage,
-                                          confirmationMessage,
-                                          () => Services.logins.removeAllLogins());
+            this._showConfirmationPrompt(
+              promptMessage,
+              confirmationMessage,
+              () => Services.logins.removeAllLogins()
+            );
           });
           break;
       }
     });
   },
 
-   _showConfirmationPrompt: function(promptMessage, confirmationMessage, actionToPerform) {
-     new Prompt({
-         window: window,
-         message: promptMessage,
-         buttons: [
-           // Use default, generic values
-           gStringBundle.GetStringFromName("loginsDialog.confirm"),
-           gStringBundle.GetStringFromName("loginsDialog.cancel") ],
-       }).show((data) => {
-         switch (data.button) {
-           case 0:
-             // Corresponds to "confirm" button.
+  _showConfirmationPrompt: function(
+    promptMessage,
+    confirmationMessage,
+    actionToPerform
+  ) {
+    new Prompt({
+      window: window,
+      message: promptMessage,
+      buttons: [
+        // Use default, generic values
+        gStringBundle.GetStringFromName("loginsDialog.confirm"),
+        gStringBundle.GetStringFromName("loginsDialog.cancel"),
+      ],
+    }).show(data => {
+      switch (data.button) {
+        case 0:
+          // Corresponds to "confirm" button.
 
-             actionToPerform();
+          actionToPerform();
 
-             Snackbars.show(confirmationMessage, Snackbars.LENGTH_LONG);
-         }
-       });
-   },
+          Snackbars.show(confirmationMessage, Snackbars.LENGTH_LONG);
+      }
+    });
+  },
 
   _loadFavicon: function(aImg, aOrigin) {
     // Load favicon from cache.
-    EventDispatcher.instance.sendRequestForResult({
-      type: "Favicon:Request",
-      url: aOrigin,
-      skipNetwork: true,
-    }).then(function(faviconUrl) {
-      aImg.style.backgroundImage = "url('" + faviconUrl + "')";
-      aImg.style.visibility = "visible";
-    }, function(data) {
-      debug("Favicon cache failure : " + data);
-      aImg.style.visibility = "visible";
-    });
+    EventDispatcher.instance
+      .sendRequestForResult({
+        type: "Favicon:Request",
+        url: aOrigin,
+        skipNetwork: true,
+      })
+      .then(
+        function(faviconUrl) {
+          aImg.style.backgroundImage = "url('" + faviconUrl + "')";
+          aImg.style.visibility = "visible";
+        },
+        function(data) {
+          debug("Favicon cache failure : " + data);
+          aImg.style.visibility = "visible";
+        }
+      );
   },
 
   _createItemForLogin: function(login) {
@@ -521,16 +605,14 @@ var Logins = {
 
   _filter: function(event) {
     let value = event.target.value.toLowerCase();
-    let logins = this._logins.filter((login) => {
+    let logins = this._logins.filter(login => {
       if (login.origin.toLowerCase().includes(value)) {
         return true;
       }
-      if (login.username &&
-          login.username.toLowerCase().includes(value)) {
+      if (login.username && login.username.toLowerCase().includes(value)) {
         return true;
       }
-      if (login.httpRealm &&
-          login.httpRealm.toLowerCase().includes(value)) {
+      if (login.httpRealm && login.httpRealm.toLowerCase().includes(value)) {
         return true;
       }
       return false;

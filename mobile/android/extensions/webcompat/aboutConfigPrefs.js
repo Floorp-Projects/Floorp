@@ -34,7 +34,9 @@ this.aboutConfigPrefs = class extends ExtensionAPI {
         }).api(),
         async getPref(name) {
           try {
-            return Services.prefs.getBoolPref(`${extensionPrefNameBase}${name}`);
+            return Services.prefs.getBoolPref(
+              `${extensionPrefNameBase}${name}`
+            );
           } catch (_) {
             return undefined;
           }

@@ -5,16 +5,41 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadUtils", "resource://gre/modules/DownloadUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadUtils",
+  "resource://gre/modules/DownloadUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "EventDispatcher",
+  "resource://gre/modules/Messaging.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PluralForm",
+  "resource://gre/modules/PluralForm.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-var gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
-XPCOMUtils.defineLazyGetter(this, "strings",
-                            () => Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties"));
+var gStrings = Services.strings.createBundle(
+  "chrome://browser/locale/aboutDownloads.properties"
+);
+XPCOMUtils.defineLazyGetter(this, "strings", () =>
+  Services.strings.createBundle(
+    "chrome://browser/locale/aboutDownloads.properties"
+  )
+);
 
 function deleteDownload(download) {
   download.finalize(true).catch(Cu.reportError);
@@ -31,42 +56,58 @@ var contextMenu = {
 
   init: function() {
     let element = document.getElementById("downloadmenu");
-    element.addEventListener("click",
-                             event => event.download = this._targetDownload,
-                             true);
+    element.addEventListener(
+      "click",
+      event => (event.download = this._targetDownload),
+      true
+    );
     this._items = [
-      new ContextMenuItem("open",
-                          download => download.succeeded,
-                          download => download.launch().catch(Cu.reportError)),
-      new ContextMenuItem("retry",
-                          download => download.error ||
-                                      (download.canceled && !download.hasPartialData),
-                          download => download.start().catch(Cu.reportError)),
-      new ContextMenuItem("remove",
-                          download => download.stopped,
-                          download => {
-                            Downloads.getList(Downloads.ALL)
-                                     .then(list => list.remove(download))
-                                     .catch(Cu.reportError);
-                            deleteDownload(download);
-                          }),
-      new ContextMenuItem("pause",
-                          download => !download.stopped && download.hasPartialData,
-                          download => download.cancel().catch(Cu.reportError)),
-      new ContextMenuItem("resume",
-                          download => download.canceled && download.hasPartialData,
-                          download => download.start().catch(Cu.reportError)),
-      new ContextMenuItem("cancel",
-                          download => !download.stopped ||
-                                      (download.canceled && download.hasPartialData),
-                          download => {
-                            download.cancel().catch(Cu.reportError);
-                            download.removePartialData().catch(Cu.reportError);
-                          }),
+      new ContextMenuItem(
+        "open",
+        download => download.succeeded,
+        download => download.launch().catch(Cu.reportError)
+      ),
+      new ContextMenuItem(
+        "retry",
+        download =>
+          download.error || (download.canceled && !download.hasPartialData),
+        download => download.start().catch(Cu.reportError)
+      ),
+      new ContextMenuItem(
+        "remove",
+        download => download.stopped,
+        download => {
+          Downloads.getList(Downloads.ALL)
+            .then(list => list.remove(download))
+            .catch(Cu.reportError);
+          deleteDownload(download);
+        }
+      ),
+      new ContextMenuItem(
+        "pause",
+        download => !download.stopped && download.hasPartialData,
+        download => download.cancel().catch(Cu.reportError)
+      ),
+      new ContextMenuItem(
+        "resume",
+        download => download.canceled && download.hasPartialData,
+        download => download.start().catch(Cu.reportError)
+      ),
+      new ContextMenuItem(
+        "cancel",
+        download =>
+          !download.stopped || (download.canceled && download.hasPartialData),
+        download => {
+          download.cancel().catch(Cu.reportError);
+          download.removePartialData().catch(Cu.reportError);
+        }
+      ),
       // following menu item is a global action
-      new ContextMenuItem("removeall",
-                          () => downloadLists.finished.length > 0,
-                          () => downloadLists.removeFinished()),
+      new ContextMenuItem(
+        "removeall",
+        () => downloadLists.finished.length > 0,
+        () => downloadLists.removeFinished()
+      ),
     ];
   },
 
@@ -113,13 +154,13 @@ function DownloadListView(type, listElementId) {
   this.items = new Map();
 
   Downloads.getList(type)
-           .then(list => list.addView(this))
-           .catch(Cu.reportError);
+    .then(list => list.addView(this))
+    .catch(Cu.reportError);
 
   window.addEventListener("unload", event => {
     Downloads.getList(type)
-             .then(list => list.removeView(this))
-             .catch(Cu.reportError);
+      .then(list => list.removeView(this))
+      .catch(Cu.reportError);
   });
 }
 
@@ -146,7 +187,10 @@ DownloadListView.prototype = {
     };
 
     let insertLocation = this.listElement.firstChild;
-    while (insertLocation && compare(item.download, insertLocation.download) > 0) {
+    while (
+      insertLocation &&
+      compare(item.download, insertLocation.download) > 0
+    ) {
       insertLocation = insertLocation.nextElementSibling;
     }
     this.listElement.insertBefore(item.element, insertLocation);
@@ -191,8 +235,14 @@ DownloadListView.prototype = {
 
 var downloadLists = {
   init: function() {
-    this.publicDownloads = new DownloadListView(Downloads.PUBLIC, "public-downloads-list");
-    this.privateDownloads = new DownloadListView(Downloads.PRIVATE, "private-downloads-list");
+    this.publicDownloads = new DownloadListView(
+      Downloads.PUBLIC,
+      "public-downloads-list"
+    );
+    this.privateDownloads = new DownloadListView(
+      Downloads.PRIVATE,
+      "private-downloads-list"
+    );
   },
 
   get finished() {
@@ -207,16 +257,18 @@ var downloadLists = {
 
     let title = strings.GetStringFromName("downloadAction.deleteAll");
     let messageForm = strings.GetStringFromName("downloadMessage.deleteAll");
-    let message = PluralForm.get(finished.length, messageForm).replace("#1", finished.length);
+    let message = PluralForm.get(finished.length, messageForm).replace(
+      "#1",
+      finished.length
+    );
 
     if (Services.prompt.confirm(null, title, message)) {
-      Downloads.getList(Downloads.ALL)
-               .then(list => {
-                 for (let download of finished) {
-                   list.remove(download).catch(Cu.reportError);
-                   deleteDownload(download);
-                 }
-               }, Cu.reportError);
+      Downloads.getList(Downloads.ALL).then(list => {
+        for (let download of finished) {
+          list.remove(download).catch(Cu.reportError);
+          deleteDownload(download);
+        }
+      }, Cu.reportError);
     }
   },
 };
@@ -228,7 +280,9 @@ function DownloadItem(download) {
   this._domain = DownloadUtils.getURIHost(download.source.url)[0];
   this._fileName = this._htmlEscape(OS.Path.basename(download.target.path));
   this._iconUrl = "moz-icon://" + this._fileName + "?size=64";
-  this._startDate = this._htmlEscape(DownloadUtils.getReadableDates(download.startTime)[0]);
+  this._startDate = this._htmlEscape(
+    DownloadUtils.getReadableDates(download.startTime)[0]
+  );
 
   this._element = this.createElement();
 }
@@ -254,14 +308,16 @@ DownloadItem.prototype = {
   _updateFromDownload: function() {
     this._state = {};
     kDownloadStatePropertyNames.forEach(
-      name => this._state[name] = this._download[name],
-      this);
+      name => (this._state[name] = this._download[name]),
+      this
+    );
   },
 
   get stateChanged() {
     return kDownloadStatePropertyNames.some(
       name => this._state[name] != this._download[name],
-      this);
+      this
+    );
   },
 
   get download() {
@@ -366,6 +422,6 @@ DownloadItem.prototype = {
 };
 
 window.addEventListener("DOMContentLoaded", event => {
-    contextMenu.init();
-    downloadLists.init();
+  contextMenu.init();
+  downloadLists.init();
 });

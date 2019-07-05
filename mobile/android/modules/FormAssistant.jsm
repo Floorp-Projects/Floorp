@@ -5,7 +5,9 @@
 
 var EXPORTED_SYMBOLS = ["FormAssistant"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
@@ -90,14 +92,14 @@ var FormAssistant = {
 
   notifyInvalidSubmit: function(aFormElement, aInvalidElements) {
     if (!aInvalidElements.length) {
-        return;
+      return;
     }
 
     // Ignore this notificaiton if the current tab doesn't contain the invalid element
     let currentElement = aInvalidElements[0];
     let focused = this.focusedElement;
     if (focused && focused.ownerGlobal.top !== currentElement.ownerGlobal.top) {
-        return;
+      return;
     }
 
     // Our focus listener will show the element's validation message
@@ -113,12 +115,17 @@ var FormAssistant = {
       case "focus": {
         let currentElement = aEvent.target;
         // Only show a validation message on focus.
-        if (this._showValidationMessage(currentElement) ||
-            this._isAutoComplete(currentElement)) {
+        if (
+          this._showValidationMessage(currentElement) ||
+          this._isAutoComplete(currentElement)
+        ) {
           this._currentFocusedElement = Cu.getWeakReference(currentElement);
           // Start listening to resizes.
-          currentElement.ownerGlobal.addEventListener(
-              "resize", this, {capture: true, mozSystemGroup: true, once: true});
+          currentElement.ownerGlobal.addEventListener("resize", this, {
+            capture: true,
+            mozSystemGroup: true,
+            once: true,
+          });
         }
         break;
       }
@@ -168,9 +175,11 @@ var FormAssistant = {
         // Since we can only show one popup at a time, prioritize autocomplete
         // suggestions over a form validation message
         let checkResultsInput = hasResults => {
-          if (hasResults ||
-              currentElement !== this.focusedElement ||
-              this._showValidationMessage(currentElement)) {
+          if (
+            hasResults ||
+            currentElement !== this.focusedElement ||
+            this._showValidationMessage(currentElement)
+          ) {
             return;
           }
           // If we're not showing autocomplete suggestions, hide the form assist popup
@@ -187,8 +196,11 @@ var FormAssistant = {
           // Reposition the popup as in the case of pan/zoom.
           this.observe(null, "PanZoom:StateChange", this._lastPanZoomState);
           // Continue to listen to resizes.
-          focused.ownerGlobal.addEventListener(
-              "resize", this, {capture: true, mozSystemGroup: true, once: true});
+          focused.ownerGlobal.addEventListener("resize", this, {
+            capture: true,
+            mozSystemGroup: true,
+            once: true,
+          });
         }
         break;
       }
@@ -197,11 +209,13 @@ var FormAssistant = {
 
   // We only want to show autocomplete suggestions for certain elements
   _isAutoComplete: function(aElement) {
-    return (ChromeUtils.getClassName(aElement) === "HTMLInputElement") &&
-           !aElement.readOnly &&
-           !this._isDisabledElement(aElement) &&
-           (aElement.type !== "password") &&
-           (aElement.autocomplete !== "off");
+    return (
+      ChromeUtils.getClassName(aElement) === "HTMLInputElement" &&
+      !aElement.readOnly &&
+      !this._isDisabledElement(aElement) &&
+      aElement.type !== "password" &&
+      aElement.autocomplete !== "off"
+    );
   },
 
   // Retrieves autocomplete suggestions for an element from the form autocomplete service.
@@ -209,8 +223,9 @@ var FormAssistant = {
   _getAutoCompleteSuggestions: function(aSearchString, aElement, aCallback) {
     // Cache the form autocomplete service for future use
     if (!this._formAutoCompleteService) {
-      this._formAutoCompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"]
-          .getService(Ci.nsIFormAutoComplete);
+      this._formAutoCompleteService = Cc[
+        "@mozilla.org/satchel/form-autocomplete;1"
+      ].getService(Ci.nsIFormAutoComplete);
     }
 
     let resultsAvailable = function(results) {
@@ -219,8 +234,9 @@ var FormAssistant = {
         let value = results.getValueAt(i);
 
         // Do not show the value if it is the current one in the input field
-        if (value == aSearchString)
+        if (value == aSearchString) {
           continue;
+        }
 
         // Supply a label and value, since they can differ for datalist suggestions
         suggestions.push({ label: value, value: value });
@@ -228,9 +244,14 @@ var FormAssistant = {
       aCallback(suggestions);
     };
 
-    this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,
-                                                          aSearchString, aElement, null,
-                                                          null, resultsAvailable);
+    this._formAutoCompleteService.autoCompleteSearchAsync(
+      aElement.name || aElement.id,
+      aSearchString,
+      aElement,
+      null,
+      null,
+      resultsAvailable
+    );
   },
 
   /**
@@ -239,7 +260,10 @@ var FormAssistant = {
    * used by the autocomplete.xml binding which is not in used in fennec
    */
   _getListSuggestions: function(aElement) {
-    if (ChromeUtils.getClassName(aElement) !== "HTMLInputElement" || !aElement.list) {
+    if (
+      ChromeUtils.getClassName(aElement) !== "HTMLInputElement" ||
+      !aElement.list
+    ) {
       return [];
     }
 
@@ -259,7 +283,7 @@ var FormAssistant = {
         label = item.text;
       }
 
-      if (filter && !(label.toLowerCase().includes(lowerFieldValue))) {
+      if (filter && !label.toLowerCase().includes(lowerFieldValue)) {
         continue;
       }
       suggestions.push({ label: label, value: item.value });
@@ -278,7 +302,7 @@ var FormAssistant = {
       return;
     }
 
-    let isEmpty = (aElement.value.length === 0);
+    let isEmpty = aElement.value.length === 0;
 
     let resultsAvailable = autoCompleteSuggestions => {
       // On desktop, we show datalist suggestions below autocomplete suggestions,
@@ -292,31 +316,40 @@ var FormAssistant = {
         return;
       }
 
-      GeckoViewUtils.getDispatcherForWindow(aElement.ownerGlobal).sendRequest({
-        type: "FormAssist:AutoCompleteResult",
-        suggestions: suggestions,
-        rect: this._getBoundingContentRect(aElement),
-        isEmpty: isEmpty,
-      }, {
-        onSuccess: response => this._onPopupResponse(aElement, response),
-        onError: error => Cu.reportError(error),
-      });
+      GeckoViewUtils.getDispatcherForWindow(aElement.ownerGlobal).sendRequest(
+        {
+          type: "FormAssist:AutoCompleteResult",
+          suggestions: suggestions,
+          rect: this._getBoundingContentRect(aElement),
+          isEmpty: isEmpty,
+        },
+        {
+          onSuccess: response => this._onPopupResponse(aElement, response),
+          onError: error => Cu.reportError(error),
+        }
+      );
 
       aCallback(true);
     };
 
-    this._getAutoCompleteSuggestions(aElement.value, aElement, resultsAvailable);
+    this._getAutoCompleteSuggestions(
+      aElement.value,
+      aElement,
+      resultsAvailable
+    );
   },
 
   // Only show a validation message if the user submitted an invalid form,
   // there's a non-empty message string, and the element is the correct type
   _isValidateable: function(aElement) {
-    return (ChromeUtils.getClassName(aElement) === "HTMLInputElement" ||
-            ChromeUtils.getClassName(aElement) === "HTMLTextAreaElement" ||
-            ChromeUtils.getClassName(aElement) === "HTMLSelectElement" ||
-            ChromeUtils.getClassName(aElement) === "HTMLButtonElement") &&
-           aElement.matches(":-moz-ui-invalid") &&
-           aElement.validationMessage;
+    return (
+      (ChromeUtils.getClassName(aElement) === "HTMLInputElement" ||
+        ChromeUtils.getClassName(aElement) === "HTMLTextAreaElement" ||
+        ChromeUtils.getClassName(aElement) === "HTMLSelectElement" ||
+        ChromeUtils.getClassName(aElement) === "HTMLButtonElement") &&
+      aElement.matches(":-moz-ui-invalid") &&
+      aElement.validationMessage
+    );
   },
 
   // Sends a validation message and position data for an element to the Java UI.
@@ -356,7 +389,7 @@ var FormAssistant = {
 
   _getBoundingContentRect: function(aElement) {
     if (!aElement) {
-      return {x: 0, y: 0, w: 0, h: 0};
+      return { x: 0, y: 0, w: 0, h: 0 };
     }
 
     let document = aElement.ownerDocument;
@@ -364,12 +397,16 @@ var FormAssistant = {
       document = document.defaultView.frameElement.ownerDocument;
     }
 
-    let scrollX = 0, scrollY = 0;
+    let scrollX = 0,
+      scrollY = 0;
     let r = aElement.getBoundingClientRect();
 
     // step out of iframes and frames, offsetting scroll values
-    for (let frame = aElement.ownerGlobal; frame.frameElement;
-         frame = frame.parent) {
+    for (
+      let frame = aElement.ownerGlobal;
+      frame.frameElement;
+      frame = frame.parent
+    ) {
       // adjust client coordinates' origin to be top left of iframe viewport
       let rect = frame.frameElement.getBoundingClientRect();
       let left = frame.getComputedStyle(frame.frameElement).borderLeftWidth;
@@ -382,9 +419,12 @@ var FormAssistant = {
     // i.e. the layout viewport origin, but the consumer of the
     // FormAssist::AutoCompleteResult messaage expects a rect relative to
     // the visual viewport origin, so translate between the two.
-    let offsetX = {}, offsetY = {};
-    aElement.ownerGlobal.windowUtils
-        .getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+    let offsetX = {},
+      offsetY = {};
+    aElement.ownerGlobal.windowUtils.getVisualViewportOffsetRelativeToLayoutViewport(
+      offsetX,
+      offsetY
+    );
 
     return {
       x: r.left + scrollX - offsetX.value,
