@@ -45,7 +45,6 @@ module.exports = {
   "overrides": [{
       "files": [
         "devtools/**",
-        "mozglue/**",
         "netwerk/**",
         "nsprpub/**",
         "other-licenses/**",
