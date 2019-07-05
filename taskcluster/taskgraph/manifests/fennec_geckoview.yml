@@ -8,7 +8,7 @@ default_locales:  # Ignored for geckoview
     - en-US
 tasktype_map:  # Map task reference to task type.
     build: build
-base_artifact_prefix: ''
+base_artifact_prefix: public/build/maven/
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
@@ -21,12 +21,6 @@ default: &default
     description: "TO_BE_OVERRIDDEN"
     destinations:  # locale_prefix is appended
         - org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
-
-# Configuration for individual files. Extends 'default', above.
-upstream_mapping:
-    target.maven.zip:
-        from:
-            - build
 
 mapping:
     ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1:
