@@ -3,7 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 // Unhandled exception in body
-onmessage = function(event) {
-};
+onmessage = function(event) {};
 
 throw new Error("Bah!");

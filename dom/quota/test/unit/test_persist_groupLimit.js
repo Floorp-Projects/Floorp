@@ -18,18 +18,14 @@
  *     write a byte.
  *   - foo2 is no longer constrained by the group limit itself.
  */
-async function testSteps()
-{
+async function testSteps() {
   // The group limit is calculated as 20% of the global limit and the minimum
   // value of the group limit is 10 MB.
 
   const groupLimitKB = 10 * 1024;
   const globalLimitKB = groupLimitKB * 5;
 
-  const urls = [
-    "http://foo1.example.com",
-    "http://foo2.example.com",
-  ];
+  const urls = ["http://foo1.example.com", "http://foo2.example.com"];
 
   const foo2Index = 1;
 
@@ -60,7 +56,7 @@ async function testSteps()
     request = databases[foo2Index].write(new ArrayBuffer(groupLimitKB * 1024));
     await requestFinished(request);
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 
@@ -71,7 +67,7 @@ async function testSteps()
       request = databases[index].write(new ArrayBuffer(1));
       await requestFinished(request);
       ok(false, "Should have thrown");
-    } catch(ex) {
+    } catch (ex) {
       ok(true, "Should have thrown");
       ok(ex == NS_ERROR_FILE_NO_DEVICE_SPACE, "Threw right code");
     }
@@ -89,7 +85,7 @@ async function testSteps()
       request = databases[index].write(new ArrayBuffer(1));
       await requestFinished(request);
       ok(true, "Should not have thrown");
-    } catch(ex) {
+    } catch (ex) {
       ok(false, "Should not have thrown");
     }
   }

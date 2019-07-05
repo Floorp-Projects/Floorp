@@ -6,7 +6,11 @@ addEventListener("fetch", event => {
       clients.matchAll().then(clients => {
         for (var client of clients) {
           if (client.url.indexOf("index.html") > -1) {
-            client.postMessage({status: "ok", result: !badURL, message: "Should not find a bad URL (" + url + ")"});
+            client.postMessage({
+              status: "ok",
+              result: !badURL,
+              message: "Should not find a bad URL (" + url + ")",
+            });
             break;
           }
         }

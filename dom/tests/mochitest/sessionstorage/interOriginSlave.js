@@ -1,16 +1,15 @@
-function postMsg(message)
-{
+function postMsg(message) {
   opener.postMessage(message, "http://mochi.test:8888");
 }
 
 window.addEventListener("message", onMessageReceived);
 
-function onMessageReceived(event)
-{
+function onMessageReceived(event) {
   //alert("slave got event: "+event.data);
   if (event.data == "step") {
-    if (doStep())
+    if (doStep()) {
       postMsg("perf");
+    }
 
     return;
   }
@@ -18,24 +17,23 @@ function onMessageReceived(event)
   postMsg("Invalid message");
 }
 
-function ok(a, message)
-{
-  if (!a)
+function ok(a, message) {
+  if (!a) {
     postMsg("FAILURE: " + message);
-  else
+  } else {
     postMsg(message);
+  }
 }
 
-function is(a, b, message)
-{
-  if (a != b)
-    postMsg("FAILURE: " + message + ", expected "+b+" got "+a);
-  else
-    postMsg(message + ", expected "+b+" got "+a);
+function is(a, b, message) {
+  if (a != b) {
+    postMsg("FAILURE: " + message + ", expected " + b + " got " + a);
+  } else {
+    postMsg(message + ", expected " + b + " got " + a);
+  }
 }
 
-function finishTest()
-{
+function finishTest() {
   sessionStorage.clear();
   postMsg("done");
   return false;

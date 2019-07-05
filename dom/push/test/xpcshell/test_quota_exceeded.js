@@ -3,8 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
-
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "7eb873f9-8d47-4218-804b-fff78dc04e88";
 
@@ -78,13 +77,16 @@ add_task(async function test_expiration_origin_threshold() {
   // different scopes, so each can send 5 notifications before we remove
   // their subscription.
   let updates = 0;
-  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) => {
-    updates++;
-    return updates == 6;
-  });
+  let notifyPromise = promiseObserverNotification(
+    PushServiceComponent.pushTopic,
+    (subject, data) => {
+      updates++;
+      return updates == 6;
+    }
+  );
 
   let unregisterDone;
-  let unregisterPromise = new Promise(resolve => unregisterDone = resolve);
+  let unregisterPromise = new Promise(resolve => (unregisterDone = resolve));
 
   PushService.init({
     serverURI: "wss://push.example.org/",
@@ -92,35 +94,49 @@ add_task(async function test_expiration_origin_threshold() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
           // We last visited the site 2 days ago, so we can send 5
           // notifications without throttling. Sending a 6th should
           // drop the registration.
           for (let version = 1; version <= 6; version++) {
-            this.serverSendMsg(JSON.stringify({
-              messageType: "notification",
-              updates: [{
-                channelID: "eb33fc90-c883-4267-b5cb-613969e8e349",
-                version,
-              }],
-            }));
+            this.serverSendMsg(
+              JSON.stringify({
+                messageType: "notification",
+                updates: [
+                  {
+                    channelID: "eb33fc90-c883-4267-b5cb-613969e8e349",
+                    version,
+                  },
+                ],
+              })
+            );
           }
           // But the limits are per-channel, so we can send 5 more
           // notifications on a different channel.
-          this.serverSendMsg(JSON.stringify({
-            messageType: "notification",
-            updates: [{
-              channelID: "46cc6f6a-c106-4ffa-bb7c-55c60bd50c41",
-              version: 1,
-            }],
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "notification",
+              updates: [
+                {
+                  channelID: "46cc6f6a-c106-4ffa-bb7c-55c60bd50c41",
+                  version: 1,
+                },
+              ],
+            })
+          );
         },
         onUnregister(request) {
-          equal(request.channelID, "eb33fc90-c883-4267-b5cb-613969e8e349", "Unregistered wrong channel ID");
+          equal(
+            request.channelID,
+            "eb33fc90-c883-4267-b5cb-613969e8e349",
+            "Unregistered wrong channel ID"
+          );
           equal(request.code, 201, "Expected quota exceeded unregister reason");
           unregisterDone();
         },
@@ -135,6 +151,8 @@ add_task(async function test_expiration_origin_threshold() {
 
   await notifyPromise;
 
-  let expiredRecord = await db.getByKeyID("eb33fc90-c883-4267-b5cb-613969e8e349");
+  let expiredRecord = await db.getByKeyID(
+    "eb33fc90-c883-4267-b5cb-613969e8e349"
+  );
   strictEqual(expiredRecord.quota, 0, "Expired record not updated");
 });

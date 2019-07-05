@@ -1,12 +1,12 @@
 /*
  * Helper functions for online/offline events tests.
- * 
+ *
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
  */
 var gState = 0;
 /**
- * After all the on/offline handlers run, 
+ * After all the on/offline handlers run,
  * gState is expected to be equal to MAX_STATE.
  */
 var MAX_STATE;
@@ -33,43 +33,64 @@ function makeHandler(nameTemplate, eventName, expectedStates) {
     var name = nameTemplate.replace(/%1/, eventName);
     ++gState;
     trace(name + ": gState=" + gState);
-    ok(expectedStates.includes(gState),
-       "handlers called in the right order: " + name + " is called, " + 
-       "gState=" + gState + ", expectedStates=" + expectedStates);
+    ok(
+      expectedStates.includes(gState),
+      "handlers called in the right order: " +
+        name +
+        " is called, " +
+        "gState=" +
+        gState +
+        ", expectedStates=" +
+        expectedStates
+    );
     ok(e.constructor == Event, "event should be an Event");
     ok(e.type == eventName, "event type should be " + eventName);
     ok(!e.bubbles, "event should not bubble");
     ok(!e.cancelable, "event should not be cancelable");
     ok(e.target == window, "target should be the window");
-  }
+  };
 }
 
 function doTest() {
-  var iosvc = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                           .getService(SpecialPowers.Ci.nsIIOService);
+  var iosvc = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].getService(
+    SpecialPowers.Ci.nsIIOService
+  );
   iosvc.manageOfflineStatus = false;
   iosvc.offline = false;
-  ok(navigator.onLine, "navigator.onLine should be true, since we've just " +
-                       "set nsIIOService.offline to false");
+  ok(
+    navigator.onLine,
+    "navigator.onLine should be true, since we've just " +
+      "set nsIIOService.offline to false"
+  );
 
   gState = 0;
 
   trace("setting iosvc.offline = true");
   iosvc.offline = true;
   trace("done setting iosvc.offline = true");
-  ok(!navigator.onLine,
-     "navigator.onLine should be false when iosvc.offline == true");
-  ok(gState == window.MAX_STATE,
-     "offline event: all registered handlers should have been invoked, " +
-     "actual: " + gState);
+  ok(
+    !navigator.onLine,
+    "navigator.onLine should be false when iosvc.offline == true"
+  );
+  ok(
+    gState == window.MAX_STATE,
+    "offline event: all registered handlers should have been invoked, " +
+      "actual: " +
+      gState
+  );
 
   gState = 0;
   trace("setting iosvc.offline = false");
   iosvc.offline = false;
   trace("done setting iosvc.offline = false");
-  ok(navigator.onLine,
-     "navigator.onLine should be true when iosvc.offline == false");
-  ok(gState == window.MAX_STATE,
-     "online event: all registered handlers should have been invoked, " +
-     "actual: " + gState);
+  ok(
+    navigator.onLine,
+    "navigator.onLine should be true when iosvc.offline == false"
+  );
+  ok(
+    gState == window.MAX_STATE,
+    "online event: all registered handlers should have been invoked, " +
+      "actual: " +
+      gState
+  );
 }

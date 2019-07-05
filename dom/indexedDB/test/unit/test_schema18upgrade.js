@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const testName = "schema18upgrade";
   const testKeys = [
     -1 / 0,
@@ -94,7 +93,7 @@ function* testSteps()
     "\uDFFF\uD800",
     "\uFFFE",
     "\uFFFF",
-      "\uFFFF\x00",
+    "\uFFFF\x00",
     "\uFFFFZZZ",
     [],
     [-1 / 0],
@@ -171,18 +170,34 @@ function* testSteps()
   index.openCursor().onsuccess = event => {
     let cursor = event.target.result;
     if (cursor) {
-      info("Comparing " + JSON.stringify(cursor.primaryKey) + " to " +
-           JSON.stringify(testKeys[cursor.key]) +
-           " [" + cursor.key + "]");
-      is(indexedDB.cmp(cursor.primaryKey, testKeys[cursor.key]), 0,
-         "Keys compare equally via 'indexedDB.cmp'");
-      is(compareKeys(cursor.primaryKey, testKeys[cursor.key]), true,
-         "Keys compare equally via 'compareKeys'");
+      info(
+        "Comparing " +
+          JSON.stringify(cursor.primaryKey) +
+          " to " +
+          JSON.stringify(testKeys[cursor.key]) +
+          " [" +
+          cursor.key +
+          "]"
+      );
+      is(
+        indexedDB.cmp(cursor.primaryKey, testKeys[cursor.key]),
+        0,
+        "Keys compare equally via 'indexedDB.cmp'"
+      );
+      is(
+        compareKeys(cursor.primaryKey, testKeys[cursor.key]),
+        true,
+        "Keys compare equally via 'compareKeys'"
+      );
 
       let indexProperty = cursor.value.index;
       is(Array.isArray(indexProperty), true, "index property is Array");
       is(indexProperty[0], cursor.key, "index property first item correct");
-      is(indexProperty[1], cursor.key + 1, "index property second item correct");
+      is(
+        indexProperty[1],
+        cursor.key + 1,
+        "index property second item correct"
+      );
 
       is(cursor.key, keyIndex, "Cursor key property is correct");
 
@@ -306,20 +321,38 @@ function* testSteps()
   index.openCursor().onsuccess = event => {
     let cursor = event.target.result;
     if (cursor) {
-      is(indexedDB.cmp(cursor.primaryKey, testKeys[keyIndex]), 0,
-         "Keys compare equally via 'indexedDB.cmp'");
-      is(compareKeys(cursor.primaryKey, testKeys[keyIndex]), true,
-         "Keys compare equally via 'compareKeys'");
-      is(indexedDB.cmp(cursor.key, testKeys[keyIndex]), 0,
-         "Keys compare equally via 'indexedDB.cmp'");
-      is(compareKeys(cursor.key, testKeys[keyIndex]), true,
-         "Keys compare equally via 'compareKeys'");
+      is(
+        indexedDB.cmp(cursor.primaryKey, testKeys[keyIndex]),
+        0,
+        "Keys compare equally via 'indexedDB.cmp'"
+      );
+      is(
+        compareKeys(cursor.primaryKey, testKeys[keyIndex]),
+        true,
+        "Keys compare equally via 'compareKeys'"
+      );
+      is(
+        indexedDB.cmp(cursor.key, testKeys[keyIndex]),
+        0,
+        "Keys compare equally via 'indexedDB.cmp'"
+      );
+      is(
+        compareKeys(cursor.key, testKeys[keyIndex]),
+        true,
+        "Keys compare equally via 'compareKeys'"
+      );
 
       let indexProperty = cursor.value.index;
-      is(indexedDB.cmp(indexProperty, testKeys[keyIndex]), 0,
-         "Keys compare equally via 'indexedDB.cmp'");
-      is(compareKeys(indexProperty, testKeys[keyIndex]), true,
-         "Keys compare equally via 'compareKeys'");
+      is(
+        indexedDB.cmp(indexProperty, testKeys[keyIndex]),
+        0,
+        "Keys compare equally via 'indexedDB.cmp'"
+      );
+      is(
+        compareKeys(indexProperty, testKeys[keyIndex]),
+        true,
+        "Keys compare equally via 'compareKeys'"
+      );
 
       is(cursor.value.testString, testString, "Test string compared equally");
 

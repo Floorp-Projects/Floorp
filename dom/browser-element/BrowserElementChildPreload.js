@@ -14,14 +14,18 @@ debug("loaded");
 
 var BrowserElementIsReady;
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {BrowserElementPromptService} = ChromeUtils.import("resource://gre/modules/BrowserElementPromptService.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { BrowserElementPromptService } = ChromeUtils.import(
+  "resource://gre/modules/BrowserElementPromptService.jsm"
+);
 
 var kLongestReturnedString = 128;
 
-var Timer = Components.Constructor("@mozilla.org/timer;1",
-                                   "nsITimer",
-                                   "initWithCallback");
+var Timer = Components.Constructor(
+  "@mozilla.org/timer;1",
+  "nsITimer",
+  "initWithCallback"
+);
 
 function sendAsyncMsg(msg, data) {
   // Ensure that we don't send any messages before BrowserElementChild.js
@@ -31,7 +35,7 @@ function sendAsyncMsg(msg, data) {
   }
 
   if (!data) {
-    data = { };
+    data = {};
   }
 
   data.msg_name = msg;
@@ -46,7 +50,7 @@ function sendSyncMsg(msg, data) {
   }
 
   if (!data) {
-    data = { };
+    data = {};
   }
 
   data.msg_name = msg;
@@ -67,7 +71,11 @@ var LISTENED_EVENTS = [
   { type: "DOMLinkAdded", useCapture: true, wantsUntrusted: false },
   { type: "MozScrolledAreaChanged", useCapture: true, wantsUntrusted: false },
   { type: "MozDOMFullscreen:Request", useCapture: true, wantsUntrusted: false },
-  { type: "MozDOMFullscreen:NewOrigin", useCapture: true, wantsUntrusted: false },
+  {
+    type: "MozDOMFullscreen:NewOrigin",
+    useCapture: true,
+    wantsUntrusted: false,
+  },
   { type: "MozDOMFullscreen:Exit", useCapture: true, wantsUntrusted: false },
   { type: "DOMMetaAdded", useCapture: true, wantsUntrusted: false },
   { type: "DOMMetaChanged", useCapture: true, wantsUntrusted: false },
@@ -115,20 +123,24 @@ function BrowserElementChild() {
 }
 
 BrowserElementChild.prototype = {
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   _init() {
     debug("Starting up.");
 
     BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
-    docShell.QueryInterface(Ci.nsIWebProgress)
-            .addProgressListener(this._progressListener,
-                                 Ci.nsIWebProgress.NOTIFY_LOCATION |
-                                 Ci.nsIWebProgress.NOTIFY_SECURITY |
-                                 Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+    docShell
+      .QueryInterface(Ci.nsIWebProgress)
+      .addProgressListener(
+        this._progressListener,
+        Ci.nsIWebProgress.NOTIFY_LOCATION |
+          Ci.nsIWebProgress.NOTIFY_SECURITY |
+          Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
+      );
 
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     if (!webNavigation.sessionHistory) {
@@ -139,8 +151,9 @@ BrowserElementChild.prototype = {
     }
 
     // This is necessary to get security web progress notifications.
-    var securityUI = Cc["@mozilla.org/secure_browser_ui;1"]
-                       .createInstance(Ci.nsISecureBrowserUI);
+    var securityUI = Cc["@mozilla.org/secure_browser_ui;1"].createInstance(
+      Ci.nsISecureBrowserUI
+    );
     securityUI.init(docShell);
 
     // A cache of the menuitem dom objects keyed by the id we generate
@@ -152,7 +165,12 @@ BrowserElementChild.prototype = {
     this._shuttingDown = false;
 
     LISTENED_EVENTS.forEach(event => {
-      addEventListener(event.type, this, event.useCapture, event.wantsUntrusted);
+      addEventListener(
+        event.type,
+        this,
+        event.useCapture,
+        event.wantsUntrusted
+      );
     });
 
     // Registers a MozAfterPaint handler for the very first paint.
@@ -163,10 +181,15 @@ BrowserElementChild.prototype = {
     addMessageListener("browser-element-api:call", this);
 
     LISTENED_SYSTEM_EVENTS.forEach(event => {
-      Services.els.addSystemEventListener(global, event.type, this, event.useCapture);
+      Services.els.addSystemEventListener(
+        global,
+        event.type,
+        this,
+        event.useCapture
+      );
     });
 
-    OBSERVED_EVENTS.forEach((aTopic) => {
+    OBSERVED_EVENTS.forEach(aTopic => {
       Services.obs.addObserver(this, aTopic);
     });
   },
@@ -183,20 +206,31 @@ BrowserElementChild.prototype = {
 
     BrowserElementPromptService.unmapWindowToBrowserElementChild(content);
 
-    docShell.QueryInterface(Ci.nsIWebProgress)
-            .removeProgressListener(this._progressListener);
+    docShell
+      .QueryInterface(Ci.nsIWebProgress)
+      .removeProgressListener(this._progressListener);
 
     LISTENED_EVENTS.forEach(event => {
-      removeEventListener(event.type, this, event.useCapture, event.wantsUntrusted);
+      removeEventListener(
+        event.type,
+        this,
+        event.useCapture,
+        event.wantsUntrusted
+      );
     });
 
     removeMessageListener("browser-element-api:call", this);
 
     LISTENED_SYSTEM_EVENTS.forEach(event => {
-      Services.els.removeSystemEventListener(global, event.type, this, event.useCapture);
+      Services.els.removeSystemEventListener(
+        global,
+        event.type,
+        this,
+        event.useCapture
+      );
     });
 
-    OBSERVED_EVENTS.forEach((aTopic) => {
+    OBSERVED_EVENTS.forEach(aTopic => {
       Services.obs.removeObserver(this, aTopic);
     });
   },
@@ -266,9 +300,9 @@ BrowserElementChild.prototype = {
       "get-can-go-forward": this._recvCanGoForward,
       "go-back": this._recvGoBack,
       "go-forward": this._recvGoForward,
-      "reload": this._recvReload,
-      "stop": this._recvStop,
-      "zoom": this._recvZoom,
+      reload: this._recvReload,
+      stop: this._recvStop,
+      zoom: this._recvZoom,
       "unblock-modal-prompt": this._recvStopWaiting,
       "fire-ctx-callback": this._recvFireCtxCallback,
       "owner-visibility-change": this._recvOwnerVisibilityChange,
@@ -287,17 +321,20 @@ BrowserElementChild.prototype = {
     // Ignore notifications not about our document.  (Note that |content| /can/
     // be null; see bug 874900.)
 
-    if (topic !== "activity-done" &&
-        topic !== "audio-playback" &&
-        topic !== "will-launch-app" &&
-        (!content || subject !== content.document)) {
+    if (
+      topic !== "activity-done" &&
+      topic !== "audio-playback" &&
+      topic !== "will-launch-app" &&
+      (!content || subject !== content.document)
+    ) {
       return;
     }
-    if (topic == "activity-done" && docShell !== subject)
+    if (topic == "activity-done" && docShell !== subject) {
       return;
+    }
     switch (topic) {
       case "activity-done":
-        sendAsyncMsg("activitydone", { success: (data == "activity-success") });
+        sendAsyncMsg("activitydone", { success: data == "activity-success" });
         break;
       case "audio-playback":
         if (subject === content) {
@@ -314,14 +351,20 @@ BrowserElementChild.prototype = {
         }
 
         // If this is not a content process, let's not freeze painting.
-        if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
+        if (
+          Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT
+        ) {
           return;
         }
 
         docShell.contentViewer.pausePainting();
 
         this._paintFrozenTimer && this._paintFrozenTimer.cancel();
-        this._paintFrozenTimer = new Timer(this, 3000, Ci.nsITimer.TYPE_ONE_SHOT);
+        this._paintFrozenTimer = new Timer(
+          this,
+          3000,
+          Ci.nsITimer.TYPE_ONE_SHOT
+        );
         break;
     }
   },
@@ -351,15 +394,19 @@ BrowserElementChild.prototype = {
   showModalPrompt(win, args) {
     let utils = win.windowUtils;
 
-    args.windowID = { outer: utils.outerWindowID,
-                      inner: this._tryGetInnerWindowID(win) };
+    args.windowID = {
+      outer: utils.outerWindowID,
+      inner: this._tryGetInnerWindowID(win),
+    };
     sendAsyncMsg("showmodalprompt", args);
 
     let returnValue = this._waitForResult(win);
 
-    if (args.promptType == "prompt" ||
-        args.promptType == "confirm" ||
-        args.promptType == "custom-prompt") {
+    if (
+      args.promptType == "prompt" ||
+      args.promptType == "confirm" ||
+      args.promptType == "custom-prompt"
+    ) {
       return returnValue;
     }
     return undefined;
@@ -384,8 +431,14 @@ BrowserElementChild.prototype = {
 
     this._windowIDDict[outerWindowID] = Cu.getWeakReference(win);
 
-    debug("Entering modal state (outerWindowID=" + outerWindowID + ", " +
-                                "innerWindowID=" + innerWindowID + ")");
+    debug(
+      "Entering modal state (outerWindowID=" +
+        outerWindowID +
+        ", " +
+        "innerWindowID=" +
+        innerWindowID +
+        ")"
+    );
 
     utils.enterModalState();
 
@@ -403,8 +456,10 @@ BrowserElementChild.prototype = {
       // window navigated.  Bail out when we're shutting down because otherwise
       // we'll leak our window.
       if (this._tryGetInnerWindowID(win) !== innerWindowID) {
-        debug("_waitForResult: Inner window ID changed " +
-              "while in nested event loop.");
+        debug(
+          "_waitForResult: Inner window ID changed " +
+            "while in nested event loop."
+        );
         return true;
       }
 
@@ -419,8 +474,10 @@ BrowserElementChild.prototype = {
     // If we exited the loop because the inner window changed, then bail on the
     // modal prompt.
     if (innerWindowID !== this._tryGetInnerWindowID(win)) {
-      throw Components.Exception("Modal state aborted by navigation",
-                                 Cr.NS_ERROR_NOT_AVAILABLE);
+      throw Components.Exception(
+        "Modal state aborted by navigation",
+        Cr.NS_ERROR_NOT_AVAILABLE
+      );
     }
 
     let returnValue = win.modalReturnValue;
@@ -430,8 +487,14 @@ BrowserElementChild.prototype = {
       utils.leaveModalState();
     }
 
-    debug("Leaving modal state (outerID=" + outerWindowID + ", " +
-                               "innerID=" + innerWindowID + ")");
+    debug(
+      "Leaving modal state (outerID=" +
+        outerWindowID +
+        ", " +
+        "innerID=" +
+        innerWindowID +
+        ")"
+    );
     return returnValue;
   },
 
@@ -439,8 +502,15 @@ BrowserElementChild.prototype = {
     let outerID = msg.json.windowID.outer;
     let innerID = msg.json.windowID.inner;
     let returnValue = msg.json.returnValue;
-    debug("recvStopWaiting(outer=" + outerID + ", inner=" + innerID +
-          ", returnValue=" + returnValue + ")");
+    debug(
+      "recvStopWaiting(outer=" +
+        outerID +
+        ", inner=" +
+        innerID +
+        ", returnValue=" +
+        returnValue +
+        ")"
+    );
 
     if (!this._windowIDDict[outerID]) {
       debug("recvStopWaiting: No record of outer window ID " + outerID);
@@ -465,8 +535,10 @@ BrowserElementChild.prototype = {
   },
 
   _recvEnteredFullscreen() {
-    if (!this._windowUtils.handleFullscreenRequests() &&
-        !content.document.fullscreenElement) {
+    if (
+      !this._windowUtils.handleFullscreenRequests() &&
+      !content.document.fullscreenElement
+    ) {
       // If we don't actually have any pending fullscreen request
       // to handle, neither we have been in fullscreen, tell the
       // parent to just exit.
@@ -512,8 +584,7 @@ BrowserElementChild.prototype = {
       return;
     }
 
-    sendAsyncMsg("opensearch", { title: e.target.title,
-                                 href: e.target.href });
+    sendAsyncMsg("opensearch", { title: e.target.title, href: e.target.href });
   },
 
   // Processes the "rel" field in <link> tags and forward to specific handlers.
@@ -527,10 +598,10 @@ BrowserElementChild.prototype = {
     }
 
     let handlers = {
-      "icon": this._iconChangedHandler.bind(this),
+      icon: this._iconChangedHandler.bind(this),
       "apple-touch-icon": this._iconChangedHandler.bind(this),
       "apple-touch-icon-precomposed": this._iconChangedHandler.bind(this),
-      "search": this._openSearchHandler,
+      search: this._openSearchHandler,
     };
 
     debug("Got linkAdded: (" + e.target.href + ") " + e.target.rel);
@@ -558,11 +629,10 @@ BrowserElementChild.prototype = {
       return;
     }
 
-    debug("Got metaChanged: (" + (name || property) + ") " +
-          e.target.content);
+    debug("Got metaChanged: (" + (name || property) + ") " + e.target.content);
 
     let handlers = {
-      "viewmode": this._genericMetaHandler,
+      viewmode: this._genericMetaHandler,
       "theme-color": this._genericMetaHandler,
       "theme-group": this._genericMetaHandler,
       "application-name": this._applicationNameChangedHandler,
@@ -586,22 +656,26 @@ BrowserElementChild.prototype = {
       return;
     }
 
-    let meta = { name,
-                 content: target.content };
+    let meta = { name, content: target.content };
 
     let lang;
     let elm;
 
-    for (elm = target;
-         !lang && elm && elm.nodeType == target.ELEMENT_NODE;
-         elm = elm.parentNode) {
+    for (
+      elm = target;
+      !lang && elm && elm.nodeType == target.ELEMENT_NODE;
+      elm = elm.parentNode
+    ) {
       if (elm.hasAttribute("lang")) {
         lang = elm.getAttribute("lang");
         continue;
       }
 
       if (elm.hasAttributeNS("http://www.w3.org/XML/1998/namespace", "lang")) {
-        lang = elm.getAttributeNS("http://www.w3.org/XML/1998/namespace", "lang");
+        lang = elm.getAttributeNS(
+          "http://www.w3.org/XML/1998/namespace",
+          "lang"
+        );
         continue;
       }
     }
@@ -628,22 +702,24 @@ BrowserElementChild.prototype = {
 
   _ClickHandler(e) {
     let isHTMLLink = node =>
-        ((ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
-         (ChromeUtils.getClassName(node) === "HTMLAreaElement" && node.href) ||
-         ChromeUtils.getClassName(node) === "HTMLLinkElement");
+      (ChromeUtils.getClassName(node) === "HTMLAnchorElement" && node.href) ||
+      (ChromeUtils.getClassName(node) === "HTMLAreaElement" && node.href) ||
+      ChromeUtils.getClassName(node) === "HTMLLinkElement";
 
     // Open in a new tab if middle click or ctrl/cmd-click,
     // and e.target is a link or inside a link.
-    if ((Services.appinfo.OS == "Darwin" && e.metaKey) ||
-        (Services.appinfo.OS != "Darwin" && e.ctrlKey) ||
-         e.button == 1) {
+    if (
+      (Services.appinfo.OS == "Darwin" && e.metaKey) ||
+      (Services.appinfo.OS != "Darwin" && e.ctrlKey) ||
+      e.button == 1
+    ) {
       let node = e.target;
       while (node && !isHTMLLink(node)) {
         node = node.parentNode;
       }
 
       if (node) {
-        sendAsyncMsg("opentab", {url: node.href});
+        sendAsyncMsg("opentab", { url: node.href });
       }
     }
   },
@@ -662,8 +738,11 @@ BrowserElementChild.prototype = {
       let uri = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
       if (uri.spec != "about:blank") {
         debug("Got afterpaint event: " + uri.spec);
-        removeEventListener("MozAfterPaint", onMozAfterPaint,
-                            /* useCapture = */ true);
+        removeEventListener(
+          "MozAfterPaint",
+          onMozAfterPaint,
+          /* useCapture = */ true
+        );
         callback();
       }
     }
@@ -725,9 +804,11 @@ BrowserElementChild.prototype = {
     this._ctxHandlers = {};
 
     var elem = e.target;
-    var menuData = {systemTargets: [], contextmenu: null};
+    var menuData = { systemTargets: [], contextmenu: null };
     var ctxMenuId = null;
-    var clipboardPlainTextOnly = Services.prefs.getBoolPref("clipboard.plainTextOnly");
+    var clipboardPlainTextOnly = Services.prefs.getBoolPref(
+      "clipboard.plainTextOnly"
+    );
     var copyableElements = {
       image: false,
       link: false,
@@ -738,7 +819,9 @@ BrowserElementChild.prototype = {
 
     // Set the event target as the copy image command needs it to
     // determine what was context-clicked on.
-    docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit).setCommandNode(elem);
+    docShell.contentViewer
+      .QueryInterface(Ci.nsIContentViewerEdit)
+      .setCommandNode(elem);
 
     while (elem && elem.parentNode) {
       var ctxData = this._getSystemCtxMenuData(elem);
@@ -749,7 +832,11 @@ BrowserElementChild.prototype = {
         });
       }
 
-      if (!ctxMenuId && "hasAttribute" in elem && elem.hasAttribute("contextmenu")) {
+      if (
+        !ctxMenuId &&
+        "hasAttribute" in elem &&
+        elem.hasAttribute("contextmenu")
+      ) {
         ctxMenuId = elem.getAttribute("contextmenu");
       }
 
@@ -791,42 +878,54 @@ BrowserElementChild.prototype = {
   },
 
   _getSystemCtxMenuData(elem) {
-    let documentURI =
-      docShell.QueryInterface(Ci.nsIWebNavigation).currentURI.spec;
+    let documentURI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI
+      .spec;
 
-    if ((ChromeUtils.getClassName(elem) === "HTMLAnchorElement" && elem.href) ||
-        (ChromeUtils.getClassName(elem) === "HTMLAreaElement" && elem.href)) {
-      return {uri: elem.href,
-              documentURI,
-              text: elem.textContent.substring(0, kLongestReturnedString)};
+    if (
+      (ChromeUtils.getClassName(elem) === "HTMLAnchorElement" && elem.href) ||
+      (ChromeUtils.getClassName(elem) === "HTMLAreaElement" && elem.href)
+    ) {
+      return {
+        uri: elem.href,
+        documentURI,
+        text: elem.textContent.substring(0, kLongestReturnedString),
+      };
     }
-    if (elem instanceof Ci.nsIImageLoadingContent &&
-        (elem.currentRequestFinalURI || elem.currentURI)) {
+    if (
+      elem instanceof Ci.nsIImageLoadingContent &&
+      (elem.currentRequestFinalURI || elem.currentURI)
+    ) {
       let uri = elem.currentRequestFinalURI || elem.currentURI;
-      return {uri: uri.spec, documentURI};
+      return { uri: uri.spec, documentURI };
     }
     if (ChromeUtils.getClassName(elem) === "HTMLImageElement") {
-      return {uri: elem.src, documentURI};
+      return { uri: elem.src, documentURI };
     }
-    if (ChromeUtils.getClassName(elem) === "HTMLVideoElement" ||
-        ChromeUtils.getClassName(elem) === "HTMLAudioElement") {
-      let hasVideo = !(elem.readyState >= elem.HAVE_METADATA &&
-                       (elem.videoWidth == 0 || elem.videoHeight == 0));
-      return {uri: elem.currentSrc || elem.src,
-              hasVideo,
-              documentURI};
+    if (
+      ChromeUtils.getClassName(elem) === "HTMLVideoElement" ||
+      ChromeUtils.getClassName(elem) === "HTMLAudioElement"
+    ) {
+      let hasVideo = !(
+        elem.readyState >= elem.HAVE_METADATA &&
+        (elem.videoWidth == 0 || elem.videoHeight == 0)
+      );
+      return { uri: elem.currentSrc || elem.src, hasVideo, documentURI };
     }
-    if (ChromeUtils.getClassName(elem) === "HTMLInputElement" &&
-        elem.hasAttribute("name")) {
+    if (
+      ChromeUtils.getClassName(elem) === "HTMLInputElement" &&
+      elem.hasAttribute("name")
+    ) {
       // For input elements, we look for a parent <form> and if there is
       // one we return the form's method and action uri.
       let parent = elem.parentNode;
       while (parent) {
-        if (ChromeUtils.getClassName(parent) === "HTMLFormElement" &&
-            parent.hasAttribute("action")) {
-          let actionHref = docShell.QueryInterface(Ci.nsIWebNavigation)
-                                   .currentURI
-                                   .resolve(parent.getAttribute("action"));
+        if (
+          ChromeUtils.getClassName(parent) === "HTMLFormElement" &&
+          parent.hasAttribute("action")
+        ) {
+          let actionHref = docShell
+            .QueryInterface(Ci.nsIWebNavigation)
+            .currentURI.resolve(parent.getAttribute("action"));
           let method = parent.hasAttribute("method")
             ? parent.getAttribute("method").toLowerCase()
             : "get";
@@ -877,7 +976,7 @@ BrowserElementChild.prototype = {
   _recvFireCtxCallback(data) {
     debug("Received fireCtxCallback message: (" + data.json.menuitem + ")");
 
-    let doCommandIfEnabled = (command) => {
+    let doCommandIfEnabled = command => {
       if (docShell.isCommandEnabled(command)) {
         docShell.doCommand(command);
       }
@@ -897,17 +996,19 @@ BrowserElementChild.prototype = {
   },
 
   _buildMenuObj(menu, idPrefix, copyableElements) {
-    var menuObj = {type: "menu", customized: false, items: []};
+    var menuObj = { type: "menu", customized: false, items: [] };
     // Customized context menu
     if (menu) {
       this._maybeCopyAttribute(menu, menuObj, "label");
 
-      for (var i = 0, child; (child = menu.children[i++]);) {
+      for (var i = 0, child; (child = menu.children[i++]); ) {
         if (child.nodeName === "MENU") {
-          menuObj.items.push(this._buildMenuObj(child, idPrefix + i + "_", false));
+          menuObj.items.push(
+            this._buildMenuObj(child, idPrefix + i + "_", false)
+          );
         } else if (child.nodeName === "MENUITEM") {
           var id = this._ctxCounter + "_" + idPrefix + i;
-          var menuitem = {id, type: "menuitem"};
+          var menuitem = { id, type: "menuitem" };
           this._maybeCopyAttribute(child, menuitem, "label");
           this._maybeCopyAttribute(child, menuitem, "icon");
           this._ctxHandlers[id] = child;
@@ -923,11 +1024,11 @@ BrowserElementChild.prototype = {
     //       put together with other image options if elem is an image link.
     // "Copy Link" menu item
     if (copyableElements.link) {
-      menuObj.items.push({id: "copy-link"});
+      menuObj.items.push({ id: "copy-link" });
     }
     // "Copy Image" menu item
     if (copyableElements.image) {
-      menuObj.items.push({id: "copy-image"});
+      menuObj.items.push({ id: "copy-image" });
     }
 
     return menuObj;
@@ -953,8 +1054,14 @@ BrowserElementChild.prototype = {
   _recvSendMouseEvent(data) {
     let json = data.json;
     let utils = content.windowUtils;
-    utils.sendMouseEventToWindow(json.type, json.x, json.y, json.button,
-                                 json.clickCount, json.modifiers);
+    utils.sendMouseEventToWindow(
+      json.type,
+      json.x,
+      json.y,
+      json.button,
+      json.clickCount,
+      json.modifiers
+    );
   },
 
   _recvCanGoBack(data) {
@@ -991,9 +1098,9 @@ BrowserElementChild.prototype = {
 
   _recvReload(data) {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let reloadFlags = data.json.hardReload ?
-      webNav.LOAD_FLAGS_BYPASS_PROXY | webNav.LOAD_FLAGS_BYPASS_CACHE :
-      webNav.LOAD_FLAGS_NONE;
+    let reloadFlags = data.json.hardReload
+      ? webNav.LOAD_FLAGS_BYPASS_PROXY | webNav.LOAD_FLAGS_BYPASS_CACHE
+      : webNav.LOAD_FLAGS_NONE;
     try {
       webNav.reload(reloadFlags);
     } catch (e) {
@@ -1009,8 +1116,10 @@ BrowserElementChild.prototype = {
   // The docShell keeps a weak reference to the progress listener, so we need
   // to keep a strong ref to it ourselves.
   _progressListener: {
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIWebProgressListener,
+      Ci.nsISupportsWeakReference,
+    ]),
     _seenLoadStart: false,
 
     onLocationChange(webProgress, request, location, flags) {
@@ -1030,9 +1139,11 @@ BrowserElementChild.prototype = {
 
       var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
 
-      sendAsyncMsg("locationchange", { url: location.spec,
-                                       canGoBack: webNav.canGoBack,
-                                       canGoForward: webNav.canGoForward });
+      sendAsyncMsg("locationchange", {
+        url: location.spec,
+        canGoBack: webNav.canGoBack,
+        canGoForward: webNav.canGoForward,
+      });
     },
 
     // eslint-disable-next-line complexity
@@ -1049,102 +1160,103 @@ BrowserElementChild.prototype = {
       if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         let bgColor = "transparent";
         try {
-          bgColor = content.getComputedStyle(content.document.body)
-                           .getPropertyValue("background-color");
+          bgColor = content
+            .getComputedStyle(content.document.body)
+            .getPropertyValue("background-color");
         } catch (e) {}
-        sendAsyncMsg("loadend", {backgroundColor: bgColor});
+        sendAsyncMsg("loadend", { backgroundColor: bgColor });
 
         switch (status) {
-          case Cr.NS_OK :
-          case Cr.NS_BINDING_ABORTED :
-            // Ignoring NS_BINDING_ABORTED, which is set when loading page is
-            // stopped.
+          case Cr.NS_OK:
+          case Cr.NS_BINDING_ABORTED:
+          // Ignoring NS_BINDING_ABORTED, which is set when loading page is
+          // stopped.
           case Cr.NS_ERROR_PARSED_DATA_CACHED:
             return;
 
           // TODO See nsDocShell::DisplayLoadError to see what extra
           // information we should be annotating this first block of errors
           // with. Bug 1107091.
-          case Cr.NS_ERROR_UNKNOWN_PROTOCOL :
+          case Cr.NS_ERROR_UNKNOWN_PROTOCOL:
             sendAsyncMsg("error", { type: "unknownProtocolFound" });
             return;
-          case Cr.NS_ERROR_FILE_NOT_FOUND :
+          case Cr.NS_ERROR_FILE_NOT_FOUND:
             sendAsyncMsg("error", { type: "fileNotFound" });
             return;
-          case Cr.NS_ERROR_UNKNOWN_HOST :
+          case Cr.NS_ERROR_UNKNOWN_HOST:
             sendAsyncMsg("error", { type: "dnsNotFound" });
             return;
-          case Cr.NS_ERROR_CONNECTION_REFUSED :
+          case Cr.NS_ERROR_CONNECTION_REFUSED:
             sendAsyncMsg("error", { type: "connectionFailure" });
             return;
-          case Cr.NS_ERROR_NET_INTERRUPT :
+          case Cr.NS_ERROR_NET_INTERRUPT:
             sendAsyncMsg("error", { type: "netInterrupt" });
             return;
-          case Cr.NS_ERROR_NET_TIMEOUT :
+          case Cr.NS_ERROR_NET_TIMEOUT:
             sendAsyncMsg("error", { type: "netTimeout" });
             return;
-          case Cr.NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION :
+          case Cr.NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION:
             sendAsyncMsg("error", { type: "cspBlocked" });
             return;
-          case Cr.NS_ERROR_PHISHING_URI :
+          case Cr.NS_ERROR_PHISHING_URI:
             sendAsyncMsg("error", { type: "deceptiveBlocked" });
             return;
-          case Cr.NS_ERROR_MALWARE_URI :
+          case Cr.NS_ERROR_MALWARE_URI:
             sendAsyncMsg("error", { type: "malwareBlocked" });
             return;
-          case Cr.NS_ERROR_HARMFUL_URI :
+          case Cr.NS_ERROR_HARMFUL_URI:
             sendAsyncMsg("error", { type: "harmfulBlocked" });
             return;
-          case Cr.NS_ERROR_UNWANTED_URI :
+          case Cr.NS_ERROR_UNWANTED_URI:
             sendAsyncMsg("error", { type: "unwantedBlocked" });
             return;
-          case Cr.NS_ERROR_FORBIDDEN_URI :
+          case Cr.NS_ERROR_FORBIDDEN_URI:
             sendAsyncMsg("error", { type: "forbiddenBlocked" });
             return;
 
-          case Cr.NS_ERROR_OFFLINE :
+          case Cr.NS_ERROR_OFFLINE:
             sendAsyncMsg("error", { type: "offline" });
             return;
-          case Cr.NS_ERROR_MALFORMED_URI :
+          case Cr.NS_ERROR_MALFORMED_URI:
             sendAsyncMsg("error", { type: "malformedURI" });
             return;
-          case Cr.NS_ERROR_REDIRECT_LOOP :
+          case Cr.NS_ERROR_REDIRECT_LOOP:
             sendAsyncMsg("error", { type: "redirectLoop" });
             return;
-          case Cr.NS_ERROR_UNKNOWN_SOCKET_TYPE :
+          case Cr.NS_ERROR_UNKNOWN_SOCKET_TYPE:
             sendAsyncMsg("error", { type: "unknownSocketType" });
             return;
-          case Cr.NS_ERROR_NET_RESET :
+          case Cr.NS_ERROR_NET_RESET:
             sendAsyncMsg("error", { type: "netReset" });
             return;
-          case Cr.NS_ERROR_DOCUMENT_NOT_CACHED :
+          case Cr.NS_ERROR_DOCUMENT_NOT_CACHED:
             sendAsyncMsg("error", { type: "notCached" });
             return;
-          case Cr.NS_ERROR_DOCUMENT_IS_PRINTMODE :
+          case Cr.NS_ERROR_DOCUMENT_IS_PRINTMODE:
             sendAsyncMsg("error", { type: "isprinting" });
             return;
-          case Cr.NS_ERROR_PORT_ACCESS_NOT_ALLOWED :
+          case Cr.NS_ERROR_PORT_ACCESS_NOT_ALLOWED:
             sendAsyncMsg("error", { type: "deniedPortAccess" });
             return;
-          case Cr.NS_ERROR_UNKNOWN_PROXY_HOST :
+          case Cr.NS_ERROR_UNKNOWN_PROXY_HOST:
             sendAsyncMsg("error", { type: "proxyResolveFailure" });
             return;
-          case Cr.NS_ERROR_PROXY_CONNECTION_REFUSED :
+          case Cr.NS_ERROR_PROXY_CONNECTION_REFUSED:
             sendAsyncMsg("error", { type: "proxyConnectFailure" });
             return;
-          case Cr.NS_ERROR_INVALID_CONTENT_ENCODING :
+          case Cr.NS_ERROR_INVALID_CONTENT_ENCODING:
             sendAsyncMsg("error", { type: "contentEncodingFailure" });
             return;
-          case Cr.NS_ERROR_REMOTE_XUL :
+          case Cr.NS_ERROR_REMOTE_XUL:
             sendAsyncMsg("error", { type: "remoteXUL" });
             return;
-          case Cr.NS_ERROR_UNSAFE_CONTENT_TYPE :
+          case Cr.NS_ERROR_UNSAFE_CONTENT_TYPE:
             sendAsyncMsg("error", { type: "unsafeContentType" });
             return;
-          case Cr.NS_ERROR_CORRUPTED_CONTENT :
+          case Cr.NS_ERROR_CORRUPTED_CONTENT:
             sendAsyncMsg("error", { type: "corruptedContentErrorv2" });
             return;
-          case Cr.NS_ERROR_BLOCKED_BY_POLICY :
+          case Cr.NS_ERROR_BLOCKED_BY_POLICY:
             sendAsyncMsg("error", { type: "blockedByPolicy" });
             return;
 
@@ -1152,15 +1264,21 @@ BrowserElementChild.prototype = {
             // getErrorClass() will throw if the error code passed in is not a NSS
             // error code.
             try {
-              let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
-                                       .getService(Ci.nsINSSErrorsService);
-              if (nssErrorsService.getErrorClass(status)
-                    == Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
+              let nssErrorsService = Cc[
+                "@mozilla.org/nss_errors_service;1"
+              ].getService(Ci.nsINSSErrorsService);
+              if (
+                nssErrorsService.getErrorClass(status) ==
+                Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT
+              ) {
                 // XXX Is there a point firing the event if the error page is not
                 // certerror? If yes, maybe we should add a property to the
                 // event to to indicate whether there is a custom page. That would
                 // let the embedder have more control over the desired behavior.
-                let errorPage = Services.prefs.getCharPref(CERTIFICATE_ERROR_PAGE_PREF, "");
+                let errorPage = Services.prefs.getCharPref(
+                  CERTIFICATE_ERROR_PAGE_PREF,
+                  ""
+                );
 
                 if (errorPage == "certerror") {
                   sendAsyncMsg("error", { type: "certerror" });
@@ -1192,17 +1310,25 @@ BrowserElementChild.prototype = {
       }
 
       var mixedStateDesc;
-      if (state & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+      if (
+        state & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT
+      ) {
         mixedStateDesc = "blocked_mixed_active_content";
-      } else if (state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+      } else if (
+        state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT
+      ) {
         // Note that STATE_LOADED_MIXED_ACTIVE_CONTENT implies STATE_IS_BROKEN
         mixedStateDesc = "loaded_mixed_active_content";
       }
 
-      var isEV = !!(state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
-      var isMixedContent = !!(state &
+      var isEV = !!(
+        state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL
+      );
+      var isMixedContent = !!(
+        state &
         (Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
-        Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT));
+          Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT)
+      );
 
       sendAsyncMsg("securitychange", {
         state: securityStateDesc,
@@ -1227,7 +1353,10 @@ BrowserElementChild.prototype = {
 };
 
 var api = null;
-if ("DoPreloadPostfork" in this && typeof this.DoPreloadPostfork === "function") {
+if (
+  "DoPreloadPostfork" in this &&
+  typeof this.DoPreloadPostfork === "function"
+) {
   // If we are preloaded, instantiate BrowserElementChild after a content
   // process is forked.
   this.DoPreloadPostfork(function() {

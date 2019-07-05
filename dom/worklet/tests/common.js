@@ -4,7 +4,7 @@ window.onload = function() {
     SimpleTest.waitForExplicitFinish();
 
     configureTest().then(() => {
-      var iframe = document.createElement('iframe');
+      var iframe = document.createElement("iframe");
       iframe.src = location.href + "?worklet_iframe";
       document.body.appendChild(iframe);
     });
@@ -20,4 +20,4 @@ window.onload = function() {
   window.info = parent.info;
 
   runTestInIframe();
-}
+};

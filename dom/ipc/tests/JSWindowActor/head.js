@@ -15,12 +15,10 @@ let windowActorOptions = {
     moduleURI: "resource://testing-common/TestChild.jsm",
 
     events: {
-      "mozshowdropdown": {},
+      mozshowdropdown: {},
     },
 
-    observers: [
-      "test-js-window-actor-child-observer",
-    ],
+    observers: ["test-js-window-actor-child-observer"],
   },
 };
 
@@ -54,7 +52,10 @@ function declTest(name, cfg) {
     info("Entering test: " + name);
 
     // Create a fresh window with the correct settings, and register our actor.
-    let win = await BrowserTestUtils.openNewBrowserWindow({remote: true, fission});
+    let win = await BrowserTestUtils.openNewBrowserWindow({
+      remote: true,
+      fission,
+    });
     ChromeUtils.registerWindowActor("Test", actorOptions);
 
     // Wait for the provided URL to load in our browser

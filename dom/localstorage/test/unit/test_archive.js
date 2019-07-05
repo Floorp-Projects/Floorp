@@ -44,8 +44,9 @@ async function testSteps() {
   request = clear();
   await requestFinished(request);
 
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                .createInstance(Ci.nsIFileOutputStream);
+  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   ostream.init(archiveFile, -1, parseInt("0644", 8), 0);
   ostream.write("foobar", 6);
   ostream.close();

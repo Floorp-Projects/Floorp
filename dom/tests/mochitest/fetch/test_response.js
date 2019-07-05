@@ -1,7 +1,10 @@
 function testDefaultCtor() {
   var res = new Response();
   is(res.type, "default", "Default Response type is default");
-  ok(res.headers instanceof Headers, "Response should have non-null Headers object");
+  ok(
+    res.headers instanceof Headers,
+    "Response should have non-null Headers object"
+  );
   is(res.url, "", "URL should be empty string");
   is(res.status, 200, "Default status is 200");
   is(res.statusText, "", "Default statusText is an empty string");
@@ -9,85 +12,119 @@ function testDefaultCtor() {
 
 function testClone() {
   var orig = new Response("This is a body", {
-              status: 404,
-              statusText: "Not Found",
-              headers: { "Content-Length": 5 },
-            });
+    status: 404,
+    statusText: "Not Found",
+    headers: { "Content-Length": 5 },
+  });
   var clone = orig.clone();
   is(clone.status, 404, "Response status is 404");
   is(clone.statusText, "Not Found", "Response statusText is POST");
-  ok(clone.headers instanceof Headers, "Response should have non-null Headers object");
+  ok(
+    clone.headers instanceof Headers,
+    "Response should have non-null Headers object"
+  );
 
-  is(clone.headers.get('content-length'), "5", "Response content-length should be 5.");
-  orig.headers.set('content-length', 6);
-  is(clone.headers.get('content-length'), "5", "Response content-length should be 5.");
+  is(
+    clone.headers.get("content-length"),
+    "5",
+    "Response content-length should be 5."
+  );
+  orig.headers.set("content-length", 6);
+  is(
+    clone.headers.get("content-length"),
+    "5",
+    "Response content-length should be 5."
+  );
 
   ok(!orig.bodyUsed, "Original body is not consumed.");
   ok(!clone.bodyUsed, "Clone body is not consumed.");
 
   var origBody = null;
   var clone2 = null;
-  return orig.text().then(function (body) {
-    origBody = body;
-    is(origBody, "This is a body", "Original body string matches");
-    ok(orig.bodyUsed, "Original body is consumed.");
-    ok(!clone.bodyUsed, "Clone body is not consumed.");
+  return orig
+    .text()
+    .then(function(body) {
+      origBody = body;
+      is(origBody, "This is a body", "Original body string matches");
+      ok(orig.bodyUsed, "Original body is consumed.");
+      ok(!clone.bodyUsed, "Clone body is not consumed.");
 
-    try {
-      orig.clone()
-      ok(false, "Cannot clone Response whose body is already consumed");
-    } catch (e) {
-      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
-    }
+      try {
+        orig.clone();
+        ok(false, "Cannot clone Response whose body is already consumed");
+      } catch (e) {
+        is(
+          e.name,
+          "TypeError",
+          "clone() of consumed body should throw TypeError"
+        );
+      }
 
-    clone2 = clone.clone();
-    return clone.text();
-  }).then(function (body) {
-    is(body, origBody, "Clone body matches original body.");
-    ok(clone.bodyUsed, "Clone body is consumed.");
+      clone2 = clone.clone();
+      return clone.text();
+    })
+    .then(function(body) {
+      is(body, origBody, "Clone body matches original body.");
+      ok(clone.bodyUsed, "Clone body is consumed.");
 
-    try {
-      clone.clone()
-      ok(false, "Cannot clone Response whose body is already consumed");
-    } catch (e) {
-      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
-    }
+      try {
+        clone.clone();
+        ok(false, "Cannot clone Response whose body is already consumed");
+      } catch (e) {
+        is(
+          e.name,
+          "TypeError",
+          "clone() of consumed body should throw TypeError"
+        );
+      }
 
-    return clone2.text();
-  }).then(function (body) {
-    is(body, origBody, "Clone body matches original body.");
-    ok(clone2.bodyUsed, "Clone body is consumed.");
+      return clone2.text();
+    })
+    .then(function(body) {
+      is(body, origBody, "Clone body matches original body.");
+      ok(clone2.bodyUsed, "Clone body is consumed.");
 
-    try {
-      clone2.clone()
-      ok(false, "Cannot clone Response whose body is already consumed");
-    } catch (e) {
-      is(e.name, "TypeError", "clone() of consumed body should throw TypeError");
-    }
-  });
+      try {
+        clone2.clone();
+        ok(false, "Cannot clone Response whose body is already consumed");
+      } catch (e) {
+        is(
+          e.name,
+          "TypeError",
+          "clone() of consumed body should throw TypeError"
+        );
+      }
+    });
 }
 
 function testCloneUnfiltered() {
-  var url = 'http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200';
-  return fetch(url, { mode: 'no-cors' }).then(function(response) {
+  var url =
+    "http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200";
+  return fetch(url, { mode: "no-cors" }).then(function(response) {
     // By default the chrome-only function should not be available.
-    is(response.type, 'opaque', 'response should be opaque');
-    is(response.cloneUnfiltered, undefined,
-       'response.cloneUnfiltered should be undefined');
+    is(response.type, "opaque", "response should be opaque");
+    is(
+      response.cloneUnfiltered,
+      undefined,
+      "response.cloneUnfiltered should be undefined"
+    );
 
     // When the test is run in a worker context we can't actually try to use
     // the chrome-only function.  SpecialPowers is not defined.
-    if (typeof SpecialPowers !== 'object') {
+    if (typeof SpecialPowers !== "object") {
       return;
     }
 
     // With a chrome code, however, should be able to get an unfiltered response.
     var chromeResponse = SpecialPowers.wrap(response);
-    is(typeof chromeResponse.cloneUnfiltered, 'function',
-       'chromeResponse.cloneFiltered should be a function');
+    is(
+      typeof chromeResponse.cloneUnfiltered,
+      "function",
+      "chromeResponse.cloneFiltered should be a function"
+    );
     var unfiltered = chromeResponse.cloneUnfiltered();
-    is(unfiltered.type, 'default', 'unfiltered response should be default');
-    is(unfiltered.status, 200, 'unfiltered response should have 200 status');
+    is(unfiltered.type, "default", "unfiltered response should be default");
+    is(unfiltered.status, 200, "unfiltered response should have 200 status");
   });
 }
 
@@ -97,7 +134,7 @@ function testError() {
   try {
     res.headers.set("someheader", "not allowed");
     ok(false, "Error response should have immutable headers");
-  } catch(e) {
+  } catch (e) {
     ok(true, "Error response should have immutable headers");
   }
 }
@@ -107,11 +144,14 @@ function testRedirect() {
   is(res.status, 302, "Default redirect has status code 302");
   is(res.statusText, "", "Default redirect has status text empty");
   var h = res.headers.get("location");
-  ok(h === (new URL("./redirect.response", self.location.href)).href, "Location header should be correct absolute URL");
+  ok(
+    h === new URL("./redirect.response", self.location.href).href,
+    "Location header should be correct absolute URL"
+  );
   try {
     res.headers.set("someheader", "not allowed");
     ok(false, "Redirects should have immutable headers");
-  } catch(e) {
+  } catch (e) {
     ok(true, "Redirects should have immutable headers");
   }
 
@@ -126,8 +166,12 @@ function testRedirect() {
     try {
       var res = Response.redirect(".", failStatus[i]);
       ok(false, "Invalid status code should fail " + failStatus[i]);
-    } catch(e) {
-      is(e.name, "RangeError", "Invalid status code should fail " + failStatus[i]);
+    } catch (e) {
+      is(
+        e.name,
+        "RangeError",
+        "Invalid status code should fail " + failStatus[i]
+      );
     }
   }
 }
@@ -149,16 +193,22 @@ function testOk() {
 function testBodyUsed() {
   var res = new Response("Sample body");
   ok(!res.bodyUsed, "bodyUsed is initially false.");
-  return res.text().then((v) => {
-    is(v, "Sample body", "Body should match");
-    ok(res.bodyUsed, "After reading body, bodyUsed should be true.");
-  }).then(() => {
-    return res.blob().then((v) => {
-      ok(false, "Attempting to read body again should fail.");
-    }, (e) => {
-      ok(true, "Attempting to read body again should fail.");
+  return res
+    .text()
+    .then(v => {
+      is(v, "Sample body", "Body should match");
+      ok(res.bodyUsed, "After reading body, bodyUsed should be true.");
     })
-  });
+    .then(() => {
+      return res.blob().then(
+        v => {
+          ok(false, "Attempting to read body again should fail.");
+        },
+        e => {
+          ok(true, "Attempting to read body again should fail.");
+        }
+      );
+    });
 }
 
 function testBodyCreation() {
@@ -174,7 +224,7 @@ function testBodyCreation() {
     is("Hello", v, "Extracted string should match");
   });
 
-  var res2b = new Response((new Uint8Array([72, 101, 108, 108, 111])).buffer);
+  var res2b = new Response(new Uint8Array([72, 101, 108, 108, 111]).buffer);
   var p2b = res2b.text().then(function(v) {
     is("Hello", v, "Extracted string should match");
   });
@@ -201,48 +251,74 @@ function testBodyCreation() {
 
 function testBodyExtraction() {
   var text = "κόσμε";
-  var newRes = function() { return new Response(text); }
-  return newRes().text().then(function(v) {
-    ok(typeof v === "string", "Should resolve to string");
-    is(text, v, "Extracted string should match");
-  }).then(function() {
-    return newRes().blob().then(function(v) {
-      ok(v instanceof Blob, "Should resolve to Blob");
-      return readAsText(v).then(function(result) {
-        is(result, text, "Decoded Blob should match original");
-      });
-    });
-  }).then(function() {
-    return newRes().json().then(function(v) {
-      ok(false, "Invalid json should reject");
-    }, function(e) {
-      ok(true, "Invalid json should reject");
+  var newRes = function() {
+    return new Response(text);
+  };
+  return newRes()
+    .text()
+    .then(function(v) {
+      ok(typeof v === "string", "Should resolve to string");
+      is(text, v, "Extracted string should match");
     })
-  }).then(function() {
-    return newRes().arrayBuffer().then(function(v) {
-      ok(v instanceof ArrayBuffer, "Should resolve to ArrayBuffer");
-      var dec = new TextDecoder();
-      is(dec.decode(new Uint8Array(v)), text, "UTF-8 decoded ArrayBuffer should match original");
+    .then(function() {
+      return newRes()
+        .blob()
+        .then(function(v) {
+          ok(v instanceof Blob, "Should resolve to Blob");
+          return readAsText(v).then(function(result) {
+            is(result, text, "Decoded Blob should match original");
+          });
+        });
+    })
+    .then(function() {
+      return newRes()
+        .json()
+        .then(
+          function(v) {
+            ok(false, "Invalid json should reject");
+          },
+          function(e) {
+            ok(true, "Invalid json should reject");
+          }
+        );
+    })
+    .then(function() {
+      return newRes()
+        .arrayBuffer()
+        .then(function(v) {
+          ok(v instanceof ArrayBuffer, "Should resolve to ArrayBuffer");
+          var dec = new TextDecoder();
+          is(
+            dec.decode(new Uint8Array(v)),
+            text,
+            "UTF-8 decoded ArrayBuffer should match original"
+          );
+        });
     });
-  })
 }
 
 function testNullBodyStatus() {
   [204, 205, 304].forEach(function(status) {
     try {
-      var res = new Response(new Blob(), { "status": status });
-      ok(false, "Response body provided but status code does not permit a body");
-    } catch(e) {
+      var res = new Response(new Blob(), { status: status });
+      ok(
+        false,
+        "Response body provided but status code does not permit a body"
+      );
+    } catch (e) {
       ok(true, "Response body provided but status code does not permit a body");
     }
   });
 
   [204, 205, 304].forEach(function(status) {
     try {
-      var res = new Response(undefined, { "status": status });
+      var res = new Response(undefined, { status: status });
       ok(true, "Response body provided but status code does not permit a body");
-    } catch(e) {
-      ok(false, "Response body provided but status code does not permit a body");
+    } catch (e) {
+      ok(
+        false,
+        "Response body provided but status code does not permit a body"
+      );
     }
   });
 }
@@ -254,15 +330,17 @@ function runTest() {
   testOk();
   testNullBodyStatus();
 
-  return Promise.resolve()
-    .then(testBodyCreation)
-    .then(testBodyUsed)
-    .then(testBodyExtraction)
-    .then(testClone)
-    .then(testCloneUnfiltered)
-    // Put more promise based tests here.
-    .catch(function(e) {
-      dump('### ### ' + e + '\n');
-      ok(false, 'got unexpected error!');
-    });
+  return (
+    Promise.resolve()
+      .then(testBodyCreation)
+      .then(testBodyUsed)
+      .then(testBodyExtraction)
+      .then(testClone)
+      .then(testCloneUnfiltered)
+      // Put more promise based tests here.
+      .catch(function(e) {
+        dump("### ### " + e + "\n");
+        ok(false, "got unexpected error!");
+      })
+  );
 }

@@ -27,12 +27,8 @@ if (!window.runTest) {
 
     info("Pushing preferences");
 
-    await SpecialPowers.pushPrefEnv(
-    {
-      set: [
-        ["dom.storage.testing", true],
-        ["dom.quotaManager.testing", true],
-      ],
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.storage.testing", true], ["dom.quotaManager.testing", true]],
     });
 
     info("Clearing old databases");
@@ -40,8 +36,10 @@ if (!window.runTest) {
     await requestFinished(clearAllDatabases());
 
     ok(typeof testSteps === "function", "There should be a testSteps function");
-    ok(testSteps.constructor.name === "AsyncFunction",
-       "testSteps should be an async function");
+    ok(
+      testSteps.constructor.name === "AsyncFunction",
+      "testSteps should be an async function"
+    );
 
     SimpleTest.registerCleanupFunction(async function() {
       await requestFinished(clearAllDatabases());

@@ -11,6 +11,6 @@
  *   local: { iceServers: [{"username":"mozilla","credential":"mozilla","url":"turn:10.0.0.1"}] },
  *   remote: { iceServers: [{"username":"firefox","credential":"firefox","url":"turn:10.0.0.2"}] }
  * };
-  */
+ */
 
-var turnServers = { };
+var turnServers = {};

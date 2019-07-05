@@ -1,16 +1,18 @@
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name = this.window ? window.location.pathname :
-               "test_storage_manager_estimate.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_storage_manager_estimate.js";
   const objectStoreName = "storagesManager";
   const arraySize = 1e6;
 
   ok("estimate" in navigator.storage, "Has estimate function");
   is(typeof navigator.storage.estimate, "function", "estimate is function");
-  ok(navigator.storage.estimate() instanceof Promise,
-     "estimate() method exists and returns a Promise");
+  ok(
+    navigator.storage.estimate() instanceof Promise,
+    "estimate() method exists and returns a Promise"
+  );
 
   navigator.storage.estimate().then(estimation => {
     testGenerator.next(estimation.usage);
@@ -27,14 +29,17 @@ function* testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  let objectStore = db.createObjectStore(objectStoreName, { });
+  let objectStore = db.createObjectStore(objectStoreName, {});
   yield undefined;
 
   navigator.storage.estimate().then(estimation => {
     testGenerator.next(estimation.usage);
   });
   let usageAfterCreate = yield undefined;
-  ok(usageAfterCreate > before, "estimated usage must increase after createObjectStore");
+  ok(
+    usageAfterCreate > before,
+    "estimated usage must increase after createObjectStore"
+  );
 
   let txn = db.transaction(objectStoreName, "readwrite");
   objectStore = txn.objectStore(objectStoreName);
@@ -48,15 +53,20 @@ function* testSteps()
     testGenerator.next(estimation.usage);
   });
   let usageAfterPut = yield undefined;
-  ok(usageAfterPut > usageAfterCreate, "estimated usage must increase after putting large object");
+  ok(
+    usageAfterPut > usageAfterCreate,
+    "estimated usage must increase after putting large object"
+  );
   db.close();
 
   finishTest();
 }
 
-function setup()
-{
-  SpecialPowers.pushPrefEnv({
-    "set": [["dom.storageManager.enabled", true]],
-  }, runTest);
+function setup() {
+  SpecialPowers.pushPrefEnv(
+    {
+      set: [["dom.storageManager.enabled", true]],
+    },
+    runTest
+  );
 }

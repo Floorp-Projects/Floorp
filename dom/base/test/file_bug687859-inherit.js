@@ -1,1 +1,1 @@
-var stringFromInheritScript = "¡";
+var stringFromInheritScript = "ï¿½";

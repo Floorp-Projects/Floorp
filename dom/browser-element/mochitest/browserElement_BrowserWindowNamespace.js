@@ -25,7 +25,9 @@ function runTest() {
     ok(true, "Got first mozbrowseropenwindow event.");
     document.body.appendChild(e.detail.frameElement);
 
-    e.detail.frameElement.addEventListener("mozbrowserlocationchange", function(f) {
+    e.detail.frameElement.addEventListener("mozbrowserlocationchange", function(
+      f
+    ) {
       if (f.detail.url == "http://example.com/#2") {
         ok(true, "Got locationchange to http://example.com/#2");
         SimpleTest.finish();

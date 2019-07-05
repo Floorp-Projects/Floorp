@@ -1,27 +1,30 @@
 function ok(test, message) {
-  postMessage({ type: 'ok', test: test, message: message });
+  postMessage({ type: "ok", test: test, message: message });
 }
 
 function is(a, b, message) {
-  postMessage({ type: 'is', test1: a, test2: b, message: message });
+  postMessage({ type: "is", test1: a, test2: b, message: message });
 }
 
 if (self.Notification) {
   var steps = [
-    function () {
+    function() {
       ok(typeof Notification === "function", "Notification constructor exists");
       ok(Notification.permission, "Notification.permission exists");
-      ok(typeof Notification.requestPermission === "undefined", "Notification.requestPermission should not exist");
+      ok(
+        typeof Notification.requestPermission === "undefined",
+        "Notification.requestPermission should not exist"
+      );
     },
 
-    function (done) {
+    function(done) {
       var options = {
         dir: "auto",
         lang: "",
         body: "This is a notification body",
         tag: "sometag",
         icon: "icon.png",
-        data: ["a complex object that should be", { "structured": "cloned" }],
+        data: ["a complex object that should be", { structured: "cloned" }],
         mozbehavior: { vibrationPattern: [30, 200, 30] },
       };
       var notification = new Notification("This is a title", options);
@@ -38,22 +41,30 @@ if (self.Notification) {
       is(notification.body, options.body, "body should get set");
       is(notification.tag, options.tag, "tag should get set");
       is(notification.icon, options.icon, "icon should get set");
-      is(notification.data[0],  "a complex object that should be", "data item 0 should be a matching string");
-      is(notification.data[1]["structured"], "cloned", "data item 1 should be a matching object literal");
+      is(
+        notification.data[0],
+        "a complex object that should be",
+        "data item 0 should be a matching string"
+      );
+      is(
+        notification.data[1]["structured"],
+        "cloned",
+        "data item 1 should be a matching object literal"
+      );
 
       // store notification in test context
       this.notification = notification;
 
-      notification.onshow = function () {
+      notification.onshow = function() {
         ok(true, "onshow handler should be called");
         done();
       };
     },
 
-    function (done) {
+    function(done) {
       var notification = this.notification;
 
-      notification.onclose = function () {
+      notification.onclose = function() {
         ok(true, "onclose handler should be called");
         done();
       };
@@ -66,7 +77,7 @@ if (self.Notification) {
     var context = {};
     (function executeRemainingTests(remainingTests) {
       if (!remainingTests.length) {
-        postMessage({type: 'finish'});
+        postMessage({ type: "finish" });
         return;
       }
 
@@ -86,8 +97,8 @@ if (self.Notification) {
         finishTest();
       }
     })(steps);
-  }
+  };
 } else {
   ok(true, "Notifications are not enabled in workers on the platform.");
-  postMessage({ type: 'finish' });
+  postMessage({ type: "finish" });
 }

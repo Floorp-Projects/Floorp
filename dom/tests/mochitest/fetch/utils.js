@@ -9,7 +9,7 @@ function readAsText(blob) {
       var fs = new FileReader();
       fs.onload = function() {
         resolve(fs.result);
-      }
+      };
       fs.onerror = reject;
       fs.readAsText(blob);
     });
@@ -25,7 +25,7 @@ function readAsArrayBuffer(blob) {
       var fs = new FileReader();
       fs.onload = function() {
         resolve(fs.result);
-      }
+      };
       fs.onerror = reject;
       fs.readAsArrayBuffer(blob);
     });
@@ -41,9 +41,9 @@ function waitForState(worker, state, context) {
       resolve(context);
       return;
     }
-    worker.addEventListener('statechange', function onStateChange() {
+    worker.addEventListener("statechange", function onStateChange() {
       if (worker.state === state) {
-        worker.removeEventListener('statechange', onStateChange);
+        worker.removeEventListener("statechange", onStateChange);
         resolve(context);
       }
     });

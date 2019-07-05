@@ -11,9 +11,9 @@ const UNORDERED_TYPE = 8; // XPathResult.ANY_UNORDERED_NODE_TYPE
  * @return NodeFilter.FILTER_ACCEPT otherwise.
  */
 function isWhitespace(aNode) {
-  return ((/\S/).test(aNode.nodeValue)) ?
-         NodeFilter.FILTER_SKIP :
-         NodeFilter.FILTER_ACCEPT;
+  return /\S/.test(aNode.nodeValue)
+    ? NodeFilter.FILTER_SKIP
+    : NodeFilter.FILTER_ACCEPT;
 }
 
 /**
@@ -75,7 +75,9 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
   var childIndex = 1;
   var bracketIndex = prefix.indexOf("[");
   if (bracketIndex != -1) {
-    childIndex = Number(prefix.substring(bracketIndex + 1, prefix.indexOf("]")));
+    childIndex = Number(
+      prefix.substring(bracketIndex + 1, prefix.indexOf("]"))
+    );
     Assert.ok(childIndex > 0);
     prefix = prefix.substr(0, bracketIndex);
   }
@@ -84,7 +86,10 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
   var targetNodeName = prefix;
   if (prefix.indexOf("processing-instruction(") == 0) {
     targetType = NodeFilter.SHOW_PROCESSING_INSTRUCTION;
-    targetNodeName = prefix.substring(prefix.indexOf("(") + 2, prefix.indexOf(")") - 1);
+    targetNodeName = prefix.substring(
+      prefix.indexOf("(") + 2,
+      prefix.indexOf(")") - 1
+    );
   }
   switch (prefix) {
     case "text()":
@@ -125,9 +130,10 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
 
   // Look for the node matching the step from the document fragment.
   var walker = aContextNode.ownerDocument.createTreeWalker(
-                 aContextNode,
-                 targetType,
-                 filter);
+    aContextNode,
+    targetType,
+    filter
+  );
   var targetNode = walker.nextNode();
   Assert.notEqual(targetNode, null);
 
@@ -170,7 +176,9 @@ function getRange(aSourceNode, aFragment) {
  * @param aPath The path to the local document.
  */
 function getParsedDocument(aPath) {
-  return do_parse_document(aPath, "application/xml").then(processParsedDocument);
+  return do_parse_document(aPath, "application/xml").then(
+    processParsedDocument
+  );
 }
 
 function processParsedDocument(doc) {
@@ -178,10 +186,11 @@ function processParsedDocument(doc) {
   Assert.equal(ChromeUtils.getClassName(doc), "XMLDocument");
 
   // Clean out whitespace.
-  var walker = doc.createTreeWalker(doc,
-                                    NodeFilter.SHOW_TEXT |
-                                    NodeFilter.SHOW_CDATA_SECTION,
-                                    isWhitespace);
+  var walker = doc.createTreeWalker(
+    doc,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_CDATA_SECTION,
+    isWhitespace
+  );
   while (walker.nextNode()) {
     var parent = walker.currentNode.parentNode;
     parent.removeChild(walker.currentNode);
@@ -273,9 +282,7 @@ function do_extract_test(doc) {
     Assert.ok(baseFrag.isEqualNode(resultFrag));
 
     dump("Ensure the original nodes weren't extracted - test " + i + "\n\n");
-    var walker = doc.createTreeWalker(baseFrag,
-                                      NodeFilter.SHOW_ALL,
-                                      null);
+    var walker = doc.createTreeWalker(baseFrag, NodeFilter.SHOW_ALL, null);
     var foundStart = false;
     var foundEnd = false;
     do {
@@ -306,9 +313,7 @@ function do_extract_test(doc) {
     Assert.ok(baseFrag.isEqualNode(resultFrag));
 
     dump("Ensure the original nodes weren't deleted - test " + i + "\n\n");
-    walker = doc.createTreeWalker(baseFrag,
-                                  NodeFilter.SHOW_ALL,
-                                  null);
+    walker = doc.createTreeWalker(baseFrag, NodeFilter.SHOW_ALL, null);
     foundStart = false;
     foundEnd = false;
     do {
@@ -339,8 +344,9 @@ function run_miscellaneous_tests() {
 }
 
 function isText(node) {
-  return node.nodeType == node.TEXT_NODE ||
-         node.nodeType == node.CDATA_SECTION_NODE;
+  return (
+    node.nodeType == node.TEXT_NODE || node.nodeType == node.CDATA_SECTION_NODE
+  );
 }
 
 function do_miscellaneous_tests(doc) {
@@ -359,9 +365,11 @@ function do_miscellaneous_tests(doc) {
   var endOffset = baseRange.endOffset;
 
   // Text range manipulation.
-  if ((endOffset > startOffset) &&
-      (startContainer == endContainer) &&
-      isText(startContainer)) {
+  if (
+    endOffset > startOffset &&
+    startContainer == endContainer &&
+    isText(startContainer)
+  ) {
     // Invalid start node
     try {
       baseRange.setStart(null, 0);
@@ -387,9 +395,9 @@ function do_miscellaneous_tests(doc) {
     }
 
     // Invalid index
-    var newOffset = isText(startContainer) ?
-                      startContainer.nodeValue.length + 1 :
-                      startContainer.childNodes.length + 1;
+    var newOffset = isText(startContainer)
+      ? startContainer.nodeValue.length + 1
+      : startContainer.childNodes.length + 1;
     try {
       baseRange.setStart(startContainer, newOffset);
       do_throw("Should have thrown IndexSizeError!");
@@ -410,7 +418,9 @@ function do_miscellaneous_tests(doc) {
     Assert.equal(baseRange.startOffset, 0);
     Assert.ok(baseRange.collapsed);
   } else {
-    do_throw("The first test should be a text-only range test.  Test is invalid.");
+    do_throw(
+      "The first test should be a text-only range test.  Test is invalid."
+    );
   }
 
   /* See what happens when a range has a startContainer in one fragment, and an

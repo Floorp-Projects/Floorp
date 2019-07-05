@@ -4,7 +4,9 @@
  */
 
 function run_test() {
-  const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
+    Ci.nsIPluginHost
+  );
   const pluginDefaultState = Services.prefs.getIntPref("plugin.default.state");
 
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
@@ -37,13 +39,19 @@ function run_test() {
   // If allowed_types isn't set, then all plugin types are enabled.
   reload_plugins_with_allowed_types();
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
   // If allowed_types is set to the empty string, then all plugin types are enabled.
   reload_plugins_with_allowed_types("");
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
   // If allowed_types is set to anything other than the empty string,
@@ -64,7 +72,10 @@ function run_test() {
 
   reload_plugins_with_allowed_types("application/x-Second-Test");
   Assert.equal(get_status_for_type("application/x-test"), undefined);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
   reload_plugins_with_allowed_types("application/x-nonexistent");
@@ -72,54 +83,98 @@ function run_test() {
   Assert.equal(get_status_for_type("application/x-Second-Test"), undefined);
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-test,application/x-Second-Test");
+  reload_plugins_with_allowed_types(
+    "application/x-test,application/x-Second-Test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-Second-Test,application/x-test");
+  reload_plugins_with_allowed_types(
+    "application/x-Second-Test,application/x-test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-test,application/x-nonexistent");
+  reload_plugins_with_allowed_types(
+    "application/x-test,application/x-nonexistent"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
   Assert.equal(get_status_for_type("application/x-Second-Test"), undefined);
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-nonexistent,application/x-test");
+  reload_plugins_with_allowed_types(
+    "application/x-nonexistent,application/x-test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
   Assert.equal(get_status_for_type("application/x-Second-Test"), undefined);
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-test,application/x-Second-Test,application/x-nonexistent");
+  reload_plugins_with_allowed_types(
+    "application/x-test,application/x-Second-Test,application/x-nonexistent"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-test,application/x-nonexistent,application/x-Second-Test");
+  reload_plugins_with_allowed_types(
+    "application/x-test,application/x-nonexistent,application/x-Second-Test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-Second-Test,application/x-test,application/x-nonexistent");
+  reload_plugins_with_allowed_types(
+    "application/x-Second-Test,application/x-test,application/x-nonexistent"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-Second-Test,application/x-nonexistent,application/x-test");
+  reload_plugins_with_allowed_types(
+    "application/x-Second-Test,application/x-nonexistent,application/x-test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-nonexistent,application/x-test,application/x-Second-Test");
+  reload_plugins_with_allowed_types(
+    "application/x-nonexistent,application/x-test,application/x-Second-Test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
-  reload_plugins_with_allowed_types("application/x-nonexistent,application/x-Second-Test,application/x-test");
+  reload_plugins_with_allowed_types(
+    "application/x-nonexistent,application/x-Second-Test,application/x-test"
+  );
   Assert.equal(get_status_for_type("application/x-test"), pluginDefaultState);
-  Assert.equal(get_status_for_type("application/x-Second-Test"), pluginDefaultState);
+  Assert.equal(
+    get_status_for_type("application/x-Second-Test"),
+    pluginDefaultState
+  );
   Assert.equal(get_status_for_type("application/x-nonexistent"), undefined);
 
   // Plugin types are case-insensitive, so matching should be too.

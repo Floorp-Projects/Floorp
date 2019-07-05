@@ -9,7 +9,7 @@ function addTest(test) {
 }
 
 function addAsyncTest(fn) {
-  _tests.push(() => (fn)().catch(ok.bind(null, false)));
+  _tests.push(() => fn().catch(ok.bind(null, false)));
 }
 
 function runNextTest() {
@@ -21,8 +21,12 @@ function runNextTest() {
   try {
     fn();
   } catch (ex) {
-    info("Test function " + (fn.name ? "'" + fn.name + "' " : "") +
-         "threw an exception: " + ex);
+    info(
+      "Test function " +
+        (fn.name ? "'" + fn.name + "' " : "") +
+        "threw an exception: " +
+        ex
+    );
   }
 }
 
@@ -35,7 +39,11 @@ function doXHRGetBlob(uri) {
     xhr.open("GET", uri);
     xhr.responseType = "blob";
     xhr.addEventListener("load", function() {
-      is(xhr.status, 200, "doXHRGetBlob load uri='" + uri + "' status=" + xhr.status);
+      is(
+        xhr.status,
+        200,
+        "doXHRGetBlob load uri='" + uri + "' status=" + xhr.status
+      );
       resolve(xhr.response);
     });
     xhr.send();
@@ -65,14 +73,16 @@ function assertCSPBlock(url, shouldBlock) {
 
         if (topic === "csp-on-violate-policy") {
           let asciiSpec = SpecialPowers.getPrivilegedProps(
-            SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+            SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+            "asciiSpec"
+          );
           if (asciiSpec == url) {
             is(shouldBlock, true, "Should block request uri='" + url);
             removeObserver(observer);
             resolve();
           }
         }
-       },
+      },
     };
 
     SpecialPowers.addObserver(observer, "csp-on-violate-policy");

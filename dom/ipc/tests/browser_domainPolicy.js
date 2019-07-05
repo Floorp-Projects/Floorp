@@ -12,14 +12,25 @@ function deactivateDomainPolicy() {
 }
 
 async function test_domainPolicy() {
-  ChromeUtils.defineModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
+  ChromeUtils.defineModuleGetter(
+    this,
+    "Promise",
+    "resource://gre/modules/Promise.jsm"
+  );
   let outerDeferred = Promise.defer();
   let currentTask = outerDeferred.promise;
   SpecialPowers.pushPrefEnv(
-    {set: [["dom.ipc.browser_frames.oop_by_default", false],
-          ["browser.pagethumbnails.capturing_disabled", false],
-          ["dom.mozBrowserFramesEnabled", false]]},
-    () => { return outerDeferred.resolve(); });
+    {
+      set: [
+        ["dom.ipc.browser_frames.oop_by_default", false],
+        ["browser.pagethumbnails.capturing_disabled", false],
+        ["dom.mozBrowserFramesEnabled", false],
+      ],
+    },
+    () => {
+      return outerDeferred.resolve();
+    }
+  );
   await currentTask;
 
   // Create tab
@@ -27,10 +38,12 @@ async function test_domainPolicy() {
 
   // Init test
   function initProcess() {
-    return BrowserTestUtils.openNewForegroundTab(
-      {gBrowser,
-       opening: "http://mochi.test:8888/browser/dom/ipc/tests/file_domainPolicy_base.html",
-       forceNewProcess: true});
+    return BrowserTestUtils.openNewForegroundTab({
+      gBrowser,
+      opening:
+        "http://mochi.test:8888/browser/dom/ipc/tests/file_domainPolicy_base.html",
+      forceNewProcess: true,
+    });
   }
 
   // We use ContentTask for the tests, but we also want to pass some data and some helper functions too.
@@ -41,8 +54,10 @@ async function test_domainPolicy() {
     obj.checkScriptEnabled = function(win, expectEnabled) {
       win.wrappedJSObject.gFiredOnclick = false;
       win.document.body.dispatchEvent(new win.Event("click"));
-      return { passed: win.wrappedJSObject.gFiredOnclick == expectEnabled,
-               msg: `Checking script-enabled for ${win.name} (${win.location})`};
+      return {
+        passed: win.wrappedJSObject.gFiredOnclick == expectEnabled,
+        msg: `Checking script-enabled for ${win.name} (${win.location})`,
+      };
     };
 
     obj.navigateFrame = function(ifr, src) {
@@ -58,14 +73,22 @@ async function test_domainPolicy() {
   }
 
   function runTest(test) {
-    return ContentTask.spawn(tab.linkedBrowser,
-      "ipcArgs = " + JSON.stringify(ipcArgs) + "; (" + initUtils.toSource() + ")(utils)", test);
+    return ContentTask.spawn(
+      tab.linkedBrowser,
+      "ipcArgs = " +
+        JSON.stringify(ipcArgs) +
+        "; (" +
+        initUtils.toSource() +
+        ")(utils)",
+      test
+    );
   }
 
   function checkAndCleanup(result) {
     result = [].concat(result);
-    for (var i in result)
+    for (var i in result) {
       ok(result[i].passed, result[i].msg);
+    }
     gBrowser.removeTab(tab);
     deactivateDomainPolicy();
     ipcArgs = {};
@@ -73,8 +96,10 @@ async function test_domainPolicy() {
 
   function testDomain(domain) {
     ipcArgs.domain = domain;
-    return (aUtils) => {
-      const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+    return aUtils => {
+      const { PromiseUtils } = ChromeUtils.import(
+        "resource://gre/modules/PromiseUtils.jsm"
+      );
       // eslint-disable-next-line no-shadow
       var ipcArgs;
       var utils = {};
@@ -85,7 +110,9 @@ async function test_domainPolicy() {
       let deferred = PromiseUtils.defer();
       var rootFrame = content.document.getElementById("root");
       utils.navigateFrame(rootFrame, ipcArgs.domain + path).then(() => {
-        deferred.resolve(utils.checkScriptEnabled(rootFrame.contentWindow, false));
+        deferred.resolve(
+          utils.checkScriptEnabled(rootFrame.contentWindow, false)
+        );
       });
       return deferred.promise;
     };
@@ -112,8 +139,10 @@ async function test_domainPolicy() {
   function testList(expectEnabled, list) {
     ipcArgs.expectEnabled = expectEnabled;
     ipcArgs.list = list;
-    return (aUtils) => {
-      const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+    return aUtils => {
+      const { PromiseUtils } = ChromeUtils.import(
+        "resource://gre/modules/PromiseUtils.jsm"
+      );
       // eslint-disable-next-line no-shadow
       var ipcArgs;
       var utils = {};
@@ -121,18 +150,32 @@ async function test_domainPolicy() {
       eval(aUtils);
 
       var results = [];
-      var testListInternal = function(internalExpectEnabled, internalList, idx) {
+      var testListInternal = function(
+        internalExpectEnabled,
+        internalList,
+        idx
+      ) {
         idx = idx || 0;
         let deferred = PromiseUtils.defer();
         let path = "/browser/dom/ipc/tests/file_disableScript.html";
         let target = internalList[idx] + path;
         var rootFrame = content.document.getElementById("root");
         utils.navigateFrame(rootFrame, target).then(function() {
-          results.push(utils.checkScriptEnabled(rootFrame.contentWindow, internalExpectEnabled));
-          if (idx == internalList.length - 1)
+          results.push(
+            utils.checkScriptEnabled(
+              rootFrame.contentWindow,
+              internalExpectEnabled
+            )
+          );
+          if (idx == internalList.length - 1) {
             deferred.resolve(results);
-          else
-            testListInternal(internalExpectEnabled, internalList, idx + 1).then(function(retArg) { deferred.resolve(retArg); });
+          } else {
+            testListInternal(internalExpectEnabled, internalList, idx + 1).then(
+              function(retArg) {
+                deferred.resolve(retArg);
+              }
+            );
+          }
         });
         return deferred.promise;
       };
@@ -141,24 +184,35 @@ async function test_domainPolicy() {
   }
 
   let testPolicy = {
-     exceptions: ["http://test1.example.com", "http://example.com"],
-     superExceptions: ["http://test2.example.org", "https://test1.example.com"],
-     exempt: ["http://test1.example.com", "http://example.com",
-              "http://test2.example.org", "http://sub1.test2.example.org",
-              "https://sub1.test1.example.com"],
-     notExempt: ["http://test2.example.com", "http://sub1.test1.example.com",
-                 "http://www.example.com", "https://test2.example.com",
-                 "https://example.com", "http://test1.example.org"],
+    exceptions: ["http://test1.example.com", "http://example.com"],
+    superExceptions: ["http://test2.example.org", "https://test1.example.com"],
+    exempt: [
+      "http://test1.example.com",
+      "http://example.com",
+      "http://test2.example.org",
+      "http://sub1.test2.example.org",
+      "https://sub1.test1.example.com",
+    ],
+    notExempt: [
+      "http://test2.example.com",
+      "http://sub1.test1.example.com",
+      "http://www.example.com",
+      "https://test2.example.com",
+      "https://example.com",
+      "http://test1.example.org",
+    ],
   };
 
   function activate(isBlock, exceptions, superExceptions) {
     activateDomainPolicy();
     let set = isBlock ? policy.blocklist : policy.allowlist;
     let superSet = isBlock ? policy.superBlocklist : policy.superAllowlist;
-    for (let e of exceptions)
+    for (let e of exceptions) {
       set.add(makeURI(e));
-    for (let e of superExceptions)
+    }
+    for (let e of superExceptions) {
       superSet.add(makeURI(e));
+    }
   }
 
   info("Testing Blocklist-style Domain Policy");
@@ -185,7 +239,9 @@ async function test_domainPolicy() {
   info("Testing Allowlist-style Domain Policy");
   let deferred = Promise.defer();
   currentTask = deferred.promise;
-  SpecialPowers.pushPrefEnv({set: [["javascript.enabled", false]]}, () => { return deferred.resolve(); });
+  SpecialPowers.pushPrefEnv({ set: [["javascript.enabled", false]] }, () => {
+    return deferred.resolve();
+  });
   await currentTask;
 
   info("Activating domainPolicy first, creating child process after");
@@ -209,7 +265,6 @@ async function test_domainPolicy() {
   checkAndCleanup(results);
   finish();
 }
-
 
 add_task(test_domainPolicy);
 

@@ -1,5 +1,5 @@
 function ok(a, msg) {
-  postMessage({type: "status", status: !!a, msg });
+  postMessage({ type: "status", status: !!a, msg });
 }
 
 onmessage = function(event) {
@@ -34,5 +34,5 @@ onmessage = function(event) {
   }
   ok(status, "new URL(something, 42) should throw");
 
-  postMessage({type: "finish" });
+  postMessage({ type: "finish" });
 };

@@ -46,7 +46,8 @@ function exerciseInterface() {
   };
 
   var db = new DB("data", "base");
-  return db.add("x", [ 10, {} ])
+  return db
+    .add("x", [10, {}])
     .then(_ => db.get("x"))
     .then(x => {
       equal(x.length, 2);
@@ -59,19 +60,24 @@ function exerciseInterface() {
 function run_test() {
   do_get_profile();
 
-  let sb = new Cu.Sandbox("https://www.example.com",
-                          { wantGlobalProperties: ["indexedDB"] });
+  let sb = new Cu.Sandbox("https://www.example.com", {
+    wantGlobalProperties: ["indexedDB"],
+  });
 
   sb.equal = equal;
   var innerPromise = new Promise((resolve, reject) => {
     sb.test_done = resolve;
     sb.test_error = reject;
   });
-  Cu.evalInSandbox("(" + exerciseInterface.toSource() + ")()" +
-                   ".then(test_done, test_error);", sb);
+  Cu.evalInSandbox(
+    "(" +
+      exerciseInterface.toSource() +
+      ")()" +
+      ".then(test_done, test_error);",
+    sb
+  );
 
   Cu.importGlobalProperties(["indexedDB"]);
   do_test_pending();
-  Promise.all([innerPromise, exerciseInterface()])
-    .then(do_test_finished);
+  Promise.all([innerPromise, exerciseInterface()]).then(do_test_finished);
 }

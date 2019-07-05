@@ -6,14 +6,17 @@
 async function testSteps() {
   const principal = getPrincipal("http://example.com");
 
-  const dataFile =
-    getRelativeFile("storage/default/http+++example.com/ls/data.sqlite");
+  const dataFile = getRelativeFile(
+    "storage/default/http+++example.com/ls/data.sqlite"
+  );
 
-  const usageJournalFile =
-    getRelativeFile("storage/default/http+++example.com/ls/usage-journal");
+  const usageJournalFile = getRelativeFile(
+    "storage/default/http+++example.com/ls/usage-journal"
+  );
 
-  const usageFile =
-    getRelativeFile("storage/default/http+++example.com/ls/usage");
+  const usageFile = getRelativeFile(
+    "storage/default/http+++example.com/ls/usage"
+  );
 
   const data = {};
   data.key = "key1";
@@ -40,12 +43,14 @@ async function testSteps() {
   }
 
   function getBinaryOutputStream(file) {
-    var ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                  .createInstance(Ci.nsIFileOutputStream);
+    var ostream = Cc[
+      "@mozilla.org/network/file-output-stream;1"
+    ].createInstance(Ci.nsIFileOutputStream);
     ostream.init(file, -1, parseInt("0644", 8), 0);
 
-    let bstream = Cc["@mozilla.org/binaryoutputstream;1"]
-                  .createInstance(Ci.nsIBinaryOutputStream);
+    let bstream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+      Ci.nsIBinaryOutputStream
+    );
     bstream.setOutputStream(ostream);
 
     return bstream;
@@ -104,10 +109,12 @@ async function testSteps() {
 
   Services.prefs.setBoolPref("dom.storage.next_gen", true);
 
-  info("Stage 1 - " +
-       "data.sqlite file doesn't exist, " +
-       "usage-journal file doesn't exist, " +
-       "any usage file exists");
+  info(
+    "Stage 1 - " +
+      "data.sqlite file doesn't exist, " +
+      "usage-journal file doesn't exist, " +
+      "any usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -115,15 +122,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ false,
-                   /* wantUsage */ false);
+  await checkFiles(/* wantData */ false, /* wantUsage */ false);
 
   await clearTestOrigin();
 
-  info("Stage 2 - " +
-       "data.sqlite file doesn't exist, " +
-       "any usage-journal file exists, " +
-       "any usage file exists");
+  info(
+    "Stage 2 - " +
+      "data.sqlite file doesn't exist, " +
+      "any usage-journal file exists, " +
+      "any usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -132,15 +140,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ false,
-                   /* wantUsage */ false);
+  await checkFiles(/* wantData */ false, /* wantUsage */ false);
 
   await clearTestOrigin();
 
-  info("Stage 3 - " +
-       "valid data.sqlite file exists, " +
-       "usage-journal file doesn't exist, " +
-       "usage file doesn't exist");
+  info(
+    "Stage 3 - " +
+      "valid data.sqlite file exists, " +
+      "usage-journal file doesn't exist, " +
+      "usage file doesn't exist"
+  );
 
   await createTestOrigin();
 
@@ -148,15 +157,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 4 - " +
-       "valid data.sqlite file exists, " +
-       "usage-journal file doesn't exist, " +
-       "invalid (wrong file size) usage file exists");
+  info(
+    "Stage 4 - " +
+      "valid data.sqlite file exists, " +
+      "usage-journal file doesn't exist, " +
+      "invalid (wrong file size) usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -165,15 +175,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 5 - " +
-       "valid data.sqlite file exists, " +
-       "usage-journal file doesn't exist, " +
-       "invalid (wrong cookie) usage file exists");
+  info(
+    "Stage 5 - " +
+      "valid data.sqlite file exists, " +
+      "usage-journal file doesn't exist, " +
+      "invalid (wrong cookie) usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -184,29 +195,31 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 6 - " +
-       "valid data.sqlite file exists, " +
-       "usage-journal file doesn't exist, " +
-       "valid usage file exists");
+  info(
+    "Stage 6 - " +
+      "valid data.sqlite file exists, " +
+      "usage-journal file doesn't exist, " +
+      "valid usage file exists"
+  );
 
   await createTestOrigin();
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 7 - " +
-       "valid data.sqlite file exists, " +
-       "any usage-journal exists, " +
-       "usage file doesn't exist");
+  info(
+    "Stage 7 - " +
+      "valid data.sqlite file exists, " +
+      "any usage-journal exists, " +
+      "usage file doesn't exist"
+  );
 
   await createTestOrigin();
 
@@ -215,15 +228,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 8 - " +
-       "valid data.sqlite file exists, " +
-       "any usage-journal exists, " +
-       "invalid (wrong file size) usage file exists");
+  info(
+    "Stage 8 - " +
+      "valid data.sqlite file exists, " +
+      "any usage-journal exists, " +
+      "invalid (wrong file size) usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -233,15 +247,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 9 - " +
-       "valid data.sqlite file exists, " +
-       "any usage-journal exists, " +
-       "invalid (wrong cookie) usage file exists");
+  info(
+    "Stage 9 - " +
+      "valid data.sqlite file exists, " +
+      "any usage-journal exists, " +
+      "invalid (wrong cookie) usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -253,15 +268,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 10 - " +
-       "valid data.sqlite file exists, " +
-       "any usage-journal exists, " +
-       "invalid (wrong usage) usage file exists");
+  info(
+    "Stage 10 - " +
+      "valid data.sqlite file exists, " +
+      "any usage-journal exists, " +
+      "invalid (wrong usage) usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -273,15 +289,16 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 
-  info("Stage 11 - " +
-       "valid data.sqlite file exists, " +
-       "any usage-journal exists, " +
-       "valid usage file exists");
+  info(
+    "Stage 11 - " +
+      "valid data.sqlite file exists, " +
+      "any usage-journal exists, " +
+      "valid usage file exists"
+  );
 
   await createTestOrigin();
 
@@ -289,8 +306,7 @@ async function testSteps() {
 
   await initTestOrigin();
 
-  await checkFiles(/* wantData */ true,
-                   /* wantUsage */ true);
+  await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
 }

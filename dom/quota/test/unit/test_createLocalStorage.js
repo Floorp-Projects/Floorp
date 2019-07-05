@@ -3,14 +3,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const webAppsStoreFile = "webappsstore.sqlite";
   const lsArchiveFile = "storage/ls-archive.sqlite";
   const lsArchiveTmpFile = "storage/ls-archive-tmp.sqlite";
 
-  function checkArchiveFileNotExists()
-  {
+  function checkArchiveFileNotExists() {
     info("Checking archive tmp file");
 
     let archiveTmpFile = getRelativeFile(lsArchiveTmpFile);
@@ -26,8 +24,7 @@ async function testSteps()
     ok(!exists, "archive file doesn't exist");
   }
 
-  function checkArchiveFileExists()
-  {
+  function checkArchiveFileExists() {
     info("Checking archive tmp file");
 
     let archiveTmpFile = getRelativeFile(lsArchiveTmpFile);
@@ -70,7 +67,7 @@ async function testSteps()
     await requestFinished(request);
 
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 
@@ -91,7 +88,7 @@ async function testSteps()
     await requestFinished(request);
 
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 
@@ -105,8 +102,9 @@ async function testSteps()
   request = clear();
   await requestFinished(request);
 
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                .createInstance(Ci.nsIFileOutputStream);
+  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   ostream.init(appsStoreFile, -1, parseInt("0644", 8), 0);
   ostream.write("foobar", 6);
   ostream.close();
@@ -118,7 +116,7 @@ async function testSteps()
     await requestFinished(request);
 
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 
@@ -151,7 +149,7 @@ async function testSteps()
     await requestFinished(request);
 
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 

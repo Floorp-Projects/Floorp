@@ -9,9 +9,9 @@ onmessage = function(event) {
 
   worker.onmessage = function(msg) {
     postMessage(msg.data);
-  }
+  };
 
   worker.onerror = function(error) {
     postMessage(undefined);
-  }
+  };
 };

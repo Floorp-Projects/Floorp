@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const storeName = "test store";
   const indexName_ToBeDeleted = "test index to be deleted";
@@ -25,7 +24,11 @@ function* testSteps()
 
   let objectStore = db.createObjectStore(storeName, { keyPath: "foo" });
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
-  is(db.objectStoreNames.item(0), objectStore.name, "Correct object store name");
+  is(
+    db.objectStoreNames.item(0),
+    objectStore.name,
+    "Correct object store name"
+  );
 
   // create index to be deleted later in v2.
   objectStore.createIndex(indexName_ToBeDeleted, "foo");
@@ -57,20 +60,34 @@ function* testSteps()
   txn.abort();
   try {
     index.get("foo");
-    ok(false, "TransactionInactiveError shall be thrown right after a deletion of an index is aborted.");
+    ok(
+      false,
+      "TransactionInactiveError shall be thrown right after a deletion of an index is aborted."
+    );
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
-    is(e.name, "TransactionInactiveError", "TransactionInactiveError shall be thrown right after a deletion of an index is aborted.");
+    is(
+      e.name,
+      "TransactionInactiveError",
+      "TransactionInactiveError shall be thrown right after a deletion of an index is aborted."
+    );
   }
 
   yield undefined;
 
   try {
     index.get("foo");
-    ok(false, "TransactionInactiveError shall be thrown after the transaction is inactive.");
+    ok(
+      false,
+      "TransactionInactiveError shall be thrown after the transaction is inactive."
+    );
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
-    is(e.name, "TransactionInactiveError", "TransactionInactiveError shall be thrown after the transaction is inactive.");
+    is(
+      e.name,
+      "TransactionInactiveError",
+      "TransactionInactiveError shall be thrown after the transaction is inactive."
+    );
   }
 
   finishTest();

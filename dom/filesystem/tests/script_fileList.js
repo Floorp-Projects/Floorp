@@ -1,9 +1,11 @@
 /* eslint-env mozilla/frame-script */
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["File"]);
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 function createProfDFile() {
-  return Services.dirsvc.QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
+  return Services.dirsvc
+    .QueryInterface(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
 }
 
 // Creates a parametric arity directory hierarchy as a function of depth.
@@ -22,7 +24,9 @@ function createProfDFile() {
 // Returns the parent directory of the subtree.
 function createTreeFile(depth, parent) {
   if (!parent) {
-    parent = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
+    parent = Services.dirsvc
+      .QueryInterface(Ci.nsIProperties)
+      .get("TmpD", Ci.nsIFile);
     parent.append("dir-tree-test");
     parent.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
   }
@@ -60,7 +64,9 @@ function createRootFile() {
 }
 
 function createTestFile() {
-  var tmpFile = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
+  var tmpFile = Services.dirsvc
+    .QueryInterface(Ci.nsIProperties)
+    .get("TmpD", Ci.nsIFile);
   tmpFile.append("dir-test");
   tmpFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
@@ -109,7 +115,9 @@ addMessageListener("dir.open", function(e) {
 });
 
 addMessageListener("file.open", function(e) {
-  var testFile = Services.dirsvc.QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
+  var testFile = Services.dirsvc
+    .QueryInterface(Ci.nsIProperties)
+    .get("ProfD", Ci.nsIFile);
   testFile.append("prefs.js");
 
   File.createFromNsIFile(testFile).then(function(file) {

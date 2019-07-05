@@ -6,19 +6,25 @@
 
 // This is only usable from the parent process, even for doing simple stuff like
 // serializing a cert.
-var gCertMaker = Cc["@mozilla.org/security/x509certdb;1"].
-              getService(Ci.nsIX509CertDB);
+var gCertMaker = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
-var gCertOverrides = Cc["@mozilla.org/security/certoverride;1"].
-              getService(Ci.nsICertOverrideService);
+var gCertOverrides = Cc["@mozilla.org/security/certoverride;1"].getService(
+  Ci.nsICertOverrideService
+);
 
-
-addMessageListener('add-turns-certs', certs => {
+addMessageListener("add-turns-certs", certs => {
   var port = 5349;
   certs.forEach(certDescription => {
     var cert = gCertMaker.constructX509FromBase64(certDescription.cert);
-    gCertOverrides.rememberValidityOverride(certDescription.hostname, port,
-        cert, Ci.nsICertOverrideService.ERROR_UNTRUSTED, false);
+    gCertOverrides.rememberValidityOverride(
+      certDescription.hostname,
+      port,
+      cert,
+      Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+      false
+    );
   });
-  sendAsyncMessage('certs-added');
+  sendAsyncMessage("certs-added");
 });

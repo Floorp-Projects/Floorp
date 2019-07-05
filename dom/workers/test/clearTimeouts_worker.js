@@ -3,7 +3,7 @@ function timerFunction() {
   if (++count == 30) {
     close();
     postMessage("ready");
-    while (true) { }
+    while (true) {}
   }
 }
 

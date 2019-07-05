@@ -1,10 +1,13 @@
-var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 function waitForPluginVisibility(browser, shouldBeVisible, errorMessage) {
   return new Promise((resolve, reject) => {
     let windowUtils = window.windowUtils;
     let lastTransactionId = windowUtils.lastTransactionId;
-    let listener = async (event) => {
+    let listener = async event => {
       let visibility = await ContentTask.spawn(browser, null, async function() {
         let doc = content.document;
         let plugin = doc.getElementById("testplugin");
@@ -36,64 +39,102 @@ add_task(async function() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
-  let pluginTab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
-  let pluginTab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
+  let pluginTab1 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    gTestRoot + "plugin_test.html"
+  );
+  let pluginTab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    gTestRoot + "plugin_test.html"
+  );
 
-  result = await ContentTask.spawn(pluginTab1.linkedBrowser, null, async function() {
-    let doc = content.document;
-    let plugin = doc.getElementById("testplugin");
-    return !!plugin;
-  });
+  result = await ContentTask.spawn(
+    pluginTab1.linkedBrowser,
+    null,
+    async function() {
+      let doc = content.document;
+      let plugin = doc.getElementById("testplugin");
+      return !!plugin;
+    }
+  );
   is(result, true, "plugin1 is loaded");
 
-  result = await ContentTask.spawn(pluginTab2.linkedBrowser, null, async function() {
-    let doc = content.document;
-    let plugin = doc.getElementById("testplugin");
-    return !!plugin;
-  });
+  result = await ContentTask.spawn(
+    pluginTab2.linkedBrowser,
+    null,
+    async function() {
+      let doc = content.document;
+      let plugin = doc.getElementById("testplugin");
+      return !!plugin;
+    }
+  );
   is(result, true, "plugin2 is loaded");
 
   // plugin tab 2 should be selected
   is(gBrowser.selectedTab == pluginTab2, true, "plugin2 is selected");
 
-  await waitForPluginVisibility(pluginTab1.linkedBrowser,
-                                false, "plugin1 should be hidden");
+  await waitForPluginVisibility(
+    pluginTab1.linkedBrowser,
+    false,
+    "plugin1 should be hidden"
+  );
 
-  await waitForPluginVisibility(pluginTab2.linkedBrowser,
-                                true, "plugin2 should be visible");
+  await waitForPluginVisibility(
+    pluginTab2.linkedBrowser,
+    true,
+    "plugin2 should be visible"
+  );
 
   // select plugin1 tab
   tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = pluginTab1;
   await tabSwitchedPromise;
 
-  await waitForPluginVisibility(pluginTab1.linkedBrowser,
-                                true, "plugin1 should be visible");
+  await waitForPluginVisibility(
+    pluginTab1.linkedBrowser,
+    true,
+    "plugin1 should be visible"
+  );
 
-  await waitForPluginVisibility(pluginTab2.linkedBrowser,
-                                false, "plugin2 should be hidden");
+  await waitForPluginVisibility(
+    pluginTab2.linkedBrowser,
+    false,
+    "plugin2 should be hidden"
+  );
 
   // select plugin2 tab
   tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = pluginTab2;
   await tabSwitchedPromise;
 
-  await waitForPluginVisibility(pluginTab1.linkedBrowser,
-                                false, "plugin1 should be hidden");
+  await waitForPluginVisibility(
+    pluginTab1.linkedBrowser,
+    false,
+    "plugin1 should be hidden"
+  );
 
-  await waitForPluginVisibility(pluginTab2.linkedBrowser,
-                                true, "plugin2 should be visible");
+  await waitForPluginVisibility(
+    pluginTab2.linkedBrowser,
+    true,
+    "plugin2 should be visible"
+  );
 
   // select test tab
   tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = testTab;
   await tabSwitchedPromise;
 
-  await waitForPluginVisibility(pluginTab1.linkedBrowser,
-                                false, "plugin1 should be hidden");
+  await waitForPluginVisibility(
+    pluginTab1.linkedBrowser,
+    false,
+    "plugin1 should be hidden"
+  );
 
-  await waitForPluginVisibility(pluginTab2.linkedBrowser,
-                                false, "plugin2 should be hidden");
+  await waitForPluginVisibility(
+    pluginTab2.linkedBrowser,
+    false,
+    "plugin2 should be hidden"
+  );
 
   gBrowser.removeTab(pluginTab1);
   gBrowser.removeTab(pluginTab2);

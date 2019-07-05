@@ -1,9 +1,12 @@
 "use strict";
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 function clearCache() {
-  const cacheStorageSrv = Cc["@mozilla.org/netwerk/cache-storage-service;1"].
-                          getService(Ci.nsICacheStorageService);
+  const cacheStorageSrv = Cc[
+    "@mozilla.org/netwerk/cache-storage-service;1"
+  ].getService(Ci.nsICacheStorageService);
   cacheStorageSrv.clear();
 }
 

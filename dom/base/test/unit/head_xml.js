@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const I                    = Ci;
-const C                    = Cc;
+const I = Ci;
+const C = Cc;
 
-const nsIFile         = I.nsIFile;
-const nsIProperties        = I.nsIProperties;
-const nsIFileInputStream   = I.nsIFileInputStream;
-const nsIInputStream       = I.nsIInputStream;
+const nsIFile = I.nsIFile;
+const nsIProperties = I.nsIProperties;
+const nsIFileInputStream = I.nsIFileInputStream;
+const nsIInputStream = I.nsIInputStream;
 
 function getParser() {
   var parser = new DOMParser();
@@ -21,7 +21,7 @@ function getParser() {
 var __testsDirectory = null;
 
 function ParseFile(file) {
-  if (typeof(file) == "string") {
+  if (typeof file == "string") {
     if (!__testsDirectory) {
       __testsDirectory = do_get_cwd();
     }
@@ -32,22 +32,27 @@ function ParseFile(file) {
 
   Assert.equal(file instanceof nsIFile, true);
 
-  var fileStr = C["@mozilla.org/network/file-input-stream;1"]
-                 .createInstance(nsIFileInputStream);
+  var fileStr = C["@mozilla.org/network/file-input-stream;1"].createInstance(
+    nsIFileInputStream
+  );
   // Init for readonly reading
   fileStr.init(file, 0x01, 0o400, nsIFileInputStream.CLOSE_ON_EOF);
   return ParseXML(fileStr);
 }
 
 function ParseXML(data) {
-  if (typeof(data) == "string") {
+  if (typeof data == "string") {
     return getParser().parseFromString(data, "application/xml");
   }
 
   Assert.equal(data instanceof nsIInputStream, true);
 
-  return getParser().parseFromStream(data, "UTF-8", data.available(),
-                                     "application/xml");
+  return getParser().parseFromStream(
+    data,
+    "UTF-8",
+    data.available(),
+    "application/xml"
+  );
 }
 
 function DOMSerializer() {
@@ -59,7 +64,7 @@ function SerializeXML(node) {
 }
 
 function roundtrip(obj) {
-  if (typeof(obj) == "string") {
+  if (typeof obj == "string") {
     return SerializeXML(ParseXML(obj));
   }
 
@@ -79,8 +84,13 @@ function do_compare_attrs(e1, e2) {
     if (att.namespaceURI != xmlns) {
       var att2 = a2.getNamedItemNS(att.namespaceURI, att.localName);
       if (!att2) {
-        do_throw("Missing attribute with namespaceURI '" + att.namespaceURI +
-                 "' and localName '" + att.localName + "'");
+        do_throw(
+          "Missing attribute with namespaceURI '" +
+            att.namespaceURI +
+            "' and localName '" +
+            att.localName +
+            "'"
+        );
       }
       Assert.equal(att.value, att2.value);
     }
@@ -90,28 +100,28 @@ function do_compare_attrs(e1, e2) {
 function do_check_equiv(dom1, dom2) {
   Assert.equal(dom1.nodeType, dom2.nodeType);
   switch (dom1.nodeType) {
-  case Node.PROCESSING_INSTRUCTION_NODE:
-    Assert.equal(dom1.target, dom2.target);
-    Assert.equal(dom1.data, dom2.data);
-  case Node.TEXT_NODE:
-  case Node.CDATA_SECTION_NODE:
-  case Node.COMMENT_NODE:
-    Assert.equal(dom1.data, dom2.data);
-    break;
-  case Node.ELEMENT_NODE:
-    Assert.equal(dom1.namespaceURI, dom2.namespaceURI);
-    Assert.equal(dom1.localName, dom2.localName);
-    // Compare attrs in both directions -- do_compare_attrs does a
-    // subset check.
-    do_compare_attrs(dom1, dom2);
-    do_compare_attrs(dom2, dom1);
+    case Node.PROCESSING_INSTRUCTION_NODE:
+      Assert.equal(dom1.target, dom2.target);
+      Assert.equal(dom1.data, dom2.data);
+    case Node.TEXT_NODE:
+    case Node.CDATA_SECTION_NODE:
+    case Node.COMMENT_NODE:
+      Assert.equal(dom1.data, dom2.data);
+      break;
+    case Node.ELEMENT_NODE:
+      Assert.equal(dom1.namespaceURI, dom2.namespaceURI);
+      Assert.equal(dom1.localName, dom2.localName);
+      // Compare attrs in both directions -- do_compare_attrs does a
+      // subset check.
+      do_compare_attrs(dom1, dom2);
+      do_compare_attrs(dom2, dom1);
     // Fall through
-  case Node.DOCUMENT_NODE:
-    Assert.equal(dom1.childNodes.length, dom2.childNodes.length);
-    for (var i = 0; i < dom1.childNodes.length; ++i) {
-      do_check_equiv(dom1.childNodes.item(i), dom2.childNodes.item(i));
-    }
-    break;
+    case Node.DOCUMENT_NODE:
+      Assert.equal(dom1.childNodes.length, dom2.childNodes.length);
+      for (var i = 0; i < dom1.childNodes.length; ++i) {
+        do_check_equiv(dom1.childNodes.item(i), dom2.childNodes.item(i));
+      }
+      break;
   }
 }
 
@@ -130,8 +140,9 @@ function ScriptableInput(arg) {
     arg = arg.inputStream;
   }
 
-  var str = C["@mozilla.org/scriptableinputstream;1"].
-    createInstance(I.nsIScriptableInputStream);
+  var str = C["@mozilla.org/scriptableinputstream;1"].createInstance(
+    I.nsIScriptableInputStream
+  );
 
   str.init(arg);
 

@@ -15,7 +15,7 @@ declTest("asyncMessage testing", {
 
       let promise = new Promise(resolve => {
         actorChild.sendAsyncMessage("init", {});
-        actorChild.done = (data) => resolve(data);
+        actorChild.done = data => resolve(data);
       }).then(data => {
         ok(data.initial, "Initial should be true.");
         ok(data.toParent, "ToParent should be true.");
@@ -38,7 +38,7 @@ declTest("asyncMessage without both sides", {
 
       let promise = new Promise(resolve => {
         actorChild.sendAsyncMessage("init", {});
-        actorChild.done = (data) => resolve(data);
+        actorChild.done = data => resolve(data);
       }).then(data => {
         ok(data.initial, "Initial should be true.");
         ok(data.toParent, "ToParent should be true.");

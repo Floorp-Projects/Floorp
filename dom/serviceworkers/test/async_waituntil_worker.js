@@ -4,7 +4,7 @@ var result = "Failed";
 
 onactivate = function(event) {
   event.waitUntil(clients.claim());
-}
+};
 
 onmessage = function(event) {
   if (event.data === "Start") {
@@ -23,9 +23,9 @@ onmessage = function(event) {
       resolvePromise();
     }
   }
-}
+};
 
-addEventListener('fetch', e => {
+addEventListener("fetch", e => {
   let respondWithPromise = new Promise(function(res, rej) {
     setTimeout(() => {
       res(new Response("ok"));
@@ -35,12 +35,14 @@ addEventListener('fetch', e => {
   // Test that waitUntil can be called in the promise handler of the existing
   // lifetime extension promise.
   respondWithPromise.then(() => {
-    e.waitUntil(clients.matchAll().then((cls) => {
-      if (cls.length != 1) {
-        dump("ERROR: no controlled clients.\n");
-      }
-      client = cls[0];
-      client.postMessage("Done");
-    }));
+    e.waitUntil(
+      clients.matchAll().then(cls => {
+        if (cls.length != 1) {
+          dump("ERROR: no controlled clients.\n");
+        }
+        client = cls[0];
+        client.postMessage("Done");
+      })
+    );
   });
 });

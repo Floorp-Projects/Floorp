@@ -1,1 +1,1 @@
-self.postMessage('worker-networkresponse');
+self.postMessage("worker-networkresponse");

@@ -9,7 +9,7 @@ const PARENT_ORIGIN = "http://mochi.test:8888/";
 // before we start sending synthesized widget events. Here, we avoid using
 // default values used in Gecko to insure everything works as expected.
 const POINTER_MOUSE_ID = 7;
-const POINTER_PEN_ID   = 8;
+const POINTER_PEN_ID = 8;
 const POINTER_TOUCH_ID = 9; // Extend for multiple touch points if needed.
 
 // Setup environment.
@@ -23,15 +23,19 @@ function resultCallback(aTestObj) {
   var message = aTestObj["name"] + " (";
   message += "Get: " + JSON.stringify(aTestObj["status"]) + ", ";
   message += "Expect: " + JSON.stringify(aTestObj["PASS"]) + ")";
-  window.opener.postMessage({type: "RESULT",
-                             message: message,
-                             result: aTestObj["status"] === aTestObj["PASS"]},
-                            PARENT_ORIGIN);
+  window.opener.postMessage(
+    {
+      type: "RESULT",
+      message: message,
+      result: aTestObj["status"] === aTestObj["PASS"],
+    },
+    PARENT_ORIGIN
+  );
 }
 
 add_result_callback(resultCallback);
 add_completion_callback(() => {
-  window.opener.postMessage({type: "FIN"}, PARENT_ORIGIN);
+  window.opener.postMessage({ type: "FIN" }, PARENT_ORIGIN);
 });
 
 window.addEventListener("load", () => {
@@ -40,21 +44,32 @@ window.addEventListener("load", () => {
     type: "START",
     message: {
       mouseId: POINTER_MOUSE_ID,
-      penId:   POINTER_PEN_ID,
-      touchId: POINTER_TOUCH_ID
-    }
-  }
+      penId: POINTER_PEN_ID,
+      touchId: POINTER_TOUCH_ID,
+    },
+  };
   window.opener.postMessage(startMessage, PARENT_ORIGIN);
 });
 
 function addListeners(elem) {
-  if(!elem)
+  if (!elem) {
     return;
-  var All_Events = ["pointerdown","pointerup","pointercancel","pointermove","pointerover","pointerout",
-                    "pointerenter","pointerleave","gotpointercapture","lostpointercapture"];
+  }
+  var All_Events = [
+    "pointerdown",
+    "pointerup",
+    "pointercancel",
+    "pointermove",
+    "pointerover",
+    "pointerout",
+    "pointerenter",
+    "pointerleave",
+    "gotpointercapture",
+    "lostpointercapture",
+  ];
   All_Events.forEach(function(name) {
     elem.addEventListener(name, function(event) {
-      console.log('('+event.type+')-('+event.pointerType+')');
+      console.log("(" + event.type + ")-(" + event.pointerType + ")");
 
       // Perform checks only for trusted events.
       if (!event.isTrusted) {
@@ -64,17 +79,16 @@ function addListeners(elem) {
       // Compute the desired event.pointerId from event.pointerType.
       var pointerId = {
         mouse: POINTER_MOUSE_ID,
-        pen:   POINTER_PEN_ID,
-        touch: POINTER_TOUCH_ID
+        pen: POINTER_PEN_ID,
+        touch: POINTER_TOUCH_ID,
       }[event.pointerType];
 
       // Compare the pointerId.
       resultCallback({
-        name:   "Mismatched event.pointerId recieved.",
+        name: "Mismatched event.pointerId recieved.",
         status: event.pointerId,
-        PASS:   pointerId
+        PASS: pointerId,
       });
-
     });
   });
 }

@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreInfo = [
     { name: "foo", options: { keyPath: "id" }, location: 1 },
@@ -26,17 +25,16 @@ function* testSteps()
 
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
-    let objectStore = info.hasOwnProperty("options") ?
-                      db.createObjectStore(info.name, info.options) :
-                      db.createObjectStore(info.name);
+    let objectStore = info.hasOwnProperty("options")
+      ? db.createObjectStore(info.name, info.options)
+      : db.createObjectStore(info.name);
 
     // Test index creation, and that it ends up in indexNames.
     for (let j = 0; j < indexInfo.length; j++) {
       let info = indexInfo[j];
-      info.hasOwnProperty("options") ?
-        objectStore.createIndex(info.name, info.keyPath,
-                                info.options) :
-        objectStore.createIndex(info.name, info.keyPath);
+      info.hasOwnProperty("options")
+        ? objectStore.createIndex(info.name, info.keyPath, info.options)
+        : objectStore.createIndex(info.name, info.keyPath);
     }
   }
 
@@ -50,15 +48,21 @@ function* testSteps()
     let info = objectStoreInfo[i];
     objectStoreNames.push(info.name);
 
-    is(db.objectStoreNames[info.location], info.name,
-       "Got objectStore name in the right location");
+    is(
+      db.objectStoreNames[info.location],
+      info.name,
+      "Got objectStore name in the right location"
+    );
 
     let trans = db.transaction(info.name);
     let objectStore = trans.objectStore(info.name);
     for (let j = 0; j < indexInfo.length; j++) {
       let info = indexInfo[j];
-      is(objectStore.indexNames[info.location], info.name,
-         "Got index name in the right location");
+      is(
+        objectStore.indexNames[info.location],
+        info.name,
+        "Got index name in the right location"
+      );
     }
   }
 
@@ -66,8 +70,11 @@ function* testSteps()
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
 
-    is(trans.objectStoreNames[info.location], info.name,
-       "Got objectStore name in the right location");
+    is(
+      trans.objectStoreNames[info.location],
+      info.name,
+      "Got objectStore name in the right location"
+    );
   }
 
   db.close();
@@ -85,15 +92,21 @@ function* testSteps()
     let info = objectStoreInfo[i];
     objectStoreNames.push(info.name);
 
-    is(db.objectStoreNames[info.location], info.name,
-       "Got objectStore name in the right location");
+    is(
+      db.objectStoreNames[info.location],
+      info.name,
+      "Got objectStore name in the right location"
+    );
 
     let trans = db.transaction(info.name);
     let objectStore = trans.objectStore(info.name);
     for (let j = 0; j < indexInfo.length; j++) {
       let info = indexInfo[j];
-      is(objectStore.indexNames[info.location], info.name,
-         "Got index name in the right location");
+      is(
+        objectStore.indexNames[info.location],
+        info.name,
+        "Got index name in the right location"
+      );
     }
   }
 
@@ -101,8 +114,11 @@ function* testSteps()
   for (let i = 0; i < objectStoreInfo.length; i++) {
     let info = objectStoreInfo[i];
 
-    is(trans.objectStoreNames[info.location], info.name,
-       "Got objectStore name in the right location");
+    is(
+      trans.objectStoreNames[info.location],
+      info.name,
+      "Got objectStore name in the right location"
+    );
   }
 
   db.close();

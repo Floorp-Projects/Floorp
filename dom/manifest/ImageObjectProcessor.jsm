@@ -21,8 +21,10 @@
 /* globals Components */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -33,12 +35,12 @@ function ImageObjectProcessor(aConsole, aExtractor) {
 
 // Static getters
 Object.defineProperties(ImageObjectProcessor, {
-  "decimals": {
+  decimals: {
     get() {
       return /^\d+$/;
     },
   },
-  "anyRegEx": {
+  anyRegEx: {
     get() {
       return new RegExp("any", "i");
     },
@@ -46,7 +48,9 @@ Object.defineProperties(ImageObjectProcessor, {
 });
 
 ImageObjectProcessor.prototype.process = function(
-  aManifest, aBaseURL, aMemberName
+  aManifest,
+  aBaseURL,
+  aMemberName
 ) {
   const spec = {
     objectName: "manifest",
@@ -60,7 +64,8 @@ ImageObjectProcessor.prototype.process = function(
   const value = extractor.extractValue(spec);
   if (Array.isArray(value)) {
     // Filter out images whose "src" is not useful.
-    value.filter(item => !!processSrcMember(item, aBaseURL))
+    value
+      .filter(item => !!processSrcMember(item, aBaseURL))
       .map(toImageObject)
       .forEach(image => images.push(image));
   }
@@ -68,9 +73,9 @@ ImageObjectProcessor.prototype.process = function(
 
   function toImageObject(aImageSpec) {
     return {
-      "src": processSrcMember(aImageSpec, aBaseURL),
-      "type": processTypeMember(aImageSpec),
-      "sizes": processSizesMember(aImageSpec),
+      src: processSrcMember(aImageSpec, aBaseURL),
+      type: processTypeMember(aImageSpec),
+      sizes: processSizesMember(aImageSpec),
     };
   }
 
@@ -86,7 +91,11 @@ ImageObjectProcessor.prototype.process = function(
     };
     let value = extractor.extractValue(spec);
     if (value) {
-      value = Services.netUtils.parseRequestContentType(value, charset, hadCharset);
+      value = Services.netUtils.parseRequestContentType(
+        value,
+        charset,
+        hadCharset
+      );
     }
     return value || undefined;
   }
@@ -121,11 +130,12 @@ ImageObjectProcessor.prototype.process = function(
     const value = extractor.extractValue(spec);
     if (value) {
       // Split on whitespace and filter out invalid values.
-      value.split(/\s+/)
+      value
+        .split(/\s+/)
         .filter(isValidSizeValue)
         .reduce((collector, size) => collector.add(size), sizes);
     }
-    return (sizes.size) ? Array.from(sizes).join(" ") : undefined;
+    return sizes.size ? Array.from(sizes).join(" ") : undefined;
     // Implementation of HTML's link@size attribute checker.
     function isValidSizeValue(aSize) {
       const size = aSize.toLowerCase();
@@ -141,7 +151,7 @@ ImageObjectProcessor.prototype.process = function(
       const h = widthAndHeight.join("x");
       const validStarts = !w.startsWith("0") && !h.startsWith("0");
       const validDecimals = ImageObjectProcessor.decimals.test(w + h);
-      return (validStarts && validDecimals);
+      return validStarts && validDecimals;
     }
   }
 };

@@ -24,7 +24,8 @@ function runTest() {
     SimpleTest.finish();
   });
 
-  iframe.src = "data:text/html,<html><body style='min-height: 5000px; min-width: 5000px;'></body><script>window.scrollTo(4000, 4000);</script></html>";
+  iframe.src =
+    "data:text/html,<html><body style='min-height: 5000px; min-width: 5000px;'></body><script>window.scrollTo(4000, 4000);</script></html>";
 }
 
 addEventListener("testready", runTest);

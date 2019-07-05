@@ -5,9 +5,11 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+function* testSteps() {
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
@@ -17,9 +19,10 @@ function* testSteps()
   let db = event.target.result;
 
   for (let autoIncrement of [false, true]) {
-    let objectStore =
-      db.createObjectStore(autoIncrement, { keyPath: "id",
-                                            autoIncrement });
+    let objectStore = db.createObjectStore(autoIncrement, {
+      keyPath: "id",
+      autoIncrement,
+    });
     objectStore.createIndex("", "index", { unique: true });
 
     for (let i = 0; i < 10; i++) {
@@ -31,8 +34,9 @@ function* testSteps()
   is(event.type, "success", "expect a success event");
 
   for (let autoIncrement of [false, true]) {
-    let objectStore = db.transaction(autoIncrement, "readwrite")
-                    .objectStore(autoIncrement);
+    let objectStore = db
+      .transaction(autoIncrement, "readwrite")
+      .objectStore(autoIncrement);
 
     request = objectStore.put({ id: 5, index: 6 });
     request.onsuccess = unexpectedSuccessHandler;
@@ -53,7 +57,10 @@ function* testSteps()
 
       request = cursor.update(cursor.value);
       request.onsuccess = unexpectedSuccessHandler;
-      request.addEventListener("error", new ExpectError("ConstraintError", true));
+      request.addEventListener(
+        "error",
+        new ExpectError("ConstraintError", true)
+      );
     };
 
     yield undefined;

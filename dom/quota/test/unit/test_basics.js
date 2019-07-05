@@ -5,31 +5,30 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const storageFile = "storage.sqlite";
 
   const metadataFiles = [
     {
       path: "storage/permanent/chrome/.metadata",
-      shouldExistAfterInit: false
+      shouldExistAfterInit: false,
     },
 
     {
       path: "storage/permanent/chrome/.metadata-tmp",
-      shouldExistAfterInit: false
+      shouldExistAfterInit: false,
     },
 
     {
       path: "storage/permanent/chrome/.metadata-v2",
-      shouldExistAfterInit: true
+      shouldExistAfterInit: true,
     },
 
     {
       path: "storage/permanent/chrome/.metadata-v2-tmp",
-      shouldExistAfterInit: false
-    }
-  ]
+      shouldExistAfterInit: false,
+    },
+  ];
 
   info("Clearing");
 

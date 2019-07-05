@@ -13,7 +13,7 @@ function info(text) {
 }
 
 function ok(test, message) {
-  postMessage({ type: 'ok', test: test, message: message });
+  postMessage({ type: "ok", test: test, message: message });
 }
 
 /**
@@ -35,41 +35,57 @@ function makeHandler(nameTemplate, eventName, expectedState, prefix, custom) {
     ok(e.type == eventName, prefix + "event type should be " + eventName);
     ok(!e.bubbles, prefix + "event should not bubble");
     ok(!e.cancelable, prefix + "event should not be cancelable");
-    ok(e.target == self, prefix + "the event target should be the worker scope");
-    ok(eventName == 'online' ? navigator.onLine : !navigator.onLine, prefix + "navigator.onLine " + navigator.onLine + " should reflect event " + eventName);
+    ok(
+      e.target == self,
+      prefix + "the event target should be the worker scope"
+    );
+    ok(
+      eventName == "online" ? navigator.onLine : !navigator.onLine,
+      prefix +
+        "navigator.onLine " +
+        navigator.onLine +
+        " should reflect event " +
+        eventName
+    );
 
     if (custom) {
       custom();
     }
-  }
+  };
 }
-
-
 
 var lastTest = false;
 
 function lastTestTest() {
   if (lastTest) {
-    postMessage({ type: 'finished' });
+    postMessage({ type: "finished" });
     close();
   }
 }
 
 for (var event of ["online", "offline"]) {
-  addEventListener(event,
-                   makeHandler(
-                     "addEventListener('%1', ..., false)",
-                     event, 1, "Child Worker", lastTestTest
-                   ),
-                   false);
+  addEventListener(
+    event,
+    makeHandler(
+      "addEventListener('%1', ..., false)",
+      event,
+      1,
+      "Child Worker",
+      lastTestTest
+    ),
+    false
+  );
 }
 
 onmessage = function(e) {
-  if (e.data.type === 'lastTest') {
+  if (e.data.type === "lastTest") {
     lastTest = true;
-  } else if (e.data.type === 'navigatorState') {
-    ok(e.data.state === navigator.onLine, "Child and parent navigator state should match");
+  } else if (e.data.type === "navigatorState") {
+    ok(
+      e.data.state === navigator.onLine,
+      "Child and parent navigator state should match"
+    );
   }
-}
+};
 
-postMessage({ type: 'ready' });
+postMessage({ type: "ready" });

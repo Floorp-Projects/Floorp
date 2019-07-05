@@ -9,13 +9,21 @@ var client;
 var context;
 
 function ok(a, msg) {
-  client.postMessage({type: "status", status: !!a,
-                      msg: a + ": " + msg, context});
+  client.postMessage({
+    type: "status",
+    status: !!a,
+    msg: a + ": " + msg,
+    context,
+  });
 }
 
 function is(a, b, msg) {
-  client.postMessage({type: "status", status: a === b,
-                      msg: a + " === " + b + ": " + msg, context });
+  client.postMessage({
+    type: "status",
+    status: a === b,
+    msg: a + " === " + b + ": " + msg,
+    context,
+  });
 }
 
 function workerTestArrayEquals(a, b) {
@@ -36,8 +44,10 @@ function testDone() {
 
 function workerTestGetPrefs(prefs, cb) {
   addEventListener("message", function workerTestGetPrefsCB(e) {
-    if (e.data.type != "returnPrefs" ||
-        !workerTestArrayEquals(prefs, e.data.prefs)) {
+    if (
+      e.data.type != "returnPrefs" ||
+      !workerTestArrayEquals(prefs, e.data.prefs)
+    ) {
       return;
     }
     removeEventListener("message", workerTestGetPrefsCB);
@@ -52,8 +62,10 @@ function workerTestGetPrefs(prefs, cb) {
 
 function workerTestGetPermissions(permissions, cb) {
   addEventListener("message", function workerTestGetPermissionsCB(e) {
-    if (e.data.type != "returnPermissions" ||
-        !workerTestArrayEquals(permissions, e.data.permissions)) {
+    if (
+      e.data.type != "returnPermissions" ||
+      !workerTestArrayEquals(permissions, e.data.permissions)
+    ) {
       return;
     }
     removeEventListener("message", workerTestGetPermissionsCB);
@@ -93,25 +105,30 @@ addEventListener("message", function workerWrapperOnMessage(e) {
         type: "status",
         status: false,
         context,
-        msg: "worker failed to import " + data.script + "; error: " + err.message,
+        msg:
+          "worker failed to import " + data.script + "; error: " + err.message,
       });
     }
   }
   if ("ServiceWorker" in self) {
-    self.clients.matchAll({ includeUncontrolled: true }).then(function(clients) {
-      for (var i = 0; i < clients.length; ++i) {
-        if (clients[i].url.indexOf("message_receiver.html") > -1) {
-          client = clients[i];
-          break;
+    self.clients
+      .matchAll({ includeUncontrolled: true })
+      .then(function(clients) {
+        for (var i = 0; i < clients.length; ++i) {
+          if (clients[i].url.indexOf("message_receiver.html") > -1) {
+            client = clients[i];
+            break;
+          }
         }
-      }
-      if (!client) {
-        dump("We couldn't find the message_receiver window, the test will fail\n");
-      }
-      context = "ServiceWorker";
-      runScript();
-      completeInstall();
-    });
+        if (!client) {
+          dump(
+            "We couldn't find the message_receiver window, the test will fail\n"
+          );
+        }
+        context = "ServiceWorker";
+        runScript();
+        completeInstall();
+      });
   } else {
     client = self;
     context = "Worker";
@@ -120,5 +137,5 @@ addEventListener("message", function workerWrapperOnMessage(e) {
 });
 
 addEventListener("install", e => {
-  e.waitUntil(new Promise(resolve => completeInstall = resolve));
+  e.waitUntil(new Promise(resolve => (completeInstall = resolve)));
 });

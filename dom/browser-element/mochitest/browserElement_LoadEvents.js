@@ -25,7 +25,8 @@ function runTest() {
   var iframe = document.createElement("iframe");
   iframe.setAttribute("mozbrowser", "true");
   iframe.id = "iframe";
-  iframe.src = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_LoadEvents.html";
+  iframe.src =
+    "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_LoadEvents.html";
 
   function loadstart(e) {
     ok(e.isTrusted, "Event should be trusted.");
@@ -45,7 +46,11 @@ function runTest() {
     // Fails with: event's reported location -
     //   got "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_LoadEvents.html",
     //   expected "http://example.com/tests/dom/browser-element/mochitest/file_empty.html"
-    todo_is(e.detail.url, browserElementTestHelpers.emptyPage1, "event's reported location");
+    todo_is(
+      e.detail.url,
+      browserElementTestHelpers.emptyPage1,
+      "event's reported location"
+    );
   }
 
   function loadend(e) {
@@ -53,7 +58,11 @@ function runTest() {
     ok(seenLoadStart, "loadend after loadstart.");
     ok(!seenLoadEnd, "Just one loadend event.");
     ok(seenLocationChange, "loadend after locationchange.");
-    is(e.detail.backgroundColor, "rgb(0, 128, 0)", "Expected background color reported");
+    is(
+      e.detail.backgroundColor,
+      "rgb(0, 128, 0)",
+      "Expected background color reported"
+    );
     seenLoadEnd = true;
   }
 
@@ -98,7 +107,11 @@ function runTest2() {
     seenLocationChange = true;
     ok(seenLoadStart, "Location change after load start.");
     ok(!seenLoadEnd, "Location change before load end.");
-    is(e.detail.url, browserElementTestHelpers.emptyPage2, "event's reported location");
+    is(
+      e.detail.url,
+      browserElementTestHelpers.emptyPage2,
+      "event's reported location"
+    );
   });
 
   iframe.addEventListener("mozbrowserloadend", function(e) {
@@ -107,7 +120,11 @@ function runTest2() {
     seenLoadEnd = true;
     ok(seenLoadStart, "Load end after load start.");
     ok(seenLocationChange, "Load end after location change.");
-    is(e.detail.backgroundColor, "rgba(0, 0, 0, 0)", "Expected background color reported");
+    is(
+      e.detail.backgroundColor,
+      "rgba(0, 0, 0, 0)",
+      "Expected background color reported"
+    );
   });
 
   iframe.src = browserElementTestHelpers.emptyPage2;

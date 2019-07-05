@@ -5,10 +5,10 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name = this.window ? window.location.pathname
-                           : "test_clone_before_key_evaluation.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_clone_before_key_evaluation.js";
   const objectStoreInfo = {
     name: "customers",
     options: { keyPath: "ssn" },
@@ -38,14 +38,18 @@ function* testSteps()
 
     info("Creating objectStore");
 
-    let objectStore = db.createObjectStore(objectStoreInfo.name,
-                                           objectStoreInfo.options);
+    let objectStore = db.createObjectStore(
+      objectStoreInfo.name,
+      objectStoreInfo.options
+    );
 
     info("Creating index");
 
-    objectStore.createIndex(indexInfo.name,
-                            indexInfo.keyPath,
-                            indexInfo.options);
+    objectStore.createIndex(
+      indexInfo.name,
+      indexInfo.keyPath,
+      indexInfo.options
+    );
 
     switch (test) {
       case 1: {
@@ -54,9 +58,11 @@ function* testSteps()
         let idCount = 0;
 
         const customerData = {
-          ssn: "444-44-4444", name: "Bill", age: 25, email: "bill@company.com",
-          get id()
-          {
+          ssn: "444-44-4444",
+          name: "Bill",
+          age: 25,
+          email: "bill@company.com",
+          get id() {
             idCount++;
             objectStore.deleteIndex(indexInfo.name);
             return "ID_001";
@@ -78,7 +84,10 @@ function* testSteps()
         let idCount = 0;
 
         const customerData = {
-          ssn: "555-55-5555", name: "Joe", age: 52, email: "joe@company.com",
+          ssn: "555-55-5555",
+          name: "Joe",
+          age: 52,
+          email: "joe@company.com",
         };
 
         Object.defineProperty(Object.prototype, "id", {

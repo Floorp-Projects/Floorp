@@ -9,8 +9,10 @@
  * appropriate action here in the parent.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {BrowserElementPromptService} = ChromeUtils.import("resource://gre/modules/BrowserElementPromptService.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { BrowserElementPromptService } = ChromeUtils.import(
+  "resource://gre/modules/BrowserElementPromptService.jsm"
+);
 
 function debug(msg) {
   // dump("BrowserElementParent - " + msg + "\n");
@@ -18,7 +20,9 @@ function debug(msg) {
 
 function handleWindowEvent(e) {
   if (this._browserElementParents) {
-    let beps = ChromeUtils.nondeterministicGetWeakMapKeys(this._browserElementParents);
+    let beps = ChromeUtils.nondeterministicGetWeakMapKeys(
+      this._browserElementParents
+    );
     beps.forEach(bep => bep._handleOwnerEvent(e));
   }
 }
@@ -51,19 +55,28 @@ function BrowserElementParent() {
   this._pendingPromises = {};
   this._pendingDOMFullscreen = false;
 
-  Services.obs.addObserver(this, "oop-frameloader-crashed", /* ownsWeak = */ true);
-  Services.obs.addObserver(this, "ask-children-to-execute-copypaste-command", /* ownsWeak = */ true);
+  Services.obs.addObserver(
+    this,
+    "oop-frameloader-crashed",
+    /* ownsWeak = */ true
+  );
+  Services.obs.addObserver(
+    this,
+    "ask-children-to-execute-copypaste-command",
+    /* ownsWeak = */ true
+  );
   Services.obs.addObserver(this, "back-docommand", /* ownsWeak = */ true);
 }
 
 BrowserElementParent.prototype = {
-
   classDescription: "BrowserElementAPI implementation",
   classID: Components.ID("{9f171ac4-0939-4ef8-b360-3408aedc3060}"),
   contractID: "@mozilla.org/dom/browser-element-api;1",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserElementAPI,
-                                          Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIBrowserElementAPI,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   setFrameLoader(frameLoader) {
     debug("Setting frameLoader");
@@ -88,15 +101,22 @@ BrowserElementParent.prototype = {
       let handler = handleWindowEvent.bind(this._window);
       let windowEvents = ["visibilitychange", "fullscreenchange"];
       for (let event of windowEvents) {
-        Services.els.addSystemEventListener(this._window, event, handler,
-                                            /* useCapture = */ true);
+        Services.els.addSystemEventListener(
+          this._window,
+          event,
+          handler,
+          /* useCapture = */ true
+        );
       }
     }
 
     this._window._browserElementParents.set(this, null);
 
     // Insert ourself into the prompt service.
-    BrowserElementPromptService.mapFrameToBrowserElementParent(this._frameElement, this);
+    BrowserElementPromptService.mapFrameToBrowserElementParent(
+      this._frameElement,
+      this
+    );
     this._setupMessageListener();
   },
 
@@ -135,43 +155,46 @@ BrowserElementParent.prototype = {
     // We use a single message and dispatch to various function based
     // on data.msg_name
     let mmCalls = {
-      "hello": this._recvHello,
-      "loadstart": this._fireProfiledEventFromMsg,
-      "loadend": this._fireProfiledEventFromMsg,
-      "close": this._fireEventFromMsg,
-      "error": this._fireEventFromMsg,
-      "firstpaint": this._fireProfiledEventFromMsg,
-      "documentfirstpaint": this._fireProfiledEventFromMsg,
+      hello: this._recvHello,
+      loadstart: this._fireProfiledEventFromMsg,
+      loadend: this._fireProfiledEventFromMsg,
+      close: this._fireEventFromMsg,
+      error: this._fireEventFromMsg,
+      firstpaint: this._fireProfiledEventFromMsg,
+      documentfirstpaint: this._fireProfiledEventFromMsg,
       "got-can-go-back": this._gotAsyncResult,
       "got-can-go-forward": this._gotAsyncResult,
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
       "exit-dom-fullscreen": this._exitDomFullscreen,
-      "scrollviewchange": this._handleScrollViewChange,
-      "caretstatechanged": this._handleCaretStateChanged,
+      scrollviewchange: this._handleScrollViewChange,
+      caretstatechanged: this._handleCaretStateChanged,
     };
 
     let mmSecuritySensitiveCalls = {
-      "audioplaybackchange": this._fireEventFromMsg,
-      "showmodalprompt": this._handleShowModalPrompt,
-      "contextmenu": this._fireCtxMenuEvent,
-      "securitychange": this._fireEventFromMsg,
-      "locationchange": this._fireEventFromMsg,
-      "iconchange": this._fireEventFromMsg,
-      "scrollareachanged": this._fireEventFromMsg,
-      "titlechange": this._fireProfiledEventFromMsg,
-      "opensearch": this._fireEventFromMsg,
-      "metachange": this._fireEventFromMsg,
-      "resize": this._fireEventFromMsg,
-      "activitydone": this._fireEventFromMsg,
-      "scroll": this._fireEventFromMsg,
-      "opentab": this._fireEventFromMsg,
+      audioplaybackchange: this._fireEventFromMsg,
+      showmodalprompt: this._handleShowModalPrompt,
+      contextmenu: this._fireCtxMenuEvent,
+      securitychange: this._fireEventFromMsg,
+      locationchange: this._fireEventFromMsg,
+      iconchange: this._fireEventFromMsg,
+      scrollareachanged: this._fireEventFromMsg,
+      titlechange: this._fireProfiledEventFromMsg,
+      opensearch: this._fireEventFromMsg,
+      metachange: this._fireEventFromMsg,
+      resize: this._fireEventFromMsg,
+      activitydone: this._fireEventFromMsg,
+      scroll: this._fireEventFromMsg,
+      opentab: this._fireEventFromMsg,
     };
 
     if (aMsg.data.msg_name in mmCalls) {
       return mmCalls[aMsg.data.msg_name].apply(this, arguments);
     } else if (aMsg.data.msg_name in mmSecuritySensitiveCalls) {
-      return mmSecuritySensitiveCalls[aMsg.data.msg_name].apply(this, arguments);
+      return mmSecuritySensitiveCalls[aMsg.data.msg_name].apply(
+        this,
+        arguments
+      );
     }
     return undefined;
   },
@@ -185,9 +208,11 @@ BrowserElementParent.prototype = {
    * false.  (You'll likely get an exception if you do.)
    */
   _isAlive() {
-    return !Cu.isDeadWrapper(this._frameElement) &&
-           !Cu.isDeadWrapper(this._frameElement.ownerDocument) &&
-           !Cu.isDeadWrapper(this._frameElement.ownerGlobal);
+    return (
+      !Cu.isDeadWrapper(this._frameElement) &&
+      !Cu.isDeadWrapper(this._frameElement.ownerDocument) &&
+      !Cu.isDeadWrapper(this._frameElement.ownerGlobal)
+    );
   },
 
   get _window() {
@@ -216,20 +241,28 @@ BrowserElementParent.prototype = {
 
     /* username and password */
     let detail = {
-      host:     authDetail.host,
-      path:     authDetail.path,
-      realm:    authDetail.realm,
-      isProxy:  authDetail.isProxy,
+      host: authDetail.host,
+      path: authDetail.path,
+      realm: authDetail.realm,
+      isProxy: authDetail.isProxy,
     };
 
-    evt = this._createEvent("usernameandpasswordrequired", detail,
-                            /* cancelable */ true);
-    Cu.exportFunction(function(username, password) {
-      if (callbackCalled)
-        return;
-      callbackCalled = true;
-      callback(true, username, password);
-    }, evt.detail, { defineAs: "authenticate" });
+    evt = this._createEvent(
+      "usernameandpasswordrequired",
+      detail,
+      /* cancelable */ true
+    );
+    Cu.exportFunction(
+      function(username, password) {
+        if (callbackCalled) {
+          return;
+        }
+        callbackCalled = true;
+        callback(true, username, password);
+      },
+      evt.detail,
+      { defineAs: "authenticate" }
+    );
 
     Cu.exportFunction(cancelCallback, evt.detail, { defineAs: "cancel" });
 
@@ -243,7 +276,7 @@ BrowserElementParent.prototype = {
   _sendAsyncMsg(msg, data) {
     try {
       if (!data) {
-        data = { };
+        data = {};
       }
 
       data.msg_name = msg;
@@ -282,9 +315,13 @@ BrowserElementParent.prototype = {
 
     if (detail.contextmenu) {
       var self = this;
-      Cu.exportFunction(function(id) {
-        self._sendAsyncMsg("fire-ctx-callback", {menuitem: id});
-      }, evt.detail, { defineAs: "contextMenuItemSelected" });
+      Cu.exportFunction(
+        function(id) {
+          self._sendAsyncMsg("fire-ctx-callback", { menuitem: id });
+        },
+        evt.detail,
+        { defineAs: "contextMenuItemSelected" }
+      );
     }
 
     // The embedder may have default actions on context menu events, so
@@ -318,8 +355,7 @@ BrowserElementParent.prototype = {
     }
 
     debug("fireEventFromMsg: " + name + ", " + JSON.stringify(detail));
-    let evt = this._createEvent(name, detail,
-                                /* cancelable = */ false);
+    let evt = this._createEvent(name, detail, /* cancelable = */ false);
     this._frameElement.dispatchEvent(evt);
   },
 
@@ -343,8 +379,11 @@ BrowserElementParent.prototype = {
     let windowID = detail.windowID;
     delete detail.windowID;
     debug("Event will have detail: " + JSON.stringify(detail));
-    let evt = this._createEvent("showmodalprompt", detail,
-                                /* cancelable = */ true);
+    let evt = this._createEvent(
+      "showmodalprompt",
+      detail,
+      /* cancelable = */ true
+    );
 
     let self = this;
     let unblockMsgSent = false;
@@ -357,8 +396,7 @@ BrowserElementParent.prototype = {
       // We don't need to sanitize evt.detail.returnValue (e.g. converting the
       // return value of confirm() to a boolean); Gecko does that for us.
 
-      let data = { windowID,
-                   returnValue: evt.detail.returnValue };
+      let data = { windowID, returnValue: evt.detail.returnValue };
       self._sendAsyncMsg("unblock-modal-prompt", data);
     }
 
@@ -391,22 +429,30 @@ BrowserElementParent.prototype = {
   //  - selectedTextContent: Contains current selected text content, which is
   //                         equivalent to the string returned by Selection.toString().
   _handleCaretStateChanged(data) {
-    let evt = this._createEvent("caretstatechanged", data.json,
-                                /* cancelable = */ false);
+    let evt = this._createEvent(
+      "caretstatechanged",
+      data.json,
+      /* cancelable = */ false
+    );
 
     let self = this;
     function sendDoCommandMsg(cmd) {
       let data = { command: cmd };
       self._sendAsyncMsg("copypaste-do-command", data);
     }
-    Cu.exportFunction(sendDoCommandMsg, evt.detail, { defineAs: "sendDoCommandMsg" });
+    Cu.exportFunction(sendDoCommandMsg, evt.detail, {
+      defineAs: "sendDoCommandMsg",
+    });
 
     this._frameElement.dispatchEvent(evt);
   },
 
   _handleScrollViewChange(data) {
-    let evt = this._createEvent("scrollviewchange", data.json,
-                                /* cancelable = */ false);
+    let evt = this._createEvent(
+      "scrollviewchange",
+      data.json,
+      /* cancelable = */ false
+    );
     this._frameElement.dispatchEvent(evt);
   },
 
@@ -415,15 +461,17 @@ BrowserElementParent.prototype = {
     // detail.  For now, it's OK.
     if (detail !== undefined && detail !== null) {
       detail = Cu.cloneInto(detail, this._window);
-      return new this._window.CustomEvent("mozbrowser" + evtName,
-                                          { bubbles: true,
-                                            cancelable,
-                                            detail });
+      return new this._window.CustomEvent("mozbrowser" + evtName, {
+        bubbles: true,
+        cancelable,
+        detail,
+      });
     }
 
-    return new this._window.Event("mozbrowser" + evtName,
-                                  { bubbles: true,
-                                    cancelable });
+    return new this._window.Event("mozbrowser" + evtName, {
+      bubbles: true,
+      cancelable,
+    });
   },
 
   /**
@@ -450,7 +498,7 @@ BrowserElementParent.prototype = {
       if (!self._isAlive()) {
         return;
       }
-      if (self._sendAsyncMsg(msgName, {id, args})) {
+      if (self._sendAsyncMsg(msgName, { id, args })) {
         self._pendingPromises[id] = { p, resolve, reject };
       } else {
         reject(new this._window.DOMException("fail"));
@@ -488,23 +536,33 @@ BrowserElementParent.prototype = {
       p.resolve(clientObj);
     } else {
       debug("Got error in gotAsyncResult.");
-      p.reject(new this._window.DOMException(
-        Cu.cloneInto(data.json.errorMsg, this._window)));
+      p.reject(
+        new this._window.DOMException(
+          Cu.cloneInto(data.json.errorMsg, this._window)
+        )
+      );
     }
   },
 
-  sendMouseEvent: defineNoReturnMethod(function(type, x, y, button, clickCount, modifiers) {
+  sendMouseEvent: defineNoReturnMethod(function(
+    type,
+    x,
+    y,
+    button,
+    clickCount,
+    modifiers
+  ) {
     // This method used to attempt to transform from the parent
     // coordinate space to the child coordinate space, but the
     // transform was always a no-op, because this._frameLoader.remoteTab
     // was null.
     this._sendAsyncMsg("send-mouse-event", {
-      "type": type,
-      "x": x,
-      "y": y,
-      "button": button,
-      "clickCount": clickCount,
-      "modifiers": modifiers,
+      type,
+      x,
+      y,
+      button,
+      clickCount,
+      modifiers,
     });
   }),
 
@@ -520,7 +578,7 @@ BrowserElementParent.prototype = {
   }),
 
   reload: defineNoReturnMethod(function(hardReload) {
-    this._sendAsyncMsg("reload", {hardReload});
+    this._sendAsyncMsg("reload", { hardReload });
   }),
 
   stop: defineNoReturnMethod(function() {
@@ -531,8 +589,9 @@ BrowserElementParent.prototype = {
    * Called when the visibility of the window which owns this iframe changes.
    */
   _ownerVisibilityChange() {
-    this._sendAsyncMsg("owner-visibility-change",
-                       {visible: !this._window.document.hidden});
+    this._sendAsyncMsg("owner-visibility-change", {
+      visible: !this._window.document.hidden,
+    });
   },
 
   _requestedDOMFullscreen() {
@@ -542,7 +601,10 @@ BrowserElementParent.prototype = {
 
   _fullscreenOriginChange(data) {
     Services.obs.notifyObservers(
-      this._frameElement, "fullscreen-origin-change", data.json.originNoSuffix);
+      this._frameElement,
+      "fullscreen-origin-change",
+      data.json.originNoSuffix
+    );
   },
 
   _exitDomFullscreen(data) {
@@ -566,31 +628,34 @@ BrowserElementParent.prototype = {
   },
 
   _fireFatalError() {
-    let evt = this._createEvent("error", {type: "fatal"},
-                                /* cancelable = */ false);
+    let evt = this._createEvent(
+      "error",
+      { type: "fatal" },
+      /* cancelable = */ false
+    );
     this._frameElement.dispatchEvent(evt);
   },
 
   observe(subject, topic, data) {
     switch (topic) {
-    case "oop-frameloader-crashed":
-      if (this._isAlive() && subject == this._frameLoader) {
-        this._fireFatalError();
-      }
-      break;
-    case "ask-children-to-execute-copypaste-command":
-      if (this._isAlive() && this._frameElement == subject.wrappedJSObject) {
-        this._sendAsyncMsg("copypaste-do-command", { command: data });
-      }
-      break;
-    case "back-docommand":
-      if (this._isAlive() && this._frameLoader.visible) {
+      case "oop-frameloader-crashed":
+        if (this._isAlive() && subject == this._frameLoader) {
+          this._fireFatalError();
+        }
+        break;
+      case "ask-children-to-execute-copypaste-command":
+        if (this._isAlive() && this._frameElement == subject.wrappedJSObject) {
+          this._sendAsyncMsg("copypaste-do-command", { command: data });
+        }
+        break;
+      case "back-docommand":
+        if (this._isAlive() && this._frameLoader.visible) {
           this.goBack();
-      }
-      break;
-    default:
-      debug("Unknown topic: " + topic);
-      break;
+        }
+        break;
+      default:
+        debug("Unknown topic: " + topic);
+        break;
     }
   },
 };

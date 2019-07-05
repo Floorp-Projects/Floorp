@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreInfo = [
     { name: "1", options: { keyPath: null } },
@@ -39,31 +38,30 @@ function* testSteps()
   try {
     db.createObjectStore("foo", "bar");
     ok(false, "createObjectStore with bad options should throw");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "createObjectStore with bad options");
   }
 
-  ok(db.createObjectStore("foo", { foo: "" }),
-     "createObjectStore with unknown options should not throw");
+  ok(
+    db.createObjectStore("foo", { foo: "" }),
+    "createObjectStore with unknown options should not throw"
+  );
   db.deleteObjectStore("foo");
 
   for (let index in objectStoreInfo) {
     index = parseInt(index);
     const info = objectStoreInfo[index];
 
-    let objectStore = info.hasOwnProperty("options") ?
-                      db.createObjectStore(info.name, info.options) :
-                      db.createObjectStore(info.name);
+    let objectStore = info.hasOwnProperty("options")
+      ? db.createObjectStore(info.name, info.options)
+      : db.createObjectStore(info.name);
 
-    is(db.objectStoreNames.length, index + 1,
-       "updated objectStoreNames list");
+    is(db.objectStoreNames.length, index + 1, "updated objectStoreNames list");
 
     let name = info.name;
     if (name === null) {
       name = "null";
-    }
-    else if (name === undefined) {
+    } else if (name === undefined) {
       name = "undefined";
     }
 
@@ -77,20 +75,27 @@ function* testSteps()
     is(found, true, "objectStoreNames contains name");
 
     is(objectStore.name, name, "Bad name");
-    is(objectStore.keyPath, info.options && info.options.keyPath ?
-                            info.options.keyPath : null,
-       "Bad keyPath");
+    is(
+      objectStore.keyPath,
+      info.options && info.options.keyPath ? info.options.keyPath : null,
+      "Bad keyPath"
+    );
     is(objectStore.indexNames.length, 0, "Bad indexNames");
 
     ok(event.target.transaction, "event has a transaction");
     ok(event.target.transaction.db === db, "transaction has the right db");
-    is(event.target.transaction.mode, "versionchange",
-       "transaction has the correct mode");
-    is(event.target.transaction.objectStoreNames.length, index + 1,
-       "transaction has correct objectStoreNames list");
+    is(
+      event.target.transaction.mode,
+      "versionchange",
+      "transaction has the correct mode"
+    );
+    is(
+      event.target.transaction.objectStoreNames.length,
+      index + 1,
+      "transaction has correct objectStoreNames list"
+    );
     found = false;
-    for (let j = 0; j < event.target.transaction.objectStoreNames.length;
-         j++) {
+    for (let j = 0; j < event.target.transaction.objectStoreNames.length; j++) {
       if (event.target.transaction.objectStoreNames.item(j) == name) {
         found = true;
         break;
@@ -103,8 +108,7 @@ function* testSteps()
   let ex;
   try {
     db.createObjectStore("storefail", { keyPath: "", autoIncrement: true });
-  }
-  catch (e) {
+  } catch (e) {
     ex = e;
   }
   ok(ex, "createObjectStore with empty keyPath and autoIncrement should throw");
@@ -115,8 +119,7 @@ function* testSteps()
   // Can't handle autoincrement and array keypath
   try {
     db.createObjectStore("storefail", { keyPath: ["a"], autoIncrement: true });
-  }
-  catch (e) {
+  } catch (e) {
     ex = e;
   }
   ok(ex, "createObjectStore with array keyPath and autoIncrement should throw");

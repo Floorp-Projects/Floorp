@@ -30,5 +30,3 @@ function incrementLoad2(tag, expectedLoadCount) {
 function postfail(msg) {
   window.parent.postMessage("fail-" + msg, window.location.origin);
 }
-
-

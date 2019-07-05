@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const objectStoreData = [
     // This one will be removed.
     { ss: "237-23-7732", name: "Bob" },
@@ -22,9 +21,12 @@ function* testSteps()
   ];
 
   // Post-add and post-remove data ordered by name.
-  const objectStoreDataNameSort = [ 1, 4, 5, 2, 3 ];
+  const objectStoreDataNameSort = [1, 4, 5, 2, 3];
 
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(
+    this.window ? window.location.pathname : "Splendid Test",
+    1
+  );
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield undefined;
@@ -45,22 +47,25 @@ function* testSteps()
   let sawAdded = false;
   let sawRemoved = false;
 
-  db.transaction("foo").objectStore("foo").openCursor().onsuccess =
-    function(event) {
-      event.target.transaction.oncomplete = continueToNextStep;
-      let cursor = event.target.result;
-      if (cursor) {
-        if (cursor.value.name == objectStoreData[0].name) {
-          sawRemoved = true;
-        }
-        if (cursor.value.name ==
-            objectStoreData[objectStoreData.length - 1].name) {
-          sawAdded = true;
-        }
-        cursor.continue();
-        count++;
+  db
+    .transaction("foo")
+    .objectStore("foo")
+    .openCursor().onsuccess = function(event) {
+    event.target.transaction.oncomplete = continueToNextStep;
+    let cursor = event.target.result;
+    if (cursor) {
+      if (cursor.value.name == objectStoreData[0].name) {
+        sawRemoved = true;
       }
-    };
+      if (
+        cursor.value.name == objectStoreData[objectStoreData.length - 1].name
+      ) {
+        sawAdded = true;
+      }
+      cursor.continue();
+      count++;
+    }
+  };
   yield undefined;
 
   is(count, objectStoreData.length - 1, "Good initial count");
@@ -71,39 +76,43 @@ function* testSteps()
   sawAdded = false;
   sawRemoved = false;
 
-  db.transaction("foo", "readwrite").objectStore("foo")
-    .index("name").openCursor().onsuccess = function(event) {
-      event.target.transaction.oncomplete = continueToNextStep;
-      let cursor = event.target.result;
-      if (cursor) {
-        if (cursor.value.name == objectStoreData[0].name) {
-          sawRemoved = true;
-        }
-        if (cursor.value.name ==
-            objectStoreData[objectStoreData.length - 1].name) {
-          sawAdded = true;
-        }
-
-        is(cursor.value.name,
-           objectStoreData[objectStoreDataNameSort[count++]].name,
-           "Correct name");
-
-        if (count == 1) {
-          let objectStore = event.target.transaction.objectStore("foo");
-          objectStore.delete(objectStoreData[0].ss)
-                     .onsuccess = function(event) {
-            objectStore.add(objectStoreData[objectStoreData.length - 1])
-                       .onsuccess =
-              function(event) {
-                cursor.continue();
-              };
-          };
-        }
-        else {
-          cursor.continue();
-        }
+  db
+    .transaction("foo", "readwrite")
+    .objectStore("foo")
+    .index("name")
+    .openCursor().onsuccess = function(event) {
+    event.target.transaction.oncomplete = continueToNextStep;
+    let cursor = event.target.result;
+    if (cursor) {
+      if (cursor.value.name == objectStoreData[0].name) {
+        sawRemoved = true;
       }
-    };
+      if (
+        cursor.value.name == objectStoreData[objectStoreData.length - 1].name
+      ) {
+        sawAdded = true;
+      }
+
+      is(
+        cursor.value.name,
+        objectStoreData[objectStoreDataNameSort[count++]].name,
+        "Correct name"
+      );
+
+      if (count == 1) {
+        let objectStore = event.target.transaction.objectStore("foo");
+        objectStore.delete(objectStoreData[0].ss).onsuccess = function(event) {
+          objectStore.add(
+            objectStoreData[objectStoreData.length - 1]
+          ).onsuccess = function(event) {
+            cursor.continue();
+          };
+        };
+      } else {
+        cursor.continue();
+      }
+    }
+  };
   yield undefined;
 
   is(count, objectStoreData.length - 1, "Good final count");

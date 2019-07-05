@@ -1,14 +1,17 @@
 // Define several classes.
 // Only the last ones are valid.
-class EmptyWorkletProcessor extends AudioWorkletProcessor {
-}
+class EmptyWorkletProcessor extends AudioWorkletProcessor {}
 
 class NoProcessWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 }
 
 class BadDescriptorsWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
@@ -20,21 +23,28 @@ class BadDescriptorsWorkletProcessor extends AudioWorkletProcessor {
 }
 
 class GoodDescriptorsWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: 'myParam', defaultValue: 0.707
-    }];
+    return [
+      {
+        name: "myParam",
+        defaultValue: 0.707,
+      },
+    ];
   }
 }
 
 class DummyProcessWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
@@ -42,82 +52,105 @@ class DummyProcessWorkletProcessor extends AudioWorkletProcessor {
 }
 
 class DescriptorsNoNameWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      defaultValue: 0.707
-    }];
+    return [
+      {
+        defaultValue: 0.707,
+      },
+    ];
   }
 }
 
 class DescriptorsDefaultValueNotNumberWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: "test",
-      defaultValue: "test"
-    }];
+    return [
+      {
+        name: "test",
+        defaultValue: "test",
+      },
+    ];
   }
 }
 
 class DescriptorsMinValueNotNumberWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: "test",
-      minValue: "test"
-    }];
+    return [
+      {
+        name: "test",
+        minValue: "test",
+      },
+    ];
   }
 }
 
 class DescriptorsMaxValueNotNumberWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: "test",
-      maxValue: "test"
-    }];
+    return [
+      {
+        name: "test",
+        maxValue: "test",
+      },
+    ];
   }
 }
 
 class DescriptorsDuplicatedNameWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: "test",
-    }, {
-      name: "test",
-    }];
+    return [
+      {
+        name: "test",
+      },
+      {
+        name: "test",
+      },
+    ];
   }
 }
 
 class DescriptorsNotDictWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
@@ -129,53 +162,65 @@ class DescriptorsNotDictWorkletProcessor extends AudioWorkletProcessor {
 }
 
 class DescriptorsOutOfRangeMinWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: 'test',
-      defaultValue: 0,
-      minValue: 1,
-      maxValue: 2,
-    }];
+    return [
+      {
+        name: "test",
+        defaultValue: 0,
+        minValue: 1,
+        maxValue: 2,
+      },
+    ];
   }
 }
 
 class DescriptorsOutOfRangeMaxWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: 'test',
-      defaultValue: 3,
-      minValue: 1,
-      maxValue: 2,
-    }];
+    return [
+      {
+        name: "test",
+        defaultValue: 3,
+        minValue: 1,
+        maxValue: 2,
+      },
+    ];
   }
 }
 
 class DescriptorsBadRangeMaxWorkletProcessor extends AudioWorkletProcessor {
-  constructor() { super(); }
+  constructor() {
+    super();
+  }
 
   process() {
     // Do nothing, output silence
   }
 
   static get parameterDescriptors() {
-    return [{
-      name: 'test',
-      defaultValue: 1.5,
-      minValue: 2,
-      maxValue: 1,
-    }];
+    return [
+      {
+        name: "test",
+        defaultValue: 1.5,
+        minValue: 2,
+        maxValue: 1,
+      },
+    ];
   }
 }
 
@@ -184,7 +229,7 @@ class DescriptorsBadRangeMaxWorkletProcessor extends AudioWorkletProcessor {
 try {
   registerProcessor("sure!", () => {});
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Test empty name
@@ -192,7 +237,7 @@ try {
 try {
   registerProcessor("", EmptyWorkletProcessor);
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Test not an object
@@ -200,7 +245,7 @@ try {
 try {
   registerProcessor("my-worklet-processor", "");
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Test Empty class definition
@@ -208,7 +253,7 @@ try {
 try {
   registerProcessor("empty-worklet-processor", EmptyWorkletProcessor);
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Test class with constructor but not process function
@@ -216,20 +261,26 @@ try {
 try {
   registerProcessor("no-worklet-processor", NoProcessWorkletProcessor);
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Test class with parameterDescriptors not being array nor undefined
 // "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.parameterDescriptors is neither an array nor undefined."
 try {
-  registerProcessor("bad-descriptors-worklet-processor", BadDescriptorsWorkletProcessor);
+  registerProcessor(
+    "bad-descriptors-worklet-processor",
+    BadDescriptorsWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Test class with good parameterDescriptors
 // No error expected here
-registerProcessor("good-descriptors-worklet-processor", GoodDescriptorsWorkletProcessor);
+registerProcessor(
+  "good-descriptors-worklet-processor",
+  GoodDescriptorsWorkletProcessor
+);
 
 // Test class with constructor and process function
 // No error expected here
@@ -240,77 +291,104 @@ registerProcessor("dummy-worklet-processor", DummyProcessWorkletProcessor);
 try {
   registerProcessor("dummy-worklet-processor", DummyProcessWorkletProcessor);
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // "name" is a mandatory field in descriptors
 // "TypeError: Missing required 'name' member of AudioParamDescriptor."
 try {
-  registerProcessor("descriptors-no-name-worklet-processor", DescriptorsNoNameWorkletProcessor);
+  registerProcessor(
+    "descriptors-no-name-worklet-processor",
+    DescriptorsNoNameWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // "defaultValue" should be a number
 // "TypeError: 'defaultValue' member of AudioParamDescriptor is not a finite floating-point value."
 try {
-  registerProcessor("descriptors-default-value-not-number-worklet-processor", DescriptorsDefaultValueNotNumberWorkletProcessor);
+  registerProcessor(
+    "descriptors-default-value-not-number-worklet-processor",
+    DescriptorsDefaultValueNotNumberWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // "min" should be a number
 // "TypeError: 'minValue' member of AudioParamDescriptor is not a finite floating-point value."
 try {
-  registerProcessor("descriptors-min-value-not-number-worklet-processor", DescriptorsMinValueNotNumberWorkletProcessor);
+  registerProcessor(
+    "descriptors-min-value-not-number-worklet-processor",
+    DescriptorsMinValueNotNumberWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // "max" should be a number
 // "TypeError: 'maxValue' member of AudioParamDescriptor is not a finite floating-point value."
 try {
-  registerProcessor("descriptors-max-value-not-number-worklet-processor", DescriptorsMaxValueNotNumberWorkletProcessor);
+  registerProcessor(
+    "descriptors-max-value-not-number-worklet-processor",
+    DescriptorsMaxValueNotNumberWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Duplicated values are not allowed for "name"
 // "NotSupportedError: Duplicated name \"test\" in parameterDescriptors"
 try {
-  registerProcessor("descriptors-duplicated-name-worklet-processor", DescriptorsDuplicatedNameWorkletProcessor);
+  registerProcessor(
+    "descriptors-duplicated-name-worklet-processor",
+    DescriptorsDuplicatedNameWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // Descriptors' elements should be dictionnary
 // "TypeError: Element 0 in parameterDescriptors can't be converted to a dictionary.",
 try {
-  registerProcessor("descriptors-not-dict-worklet-processor", DescriptorsNotDictWorkletProcessor);
+  registerProcessor(
+    "descriptors-not-dict-worklet-processor",
+    DescriptorsNotDictWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // defaultValue value should be in range [minValue, maxValue]. defaultValue < minValue is not allowed
 // "NotSupportedError: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
 try {
-  registerProcessor("descriptors-out-of-range-min-worklet-processor", DescriptorsOutOfRangeMinWorkletProcessor);
+  registerProcessor(
+    "descriptors-out-of-range-min-worklet-processor",
+    DescriptorsOutOfRangeMinWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // defaultValue value should be in range [minValue, maxValue]. defaultValue > maxValue is not allowed
 // "NotSupportedError: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
 try {
-  registerProcessor("descriptors-out-of-range-max-worklet-processor", DescriptorsOutOfRangeMaxWorkletProcessor);
+  registerProcessor(
+    "descriptors-out-of-range-max-worklet-processor",
+    DescriptorsOutOfRangeMaxWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }
 
 // We should have minValue < maxValue to define a valid range
 // "NotSupportedError: In parameterDescriptors, test minValue should be smaller than maxValue.",
 try {
-  registerProcessor("descriptors-bad-range-max-worklet-processor", DescriptorsBadRangeMaxWorkletProcessor);
+  registerProcessor(
+    "descriptors-bad-range-max-worklet-processor",
+    DescriptorsBadRangeMaxWorkletProcessor
+  );
 } catch (e) {
-  console.log(e)
+  console.log(e);
 }

@@ -18,7 +18,11 @@ worker.onmessage = function(event) {
   }
 
   if (args.name === "languages") {
-    is(navigator.languages.toString(), args.value.toString(), "languages matches");
+    is(
+      navigator.languages.toString(),
+      args.value.toString(),
+      "languages matches"
+    );
     return;
   }
 
@@ -28,25 +32,39 @@ worker.onmessage = function(event) {
   }
 
   if (args.name === "connection") {
-    is(typeof navigator.connection, typeof args.value, "connection type matches");
+    is(
+      typeof navigator.connection,
+      typeof args.value,
+      "connection type matches"
+    );
     return;
   }
 
   if (args.name === "mediaCapabilities") {
-    is(typeof navigator.mediaCapabilities, typeof args.value, "mediaCapabilities type matches");
+    is(
+      typeof navigator.mediaCapabilities,
+      typeof args.value,
+      "mediaCapabilities type matches"
+    );
     return;
   }
 
-  is(navigator[args.name], args.value,
-     "Mismatched navigator string for " + args.name + "!");
+  is(
+    navigator[args.name],
+    args.value,
+    "Mismatched navigator string for " + args.name + "!"
+  );
 };
 
 worker.onerror = function(event) {
   ok(false, "Worker had an error: " + event.message);
   SimpleTest.finish();
-}
+};
 
-var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+var { AppConstants } = SpecialPowers.Cu.import(
+  "resource://gre/modules/AppConstants.jsm",
+  {}
+);
 var isNightly = AppConstants.NIGHTLY_BUILD;
 var isRelease = AppConstants.RELEASE_OR_BETA;
 

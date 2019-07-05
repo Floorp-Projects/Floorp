@@ -1,6 +1,5 @@
 "use strict";
 
-
 // This test registers a SW for a scope that will never control a document
 // and therefore never trigger a "fetch" functional event that would
 // automatically attempt to update the registration.  The overlap of the
@@ -29,22 +28,26 @@ async function checkForUpdate(browser) {
 // QuotaManager APIs
 async function wipeStorage(u) {
   let uri = Services.io.newURI(u);
-  let principal =
-    Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    uri,
+    {}
+  );
   let caches = new CacheStorage("chrome", principal);
   let list = await caches.keys();
   return Promise.all(list.map(c => caches.delete(c)));
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    // Until the e10s refactor is complete, use a single process to avoid
-    // service worker propagation race.
-    ["dom.ipc.processCount", 1],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true],
-    ["dom.serviceWorkers.idle_timeout", 0],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Until the e10s refactor is complete, use a single process to avoid
+      // service worker propagation race.
+      ["dom.ipc.processCount", 1],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+      ["dom.serviceWorkers.idle_timeout", 0],
+    ],
+  });
 
   // Configure the server script to not redirect.
   await fetch(SW_SCRIPT + "?clear-redirect");
@@ -53,10 +56,13 @@ add_task(async function setup() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(browser, { script: SW_SCRIPT, scope: SCOPE },
+  await ContentTask.spawn(
+    browser,
+    { script: SW_SCRIPT, scope: SCOPE },
     async function(opts) {
-      let reg = await content.navigator.serviceWorker.register(opts.script,
-                                                               { scope: opts.scope });
+      let reg = await content.navigator.serviceWorker.register(opts.script, {
+        scope: opts.scope,
+      });
       let worker = reg.installing || reg.waiting || reg.active;
       await new Promise(resolve => {
         if (worker.state === "activated") {
@@ -137,7 +143,10 @@ add_task(async function wiped_and_failed_update_check() {
     let reg = await content.navigator.serviceWorker.getRegistration(uri);
     return !!reg;
   });
-  ok(!exists, "registration should be removed after scripts are wiped and update fails");
+  ok(
+    !exists,
+    "registration should be removed after scripts are wiped and update fails"
+  );
 
   // Note, we don't have to clean up the service worker registration
   // since its effectively been force-removed here.

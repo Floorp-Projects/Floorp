@@ -1,7 +1,6 @@
-function* getTestContent()
-{
+function* getTestContent() {
   yield "hello";
-  yield 2+3;
+  yield 2 + 3;
   yield 12;
   yield null;
   yield "complex" + "string";

@@ -12,22 +12,25 @@ function addOpaque(c, url) {
   });
 }
 
-caches.open(name).then(function(c) {
-  cache = c;
-  return Promise.all([
-    addOpaque(cache, url1),
-    addOpaque(cache, url2),
-  ]);
-}).then(function() {
-  return cache.delete(url1);
-}).then(function(result) {
-  ok(result, "Cache entry should be deleted");
-  return cache.delete(url2);
-}).then(function(result) {
-  ok(result, "Cache entry should be deleted");
-  cache = null;
-  return caches.delete(name);
-}).then(function(result) {
-  ok(result, "Cache should be deleted");
-  testDone();
-});
+caches
+  .open(name)
+  .then(function(c) {
+    cache = c;
+    return Promise.all([addOpaque(cache, url1), addOpaque(cache, url2)]);
+  })
+  .then(function() {
+    return cache.delete(url1);
+  })
+  .then(function(result) {
+    ok(result, "Cache entry should be deleted");
+    return cache.delete(url2);
+  })
+  .then(function(result) {
+    ok(result, "Cache entry should be deleted");
+    cache = null;
+    return caches.delete(name);
+  })
+  .then(function(result) {
+    ok(result, "Cache should be deleted");
+    testDone();
+  });

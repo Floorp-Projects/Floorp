@@ -7,10 +7,10 @@ var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
-  const name =
-    this.window ? window.location.pathname : "test_view_put_get_values.js";
+function* testSteps() {
+  const name = this.window
+    ? window.location.pathname
+    : "test_view_put_get_values.js";
 
   const objectStoreName = "Views";
 
@@ -22,7 +22,9 @@ function* testSteps()
 
       if (this.window) {
         SpecialPowers.pushPrefEnv(
-          { "set": [["dom.indexedDB.dataThreshold", 0]] }, continueToNextStep);
+          { set: [["dom.indexedDB.dataThreshold", 0]] },
+          continueToNextStep
+        );
         yield undefined;
       } else {
         setDataThreshold(0);
@@ -53,8 +55,9 @@ function* testSteps()
 
     info("Storing view");
 
-    let objectStore = db.transaction([objectStoreName], "readwrite")
-                        .objectStore(objectStoreName);
+    let objectStore = db
+      .transaction([objectStoreName], "readwrite")
+      .objectStore(objectStoreName);
     request = objectStore.add(viewData.view, viewData.key);
     request.onsuccess = continueToNextStepSync;
     yield undefined;
@@ -72,8 +75,10 @@ function* testSteps()
 
     info("Getting view in new transaction");
 
-    request = db.transaction([objectStoreName])
-                .objectStore(objectStoreName).get(viewData.key);
+    request = db
+      .transaction([objectStoreName])
+      .objectStore(objectStoreName)
+      .get(viewData.key);
     request.onsuccess = continueToNextStepSync;
     yield undefined;
 

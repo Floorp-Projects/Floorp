@@ -27,29 +27,37 @@ function fileReaderJunkArgument(blob) {
 
   try {
     fileReader.readAsBinaryString(blob);
-    is(false, true, "Should have thrown an exception calling readAsBinaryString.");
-  } catch(ex) {
+    is(
+      false,
+      true,
+      "Should have thrown an exception calling readAsBinaryString."
+    );
+  } catch (ex) {
     is(true, true, "Should have thrown an exception.");
   }
 
   try {
     fileReader.readAsDataURL(blob);
     is(false, true, "Should have thrown an exception calling readAsDataURL.");
-  } catch(ex) {
+  } catch (ex) {
     is(true, true, "Should have thrown an exception.");
   }
 
   try {
     fileReader.readAsArrayBuffer(blob);
-    is(false, true, "Should have thrown an exception calling readAsArrayBuffer.");
-  } catch(ex) {
+    is(
+      false,
+      true,
+      "Should have thrown an exception calling readAsArrayBuffer."
+    );
+  } catch (ex) {
     is(true, true, "Should have thrown an exception.");
   }
 
   try {
     fileReader.readAsText(blob);
     is(false, true, "Should have thrown an exception calling readAsText.");
-  } catch(ex) {
+  } catch (ex) {
     is(true, true, "Should have thrown an exception.");
   }
 }
@@ -69,6 +77,6 @@ onmessage = function(event) {
   fileReaderJunkArgument(new Object());
   fileReaderJunkArgument("hello");
 
-    // Post undefined to indicate that testing has finished.
+  // Post undefined to indicate that testing has finished.
   postMessage(undefined);
 };

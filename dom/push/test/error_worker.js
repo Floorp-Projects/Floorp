@@ -4,7 +4,6 @@ this.onpush = function(event) {
     throw new Error("Uncaught exception");
   }
   if (request.type == "rejection") {
-    event.waitUntil(Promise.reject(
-      new Error("Unhandled rejection")));
+    event.waitUntil(Promise.reject(new Error("Unhandled rejection")));
   }
 };

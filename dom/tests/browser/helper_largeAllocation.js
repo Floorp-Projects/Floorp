@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_URI = "http://example.com/browser/dom/tests/browser/test_largeAllocation.html";
-const TEST_URI_2 = "http://example.com/browser/dom/tests/browser/test_largeAllocation2.html";
+const TEST_URI =
+  "http://example.com/browser/dom/tests/browser/test_largeAllocation.html";
+const TEST_URI_2 =
+  "http://example.com/browser/dom/tests/browser/test_largeAllocation2.html";
 
 function expectProcessCreated() {
   let os = Services.obs;
@@ -55,7 +57,8 @@ async function largeAllocSuccessTests() {
   requestLongerTimeout(4);
 
   // Check if we are on win32
-  let isWin32 = /Windows/.test(navigator.userAgent) && !/x64/.test(navigator.userAgent);
+  let isWin32 =
+    /Windows/.test(navigator.userAgent) && !/x64/.test(navigator.userAgent);
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -86,7 +89,11 @@ async function largeAllocSuccessTests() {
 
     let pid2 = await getPID(aBrowser);
 
-    isnot(pid1, pid2, "The pids should be different between the initial load and the new load");
+    isnot(
+      pid1,
+      pid2,
+      "The pids should be different between the initial load and the new load"
+    );
     is(true, await getInLAProc(aBrowser));
   });
 
@@ -121,7 +128,9 @@ async function largeAllocSuccessTests() {
   });
 
   // If you have an opener cross process navigation shouldn't work
-  await BrowserTestUtils.withNewTab("http://example.com", async function(aBrowser) {
+  await BrowserTestUtils.withNewTab("http://example.com", async function(
+    aBrowser
+  ) {
     info("Starting test 2");
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
@@ -177,10 +186,13 @@ async function largeAllocSuccessTests() {
 
     await BrowserTestUtils.browserLoaded(aBrowser);
 
-    await ContentTask.spawn(aBrowser, null, () => content.document.location = "about:blank");
+    await ContentTask.spawn(
+      aBrowser,
+      null,
+      () => (content.document.location = "about:blank")
+    );
 
     await BrowserTestUtils.browserLoaded(aBrowser);
-
 
     // We should have been kicked out of the large-allocation process by the
     // load, meaning we're back in a non-fresh process
@@ -259,8 +271,10 @@ async function largeAllocSuccessTests() {
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
 
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
@@ -308,8 +322,10 @@ async function largeAllocSuccessTests() {
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
 
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
@@ -351,8 +367,10 @@ async function largeAllocSuccessTests() {
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
 
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
@@ -368,7 +386,10 @@ async function largeAllocSuccessTests() {
     let stopExpectNoProcess = expectNoProcess();
 
     let firstTab = gBrowser.selectedTab;
-    let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:blank");
+    let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      "about:blank"
+    );
     await ContentTask.spawn(aBrowser, null, () => {
       this.__newWindow = content.window.open("about:blank");
     });
@@ -403,8 +424,10 @@ async function largeAllocSuccessTests() {
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
     });
@@ -418,8 +441,12 @@ async function largeAllocSuccessTests() {
 
     let newWindow = await BrowserTestUtils.openNewBrowserWindow();
 
-    newWindow.gBrowser.adoptTab(gBrowser.getTabForBrowser(aBrowser), 0, null,
-                                Services.scriptSecurityManager.getSystemPrincipal());
+    newWindow.gBrowser.adoptTab(
+      gBrowser.getTabForBrowser(aBrowser),
+      0,
+      null,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
     let newTab = newWindow.gBrowser.tabs[0];
 
     is(newTab.linkedBrowser.currentURI.spec, TEST_URI);
@@ -437,17 +464,17 @@ async function largeAllocSuccessTests() {
   await BrowserTestUtils.withNewTab("about:blank", async function(aBrowser) {
     info("Starting test 8");
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["dom.ipc.processCount.webLargeAllocation", 1],
-      ],
+      set: [["dom.ipc.processCount.webLargeAllocation", 1]],
     });
 
     // Loading the first Large-Allocation tab should succeed as normal
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
 
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
@@ -509,16 +536,16 @@ async function largeAllocSuccessTests() {
   await BrowserTestUtils.withNewTab("about:blank", async function(aBrowser) {
     info("Starting test 10");
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["dom.ipc.processCount.webLargeAllocation", 1],
-      ],
+      set: [["dom.ipc.processCount.webLargeAllocation", 1]],
     });
 
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
     });
@@ -557,8 +584,10 @@ async function largeAllocSuccessTests() {
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));
 
-    let ready = Promise.all([expectProcessCreated(),
-                             BrowserTestUtils.browserLoaded(aBrowser)]);
+    let ready = Promise.all([
+      expectProcessCreated(),
+      BrowserTestUtils.browserLoaded(aBrowser),
+    ]);
     await ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
     });
@@ -581,8 +610,11 @@ async function largeAllocSuccessTests() {
       return content.document.body.innerText;
     });
     isnot(innerText, "FAIL", "We should not have sent a get request!");
-    is(innerText, "textarea=default+value&button=submit",
-       "The post data should be received by the callee");
+    is(
+      innerText,
+      "textarea=default+value&button=submit",
+      "The post data should be received by the callee"
+    );
   });
 
   // XXX: Make sure to reset dom.ipc.processCount.webLargeAllocation if adding a
@@ -590,7 +622,9 @@ async function largeAllocSuccessTests() {
 }
 
 async function largeAllocFailTests() {
-  await BrowserTestUtils.withNewTab("http://example.com", async function(aBrowser) {
+  await BrowserTestUtils.withNewTab("http://example.com", async function(
+    aBrowser
+  ) {
     info("Starting test 1");
     let pid1 = await getPID(aBrowser);
     is(false, await getInLAProc(aBrowser));

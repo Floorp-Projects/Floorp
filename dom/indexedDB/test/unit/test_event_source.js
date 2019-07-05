@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
   const objectStoreName = "Objects";
 
@@ -19,8 +18,9 @@ function* testSteps()
   is(event.target.source, null, "correct event.target.source");
 
   var db = event.target.result;
-  var objectStore = db.createObjectStore(objectStoreName,
-                                         { autoIncrement: true });
+  var objectStore = db.createObjectStore(objectStoreName, {
+    autoIncrement: true,
+  });
   request = objectStore.add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;

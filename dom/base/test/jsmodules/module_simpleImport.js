@@ -1,2 +1,2 @@
-import { x } from "./module_simpleExport.js"
+import { x } from "./module_simpleExport.js";
 result = x;

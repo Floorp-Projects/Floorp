@@ -10,40 +10,42 @@ var gActiveListeners = {};
 // These event (un)registration handlers only work for one window, DONOT use
 // them with multiple windows.
 
-function registerPopupEventHandler(eventName, callback, win)
-{
+function registerPopupEventHandler(eventName, callback, win) {
   if (!win) {
     win = window;
   }
-  gActiveListeners[eventName] = function (event) {
-    if (event.target != win.PopupNotifications.panel)
+  gActiveListeners[eventName] = function(event) {
+    if (event.target != win.PopupNotifications.panel) {
       return;
+    }
     win.PopupNotifications.panel.removeEventListener(
-                                                   eventName,
-                                                   gActiveListeners[eventName]);
+      eventName,
+      gActiveListeners[eventName]
+    );
     delete gActiveListeners[eventName];
 
     callback.call(win.PopupNotifications.panel);
-  }
-  win.PopupNotifications.panel.addEventListener(eventName,
-                                                gActiveListeners[eventName]);
+  };
+  win.PopupNotifications.panel.addEventListener(
+    eventName,
+    gActiveListeners[eventName]
+  );
 }
 
-function unregisterAllPopupEventHandlers(win)
-{
+function unregisterAllPopupEventHandlers(win) {
   if (!win) {
     win = window;
   }
   for (let eventName in gActiveListeners) {
     win.PopupNotifications.panel.removeEventListener(
-                                                   eventName,
-                                                   gActiveListeners[eventName]);
+      eventName,
+      gActiveListeners[eventName]
+    );
   }
   gActiveListeners = {};
 }
 
-function triggerMainCommand(popup, win)
-{
+function triggerMainCommand(popup, win) {
   if (!win) {
     win = window;
   }
@@ -56,8 +58,7 @@ function triggerMainCommand(popup, win)
   EventUtils.synthesizeMouseAtCenter(notification.button, {}, win);
 }
 
-async function triggerSecondaryCommand(popup, actionIndex, win)
-{
+async function triggerSecondaryCommand(popup, actionIndex, win) {
   if (!win) {
     win = window;
   }
@@ -68,41 +69,51 @@ async function triggerSecondaryCommand(popup, actionIndex, win)
   let notification = notifications[0];
 
   if (!actionIndex) {
-    await EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {}, win);
+    await EventUtils.synthesizeMouseAtCenter(
+      notification.secondaryButton,
+      {},
+      win
+    );
   } else {
     // Click the dropmarker arrow and wait for the menu to show up.
-    let dropdownPromise =
-      BrowserTestUtils.waitForEvent(notification.menupopup, "popupshown");
+    let dropdownPromise = BrowserTestUtils.waitForEvent(
+      notification.menupopup,
+      "popupshown"
+    );
     await EventUtils.synthesizeMouseAtCenter(notification.menubutton, {});
     await dropdownPromise;
 
-    let actionMenuItem = notification.querySelectorAll("menuitem")[actionIndex - 1];
+    let actionMenuItem = notification.querySelectorAll("menuitem")[
+      actionIndex - 1
+    ];
     await EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
   }
 }
 
-function dismissNotification(popup, win)
-{
+function dismissNotification(popup, win) {
   if (!win) {
     win = window;
   }
   info("dismissing notification");
-  executeSoon(function () {
+  executeSoon(function() {
     EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
   });
 }
 
-function waitForMessage(aMessage, browser)
-{
+function waitForMessage(aMessage, browser) {
   return new Promise((resolve, reject) => {
     // When contentScript runs, "this" is a ContentFrameMessageManager (so that's where
     // addEventListener will add the listener), but the non-bubbling "message" event is
     // sent to the Window involved, so we need a capturing listener.
     function contentScript() {
-      addEventListener("message", function(event) {
-        sendAsyncMessage("testLocal:persisted",
-          {persisted: event.data});
-      }, {once: true, capture: true}, true);
+      addEventListener(
+        "message",
+        function(event) {
+          sendAsyncMessage("testLocal:persisted", { persisted: event.data });
+        },
+        { once: true, capture: true },
+        true
+      );
     }
 
     let script = "data:,(" + contentScript.toString() + ")();";
@@ -124,13 +135,13 @@ function waitForMessage(aMessage, browser)
   });
 }
 
-function removePermission(url, permission)
-{
+function removePermission(url, permission) {
   let uri = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService)
-              .newURI(url);
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
+    .getService(Ci.nsIIOService)
+    .newURI(url);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
+    Ci.nsIScriptSecurityManager
+  );
   let principal = ssm.createCodebasePrincipal(uri, {});
 
   Cc["@mozilla.org/permissionmanager;1"]
@@ -138,29 +149,28 @@ function removePermission(url, permission)
     .removeFromPrincipal(principal, permission);
 }
 
-function getPermission(url, permission)
-{
+function getPermission(url, permission) {
   let uri = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService)
-              .newURI(url);
-  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
+    .getService(Ci.nsIIOService)
+    .newURI(url);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
+    Ci.nsIScriptSecurityManager
+  );
   let principal = ssm.createCodebasePrincipal(uri, {});
 
   return Cc["@mozilla.org/permissionmanager;1"]
-           .getService(Ci.nsIPermissionManager)
-           .testPermissionFromPrincipal(principal, permission);
+    .getService(Ci.nsIPermissionManager)
+    .testPermissionFromPrincipal(principal, permission);
 }
 
-function getCurrentPrincipal()
-{
+function getCurrentPrincipal() {
   return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 }
 
-function getSimpleDatabase(principal)
-{
-  let connection = Cc["@mozilla.org/dom/sdb-connection;1"]
-    .createInstance(Ci.nsISDBConnection);
+function getSimpleDatabase(principal) {
+  let connection = Cc["@mozilla.org/dom/sdb-connection;1"].createInstance(
+    Ci.nsISDBConnection
+  );
 
   if (!principal) {
     principal = getCurrentPrincipal();
@@ -179,9 +189,11 @@ function requestFinished(request) {
       } else {
         reject(req.resultCode);
       }
-    }
+    };
   });
 }
 
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/quota/test/head-shared.js", this);
+  "chrome://mochitests/content/browser/dom/quota/test/head-shared.js",
+  this
+);

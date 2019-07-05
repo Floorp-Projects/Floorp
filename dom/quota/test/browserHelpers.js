@@ -7,8 +7,7 @@ var testGenerator = testSteps();
 
 var testResult;
 
-function clearAllDatabases(callback)
-{
+function clearAllDatabases(callback) {
   let qms = SpecialPowers.Services.qms;
   let principal = SpecialPowers.wrap(document).nodePrincipal;
   let request = qms.clearStoragesForPrincipal(principal);
@@ -16,23 +15,20 @@ function clearAllDatabases(callback)
   request.callback = cb;
 }
 
-function runTest()
-{
+function runTest() {
   clearAllDatabases(() => {
     testGenerator.next();
   });
 }
 
-function finishTestNow()
-{
+function finishTestNow() {
   if (testGenerator) {
     testGenerator.return();
     testGenerator = undefined;
   }
 }
 
-function finishTest()
-{
+function finishTest() {
   clearAllDatabases(() => {
     setTimeout(finishTestNow, 0);
     setTimeout(() => {
@@ -41,8 +37,7 @@ function finishTest()
   });
 }
 
-function continueToNextStep()
-{
+function continueToNextStep() {
   setTimeout(() => {
     testGenerator.next();
   }, 0);

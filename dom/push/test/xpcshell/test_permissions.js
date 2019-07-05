@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+const { PushDB, PushService, PushServiceWebSocket } = serviceExports;
 
 const userAgentID = "2c43af06-ab6e-476a-adc4-16cbda54fb89";
 
@@ -16,7 +16,9 @@ function run_test() {
   });
 
   db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
+  registerCleanupFunction(() => {
+    return db.drop().then(_ => db.close());
+  });
 
   run_next_test();
 }
@@ -24,7 +26,7 @@ function run_test() {
 let unregisterDefers = {};
 
 function promiseUnregister(keyID) {
-  return new Promise(r => unregisterDefers[keyID] = r);
+  return new Promise(r => (unregisterDefers[keyID] = r));
 }
 
 function makePushPermission(url, capability) {
@@ -34,7 +36,8 @@ function makePushPermission(url, capability) {
     expireTime: 0,
     expireType: Ci.nsIPermissionManager.EXPIRE_NEVER,
     principal: Services.scriptSecurityManager.createCodebasePrincipal(
-      Services.io.newURI(url), {}
+      Services.io.newURI(url),
+      {}
     ),
     type: "desktop-notification",
   };
@@ -51,18 +54,20 @@ function promiseObserverNotifications(topic, count) {
 
 function promiseSubscriptionChanges(count) {
   return promiseObserverNotifications(
-    PushServiceComponent.subscriptionChangeTopic, count);
+    PushServiceComponent.subscriptionChangeTopic,
+    count
+  );
 }
 
 function promiseSubscriptionModifications(count) {
   return promiseObserverNotifications(
-    PushServiceComponent.subscriptionModifiedTopic, count);
+    PushServiceComponent.subscriptionModifiedTopic,
+    count
+  );
 }
 
 function allExpired(...keyIDs) {
-  return Promise.all(keyIDs.map(
-    keyID => db.getByKeyID(keyID)
-  )).then(records =>
+  return Promise.all(keyIDs.map(keyID => db.getByKeyID(keyID))).then(records =>
     records.every(record => record.isExpired())
   );
 }
@@ -77,12 +82,22 @@ add_task(async function setUp() {
 
   // Active registration; should be expired when we change the permission
   // to "deny".
-  await putTestRecord(db, "active-deny-changed", "https://example.xyz/page/1", 16);
+  await putTestRecord(
+    db,
+    "active-deny-changed",
+    "https://example.xyz/page/1",
+    16
+  );
 
   // Two active registrations for a visited site. These will expire when we
   // add a "deny" permission.
   await putTestRecord(db, "active-deny-added-1", "https://example.net/ham", 16);
-  await putTestRecord(db, "active-deny-added-2", "https://example.net/green", 8);
+  await putTestRecord(
+    db,
+    "active-deny-added-2",
+    "https://example.net/green",
+    8
+  );
 
   // An already-expired registration for a visited site. We shouldn't send an
   // `unregister` request for this one, but still receive an observer
@@ -98,33 +113,43 @@ add_task(async function setUp() {
   await putTestRecord(db, "drop-on-clear", "https://example.edu/lonely", 16);
 
   let handshakeDone;
-  let handshakePromise = new Promise(resolve => handshakeDone = resolve);
+  let handshakePromise = new Promise(resolve => (handshakeDone = resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: "hello",
-            status: 200,
-            uaid: userAgentID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "hello",
+              status: 200,
+              uaid: userAgentID,
+            })
+          );
           handshakeDone();
         },
         onUnregister(request) {
           let resolve = unregisterDefers[request.channelID];
-          equal(typeof resolve, "function",
-            "Dropped unexpected channel ID " + request.channelID);
+          equal(
+            typeof resolve,
+            "function",
+            "Dropped unexpected channel ID " + request.channelID
+          );
           delete unregisterDefers[request.channelID];
-          equal(request.code, 202,
-            "Expected permission revoked unregister reason");
+          equal(
+            request.code,
+            202,
+            "Expected permission revoked unregister reason"
+          );
           resolve();
-          this.serverSendMsg(JSON.stringify({
-            messageType: "unregister",
-            status: 200,
-            channelID: request.channelID,
-          }));
+          this.serverSendMsg(
+            JSON.stringify({
+              messageType: "unregister",
+              status: 200,
+              channelID: request.channelID,
+            })
+          );
         },
         onACK(request) {},
       });
@@ -142,13 +167,18 @@ add_task(async function test_permissions_allow_added() {
   );
   let notifiedScopes = await subChangePromise;
 
-  deepEqual(notifiedScopes, [
-    "https://example.info/page/2",
-  ], "Wrong scopes after adding allow");
+  deepEqual(
+    notifiedScopes,
+    ["https://example.info/page/2"],
+    "Wrong scopes after adding allow"
+  );
 
   let record = await db.getByKeyID("active-allow");
-  equal(record.quota, 16,
-    "Should reset quota for active records after adding allow");
+  equal(
+    record.quota,
+    16,
+    "Should reset quota for active records after adding allow"
+  );
 
   record = await db.getByKeyID("expired-allow");
   ok(!record, "Should drop expired records after adding allow");
@@ -167,13 +197,14 @@ add_task(async function test_permissions_allow_deleted() {
   await unregisterPromise;
 
   let notifiedScopes = await subModifiedPromise;
-  deepEqual(notifiedScopes, [
-    "https://example.info/page/1",
-  ], "Wrong scopes modified after deleting allow");
+  deepEqual(
+    notifiedScopes,
+    ["https://example.info/page/1"],
+    "Wrong scopes modified after deleting allow"
+  );
 
   let record = await db.getByKeyID("active-allow");
-  ok(record.isExpired(),
-    "Should expire active record after deleting allow");
+  ok(record.isExpired(), "Should expire active record after deleting allow");
 });
 
 add_task(async function test_permissions_deny_added() {
@@ -191,15 +222,13 @@ add_task(async function test_permissions_deny_added() {
   await unregisterPromise;
 
   let notifiedScopes = await subModifiedPromise;
-  deepEqual(notifiedScopes, [
-    "https://example.net/green",
-    "https://example.net/ham",
-  ], "Wrong scopes modified after adding deny");
-
-  let isExpired = await allExpired(
-    "active-deny-added-1",
-    "expired-deny-added"
+  deepEqual(
+    notifiedScopes,
+    ["https://example.net/green", "https://example.net/ham"],
+    "Wrong scopes modified after adding deny"
   );
+
+  let isExpired = await allExpired("active-deny-added-1", "expired-deny-added");
   ok(isExpired, "Should expire all registrations after adding deny");
 });
 
@@ -209,10 +238,7 @@ add_task(async function test_permissions_deny_deleted() {
     "deleted"
   );
 
-  let isExpired = await allExpired(
-    "active-deny-added-1",
-    "expired-deny-added"
-  );
+  let isExpired = await allExpired("active-deny-added-1", "expired-deny-added");
   ok(isExpired, "Should retain expired registrations after deleting deny");
 });
 
@@ -226,19 +252,25 @@ add_task(async function test_permissions_allow_changed() {
 
   let notifiedScopes = await subChangePromise;
 
-  deepEqual(notifiedScopes, [
-    "https://example.net/eggs",
-    "https://example.net/green",
-    "https://example.net/ham",
-  ], "Wrong scopes after changing to allow");
+  deepEqual(
+    notifiedScopes,
+    [
+      "https://example.net/eggs",
+      "https://example.net/green",
+      "https://example.net/ham",
+    ],
+    "Wrong scopes after changing to allow"
+  );
 
   let droppedRecords = await Promise.all([
     db.getByKeyID("active-deny-added-1"),
     db.getByKeyID("active-deny-added-2"),
     db.getByKeyID("expired-deny-added"),
   ]);
-  ok(!droppedRecords.some(Boolean),
-    "Should drop all expired registrations after changing to allow");
+  ok(
+    !droppedRecords.some(Boolean),
+    "Should drop all expired registrations after changing to allow"
+  );
 });
 
 add_task(async function test_permissions_deny_changed() {
@@ -254,24 +286,24 @@ add_task(async function test_permissions_deny_changed() {
   await unregisterPromise;
 
   let notifiedScopes = await subModifiedPromise;
-  deepEqual(notifiedScopes, [
-    "https://example.xyz/page/1",
-  ], "Wrong scopes modified after changing to deny");
+  deepEqual(
+    notifiedScopes,
+    ["https://example.xyz/page/1"],
+    "Wrong scopes modified after changing to deny"
+  );
 
   let record = await db.getByKeyID("active-deny-changed");
-  ok(record.isExpired(),
-    "Should expire active record after changing to deny");
+  ok(record.isExpired(), "Should expire active record after changing to deny");
 });
 
 add_task(async function test_permissions_clear() {
   let subModifiedPromise = promiseSubscriptionModifications(3);
 
-  deepEqual(await getAllKeyIDs(db), [
-    "active-allow",
-    "active-deny-changed",
-    "drop-on-clear",
-    "never-expires",
-  ], "Wrong records in database before clearing");
+  deepEqual(
+    await getAllKeyIDs(db),
+    ["active-allow", "active-deny-changed", "drop-on-clear", "never-expires"],
+    "Wrong records in database before clearing"
+  );
 
   let unregisterPromise = Promise.all([
     promiseUnregister("active-allow"),
@@ -284,13 +316,19 @@ add_task(async function test_permissions_clear() {
   await unregisterPromise;
 
   let notifiedScopes = await subModifiedPromise;
-  deepEqual(notifiedScopes, [
-    "https://example.edu/lonely",
-    "https://example.info/page/1",
-    "https://example.xyz/page/1",
-  ], "Wrong scopes modified after clearing registrations");
+  deepEqual(
+    notifiedScopes,
+    [
+      "https://example.edu/lonely",
+      "https://example.info/page/1",
+      "https://example.xyz/page/1",
+    ],
+    "Wrong scopes modified after clearing registrations"
+  );
 
-  deepEqual(await getAllKeyIDs(db), [
-    "never-expires",
-  ], "Unrestricted registrations should not be dropped");
+  deepEqual(
+    await getAllKeyIDs(db),
+    ["never-expires"],
+    "Unrestricted registrations should not be dropped"
+  );
 });

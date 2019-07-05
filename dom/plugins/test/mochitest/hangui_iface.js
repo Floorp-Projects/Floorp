@@ -16,30 +16,36 @@ function initCTypes() {
     user32 = ctypes.open("user32.dll");
   }
   if (!getDlgItem) {
-    getDlgItem = user32.declare("GetDlgItem",
-                                ctypes.winapi_abi,
-                                ctypes.uintptr_t,
-                                ctypes.uintptr_t,
-                                ctypes.int);
+    getDlgItem = user32.declare(
+      "GetDlgItem",
+      ctypes.winapi_abi,
+      ctypes.uintptr_t,
+      ctypes.uintptr_t,
+      ctypes.int
+    );
   }
   if (!sendMessage) {
-    sendMessage = user32.declare("SendMessageW",
-                                 ctypes.winapi_abi,
-                                 ctypes.intptr_t,
-                                 ctypes.uintptr_t,
-                                 ctypes.uint32_t,
-                                 ctypes.uintptr_t,
-                                 ctypes.intptr_t);
+    sendMessage = user32.declare(
+      "SendMessageW",
+      ctypes.winapi_abi,
+      ctypes.intptr_t,
+      ctypes.uintptr_t,
+      ctypes.uint32_t,
+      ctypes.uintptr_t,
+      ctypes.intptr_t
+    );
   }
   if (!messageBox) {
     // Handy for debugging the test itself
-    messageBox = user32.declare("MessageBoxW",
-                                ctypes.winapi_abi,
-                                ctypes.int,
-                                ctypes.uintptr_t,
-                                ctypes.char16_t.ptr,
-                                ctypes.char16_t.ptr,
-                                ctypes.uint32_t);
+    messageBox = user32.declare(
+      "MessageBoxW",
+      ctypes.winapi_abi,
+      ctypes.int,
+      ctypes.uintptr_t,
+      ctypes.char16_t.ptr,
+      ctypes.char16_t.ptr,
+      ctypes.uint32_t
+    );
   }
   if (!watcher) {
     watcher = new DialogWatcher("Warning: Unresponsive plugin");
@@ -47,11 +53,11 @@ function initCTypes() {
 }
 
 function postSuccess(params) {
-  self.postMessage({"status": true, "params": params});
+  self.postMessage({ status: true, params });
 }
 
 function postFail(params, msg) {
-  self.postMessage({"status": false, "params": params, "msg": msg});
+  self.postMessage({ status: false, params, msg });
 }
 
 function onDialogStart(inparams, hwnd) {
@@ -72,15 +78,27 @@ function onDialogStart(inparams, hwnd) {
         return;
       }
       sendMessage(checkbox, BM_SETCHECK, BST_CHECKED, 0);
-      sendMessage(hwnd, WM_COMMAND, (BN_CLICKED << 16) | IDC_NOFUTURE, checkbox);
+      sendMessage(
+        hwnd,
+        WM_COMMAND,
+        (BN_CLICKED << 16) | IDC_NOFUTURE,
+        checkbox
+      );
     }
     var button = getDlgItem(hwnd, params.commandId);
     if (!button) {
-      postFail(params,
-               "GetDlgItem failed to find button with ID " + params.commandId);
+      postFail(
+        params,
+        "GetDlgItem failed to find button with ID " + params.commandId
+      );
       return;
     }
-    sendMessage(hwnd, WM_COMMAND, (BN_CLICKED << 16) | params.commandId, button);
+    sendMessage(
+      hwnd,
+      WM_COMMAND,
+      (BN_CLICKED << 16) | params.commandId,
+      button
+    );
   }
   postSuccess(params);
 }
@@ -98,9 +116,13 @@ self.onmessage = function(event) {
   var params = event.data;
   var timeout = params.timeoutMs;
   if (params.expectToFind) {
-    watcher.onDialogStart = function(hwnd) { onDialogStart(params, hwnd); };
+    watcher.onDialogStart = function(hwnd) {
+      onDialogStart(params, hwnd);
+    };
     if (params.expectToClose) {
-      watcher.onDialogEnd = function() { onDialogEnd(params); };
+      watcher.onDialogEnd = function() {
+        onDialogEnd(params);
+      };
     }
   } else {
     watcher.onDialogStart = null;
@@ -119,7 +141,7 @@ self.onmessage = function(event) {
 };
 
 self.onerror = function(event) {
-  var msg = "Error: " + event.message + " at " + event.filename + ":" + event.lineno;
+  var msg =
+    "Error: " + event.message + " at " + event.filename + ":" + event.lineno;
   postFail(null, msg);
 };
-

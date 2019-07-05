@@ -10,9 +10,15 @@
  *  executed per tick.
  */
 function waterfall(...callbacks) {
-  callbacks.reduce((promise, callback) => promise.then(() => {
-    callback();
-  }), Promise.resolve()).catch(Cu.reportError);
+  callbacks
+    .reduce(
+      (promise, callback) =>
+        promise.then(() => {
+          callback();
+        }),
+      Promise.resolve()
+    )
+    .catch(Cu.reportError);
 }
 
 /**
@@ -51,14 +57,16 @@ MockWebSocketParent.prototype = {
   },
 
   serverSendMsg(msg) {
-    waterfall(() => this._listener.onMessageAvailable(this._context, msg),
-              () => this._listener.onAcknowledge(this._context, 0));
+    waterfall(
+      () => this._listener.onMessageAvailable(this._context, msg),
+      () => this._listener.onAcknowledge(this._context, 0)
+    );
   },
 };
 
-var pushService = Cc["@mozilla.org/push/Service;1"].
-                  getService(Ci.nsIPushService).
-                  wrappedJSObject;
+var pushService = Cc["@mozilla.org/push/Service;1"].getService(
+  Ci.nsIPushService
+).wrappedJSObject;
 
 var mockSocket;
 var serverMsgs = [];
@@ -78,16 +86,19 @@ addMessageListener("socket-setup", function() {
 });
 
 addMessageListener("socket-teardown", function(msg) {
-  pushService.restoreServiceBackend().then(_ => {
-    serverMsgs.length = 0;
-    if (mockSocket) {
-      mockSocket.close();
-      mockSocket = null;
-    }
-    sendAsyncMessage("socket-server-teardown");
-  }).catch(error => {
-    Cu.reportError(`Error restoring service backend: ${error}`);
-  });
+  pushService
+    .restoreServiceBackend()
+    .then(_ => {
+      serverMsgs.length = 0;
+      if (mockSocket) {
+        mockSocket.close();
+        mockSocket = null;
+      }
+      sendAsyncMessage("socket-server-teardown");
+    })
+    .catch(error => {
+      Cu.reportError(`Error restoring service backend: ${error}`);
+    });
 });
 
 addMessageListener("socket-server-msg", function(msg) {
@@ -161,19 +172,23 @@ async function replaceService(service) {
 }
 
 addMessageListener("service-replace", function() {
-  replaceService(MockService).then(_ => {
-    sendAsyncMessage("service-replaced");
-  }).catch(error => {
-    Cu.reportError(`Error replacing service: ${error}`);
-  });
+  replaceService(MockService)
+    .then(_ => {
+      sendAsyncMessage("service-replaced");
+    })
+    .catch(error => {
+      Cu.reportError(`Error replacing service: ${error}`);
+    });
 });
 
 addMessageListener("service-restore", function() {
-  replaceService(null).then(_ => {
-    sendAsyncMessage("service-restored");
-  }).catch(error => {
-    Cu.reportError(`Error restoring service: ${error}`);
-  });
+  replaceService(null)
+    .then(_ => {
+      sendAsyncMessage("service-restored");
+    })
+    .catch(error => {
+      Cu.reportError(`Error restoring service: ${error}`);
+    });
 });
 
 addMessageListener("service-response", function(response) {

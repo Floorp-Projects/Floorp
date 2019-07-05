@@ -3,8 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function getBuffer(size)
-{
+function getBuffer(size) {
   let buffer = new ArrayBuffer(size);
   is(buffer.byteLength, size, "Correct byte length");
   return buffer;
@@ -13,18 +12,16 @@ function getBuffer(size)
 // May be called for any size, but you should call getBuffer() if you know
 // that size is big and that randomness is not necessary because it is
 // noticeably faster.
-function getRandomBuffer(size)
-{
+function getRandomBuffer(size) {
   let buffer = getBuffer(size);
   let view = new Uint8Array(buffer);
   for (let i = 0; i < size; i++) {
-    view[i] = parseInt(Math.random() * 255)
+    view[i] = parseInt(Math.random() * 255);
   }
   return buffer;
 }
 
-function compareBuffers(buffer1, buffer2)
-{
+function compareBuffers(buffer1, buffer2) {
   if (buffer1.byteLength != buffer2.byteLength) {
     return false;
   }

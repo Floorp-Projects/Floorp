@@ -5,8 +5,7 @@
 
 var testGenerator = testSteps();
 
-function* testSteps()
-{
+function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   let request = indexedDB.open(name, 1);
@@ -57,24 +56,21 @@ function* testSteps()
   try {
     objectStore.put({});
     ok(true, "put with no key should not throw with autoIncrement!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(false, "put with no key threw with autoIncrement");
   }
 
   try {
     objectStore.put({});
     ok(true, "put with no key should not throw with autoIncrement!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(false, "put with no key threw with autoIncrement");
   }
 
   try {
     objectStore.delete();
     ok(false, "remove with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "remove with no key threw");
   }
 
@@ -83,32 +79,28 @@ function* testSteps()
   try {
     objectStore.add({});
     ok(false, "add with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "add with no key threw");
   }
 
   try {
     objectStore.put({});
     ok(false, "put with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "put with no key threw");
   }
 
   try {
     objectStore.put({});
     ok(false, "put with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "put with no key threw");
   }
 
   try {
     objectStore.delete();
     ok(false, "remove with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "remove with no key threw");
   }
 
@@ -117,67 +109,62 @@ function* testSteps()
   try {
     objectStore.add({});
     ok(false, "add with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "add with no key threw");
   }
 
   try {
-    objectStore.add({id: 5}, 5);
+    objectStore.add({ id: 5 }, 5);
     ok(false, "add with inline key and passed key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "add with inline key and passed key threw");
   }
 
   try {
     objectStore.put({});
     ok(false, "put with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "put with no key threw");
   }
 
   try {
     objectStore.put({});
     ok(false, "put with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "put with no key threw");
   }
 
   try {
     objectStore.delete();
     ok(false, "remove with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "remove with no key threw");
   }
 
   key1 = 10;
 
-  request = objectStore.add({id: key1});
+  request = objectStore.add({ id: key1 });
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, key1, "add gave back the same key");
 
-  request = objectStore.put({id: 10});
+  request = objectStore.put({ id: 10 });
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, key1, "put gave back the same key");
 
-  request = objectStore.put({id: 10});
+  request = objectStore.put({ id: 10 });
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result, key1, "put gave back the same key");
 
-  request = objectStore.add({id: 10});
+  request = objectStore.add({ id: 10 });
   request.addEventListener("error", new ExpectError("ConstraintError", true));
   request.onsuccess = unexpectedSuccessHandler;
   event = yield undefined;
@@ -185,37 +172,35 @@ function* testSteps()
   try {
     objectStore.add({}, null);
     ok(false, "add with null key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "add with null key threw");
   }
 
   try {
     objectStore.put({}, null);
     ok(false, "put with null key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "put with null key threw");
   }
 
   try {
     objectStore.put({}, null);
     ok(false, "put with null key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "put with null key threw");
   }
 
   try {
     objectStore.delete({}, null);
     ok(false, "remove with null key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "remove with null key threw");
   }
 
-  objectStore = db.createObjectStore("bazing", { keyPath: "id",
-                                                 autoIncrement: true });
+  objectStore = db.createObjectStore("bazing", {
+    keyPath: "id",
+    autoIncrement: true,
+  });
 
   request = objectStore.add({});
   request.onerror = errorHandler;
@@ -224,7 +209,7 @@ function* testSteps()
 
   key1 = event.target.result;
 
-  request = objectStore.put({id: key1});
+  request = objectStore.put({ id: key1 });
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -233,7 +218,7 @@ function* testSteps()
 
   key2 = 10;
 
-  request = objectStore.put({id: key2});
+  request = objectStore.put({ id: key2 });
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -243,32 +228,28 @@ function* testSteps()
   try {
     objectStore.put({});
     ok(true, "put with no key should not throw with autoIncrement!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(false, "put with no key threw with autoIncrement");
   }
 
   try {
     objectStore.put({});
     ok(true, "put with no key should not throw with autoIncrement!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(false, "put with no key threw with autoIncrement");
   }
 
   try {
     objectStore.delete();
     ok(false, "remove with no key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "remove with no key threw");
   }
 
   try {
-    objectStore.add({id: 5}, 5);
+    objectStore.add({ id: 5 }, 5);
     ok(false, "add with inline key and passed key should throw!");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "add with inline key and passed key threw");
   }
 

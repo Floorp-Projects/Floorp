@@ -6,7 +6,7 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Enumerate the directory tree and store results in entryList as
 //
@@ -29,8 +29,9 @@ function enumerate_tree(entryList) {
 }
 
 function zip_profile(zipFile, profileDir) {
-  var zipWriter = Cc["@mozilla.org/zipwriter;1"]
-                  .createInstance(Ci.nsIZipWriter);
+  var zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(
+    Ci.nsIZipWriter
+  );
   zipWriter.open(zipFile, 0x04 | 0x08 | 0x20);
 
   var root = profileDir.clone();
@@ -38,20 +39,28 @@ function zip_profile(zipFile, profileDir) {
   root.append("default");
   root.append("chrome");
 
-  var entryList = [{path: "storage/default/chrome", file: root}];
+  var entryList = [{ path: "storage/default/chrome", file: root }];
   enumerate_tree(entryList);
 
   entryList.forEach(function(entry) {
     if (entry.file.isDirectory()) {
-      zipWriter.addEntryDirectory(entry.path, entry.file.lastModifiedTime,
-                                  false);
+      zipWriter.addEntryDirectory(
+        entry.path,
+        entry.file.lastModifiedTime,
+        false
+      );
     } else {
-      var istream = Cc["@mozilla.org/network/file-input-stream;1"]
-                    .createInstance(Ci.nsIFileInputStream);
+      var istream = Cc[
+        "@mozilla.org/network/file-input-stream;1"
+      ].createInstance(Ci.nsIFileInputStream);
       istream.init(entry.file, -1, -1, 0);
-      zipWriter.addEntryStream(entry.path, entry.file.lastModifiedTime,
-                               Ci.nsIZipWriter.COMPRESSION_DEFAULT, istream,
-                               false);
+      zipWriter.addEntryStream(
+        entry.path,
+        entry.file.lastModifiedTime,
+        Ci.nsIZipWriter.COMPRESSION_DEFAULT,
+        istream,
+        false
+      );
       istream.close();
     }
   });
@@ -80,8 +89,9 @@ function exactGC() {
 
 function resetQuotaManager() {
   return new Promise(function(resolve) {
-    var qm = Cc["@mozilla.org/dom/quota/manager;1"]
-             .getService(Ci.nsIQuotaManager);
+    var qm = Cc["@mozilla.org/dom/quota/manager;1"].getService(
+      Ci.nsIQuotaManager
+    );
 
     var prefService = Services.prefs;
 
@@ -112,16 +122,22 @@ function run_test() {
   }
   ok(!zipFile.exists());
 
-  caches.open("xpcshell-test").then(function(c) {
-    var request = new Request("http://example.com/index.html");
-    var response = new Response("hello world");
-    return c.put(request, response);
-  }).then(exactGC).then(resetQuotaManager).then(function() {
-    zip_profile(zipFile, profileDir);
-    dump("### ### created zip at: " + zipFile.path + "\n");
-    do_test_finished();
-  }).catch(function(e) {
-    do_test_finished();
-    ok(false, e);
-  });
+  caches
+    .open("xpcshell-test")
+    .then(function(c) {
+      var request = new Request("http://example.com/index.html");
+      var response = new Response("hello world");
+      return c.put(request, response);
+    })
+    .then(exactGC)
+    .then(resetQuotaManager)
+    .then(function() {
+      zip_profile(zipFile, profileDir);
+      dump("### ### created zip at: " + zipFile.path + "\n");
+      do_test_finished();
+    })
+    .catch(function(e) {
+      do_test_finished();
+      ok(false, e);
+    });
 }

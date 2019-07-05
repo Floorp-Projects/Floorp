@@ -11,23 +11,38 @@ function promiseU2FRegister(tab, app_id) {
   challenge = bytesToBase64UrlSafe(challenge);
 
   /* eslint-disable no-shadow */
-  return ContentTask.spawn(tab.linkedBrowser, [app_id, challenge], async function ([app_id, challenge]) {
-    return new Promise(resolve => {
-      let version = "U2F_V2";
-      content.u2f.register(app_id, [{version, challenge}], [], resolve);
-    });
-  });
+  return ContentTask.spawn(
+    tab.linkedBrowser,
+    [app_id, challenge],
+    async function([app_id, challenge]) {
+      return new Promise(resolve => {
+        let version = "U2F_V2";
+        content.u2f.register(app_id, [{ version, challenge }], [], resolve);
+      });
+    }
+  );
   /* eslint-enable no-shadow */
 }
 
-add_task(async function () {
+add_task(async function() {
   // By default, proxies don't apply to localhost. We need them to for this test, though:
-  await SpecialPowers.pushPrefEnv({set: [["network.proxy.allow_hijacking_localhost", true],]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.proxy.allow_hijacking_localhost", true]],
+  });
   // Enable the soft token.
   Services.prefs.setBoolPref("security.webauth.u2f", true);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", true);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", false);
-  Services.prefs.setBoolPref("security.webauth.webauthn_enable_android_fido2", false);
+  Services.prefs.setBoolPref(
+    "security.webauth.webauthn_enable_softtoken",
+    true
+  );
+  Services.prefs.setBoolPref(
+    "security.webauth.webauthn_enable_usbtoken",
+    false
+  );
+  Services.prefs.setBoolPref(
+    "security.webauth.webauthn_enable_android_fido2",
+    false
+  );
 
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);

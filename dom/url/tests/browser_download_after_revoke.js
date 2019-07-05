@@ -13,7 +13,11 @@ function test() {
         function downloadOnLoad() {
           domwindow.removeEventListener("load", downloadOnLoad, true);
 
-          is(domwindow.document.location.href, "chrome://mozapps/content/downloads/unknownContentType.xul", "Download page appeared");
+          is(
+            domwindow.document.location.href,
+            "chrome://mozapps/content/downloads/unknownContentType.xul",
+            "Download page appeared"
+          );
 
           domwindow.close();
           gBrowser.removeTab(gBrowser.selectedTab);
@@ -46,5 +50,8 @@ function test() {
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onLoad);
 
   info("Loading download page...");
-  BrowserTestUtils.loadURI(gBrowser, "http://example.com/browser/dom/url/tests/empty.html");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "http://example.com/browser/dom/url/tests/empty.html"
+  );
 }

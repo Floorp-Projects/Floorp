@@ -5,9 +5,11 @@
 "use strict";
 
 const CC = Components.Constructor;
-const ServerSocket = CC("@mozilla.org/network/server-socket;1",
-                        "nsIServerSocket",
-                        "init");
+const ServerSocket = CC(
+  "@mozilla.org/network/server-socket;1",
+  "nsIServerSocket",
+  "init"
+);
 
 var testServer = null;
 var clientTransport = null;
@@ -19,14 +21,17 @@ var serverBuilder = null;
 const clientMessage = "Client Message";
 const serverMessage = "Server Message";
 
-const address = Cc["@mozilla.org/supports-cstring;1"]
-                  .createInstance(Ci.nsISupportsCString);
+const address = Cc["@mozilla.org/supports-cstring;1"].createInstance(
+  Ci.nsISupportsCString
+);
 address.data = "127.0.0.1";
 const addresses = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 addresses.appendElement(address);
 
 const serverChannelDescription = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationChannelDescription,
+  ]),
   type: 1,
   tcpAddress: addresses,
 };
@@ -37,7 +42,9 @@ var isClientClosed = false;
 var isServerClosed = false;
 
 const clientCallback = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationSessionTransportCallback,
+  ]),
   notifyTransportReady() {
     Assert.ok(true, "Client transport ready.");
 
@@ -61,7 +68,9 @@ const clientCallback = {
 };
 
 const serverCallback = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationSessionTransportCallback,
+  ]),
   notifyTransportReady() {
     Assert.ok(true, "Server transport ready.");
 
@@ -85,7 +94,9 @@ const serverCallback = {
 };
 
 const clientListener = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationSessionTransportBuilderListener,
+  ]),
   onSessionTransport(aTransport) {
     Assert.ok(true, "Client Transport is built.");
     clientTransport = aTransport;
@@ -98,7 +109,9 @@ const clientListener = {
 };
 
 const serverListener = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIPresentationSessionTransportBuilderListener,
+  ]),
   onSessionTransport(aTransport) {
     Assert.ok(true, "Server Transport is built.");
     serverTransport = aTransport;
@@ -119,8 +132,9 @@ function TestServer() {
 TestServer.prototype = {
   onSocketAccepted(aSocket, aTransport) {
     print("Test server gets a client connection.");
-    serverBuilder = Cc["@mozilla.org/presentation/presentationtcpsessiontransport;1"]
-                      .createInstance(Ci.nsIPresentationTCPSessionTransportBuilder);
+    serverBuilder = Cc[
+      "@mozilla.org/presentation/presentationtcpsessiontransport;1"
+    ].createInstance(Ci.nsIPresentationTCPSessionTransportBuilder);
     serverBuilder.buildTCPSenderTransport(aTransport, serverListener);
   },
   onStopListening(aSocket) {
@@ -137,20 +151,38 @@ TestServer.prototype = {
 // Set up the transport connection and ensure |notifyTransportReady| triggered
 // at both sides.
 function setup() {
-  clientBuilder = Cc["@mozilla.org/presentation/presentationtcpsessiontransport;1"]
-                    .createInstance(Ci.nsIPresentationTCPSessionTransportBuilder);
-  clientBuilder.buildTCPReceiverTransport(serverChannelDescription, clientListener);
+  clientBuilder = Cc[
+    "@mozilla.org/presentation/presentationtcpsessiontransport;1"
+  ].createInstance(Ci.nsIPresentationTCPSessionTransportBuilder);
+  clientBuilder.buildTCPReceiverTransport(
+    serverChannelDescription,
+    clientListener
+  );
 }
 
 // Test |selfAddress| attribute of |nsIPresentationSessionTransport|.
 function selfAddress() {
   var serverSelfAddress = serverTransport.selfAddress;
-  Assert.equal(serverSelfAddress.address, address.data, "The self address of server transport should be set.");
-  Assert.equal(serverSelfAddress.port, testServer.serverSocket.port, "The port of server transport should be set.");
+  Assert.equal(
+    serverSelfAddress.address,
+    address.data,
+    "The self address of server transport should be set."
+  );
+  Assert.equal(
+    serverSelfAddress.port,
+    testServer.serverSocket.port,
+    "The port of server transport should be set."
+  );
 
   var clientSelfAddress = clientTransport.selfAddress;
-  Assert.ok(clientSelfAddress.address, "The self address of client transport should be set.");
-  Assert.ok(clientSelfAddress.port, "The port of client transport should be set.");
+  Assert.ok(
+    clientSelfAddress.address,
+    "The self address of client transport should be set."
+  );
+  Assert.ok(
+    clientSelfAddress.port,
+    "The port of client transport should be set."
+  );
 
   run_next_test();
 }

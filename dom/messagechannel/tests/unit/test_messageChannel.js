@@ -5,7 +5,8 @@ add_test(function test_messageChannel() {
   do_test_pending();
 
   let chromeWorker = new ChromeWorker(
-    "resource://test/chromeWorker_messageChannel.js");
+    "resource://test/chromeWorker_messageChannel.js"
+  );
   let { port1, port2 } = new MessageChannel();
   port2.onmessage = pongEvt => {
     Assert.equal(pongEvt.data, "pong");

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const gIsWindows = mozinfo.os == "win";
 const gIsOSX = mozinfo.os == "mac";
@@ -31,25 +31,25 @@ function get_test_plugin(secondplugin = false) {
 // Finds the test nsIPluginTag
 function get_test_plugintag(aName = "Test Plug-in") {
   var name = aName || "Test Plug-in";
-  var host = Cc["@mozilla.org/plugin/host;1"].
-             getService(Ci.nsIPluginHost);
+  var host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   var tags = host.getPluginTags();
 
   for (var i = 0; i < tags.length; i++) {
-    if (tags[i].name == name)
+    if (tags[i].name == name) {
       return tags[i];
+    }
   }
   return null;
 }
 
 // Creates a fake ProfDS directory key, copied from do_get_profile
 function do_get_profile_startup() {
-  let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // the python harness sets this in the environment for us
   let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
-  let file = Cc["@mozilla.org/file/local;1"]
-               .createInstance(Ci.nsIFile);
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(profd);
 
   let dirSvc = Services.dirsvc;
@@ -63,28 +63,43 @@ function do_get_profile_startup() {
     },
     QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };
-  dirSvc.QueryInterface(Ci.nsIDirectoryService)
-        .registerProvider(provider);
+  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
   return file.clone();
 }
 
 function get_platform_specific_plugin_name(secondplugin = false) {
   if (secondplugin) {
-    if (gIsWindows) return "npsecondtest.dll";
-    if (gIsOSX) return "SecondTest.plugin";
-    if (gIsLinux) return "libnpsecondtest.so";
+    if (gIsWindows) {
+      return "npsecondtest.dll";
+    }
+    if (gIsOSX) {
+      return "SecondTest.plugin";
+    }
+    if (gIsLinux) {
+      return "libnpsecondtest.so";
+    }
   } else {
-    if (gIsWindows) return "nptest.dll";
-    if (gIsOSX) return "Test.plugin";
-    if (gIsLinux) return "libnptest.so";
+    if (gIsWindows) {
+      return "nptest.dll";
+    }
+    if (gIsOSX) {
+      return "Test.plugin";
+    }
+    if (gIsLinux) {
+      return "libnptest.so";
+    }
   }
   return null;
 }
 
 function get_platform_specific_plugin_suffix() {
-  if (gIsWindows) return ".dll";
-  else if (gIsOSX) return ".plugin";
-  else if (gIsLinux) return ".so";
+  if (gIsWindows) {
+    return ".dll";
+  } else if (gIsOSX) {
+    return ".plugin";
+  } else if (gIsLinux) {
+    return ".so";
+  }
   return null;
 }
 
