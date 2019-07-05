@@ -1,4 +1,6 @@
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 if (AppConstants.platform != "android") {
   // We load HTML documents, which try to track link state, which requires
   // the history service, which requires a profile.
@@ -20,16 +22,25 @@ function run_test() {
     // is set to true *before* profile-change-teardown notifications are fired.
     // To work around this, just force the history service to be created earlier:
 
-    let {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-    Assert.ok(PlacesUtils.history.databaseStatus <= 1, "ensure places database is successfully initialized.");
+    let { PlacesUtils } = ChromeUtils.import(
+      "resource://gre/modules/PlacesUtils.jsm"
+    );
+    Assert.ok(
+      PlacesUtils.history.databaseStatus <= 1,
+      "ensure places database is successfully initialized."
+    );
   }
 
-  var ParserUtils =  Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
-  var sanitizeFlags = ParserUtils.SanitizerCidEmbedsOnly | ParserUtils.SanitizerDropForms | ParserUtils.SanitizerDropNonCSSPresentation;
+  var ParserUtils = Cc["@mozilla.org/parserutils;1"].getService(
+    Ci.nsIParserUtils
+  );
+  var sanitizeFlags =
+    ParserUtils.SanitizerCidEmbedsOnly |
+    ParserUtils.SanitizerDropForms |
+    ParserUtils.SanitizerDropNonCSSPresentation;
   // flags according to
   // http://mxr.mozilla.org/comm-central/source/mailnews/mime/src/mimemoz2.cpp#2218
   // and default settings
-
 
   for (var item in vectors) {
     var evil = vectors[item].data;
