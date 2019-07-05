@@ -6,19 +6,21 @@ function run_test() {
   //* *************************************************************************//
   // Constants
 
-  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].
-                     getService(Ci.nsIHandlerService);
+  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+    Ci.nsIHandlerService
+  );
 
-  const mimeSvc = Cc["@mozilla.org/mime;1"].
-                  getService(Ci.nsIMIMEService);
+  const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
-  const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
-                   getService(Ci.nsIExternalProtocolService);
+  const protoSvc = Cc[
+    "@mozilla.org/uriloader/external-protocol-service;1"
+  ].getService(Ci.nsIExternalProtocolService);
 
   const prefSvc = Services.prefs;
 
-  const env = Cc["@mozilla.org/process/environment;1"].
-              getService(Ci.nsIEnvironment);
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
 
   const rootPrefBranch = prefSvc.getBranch("");
 
@@ -26,12 +28,11 @@ function run_test() {
   if (mozinfo.os == "win") {
     // Check mailto handler from registry.
     // If registry entry is nothing, no mailto handler
-    let regSvc = Cc["@mozilla.org/windows-registry-key;1"].
-                 createInstance(Ci.nsIWindowsRegKey);
+    let regSvc = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+      Ci.nsIWindowsRegKey
+    );
     try {
-      regSvc.open(regSvc.ROOT_KEY_CLASSES_ROOT,
-                  "mailto",
-                  regSvc.ACCESS_READ);
+      regSvc.open(regSvc.ROOT_KEY_CLASSES_ROOT, "mailto", regSvc.ACCESS_READ);
       noMailto = false;
     } catch (ex) {
       noMailto = true;
@@ -42,8 +43,9 @@ function run_test() {
   if (mozinfo.os == "linux") {
     // Check mailto handler from GIO
     // If there isn't one, then we have no mailto handler
-    let gIOSvc = Cc["@mozilla.org/gio-service;1"].
-                 createInstance(Ci.nsIGIOService);
+    let gIOSvc = Cc["@mozilla.org/gio-service;1"].createInstance(
+      Ci.nsIGIOService
+    );
     try {
       gIOSvc.getAppForURIScheme("mailto");
       noMailto = false;
@@ -66,20 +68,21 @@ function run_test() {
   // if (!executable.exists())
   //  executable.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o755);
 
-  var localHandler = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                     createInstance(Ci.nsILocalHandlerApp);
+  var localHandler = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
   localHandler.name = "Local Handler";
   localHandler.executable = executable;
 
-  var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
-                   createInstance(Ci.nsIWebHandlerApp);
+  var webHandler = Cc[
+    "@mozilla.org/uriloader/web-handler-app;1"
+  ].createInstance(Ci.nsIWebHandlerApp);
   webHandler.name = "Web Handler";
   webHandler.uriTemplate = "http://www.example.com/?%s";
 
   // FIXME: these tests create and manipulate enough variables that it would
   // make sense to move each test into its own scope so we don't run the risk
   // of one test stomping on another's data.
-
 
   //* *************************************************************************//
   // Test Default Properties
@@ -154,16 +157,18 @@ function run_test() {
   // OS default exists, injected default exists, explicit warning pref: false
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  if (haveDefaultHandlersVersion)
+  if (haveDefaultHandlersVersion) {
     Assert.equal(2, protoInfo.possibleApplicationHandlers.length);
-  else
+  } else {
     Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
+  }
 
   // Win7+ or Linux's GIO might not have a default mailto: handler
-  if (noMailto)
+  if (noMailto) {
     Assert.ok(protoInfo.alwaysAskBeforeHandling);
-  else
+  } else {
     Assert.ok(!protoInfo.alwaysAskBeforeHandling);
+  }
 
   // OS default exists, injected default exists, explicit warning pref: true
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true);
@@ -175,10 +180,11 @@ function run_test() {
     // the pref is true, the value in RDF is false. The injected mailto handler
     // carried over the default pref value, and so when we set the pref above
     // to true it's ignored.
-    if (noMailto)
+    if (noMailto) {
       Assert.ok(protoInfo.alwaysAskBeforeHandling);
-    else
+    } else {
       Assert.ok(!protoInfo.alwaysAskBeforeHandling);
+    }
   } else {
     Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
     Assert.ok(protoInfo.alwaysAskBeforeHandling);
@@ -195,7 +201,6 @@ function run_test() {
     Assert.equal(2, protoInfo.possibleApplicationHandlers.length);
     Assert.ok(protoInfo.alwaysAskBeforeHandling);
   }
-
 
   //* *************************************************************************//
   // Test Round-Trip Data Integrity
@@ -242,46 +247,63 @@ function run_test() {
   // Make sure the handler service's remove method removes a handler record.
   handlerSvc.remove(handlerInfo2);
   let handlers = handlerSvc.enumerate();
-  while (handlers.hasMoreElements())
-    Assert.notEqual(handlers.getNext().QueryInterface(Ci.nsIHandlerInfo).type,
-                    handlerInfo2.type);
+  while (handlers.hasMoreElements()) {
+    Assert.notEqual(
+      handlers.getNext().QueryInterface(Ci.nsIHandlerInfo).type,
+      handlerInfo2.type
+    );
+  }
 
   // Make sure we can store and retrieve a handler info object with no preferred
   // handler.
-  var noPreferredHandlerInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/no-preferred-handler", null);
+  var noPreferredHandlerInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/no-preferred-handler",
+    null
+  );
   handlerSvc.store(noPreferredHandlerInfo);
-  noPreferredHandlerInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/no-preferred-handler", null);
+  noPreferredHandlerInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/no-preferred-handler",
+    null
+  );
   Assert.equal(noPreferredHandlerInfo.preferredApplicationHandler, null);
 
   // Make sure that the handler service removes an existing handler record
   // if we store a handler info object with no preferred handler.
-  var removePreferredHandlerInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/rem-preferred-handler", null);
+  var removePreferredHandlerInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/rem-preferred-handler",
+    null
+  );
   removePreferredHandlerInfo.preferredApplicationHandler = localHandler;
   handlerSvc.store(removePreferredHandlerInfo);
-  removePreferredHandlerInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/rem-preferred-handler", null);
+  removePreferredHandlerInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/rem-preferred-handler",
+    null
+  );
   removePreferredHandlerInfo.preferredApplicationHandler = null;
   handlerSvc.store(removePreferredHandlerInfo);
-  removePreferredHandlerInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/rem-preferred-handler", null);
+  removePreferredHandlerInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/rem-preferred-handler",
+    null
+  );
   Assert.equal(removePreferredHandlerInfo.preferredApplicationHandler, null);
 
   // Make sure we can store and retrieve a handler info object with possible
   // handlers.  We test both adding and removing handlers.
 
   // Get a handler info and make sure it has no possible handlers.
-  var possibleHandlersInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/possible-handlers", null);
+  var possibleHandlersInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/possible-handlers",
+    null
+  );
   Assert.equal(possibleHandlersInfo.possibleApplicationHandlers.length, 0);
 
   // Store and re-retrieve the handler and make sure it still has no possible
   // handlers.
   handlerSvc.store(possibleHandlersInfo);
-  possibleHandlersInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/possible-handlers", null);
+  possibleHandlersInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/possible-handlers",
+    null
+  );
   Assert.equal(possibleHandlersInfo.possibleApplicationHandlers.length, 0);
 
   // Add two handlers, store the object, re-retrieve it, and make sure it has
@@ -289,26 +311,37 @@ function run_test() {
   possibleHandlersInfo.possibleApplicationHandlers.appendElement(localHandler);
   possibleHandlersInfo.possibleApplicationHandlers.appendElement(webHandler);
   handlerSvc.store(possibleHandlersInfo);
-  possibleHandlersInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/possible-handlers", null);
+  possibleHandlersInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/possible-handlers",
+    null
+  );
   Assert.equal(possibleHandlersInfo.possibleApplicationHandlers.length, 2);
 
   // Figure out which is the local and which is the web handler and the index
   // in the array of the local handler, which is the one we're going to remove
   // to test removal of a handler.
-  var handler1 = possibleHandlersInfo.possibleApplicationHandlers.
-                 queryElementAt(0, Ci.nsIHandlerApp);
-  var handler2 = possibleHandlersInfo.possibleApplicationHandlers.
-                 queryElementAt(1, Ci.nsIHandlerApp);
+  var handler1 = possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
+    0,
+    Ci.nsIHandlerApp
+  );
+  var handler2 = possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
+    1,
+    Ci.nsIHandlerApp
+  );
   var localPossibleHandler, webPossibleHandler, localIndex;
-  if (handler1 instanceof Ci.nsILocalHandlerApp)
-    [localPossibleHandler, webPossibleHandler, localIndex] = [handler1,
-                                                              handler2,
-                                                              0];
-  else
-    [localPossibleHandler, webPossibleHandler, localIndex] = [handler2,
-                                                              handler1,
-                                                              1];
+  if (handler1 instanceof Ci.nsILocalHandlerApp) {
+    [localPossibleHandler, webPossibleHandler, localIndex] = [
+      handler1,
+      handler2,
+      0,
+    ];
+  } else {
+    [localPossibleHandler, webPossibleHandler, localIndex] = [
+      handler2,
+      handler1,
+      1,
+    ];
+  }
   localPossibleHandler.QueryInterface(Ci.nsILocalHandlerApp);
   webPossibleHandler.QueryInterface(Ci.nsIWebHandlerApp);
 
@@ -322,20 +355,25 @@ function run_test() {
   // it only has one handler.
   possibleHandlersInfo.possibleApplicationHandlers.removeElementAt(localIndex);
   handlerSvc.store(possibleHandlersInfo);
-  possibleHandlersInfo =
-    mimeSvc.getFromTypeAndExtension("nonexistent/possible-handlers", null);
+  possibleHandlersInfo = mimeSvc.getFromTypeAndExtension(
+    "nonexistent/possible-handlers",
+    null
+  );
   Assert.equal(possibleHandlersInfo.possibleApplicationHandlers.length, 1);
 
   // Make sure the handler is the one we didn't remove.
-  webPossibleHandler = possibleHandlersInfo.possibleApplicationHandlers.
-                       queryElementAt(0, Ci.nsIWebHandlerApp);
+  webPossibleHandler = possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
+    0,
+    Ci.nsIWebHandlerApp
+  );
   Assert.equal(webPossibleHandler.name, webHandler.name);
   Assert.ok(webPossibleHandler.equals(webHandler));
 
   // ////////////////////////////////////////////////////
   // handler info command line parameters and equality
-  var localApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                 createInstance(Ci.nsILocalHandlerApp);
+  var localApp = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
   var handlerApp = localApp.QueryInterface(Ci.nsIHandlerApp);
 
   Assert.ok(handlerApp.equals(localApp));
@@ -353,8 +391,9 @@ function run_test() {
   localApp.clearParameters();
   Assert.equal(0, localApp.parameterCount);
 
-  var localApp2 = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                  createInstance(Ci.nsILocalHandlerApp);
+  var localApp2 = Cc[
+    "@mozilla.org/uriloader/local-handler-app;1"
+  ].createInstance(Ci.nsILocalHandlerApp);
 
   localApp2.executable = executable;
 
@@ -406,7 +445,6 @@ function run_test() {
   var lolType = handlerSvc.getTypeFromExtension("lolcat");
   Assert.equal(lolType, "");
 
-
   // add a handler for the extension
   var lolHandler = mimeSvc.getFromTypeAndExtension("application/lolcat", null);
 
@@ -429,7 +467,10 @@ function run_test() {
   if (mozinfo.os != "win" && mozinfo.os != "mac") {
     env.set("PERSONAL_MAILCAP", do_get_file("mailcap").path);
     handlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", null);
-    Assert.equal(handlerInfo.preferredAction, Ci.nsIHandlerInfo.useSystemDefault);
+    Assert.equal(
+      handlerInfo.preferredAction,
+      Ci.nsIHandlerInfo.useSystemDefault
+    );
     Assert.equal(handlerInfo.defaultDescription, "sed");
   }
 }
