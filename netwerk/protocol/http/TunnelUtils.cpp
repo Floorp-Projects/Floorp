@@ -130,18 +130,6 @@ void TLSFilterTransaction::Close(nsresult aReason) {
   }
   mTransaction->Close(aReason);
   mTransaction = nullptr;
-
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
-  SpdyConnectTransaction* trans =
-      baseTrans ? baseTrans->QuerySpdyConnectTransaction() : nullptr;
-
-  LOG(("TLSFilterTransaction::Close %p aReason=%" PRIx32 " trans=%p\n", this,
-       static_cast<uint32_t>(aReason), trans));
-
-  if (trans) {
-    trans->Close(aReason);
-    trans = nullptr;
-  }
 }
 
 nsresult TLSFilterTransaction::OnReadSegment(const char* aData, uint32_t aCount,
