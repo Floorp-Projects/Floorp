@@ -17,16 +17,13 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function callError(message) {
-  return [{message, type: "BinaryExpression"}];
+  return [{ message, type: "BinaryExpression" }];
 }
 
 const MESSAGE = "Don't compare for inexact equality against boolean literals";
 
 ruleTester.run("no-compare-against-boolean-literals", rule, {
-  valid: [
-    `if (!foo) {}`,
-    `if (!!foo) {}`,
-  ],
+  valid: [`if (!foo) {}`, `if (!!foo) {}`],
   invalid: [
     {
       code: `if (foo == true) {}`,
@@ -62,4 +59,3 @@ ruleTester.run("no-compare-against-boolean-literals", rule, {
     },
   ],
 });
-

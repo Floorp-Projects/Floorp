@@ -2,15 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-var {OS, require} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function getFiles() {
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   // This is the directory where gcov is emitting the gcda files.
   const jsCoveragePath = env.get("JS_CODE_COVERAGE_OUTPUT_DIR");
 
-  const jsCoverageDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  const jsCoverageDir = Cc["@mozilla.org/file/local;1"].createInstance(
+    Ci.nsIFile
+  );
   jsCoverageDir.initWithPath(jsCoveragePath);
 
   let files = [];
@@ -47,9 +53,9 @@ function parseRecords(files) {
 
           let [hits, name] = recordContent.split(",");
           currentSF.push({
-            "type": "FNDA",
-            "hits": hits,
-            "name": name,
+            type: "FNDA",
+            hits,
+            name,
           });
           break;
         }
@@ -61,8 +67,8 @@ function parseRecords(files) {
 
           let name = recordContent.split(",")[1];
           currentSF.push({
-            "type": "FN",
-            "name": name,
+            type: "FN",
+            name,
           });
           break;
         }

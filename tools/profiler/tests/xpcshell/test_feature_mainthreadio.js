@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 /**
  * Test that the IOInterposer is working correctly to capture main thread IO.
@@ -21,10 +23,16 @@ add_task(async () => {
 
   {
     const filename = "profiler-mainthreadio-test-firstrun";
-    const payloads = await startProfilerAndgetFileIOPayloads(["mainthreadio"], filename);
+    const payloads = await startProfilerAndgetFileIOPayloads(
+      ["mainthreadio"],
+      filename
+    );
 
-    greater(payloads.length, 0,
-       "FileIO markers were found when using the mainthreadio feature on the profiler.");
+    greater(
+      payloads.length,
+      0,
+      "FileIO markers were found when using the mainthreadio feature on the profiler."
+    );
 
     // It would be better to check on the filename, but Linux does not currently include
     // it. See https://bugzilla.mozilla.org/show_bug.cgi?id=1533531
@@ -36,18 +44,27 @@ add_task(async () => {
     const filename = "profiler-mainthreadio-test-no-instrumentation";
     const payloads = await startProfilerAndgetFileIOPayloads([], filename);
 
-    equal(payloads.length, 0,
-          "No FileIO markers are found when the mainthreadio feature is not turned on " +
-          "in the profiler.");
+    equal(
+      payloads.length,
+      0,
+      "No FileIO markers are found when the mainthreadio feature is not turned on " +
+        "in the profiler."
+    );
   }
 
   {
     const filename = "profiler-mainthreadio-test-secondrun";
-    const payloads = await startProfilerAndgetFileIOPayloads(["mainthreadio"], filename);
+    const payloads = await startProfilerAndgetFileIOPayloads(
+      ["mainthreadio"],
+      filename
+    );
 
-    greater(payloads.length, 0,
-       "FileIO markers were found when re-starting the mainthreadio feature on the " +
-       "profiler.");
+    greater(
+      payloads.length,
+      0,
+      "FileIO markers were found when re-starting the mainthreadio feature on the " +
+        "profiler."
+    );
     // It would be better to check on the filename, but Linux does not currently include
     // it. See https://bugzilla.mozilla.org/show_bug.cgi?id=1533531
     // ok(hasWritePayload(payloads, filename),
@@ -67,14 +84,13 @@ async function startProfilerAndgetFileIOPayloads(features, filename) {
   const threads = [];
   Services.profiler.StartProfiler(entries, interval, features, threads);
 
-
   const file = FileUtils.getFile("TmpD", [filename]);
   if (file.exists()) {
     console.warn(
       "This test is triggering FileIO by writing to a file. However, the test found an " +
-      "existing file at the location it was trying to write to. This could happen " +
-      "because a previous run of the test failed to clean up after itself. This test " +
-      " will now clean up that file before running the test again."
+        "existing file at the location it was trying to write to. This could happen " +
+        "because a previous run of the test failed to clean up after itself. This test " +
+        " will now clean up that file before running the test again."
     );
     file.remove(false);
   }
