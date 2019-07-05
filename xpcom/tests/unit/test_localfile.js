@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const MAX_TIME_DIFFERENCE = 2500;
-const MILLIS_PER_DAY      = 1000 * 60 * 60 * 24;
+const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 
 var LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
@@ -38,8 +38,7 @@ function test_normalize_crash_if_media_missing() {
   for (var i = a; i <= z; ++i) {
     try {
       LocalFile(String.fromCharCode(i) + ":.\\test").normalize();
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 }
 
@@ -49,8 +48,9 @@ function test_file_modification_time() {
   file.append("testfile");
 
   // Should never happen but get rid of it anyway
-  if (file.exists())
+  if (file.exists()) {
     file.remove(true);
+  }
 
   var now = Date.now();
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
@@ -88,8 +88,9 @@ function test_directory_modification_time() {
   dir.append("testdir");
 
   // Should never happen but get rid of it anyway
-  if (dir.exists())
+  if (dir.exists()) {
     dir.remove(true);
+  }
 
   var now = Date.now();
   dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
@@ -123,8 +124,9 @@ function test_diskSpaceAvailable() {
   Assert.ok(bytes > 0);
 
   file.append("testfile");
-  if (file.exists())
+  if (file.exists()) {
     file.remove(true);
+  }
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
 
   bytes = file.diskSpaceAvailable;

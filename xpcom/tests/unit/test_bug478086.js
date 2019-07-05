@@ -3,8 +3,7 @@
 
 function run_test() {
   var nsIFile = Ci.nsIFile;
-  var root = Cc["@mozilla.org/file/local;1"].
-              createInstance(nsIFile);
+  var root = Cc["@mozilla.org/file/local;1"].createInstance(nsIFile);
 
   // copied from http://mxr.mozilla.org/mozilla-central/source/image/test/unit/test_imgtools.js#135
   // nsIXULRuntime.OS doesn't seem to be available in xpcshell, so we'll use

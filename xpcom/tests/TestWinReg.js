@@ -10,8 +10,9 @@ const nsIWindowsRegKey = Ci.nsIWindowsRegKey;
 const BASE_PATH = "SOFTWARE\\Mozilla\\Firefox";
 
 function idump(indent, str) {
-  for (var j = 0; j < indent; ++j)
+  for (var j = 0; j < indent; ++j) {
     dump(" ");
+  }
   dump(str);
 }
 
@@ -24,10 +25,11 @@ function list_values(indent, key) {
     if (key.getValueType(vn) == nsIWindowsRegKey.TYPE_STRING) {
       val = key.readStringValue(vn);
     }
-    if (vn == "")
-      idump(indent + 1, "(Default): \"" + val + "\"\n");
-    else
-      idump(indent + 1, vn + ": \"" + val + "\"\n");
+    if (vn == "") {
+      idump(indent + 1, '(Default): "' + val + '"\n');
+    } else {
+      idump(indent + 1, vn + ': "' + val + '"\n');
+    }
   }
   idump(indent, "}\n");
 }
@@ -44,13 +46,20 @@ function list_children(indent, key) {
 }
 
 // enumerate everything under BASE_PATH
-var key = Cc["@mozilla.org/windows-registry-key;1"].
-    createInstance(nsIWindowsRegKey);
-key.open(nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE, BASE_PATH,
-         nsIWindowsRegKey.ACCESS_READ);
+var key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+  nsIWindowsRegKey
+);
+key.open(
+  nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+  BASE_PATH,
+  nsIWindowsRegKey.ACCESS_READ
+);
 list_children(1, key);
 
 key.close();
-key.open(nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, BASE_PATH,
-         nsIWindowsRegKey.ACCESS_READ);
+key.open(
+  nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+  BASE_PATH,
+  nsIWindowsRegKey.ACCESS_READ
+);
 list_children(1, key);
