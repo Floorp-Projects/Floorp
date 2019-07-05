@@ -45,7 +45,6 @@ module.exports = {
   "overrides": [{
       "files": [
         "devtools/**",
-        "nsprpub/**",
         "other-licenses/**",
         "parser/**",
         "python/**",
