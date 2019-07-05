@@ -347,7 +347,6 @@ macosx1014-64-qr-tests:
 macosx64-tests:
     - gtest
     - mochitest-browser-chrome
-    - mochitest-media
     # - mochitest-webgl2-ext test timeouts
 
 macosx64-talos:
