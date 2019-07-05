@@ -4,11 +4,16 @@
 add_task(async function test_bug1174036() {
   const URI =
     "<body><textarea>e1</textarea><textarea>e2</textarea><textarea>e3</textarea></body>";
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "data:text/html;charset=utf-8," + encodeURIComponent(URI) },
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "data:text/html;charset=utf-8," + encodeURIComponent(URI),
+    },
     async function(browser) {
       // Hide the first textarea.
       await ContentTask.spawn(browser, null, function() {
-        content.document.getElementsByTagName("textarea")[0].style.display = "none";
+        content.document.getElementsByTagName("textarea")[0].style.display =
+          "none";
       });
 
       let finder = browser.finder;
@@ -29,7 +34,11 @@ add_task(async function test_bug1174036() {
       let promiseFind = waitForFind();
       finder.fastFind("e", false, false);
       let findResult = await promiseFind;
-      is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "find first string");
+      is(
+        findResult.result,
+        Ci.nsITypeAheadFind.FIND_FOUND,
+        "find first string"
+      );
 
       let firstRect = findResult.rect;
 
@@ -37,16 +46,25 @@ add_task(async function test_bug1174036() {
       promiseFind = waitForFind();
       finder.findAgain(false, false, false);
       findResult = await promiseFind;
-      is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "find second string");
+      is(
+        findResult.result,
+        Ci.nsITypeAheadFind.FIND_FOUND,
+        "find second string"
+      );
       ok(!findResult.rect.equals(firstRect), "found new string");
 
       // Ensure that we properly wrap to the second textarea.
       promiseFind = waitForFind();
       finder.findAgain(false, false, false);
       findResult = await promiseFind;
-      is(findResult.result, Ci.nsITypeAheadFind.FIND_WRAPPED, "wrapped to first string");
+      is(
+        findResult.result,
+        Ci.nsITypeAheadFind.FIND_WRAPPED,
+        "wrapped to first string"
+      );
       ok(findResult.rect.equals(firstRect), "wrapped to original string");
 
       finder.removeResultListener(listener);
-    });
+    }
+  );
 });

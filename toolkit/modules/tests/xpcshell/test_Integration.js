@@ -102,8 +102,10 @@ async function assertCombinedResults(combined, overridesCount) {
   Assert.equal(combined.methodArgument, "-argument");
 
   combined.asyncMethodArgument = "";
-  Assert.equal(await combined.asyncMethod("-argument"),
-               prefix + "asyncMethod-argument");
+  Assert.equal(
+    await combined.asyncMethod("-argument"),
+    prefix + "asyncMethod-argument"
+  );
   Assert.equal(combined.asyncMethodArgument, "-argument");
 }
 
@@ -164,7 +166,9 @@ add_task(async function test_override_super_multiple() {
  * ensures that this does not block other functions from being registered.
  */
 add_task(async function test_override_error() {
-  let errorOverrideFn = base => { throw new Error("Expected error."); };
+  let errorOverrideFn = base => {
+    throw new Error("Expected error.");
+  };
 
   Integration.testModule.register(errorOverrideFn);
   Integration.testModule.register(overrideFn);
@@ -205,8 +209,10 @@ add_task(async function test_xpcom_throws() {
   let combined = Integration.testModule.getCombined(TestIntegration);
 
   // This calls QueryInterface because it looks for nsISupportsWeakReference.
-  Assert.throws(() => Services.obs.addObserver(combined, "test-topic", true),
-                /NS_NOINTERFACE/);
+  Assert.throws(
+    () => Services.obs.addObserver(combined, "test-topic", true),
+    /NS_NOINTERFACE/
+  );
 });
 
 /**
@@ -217,11 +223,17 @@ add_task(async function test_defineModuleGetter() {
   let objectForGetters = {};
 
   // Test with and without the optional "symbol" parameter.
-  Integration.testModule.defineModuleGetter(objectForGetters,
-    "TestIntegration", "resource://testing-common/TestIntegration.jsm");
-  Integration.testModule.defineModuleGetter(objectForGetters,
-    "integration", "resource://testing-common/TestIntegration.jsm",
-    "TestIntegration");
+  Integration.testModule.defineModuleGetter(
+    objectForGetters,
+    "TestIntegration",
+    "resource://testing-common/TestIntegration.jsm"
+  );
+  Integration.testModule.defineModuleGetter(
+    objectForGetters,
+    "integration",
+    "resource://testing-common/TestIntegration.jsm",
+    "TestIntegration"
+  );
 
   Integration.testModule.register(overrideFn);
   await assertCombinedResults(objectForGetters.integration, 1);

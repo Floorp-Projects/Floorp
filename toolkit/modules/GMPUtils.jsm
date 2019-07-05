@@ -4,20 +4,26 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
-                         "GMPPrefs",
-                         "GMPUtils",
-                         "OPEN_H264_ID",
-                         "WIDEVINE_ID" ];
+var EXPORTED_SYMBOLS = [
+  "GMP_PLUGIN_IDS",
+  "GMPPrefs",
+  "GMPUtils",
+  "OPEN_H264_ID",
+  "WIDEVINE_ID",
+];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { UpdateUtils } = ChromeUtils.import(
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
 // GMP IDs
-const OPEN_H264_ID  = "gmp-gmpopenh264";
-const WIDEVINE_ID   = "gmp-widevinecdm";
-const GMP_PLUGIN_IDS = [ OPEN_H264_ID, WIDEVINE_ID ];
+const OPEN_H264_ID = "gmp-gmpopenh264";
+const WIDEVINE_ID = "gmp-widevinecdm";
+const GMP_PLUGIN_IDS = [OPEN_H264_ID, WIDEVINE_ID];
 
 var GMPUtils = {
   /**
@@ -33,8 +39,7 @@ var GMPUtils = {
       return true;
     }
 
-    if (!this._isPluginSupported(aPlugin) ||
-        !this._isPluginVisible(aPlugin)) {
+    if (!this._isPluginSupported(aPlugin) || !this._isPluginVisible(aPlugin)) {
       return true;
     }
 
@@ -61,9 +66,11 @@ var GMPUtils = {
     if (aPlugin.id == WIDEVINE_ID) {
       // The Widevine plugin is available for Windows versions Vista and later,
       // Mac OSX, and Linux.
-      return AppConstants.platform == "win" ||
-             AppConstants.platform == "macosx" ||
-             AppConstants.platform == "linux";
+      return (
+        AppConstants.platform == "win" ||
+        AppConstants.platform == "macosx" ||
+        AppConstants.platform == "linux"
+      );
     }
 
     return true;
@@ -95,7 +102,11 @@ var GMPUtils = {
    *          The plugin to check.
    */
   _isPluginForceSupported(aPlugin) {
-    return GMPPrefs.getBool(GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, false, aPlugin.id);
+    return GMPPrefs.getBool(
+      GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED,
+      false,
+      aPlugin.id
+    );
   },
 
   _isWindowsOnARM64() {
@@ -117,29 +128,29 @@ var GMPUtils = {
  * Manages preferences for GMP addons
  */
 var GMPPrefs = {
-  KEY_EME_ENABLED:              "media.eme.enabled",
-  KEY_PLUGIN_ENABLED:           "media.{0}.enabled",
-  KEY_PLUGIN_LAST_UPDATE:       "media.{0}.lastUpdate",
-  KEY_PLUGIN_VERSION:           "media.{0}.version",
-  KEY_PLUGIN_AUTOUPDATE:        "media.{0}.autoupdate",
-  KEY_PLUGIN_VISIBLE:           "media.{0}.visible",
-  KEY_PLUGIN_ABI:               "media.{0}.abi",
-  KEY_PLUGIN_FORCE_SUPPORTED:   "media.{0}.forceSupported",
-  KEY_URL:                      "media.gmp-manager.url",
-  KEY_URL_OVERRIDE:             "media.gmp-manager.url.override",
-  KEY_CERT_CHECKATTRS:          "media.gmp-manager.cert.checkAttributes",
-  KEY_CERT_REQUIREBUILTIN:      "media.gmp-manager.cert.requireBuiltIn",
-  KEY_UPDATE_LAST_CHECK:        "media.gmp-manager.lastCheck",
-  KEY_SECONDS_BETWEEN_CHECKS:   "media.gmp-manager.secondsBetweenChecks",
-  KEY_UPDATE_ENABLED:           "media.gmp-manager.updateEnabled",
-  KEY_APP_DISTRIBUTION:         "distribution.id",
+  KEY_EME_ENABLED: "media.eme.enabled",
+  KEY_PLUGIN_ENABLED: "media.{0}.enabled",
+  KEY_PLUGIN_LAST_UPDATE: "media.{0}.lastUpdate",
+  KEY_PLUGIN_VERSION: "media.{0}.version",
+  KEY_PLUGIN_AUTOUPDATE: "media.{0}.autoupdate",
+  KEY_PLUGIN_VISIBLE: "media.{0}.visible",
+  KEY_PLUGIN_ABI: "media.{0}.abi",
+  KEY_PLUGIN_FORCE_SUPPORTED: "media.{0}.forceSupported",
+  KEY_URL: "media.gmp-manager.url",
+  KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
+  KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",
+  KEY_CERT_REQUIREBUILTIN: "media.gmp-manager.cert.requireBuiltIn",
+  KEY_UPDATE_LAST_CHECK: "media.gmp-manager.lastCheck",
+  KEY_SECONDS_BETWEEN_CHECKS: "media.gmp-manager.secondsBetweenChecks",
+  KEY_UPDATE_ENABLED: "media.gmp-manager.updateEnabled",
+  KEY_APP_DISTRIBUTION: "distribution.id",
   KEY_APP_DISTRIBUTION_VERSION: "distribution.version",
-  KEY_BUILDID:                  "media.gmp-manager.buildID",
-  KEY_CERTS_BRANCH:             "media.gmp-manager.certs.",
-  KEY_PROVIDER_ENABLED:         "media.gmp-provider.enabled",
-  KEY_LOG_BASE:                 "media.gmp.log.",
-  KEY_LOGGING_LEVEL:            "media.gmp.log.level",
-  KEY_LOGGING_DUMP:             "media.gmp.log.dump",
+  KEY_BUILDID: "media.gmp-manager.buildID",
+  KEY_CERTS_BRANCH: "media.gmp-manager.certs.",
+  KEY_PROVIDER_ENABLED: "media.gmp-provider.enabled",
+  KEY_LOG_BASE: "media.gmp.log.",
+  KEY_LOGGING_LEVEL: "media.gmp.log.level",
+  KEY_LOGGING_DUMP: "media.gmp.log.dump",
 
   /**
    * Obtains the specified string preference in relation to the specified plugin.
@@ -149,11 +160,16 @@ var GMPPrefs = {
    * @return The obtained preference value, or the defaultValue if none exists.
    */
   getString(aKey, aDefaultValue, aPlugin) {
-    if (aKey === this.KEY_APP_DISTRIBUTION ||
-        aKey === this.KEY_APP_DISTRIBUTION_VERSION) {
+    if (
+      aKey === this.KEY_APP_DISTRIBUTION ||
+      aKey === this.KEY_APP_DISTRIBUTION_VERSION
+    ) {
       return Services.prefs.getDefaultBranch(null).getCharPref(aKey, "default");
     }
-    return Services.prefs.getStringPref(this.getPrefKey(aKey, aPlugin), aDefaultValue);
+    return Services.prefs.getStringPref(
+      this.getPrefKey(aKey, aPlugin),
+      aDefaultValue
+    );
   },
 
   /**
@@ -164,7 +180,10 @@ var GMPPrefs = {
    * @return The obtained preference value, or the defaultValue if none exists.
    */
   getInt(aKey, aDefaultValue, aPlugin) {
-    return Services.prefs.getIntPref(this.getPrefKey(aKey, aPlugin), aDefaultValue);
+    return Services.prefs.getIntPref(
+      this.getPrefKey(aKey, aPlugin),
+      aDefaultValue
+    );
   },
 
   /**
@@ -175,7 +194,10 @@ var GMPPrefs = {
    * @return The obtained preference value, or the defaultValue if none exists.
    */
   getBool(aKey, aDefaultValue, aPlugin) {
-    return Services.prefs.getBoolPref(this.getPrefKey(aKey, aPlugin), aDefaultValue);
+    return Services.prefs.getBoolPref(
+      this.getPrefKey(aKey, aPlugin),
+      aDefaultValue
+    );
   },
 
   /**
