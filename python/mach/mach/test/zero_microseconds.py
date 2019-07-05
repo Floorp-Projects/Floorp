@@ -1,5 +1,6 @@
 # This code is loaded via `mach python --exec-file`, so it runs in the scope of
 # the `mach python` command.
+from __future__ import absolute_import
 old = self._mach_context.post_dispatch_handler  # noqa: F821
 
 
