@@ -6,7 +6,8 @@
 "use strict";
 
 // Test for dynamically registering and unregistering themes
-const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/framework/test/";
+const CHROME_URL =
+  "chrome://mochitests/content/browser/devtools/client/framework/test/";
 const TEST_THEME_NAME = "test-theme";
 const LIGHT_THEME_NAME = "light";
 
@@ -40,7 +41,8 @@ add_task(async function themeInOptionsPanel() {
   const doc = panelWin.frameElement.contentDocument;
   const themeBox = doc.getElementById("devtools-theme-box");
   const testThemeOption = themeBox.querySelector(
-    `input[type=radio][value=${TEST_THEME_NAME}]`);
+    `input[type=radio][value=${TEST_THEME_NAME}]`
+  );
   const eventsRecorded = [];
 
   function onThemeChanged(theme) {
@@ -51,7 +53,8 @@ add_task(async function themeInOptionsPanel() {
   ok(testThemeOption, "new theme exists in the Options panel");
 
   const lightThemeOption = themeBox.querySelector(
-    `input[type=radio][value=${LIGHT_THEME_NAME}]`);
+    `input[type=radio][value=${LIGHT_THEME_NAME}]`
+  );
 
   let color = panelWin.getComputedStyle(themeBox).color;
   isnot(color, "rgb(255, 0, 0)", "style unapplied");
@@ -64,8 +67,16 @@ add_task(async function themeInOptionsPanel() {
   info("Waiting for theme to finish loading");
   await onThemeSwithComplete;
 
-  is(gDevTools.getTheme(), TEST_THEME_NAME, "getTheme returns the expected theme");
-  is(eventsRecorded.pop(), TEST_THEME_NAME, "theme-changed fired with the expected theme");
+  is(
+    gDevTools.getTheme(),
+    TEST_THEME_NAME,
+    "getTheme returns the expected theme"
+  );
+  is(
+    eventsRecorded.pop(),
+    TEST_THEME_NAME,
+    "theme-changed fired with the expected theme"
+  );
 
   color = panelWin.getComputedStyle(themeBox).color;
   is(color, "rgb(255, 0, 0)", "style applied");
@@ -78,8 +89,16 @@ add_task(async function themeInOptionsPanel() {
   info("Waiting for theme to finish loading");
   await onThemeSwithComplete;
 
-  is(gDevTools.getTheme(), LIGHT_THEME_NAME, "getTheme returns the expected theme");
-  is(eventsRecorded.pop(), LIGHT_THEME_NAME, "theme-changed fired with the expected theme");
+  is(
+    gDevTools.getTheme(),
+    LIGHT_THEME_NAME,
+    "getTheme returns the expected theme"
+  );
+  is(
+    eventsRecorded.pop(),
+    LIGHT_THEME_NAME,
+    "theme-changed fired with the expected theme"
+  );
 
   color = panelWin.getComputedStyle(themeBox).color;
   isnot(color, "rgb(255, 0, 0)", "style unapplied");
@@ -88,8 +107,16 @@ add_task(async function themeInOptionsPanel() {
   // Select test theme again.
   testThemeOption.click();
   await onThemeSwithComplete;
-  is(gDevTools.getTheme(), TEST_THEME_NAME, "getTheme returns the expected theme");
-  is(eventsRecorded.pop(), TEST_THEME_NAME, "theme-changed fired with the expected theme");
+  is(
+    gDevTools.getTheme(),
+    TEST_THEME_NAME,
+    "getTheme returns the expected theme"
+  );
+  is(
+    eventsRecorded.pop(),
+    TEST_THEME_NAME,
+    "theme-changed fired with the expected theme"
+  );
 
   gDevTools.off("theme-changed", onThemeChanged);
 });
@@ -109,17 +136,31 @@ add_task(async function themeUnregistration() {
   await onUnRegisteredTheme;
   await onThemeSwitchComplete;
 
-  is(gDevTools.getTheme(), LIGHT_THEME_NAME, "getTheme returns the expected theme");
-  is(eventsRecorded.pop(), LIGHT_THEME_NAME, "theme-changed fired with the expected theme");
-  ok(!gDevTools.getThemeDefinitionMap().has(TEST_THEME_NAME),
-    "theme removed from map");
+  is(
+    gDevTools.getTheme(),
+    LIGHT_THEME_NAME,
+    "getTheme returns the expected theme"
+  );
+  is(
+    eventsRecorded.pop(),
+    LIGHT_THEME_NAME,
+    "theme-changed fired with the expected theme"
+  );
+  ok(
+    !gDevTools.getThemeDefinitionMap().has(TEST_THEME_NAME),
+    "theme removed from map"
+  );
 
   const doc = panelWin.frameElement.contentDocument;
   const themeBox = doc.getElementById("devtools-theme-box");
 
   // The default light theme must be selected now.
-  is(themeBox.querySelector(`#devtools-theme-box [value=${LIGHT_THEME_NAME}]`).checked, true,
-    `${LIGHT_THEME_NAME} theme must be selected`);
+  is(
+    themeBox.querySelector(`#devtools-theme-box [value=${LIGHT_THEME_NAME}]`)
+      .checked,
+    true,
+    `${LIGHT_THEME_NAME} theme must be selected`
+  );
 
   gDevTools.off("theme-changed", onThemeChanged);
 });

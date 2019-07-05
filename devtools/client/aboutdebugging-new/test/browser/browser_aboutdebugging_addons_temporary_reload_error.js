@@ -13,10 +13,13 @@ add_task(async function() {
   const EXTENSION_ID = "test-devtools@mozilla.org";
   const EXTENSION_NAME = "Temporary web extension";
 
-  let addonFile = await installTemporaryExtensionFromXPI({
-    id: EXTENSION_ID,
-    name: EXTENSION_NAME,
-  }, document);
+  let addonFile = await installTemporaryExtensionFromXPI(
+    {
+      id: EXTENSION_ID,
+      name: EXTENSION_NAME,
+    },
+    document
+  );
 
   const target = findDebugTargetByText(EXTENSION_NAME, document);
   ok(!!target, "The temporary extension is installed with the expected name");
@@ -25,25 +28,37 @@ add_task(async function() {
   addonFile = updateTemporaryXPI({ id: EXTENSION_ID }, addonFile);
 
   info("Click on the reload button for the invalid temporary extension");
-  const waitForError =
-    waitForDispatch(window.AboutDebugging.store, "TEMPORARY_EXTENSION_RELOAD_FAILURE");
-  const reloadButton = target.querySelector(".qa-temporary-extension-reload-button");
+  const waitForError = waitForDispatch(
+    window.AboutDebugging.store,
+    "TEMPORARY_EXTENSION_RELOAD_FAILURE"
+  );
+  const reloadButton = target.querySelector(
+    ".qa-temporary-extension-reload-button"
+  );
   reloadButton.click();
   await waitForError;
-  ok(target.querySelector(".qa-temporary-extension-reload-error"),
-     "The error message of reloading appears");
+  ok(
+    target.querySelector(".qa-temporary-extension-reload-error"),
+    "The error message of reloading appears"
+  );
 
   info("Click on the reload button for the valid temporary extension");
-  const waitForSuccess =
-    waitForDispatch(window.AboutDebugging.store, "TEMPORARY_EXTENSION_RELOAD_SUCCESS");
+  const waitForSuccess = waitForDispatch(
+    window.AboutDebugging.store,
+    "TEMPORARY_EXTENSION_RELOAD_SUCCESS"
+  );
   updateTemporaryXPI({ id: EXTENSION_ID, name: EXTENSION_NAME }, addonFile);
   reloadButton.click();
   await waitForSuccess;
-  ok(!target.querySelector(".qa-temporary-extension-reload-error"),
-     "The error message of reloading disappears");
+  ok(
+    !target.querySelector(".qa-temporary-extension-reload-error"),
+    "The error message of reloading disappears"
+  );
 
   info("Click on the remove button for the temporary extension");
-  const removeButton = target.querySelector(".qa-temporary-extension-remove-button");
+  const removeButton = target.querySelector(
+    ".qa-temporary-extension-remove-button"
+  );
   removeButton.click();
 
   info("Wait until the debug target with the extension disappears");

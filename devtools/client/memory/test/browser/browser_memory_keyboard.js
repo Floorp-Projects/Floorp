@@ -6,18 +6,19 @@
 
 "use strict";
 
-const {
-  viewState,
-} = require("devtools/client/memory/constants");
+const { viewState } = require("devtools/client/memory/constants");
 const {
   takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+const TEST_URL =
+  "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 function waitUntilFocused(store, node) {
-  return waitUntilState(store, state =>
+  return waitUntilState(
+    store,
+    state =>
       state.snapshots.length === 1 &&
       state.snapshots[0].census &&
       state.snapshots[0].census.state === censusState.SAVED &&
@@ -27,10 +28,13 @@ function waitUntilFocused(store, node) {
 }
 
 function waitUntilExpanded(store, node) {
-  return waitUntilState(store, state =>
-    state.snapshots[0] &&
-    state.snapshots[0].census &&
-    state.snapshots[0].census.expanded.has(node.id));
+  return waitUntilState(
+    store,
+    state =>
+      state.snapshots[0] &&
+      state.snapshots[0].census &&
+      state.snapshots[0].census.expanded.has(node.id)
+  );
 }
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {

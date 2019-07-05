@@ -18,7 +18,9 @@ function errorLoggingMiddleware() {
         // All failure actions should dispatch an error object instead of a message.
         // We allow some flexibility to still provide some error logging.
         console.error(`[ACTION FAILED] ${action.type}: ${error}`);
-        console.error(`[ACTION FAILED] ${action.type} should dispatch the error object!`);
+        console.error(
+          `[ACTION FAILED] ${action.type} should dispatch the error object!`
+        );
       }
 
       if (error.stack) {

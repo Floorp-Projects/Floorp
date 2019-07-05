@@ -13,30 +13,42 @@ const { MockFilePicker } = SpecialPowers;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-Services.scriptloader
-        .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                       this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+  this
+);
 
 function click(selector) {
-  return BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, gBrowser.selectedBrowser);
+  return BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    {},
+    gBrowser.selectedBrowser
+  );
 }
 
 function rightClick(selector) {
   return BrowserTestUtils.synthesizeMouseAtCenter(
     selector,
-    {type: "contextmenu", button: 2},
+    { type: "contextmenu", button: 2 },
     gBrowser.selectedBrowser
   );
 }
 
 function awaitFileSave(name, ext) {
-  return new Promise((resolve) => {
-    MockFilePicker.showCallback = (fp) => {
+  return new Promise(resolve => {
+    MockFilePicker.showCallback = fp => {
       ok(true, "File picker was opened");
       const fileName = fp.defaultString;
-      is(fileName, name, "File picker should provide the correct default filename.");
-      is(fp.defaultExtension, ext,
-         "File picker should provide the correct default file extension.");
+      is(
+        fileName,
+        name,
+        "File picker should provide the correct default filename."
+      );
+      is(
+        fp.defaultExtension,
+        ext,
+        "File picker should provide the correct default file extension."
+      );
       const destFile = destDir.clone();
       destFile.append(fileName);
       MockFilePicker.setFiles([destFile]);
@@ -59,7 +71,9 @@ function getFileContents(file) {
     NetUtil.asyncFetch(channel, function(inputStream, status) {
       if (Components.isSuccessCode(status)) {
         info("Fetched downloaded contents.");
-        resolve(NetUtil.readInputStreamToString(inputStream, inputStream.available()));
+        resolve(
+          NetUtil.readInputStreamToString(inputStream, inputStream.available())
+        );
       } else {
         reject();
       }
@@ -106,17 +120,21 @@ add_task(async function() {
 
   // Attempt to save original JSON via "Save As" command
   promise = awaitFileSave(JSON_FILE, "json");
-  await new Promise((resolve) => {
+  await new Promise(resolve => {
     info("Register to handle popupshown.");
-    document.addEventListener("popupshown", function(event) {
-      info("Context menu opened.");
-      const savePageCommand = document.getElementById("context-savepage");
-      savePageCommand.doCommand();
-      info("SavePage command done.");
-      event.target.hidePopup();
-      info("Context menu hidden.");
-      resolve();
-    }, {once: true});
+    document.addEventListener(
+      "popupshown",
+      function(event) {
+        info("Context menu opened.");
+        const savePageCommand = document.getElementById("context-savepage");
+        savePageCommand.doCommand();
+        info("SavePage command done.");
+        event.target.hidePopup();
+        info("Context menu hidden.");
+        resolve();
+      },
+      { once: true }
+    );
     rightClick("body");
     info("Right clicked.");
   });

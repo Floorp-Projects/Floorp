@@ -19,7 +19,10 @@ add_task(async function() {
   // Note that this is relative to the <style>.
   is(value.slice(-2), ":6", "initial rule line number is 6");
 
-  const onLocationChanged = once(bodyRuleEditor.rule.domRule, "location-changed");
+  const onLocationChanged = once(
+    bodyRuleEditor.rule.domRule,
+    "location-changed"
+  );
   await addProperty(view, 1, "font-size", "23px");
   await onLocationChanged;
 

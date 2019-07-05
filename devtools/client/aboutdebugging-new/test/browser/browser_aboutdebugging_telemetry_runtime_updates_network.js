@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-telemetry.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-telemetry.js",
+  this
+);
 
 const NETWORK_RUNTIME = {
   host: "localhost:1234",
@@ -31,37 +34,48 @@ add_task(async function testNetworkRuntimeUpdates() {
   // Before the connection, we don't have any information about the runtime.
   // Device information is also not available to network runtimes.
   const networkRuntimeExtras = {
-    "connection_type": "network",
-    "device_name": "",
-    "runtime_name": "",
+    connection_type: "network",
+    device_name: "",
+    runtime_name: "",
   };
 
   // Once connected we should be able to log a valid runtime name.
-  const connectedNetworkRuntimeExtras = Object.assign({}, networkRuntimeExtras, {
-    "runtime_name": NETWORK_RUNTIME.name,
-  });
+  const connectedNetworkRuntimeExtras = Object.assign(
+    {},
+    networkRuntimeExtras,
+    {
+      runtime_name: NETWORK_RUNTIME.name,
+    }
+  );
 
   // For network runtimes, we don't have any device information, so we shouldn't have any
   // device_added event.
-  checkTelemetryEvents([
-    { method: "runtime_added", extras: networkRuntimeExtras },
-  ], sessionId);
+  checkTelemetryEvents(
+    [{ method: "runtime_added", extras: networkRuntimeExtras }],
+    sessionId
+  );
 
   await connectToRuntime(NETWORK_RUNTIME.host, document);
-  checkTelemetryEvents([
-    { method: "runtime_connected", extras: connectedNetworkRuntimeExtras },
-    { method: "connection_attempt", extras: { status: "start" } },
-    { method: "connection_attempt", extras: { status: "success" } },
-  ], sessionId);
+  checkTelemetryEvents(
+    [
+      { method: "runtime_connected", extras: connectedNetworkRuntimeExtras },
+      { method: "connection_attempt", extras: { status: "start" } },
+      { method: "connection_attempt", extras: { status: "success" } },
+    ],
+    sessionId
+  );
 
   info("Remove network runtime");
   mocks.removeRuntime(NETWORK_RUNTIME.host);
   await waitUntil(() => !findSidebarItemByText(NETWORK_RUNTIME.host, document));
   // Similarly we should not have any device removed event.
-  checkTelemetryEvents([
-    { method: "runtime_disconnected", extras: connectedNetworkRuntimeExtras },
-    { method: "runtime_removed", extras: networkRuntimeExtras },
-  ], sessionId);
+  checkTelemetryEvents(
+    [
+      { method: "runtime_disconnected", extras: connectedNetworkRuntimeExtras },
+      { method: "runtime_removed", extras: networkRuntimeExtras },
+    ],
+    sessionId
+  );
 
   await removeTab(tab);
 });

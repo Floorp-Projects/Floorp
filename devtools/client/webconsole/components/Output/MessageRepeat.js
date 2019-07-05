@@ -1,4 +1,3 @@
-
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -21,10 +20,16 @@ MessageRepeat.propTypes = {
 
 function MessageRepeat(props) {
   const { repeat } = props;
-  return dom.span({
-    className: "message-repeats",
-    title: PluralForm.get(repeat, messageRepeatsTooltip).replace("#1", repeat),
-  }, repeat);
+  return dom.span(
+    {
+      className: "message-repeats",
+      title: PluralForm.get(repeat, messageRepeatsTooltip).replace(
+        "#1",
+        repeat
+      ),
+    },
+    repeat
+  );
 }
 
 module.exports = MessageRepeat;

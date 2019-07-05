@@ -7,7 +7,7 @@
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const TextEditor = require("devtools/client/inspector/markup/views/text-editor");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
-const {extend} = require("devtools/shared/extend");
+const { extend } = require("devtools/shared/extend");
 
 /**
  * An implementation of MarkupContainer for text node and comment nodes.
@@ -21,8 +21,12 @@ const {extend} = require("devtools/shared/extend");
  *         The inspector tool container the markup-view
  */
 function MarkupTextContainer(markupView, node) {
-  MarkupContainer.prototype.initialize.call(this, markupView, node,
-    "textcontainer");
+  MarkupContainer.prototype.initialize.call(
+    this,
+    markupView,
+    node,
+    "textcontainer"
+  );
 
   if (node.nodeType == nodeConstants.TEXT_NODE) {
     this.editor = new TextEditor(this, node, "text");

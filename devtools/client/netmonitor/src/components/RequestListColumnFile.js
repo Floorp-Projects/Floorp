@@ -10,9 +10,7 @@ const { L10N } = require("../utils/l10n");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { propertiesEqual } = require("../utils/request-utils");
 
-const UPDATED_FILE_PROPS = [
-  "urlDetails",
-];
+const UPDATED_FILE_PROPS = ["urlDetails"];
 
 class RequestListColumnFile extends Component {
   static get propTypes() {
@@ -22,7 +20,11 @@ class RequestListColumnFile extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return !propertiesEqual(UPDATED_FILE_PROPS, this.props.item, nextProps.item);
+    return !propertiesEqual(
+      UPDATED_FILE_PROPS,
+      this.props.item,
+      nextProps.item
+    );
   }
 
   render() {
@@ -32,21 +34,26 @@ class RequestListColumnFile extends Component {
 
     const originalFileURL = urlDetails.url;
     const decodedFileURL = urlDetails.unicodeUrl;
-    const ORIGINAL_FILE_URL = L10N.getFormatStr("netRequest.originalFileURL.tooltip",
-      originalFileURL);
-    const DECODED_FILE_URL = L10N.getFormatStr("netRequest.decodedFileURL.tooltip",
-      decodedFileURL);
+    const ORIGINAL_FILE_URL = L10N.getFormatStr(
+      "netRequest.originalFileURL.tooltip",
+      originalFileURL
+    );
+    const DECODED_FILE_URL = L10N.getFormatStr(
+      "netRequest.decodedFileURL.tooltip",
+      decodedFileURL
+    );
     const requestedFile = urlDetails.baseNameWithQuery;
-    const fileToolTip = originalFileURL === decodedFileURL ?
-      originalFileURL : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
+    const fileToolTip =
+      originalFileURL === decodedFileURL
+        ? originalFileURL
+        : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
 
-    return (
-      dom.td({
+    return dom.td(
+      {
         className: "requests-list-column requests-list-file",
         title: fileToolTip,
       },
-        requestedFile
-      )
+      requestedFile
     );
   }
 }

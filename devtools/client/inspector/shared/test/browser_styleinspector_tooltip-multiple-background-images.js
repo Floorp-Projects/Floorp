@@ -6,14 +6,16 @@
 // Test for bug 1026921: Ensure the URL of hovered url() node is used instead
 // of the first found from the declaration  as there might be multiple urls.
 
-const YELLOW_DOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwCr0o5ngAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY/j/n6EeAAd9An7Z55GEAAAAAElFTkSuQmCC";
-const BLUE_DOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwlCkCM9QAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY2Bg+F8PAAKCAX/tPkrkAAAAAElFTkSuQmCC";
+const YELLOW_DOT =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwCr0o5ngAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY/j/n6EeAAd9An7Z55GEAAAAAElFTkSuQmCC";
+const BLUE_DOT =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwlCkCM9QAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY2Bg+F8PAAKCAX/tPkrkAAAAAElFTkSuQmCC";
 const TEST_STYLE = `h1 {background: url(${YELLOW_DOT}), url(${BLUE_DOT});}`;
 const TEST_URI = `<style>${TEST_STYLE}</style><h1>test element</h1>`;
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector} = await openInspector();
+  const { inspector } = await openInspector();
 
   await testRuleViewUrls(inspector);
   await testComputedViewUrls(inspector);
@@ -24,7 +26,7 @@ async function testRuleViewUrls(inspector) {
   const view = selectRuleView(inspector);
   await selectNode("h1", inspector);
 
-  const {valueSpan} = getRuleViewProperty(view, "h1", "background");
+  const { valueSpan } = getRuleViewProperty(view, "h1", "background");
   await performChecks(view, valueSpan);
 }
 
@@ -35,7 +37,7 @@ async function testComputedViewUrls(inspector) {
   const view = selectComputedView(inspector);
   await onComputedViewReady;
 
-  const {valueSpan} = getComputedViewProperty(view, "background-image");
+  const { valueSpan } = getComputedViewProperty(view, "background-image");
 
   await performChecks(view, valueSpan);
 }

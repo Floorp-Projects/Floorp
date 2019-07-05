@@ -8,10 +8,21 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_FLATTEN_RECURSION_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  UI_FLATTEN_RECURSION_PREF,
+  UI_ENABLE_ALLOCATIONS_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -26,7 +37,9 @@ add_task(async function() {
     MemoryFlameGraphView,
   } = panel.panelWin;
 
-  const { FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
+  const {
+    FlameGraphUtils,
+  } = require("devtools/client/shared/widgets/FlameGraph");
   const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
   // Enable memory to test
@@ -36,7 +49,10 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  let rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
+  let rendered = once(
+    MemoryFlameGraphView,
+    EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED
+  );
   await DetailsView.selectView("memory-flamegraph");
   await rendered;
 
@@ -44,44 +60,65 @@ add_task(async function() {
   const thread1 = RecordingUtils.getProfileThreadFromAllocations(allocations1);
   const rendering1 = FlameGraphUtils._cache.get(thread1);
 
-  ok(allocations1,
-    "The allocations were retrieved from the controller.");
-  ok(thread1,
-    "The allocations profile was synthesized by the utility funcs.");
-  ok(rendering1,
-    "The rendering data was cached.");
+  ok(allocations1, "The allocations were retrieved from the controller.");
+  ok(thread1, "The allocations profile was synthesized by the utility funcs.");
+  ok(rendering1, "The rendering data was cached.");
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, false);
   await rendered;
-  ok(true, "MemoryFlameGraphView rerendered when toggling flatten-tree-recursion.");
+  ok(
+    true,
+    "MemoryFlameGraphView rerendered when toggling flatten-tree-recursion."
+  );
 
   const allocations2 = PerformanceController.getCurrentRecording().getAllocations();
   const thread2 = RecordingUtils.getProfileThreadFromAllocations(allocations2);
   const rendering2 = FlameGraphUtils._cache.get(thread2);
 
-  is(allocations1, allocations2,
-    "The same allocations data should be retrieved from the controller (1).");
-  is(thread1, thread2,
-    "The same allocations profile should be retrieved from the utility funcs. (1).");
-  isnot(rendering1, rendering2,
-    "The rendering data should be different because other options were used (1).");
+  is(
+    allocations1,
+    allocations2,
+    "The same allocations data should be retrieved from the controller (1)."
+  );
+  is(
+    thread1,
+    thread2,
+    "The same allocations profile should be retrieved from the utility funcs. (1)."
+  );
+  isnot(
+    rendering1,
+    rendering2,
+    "The rendering data should be different because other options were used (1)."
+  );
 
   rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
   await rendered;
-  ok(true, "MemoryFlameGraphView rerendered when toggling back flatten-tree-recursion.");
+  ok(
+    true,
+    "MemoryFlameGraphView rerendered when toggling back flatten-tree-recursion."
+  );
 
   const allocations3 = PerformanceController.getCurrentRecording().getAllocations();
   const thread3 = RecordingUtils.getProfileThreadFromAllocations(allocations3);
   const rendering3 = FlameGraphUtils._cache.get(thread3);
 
-  is(allocations2, allocations3,
-    "The same allocations data should be retrieved from the controller (2).");
-  is(thread2, thread3,
-    "The same allocations profile should be retrieved from the utility funcs. (2).");
-  isnot(rendering2, rendering3,
-    "The rendering data should be different because other options were used (2).");
+  is(
+    allocations2,
+    allocations3,
+    "The same allocations data should be retrieved from the controller (2)."
+  );
+  is(
+    thread2,
+    thread3,
+    "The same allocations profile should be retrieved from the utility funcs. (2)."
+  );
+  isnot(
+    rendering2,
+    rendering3,
+    "The rendering data should be different because other options were used (2)."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

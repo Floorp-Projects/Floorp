@@ -18,7 +18,9 @@ add_task(async function() {
   await clickOnAnimation(animationInspector, panel, 1);
   assertSelection(panel, [false, true]);
 
-  info("Checking whether all elements will be unselected after closing the detail pane");
+  info(
+    "Checking whether all elements will be unselected after closing the detail pane"
+  );
   clickOnDetailCloseButton(panel);
   assertSelection(panel, [false, false]);
 });
@@ -26,8 +28,11 @@ add_task(async function() {
 function assertSelection(panel, expectedResult) {
   panel.querySelectorAll(".animation-item").forEach((item, index) => {
     const shouldSelected = expectedResult[index];
-    is(item.classList.contains("selected"), shouldSelected,
-       `Animation item[${ index }] should ` +
-       `${ shouldSelected ? "" : "not" } have 'selected' class`);
+    is(
+      item.classList.contains("selected"),
+      shouldSelected,
+      `Animation item[${index}] should ` +
+        `${shouldSelected ? "" : "not"} have 'selected' class`
+    );
   });
 }

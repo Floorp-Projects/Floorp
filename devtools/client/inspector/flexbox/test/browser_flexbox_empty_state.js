@@ -16,8 +16,14 @@ add_task(async function() {
   const { highlighters } = inspector;
 
   info("Checking the initial state of the Flexbox Inspector.");
-  ok(doc.querySelector(".flex-accordion .devtools-sidepanel-no-result",
-    "A message is displayede when no flex container is selected."));
-  ok(!highlighters.flexboxHighlighterShown,
-    "No flexbox highlighter exists in the highlighters overlay.");
+  ok(
+    doc.querySelector(
+      ".flex-accordion .devtools-sidepanel-no-result",
+      "A message is displayede when no flex container is selected."
+    )
+  );
+  ok(
+    !highlighters.flexboxHighlighterShown,
+    "No flexbox highlighter exists in the highlighters overlay."
+  );
 });

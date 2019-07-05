@@ -25,10 +25,14 @@ function debounceActions(wait, maxWait) {
   let queuedActions = [];
 
   return store => next => {
-    const debounced = debounce(() => {
-      next(batchActions(queuedActions));
-      queuedActions = [];
-    }, wait, maxWait);
+    const debounced = debounce(
+      () => {
+        next(batchActions(queuedActions));
+        queuedActions = [];
+      },
+      wait,
+      maxWait
+    );
 
     return action => {
       if (!action.meta || !action.meta.debounce) {

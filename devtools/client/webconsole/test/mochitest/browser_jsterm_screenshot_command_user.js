@@ -36,5 +36,8 @@ async function testUserScreenshotFunction(hud) {
   const onMessage = waitForMessage(hud, "screen");
   hud.jsterm.execute(command);
   await onMessage;
-  ok(true, "content screenshot function is not overidden and was executed as expected");
+  ok(
+    true,
+    "content screenshot function is not overidden and was executed as expected"
+  );
 }

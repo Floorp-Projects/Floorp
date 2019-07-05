@@ -9,7 +9,9 @@
 // React & Redux
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
+const Message = createFactory(
+  require("devtools/client/webconsole/components/Output/Message")
+);
 const { MODE, REPS } = require("devtools/client/shared/components/reps/reps");
 
 PageError.displayName = "PageError";

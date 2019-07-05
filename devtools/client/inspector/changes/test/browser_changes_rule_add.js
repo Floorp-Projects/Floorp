@@ -55,6 +55,10 @@ async function testTrackRenameNewRule(store, inspector, ruleView, panel) {
   const addedSelectors = getAddedSelectors(panel);
   const removedSelectors = getRemovedSelectors(panel);
   is(addedSelectors.length, 1, "One selector was tracked as added");
-  is(addedSelectors.item(0).title, ".test", "New rule's selector was updated in place.");
+  is(
+    addedSelectors.item(0).title,
+    ".test",
+    "New rule's selector was updated in place."
+  );
   is(removedSelectors.length, 0, "No selectors tracked as removed");
 }

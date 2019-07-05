@@ -75,11 +75,11 @@ add_task(async function() {
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   const rule = getRuleViewRuleEditor(view, 1).rule;
-  for (const {name, value, isValid} of TEST_DATA) {
+  for (const { name, value, isValid } of TEST_DATA) {
     await testEditProperty(view, rule, name, value, isValid);
   }
 
@@ -95,12 +95,17 @@ async function testEditProperty(view, rule, name, value, isValid) {
   info("Focusing an existing property name in the rule-view");
   let editor = await focusEditableField(view, prop.editor.nameSpan, 32, 1);
 
-  is(inplaceEditor(prop.editor.nameSpan), editor,
-    "The property name editor got focused");
+  is(
+    inplaceEditor(prop.editor.nameSpan),
+    editor,
+    "The property name editor got focused"
+  );
   let input = editor.input;
 
-  info("Entering a new property name, including : to commit and " +
-    "focus the value");
+  info(
+    "Entering a new property name, including : to commit and " +
+      "focus the value"
+  );
   const onValueFocus = once(rule.editor.element, "focus", true);
   const onNameDone = view.once("ruleview-changed");
   EventUtils.sendString(name + ":", doc.defaultView);
@@ -119,8 +124,11 @@ async function testEditProperty(view, rule, name, value, isValid) {
   await onBlur;
   await onValueDone;
 
-  is(prop.editor.isValid(), isValid,
-    value + " is " + isValid ? "valid" : "invalid");
+  is(
+    prop.editor.isValid(),
+    isValid,
+    value + " is " + isValid ? "valid" : "invalid"
+  );
 
   info("Checking that the style property was changed on the content page");
   const propValue = await executeInContent("Test:GetRulePropertyValue", {
@@ -138,13 +146,15 @@ async function testEditProperty(view, rule, name, value, isValid) {
 
 function checkResults() {
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
-  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
-                                                 event[2] === "edit_rule" &&
-                                                 event[3] === "ruleview"
+  const events = snapshot.parent.filter(
+    event =>
+      event[1] === "devtools.main" &&
+      event[2] === "edit_rule" &&
+      event[3] === "ruleview"
   );
 
   for (const i in DATA) {
-    const [ timestamp, category, method, object ] = events[i];
+    const [timestamp, category, method, object] = events[i];
     const expected = DATA[i];
 
     // ignore timestamp

@@ -9,25 +9,28 @@
 "use strict";
 requestLongerTimeout(2);
 
-const TEST_FILE = "browser/devtools/client/webconsole/test/mochitest/" +
-                          "test-trackingprotection-securityerrors.html";
+const TEST_FILE =
+  "browser/devtools/client/webconsole/test/mochitest/" +
+  "test-trackingprotection-securityerrors.html";
 const TEST_URI = "http://example.com/" + TEST_FILE;
 const TRACKER_URL = "http://tracking.example.org/";
 const BLOCKED_URL = `\u201c${TRACKER_URL}\u201d`;
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS = {
-// reject all third-party cookies
+  // reject all third-party cookies
   REJECT_FOREIGN: 1,
-// reject all cookies
+  // reject all cookies
   REJECT: 2,
-// reject third-party cookies unless the eTLD already has at least one cookie
+  // reject third-party cookies unless the eTLD already has at least one cookie
   LIMIT_FOREIGN: 3,
-// reject trackers
+  // reject trackers
   REJECT_TRACKER: 4,
 };
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -42,12 +45,19 @@ add_task(async function testContentBlockingMessage() {
   const hud = await openNewTabAndConsole(TRACKER_URL + TEST_FILE);
 
   info("Test content blocking message");
-  const message = await waitFor(() => findMessage(hud,
-    `The resource at \u201chttp://tracking.example.com/\u201d was blocked because ` +
-    `content blocking is enabled`));
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `The resource at \u201chttp://tracking.example.com/\u201d was blocked because ` +
+        `content blocking is enabled`
+    )
+  );
 
-  await testLearnMoreClickOpenNewTab(message,
-    "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection" + DOCS_GA_PARAMS);
+  await testLearnMoreClickOpenNewTab(
+    message,
+    "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection" +
+      DOCS_GA_PARAMS
+  );
 });
 
 add_task(async function testForeignCookieBlockedMessage() {
@@ -58,11 +68,18 @@ add_task(async function testForeignCookieBlockedMessage() {
   Cu.forceShrinkingGC();
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_FOREIGN);
-  const {hud, win} = await openNewWindowAndConsole(TEST_URI);
-  const message = await waitFor(() => findMessage(hud,
-    `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
-    `blocking all third-party storage access requests and content blocking is enabled`));
-  await testLearnMoreClickOpenNewTab(message, getStorageErrorUrl("CookieBlockedForeign"));
+  const { hud, win } = await openNewWindowAndConsole(TEST_URI);
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
+        `blocking all third-party storage access requests and content blocking is enabled`
+    )
+  );
+  await testLearnMoreClickOpenNewTab(
+    message,
+    getStorageErrorUrl("CookieBlockedForeign")
+  );
   win.close();
 });
 
@@ -74,12 +91,19 @@ add_task(async function testLimitForeignCookieBlockedMessage() {
   Cu.forceShrinkingGC();
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.LIMIT_FOREIGN);
-  const {hud, win} = await openNewWindowAndConsole(TEST_URI);
+  const { hud, win } = await openNewWindowAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud,
-    `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
-    `blocking all third-party storage access requests and content blocking is enabled`));
-  await testLearnMoreClickOpenNewTab(message, getStorageErrorUrl("CookieBlockedForeign"));
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
+        `blocking all third-party storage access requests and content blocking is enabled`
+    )
+  );
+  await testLearnMoreClickOpenNewTab(
+    message,
+    getStorageErrorUrl("CookieBlockedForeign")
+  );
   win.close();
 });
 
@@ -87,12 +111,19 @@ add_task(async function testAllCookieBlockedMessage() {
   info("Test all cookies blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT);
-  const {hud, win} = await openNewWindowAndConsole(TEST_URI);
+  const { hud, win } = await openNewWindowAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud,
-    `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
-    `blocking all storage access requests`));
-  await testLearnMoreClickOpenNewTab(message, getStorageErrorUrl("CookieBlockedAll"));
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
+        `blocking all storage access requests`
+    )
+  );
+  await testLearnMoreClickOpenNewTab(
+    message,
+    getStorageErrorUrl("CookieBlockedAll")
+  );
   win.close();
 });
 
@@ -100,12 +131,19 @@ add_task(async function testTrackerCookieBlockedMessage() {
   info("Test tracker cookie blocked message");
   // We change the pref and open a new window to ensure it will be taken into account.
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.REJECT_TRACKER);
-  const {hud, win} = await openNewWindowAndConsole(TEST_URI);
+  const { hud, win } = await openNewWindowAndConsole(TEST_URI);
 
-  const message = await waitFor(() => findMessage(hud,
-    `Request to access cookie or storage on ${BLOCKED_URL} was blocked because it came ` +
-    `from a tracker and content blocking is enabled`));
-  await testLearnMoreClickOpenNewTab(message, getStorageErrorUrl("CookieBlockedTracker"));
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `Request to access cookie or storage on ${BLOCKED_URL} was blocked because it came ` +
+        `from a tracker and content blocking is enabled`
+    )
+  );
+  await testLearnMoreClickOpenNewTab(
+    message,
+    getStorageErrorUrl("CookieBlockedTracker")
+  );
   win.close();
 });
 
@@ -113,14 +151,27 @@ add_task(async function testCookieBlockedByPermissionMessage() {
   info("Test cookie blocked by permission message");
   // Turn off tracking protection and add a block permission on the URL.
   await pushPref("privacy.trackingprotection.enabled", false);
-  const p = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(TRACKER_URL);
-  Services.perms.addFromPrincipal(p, "cookie", Ci.nsIPermissionManager.DENY_ACTION);
+  const p = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+    TRACKER_URL
+  );
+  Services.perms.addFromPrincipal(
+    p,
+    "cookie",
+    Ci.nsIPermissionManager.DENY_ACTION
+  );
 
-  const {hud, win} = await openNewWindowAndConsole(TEST_URI);
-  const message = await waitFor(() => findMessage(hud, `Request to access cookies or ` +
-    `storage on ${BLOCKED_URL} was blocked because of custom cookie permission`));
-  await testLearnMoreClickOpenNewTab(message,
-    getStorageErrorUrl("CookieBlockedByPermission"));
+  const { hud, win } = await openNewWindowAndConsole(TEST_URI);
+  const message = await waitFor(() =>
+    findMessage(
+      hud,
+      `Request to access cookies or ` +
+        `storage on ${BLOCKED_URL} was blocked because of custom cookie permission`
+    )
+  );
+  await testLearnMoreClickOpenNewTab(
+    message,
+    getStorageErrorUrl("CookieBlockedByPermission")
+  );
   win.close();
 
   // Remove the custom permission.
@@ -128,8 +179,9 @@ add_task(async function testCookieBlockedByPermissionMessage() {
 });
 
 function getStorageErrorUrl(category) {
-  const BASE_STORAGE_ERROR_URL = "https://developer.mozilla.org/docs/Mozilla/Firefox/" +
-                                 "Privacy/Storage_access_policy/Errors/";
+  const BASE_STORAGE_ERROR_URL =
+    "https://developer.mozilla.org/docs/Mozilla/Firefox/" +
+    "Privacy/Storage_access_policy/Errors/";
   const STORAGE_ERROR_URL_PARAMS = new URLSearchParams({
     utm_source: "devtools",
     utm_medium: "firefox-cookie-errors",

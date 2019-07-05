@@ -28,17 +28,21 @@ add_task(async function() {
   });
   await waitForMessage("Console was cleared", hud);
 
-  info("Check that the messages logged after the first clear are still displayed");
+  info(
+    "Check that the messages logged after the first clear are still displayed"
+  );
   isnot(hud.outputNode.textContent.indexOf("msg"), -1, "msg is in the output");
 });
 
 function waitForMessage(message, webconsole) {
   return waitForMessages({
     webconsole,
-    messages: [{
-      text: message,
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
+    messages: [
+      {
+        text: message,
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      },
+    ],
   });
 }

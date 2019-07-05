@@ -29,7 +29,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
 add_task(async function() {
   await pushPref("devtools.markup.pagesize", 5);
 
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   // <test-component> is a shadow host.
   info("Find and expand the test-component shadow DOM host.");
@@ -37,12 +37,18 @@ add_task(async function() {
   await inspector.markup.expandNode(hostFront);
   await waitForMultipleChildrenUpdates(inspector);
 
-  info("Test that expanding a shadow host shows shadow root and direct host children.");
-  const {markup} = inspector;
+  info(
+    "Test that expanding a shadow host shows shadow root and direct host children."
+  );
+  const { markup } = inspector;
   const hostContainer = markup.getContainer(hostFront);
   let childContainers = hostContainer.getChildContainers();
 
-  is(childContainers.length, 6, "Expecting 6 children: shadowroot, 5 host children");
+  is(
+    childContainers.length,
+    6,
+    "Expecting 6 children: shadowroot, 5 host children"
+  );
   assertContainerHasText(childContainers[0], "#shadow-root");
   for (let i = 1; i < 6; i++) {
     assertContainerHasText(childContainers[i], "div");
@@ -51,7 +57,10 @@ add_task(async function() {
 
   info("Click on the more nodes button under the host element");
   let moreNodesLink = hostContainer.elt.querySelector(".more-nodes");
-  ok(!!moreNodesLink, "A 'more nodes' button is displayed in the host container");
+  ok(
+    !!moreNodesLink,
+    "A 'more nodes' button is displayed in the host container"
+  );
   moreNodesLink.querySelector("button").click();
   await inspector.markup._waitForChildren();
 
@@ -80,19 +89,29 @@ add_task(async function() {
   is(slotChildContainers.length, 5, "Expecting 5 slotted children");
   for (const slotChildContainer of slotChildContainers) {
     assertContainerHasText(slotChildContainer, "div");
-    ok(slotChildContainer.elt.querySelector(".reveal-link"),
-      "Slotted container has a reveal link element");
+    ok(
+      slotChildContainer.elt.querySelector(".reveal-link"),
+      "Slotted container has a reveal link element"
+    );
   }
 
   info("Click on the more nodes button under the slot element");
   moreNodesLink = slotContainer.elt.querySelector(".more-nodes");
-  ok(!!moreNodesLink, "A 'more nodes' button is displayed in the host container");
-  EventUtils.sendMouseEvent({type: "click"}, moreNodesLink.querySelector("button"));
+  ok(
+    !!moreNodesLink,
+    "A 'more nodes' button is displayed in the host container"
+  );
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    moreNodesLink.querySelector("button")
+  );
   await inspector.markup._waitForChildren();
 
   slotChildContainers = slotContainer.getChildContainers();
   is(slotChildContainers.length, 6, "Expecting one additional slotted element");
   assertContainerHasText(slotChildContainers[5], "div");
-  ok(slotChildContainers[5].elt.querySelector(".reveal-link"),
-    "Slotted container has a reveal link element");
+  ok(
+    slotChildContainers[5].elt.querySelector(".reveal-link"),
+    "Slotted container has a reveal link element"
+  );
 });

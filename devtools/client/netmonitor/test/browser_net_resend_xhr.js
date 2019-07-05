@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-*  http://creativecommons.org/publicdomain/zero/1.0/ */
+ *  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -22,8 +22,9 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
 
   // Stores original request for comparison of values later
-  const { getSelectedRequest }
-  = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getSelectedRequest } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const originalRequest = getSelectedRequest(store.getState());
 
   // Context Menu > "Resend"
@@ -34,8 +35,7 @@ add_task(async function() {
   const selectedRequest = getSelectedRequest(store.getState());
 
   // Compares if the requests are the same.
-  ok(originalRequest.url === selectedRequest.url,
-  "Both requests are the same");
+  ok(originalRequest.url === selectedRequest.url, "Both requests are the same");
 
   return teardown(monitor);
 });

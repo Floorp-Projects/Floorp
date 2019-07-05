@@ -6,18 +6,28 @@
 
 "use strict";
 
-const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 loader.lazyGetter(this, "AutocompletePopup", function() {
-  return createFactory(require("devtools/client/shared/components/AutoCompletePopup"));
+  return createFactory(
+    require("devtools/client/shared/components/AutoCompletePopup")
+  );
 });
 loader.lazyGetter(this, "MDNLink", function() {
   return createFactory(require("./MdnLink"));
 });
 
-loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
+loader.lazyRequireGetter(
+  this,
+  "KeyShortcuts",
+  "devtools/client/shared/key-shortcuts"
+);
 
 class SearchBox extends PureComponent {
   static get propTypes() {
@@ -179,7 +189,8 @@ class SearchBox extends PureComponent {
       type = "search",
     } = this.props;
     const { value } = this.state;
-    const showAutocomplete = autocompleteProvider && this.state.focused && value !== "";
+    const showAutocomplete =
+      autocompleteProvider && this.state.focused && value !== "";
     const showLearnMoreLink = learnMoreUrl && value === "";
 
     const inputClassList = [`devtools-${type}input`];
@@ -197,27 +208,32 @@ class SearchBox extends PureComponent {
         value,
         type: "search",
       }),
-      showLearnMoreLink && MDNLink({
-        title: learnMoreTitle,
-        url: learnMoreUrl,
-      }),
-      summary ?
-        dom.span({
-          className: "devtools-searchinput-summary",
-          title: summaryTooltip || "",
-        }, summary)
+      showLearnMoreLink &&
+        MDNLink({
+          title: learnMoreTitle,
+          url: learnMoreUrl,
+        }),
+      summary
+        ? dom.span(
+            {
+              className: "devtools-searchinput-summary",
+              title: summaryTooltip || "",
+            },
+            summary
+          )
         : null,
       dom.button({
         className: "devtools-searchinput-clear",
         hidden: value === "",
         onClick: this.onClearButtonClick,
       }),
-      showAutocomplete && AutocompletePopup({
-        autocompleteProvider,
-        filter: value,
-        onItemSelected: itemValue => this.onChange(itemValue),
-        ref: this.autocompleteRef,
-      })
+      showAutocomplete &&
+        AutocompletePopup({
+          autocompleteProvider,
+          filter: value,
+          onItemSelected: itemValue => this.onChange(itemValue),
+          ref: this.autocompleteRef,
+        })
     );
   }
 }

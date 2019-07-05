@@ -12,7 +12,9 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip_arrow-01.xul";
 
-const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
 let useXulWrapper;
@@ -22,7 +24,7 @@ add_task(async function() {
   await pushPref("devtools.toolbox.footer.height", 200);
 
   await addTab("about:blank");
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
 
   info("Run tests for a Tooltip without using a XUL panel");
   useXulWrapper = false;
@@ -35,13 +37,13 @@ add_task(async function() {
 
 async function runTests(doc) {
   info("Create HTML tooltip");
-  const tooltip = new HTMLTooltip(doc, {type: "arrow", useXulWrapper});
+  const tooltip = new HTMLTooltip(doc, { type: "arrow", useXulWrapper });
   const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "35px";
   tooltip.panel.appendChild(div);
-  tooltip.setContentSize({width: 200, height: 35});
+  tooltip.setContentSize({ width: 200, height: 35 });
 
-  const {right: docRight} = doc.documentElement.getBoundingClientRect();
+  const { right: docRight } = doc.documentElement.getBoundingClientRect();
 
   const elements = [...doc.querySelectorAll(".anchor")];
   for (const el of elements) {
@@ -52,22 +54,30 @@ async function runTests(doc) {
     ok(arrow, "Tooltip has an arrow");
 
     // Get the geometry of the anchor, the tooltip panel & arrow.
-    const arrowBounds = arrow.getBoxQuads({relativeTo: doc})[0].getBounds();
-    const panelBounds = tooltip.panel.getBoxQuads({relativeTo: doc})[0].getBounds();
-    const anchorBounds = el.getBoxQuads({relativeTo: doc})[0].getBounds();
+    const arrowBounds = arrow.getBoxQuads({ relativeTo: doc })[0].getBounds();
+    const panelBounds = tooltip.panel
+      .getBoxQuads({ relativeTo: doc })[0]
+      .getBounds();
+    const anchorBounds = el.getBoxQuads({ relativeTo: doc })[0].getBounds();
 
-    const intersects = arrowBounds.left <= anchorBounds.right &&
-                     arrowBounds.right >= anchorBounds.left;
-    const isBlockedByViewport = arrowBounds.left == 0 ||
-                              arrowBounds.right == docRight;
-    ok(intersects || isBlockedByViewport,
-      "Tooltip arrow is aligned with the anchor, or stuck on viewport's edge.");
+    const intersects =
+      arrowBounds.left <= anchorBounds.right &&
+      arrowBounds.right >= anchorBounds.left;
+    const isBlockedByViewport =
+      arrowBounds.left == 0 || arrowBounds.right == docRight;
+    ok(
+      intersects || isBlockedByViewport,
+      "Tooltip arrow is aligned with the anchor, or stuck on viewport's edge."
+    );
 
-    const isInPanel = arrowBounds.left >= panelBounds.left &&
-                    arrowBounds.right <= panelBounds.right;
+    const isInPanel =
+      arrowBounds.left >= panelBounds.left &&
+      arrowBounds.right <= panelBounds.right;
 
-    ok(isInPanel,
-      "The tooltip arrow remains inside the tooltip panel horizontally");
+    ok(
+      isInPanel,
+      "The tooltip arrow remains inside the tooltip panel horizontally"
+    );
 
     await hideTooltip(tooltip);
   }

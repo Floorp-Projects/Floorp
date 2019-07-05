@@ -5,10 +5,14 @@
 /* eslint-env browser */
 "use strict";
 (function() {
-  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const { require } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
   const Services = require("Services");
   const { gDevTools } = require("devtools/client/framework/devtools");
-  const { appendStyleSheet } = require("devtools/client/shared/stylesheet-utils");
+  const {
+    appendStyleSheet,
+  } = require("devtools/client/shared/stylesheet-utils");
 
   const documentElement = document.documentElement;
 
@@ -68,7 +72,7 @@
 
     const loadEvents = [];
     for (const url of newThemeDef.stylesheets) {
-      const {styleSheet, loadPromise} = appendStyleSheet(document, url);
+      const { styleSheet, loadPromise } = appendStyleSheet(document, url);
       devtoolsStyleSheets.get(newThemeDef).push(styleSheet);
       loadEvents.push(loadPromise);
     }
@@ -114,8 +118,12 @@
     switchTheme(Services.prefs.getCharPref("devtools.theme"));
 
     Services.prefs.addObserver("devtools.theme", handlePrefChange);
-    window.addEventListener("unload", function() {
-      Services.prefs.removeObserver("devtools.theme", handlePrefChange);
-    }, { once: true });
+    window.addEventListener(
+      "unload",
+      function() {
+        Services.prefs.removeObserver("devtools.theme", handlePrefChange);
+      },
+      { once: true }
+    );
   }
 })();

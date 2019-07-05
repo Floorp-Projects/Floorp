@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
+const {
+  accessibility: { AUDIT_TYPE },
+} = require("devtools/shared/constants");
 const {
   AUDIT,
   AUDITING,
@@ -49,15 +51,20 @@ function audit(state = getInitialState(), action) {
       const isToggledToActive = !filters[filter];
 
       if (filter === FILTERS.ALL) {
-        filters = isToggledToActive ? allActiveFilters() : getInitialState().filters;
+        filters = isToggledToActive
+          ? allActiveFilters()
+          : getInitialState().filters;
       } else {
         filters = {
           ...filters,
           [filter]: isToggledToActive,
         };
 
-        if (isToggledToActive && !filters[FILTERS.ALL] &&
-            Object.values(AUDIT_TYPE).every(filterKey => filters[filterKey])) {
+        if (
+          isToggledToActive &&
+          !filters[FILTERS.ALL] &&
+          Object.values(AUDIT_TYPE).every(filterKey => filters[filterKey])
+        ) {
           filters[FILTERS.ALL] = true;
         } else if (!isToggledToActive && filters[FILTERS.ALL]) {
           filters[FILTERS.ALL] = false;

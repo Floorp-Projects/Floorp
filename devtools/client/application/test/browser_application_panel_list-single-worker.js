@@ -28,14 +28,19 @@ add_task(async function() {
   await waitUntil(() => workerContainer.querySelector(".js-unregister-button"));
 
   const scopeEl = workerContainer.querySelector(".js-sw-scope");
-  const expectedScope = "example.com/browser/devtools/client/application/test/" +
-                      "service-workers/";
-  ok(scopeEl.textContent.startsWith(expectedScope),
-    "Service worker has the expected scope");
+  const expectedScope =
+    "example.com/browser/devtools/client/application/test/" +
+    "service-workers/";
+  ok(
+    scopeEl.textContent.startsWith(expectedScope),
+    "Service worker has the expected scope"
+  );
 
   const updatedEl = workerContainer.querySelector(".js-sw-updated");
-  ok(updatedEl.textContent.includes(`${new Date().getFullYear()}`),
-    "Service worker has a last updated time");
+  ok(
+    updatedEl.textContent.includes(`${new Date().getFullYear()}`),
+    "Service worker has a last updated time"
+  );
 
   info("Unregister the service worker");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
@@ -46,4 +51,3 @@ add_task(async function() {
   info("Wait until the service worker is removed from the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 0);
 });
-

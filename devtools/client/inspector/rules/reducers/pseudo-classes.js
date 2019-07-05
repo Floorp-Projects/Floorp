@@ -11,16 +11,18 @@ const {
 } = require("../actions/index");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 
-const INITIAL_PSEUDO_CLASSES = PSEUDO_CLASSES.reduce((accumulator, pseudoClass) => {
-  accumulator[pseudoClass] = {
-    isChecked: false,
-    isDisabled: false,
-  };
-  return accumulator;
-}, {});
+const INITIAL_PSEUDO_CLASSES = PSEUDO_CLASSES.reduce(
+  (accumulator, pseudoClass) => {
+    accumulator[pseudoClass] = {
+      isChecked: false,
+      isDisabled: false,
+    };
+    return accumulator;
+  },
+  {}
+);
 
 const reducers = {
-
   [DISABLE_ALL_PSEUDO_CLASSES]() {
     return PSEUDO_CLASSES.reduce((accumulator, pseudoClass) => {
       accumulator[pseudoClass] = {
@@ -50,7 +52,6 @@ const reducers = {
       },
     };
   },
-
 };
 
 module.exports = function(pseudoClasses = INITIAL_PSEUDO_CLASSES, action) {

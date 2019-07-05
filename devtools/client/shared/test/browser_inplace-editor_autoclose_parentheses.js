@@ -35,23 +35,27 @@ const testData = [
 ];
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," +
-    "inplace editor parentheses autoclose");
+  await addTab(
+    "data:text/html;charset=utf-8," + "inplace editor parentheses autoclose"
+  );
   const [host, win, doc] = await createHost();
 
   const xulDocument = win.top.document;
   const popup = new AutocompletePopup(xulDocument, { autoSelect: true });
   await new Promise(resolve => {
-    createInplaceEditorAndClick({
-      start: runPropertyAutocompletionTest,
-      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
-      property: {
-        name: "background-image",
+    createInplaceEditorAndClick(
+      {
+        start: runPropertyAutocompletionTest,
+        contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+        property: {
+          name: "background-image",
+        },
+        cssVariables: new Map(),
+        done: resolve,
+        popup: popup,
       },
-      cssVariables: new Map(),
-      done: resolve,
-      popup: popup,
-    }, doc);
+      doc
+    );
   });
 
   popup.destroy();

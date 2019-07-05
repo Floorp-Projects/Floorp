@@ -8,14 +8,20 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-insecure-passwords-about-blank-web-console-warning.html";
-const INSECURE_PASSWORD_MSG = "Password fields present on an insecure (http://) iframe." +
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-insecure-passwords-about-blank-web-console-warning.html";
+const INSECURE_PASSWORD_MSG =
+  "Password fields present on an insecure (http://) iframe." +
   " This is a security risk that allows user login credentials to be stolen.";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  await waitFor(()=> findMessage(hud, INSECURE_PASSWORD_MSG, ".message.warn"), "", 100);
+  await waitFor(
+    () => findMessage(hud, INSECURE_PASSWORD_MSG, ".message.warn"),
+    "",
+    100
+  );
   ok(true, "Insecure password error displayed successfully");
 });

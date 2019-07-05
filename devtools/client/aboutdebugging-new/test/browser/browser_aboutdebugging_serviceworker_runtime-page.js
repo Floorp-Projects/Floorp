@@ -4,9 +4,15 @@
 "use strict";
 
 /* import-globals-from helper-serviceworker.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-serviceworker.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-serviceworker.js",
+  this
+);
 /* import-globals-from helper-collapsibilities.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-collapsibilities.js",
+  this
+);
 
 const SW_TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
 const SW_URL = URL_ROOT + "resources/service-workers/push-sw.js";
@@ -21,8 +27,9 @@ const SW_URL = URL_ROOT + "resources/service-workers/push-sw.js";
 add_task(async function() {
   prepareCollapsibilitiesTest();
   await enableServiceWorkerDebugging();
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging({
+    enableWorkerUpdates: true,
+  });
   const store = window.AboutDebugging.store;
 
   await selectThisFirefoxPage(document, store);
@@ -30,8 +37,7 @@ add_task(async function() {
   // check that SW list is empty
   info("Check that the SW pane is empty");
   let swPane = getDebugTargetPane("Service Workers", document);
-  ok(!swPane.querySelector(".qa-debug-target-item"),
-    "SW list is empty");
+  ok(!swPane.querySelector(".qa-debug-target-item"), "SW list is empty");
 
   // open a tab and register service worker
   info("Register a service worker");
@@ -42,10 +48,14 @@ add_task(async function() {
   await waitForServiceWorkerRunning(SW_URL, document);
 
   swPane = getDebugTargetPane("Service Workers", document);
-  ok(swPane.querySelectorAll(".qa-debug-target-item").length === 1,
-    "Service worker list has one element");
-  ok(swPane.querySelector(".qa-debug-target-item").textContent.includes(SW_URL),
-    "Service worker list is the one we registered");
+  ok(
+    swPane.querySelectorAll(".qa-debug-target-item").length === 1,
+    "Service worker list has one element"
+  );
+  ok(
+    swPane.querySelector(".qa-debug-target-item").textContent.includes(SW_URL),
+    "Service worker list is the one we registered"
+  );
 
   // unregister the service worker
   info("Unregister service worker");

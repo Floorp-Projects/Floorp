@@ -29,7 +29,7 @@ function _getUriForModulePath(modulePath) {
 
   // Add resource:// scheme if no scheme is specified.
   if (!modulePath.includes("://")) {
-    modulePath =  "resource://" + modulePath;
+    modulePath = "resource://" + modulePath;
   }
 
   return modulePath;

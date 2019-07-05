@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#matches", inspector);
 
   await enterInvalidFilter(inspector, view);
@@ -31,7 +31,7 @@ async function enterInvalidFilter(inspector, computedView) {
   const searchbar = computedView.searchField;
   const searchTerm = "xxxxx";
 
-  info("setting filter text to \"" + searchTerm + "\"");
+  info('setting filter text to "' + searchTerm + '"');
 
   const onRefreshed = inspector.once("computed-view-refreshed");
   searchbar.focus();

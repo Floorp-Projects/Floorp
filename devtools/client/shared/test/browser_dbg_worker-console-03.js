@@ -12,7 +12,8 @@
 /* import-globals-from helper_workers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
-  this);
+  this
+);
 
 var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
@@ -20,12 +21,14 @@ var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 // Test to see if creating the pause from the console works.
 add_task(async function testPausedByConsole() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
-  const {client, tab, workerTargetFront, toolbox} = dbg;
+  const { client, tab, workerTargetFront, toolbox } = dbg;
 
   const jsterm = await getSplitConsole(toolbox);
   let executed = await jsterm.execute("10000+1");
-  ok(executed.textContent.includes("10001"),
-      "Text for message appeared correct");
+  ok(
+    executed.textContent.includes("10001"),
+    "Text for message appeared correct"
+  );
 
   await clickElement(dbg, "pause");
 
@@ -35,15 +38,19 @@ add_task(async function testPausedByConsole() {
   await waitForPaused(dbg);
 
   executed = await jsterm.execute("10000+3");
-  ok(executed.textContent.includes("10003"),
-      "Text for message appeared correct");
+  ok(
+    executed.textContent.includes("10003"),
+    "Text for message appeared correct"
+  );
 
   info("Waiting for a resume");
   await clickElement(dbg, "resume");
 
   executed = await pausedExecution;
-  ok(executed.textContent.includes("10002"),
-      "Text for message appeared correct");
+  ok(
+    executed.textContent.includes("10002"),
+    "Text for message appeared correct"
+  );
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerTargetFront);

@@ -29,14 +29,17 @@ add_task(async function() {
   const checkbox = gridList.children[0].querySelector("input");
 
   info("Checking the initial state of the Grid Inspector.");
-  ok(!doc.getElementById("grid-outline-container"),
-    "There should be no grid outline shown.");
+  ok(
+    !doc.getElementById("grid-outline-container"),
+    "There should be no grid outline shown."
+  );
 
   info("Toggling ON the CSS grid highlighter from the layout panel.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  const onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 1 &&
-    state.grids[0].highlighted);
+  const onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length == 1 && state.grids[0].highlighted
+  );
   const onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group rect", 3);
   checkbox.click();
   await onHighlighterShown;

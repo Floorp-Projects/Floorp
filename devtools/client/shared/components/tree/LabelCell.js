@@ -39,8 +39,8 @@ define(function(require, exports, module) {
         iconClassList.push("open");
       }
 
-      return (
-        dom.td({
+      return dom.td(
+        {
           className: "treeLabelCell",
           style: {
             // Compute indentation dynamically. The deeper the item is
@@ -48,16 +48,19 @@ define(function(require, exports, module) {
             "--tree-label-cell-indent": `${level * 16}px`,
           },
           key: "default",
-          role: "presentation"},
-          dom.span({
-            className: iconClassList.join(" "),
-            role: "presentation",
-          }),
-          dom.span({
+          role: "presentation",
+        },
+        dom.span({
+          className: iconClassList.join(" "),
+          role: "presentation",
+        }),
+        dom.span(
+          {
             className: "treeLabel " + member.type + "Label",
             "aria-labelledby": id,
             "data-level": level,
-          }, member.name)
+          },
+          member.name
         )
       );
     }

@@ -11,10 +11,14 @@ const TEST_URI = `data:text/html;charset=utf-8,
                   <p id="one">one</p><p id="two">two</p><p id="three">three</p>`;
 
 add_task(async function() {
-  const {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   const body = await getNodeFront("body", inspector);
-  is(inspector.selection.nodeFront, body, "By default the body node is selected");
+  is(
+    inspector.selection.nodeFront,
+    body,
+    "By default the body node is selected"
+  );
 
   info("Start the element picker");
   await startPicker(toolbox);
@@ -47,10 +51,18 @@ async function clickElement(selector, testActor, inspector, isShift) {
 
 async function checkElementSelected(selector, inspector) {
   const el = await getNodeFront(selector, inspector);
-  is(inspector.selection.nodeFront, el, `The element ${selector} is now selected`);
+  is(
+    inspector.selection.nodeFront,
+    el,
+    `The element ${selector} is now selected`
+  );
 }
 
 function checkPickerMode(toolbox, isOn) {
   const pickerButton = toolbox.doc.querySelector("#command-button-pick");
-  is(pickerButton.classList.contains("checked"), isOn, "The picker mode is correct");
+  is(
+    pickerButton.classList.contains("checked"),
+    isOn,
+    "The picker mode is correct"
+  );
 }

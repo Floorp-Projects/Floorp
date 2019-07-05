@@ -14,47 +14,80 @@ add_task(async function() {
   const { document: doc } = flexboxInspector;
   const { highlighters, store } = inspector;
 
-  const onFlexHighlighterToggleRendered = waitForDOM(doc, "#flexbox-checkbox-toggle");
+  const onFlexHighlighterToggleRendered = waitForDOM(
+    doc,
+    "#flexbox-checkbox-toggle"
+  );
   await selectNode("#container", inspector);
   const [flexHighlighterToggle] = await onFlexHighlighterToggleRendered;
 
   info("Checking the #container state of the Flexbox Inspector.");
   ok(flexHighlighterToggle, "The flexbox highlighter toggle is rendered.");
-  ok(!flexHighlighterToggle.checked, "The flexbox highlighter toggle is unchecked.");
+  ok(
+    !flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is unchecked."
+  );
   ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
 
-  info("Toggling ON the flexbox highlighter for #container from the layout panel.");
+  info(
+    "Toggling ON the flexbox highlighter for #container from the layout panel."
+  );
   await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
 
   info("Checking the flexbox highlighter is created for #container.");
   const highlightedNodeFront = store.getState().flexbox.flexContainer.nodeFront;
-  is(highlighters.flexboxHighlighterShown, highlightedNodeFront,
-    "Flexbox highlighter is shown for #container.");
-  ok(flexHighlighterToggle.checked, "The flexbox highlighter toggle is checked.");
+  is(
+    highlighters.flexboxHighlighterShown,
+    highlightedNodeFront,
+    "Flexbox highlighter is shown for #container."
+  );
+  ok(
+    flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is checked."
+  );
 
   info("Switching the selected flex container to .container.column");
-  const onToggleChange = waitUntilState(store, state => !state.flexbox.highlighted);
+  const onToggleChange = waitUntilState(
+    store,
+    state => !state.flexbox.highlighted
+  );
   await selectNode(".container.column", inspector);
   await onToggleChange;
 
   info("Checking the .container.column state of the Flexbox Inspector.");
-  ok(!flexHighlighterToggle.checked, "The flexbox highlighter toggle is unchecked.");
-  is(highlighters.flexboxHighlighterShown, highlightedNodeFront,
-    "Flexbox highlighter is still shown for #container.");
+  ok(
+    !flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is unchecked."
+  );
+  is(
+    highlighters.flexboxHighlighterShown,
+    highlightedNodeFront,
+    "Flexbox highlighter is still shown for #container."
+  );
 
-  info("Toggling ON the flexbox highlighter for .container.column from the layout "
-    + "panel.");
+  info(
+    "Toggling ON the flexbox highlighter for .container.column from the layout " +
+      "panel."
+  );
   await toggleHighlighterON(flexHighlighterToggle, highlighters, store);
 
   info("Checking the flexbox highlighter is created for .container.column");
-  is(highlighters.flexboxHighlighterShown,
+  is(
+    highlighters.flexboxHighlighterShown,
     store.getState().flexbox.flexContainer.nodeFront,
-    "Flexbox highlighter is shown for .container.column.");
-  ok(flexHighlighterToggle.checked, "The flexbox highlighter toggle is checked.");
+    "Flexbox highlighter is shown for .container.column."
+  );
+  ok(
+    flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is checked."
+  );
 
   await toggleHighlighterOFF(flexHighlighterToggle, highlighters, store);
 
   info("Checking the flexbox highlighter is not shown.");
   ok(!highlighters.flexboxHighlighterShown, "No flexbox highlighter is shown.");
-  ok(!flexHighlighterToggle.checked, "The flexbox highlighter toggle is unchecked.");
+  ok(
+    !flexHighlighterToggle.checked,
+    "The flexbox highlighter toggle is unchecked."
+  );
 });

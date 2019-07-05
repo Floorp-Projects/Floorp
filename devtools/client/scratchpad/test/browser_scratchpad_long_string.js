@@ -10,7 +10,10 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,<p>test long string in Scratchpad</p>");
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    "data:text/html;charset=utf8,<p>test long string in Scratchpad</p>"
+  );
 }
 
 function runTests() {
@@ -19,9 +22,11 @@ function runTests() {
   sp.setText("'0'.repeat(10000)");
 
   sp.display().then(() => {
-    is(sp.getText(), "'0'.repeat(10000)\n" +
-                     "/*\n" + "0".repeat(10000) + "\n*/",
-       "display()ing a long string works");
+    is(
+      sp.getText(),
+      "'0'.repeat(10000)\n" + "/*\n" + "0".repeat(10000) + "\n*/",
+      "display()ing a long string works"
+    );
     finish();
   });
 }

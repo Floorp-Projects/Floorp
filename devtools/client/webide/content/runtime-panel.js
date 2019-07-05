@@ -6,7 +6,11 @@
 var RuntimePanel = {
   // TODO: Expand function to save toggle state.
   toggleSidebar: function() {
-    document.querySelector("#runtime-listing-panel").setAttribute("sidebar-displayed", true);
-    document.querySelector("#runtime-listing-splitter").setAttribute("sidebar-displayed", true);
+    document
+      .querySelector("#runtime-listing-panel")
+      .setAttribute("sidebar-displayed", true);
+    document
+      .querySelector("#runtime-listing-splitter")
+      .setAttribute("sidebar-displayed", true);
   },
 };

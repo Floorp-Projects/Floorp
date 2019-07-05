@@ -7,29 +7,40 @@
 const { mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const Provider = createFactory(
+  require("devtools/client/shared/vendor/react-redux").Provider
+);
 const {
   mockAccessible,
   setupStore,
 } = require("devtools/client/accessibility/test/jest/helpers");
 
 const Badges = require("devtools/client/accessibility/components/Badges");
-const { REPS: {Rep} } = require("devtools/client/shared/components/reps/reps");
+const {
+  REPS: { Rep },
+} = require("devtools/client/shared/components/reps/reps");
 const AuditController = require("devtools/client/accessibility/components/AuditController");
 
-const ConnectedAccessibilityRowValueClass =
-  require("devtools/client/accessibility/components/AccessibilityRowValue");
-const AccessibilityRowValueClass = ConnectedAccessibilityRowValueClass.WrappedComponent;
-const AccessibilityRowValue = createFactory(ConnectedAccessibilityRowValueClass);
+const ConnectedAccessibilityRowValueClass = require("devtools/client/accessibility/components/AccessibilityRowValue");
+const AccessibilityRowValueClass =
+  ConnectedAccessibilityRowValueClass.WrappedComponent;
+const AccessibilityRowValue = createFactory(
+  ConnectedAccessibilityRowValueClass
+);
 
 describe("AccessibilityRowValue component:", () => {
   it("audit not supported", () => {
     const store = setupStore({
-      preloadedState: { ui: { supports: {}}},
+      preloadedState: { ui: { supports: {} } },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityRowValue({
-      member: { object: mockAccessible() },
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        AccessibilityRowValue({
+          member: { object: mockAccessible() },
+        })
+      )
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     const rowValue = wrapper.find(AccessibilityRowValueClass);
@@ -43,11 +54,16 @@ describe("AccessibilityRowValue component:", () => {
 
   it("basic render", () => {
     const store = setupStore({
-      preloadedState: { ui: { supports: { audit: true }}},
+      preloadedState: { ui: { supports: { audit: true } } },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityRowValue({
-      member: { object: mockAccessible() },
-    })));
+    const wrapper = mount(
+      Provider(
+        { store },
+        AccessibilityRowValue({
+          member: { object: mockAccessible() },
+        })
+      )
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     const rowValue = wrapper.find(AccessibilityRowValueClass);

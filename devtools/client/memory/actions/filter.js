@@ -6,12 +6,12 @@
 const { actions } = require("../constants");
 const { refresh } = require("./refresh");
 
-const setFilterString = exports.setFilterString = function(filterString) {
+const setFilterString = (exports.setFilterString = function(filterString) {
   return {
     type: actions.SET_FILTER_STRING,
     filter: filterString,
   };
-};
+});
 
 // The number of milliseconds we should wait before kicking off a new census
 // when the filter string is updated. This helps us avoid doing any work while
@@ -22,14 +22,16 @@ const FILTER_INPUT_DEBOUNCE_MS = 250;
 let timerId = null;
 
 exports.setFilterStringAndRefresh = function(filterString, heapWorker) {
-  return function* (dispatch, getState) {
+  return function*(dispatch, getState) {
     dispatch(setFilterString(filterString));
 
     if (timerId !== null) {
       clearTimeout(timerId);
     }
 
-    timerId = setTimeout(() => dispatch(refresh(heapWorker)),
-                         FILTER_INPUT_DEBOUNCE_MS);
+    timerId = setTimeout(
+      () => dispatch(refresh(heapWorker)),
+      FILTER_INPUT_DEBOUNCE_MS
+    );
   };
 };

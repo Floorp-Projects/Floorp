@@ -28,12 +28,16 @@ add_task(async function() {
 
   const checkbox = doc.getElementById("grid-setting-extend-grid-lines");
 
-  ok(!Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
-    "'Extend grid lines infinitely' is pref off by default.");
+  ok(
+    !Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF),
+    "'Extend grid lines infinitely' is pref off by default."
+  );
 
   info("Toggling ON the 'Extend grid lines infinitely' setting.");
-  const onCheckboxChange = waitUntilState(store, state =>
-    state.highlighterSettings.showInfiniteLines);
+  const onCheckboxChange = waitUntilState(
+    store,
+    state => state.highlighterSettings.showInfiniteLines
+  );
   checkbox.click();
   await onCheckboxChange;
 
@@ -47,7 +51,8 @@ add_task(async function() {
   const gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  const onHighlighterShown = highlighters.once("grid-highlighter-shown",
+  const onHighlighterShown = highlighters.once(
+    "grid-highlighter-shown",
     (nodeFront, options) => {
       info("Checking the grid highlighter display settings.");
       const {

@@ -7,16 +7,25 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-console.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-console.html";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
   hud.ui.clearOutput();
 
-  const onInputMessage = waitForMessage(hud, "window.location.href;", ".message.command");
-  const onEvaluationResultMessage = waitForMessage(hud, TEST_URI, ".message.result");
+  const onInputMessage = waitForMessage(
+    hud,
+    "window.location.href;",
+    ".message.command"
+  );
+  const onEvaluationResultMessage = waitForMessage(
+    hud,
+    TEST_URI,
+    ".message.result"
+  );
   jsterm.execute("window.location.href;");
 
   let message = await onInputMessage;

@@ -18,17 +18,21 @@ add_task(async function() {
 });
 
 async function testBodyFonts(inspector, viewDoc) {
-  const FONTS = [{
-    familyName: "bar",
-    name: ["Ostrich Sans Medium", "Ostrich Sans Black"],
-  }, {
-    familyName: "barnormal",
-    name: "Ostrich Sans Medium",
-  }, {
-    // On Linux, Arial does not exist. Liberation Sans is used instead.
-    familyName: ["Arial", "Liberation Sans"],
-    name: ["Arial", "Liberation Sans"],
-  }];
+  const FONTS = [
+    {
+      familyName: "bar",
+      name: ["Ostrich Sans Medium", "Ostrich Sans Black"],
+    },
+    {
+      familyName: "barnormal",
+      name: "Ostrich Sans Medium",
+    },
+    {
+      // On Linux, Arial does not exist. Liberation Sans is used instead.
+      familyName: ["Arial", "Liberation Sans"],
+      name: ["Arial", "Liberation Sans"],
+    },
+  ];
 
   await selectNode("body", inspector);
 
@@ -40,33 +44,39 @@ async function testBodyFonts(inspector, viewDoc) {
     const font = FONTS[i];
 
     const familyName = getFamilyName(groupEL);
-    ok(font.familyName.includes(familyName),
-      `Font families used on BODY include: ${familyName}`);
+    ok(
+      font.familyName.includes(familyName),
+      `Font families used on BODY include: ${familyName}`
+    );
 
     const fontName = getName(groupEL);
-    ok(font.name.includes(fontName),
-      `Fonts used on BODY include: ${fontName}`);
+    ok(font.name.includes(fontName), `Fonts used on BODY include: ${fontName}`);
   }
 }
 
 async function testDivFonts(inspector, viewDoc) {
-  const FONTS = [{
-    selector: "div",
-    familyName: "bar",
-    name: "Ostrich Sans Medium",
-  }, {
-    selector: ".normal-text",
-    familyName: "barnormal",
-    name: "Ostrich Sans Medium",
-  }, {
-    selector: ".bold-text",
-    familyName: "bar",
-    name: "Ostrich Sans Black",
-  }, {
-    selector: ".black-text",
-    familyName: "bar",
-    name: "Ostrich Sans Black",
-  }];
+  const FONTS = [
+    {
+      selector: "div",
+      familyName: "bar",
+      name: "Ostrich Sans Medium",
+    },
+    {
+      selector: ".normal-text",
+      familyName: "barnormal",
+      name: "Ostrich Sans Medium",
+    },
+    {
+      selector: ".bold-text",
+      familyName: "bar",
+      name: "Ostrich Sans Black",
+    },
+    {
+      selector: ".black-text",
+      familyName: "bar",
+      name: "Ostrich Sans Black",
+    },
+  ];
 
   for (let i = 0; i < FONTS.length; i++) {
     await selectNode(FONTS[i].selector, inspector);
@@ -76,6 +86,10 @@ async function testDivFonts(inspector, viewDoc) {
 
     is(groups.length, 1, `Found 1 font on ${FONTS[i].selector}`);
     is(getName(groupEl), font.name, "The DIV font has the right name");
-    is(getFamilyName(groupEl), font.familyName, `font has the right family name`);
+    is(
+      getFamilyName(groupEl),
+      font.familyName,
+      `font has the right family name`
+    );
   }
 }

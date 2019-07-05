@@ -3,12 +3,13 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test that 'Resend Request' context menu " +
-                "item resends the selected request and select it in netmonitor panel.";
+const TEST_URI =
+  "data:text/html;charset=utf8,Test that 'Resend Request' context menu " +
+  "item resends the selected request and select it in netmonitor panel.";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/";
+const TEST_PATH =
+  "http://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 
 add_task(async function task() {
   await pushPref("devtools.webconsole.filter.net", true);
@@ -33,8 +34,9 @@ async function resendNetworkRequest(hud, url) {
   const message = await waitFor(() => findMessage(hud, url));
 
   const menuPopup = await openContextMenu(hud, message);
-  const openResendRequestMenuItem =
-    menuPopup.querySelector("#console-menu-resend-network-request");
+  const openResendRequestMenuItem = menuPopup.querySelector(
+    "#console-menu-resend-network-request"
+  );
   ok(openResendRequestMenuItem, "resend network request item is enabled");
 
   // Wait for message containing the resent request url

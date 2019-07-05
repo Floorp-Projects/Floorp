@@ -36,15 +36,22 @@ exports.getJSON = function(prefName) {
     }
 
     function readFromStorage(networkError) {
-      asyncStorage.getItem(prefName + "_cache").then(function(json) {
-        if (!json) {
-          return reject("Empty cache for " + prefName);
-        }
-        return resolve(json);
-      }).catch(function(e) {
-        reject("JSON not available, CDN error: " + networkError +
-                        ", storage error: " + e);
-      });
+      asyncStorage
+        .getItem(prefName + "_cache")
+        .then(function(json) {
+          if (!json) {
+            return reject("Empty cache for " + prefName);
+          }
+          return resolve(json);
+        })
+        .catch(function(e) {
+          reject(
+            "JSON not available, CDN error: " +
+              networkError +
+              ", storage error: " +
+              e
+          );
+        });
     }
 
     xhr.onload = () => {
@@ -60,7 +67,7 @@ exports.getJSON = function(prefName) {
       }
     };
 
-    xhr.onerror = (e) => {
+    xhr.onerror = e => {
       readFromStorage(e);
     };
 

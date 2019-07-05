@@ -10,7 +10,7 @@ const { assert } = require("devtools/shared/DevToolsUtils");
  * would simply duplicate work and is unnecessary. It maps from a task's unique
  * key to the promise of its result.
  */
-const TaskCache = module.exports = class TaskCache {
+const TaskCache = (module.exports = class TaskCache {
   constructor() {
     this._cache = new Map();
   }
@@ -33,8 +33,7 @@ const TaskCache = module.exports = class TaskCache {
    * @param {Promise<Any>} promise
    */
   put(key, promise) {
-    assert(!this._cache.has(key),
-           "We should not override extant entries");
+    assert(!this._cache.has(key), "We should not override extant entries");
 
     this._cache.set(key, promise);
   }
@@ -45,12 +44,14 @@ const TaskCache = module.exports = class TaskCache {
    * @param {Any} key
    */
   remove(key) {
-    assert(this._cache.has(key),
-           `Should have an extant entry for key = ${key}`);
+    assert(
+      this._cache.has(key),
+      `Should have an extant entry for key = ${key}`
+    );
 
     this._cache.delete(key);
   }
-};
+});
 
 /**
  * Create a new action-orchestrating task that is automatically cached. The
@@ -76,22 +77,27 @@ TaskCache.declareCacheableTask = function({ getCacheKey, task }) {
       // Ensure that we have our new entry in the cache *before* dispatching the
       // task!
       let resolve;
-      cache.put(key, new Promise(r => {
-        resolve = r;
-      }));
+      cache.put(
+        key,
+        new Promise(r => {
+          resolve = r;
+        })
+      );
 
-      resolve(dispatch(async function() {
-        try {
-          args.push(() => cache.remove(key), dispatch, getState);
-          return await task(...args);
-        } catch (error) {
-          // Don't perma-cache errors.
-          if (cache.get(key)) {
-            cache.remove(key);
+      resolve(
+        dispatch(async function() {
+          try {
+            args.push(() => cache.remove(key), dispatch, getState);
+            return await task(...args);
+          } catch (error) {
+            // Don't perma-cache errors.
+            if (cache.get(key)) {
+              cache.remove(key);
+            }
+            throw error;
           }
-          throw error;
-        }
-      }));
+        })
+      );
 
       return cache.get(key);
     };

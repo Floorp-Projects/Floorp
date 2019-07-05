@@ -27,7 +27,7 @@ function showMenu(items, options) {
 
   // Build the menu object from provided menu items.
   const menu = new Menu();
-  items.forEach((item) => {
+  items.forEach(item => {
     if (item == "-") {
       item = { type: "separator" };
     }
@@ -37,7 +37,7 @@ function showMenu(items, options) {
 
     if (subItems) {
       const subMenu = new Menu();
-      subItems.forEach((subItem) => {
+      subItems.forEach(subItem => {
         subMenu.append(new MenuItem(subItem));
       });
       menuItem.submenu = subMenu;

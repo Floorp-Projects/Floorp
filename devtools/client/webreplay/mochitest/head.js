@@ -27,8 +27,10 @@ async function attachDebugger(tab) {
   return { toolbox, target };
 }
 
-async function attachRecordingDebugger(url,
-    { waitForRecording } = { waitForRecording: false }) {
+async function attachRecordingDebugger(
+  url,
+  { waitForRecording } = { waitForRecording: false }
+) {
   const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
   gBrowser.selectedTab = tab;
   openTrustedLinkIn(EXAMPLE_URL + url, "current");
@@ -41,12 +43,12 @@ async function attachRecordingDebugger(url,
   const threadClient = dbg.toolbox.threadClient;
 
   await threadClient.interrupt();
-  return {...dbg, tab, threadClient, target};
+  return { ...dbg, tab, threadClient, target };
 }
 
 // Return a promise that resolves when a breakpoint has been set.
 async function setBreakpoint(threadClient, expectedFile, lineno, options = {}) {
-  const {sources} = await threadClient.getSources();
+  const { sources } = await threadClient.getSources();
   ok(sources.length == 1, "Got one source");
   ok(RegExp(expectedFile).test(sources[0].url), "Source is " + expectedFile);
   const location = { sourceUrl: sources[0].url, line: lineno };
@@ -58,9 +60,12 @@ function resumeThenPauseAtLineFunctionFactory(method) {
   return async function(threadClient, lineno) {
     threadClient[method]();
     await threadClient.once("paused", async function(packet) {
-      const {frames} = await threadClient.getFrames(0, 1);
+      const { frames } = await threadClient.getFrames(0, 1);
       const frameLine = frames[0] ? frames[0].where.line : undefined;
-      ok(frameLine == lineno, "Paused at line " + frameLine + " expected " + lineno);
+      ok(
+        frameLine == lineno,
+        "Paused at line " + frameLine + " expected " + lineno
+      );
     });
   };
 }
@@ -69,7 +74,9 @@ function resumeThenPauseAtLineFunctionFactory(method) {
 // pauses at a specified line.
 var rewindToLine = resumeThenPauseAtLineFunctionFactory("rewind");
 var resumeToLine = resumeThenPauseAtLineFunctionFactory("resume");
-var reverseStepOverToLine = resumeThenPauseAtLineFunctionFactory("reverseStepOver");
+var reverseStepOverToLine = resumeThenPauseAtLineFunctionFactory(
+  "reverseStepOver"
+);
 var stepOverToLine = resumeThenPauseAtLineFunctionFactory("stepOver");
 var stepInToLine = resumeThenPauseAtLineFunctionFactory("stepIn");
 var stepOutToLine = resumeThenPauseAtLineFunctionFactory("stepOut");
@@ -89,8 +96,10 @@ async function checkEvaluateInTopFrameThrows(target, text) {
 // Return a pathname that can be used for a new recording file.
 function newRecordingFile() {
   ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-  return OS.Path.join(OS.Constants.Path.tmpDir,
-                      "MochitestRecording" + Math.round(Math.random() * 1000000000));
+  return OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "MochitestRecording" + Math.round(Math.random() * 1000000000)
+  );
 }
 
 function findMessage(hud, text, selector = ".message") {
@@ -99,9 +108,8 @@ function findMessage(hud, text, selector = ".message") {
 
 function findMessages(hud, text, selector = ".message") {
   const messages = hud.ui.outputNode.querySelectorAll(selector);
-  const elements = Array.prototype.filter.call(
-    messages,
-    (el) => el.textContent.includes(text)
+  const elements = Array.prototype.filter.call(messages, el =>
+    el.textContent.includes(text)
   );
 
   if (elements.length == 0) {
@@ -155,4 +163,6 @@ PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 
 // Many web replay tests can resume execution before the debugger has finished
 // all operations related to the pause.
-PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /Current thread has paused or resumed/
+);

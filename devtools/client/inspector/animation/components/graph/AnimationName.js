@@ -16,9 +16,7 @@ class AnimationName extends PureComponent {
   }
 
   render() {
-    const {
-      animation,
-    } = this.props;
+    const { animation } = this.props;
 
     return dom.svg(
       {

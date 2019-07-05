@@ -6,14 +6,13 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
+const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 
 // Number of terminal entries for the self-xss prevention to go away
 const CONSOLE_ENTRY_THRESHOLD = 5;
 
 var WebConsoleUtils = {
-
   CONSOLE_ENTRY_THRESHOLD,
 
   /**
@@ -23,8 +22,9 @@ var WebConsoleUtils = {
    * @return nsISupportsString
    */
   supportsString: function(string) {
-    const str = Cc["@mozilla.org/supports-string;1"]
-              .createInstance(Ci.nsISupportsString);
+    const str = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString
+    );
     str.data = string;
     return str;
   },
@@ -55,8 +55,9 @@ var WebConsoleUtils = {
   _usageCount: 0,
   get usageCount() {
     if (WebConsoleUtils._usageCount < CONSOLE_ENTRY_THRESHOLD) {
-      WebConsoleUtils._usageCount =
-        Services.prefs.getIntPref("devtools.selfxss.count");
+      WebConsoleUtils._usageCount = Services.prefs.getIntPref(
+        "devtools.selfxss.count"
+      );
       if (Services.prefs.getBoolPref("devtools.chrome.enabled")) {
         WebConsoleUtils.usageCount = CONSOLE_ENTRY_THRESHOLD;
       }
@@ -72,4 +73,3 @@ var WebConsoleUtils = {
 };
 
 exports.Utils = WebConsoleUtils;
-

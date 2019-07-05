@@ -36,7 +36,9 @@ add_task(async function() {
 
   await onPopUpOpen;
 
-  const inputContainer = ui.window.document.querySelector(".jsterm-input-container");
+  const inputContainer = ui.window.document.querySelector(
+    ".jsterm-input-container"
+  );
   ok(inputContainer.scrollTop > 0, "The input overflows");
   const scrollTop = inputContainer.scrollTop;
 
@@ -46,8 +48,14 @@ add_task(async function() {
   await onPopupClose;
 
   ok(!popup.isOpen, "popup is not open after KEY_Enter");
-  is(getInputValue(hud), lines + "window.foobar.item0",
-    "completion was successful after KEY_Enter");
-  is(inputContainer.scrollTop, scrollTop,
-    "The scrolling position stayed the same when accepting the completion");
+  is(
+    getInputValue(hud),
+    lines + "window.foobar.item0",
+    "completion was successful after KEY_Enter"
+  );
+  is(
+    inputContainer.scrollTop,
+    scrollTop,
+    "The scrolling position stayed the same when accepting the completion"
+  );
 });

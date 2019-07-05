@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode(".testclass", inspector);
   await testClickOnSelectorEditorInput(view);
 });
@@ -31,33 +31,55 @@ async function testClickOnSelectorEditorInput(view) {
   info("Focusing an existing selector name in the rule-view");
   const editor = await focusEditableField(view, ruleEditor.selectorText);
   const editorInput = editor.input;
-  is(inplaceEditor(ruleEditor.selectorText), editor,
-    "The selector editor got focused");
+  is(
+    inplaceEditor(ruleEditor.selectorText),
+    editor,
+    "The selector editor got focused"
+  );
 
   info("Click inside the editor input");
   const onClick = once(editorInput, "click");
   EventUtils.synthesizeMouse(editor.input, 2, 1, {}, view.styleWindow);
   await onClick;
-  is(editor.input, view.styleDocument.activeElement,
-    "The editor input should still be focused");
+  is(
+    editor.input,
+    view.styleDocument.activeElement,
+    "The editor input should still be focused"
+  );
   ok(!ruleEditor.newPropSpan, "No newProperty editor was created");
 
   info("Doubleclick inside the editor input");
   const onDoubleClick = once(editorInput, "dblclick");
-  EventUtils.synthesizeMouse(editor.input, 2, 1, { clickCount: 2 },
-    view.styleWindow);
+  EventUtils.synthesizeMouse(
+    editor.input,
+    2,
+    1,
+    { clickCount: 2 },
+    view.styleWindow
+  );
   await onDoubleClick;
-  is(editor.input, view.styleDocument.activeElement,
-    "The editor input should still be focused");
+  is(
+    editor.input,
+    view.styleDocument.activeElement,
+    "The editor input should still be focused"
+  );
   ok(!ruleEditor.newPropSpan, "No newProperty editor was created");
 
   info("Click outside the editor input");
   const onBlur = once(editorInput, "blur");
   const rect = editorInput.getBoundingClientRect();
-  EventUtils.synthesizeMouse(editorInput, rect.width + 5, rect.height / 2, {},
-    view.styleWindow);
+  EventUtils.synthesizeMouse(
+    editorInput,
+    rect.width + 5,
+    rect.height / 2,
+    {},
+    view.styleWindow
+  );
   await onBlur;
 
-  isnot(editorInput, view.styleDocument.activeElement,
-    "The editor input should no longer be focused");
+  isnot(
+    editorInput,
+    view.styleDocument.activeElement,
+    "The editor input should no longer be focused"
+  );
 }

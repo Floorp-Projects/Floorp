@@ -23,25 +23,33 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("div", inspector);
 
   const swatches = [];
   swatches.push(
-    getRuleViewProperty(view, "div", "animation").valueSpan
-    .querySelector(".ruleview-bezierswatch")
+    getRuleViewProperty(view, "div", "animation").valueSpan.querySelector(
+      ".ruleview-bezierswatch"
+    )
   );
   swatches.push(
-    getRuleViewProperty(view, "div", "transition").valueSpan
-    .querySelector(".ruleview-bezierswatch")
+    getRuleViewProperty(view, "div", "transition").valueSpan.querySelector(
+      ".ruleview-bezierswatch"
+    )
   );
   swatches.push(
-    getRuleViewProperty(view, ".test", "animation-timing-function").valueSpan
-    .querySelector(".ruleview-bezierswatch")
+    getRuleViewProperty(
+      view,
+      ".test",
+      "animation-timing-function"
+    ).valueSpan.querySelector(".ruleview-bezierswatch")
   );
   swatches.push(
-    getRuleViewProperty(view, ".test", "transition-timing-function").valueSpan
-    .querySelector(".ruleview-bezierswatch")
+    getRuleViewProperty(
+      view,
+      ".test",
+      "transition-timing-function"
+    ).valueSpan.querySelector(".ruleview-bezierswatch")
   );
 
   for (const swatch of swatches) {
@@ -64,7 +72,9 @@ async function testAppears(view, swatch) {
   await onBezierWidgetReady;
 
   ok(true, "The cubic-bezier tooltip was shown on click of the cibuc swatch");
-  ok(!inplaceEditor(swatch.parentNode),
-    "The inplace editor wasn't shown as a result of the cibuc swatch click");
+  ok(
+    !inplaceEditor(swatch.parentNode),
+    "The inplace editor wasn't shown as a result of the cibuc swatch click"
+  );
   await hideTooltipAndWaitForRuleViewChanged(bezier, view);
 }

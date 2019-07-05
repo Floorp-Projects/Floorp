@@ -203,7 +203,7 @@ function withCommonPathPrefixRemoved(pathArray) {
     if (!otherSplitPaths.every(sp => sp.winDrive === winDrive)) {
       return pathArray;
     }
-  } else if (otherSplitPaths.some(sp => ("winDrive" in sp))) {
+  } else if (otherSplitPaths.some(sp => "winDrive" in sp)) {
     // Inconsistent winDrive property presence, bail out.
     return pathArray;
   }
@@ -230,7 +230,9 @@ function withCommonPathPrefixRemoved(pathArray) {
     // the leading slash from the un-split paths, which is not useful.
     return pathArray;
   }
-  return splitPaths.map(sp => OS.Path.join(...sp.components.slice(prefix.length)));
+  return splitPaths.map(sp =>
+    OS.Path.join(...sp.components.slice(prefix.length))
+  );
 }
 
 module.exports = {

@@ -32,7 +32,10 @@ add_task(async function() {
   ok(allSections.length, "Sizing sections are displayed");
 
   info("Check that the various parts of the outline are displayed");
-  const [basis, final] = [...flexOutlineContainer.querySelectorAll(
-    ".flex-outline-basis, .flex-outline-final")];
+  const [basis, final] = [
+    ...flexOutlineContainer.querySelectorAll(
+      ".flex-outline-basis, .flex-outline-final"
+    ),
+  ];
   ok(basis && final, "The final and basis parts of the outline exist");
 });

@@ -11,7 +11,9 @@ requestLongerTimeout(2);
 // Test toggling the toolbox quickly and see if there is any race breaking it.
 
 const URL = "data:text/html;charset=utf-8,Toggling devtools quickly";
-const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+const {
+  gDevToolsBrowser,
+} = require("devtools/client/framework/devtools-browser");
 
 add_task(async function() {
   // Make sure this test starts with the selectedTool pref cleared. Previous
@@ -20,7 +22,10 @@ add_task(async function() {
 
   await addTab(URL);
 
-  let created = 0, ready = 0, destroy = 0, destroyed = 0;
+  let created = 0,
+    ready = 0,
+    destroy = 0,
+    destroyed = 0;
   const onCreated = () => {
     created++;
   };

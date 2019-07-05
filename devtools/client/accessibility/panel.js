@@ -18,11 +18,13 @@ const EVENTS = {
   // When the accessibility inspector has a new accessible front selected.
   NEW_ACCESSIBLE_FRONT_SELECTED: "Accessibility:NewAccessibleFrontSelected",
   // When the accessibility inspector has a new accessible front highlighted.
-  NEW_ACCESSIBLE_FRONT_HIGHLIGHTED: "Accessibility:NewAccessibleFrontHighlighted",
+  NEW_ACCESSIBLE_FRONT_HIGHLIGHTED:
+    "Accessibility:NewAccessibleFrontHighlighted",
   // When the accessibility inspector has a new accessible front inspected.
   NEW_ACCESSIBLE_FRONT_INSPECTED: "Accessibility:NewAccessibleFrontInspected",
   // When the accessibility inspector is updated.
-  ACCESSIBILITY_INSPECTOR_UPDATED: "Accessibility:AccessibilityInspectorUpdated",
+  ACCESSIBILITY_INSPECTOR_UPDATED:
+    "Accessibility:AccessibilityInspectorUpdated",
 };
 
 /**
@@ -37,11 +39,15 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
   this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
-  this.onNewAccessibleFrontSelected =
-    this.onNewAccessibleFrontSelected.bind(this);
-  this.onAccessibilityInspectorUpdated =
-    this.onAccessibilityInspectorUpdated.bind(this);
-  this.updateA11YServiceDurationTimer = this.updateA11YServiceDurationTimer.bind(this);
+  this.onNewAccessibleFrontSelected = this.onNewAccessibleFrontSelected.bind(
+    this
+  );
+  this.onAccessibilityInspectorUpdated = this.onAccessibilityInspectorUpdated.bind(
+    this
+  );
+  this.updateA11YServiceDurationTimer = this.updateA11YServiceDurationTimer.bind(
+    this
+  );
   this.forceUpdatePickerButton = this.forceUpdatePickerButton.bind(this);
 
   EventEmitter.decorate(this);
@@ -70,10 +76,14 @@ AccessibilityPanel.prototype = {
 
     this.panelWin.EVENTS = EVENTS;
     EventEmitter.decorate(this.panelWin);
-    this.panelWin.on(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED,
-      this.onNewAccessibleFrontSelected);
-    this.panelWin.on(EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED,
-      this.onAccessibilityInspectorUpdated);
+    this.panelWin.on(
+      EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED,
+      this.onNewAccessibleFrontSelected
+    );
+    this.panelWin.on(
+      EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED,
+      this.onAccessibilityInspectorUpdated
+    );
 
     this.shouldRefresh = true;
     this.panelWin.gToolbox = this._toolbox;
@@ -105,8 +115,9 @@ AccessibilityPanel.prototype = {
    */
   async createFluentBundles() {
     const locales = Services.locale.appLocalesAsBCP47;
-    const generator =
-      L10nRegistry.generateBundles(locales, ["devtools/accessibility.ftl"]);
+    const generator = L10nRegistry.generateBundles(locales, [
+      "devtools/accessibility.ftl",
+    ]);
 
     // Return value of generateBundles is a generator and should be converted to
     // a sync iterable before using it with React.
@@ -157,8 +168,13 @@ AccessibilityPanel.prototype = {
     }
     // Alright reset the flag we are about to refresh the panel.
     this.shouldRefresh = false;
-    this.postContentMessage("initialize", this.front, this.walker, this.supports,
-                            this.fluentBundles);
+    this.postContentMessage(
+      "initialize",
+      this.front,
+      this.walker,
+      this.supports,
+      this.fluentBundles
+    );
   },
 
   updateA11YServiceDurationTimer() {
@@ -176,15 +192,26 @@ AccessibilityPanel.prototype = {
   selectAccessibleForNode(nodeFront, reason) {
     if (reason) {
       this._telemetry.keyedScalarAdd(
-        "devtools.accessibility.select_accessible_for_node", reason, 1);
+        "devtools.accessibility.select_accessible_for_node",
+        reason,
+        1
+      );
     }
 
-    this.postContentMessage("selectNodeAccessible", this.walker, nodeFront,
-      this.supports);
+    this.postContentMessage(
+      "selectNodeAccessible",
+      this.walker,
+      nodeFront,
+      this.supports
+    );
   },
 
   highlightAccessible(accessibleFront) {
-    this.postContentMessage("highlightAccessible", this.walker, accessibleFront);
+    this.postContentMessage(
+      "highlightAccessible",
+      this.walker,
+      accessibleFront
+    );
   },
 
   postContentMessage(type, ...args) {
@@ -261,10 +288,14 @@ AccessibilityPanel.prototype = {
     this.target.off("navigate", this.onTabNavigated);
     this._toolbox.off("select", this.onPanelVisibilityChange);
 
-    this.panelWin.off(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED,
-      this.onNewAccessibleFrontSelected);
-    this.panelWin.off(EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED,
-      this.onAccessibilityInspectorUpdated);
+    this.panelWin.off(
+      EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED,
+      this.onNewAccessibleFrontSelected
+    );
+    this.panelWin.off(
+      EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED,
+      this.onAccessibilityInspectorUpdated
+    );
 
     // Older versions of debugger server do not support picker functionality.
     if (this.picker) {

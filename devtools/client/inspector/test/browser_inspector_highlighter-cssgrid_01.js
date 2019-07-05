@@ -39,8 +39,9 @@ const TEST_URL = `
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URL));
+  const { inspector, testActor } = await openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URL)
+  );
   const front = inspector.inspector;
   const highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
@@ -54,7 +55,10 @@ async function isHiddenByDefault(testActor, highlighterFront) {
   info("Checking that the highlighter is hidden by default");
 
   const hidden = await testActor.getHighlighterNodeAttribute(
-    "css-grid-canvas", "hidden", highlighterFront);
+    "css-grid-canvas",
+    "hidden",
+    highlighterFront
+  );
   ok(hidden, "The highlighter is hidden by default");
 }
 
@@ -65,13 +69,19 @@ async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
   await highlighterFront.show(node);
 
   let hidden = await testActor.getHighlighterNodeAttribute(
-    "css-grid-canvas", "hidden", highlighterFront);
+    "css-grid-canvas",
+    "hidden",
+    highlighterFront
+  );
   ok(!hidden, "The highlighter is visible");
 
   info("Hiding the highlighter");
   await highlighterFront.hide();
 
   hidden = await testActor.getHighlighterNodeAttribute(
-    "css-grid-canvas", "hidden", highlighterFront);
+    "css-grid-canvas",
+    "hidden",
+    highlighterFront
+  );
   ok(hidden, "The highlighter is hidden");
 }

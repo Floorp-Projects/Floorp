@@ -12,19 +12,24 @@
 /* import-globals-from helper_workers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/helper_workers.js",
-  this);
+  this
+);
 
 var TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testNormalExecution() {
-  const {client, tab, workerTargetFront, toolbox} =
-    await initWorkerDebugger(TAB_URL, WORKER_URL);
+  const { client, tab, workerTargetFront, toolbox } = await initWorkerDebugger(
+    TAB_URL,
+    WORKER_URL
+  );
 
   const jsterm = await getSplitConsole(toolbox);
   const executed = await jsterm.execute("this.location.toString()");
-  ok(executed.textContent.includes(WORKER_URL),
-      "Evaluating the global's location works");
+  ok(
+    executed.textContent.includes(WORKER_URL),
+    "Evaluating the global's location works"
+  );
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerTargetFront);

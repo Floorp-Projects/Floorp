@@ -32,13 +32,11 @@ class IconLabel extends PureComponent {
       {
         className: `icon-label icon-label--${level} ${className || ""}`,
       },
-      dom.img(
-        {
-          className: "icon-label__icon",
-          src: ICONS[level],
-        }
-      ),
-      children,
+      dom.img({
+        className: "icon-label__icon",
+        src: ICONS[level],
+      }),
+      children
     );
   }
 }

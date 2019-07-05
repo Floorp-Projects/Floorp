@@ -32,10 +32,14 @@ add_task(async function() {
 
 // Test reveal link with keyboard navigation (Enter and Spacebar keys)
 add_task(async function() {
-  const checkWithEnter = checkRevealLink.bind(null,
-    keydownOnRevealLink.bind(null, "KEY_Enter"));
-  const checkWithSpacebar = checkRevealLink.bind(null,
-    keydownOnRevealLink.bind(null, " "));
+  const checkWithEnter = checkRevealLink.bind(
+    null,
+    keydownOnRevealLink.bind(null, "KEY_Enter")
+  );
+  const checkWithSpacebar = checkRevealLink.bind(
+    null,
+    keydownOnRevealLink.bind(null, " ")
+  );
 
   await testRevealLink(checkWithEnter, checkWithSpacebar);
 });
@@ -74,17 +78,28 @@ async function checkRevealLink(actionFn, inspector, node) {
   info("Select the slotted container for the element");
   await selectNode(node, inspector, "no-reason", true);
   ok(inspector.selection.isSlotted(), "The selection is the slotted version");
-  ok(inspector.markup.getSelectedContainer().isSlotted(),
-    "The selected container is slotted");
+  ok(
+    inspector.markup.getSelectedContainer().isSlotted(),
+    "The selected container is slotted"
+  );
 
   const link = slottedContainer.elt.querySelector(".reveal-link");
-  is(link.getAttribute("role"), "link", "Reveal link has the role=link attribute");
+  is(
+    link.getAttribute("role"),
+    "link",
+    "Reveal link has the role=link attribute"
+  );
 
   info("Click on the reveal link and wait for the new node to be selected");
   await actionFn(inspector, slottedContainer);
   const selectedFront = inspector.selection.nodeFront;
   is(selectedFront, node, "The same node front is still selected");
-  ok(!inspector.selection.isSlotted(), "The selection is not the slotted version");
-  ok(!inspector.markup.getSelectedContainer().isSlotted(),
-    "The selected container is not slotted");
+  ok(
+    !inspector.selection.isSlotted(),
+    "The selection is not the slotted version"
+  );
+  ok(
+    !inspector.markup.getSelectedContainer().isSlotted(),
+    "The selected container is not slotted"
+  );
 }

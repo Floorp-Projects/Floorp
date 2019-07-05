@@ -8,13 +8,32 @@ const promise = require("promise");
 const Services = require("Services");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
 const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
-const {ELEMENT_NODE} = require("devtools/shared/dom-node-constants");
-const {extend} = require("devtools/shared/extend");
+const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");
+const { extend } = require("devtools/shared/extend");
 
-loader.lazyRequireGetter(this, "setEventTooltip", "devtools/client/shared/widgets/tooltip/EventTooltipHelper", true);
-loader.lazyRequireGetter(this, "setImageTooltip", "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
-loader.lazyRequireGetter(this, "setBrokenImageTooltip", "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
-loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+loader.lazyRequireGetter(
+  this,
+  "setEventTooltip",
+  "devtools/client/shared/widgets/tooltip/EventTooltipHelper",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "setImageTooltip",
+  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "setBrokenImageTooltip",
+  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "clipboardHelper",
+  "devtools/shared/platform/clipboard"
+);
 
 const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
 
@@ -29,8 +48,12 @@ const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
  *         The node to display.
  */
 function MarkupElementContainer(markupView, node) {
-  MarkupContainer.prototype.initialize.call(this, markupView, node,
-    "elementcontainer");
+  MarkupContainer.prototype.initialize.call(
+    this,
+    markupView,
+    node,
+    "elementcontainer"
+  );
 
   if (node.nodeType === ELEMENT_NODE) {
     this.editor = new ElementEditor(this, node);
@@ -105,7 +128,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     }
 
     // Fetch the preview from the server.
-    this.tooltipDataPromise = (async function() {
+    this.tooltipDataPromise = async function() {
       const maxDim = Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF);
       const preview = await this.node.getImageData(maxDim);
       const data = await preview.data.string();
@@ -114,7 +137,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
       // the preview contents might have changed.
       this.tooltipDataPromise = null;
       return { data, size: preview.size };
-    }.bind(this))();
+    }.bind(this)();
 
     return this.tooltipDataPromise;
   },
@@ -203,11 +226,14 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     const undoMods = this.editor._startModifyingAttributes();
     this.editor._saveAttribute(attrName, undoMods);
     doMods.removeAttribute(attrName);
-    this.undo.do(() => {
-      doMods.apply();
-    }, () => {
-      undoMods.apply();
-    });
+    this.undo.do(
+      () => {
+        doMods.apply();
+      },
+      () => {
+        undoMods.apply();
+      }
+    );
   },
 });
 

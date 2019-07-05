@@ -9,7 +9,7 @@
 const TEST_URI = CHROME_URL_ROOT + "doc_tableWidget_keyboard_interaction.xul";
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
-const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
+const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");
 
 var doc, table;
 
@@ -17,24 +17,28 @@ function test() {
   waitForExplicitFinish();
   const win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
 
-  win.addEventListener("load", function() {
-    waitForFocus(function() {
-      doc = win.document;
-      table = new TableWidget(doc.querySelector("box"), {
-        initialColumns: {
-          col1: "Column 1",
-          col2: "Column 2",
-          col3: "Column 3",
-          col4: "Column 4",
-        },
-        uniqueId: "col1",
-        emptyText: "This is dummy empty text",
-        highlightUpdated: true,
-        removableColumns: true,
+  win.addEventListener(
+    "load",
+    function() {
+      waitForFocus(function() {
+        doc = win.document;
+        table = new TableWidget(doc.querySelector("box"), {
+          initialColumns: {
+            col1: "Column 1",
+            col2: "Column 2",
+            col3: "Column 3",
+            col4: "Column 4",
+          },
+          uniqueId: "col1",
+          emptyText: "This is dummy empty text",
+          highlightUpdated: true,
+          removableColumns: true,
+        });
+        startTests();
       });
-      startTests();
-    });
-  }, {once: true});
+    },
+    { once: true }
+  );
 }
 
 function endTests() {
@@ -113,13 +117,20 @@ function populateTable() {
 // Sends a click event on the passed DOM node in an async manner
 function click(node, button = 0) {
   if (button == 0) {
-    executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {},
-                                                         doc.defaultView));
+    executeSoon(() =>
+      EventUtils.synthesizeMouseAtCenter(node, {}, doc.defaultView)
+    );
   } else {
-    executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {
-      button: button,
-      type: "contextmenu",
-    }, doc.defaultView));
+    executeSoon(() =>
+      EventUtils.synthesizeMouseAtCenter(
+        node,
+        {
+          button: button,
+          type: "contextmenu",
+        },
+        doc.defaultView
+      )
+    );
   }
 }
 
@@ -162,8 +173,10 @@ var testKeyboardInteraction = async function() {
 async function testRow(id, key, destination) {
   const node = getNodeByValue(id);
   // node should not have selected class
-  ok(!node.classList.contains("theme-selected"),
-     "Row should not have selected class");
+  ok(
+    !node.classList.contains("theme-selected"),
+    "Row should not have selected class"
+  );
   info(`Pressing ${key} to select ${destination}`);
 
   const event = table.once(TableWidget.EVENTS.ROW_SELECTED);
@@ -176,7 +189,10 @@ async function testRow(id, key, destination) {
 
   const nodes = doc.querySelectorAll(".theme-selected");
   for (let i = 0; i < nodes.length; i++) {
-    is(nodes[i].getAttribute("data-id"), id,
-       "Correct cell selected in all columns");
+    is(
+      nodes[i].getAttribute("data-id"),
+      id,
+      "Correct cell selected in all columns"
+    );
   }
 }

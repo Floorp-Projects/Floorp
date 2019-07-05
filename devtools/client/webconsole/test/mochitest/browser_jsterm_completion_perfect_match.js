@@ -28,21 +28,27 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
-  const {autocompletePopup} = jsterm;
+  const { jsterm } = hud;
+  const { autocompletePopup } = jsterm;
 
   info("Check that filtering the cache works like on the server");
   const onPopUpOpen = autocompletePopup.once("popup-opened");
   EventUtils.sendString("x.");
   await onPopUpOpen;
-  is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "foo - foO - fOo - fOO",
-    "popup has expected item, in expected order");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join(" - "),
+    "foo - foO - fOo - fOO",
+    "popup has expected item, in expected order"
+  );
 
   const onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("foO");
   await onAutoCompleteUpdated;
-  is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "foO - foo - fOo - fOO",
-    "popup has expected item, in expected order");
+  is(
+    getAutocompletePopupLabels(autocompletePopup).join(" - "),
+    "foO - foo - fOo - fOO",
+    "popup has expected item, in expected order"
+  );
 }
 
 function getAutocompletePopupLabels(autocompletePopup) {

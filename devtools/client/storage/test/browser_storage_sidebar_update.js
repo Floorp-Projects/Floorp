@@ -33,9 +33,13 @@ add_task(async function() {
   info("Updates performed, going to verify result");
   const parsedScope = gUI.view.getScopeAtIndex(1);
   const elements = parsedScope.target.querySelectorAll(
-    `.name[value="${ITEM_NAME}"]`);
-  is(elements.length, 1,
-    `There is only one displayed variable named '${ITEM_NAME}'`);
+    `.name[value="${ITEM_NAME}"]`
+  );
+  is(
+    elements.length,
+    1,
+    `There is only one displayed variable named '${ITEM_NAME}'`
+  );
 
   await finishTests();
 });

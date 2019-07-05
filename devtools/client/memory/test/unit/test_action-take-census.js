@@ -7,7 +7,12 @@
  * Tests the async reducer responding to the action `takeCensus(heapWorker, snapshot)`
  */
 
-var { snapshotState: states, censusDisplays, censusState, viewState } = require("devtools/client/memory/constants");
+var {
+  snapshotState: states,
+  censusDisplays,
+  censusState,
+  viewState,
+} = require("devtools/client/memory/constants");
 var actions = require("devtools/client/memory/actions/snapshot");
 var { changeView } = require("devtools/client/memory/actions/view");
 
@@ -37,11 +42,16 @@ add_task(async function() {
   await waitUntilState(store, () => store.getState().errors.length === 1);
 
   dumpn("Found error: " + store.getState().errors[0]);
-  ok(/Assertion failure/.test(store.getState().errors[0]),
-    "Error thrown when taking a census of a snapshot that has not been read.");
+  ok(
+    /Assertion failure/.test(store.getState().errors[0]),
+    "Error thrown when taking a census of a snapshot that has not been read."
+  );
 
   store.dispatch(actions.readSnapshot(heapWorker, snapshot.id));
-  await waitUntilState(store, () => store.getState().snapshots[0].state === states.READ);
+  await waitUntilState(
+    store,
+    () => store.getState().snapshots[0].state === states.READ
+  );
 
   store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
   await waitUntilCensusState(store, s => s.census, [censusState.SAVING]);
@@ -50,6 +60,9 @@ add_task(async function() {
   snapshot = store.getState().snapshots[0];
   ok(snapshot.census, "Snapshot has census after saved census");
   ok(snapshot.census.report.children.length, "Census is in tree node form");
-  equal(snapshot.census.display, censusDisplays.coarseType,
-        "Snapshot stored correct display used for the census");
+  equal(
+    snapshot.census.display,
+    censusDisplays.coarseType,
+    "Snapshot stored correct display used for the census"
+  );
 });

@@ -31,7 +31,7 @@ async function performTests_false() {
 
   info("Check that Ctrl+Space opens the popup when preference is false");
   onPopUpOpen = popup.once("popup-opened");
-  EventUtils.synthesizeKey(" ", {ctrlKey: true});
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
   await onPopUpOpen;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");

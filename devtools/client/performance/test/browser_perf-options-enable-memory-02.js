@@ -8,9 +8,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { UI_ENABLE_MEMORY_PREF } = require("devtools/client/performance/test/helpers/prefs");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const {
+  UI_ENABLE_MEMORY_PREF,
+} = require("devtools/client/performance/test/helpers/prefs");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -27,11 +35,17 @@ add_task(async function() {
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
   await stopRecording(panel);
 
-  is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, false,
-    "The recording finished without tracking memory.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+  is(
+    PerformanceController.getCurrentRecording().getConfiguration().withMemory,
     false,
-    "The recording finished without tracking allocations.");
+    "The recording finished without tracking memory."
+  );
+  is(
+    PerformanceController.getCurrentRecording().getConfiguration()
+      .withAllocations,
+    false,
+    "The recording finished without tracking allocations."
+  );
 
   // Test starting with memory, and stopping without it.
   await startRecording(panel);
@@ -39,11 +53,17 @@ add_task(async function() {
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);
   await stopRecording(panel);
 
-  is(PerformanceController.getCurrentRecording().getConfiguration().withMemory, true,
-    "The recording finished with tracking memory.");
-  is(PerformanceController.getCurrentRecording().getConfiguration().withAllocations,
+  is(
+    PerformanceController.getCurrentRecording().getConfiguration().withMemory,
+    true,
+    "The recording finished with tracking memory."
+  );
+  is(
+    PerformanceController.getCurrentRecording().getConfiguration()
+      .withAllocations,
     false,
-    "The recording still is not recording allocations.");
+    "The recording still is not recording allocations."
+  );
 
   await teardownToolboxAndRemoveTab(panel);
 });

@@ -15,13 +15,10 @@ add_task(async function() {
 
   const { store, windowRequire, connector } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  const {
-    getLongString,
-    requestData,
-  } = connector;
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
+  const { getLongString, requestData } = connector;
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -58,7 +55,11 @@ add_task(async function() {
   testMultiPartHeaders(data);
   testRemoveBinaryDataFromMultipartText(data);
 
-  data = await createCurlData(requests.multipartForm, getLongString, requestData);
+  data = await createCurlData(
+    requests.multipartForm,
+    getLongString,
+    requestData
+  );
   testMultiPartHeaders(data);
 
   testGetHeadersFromMultipartText({
@@ -87,67 +88,85 @@ function testIsMultipartRequest(data) {
 function testFindHeader(data) {
   const headers = data.headers;
   const hostName = CurlUtils.findHeader(headers, "Host");
-  const requestedWithLowerCased = CurlUtils.findHeader(headers, "x-requested-with");
+  const requestedWithLowerCased = CurlUtils.findHeader(
+    headers,
+    "x-requested-with"
+  );
   const doesNotExist = CurlUtils.findHeader(headers, "X-Does-Not-Exist");
 
-  is(hostName, "example.com",
-    "Header with name 'Host' should be found in the request array.");
-  is(requestedWithLowerCased, "XMLHttpRequest",
-    "The search should be case insensitive.");
-  is(doesNotExist, null,
-    "Should return null when a header is not found.");
+  is(
+    hostName,
+    "example.com",
+    "Header with name 'Host' should be found in the request array."
+  );
+  is(
+    requestedWithLowerCased,
+    "XMLHttpRequest",
+    "The search should be case insensitive."
+  );
+  is(doesNotExist, null, "Should return null when a header is not found.");
 }
 
 function testMultiPartHeaders(data) {
   const headers = data.headers;
   const contentType = CurlUtils.findHeader(headers, "Content-Type");
 
-  ok(contentType.startsWith("multipart/form-data; boundary="),
-     "Multi-part content type header is present in headers array");
+  ok(
+    contentType.startsWith("multipart/form-data; boundary="),
+    "Multi-part content type header is present in headers array"
+  );
 }
 
 function testWritePostDataTextParams(data) {
   const params = CurlUtils.writePostDataTextParams(data.postDataText);
-  is(params, "param1=value1&param2=value2&param3=value3",
-    "Should return a serialized representation of the request parameters");
+  is(
+    params,
+    "param1=value1&param2=value2&param3=value3",
+    "Should return a serialized representation of the request parameters"
+  );
 }
 
 function testWriteEmptyPostDataTextParams(data) {
   const params = CurlUtils.writePostDataTextParams(null);
-  is(params, "",
-    "Should return a empty string when no parameters provided");
+  is(params, "", "Should return a empty string when no parameters provided");
 }
 
 function testDataArgumentOnGeneratedCommand(data) {
   const curlCommand = Curl.generateCommand(data);
-  ok(curlCommand.includes("--data"),
-    "Should return a curl command with --data");
+  ok(
+    curlCommand.includes("--data"),
+    "Should return a curl command with --data"
+  );
 }
 
 function testGetMultipartBoundary(data) {
   const boundary = CurlUtils.getMultipartBoundary(data);
-  ok(/-{3,}\w+/.test(boundary),
-    "A boundary string should be found in a multipart request.");
+  ok(
+    /-{3,}\w+/.test(boundary),
+    "A boundary string should be found in a multipart request."
+  );
 }
 
 function testRemoveBinaryDataFromMultipartText(data) {
   const generatedBoundary = CurlUtils.getMultipartBoundary(data);
   const text = data.postDataText;
-  const binaryRemoved =
-    CurlUtils.removeBinaryDataFromMultipartText(text, generatedBoundary);
+  const binaryRemoved = CurlUtils.removeBinaryDataFromMultipartText(
+    text,
+    generatedBoundary
+  );
   const boundary = "--" + generatedBoundary;
 
   const EXPECTED_POSIX_RESULT = [
     "$'",
     boundary,
     "\\r\\n",
-    "Content-Disposition: form-data; name=\"param1\"",
+    'Content-Disposition: form-data; name="param1"',
     "\\r\\n\\r\\n",
     "value1",
     "\\r\\n",
     boundary,
     "\\r\\n",
-    "Content-Disposition: form-data; name=\"file\"; filename=\"filename.png\"",
+    'Content-Disposition: form-data; name="file"; filename="filename.png"',
     "\\r\\n",
     "Content-Type: image/png",
     "\\r\\n\\r\\n",
@@ -176,11 +195,17 @@ function testRemoveBinaryDataFromMultipartText(data) {
   ].join("");
 
   if (Services.appinfo.OS != "WINNT") {
-    is(CurlUtils.escapeStringPosix(binaryRemoved), EXPECTED_POSIX_RESULT,
-      "The mulitpart request payload should not contain binary data.");
+    is(
+      CurlUtils.escapeStringPosix(binaryRemoved),
+      EXPECTED_POSIX_RESULT,
+      "The mulitpart request payload should not contain binary data."
+    );
   } else {
-    is(CurlUtils.escapeStringWin(binaryRemoved), EXPECTED_WIN_RESULT,
-      "WinNT: The mulitpart request payload should not contain binary data.");
+    is(
+      CurlUtils.escapeStringWin(binaryRemoved),
+      EXPECTED_WIN_RESULT,
+      "WinNT: The mulitpart request payload should not contain binary data."
+    );
   }
 }
 
@@ -189,60 +214,94 @@ function testGetHeadersFromMultipartText(data) {
 
   ok(Array.isArray(headers), "Should return an array.");
   ok(headers.length > 0, "There should exist at least one request header.");
-  is(headers[0].name, "Content-Type", "The first header name should be 'Content-Type'.");
+  is(
+    headers[0].name,
+    "Content-Type",
+    "The first header name should be 'Content-Type'."
+  );
 }
 
 function testEscapeStringPosix() {
   const surroundedWithQuotes = "A simple string";
-  is(CurlUtils.escapeStringPosix(surroundedWithQuotes), "'A simple string'",
-    "The string should be surrounded with single quotes.");
+  is(
+    CurlUtils.escapeStringPosix(surroundedWithQuotes),
+    "'A simple string'",
+    "The string should be surrounded with single quotes."
+  );
 
   const singleQuotes = "It's unusual to put crickets in your coffee.";
-  is(CurlUtils.escapeStringPosix(singleQuotes),
+  is(
+    CurlUtils.escapeStringPosix(singleQuotes),
     "$'It\\'s unusual to put crickets in your coffee.'",
-    "Single quotes should be escaped.");
+    "Single quotes should be escaped."
+  );
 
-  const escapeChar = "\'!ls:q:gs|ls|;ping 8.8.8.8;|";
-  is(CurlUtils.escapeStringPosix(escapeChar), "$'\\'\\041ls:q:gs|ls|;ping 8.8.8.8;|'",
-    "'!' should be escaped.");
+  const escapeChar = "'!ls:q:gs|ls|;ping 8.8.8.8;|";
+  is(
+    CurlUtils.escapeStringPosix(escapeChar),
+    "$'\\'\\041ls:q:gs|ls|;ping 8.8.8.8;|'",
+    "'!' should be escaped."
+  );
 
   const newLines = "Line 1\r\nLine 2\u000d\u000ALine3";
-  is(CurlUtils.escapeStringPosix(newLines), "$'Line 1\\r\\nLine 2\\r\\nLine3'",
-    "Newlines should be escaped.");
+  is(
+    CurlUtils.escapeStringPosix(newLines),
+    "$'Line 1\\r\\nLine 2\\r\\nLine3'",
+    "Newlines should be escaped."
+  );
 
   const controlChars = "\u0007 \u0009 \u000C \u001B";
-  is(CurlUtils.escapeStringPosix(controlChars), "$'\\x07 \\x09 \\x0c \\x1b'",
-    "Control characters should be escaped.");
+  is(
+    CurlUtils.escapeStringPosix(controlChars),
+    "$'\\x07 \\x09 \\x0c \\x1b'",
+    "Control characters should be escaped."
+  );
 
   // æ ø ü ß ö é
-  const extendedAsciiChars = "\xc3\xa6 \xc3\xb8 \xc3\xbc \xc3\x9f \xc3\xb6 \xc3\xa9";
-  is(CurlUtils.escapeStringPosix(extendedAsciiChars),
+  const extendedAsciiChars =
+    "\xc3\xa6 \xc3\xb8 \xc3\xbc \xc3\x9f \xc3\xb6 \xc3\xa9";
+  is(
+    CurlUtils.escapeStringPosix(extendedAsciiChars),
     "$'\\xc3\\xa6 \\xc3\\xb8 \\xc3\\xbc \\xc3\\x9f \\xc3\\xb6 \\xc3\\xa9'",
-    "Character codes outside of the decimal range 32 - 126 should be escaped.");
+    "Character codes outside of the decimal range 32 - 126 should be escaped."
+  );
 }
 
 function testEscapeStringWin() {
   const surroundedWithDoubleQuotes = "A simple string";
-  is(CurlUtils.escapeStringWin(surroundedWithDoubleQuotes), '"A simple string"',
-    "The string should be surrounded with double quotes.");
+  is(
+    CurlUtils.escapeStringWin(surroundedWithDoubleQuotes),
+    '"A simple string"',
+    "The string should be surrounded with double quotes."
+  );
 
-  const doubleQuotes = "Quote: \"Time is an illusion. Lunchtime doubly so.\"";
-  is(CurlUtils.escapeStringWin(doubleQuotes),
+  const doubleQuotes = 'Quote: "Time is an illusion. Lunchtime doubly so."';
+  is(
+    CurlUtils.escapeStringWin(doubleQuotes),
     '"Quote: ""Time is an illusion. Lunchtime doubly so."""',
-    "Double quotes should be escaped.");
+    "Double quotes should be escaped."
+  );
 
   const percentSigns = "%AppData%";
-  is(CurlUtils.escapeStringWin(percentSigns), '""%"AppData"%""',
-    "Percent signs should be escaped.");
+  is(
+    CurlUtils.escapeStringWin(percentSigns),
+    '""%"AppData"%""',
+    "Percent signs should be escaped."
+  );
 
   const backslashes = "\\A simple string\\";
-  is(CurlUtils.escapeStringWin(backslashes), '"\\\\A simple string\\\\"',
-    "Backslashes should be escaped.");
+  is(
+    CurlUtils.escapeStringWin(backslashes),
+    '"\\\\A simple string\\\\"',
+    "Backslashes should be escaped."
+  );
 
   const newLines = "line1\r\nline2\r\nline3";
-  is(CurlUtils.escapeStringWin(newLines),
+  is(
+    CurlUtils.escapeStringWin(newLines),
     '"line1"^\u000d\u000A\u000d\u000A"line2"^\u000d\u000A\u000d\u000A"line3"',
-    "Newlines should be escaped.");
+    "Newlines should be escaped."
+  );
 }
 
 async function createCurlData(selected, getLongString, requestData) {

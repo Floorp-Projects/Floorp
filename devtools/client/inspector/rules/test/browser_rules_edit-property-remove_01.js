@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   info("Getting the first property in the #testid rule");
@@ -41,8 +41,11 @@ add_task(async function() {
   prop = rule.textProps[0];
 
   let editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(prop.editor.nameSpan), editor,
-    "Focus should have moved to the next property name");
+  is(
+    inplaceEditor(prop.editor.nameSpan),
+    editor,
+    "Focus should have moved to the next property name"
+  );
 
   info("Deleting the name of that property to remove the property");
   view.styleDocument.activeElement.blur();
@@ -56,12 +59,17 @@ add_task(async function() {
   is(newValue, "", "color should have been unset.");
 
   editor = inplaceEditor(view.styleDocument.activeElement);
-  is(inplaceEditor(rule.editor.newPropSpan), editor,
-    "Focus should have moved to the new property span");
-  is(rule.textProps.length, 0,
-    "All properties should have been removed.");
-  is(rule.editor.propertyList.children.length, 1,
-    "Should have the new property span.");
+  is(
+    inplaceEditor(rule.editor.newPropSpan),
+    editor,
+    "Focus should have moved to the new property span"
+  );
+  is(rule.textProps.length, 0, "All properties should have been removed.");
+  is(
+    rule.editor.propertyList.children.length,
+    1,
+    "Should have the new property span."
+  );
 
   view.styleDocument.activeElement.blur();
 });

@@ -4,7 +4,11 @@
 "use strict";
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { div, input, label } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  div,
+  input,
+  label,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
  * Provide a numeric range slider UI that works off of custom numeric scales.
@@ -35,35 +39,30 @@ class Range extends PureComponent {
 
   render() {
     const { label: labelText, scale, id, value, display } = this.props;
-    return (
+    return div(
+      { className: "perf-settings-row" },
+      label(
+        {
+          className: "perf-settings-label",
+          htmlFor: id,
+        },
+        labelText
+      ),
       div(
-        { className: "perf-settings-row" },
-        label(
-          {
-            className: "perf-settings-label",
-            htmlFor: id,
-          },
-          labelText
-        ),
+        { className: "perf-settings-value" },
         div(
-          { className: "perf-settings-value" },
-          div(
-            { className: "perf-settings-range-input" },
-            input({
-              type: "range",
-              className: `perf-settings-range-input-el`,
-              min: "0",
-              max: "100",
-              value: scale.fromValueToFraction(value) * 100,
-              onChange: this.handleInput,
-              id,
-            })
-          ),
-          div(
-            { className: `perf-settings-range-value`},
-            display(value)
-          )
-        )
+          { className: "perf-settings-range-input" },
+          input({
+            type: "range",
+            className: `perf-settings-range-input-el`,
+            min: "0",
+            max: "100",
+            value: scale.fromValueToFraction(value) * 100,
+            onChange: this.handleInput,
+            id,
+          })
+        ),
+        div({ className: `perf-settings-range-value` }, display(value))
       )
     );
   }

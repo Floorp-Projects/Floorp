@@ -10,7 +10,7 @@
 // recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const {threadClient, tab, toolbox, target} = dbg;
+  const { threadClient, tab, toolbox, target } = dbg;
 
   const bp = await setBreakpoint(threadClient, "doc_rr_continuous.html", 14);
   await resumeToLine(threadClient, 14);

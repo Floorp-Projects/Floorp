@@ -101,7 +101,7 @@ function eventTelemetryMiddleware(connector, telemetry) {
  * This helper function is executed when filter related action is fired.
  * It's responsible for recording "filters_changed" telemetry event.
  */
-function filterChange({action, state, oldState, telemetry, sessionId}) {
+function filterChange({ action, state, oldState, telemetry, sessionId }) {
   const oldFilterState = oldState.filters;
   const filterState = state.filters;
   const activeFilters = [];
@@ -116,12 +116,16 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
   }
 
   let trigger;
-  if (action.type === TOGGLE_REQUEST_FILTER_TYPE ||
-      action.type === ENABLE_REQUEST_FILTER_TYPE_ONLY) {
+  if (
+    action.type === TOGGLE_REQUEST_FILTER_TYPE ||
+    action.type === ENABLE_REQUEST_FILTER_TYPE_ONLY
+  ) {
     trigger = action.filter;
   } else if (action.type === SET_REQUEST_FILTER_TEXT) {
-    if (oldFilterState.requestFilterText !== "" &&
-        filterState.requestFilterText !== "") {
+    if (
+      oldFilterState.requestFilterText !== "" &&
+      filterState.requestFilterText !== ""
+    ) {
       return;
     }
 
@@ -129,10 +133,10 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
   }
 
   telemetry.recordEvent("filters_changed", "netmonitor", null, {
-    "trigger": trigger,
-    "active": activeFilters.join(","),
-    "inactive": inactiveFilters.join(","),
-    "session_id": sessionId,
+    trigger: trigger,
+    active: activeFilters.join(","),
+    inactive: inactiveFilters.join(","),
+    session_id: sessionId,
   });
 }
 
@@ -141,11 +145,11 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
  * It's responsible for recording "sidepanel_tool_changed"
  * telemetry event.
  */
-function sidePanelChange({state, oldState, telemetry, sessionId}) {
+function sidePanelChange({ state, oldState, telemetry, sessionId }) {
   telemetry.recordEvent("sidepanel_changed", "netmonitor", null, {
-    "oldpanel": oldState.ui.detailsPanelSelectedTab,
-    "newpanel": state.ui.detailsPanelSelectedTab,
-    "session_id": sessionId,
+    oldpanel: oldState.ui.detailsPanelSelectedTab,
+    newpanel: state.ui.detailsPanelSelectedTab,
+    session_id: sessionId,
   });
 }
 
@@ -153,9 +157,9 @@ function sidePanelChange({state, oldState, telemetry, sessionId}) {
  * This helper function is executed when a request is resent.
  * It's responsible for recording "edit_resend" telemetry event.
  */
-function sendCustomRequest({telemetry, sessionId}) {
+function sendCustomRequest({ telemetry, sessionId }) {
   telemetry.recordEvent("edit_resend", "netmonitor", null, {
-    "session_id": sessionId,
+    session_id: sessionId,
   });
 }
 
@@ -163,10 +167,10 @@ function sendCustomRequest({telemetry, sessionId}) {
  * This helper function is executed when network throttling is changed.
  * It's responsible for recording "throttle_changed" telemetry event.
  */
-function throttlingChange({action, telemetry, sessionId}) {
+function throttlingChange({ action, telemetry, sessionId }) {
   telemetry.recordEvent("throttle_changed", "netmonitor", null, {
-    "mode": action.profile,
-    "session_id": sessionId,
+    mode: action.profile,
+    session_id: sessionId,
   });
 }
 
@@ -174,12 +178,15 @@ function throttlingChange({action, telemetry, sessionId}) {
  * This helper function is executed when log persistence is changed.
  * It's responsible for recording "persist_changed" telemetry event.
  */
-function persistenceChange({telemetry, state, sessionId}) {
-  telemetry.recordEvent("persist_changed", "netmonitor",
+function persistenceChange({ telemetry, state, sessionId }) {
+  telemetry.recordEvent(
+    "persist_changed",
+    "netmonitor",
     String(state.ui.persistentLogsEnabled),
     {
-      "session_id": sessionId,
-    });
+      session_id: sessionId,
+    }
+  );
 }
 
 module.exports = eventTelemetryMiddleware;

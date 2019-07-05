@@ -46,7 +46,7 @@ add_task(async function() {
   });
 
   info("Filter the output using the text filter input");
-  await setFilterState(hud, {text: "no match"});
+  await setFilterState(hud, { text: "no match" });
 
   checkTelemetryEvent({
     trigger: "text",
@@ -61,20 +61,25 @@ function checkTelemetryEvent(expectedEvent) {
   const [event] = events;
   ok(event.session_id > 0, "There is a valid session_id in the logged event");
   const f = e => JSON.stringify(e, null, 2);
-  is(f(event), f({
-    ...expectedEvent,
-    "session_id": event.session_id,
-  }), "The event has the expected data");
+  is(
+    f(event),
+    f({
+      ...expectedEvent,
+      session_id: event.session_id,
+    }),
+    "The event has the expected data"
+  );
 }
 
 function getFiltersChangedEventsExtra() {
   // Retrieve and clear telemetry events.
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
 
-  const filtersChangedEvents = snapshot.parent.filter(event =>
-    event[1] === "devtools.main" &&
-    event[2] === "filters_changed" &&
-    event[3] === "webconsole"
+  const filtersChangedEvents = snapshot.parent.filter(
+    event =>
+      event[1] === "devtools.main" &&
+      event[2] === "filters_changed" &&
+      event[3] === "webconsole"
   );
 
   // Since we already know we have the correct event, we only return the `extra` field

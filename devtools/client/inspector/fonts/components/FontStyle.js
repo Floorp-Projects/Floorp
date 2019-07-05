@@ -26,7 +26,11 @@ class FontStyle extends PureComponent {
   }
 
   onToggle(e) {
-    this.props.onChange(this.name, e.target.checked ? "italic" : "normal", null);
+    this.props.onChange(
+      this.name,
+      e.target.checked ? "italic" : "normal",
+      null
+    );
   }
 
   render() {
@@ -44,16 +48,15 @@ class FontStyle extends PureComponent {
         {
           className: "font-control-input",
         },
-        dom.input(
-          {
-            checked: this.props.value === "italic" || this.props.value === "oblique",
-            className: "devtools-checkbox-toggle",
-            disabled: this.props.disabled,
-            name: this.name,
-            onChange: this.onToggle,
-            type: "checkbox",
-          }
-        )
+        dom.input({
+          checked:
+            this.props.value === "italic" || this.props.value === "oblique",
+          className: "devtools-checkbox-toggle",
+          disabled: this.props.disabled,
+          name: this.name,
+          onChange: this.onToggle,
+          type: "checkbox",
+        })
       )
     );
   }

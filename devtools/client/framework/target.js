@@ -5,8 +5,12 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/debugger-client", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerClient",
+  "devtools/shared/client/debugger-client",
+  true
+);
 
 const targets = new WeakMap();
 
@@ -14,7 +18,6 @@ const targets = new WeakMap();
  * Functions for creating Targets
  */
 exports.TargetFactory = {
-
   /**
    * Construct a Target. The target will be cached for each Tab so that we create only
    * one per tab.

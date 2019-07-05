@@ -55,7 +55,11 @@ add_task(async function testPreferenceRetrievedWhenInstallingExtension() {
 
   info("Check whether the shown dir is same as the pref");
   const fp = await onFilePickerShown;
-  is(fp.displayDirectory.path, selectedDir, "Shown directory sets as same as the pref");
+  is(
+    fp.displayDirectory.path,
+    selectedDir,
+    "Shown directory sets as same as the pref"
+  );
 
   await removeTab(tab);
 });

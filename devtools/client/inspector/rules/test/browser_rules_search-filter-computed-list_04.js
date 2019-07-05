@@ -21,7 +21,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
   await testModifyPropertyValueFilter(inspector, view);
 });
@@ -36,11 +36,14 @@ async function testModifyPropertyValueFilter(inspector, view) {
 
   info("Check that the correct rules are visible");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(!propEditor.container.classList.contains("ruleview-highlight"),
-    "margin text property is not highlighted.");
-  ok(rule.textProps[1].editor.container.classList
-    .contains("ruleview-highlight"),
-    "top text property is correctly highlighted.");
+  ok(
+    !propEditor.container.classList.contains("ruleview-highlight"),
+    "margin text property is not highlighted."
+  );
+  ok(
+    rule.textProps[1].editor.container.classList.contains("ruleview-highlight"),
+    "top text property is correctly highlighted."
+  );
 
   const onBlur = once(editor.input, "blur");
   const onModification = view.once("ruleview-changed");
@@ -49,15 +52,25 @@ async function testModifyPropertyValueFilter(inspector, view) {
   await onBlur;
   await onModification;
 
-  ok(propEditor.container.classList.contains("ruleview-highlight"),
-    "margin text property is correctly highlighted.");
+  ok(
+    propEditor.container.classList.contains("ruleview-highlight"),
+    "margin text property is correctly highlighted."
+  );
   ok(!computed.hasAttribute("filter-open"), "margin computed list is closed.");
-  ok(!computed.children[0].classList.contains("ruleview-highlight"),
-    "margin-top computed property is not highlighted.");
-  ok(computed.children[1].classList.contains("ruleview-highlight"),
-    "margin-right computed property is correctly highlighted.");
-  ok(!computed.children[2].classList.contains("ruleview-highlight"),
-    "margin-bottom computed property is not highlighted.");
-  ok(computed.children[3].classList.contains("ruleview-highlight"),
-    "margin-left computed property is correctly highlighted.");
+  ok(
+    !computed.children[0].classList.contains("ruleview-highlight"),
+    "margin-top computed property is not highlighted."
+  );
+  ok(
+    computed.children[1].classList.contains("ruleview-highlight"),
+    "margin-right computed property is correctly highlighted."
+  );
+  ok(
+    !computed.children[2].classList.contains("ruleview-highlight"),
+    "margin-bottom computed property is not highlighted."
+  );
+  ok(
+    computed.children[3].classList.contains("ruleview-highlight"),
+    "margin-left computed property is correctly highlighted."
+  );
 }

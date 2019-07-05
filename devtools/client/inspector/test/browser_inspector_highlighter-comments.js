@@ -8,11 +8,10 @@
 // Test that hovering over the markup-view's containers doesn't always show the
 // highlighter, depending on the type of node hovered over.
 
-const TEST_PAGE = URL_ROOT +
-  "doc_inspector_highlighter-comments.html";
+const TEST_PAGE = URL_ROOT + "doc_inspector_highlighter-comments.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
+  const { inspector, testActor } = await openInspectorForURL(TEST_PAGE);
   const markupView = inspector.markup;
   await selectNode("p", inspector);
 
@@ -52,8 +51,13 @@ add_task(async function() {
     const promise = inspector.highlighter.once("node-highlight");
 
     container.tagLine.scrollIntoView();
-    EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
-        markupView.doc.defaultView);
+    EventUtils.synthesizeMouse(
+      container.tagLine,
+      2,
+      2,
+      { type: "mousemove" },
+      markupView.doc.defaultView
+    );
 
     return promise;
   }
@@ -77,20 +81,29 @@ add_task(async function() {
   function hoverTextNode(text) {
     info(`Hovering the text node "${text}" in the markup view`);
     const container = [...markupView._containers].filter(([nodeFront]) => {
-      return nodeFront.nodeType === Node.TEXT_NODE &&
-             nodeFront._form.nodeValue.trim() === text.trim();
+      return (
+        nodeFront.nodeType === Node.TEXT_NODE &&
+        nodeFront._form.nodeValue.trim() === text.trim()
+      );
     })[0][1];
     return hoverContainer(container);
   }
 
   async function assertHighlighterShownOn(selector) {
-    ok((await testActor.assertHighlightedNode(selector)),
-       "Highlighter is shown on the right node: " + selector);
+    ok(
+      await testActor.assertHighlightedNode(selector),
+      "Highlighter is shown on the right node: " + selector
+    );
   }
 
-  async function assertHighlighterShownOnTextNode(parentSelector, childNodeIndex) {
-    ok((await testActor.assertHighlightedTextNode(parentSelector, childNodeIndex)),
-       "Highlighter is shown on the right text node");
+  async function assertHighlighterShownOnTextNode(
+    parentSelector,
+    childNodeIndex
+  ) {
+    ok(
+      await testActor.assertHighlightedTextNode(parentSelector, childNodeIndex),
+      "Highlighter is shown on the right text node"
+    );
   }
 
   async function assertHighlighterHidden() {

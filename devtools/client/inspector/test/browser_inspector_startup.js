@@ -22,17 +22,20 @@ function onPageResourceRequest() {
 }
 
 // Test page load events.
-const TEST_URL = "data:text/html," +
+const TEST_URL =
+  "data:text/html," +
   "<!DOCTYPE html>" +
   "<head><meta charset='utf-8' /></head>" +
   "<body>" +
   "<p>Page loading slowly</p>" +
-  "<img src='http://localhost:" + server.identity.primaryPort + "/slow.gif' />" +
+  "<img src='http://localhost:" +
+  server.identity.primaryPort +
+  "/slow.gif' />" +
   "</body>" +
   "</html>";
 
 add_task(async function() {
-  const {inspector, tab} = await openInspectorForURL("about:blank");
+  const { inspector, tab } = await openInspectorForURL("about:blank");
 
   const domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   const pageLoaded = waitForLinkedBrowserEvent(tab, "load");
@@ -57,8 +60,11 @@ add_task(async function() {
 
   ok(inspector.markup, "There is a markup view");
   is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
-  is(await contentReadyState(tab), "interactive",
-     "Page is still loading but the inspector is ready");
+  is(
+    await contentReadyState(tab),
+    "interactive",
+    "Page is still loading but the inspector is ready"
+  );
 
   // Ends page load by unblocking the image request
   response.finish();

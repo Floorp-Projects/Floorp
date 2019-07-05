@@ -99,11 +99,20 @@ function set(cache, prefType, prefsRoot, prefName, value) {
  * @param string prefName
  * @param array serializer [optional]
  */
-function map(self, cache, accessorName, prefType, prefsRoot, prefName,
-             serializer = { in: e => e, out: e => e }) {
+function map(
+  self,
+  cache,
+  accessorName,
+  prefType,
+  prefsRoot,
+  prefName,
+  serializer = { in: e => e, out: e => e }
+) {
   if (prefName in self) {
-    throw new Error(`Can't use ${prefName} because it overrides a property` +
-                    "on the instance.");
+    throw new Error(
+      `Can't use ${prefName} because it overrides a property` +
+        "on the instance."
+    );
   }
   if (prefType == "Json") {
     map(self, cache, accessorName, "Char", prefsRoot, prefName, {
@@ -115,14 +124,14 @@ function map(self, cache, accessorName, prefType, prefsRoot, prefName,
   if (prefType == "Float") {
     map(self, cache, accessorName, "Char", prefsRoot, prefName, {
       in: Number.parseFloat,
-      out: (n) => n + "",
+      out: n => n + "",
     });
     return;
   }
 
   Object.defineProperty(self, accessorName, {
     get: () => serializer.in(get(cache, prefType, prefsRoot, prefName)),
-    set: (e) => set(cache, prefType, prefsRoot, prefName, serializer.out(e)),
+    set: e => set(cache, prefType, prefsRoot, prefName, serializer.out(e)),
   });
 }
 

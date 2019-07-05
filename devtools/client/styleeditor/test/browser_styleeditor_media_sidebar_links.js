@@ -8,21 +8,28 @@
  * @media sidebar width and height related conditions */
 
 const asyncStorage = require("devtools/shared/async-storage");
-Services.prefs.setCharPref("devtools.devices.url",
-  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json");
+Services.prefs.setCharPref(
+  "devtools.devices.url",
+  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json"
+);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.devices.url");
   asyncStorage.removeItem("devtools.devices.url_cache");
 });
 
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
+loader.lazyRequireGetter(
+  this,
+  "ResponsiveUIManager",
+  "devtools/client/responsive.html/manager",
+  true
+);
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
 add_task(async function() {
-  const {ui} = await openStyleEditorForURL(TESTCASE_URI);
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const editor = ui.editors[1];
   await openEditor(editor);
@@ -41,14 +48,23 @@ function testNumberOfLinks(editor) {
   const conditions = sidebar.querySelectorAll(".media-rule-condition");
 
   info("Testing if media rules have the appropriate number of links");
-  ok(!conditions[0].querySelector(responsiveModeToggleClass),
-    "There should be no links in the first media rule.");
-  ok(!conditions[1].querySelector(responsiveModeToggleClass),
-     "There should be no links in the second media rule.");
-  ok(conditions[2].querySelector(responsiveModeToggleClass),
-     "There should be 1 responsive mode link in the media rule");
-  is(conditions[3].querySelectorAll(responsiveModeToggleClass).length, 2,
-       "There should be 2 responsive mode links in the media rule");
+  ok(
+    !conditions[0].querySelector(responsiveModeToggleClass),
+    "There should be no links in the first media rule."
+  );
+  ok(
+    !conditions[1].querySelector(responsiveModeToggleClass),
+    "There should be no links in the second media rule."
+  );
+  ok(
+    conditions[2].querySelector(responsiveModeToggleClass),
+    "There should be 1 responsive mode link in the media rule"
+  );
+  is(
+    conditions[3].querySelectorAll(responsiveModeToggleClass).length,
+    2,
+    "There should be 2 responsive mode links in the media rule"
+  );
 }
 
 async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
@@ -68,11 +84,15 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   await onMediaChange;
   await onContentResize;
 
-  ok(ResponsiveUIManager.isActiveForTab(tab),
-    "Responsive mode should be active.");
+  ok(
+    ResponsiveUIManager.isActiveForTab(tab),
+    "Responsive mode should be active."
+  );
   conditions = sidebar.querySelectorAll(".media-rule-condition");
-  ok(!conditions[itemIndex].classList.contains("media-condition-unmatched"),
-     "media rule should now be matched after responsive mode is active");
+  ok(
+    !conditions[itemIndex].classList.contains("media-condition-unmatched"),
+    "media rule should now be matched after responsive mode is active"
+  );
 
   const dimension = (await getSizing(rdmUI))[type];
   is(dimension, value, `${type} should be properly set.`);
@@ -86,18 +106,24 @@ async function closeRDM(tab, ui) {
 
   info("Wait for media-list-changed events to settle on StyleEditorUI");
   await onMediaChange;
-  ok(!ResponsiveUIManager.isActiveForTab(tab),
-     "Responsive mode should no longer be active.");
+  ok(
+    !ResponsiveUIManager.isActiveForTab(tab),
+    "Responsive mode should no longer be active."
+  );
 }
 
 function doFinalChecks(editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   let conditions = sidebar.querySelectorAll(".media-rule-condition");
   conditions = sidebar.querySelectorAll(".media-rule-condition");
-  ok(conditions[2].classList.contains("media-condition-unmatched"),
-     "The width condition should now be unmatched");
-  ok(conditions[3].classList.contains("media-condition-unmatched"),
-     "The height condition should now be unmatched");
+  ok(
+    conditions[2].classList.contains("media-condition-unmatched"),
+    "The width condition should now be unmatched"
+  );
+  ok(
+    conditions[3].classList.contains("media-condition-unmatched"),
+    "The height condition should now be unmatched"
+  );
 }
 
 /* Helpers */

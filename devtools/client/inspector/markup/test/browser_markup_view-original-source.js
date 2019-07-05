@@ -18,27 +18,38 @@ add_task(async function() {
   const container = getContainerForNodeFront(nodeFront, inspector);
 
   const evHolder = container.elt.querySelector(
-    ".inspector-badge.interactive[data-event]");
+    ".inspector-badge.interactive[data-event]"
+  );
 
   evHolder.scrollIntoView();
-  EventUtils.synthesizeMouseAtCenter(evHolder, {},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    evHolder,
+    {},
+    inspector.markup.doc.defaultView
+  );
 
   const tooltip = inspector.markup.eventDetailsTooltip;
   await tooltip.once("shown");
   await tooltip.once("event-tooltip-source-map-ready");
 
-  const debuggerIcon = tooltip.panel.querySelector(".event-tooltip-debugger-icon");
+  const debuggerIcon = tooltip.panel.querySelector(
+    ".event-tooltip-debugger-icon"
+  );
   EventUtils.synthesizeMouse(debuggerIcon, 2, 2, {}, debuggerIcon.ownerGlobal);
 
   await gDevTools.showToolbox(target, "jsdebugger");
   const dbg = toolbox.getPanel("jsdebugger");
 
   let source;
-  await BrowserTestUtils.waitForCondition(() => {
-    source = dbg._selectors.getSelectedSource(dbg._getState());
-    return !!source;
-  }, "loaded source", 100, 20);
+  await BrowserTestUtils.waitForCondition(
+    () => {
+      source = dbg._selectors.getSelectedSource(dbg._getState());
+      return !!source;
+    },
+    "loaded source",
+    100,
+    20
+  );
 
   is(
     source.url,

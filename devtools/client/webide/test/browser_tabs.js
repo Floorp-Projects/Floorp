@@ -2,7 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webide/test/doc_tabs.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webide/test/doc_tabs.html";
 
 function test() {
   waitForExplicitFinish();
@@ -65,9 +66,7 @@ function test() {
 
 function connectToLocal(win, docRuntime) {
   return new Promise(resolve => {
-    win.AppManager.connection.once(
-      win.Connection.Events.CONNECTED,
-      resolve);
+    win.AppManager.connection.once(win.Connection.Events.CONNECTED, resolve);
     docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
   });
 }

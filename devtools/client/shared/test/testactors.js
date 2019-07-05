@@ -12,8 +12,7 @@ TestActor1.prototype = {
   actorPrefix: "testOne",
 
   grip: function TA1_grip() {
-    return { actor: this.actorID,
-             test: "TestActor1" };
+    return { actor: this.actorID, test: "TestActor1" };
   },
 
   onPing: function TA1_onPing() {
@@ -22,6 +21,6 @@ TestActor1.prototype = {
 };
 
 TestActor1.prototype.requestTypes = {
-  "ping": TestActor1.prototype.onPing,
+  ping: TestActor1.prototype.onPing,
 };
 exports.TestActor1 = TestActor1;

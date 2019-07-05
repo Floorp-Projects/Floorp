@@ -36,14 +36,17 @@ add_task(async function() {
     toolbox.getToolPanels();
   });
 
-  const msg = await waitFor(() => findMessage(bcHud,
-    "TypeError: this._toolPanels is not iterable"));
+  const msg = await waitFor(() =>
+    findMessage(bcHud, "TypeError: this._toolPanels is not iterable")
+  );
 
   fixToolbox();
 
   ok(msg, `Message found: "TypeError: this._toolPanels is not iterable"`);
 
-  const locationNode = msg.querySelector(".message-location .frame-link-source");
+  const locationNode = msg.querySelector(
+    ".message-location .frame-link-source"
+  );
   ok(locationNode, "Message location link element found");
 
   const url = locationNode.href;

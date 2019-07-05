@@ -8,7 +8,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  const {inspector, boxmodel, testActor} = await openLayoutView();
+  const { inspector, boxmodel, testActor } = await openLayoutView();
 
   info("Test that the box model view works on the first page");
   await assertBoxModelView(inspector, boxmodel, testActor);
@@ -27,7 +27,8 @@ async function assertBoxModelView(inspector, boxmodel, testActor) {
 
   info("Checking that the box model view shows the right value");
   const paddingElt = boxmodel.document.querySelector(
-    ".boxmodel-padding.boxmodel-top > span");
+    ".boxmodel-padding.boxmodel-top > span"
+  );
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");

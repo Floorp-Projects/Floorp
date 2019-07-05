@@ -11,23 +11,22 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-function getContainerForNodeFront(nodeFront, {markup}) {
+function getContainerForNodeFront(nodeFront, { markup }) {
   return markup.getContainer(nodeFront);
 }
 
 // Test basic inspector functionality in web replay: the inspector is able to
 // show contents when paused according to the child's current position.
 add_task(async function() {
-  const dbg = await attachRecordingDebugger(
-    "doc_inspector_basic.html",
-    { waitForRecording: true }
-  );
-  const {threadClient, tab, toolbox} = dbg;
+  const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
+    waitForRecording: true,
+  });
+  const { threadClient, tab, toolbox } = dbg;
 
   await threadClient.interrupt();
   await threadClient.resume();
 
-  const {inspector} = await openInspector();
+  const { inspector } = await openInspector();
 
   let nodeFront = await getNodeFront("#maindiv", inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
@@ -36,20 +35,28 @@ add_task(async function() {
   await threadClient.interrupt();
 
   nodeFront = await getNodeFront("#maindiv", inspector);
-  await waitFor(() => inspector.markup && getContainerForNodeFront(nodeFront, inspector));
+  await waitFor(
+    () => inspector.markup && getContainerForNodeFront(nodeFront, inspector)
+  );
   container = getContainerForNodeFront(nodeFront, inspector);
-  ok(container.editor.textEditor.textNode.state.value == "GOODBYE",
-     "Correct late element text");
+  ok(
+    container.editor.textEditor.textNode.state.value == "GOODBYE",
+    "Correct late element text"
+  );
 
   const bp = await setBreakpoint(threadClient, "doc_inspector_basic.html", 9);
 
   await rewindToLine(threadClient, 9);
 
   nodeFront = await getNodeFront("#maindiv", inspector);
-  await waitFor(() => inspector.markup && getContainerForNodeFront(nodeFront, inspector));
+  await waitFor(
+    () => inspector.markup && getContainerForNodeFront(nodeFront, inspector)
+  );
   container = getContainerForNodeFront(nodeFront, inspector);
-  ok(container.editor.textEditor.textNode.state.value == "HELLO",
-     "Correct early element text");
+  ok(
+    container.editor.textEditor.textNode.state.value == "HELLO",
+    "Correct early element text"
+  );
 
   await threadClient.removeBreakpoint(bp);
   await toolbox.closeToolbox();

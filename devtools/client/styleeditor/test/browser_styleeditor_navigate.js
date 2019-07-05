@@ -26,7 +26,7 @@ add_task(async function() {
 
   is(ui.selectedEditor, ui.editors[0], "first editor is selected");
 
-  const {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
+  const { line, ch } = ui.selectedEditor.sourceEditor.getCursor();
   is(line, 0, "first line is selected");
   is(ch, 0, "first column is selected");
 });

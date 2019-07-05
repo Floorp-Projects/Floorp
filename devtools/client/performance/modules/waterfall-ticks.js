@@ -22,9 +22,9 @@ function drawWaterfallBackground(doc, dataScale, waterfallWidth) {
   const ctx = canvas.getContext("2d");
 
   // Nuke the context.
-  const canvasWidth = canvas.width = waterfallWidth;
+  const canvasWidth = (canvas.width = waterfallWidth);
   // Awww yeah, 1px, repeats on Y axis.
-  const canvasHeight = canvas.height = 1;
+  const canvasHeight = (canvas.height = 1);
 
   // Start over.
   const imageData = ctx.createImageData(canvasWidth, canvasHeight);
@@ -69,7 +69,11 @@ function drawWaterfallBackground(doc, dataScale, waterfallWidth) {
  * @param number dataScale
  * @return number
  */
-function findOptimalTickInterval({ ticksMultiple, ticksSpacingMin, dataScale }) {
+function findOptimalTickInterval({
+  ticksMultiple,
+  ticksSpacingMin,
+  dataScale,
+}) {
   let timingStep = ticksMultiple;
   const maxIters = FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS;
   let numIters = 0;

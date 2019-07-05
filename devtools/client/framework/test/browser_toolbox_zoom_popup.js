@@ -5,7 +5,7 @@
 
 // Test the popup menu position when zooming in the devtools panel.
 
-const {Toolbox} = require("devtools/client/framework/toolbox");
+const { Toolbox } = require("devtools/client/framework/toolbox");
 
 // Use a simple URL in order to prevent displacing the left position of the
 // frames menu.
@@ -21,9 +21,11 @@ add_task(async function() {
   info("Load iframe page for checking the frame menu with x1.4 zoom.");
   await addTab(TEST_URL);
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = await gDevTools.showToolbox(target,
-                                            "inspector",
-                                            Toolbox.HostType.WINDOW);
+  const toolbox = await gDevTools.showToolbox(
+    target,
+    "inspector",
+    Toolbox.HostType.WINDOW
+  );
   const inspector = toolbox.getCurrentPanel();
   const hostWindow = toolbox.win.parent;
   const originWidth = hostWindow.outerWidth;
@@ -35,7 +37,9 @@ add_task(async function() {
     return parseFloat(windowUtils.fullZoom.toFixed(1)) === zoom;
   });
 
-  info("Resizing and moving the toolbox window in order to display the chevron menu.");
+  info(
+    "Resizing and moving the toolbox window in order to display the chevron menu."
+  );
   // If the window is displayed bottom of screen, the menu might be displayed
   // above the button so move it to the top of the screen first.
   hostWindow.moveTo(0, 0);
@@ -45,23 +49,30 @@ add_task(async function() {
   const prevTabs = toolbox.doc.querySelectorAll(".devtools-tab").length;
   hostWindow.resizeTo(400, hostWindow.outerHeight);
   await waitUntil(() => {
-    return hostWindow.screen.top === 0 &&
+    return (
+      hostWindow.screen.top === 0 &&
       hostWindow.screen.left === 0 &&
       hostWindow.outerWidth === 400 &&
       toolbox.doc.getElementById("tools-chevron-menu-button") &&
       inspector.panelDoc.querySelector(".all-tabs-menu") &&
-      prevTabs != toolbox.doc.querySelectorAll(".devtools-tab").length;
+      prevTabs != toolbox.doc.querySelectorAll(".devtools-tab").length
+    );
   });
 
-  const menuList =
-    [toolbox.win.document.getElementById("toolbox-meatball-menu-button"),
-     toolbox.win.document.getElementById("command-button-frames"),
-     toolbox.win.document.getElementById("tools-chevron-menu-button"),
-     inspector.panelDoc.querySelector(".all-tabs-menu")];
+  const menuList = [
+    toolbox.win.document.getElementById("toolbox-meatball-menu-button"),
+    toolbox.win.document.getElementById("command-button-frames"),
+    toolbox.win.document.getElementById("tools-chevron-menu-button"),
+    inspector.panelDoc.querySelector(".all-tabs-menu"),
+  ];
 
   for (const menu of menuList) {
-    const { buttonBounds, menuType, menuBounds, arrowBounds } =
-      await getButtonAndMenuInfo(toolbox, menu);
+    const {
+      buttonBounds,
+      menuType,
+      menuBounds,
+      arrowBounds,
+    } = await getButtonAndMenuInfo(toolbox, menu);
 
     switch (menuType) {
       case "native":
@@ -84,8 +95,11 @@ add_task(async function() {
           const buttonCenter = buttonBounds.left + buttonBounds.width / 2;
           const arrowCenter = arrowBounds.left + arrowBounds.width / 2;
           const delta = Math.abs(arrowCenter - buttonCenter);
-          ok(delta < 1, "Center of arrow is within 1px of button center" +
-             ` (delta: ${delta})`);
+          ok(
+            delta < 1,
+            "Center of arrow is within 1px of button center" +
+              ` (delta: ${delta})`
+          );
         }
         break;
     }
@@ -125,7 +139,8 @@ async function getButtonAndMenuInfo(toolbox, menuButton) {
       screenX: 1,
     },
     menuButton,
-    doc.defaultView);
+    doc.defaultView
+  );
 
   let menuPopup;
   let menuType;
@@ -138,7 +153,7 @@ async function getButtonAndMenuInfo(toolbox, menuButton) {
     menuType = "native";
     const popupset = topDoc.querySelector("popupset");
     await waitUntil(() => {
-      menuPopup = popupset.querySelector("menupopup[menu-api=\"true\"]");
+      menuPopup = popupset.querySelector('menupopup[menu-api="true"]');
       return !!menuPopup && menuPopup.state === "open";
     });
   }

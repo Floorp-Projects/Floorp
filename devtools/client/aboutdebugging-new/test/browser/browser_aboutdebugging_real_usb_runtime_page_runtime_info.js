@@ -4,7 +4,10 @@
 "use strict";
 
 /* import-globals-from helper-real-usb.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-real-usb.js", this);
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "helper-real-usb.js",
+  this
+);
 
 // Test that runtime info of USB runtime appears on main pane.
 // Documentation for real usb tests in /documentation/TESTS_REAL_DEVICES.md
@@ -23,25 +26,37 @@ add_task(async function() {
   await Promise.race([
     connectToRuntime(sidebarInfo.deviceName, document),
     /* eslint-disable mozilla/no-arbitrary-setTimeout */
-    new Promise(resolve => setTimeout(() => {
-      ok(false,
-         "Failed to connect, did you disable the connection prompt for this runtime?");
-      resolve();
-    }, 5000)),
+    new Promise(resolve =>
+      setTimeout(() => {
+        ok(
+          false,
+          "Failed to connect, did you disable the connection prompt for this runtime?"
+        );
+        resolve();
+      }, 5000)
+    ),
     /* eslint-enable mozilla/no-arbitrary-setTimeout */
   ]);
 
   info("Select a USB runtime");
-  await selectRuntime(sidebarInfo.deviceName, runtimeDetails.info.name, document);
+  await selectRuntime(
+    sidebarInfo.deviceName,
+    runtimeDetails.info.name,
+    document
+  );
 
   info("Check that runtime info is properly displayed");
   const runtimeInfo = document.querySelector(".qa-runtime-name");
   ok(runtimeInfo, "Runtime info is displayed");
   const runtimeInfoText = runtimeInfo.textContent;
-  ok(runtimeInfoText.includes(runtimeDetails.info.name),
-     "Runtime info shows the correct runtime name: " + runtimeInfoText);
-  ok(runtimeInfoText.includes(runtimeDetails.info.version),
-     "Runtime info shows the correct version number: " + runtimeInfoText);
+  ok(
+    runtimeInfoText.includes(runtimeDetails.info.name),
+    "Runtime info shows the correct runtime name: " + runtimeInfoText
+  );
+  ok(
+    runtimeInfoText.includes(runtimeDetails.info.version),
+    "Runtime info shows the correct version number: " + runtimeInfoText
+  );
 
   await removeTab(tab);
 });

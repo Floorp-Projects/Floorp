@@ -5,13 +5,17 @@
 
 // Tests loading presets
 
-const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
-const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
+const {
+  CSSFilterEditorWidget,
+} = require("devtools/client/shared/widgets/FilterWidget");
+const {
+  getClientCssProperties,
+} = require("devtools/shared/fronts/css-properties");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
@@ -38,8 +42,10 @@ add_task(async function() {
 
   await onRender;
 
-  is(widget.getCssValue(), VALUE,
-     "Should set widget's value correctly");
-  is(widget.el.querySelector(".presets-list .footer input").value, NAME,
-     "Should set input's value to name");
+  is(widget.getCssValue(), VALUE, "Should set widget's value correctly");
+  is(
+    widget.el.querySelector(".presets-list .footer input").value,
+    NAME,
+    "Should set input's value to name"
+  );
 });

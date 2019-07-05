@@ -4,10 +4,14 @@
 
 "use strict";
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {ScratchpadManager} = ChromeUtils.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {gDevTools} = require("devtools/client/framework/devtools");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { ScratchpadManager } = ChromeUtils.import(
+  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
+);
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { gDevTools } = require("devtools/client/framework/devtools");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 var gScratchpadWindow; // Reference to the Scratchpad chrome window object
@@ -34,8 +38,8 @@ var gScratchpadWindow; // Reference to the Scratchpad chrome window object
  *         object.
  */
 function openScratchpad(aReadyCallback, aOptions = {}) {
-  const win = aOptions.window ||
-            ScratchpadManager.openScratchpad(aOptions.state);
+  const win =
+    aOptions.window || ScratchpadManager.openScratchpad(aOptions.state);
   if (!win) {
     return;
   }
@@ -79,11 +83,14 @@ function openTabAndScratchpad(aOptions = {}) {
   // eslint-disable-next-line new-cap
   return new Promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-    const {selectedBrowser} = gBrowser;
+    const { selectedBrowser } = gBrowser;
     BrowserTestUtils.browserLoaded(selectedBrowser).then(function() {
       openScratchpad((win, sp) => resolve([win, sp]), aOptions);
     });
-    BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8," + (aOptions.tabContent || ""));
+    BrowserTestUtils.loadURI(
+      gBrowser,
+      "data:text/html;charset=utf8," + (aOptions.tabContent || "")
+    );
   });
 }
 
@@ -106,13 +113,19 @@ function createTempFile(aName, aContent, aCallback = function() {}) {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   // Write the temporary file.
-  const fout = Cc["@mozilla.org/network/file-output-stream;1"]
-             .createInstance(Ci.nsIFileOutputStream);
-  fout.init(file.QueryInterface(Ci.nsIFile), 0x02 | 0x08 | 0x20,
-            parseInt("644", 8), fout.DEFER_OPEN);
+  const fout = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  fout.init(
+    file.QueryInterface(Ci.nsIFile),
+    0x02 | 0x08 | 0x20,
+    parseInt("644", 8),
+    fout.DEFER_OPEN
+  );
 
-  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                  .createInstance(Ci.nsIScriptableUnicodeConverter);
+  const converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   const fileContentStream = converter.convertToInputStream(aContent);
 
@@ -145,13 +158,16 @@ function runAsyncTests(scratchpad, tests) {
       if (tests.length) {
         const test = tests.shift();
         scratchpad.setText(test.code);
-        scratchpad[test.method]().then(function success() {
-          is(scratchpad.getText(), test.result, test.label);
-          runTest();
-        }, function failure(error) {
-          ok(false, error.stack + " " + test.label);
-          runTest();
-        });
+        scratchpad[test.method]().then(
+          function success() {
+            is(scratchpad.getText(), test.result, test.label);
+            runTest();
+          },
+          function failure(error) {
+            ok(false, error.stack + " " + test.label);
+            runTest();
+          }
+        );
       } else {
         resolve();
       }
@@ -177,7 +193,7 @@ function runAsyncTests(scratchpad, tests) {
  *         The promise that will be resolved when all tests are finished.
  */
 var runAsyncCallbackTests = async function(aScratchpad, aTests) {
-  for (const {prepare, method, then} of aTests) {
+  for (const { prepare, method, then } of aTests) {
     await prepare();
     const res = await aScratchpad[method]();
     await then(res);

@@ -18,15 +18,13 @@ class KeyframeMarkerItem extends PureComponent {
   render() {
     const { keyframe } = this.props;
 
-    return dom.li(
-      {
-        className: "keyframe-marker-item",
-        title: keyframe.value,
-        style: {
-          marginInlineStart: `${ keyframe.offset * 100 }%`,
-        },
-      }
-    );
+    return dom.li({
+      className: "keyframe-marker-item",
+      title: keyframe.value,
+      style: {
+        marginInlineStart: `${keyframe.offset * 100}%`,
+      },
+    });
   }
 }
 

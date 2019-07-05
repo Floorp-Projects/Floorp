@@ -10,15 +10,18 @@
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
   const container = await getContainerForSelector("ul", inspector);
 
   info("Alt-clicking on collapsed expander should expand all children");
   const onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeMouseAtCenter(container.expander, {altKey: true},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    container.expander,
+    { altKey: true },
+    inspector.markup.doc.defaultView
+  );
   await onUpdated;
   await waitForMultipleChildrenUpdates(inspector);
 
@@ -27,13 +30,18 @@ add_task(async function() {
   for (const nodeFront of nodeFronts) {
     const nodeContainer = getContainerForNodeFront(nodeFront, inspector);
     ok(nodeContainer, "Container for node " + nodeFront.tagName + " exists");
-    ok(nodeContainer.expanded,
-      "Container for node " + nodeFront.tagName + " is expanded");
+    ok(
+      nodeContainer.expanded,
+      "Container for node " + nodeFront.tagName + " is expanded"
+    );
   }
 
   info("Alt-clicking on expanded expander should collapse all children");
-  EventUtils.synthesizeMouseAtCenter(container.expander, {altKey: true},
-    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    container.expander,
+    { altKey: true },
+    inspector.markup.doc.defaultView
+  );
   await waitForMultipleChildrenUpdates(inspector);
   // No need to wait for inspector-updated here since we are not retrieving new nodes.
 
@@ -41,13 +49,17 @@ add_task(async function() {
   nodeFronts = await getNodeFronts(inspector);
   for (const nodeFront of nodeFronts) {
     const nodeContainer = getContainerForNodeFront(nodeFront, inspector);
-    ok(!nodeContainer.expanded,
-      "Container for node " + nodeFront.tagName + " is collapsed");
+    ok(
+      !nodeContainer.expanded,
+      "Container for node " + nodeFront.tagName + " is collapsed"
+    );
   }
 });
 
 async function getNodeFronts(inspector) {
   const nodeList = await inspector.walker.querySelectorAll(
-    inspector.walker.rootNode, "ul, li, span, em");
+    inspector.walker.rootNode,
+    "ul, li, span, em"
+  );
   return nodeList.items();
 }

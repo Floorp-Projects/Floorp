@@ -5,10 +5,12 @@
 "use strict";
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N =
-  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
-const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/animationinspector.properties"
+);
+const INSPECTOR_L10N = new LocalizationHelper(
+  "devtools/client/locales/inspector.properties"
+);
 
 /**
  * Get a formatted title for this animation. This will be either:

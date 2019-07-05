@@ -23,8 +23,11 @@ add_task(async function() {
   // Expect an inspector-updated event here, because removing #d1 causes the
   // breadcrumbs to update (since #d1 is displayed in it).
   const onUpdated = inspector.once("inspector-updated");
-  await mutatePage(inspector, testActor,
-                   "document.getElementById(\"d1\").remove()");
+  await mutatePage(
+    inspector,
+    testActor,
+    'document.getElementById("d1").remove()'
+  );
   await onUpdated;
 
   info("Pressing return button to search again for node #d1.");
@@ -34,8 +37,15 @@ add_task(async function() {
   assertHasResult(inspector, false);
 
   info("Emptying the field and searching for a node that doesn't exist: #d3");
-  const keys = ["VK_BACK_SPACE", "VK_BACK_SPACE", "VK_BACK_SPACE", "#", "d", "3",
-                "VK_RETURN"];
+  const keys = [
+    "VK_BACK_SPACE",
+    "VK_BACK_SPACE",
+    "VK_BACK_SPACE",
+    "#",
+    "d",
+    "3",
+    "VK_RETURN",
+  ];
   await synthesizeKeys(keys, inspector);
 
   await inspector.search.once("search-result");
@@ -44,9 +54,12 @@ add_task(async function() {
   info("Create the #d3 node in the page");
   // No need to expect an inspector-updated event here, Creating #d3 isn't going
   // to update the breadcrumbs in any ways.
-  await mutatePage(inspector, testActor,
-                   `document.getElementById("d2").insertAdjacentHTML(
-                    "afterend", "<div id=d3></div>")`);
+  await mutatePage(
+    inspector,
+    testActor,
+    `document.getElementById("d2").insertAdjacentHTML(
+                    "afterend", "<div id=d3></div>")`
+  );
 
   info("Pressing return button to search again for node #d3.");
   await synthesizeKeys("VK_RETURN", inspector);
@@ -75,9 +88,13 @@ async function synthesizeKeys(keys, inspector) {
 }
 
 function assertHasResult(inspector, expectResult) {
-  is(inspector.searchBox.parentNode.classList.contains("devtools-searchbox-no-match"),
-     !expectResult,
-     "There are" + (expectResult ? "" : " no") + " search results");
+  is(
+    inspector.searchBox.parentNode.classList.contains(
+      "devtools-searchbox-no-match"
+    ),
+    !expectResult,
+    "There are" + (expectResult ? "" : " no") + " search results"
+  );
 }
 
 async function mutatePage(inspector, testActor, expression) {

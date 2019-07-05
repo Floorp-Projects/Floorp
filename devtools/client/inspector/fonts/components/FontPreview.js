@@ -25,18 +25,13 @@ class FontPreview extends PureComponent {
   }
 
   render() {
-    const {
-      onPreviewClick,
-      previewUrl,
-    } = this.props;
+    const { onPreviewClick, previewUrl } = this.props;
 
-    return dom.img(
-      {
-        className: "font-preview",
-        onClick: onPreviewClick,
-        src: previewUrl,
-      }
-    );
+    return dom.img({
+      className: "font-preview",
+      onClick: onPreviewClick,
+      src: previewUrl,
+    });
   }
 }
 

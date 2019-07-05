@@ -24,20 +24,32 @@ add_task(async function() {
   const [traceBar1, traceBar2, traceRab1, traceRab2] = getFrames(hud);
 
   const framesBar1 = getFramesTitleFromTrace(traceBar1);
-  is(framesBar1.join(" - "), "myFunc - bar - <anonymous>",
-    "First bar trace has the expected frames");
+  is(
+    framesBar1.join(" - "),
+    "myFunc - bar - <anonymous>",
+    "First bar trace has the expected frames"
+  );
 
   const framesBar2 = getFramesTitleFromTrace(traceBar2);
-  is(framesBar2.join(" - "), "myFunc - bar - <anonymous>",
-    "Second bar trace has the expected frames");
+  is(
+    framesBar2.join(" - "),
+    "myFunc - bar - <anonymous>",
+    "Second bar trace has the expected frames"
+  );
 
   const framesRab1 = getFramesTitleFromTrace(traceRab1);
-  is(framesRab1.join(" - "), "myFunc - rab - <anonymous>",
-    "First rab trace has the expected frames");
+  is(
+    framesRab1.join(" - "),
+    "myFunc - rab - <anonymous>",
+    "First rab trace has the expected frames"
+  );
 
   const framesRab2 = getFramesTitleFromTrace(traceRab2);
-  is(framesRab2.join(" - "), "myFunc - rab - <anonymous>",
-    "Second rab trace has the expected frames");
+  is(
+    framesRab2.join(" - "),
+    "myFunc - rab - <anonymous>",
+    "Second rab trace has the expected frames"
+  );
 });
 
 /**
@@ -54,5 +66,7 @@ function getFrames(hud) {
  * @returns {Array<String>}
  */
 function getFramesTitleFromTrace(traceEl) {
-  return Array.from(traceEl.querySelectorAll(".frame .title")).map(t => t.textContent);
+  return Array.from(traceEl.querySelectorAll(".frame .title")).map(
+    t => t.textContent
+  );
 }

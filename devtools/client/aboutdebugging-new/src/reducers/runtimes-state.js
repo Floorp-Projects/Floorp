@@ -19,12 +19,11 @@ const {
   THIS_FIREFOX_RUNTIME_CREATED,
 } = require("../constants");
 
-const {
-  findRuntimeById,
-} = require("../modules/runtimes-state-helper");
+const { findRuntimeById } = require("../modules/runtimes-state-helper");
 
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
+const {
+  remoteClientManager,
+} = require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 // Map between known runtime types and nodes in the runtimes state.
 const TYPE_TO_RUNTIMES_KEY = {
@@ -146,8 +145,9 @@ function runtimesReducer(state = RuntimesState(), action) {
       const { connectionPromptEnabled } = action;
       const { id: runtimeId } = action.runtime;
       const runtime = findRuntimeById(runtimeId, state);
-      const runtimeDetails =
-        Object.assign({}, runtime.runtimeDetails, { connectionPromptEnabled });
+      const runtimeDetails = Object.assign({}, runtime.runtimeDetails, {
+        connectionPromptEnabled,
+      });
       return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
     }
 
@@ -155,8 +155,9 @@ function runtimesReducer(state = RuntimesState(), action) {
       const { isMultiE10s } = action;
       const { id: runtimeId } = action.runtime;
       const runtime = findRuntimeById(runtimeId, state);
-      const runtimeDetails =
-        Object.assign({}, runtime.runtimeDetails, { isMultiE10s });
+      const runtimeDetails = Object.assign({}, runtime.runtimeDetails, {
+        isMultiE10s,
+      });
       return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
     }
 

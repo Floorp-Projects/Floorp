@@ -10,7 +10,9 @@ const {
   setupStore,
   clonePacket,
 } = require("devtools/client/webconsole/test/helpers");
-const { stubPackets } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPackets,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 
 const expect = require("expect");
 
@@ -35,7 +37,9 @@ describe("Network message reducer:", () => {
     packet.actor = "message1";
     updatePacket.networkInfo.actor = "message1";
     dispatch(actions.messagesAdd([packet]));
-    dispatch(actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
+    dispatch(
+      actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket)
+    );
   });
 
   describe("networkMessagesUpdateById", () => {
@@ -44,9 +48,11 @@ describe("Network message reducer:", () => {
         headers: [],
       };
 
-      dispatch(actions.networkUpdateRequest("message1", {
-        requestHeaders: headers,
-      }));
+      dispatch(
+        actions.networkUpdateRequest("message1", {
+          requestHeaders: headers,
+        })
+      );
 
       const networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(networkUpdates.message1.requestHeaders).toBe(headers);
@@ -57,9 +63,11 @@ describe("Network message reducer:", () => {
         state: "insecure",
       };
 
-      dispatch(actions.networkUpdateRequest("message1", {
-        securityInfo: securityInfo,
-      }));
+      dispatch(
+        actions.networkUpdateRequest("message1", {
+          securityInfo: securityInfo,
+        })
+      );
 
       const networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(networkUpdates.message1.securityInfo).toBe(securityInfo);
@@ -75,11 +83,13 @@ describe("Network message reducer:", () => {
         uploadHeaders,
       };
 
-      dispatch(actions.networkUpdateRequest("message1", {
-        requestPostData,
-      }));
+      dispatch(
+        actions.networkUpdateRequest("message1", {
+          requestPostData,
+        })
+      );
 
-      const {message1} = getAllNetworkMessagesUpdateById(getState());
+      const { message1 } = getAllNetworkMessagesUpdateById(getState());
       expect(message1.requestPostData).toBe(requestPostData);
       expect(message1.requestHeadersFromUploadStream).toBe(uploadHeaders);
     });

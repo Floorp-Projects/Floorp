@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -60,12 +63,10 @@ class KeyframesProgressBar extends PureComponent {
   }
 
   updateOffset(currentTime, animation, timeScale) {
-    const {
-      createdTime,
-      playbackRate,
-    } = animation.state;
+    const { createdTime, playbackRate } = animation.state;
 
-    const time = (timeScale.minStartTime + currentTime - createdTime) * playbackRate;
+    const time =
+      (timeScale.minStartTime + currentTime - createdTime) * playbackRate;
 
     if (isNaN(time)) {
       // Setting an invalid currentTime will throw so bail out if time is not a number for
@@ -74,16 +75,14 @@ class KeyframesProgressBar extends PureComponent {
     }
 
     this.simulatedAnimation.currentTime = time;
-    const position = this.simulatedAnimation.effect.getComputedTiming().progress;
+    const position = this.simulatedAnimation.effect.getComputedTiming()
+      .progress;
 
     this.setState({ position });
   }
 
   setupAnimation(props) {
-    const {
-      animation,
-      simulateAnimationForKeyframesProgressBar,
-    } = props;
+    const { animation, simulateAnimationForKeyframesProgressBar } = props;
 
     if (this.simulatedAnimation) {
       this.simulatedAnimation.cancel();
@@ -103,12 +102,10 @@ class KeyframesProgressBar extends PureComponent {
       {
         className: "keyframes-progress-bar-area",
       },
-      IndicationBar(
-        {
-          className: "keyframes-progress-bar",
-          position,
-        }
-      )
+      IndicationBar({
+        className: "keyframes-progress-bar",
+        position,
+      })
     );
   }
 }

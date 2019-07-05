@@ -7,9 +7,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -25,7 +33,10 @@ add_task(async function() {
   // The waterfall should render by default, and we want to make
   // sure that the render events don't bleed between detail views
   // so test that's the case after both views have been created.
-  const callTreeRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const callTreeRendered = once(
+    JsCallTreeView,
+    EVENTS.UI_JS_CALL_TREE_RENDERED
+  );
   await DetailsView.selectView("js-calltree");
   await callTreeRendered;
 
@@ -34,12 +45,16 @@ add_task(async function() {
   await waterfallSelected;
 
   once(JsCallTreeView, EVENTS.UI_WATERFALL_RENDERED).then(() =>
-    ok(false, "JsCallTreeView should not receive UI_WATERFALL_RENDERED event."));
+    ok(false, "JsCallTreeView should not receive UI_WATERFALL_RENDERED event.")
+  );
 
   await startRecording(panel);
   await stopRecording(panel);
 
-  const callTreeRerendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
+  const callTreeRerendered = once(
+    JsCallTreeView,
+    EVENTS.UI_JS_CALL_TREE_RENDERED
+  );
   await DetailsView.selectView("js-calltree");
   await callTreeRerendered;
 

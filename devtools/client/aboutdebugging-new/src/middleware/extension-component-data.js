@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  DEBUG_TARGETS,
-  REQUEST_EXTENSIONS_SUCCESS,
-} = require("../constants");
+const { DEBUG_TARGETS, REQUEST_EXTENSIONS_SUCCESS } = require("../constants");
 
 const {
   getExtensionUuid,
@@ -32,9 +29,11 @@ const extensionComponentDataMiddleware = store => next => action => {
 
 function getFilePath(extension) {
   // Only show file system paths, and only for temporarily installed add-ons.
-  if (!extension.temporarilyInstalled ||
-      !extension.url ||
-      !extension.url.startsWith("file://")) {
+  if (
+    !extension.temporarilyInstalled ||
+    !extension.url ||
+    !extension.url.startsWith("file://")
+  ) {
     return null;
   }
 
@@ -44,9 +43,19 @@ function getFilePath(extension) {
 function toComponentData(extensions) {
   return extensions.map(extension => {
     const type = DEBUG_TARGETS.EXTENSION;
-    const { actor, iconDataURL, iconURL, id, manifestURL, name, warnings } = extension;
+    const {
+      actor,
+      iconDataURL,
+      iconURL,
+      id,
+      manifestURL,
+      name,
+      warnings,
+    } = extension;
     const icon =
-      iconDataURL || iconURL || "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+      iconDataURL ||
+      iconURL ||
+      "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     const location = getFilePath(extension);
     const uuid = getExtensionUuid(extension);
     return {

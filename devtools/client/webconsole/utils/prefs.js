@@ -7,12 +7,12 @@ const Services = require("Services");
 
 function getPreferenceName(hud, suffix) {
   if (!suffix) {
-    console.error("Suffix shouldn't be falsy", {suffix});
+    console.error("Suffix shouldn't be falsy", { suffix });
     return null;
   }
 
   if (!hud) {
-    console.error("hud shouldn't be falsy", {hud});
+    console.error("hud shouldn't be falsy", { hud });
     return null;
   }
 
@@ -21,9 +21,7 @@ function getPreferenceName(hud, suffix) {
     return suffix;
   }
 
-  const component = hud.isBrowserConsole
-    ? "browserconsole"
-    : "webconsole";
+  const component = hud.isBrowserConsole ? "browserconsole" : "webconsole";
   return `devtools.${component}.${suffix}`;
 }
 
@@ -31,9 +29,12 @@ function getPrefsService(hud) {
   const getPrefName = pref => getPreferenceName(hud, pref);
 
   return {
-    getBoolPref: (pref, deflt) => Services.prefs.getBoolPref(getPrefName(pref), deflt),
-    getIntPref: (pref, deflt) => Services.prefs.getIntPref(getPrefName(pref), deflt),
-    setBoolPref: (pref, value) => Services.prefs.setBoolPref(getPrefName(pref), value),
+    getBoolPref: (pref, deflt) =>
+      Services.prefs.getBoolPref(getPrefName(pref), deflt),
+    getIntPref: (pref, deflt) =>
+      Services.prefs.getIntPref(getPrefName(pref), deflt),
+    setBoolPref: (pref, value) =>
+      Services.prefs.setBoolPref(getPrefName(pref), value),
     clearUserPref: pref => Services.prefs.clearUserPref(getPrefName(pref)),
     getPrefName,
   };

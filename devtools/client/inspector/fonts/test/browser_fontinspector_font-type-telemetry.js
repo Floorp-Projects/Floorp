@@ -12,5 +12,10 @@ add_task(async function() {
   startTelemetry();
   await selectNode(".normal-text", inspector);
   await selectNode(".bold-text", inspector);
-  checkTelemetry("DEVTOOLS_FONTEDITOR_FONT_TYPE_DISPLAYED", "", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_FONTEDITOR_FONT_TYPE_DISPLAYED",
+    "",
+    null,
+    "hasentries"
+  );
 });

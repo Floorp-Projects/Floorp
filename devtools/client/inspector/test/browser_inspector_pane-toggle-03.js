@@ -27,18 +27,31 @@ add_task(async function() {
 
     info("Click on the toggle button to toggle ON 3 pane inspector");
     let onRuleViewAdded = inspector.once("ruleview-added");
-    EventUtils.synthesizeMouseAtCenter(button, {}, inspector.panelDoc.defaultView);
+    EventUtils.synthesizeMouseAtCenter(
+      button,
+      {},
+      inspector.panelDoc.defaultView
+    );
     await onRuleViewAdded;
 
     info("Checking the sizes of the 3 pane inspector");
     let sidebarWidth = inspector.splitBox.state.width;
-    const sidebarSplitBoxWidth = inspector.sidebarSplitBoxRef.current.state.width;
+    const sidebarSplitBoxWidth =
+      inspector.sidebarSplitBoxRef.current.state.width;
     is(sidebarWidth, SIDEBAR_WIDTH * 2, "Got correct main split box width");
-    is(sidebarSplitBoxWidth, SIDEBAR_WIDTH, "Got correct sidebar split box width");
+    is(
+      sidebarSplitBoxWidth,
+      SIDEBAR_WIDTH,
+      "Got correct sidebar split box width"
+    );
 
     info("Click on the toggle button to toggle OFF the 3 pane inspector");
     onRuleViewAdded = inspector.once("ruleview-added");
-    EventUtils.synthesizeMouseAtCenter(button, {}, inspector.panelDoc.defaultView);
+    EventUtils.synthesizeMouseAtCenter(
+      button,
+      {},
+      inspector.panelDoc.defaultView
+    );
     await onRuleViewAdded;
 
     info("Checking the sidebar size of the 2 pane inspector");

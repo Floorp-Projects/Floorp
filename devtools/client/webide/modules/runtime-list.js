@@ -1,16 +1,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
 const Services = require("Services");
-const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const { AppManager } = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
+const {
+  RuntimeScanners,
+  WiFiScanner,
+} = require("devtools/client/webide/modules/runtimes");
 const { adbAddon, ADB_ADDON_STATES } = require("devtools/shared/adb/adb-addon");
 
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/webide.properties"
+);
 
 var RuntimeList;
 
@@ -100,7 +105,10 @@ RuntimeList.prototype = {
     const performanceCmd = doc.querySelector("#runtime-performance");
 
     // Display the performance button only if the pref is enabled
-    performanceCmd.hidden = !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false);
+    performanceCmd.hidden = !Services.prefs.getBoolPref(
+      "devtools.performance.new-panel-enabled",
+      false
+    );
 
     if (AppManager.connected) {
       if (AppManager.deviceFront) {
@@ -137,10 +145,14 @@ RuntimeList.prototype = {
     const usbListNode = doc.querySelector("#runtime-panel-usb");
     const wifiListNode = doc.querySelector("#runtime-panel-wifi");
     const otherListNode = doc.querySelector("#runtime-panel-other");
-    const noADBExtensionNode = doc.querySelector("#runtime-panel-noadbextension");
+    const noADBExtensionNode = doc.querySelector(
+      "#runtime-panel-noadbextension"
+    );
     const noUSBNode = doc.querySelector("#runtime-panel-nousbdevice");
-    noADBExtensionNode.textContent =
-      Strings.formatStringFromName("runtimePanel_noadbextension", ["ADB Extension"]);
+    noADBExtensionNode.textContent = Strings.formatStringFromName(
+      "runtimePanel_noadbextension",
+      ["ADB Extension"]
+    );
 
     if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
       noADBExtensionNode.setAttribute("hidden", "true");
@@ -154,7 +166,10 @@ RuntimeList.prototype = {
       return;
     }
 
-    if (runtimeList.usb.length === 0 && adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
+    if (
+      runtimeList.usb.length === 0 &&
+      adbAddon.status === ADB_ADDON_STATES.INSTALLED
+    ) {
       noUSBNode.removeAttribute("hidden");
     } else {
       noUSBNode.setAttribute("hidden", "true");
@@ -177,10 +192,14 @@ RuntimeList.prototype = {
         connectButton.className = "panel-item runtime-panel-item-" + type;
         connectButton.textContent = r.name;
 
-        connectButton.addEventListener("click", () => {
-          this._UI.dismissErrorNotification();
-          this._UI.connectToRuntime(r);
-        }, true);
+        connectButton.addEventListener(
+          "click",
+          () => {
+            this._UI.dismissErrorNotification();
+            this._UI.connectToRuntime(r);
+          },
+          true
+        );
         panelItemNode.appendChild(connectButton);
 
         if (r.configure) {

@@ -18,10 +18,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -37,7 +36,9 @@ add_task(async function() {
     document,
     getDisplayedRequests(store.getState()),
     getSortedRequests(store.getState()).get(0),
-    "GET", HTTPS_CONTENT_TYPE_SJS + "?fmt=br", {
+    "GET",
+    HTTPS_CONTENT_TYPE_SJS + "?fmt=br",
+    {
       status: 200,
       statusText: "Connected",
       type: "plain",
@@ -45,13 +46,18 @@ add_task(async function() {
       transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 60),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 64),
       time: true,
-    });
+    }
+  );
 
   wait = waitForDOM(document, ".CodeMirror-code");
-  const onResponseContent = monitor.panelWin.api.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
+  const onResponseContent = monitor.panelWin.api.once(
+    EVENTS.RECEIVED_RESPONSE_CONTENT
+  );
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
   await onResponseContent;
   await testResponse("br");
@@ -60,8 +66,11 @@ add_task(async function() {
   function testResponse(type) {
     switch (type) {
       case "br": {
-        is(getCodeMirrorValue(monitor), "X".repeat(64),
-          "The text shown in the source editor is incorrect for the brotli request.");
+        is(
+          getCodeMirrorValue(monitor),
+          "X".repeat(64),
+          "The text shown in the source editor is incorrect for the brotli request."
+        );
         break;
       }
     }

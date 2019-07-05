@@ -15,19 +15,18 @@ class SearchBox extends PureComponent {
   }
 
   render() {
-    return (
-      dom.div({ className: "devtools-searchbox" },
-        dom.input({
-          id: "ruleview-searchbox",
-          className: "devtools-filterinput",
-          placeholder: getStr("rule.filterStyles.placeholder"),
-          type: "search",
-        }),
-        dom.button({
-          id: "ruleview-searchinput-clear",
-          className: "devtools-searchinput-clear",
-        })
-      )
+    return dom.div(
+      { className: "devtools-searchbox" },
+      dom.input({
+        id: "ruleview-searchbox",
+        className: "devtools-filterinput",
+        placeholder: getStr("rule.filterStyles.placeholder"),
+        type: "search",
+      }),
+      dom.button({
+        id: "ruleview-searchinput-clear",
+        className: "devtools-searchinput-clear",
+      })
     );
   }
 }

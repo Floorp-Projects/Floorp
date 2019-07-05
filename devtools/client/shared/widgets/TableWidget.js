@@ -4,13 +4,25 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "setNamedTimeout",
-  "devtools/client/shared/widgets/view-helpers", true);
-loader.lazyRequireGetter(this, "clearNamedTimeout",
-  "devtools/client/shared/widgets/view-helpers", true);
-loader.lazyRequireGetter(this, "naturalSortCaseInsensitive",
-  "devtools/client/shared/natural-sort", true);
-const {KeyCodes} = require("devtools/client/shared/keycodes");
+loader.lazyRequireGetter(
+  this,
+  "setNamedTimeout",
+  "devtools/client/shared/widgets/view-helpers",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "clearNamedTimeout",
+  "devtools/client/shared/widgets/view-helpers",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "naturalSortCaseInsensitive",
+  "devtools/client/shared/natural-sort",
+  true
+);
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const AFTER_SCROLL_DELAY = 100;
@@ -66,8 +78,16 @@ function TableWidget(node, options = {}) {
   this.window = this.document.defaultView;
   this._parent = node;
 
-  const {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
-       firstColumn, wrapTextInElements, cellContextMenuId} = options;
+  const {
+    initialColumns,
+    emptyText,
+    uniqueId,
+    highlightUpdated,
+    removableColumns,
+    firstColumn,
+    wrapTextInElements,
+    cellContextMenuId,
+  } = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
   this.wrapTextInElements = wrapTextInElements || false;
@@ -122,7 +142,6 @@ function TableWidget(node, options = {}) {
 }
 
 TableWidget.prototype = {
-
   items: null,
   editBookmark: null,
   scrollIntoViewOnUpdate: null,
@@ -151,15 +170,17 @@ TableWidget.prototype = {
     }
   },
 
-/**
- * Is a row currently selected?
- *
- * @return {Boolean}
- *         true or false.
- */
+  /**
+   * Is a row currently selected?
+   *
+   * @return {Boolean}
+   *         true or false.
+   */
   get hasSelectedRow() {
-    return this.columns.get(this.uniqueId) &&
-           this.columns.get(this.uniqueId).selectedRow;
+    return (
+      this.columns.get(this.uniqueId) &&
+      this.columns.get(this.uniqueId).selectedRow
+    );
   },
 
   /**
@@ -273,8 +294,8 @@ TableWidget.prototype = {
     // A rows position in the table can change as the result of an edit. In
     // order to ensure that the correct row is highlighted after an edit we
     // save the uniqueId in editBookmark.
-    this.editBookmark = colName === uniqueId ? change.newValue
-                                             : items[uniqueId];
+    this.editBookmark =
+      colName === uniqueId ? change.newValue : items[uniqueId];
     this.emit(EVENTS.CELL_EDIT, change);
   },
 
@@ -496,8 +517,9 @@ TableWidget.prototype = {
     // e.g. because they contain a unique compound key for cookies that is never
     // displayed in the UI. To do this we get all selected cells and filter out
     // any that are hidden.
-    const selectedCells = [...this.tbody.querySelectorAll(".theme-selected")]
-                                        .filter(cell => cell.clientWidth > 0);
+    const selectedCells = [
+      ...this.tbody.querySelectorAll(".theme-selected"),
+    ].filter(cell => cell.clientWidth > 0);
     // Select the first visible selected cell.
     const selectedCell = selectedCells[0];
     if (!selectedCell) {
@@ -556,7 +578,7 @@ TableWidget.prototype = {
    * rows. This method clears any inline editors if an area outside a textbox or
    * label is clicked.
    */
-  onMousedown: function({target}) {
+  onMousedown: function({ target }) {
     const localName = target.localName;
 
     if (localName === "input" || !this._editableFieldsEngine) {
@@ -730,8 +752,12 @@ TableWidget.prototype = {
    *        allows us to e.g. have an invisible compound primary key for a
    *        table's rows.
    */
-  setColumns: function(columns, sortOn = this.sortedOn, hiddenColumns = [],
-                        privateColumns = []) {
+  setColumns: function(
+    columns,
+    sortOn = this.sortedOn,
+    hiddenColumns = [],
+    privateColumns = []
+  ) {
     for (const column of this.columns.values()) {
       column.destroy();
     }
@@ -747,8 +773,10 @@ TableWidget.prototype = {
     }
 
     if (this.firstColumn) {
-      this.columns.set(this.firstColumn,
-        new Column(this, this.firstColumn, columns[this.firstColumn]));
+      this.columns.set(
+        this.firstColumn,
+        new Column(this, this.firstColumn, columns[this.firstColumn])
+      );
     }
 
     for (const id in columns) {
@@ -1088,7 +1116,6 @@ function Column(table, id, header) {
 }
 
 Column.prototype = {
-
   // items is a cell-id to cell-index map. It is basically a reverse map of the
   // this.cells object and is used to quickly reverse lookup a cell by its id
   // instead of looping through the cells array. This reverse map is not kept
@@ -1146,8 +1173,10 @@ Column.prototype = {
     if (!value) {
       this.header.removeAttribute("sorted");
     } else {
-      this.header.setAttribute("sorted",
-        value == 1 ? "ascending" : "descending");
+      this.header.setAttribute(
+        "sorted",
+        value == 1 ? "ascending" : "descending"
+      );
     }
     this._sortState = value;
   },
@@ -1278,7 +1307,9 @@ Column.prototype = {
    */
   selectRowAt: function(index) {
     if (this.selectedRow != null) {
-      this.cells[this.items[this.selectedRow]].classList.remove("theme-selected");
+      this.cells[this.items[this.selectedRow]].classList.remove(
+        "theme-selected"
+      );
     }
 
     const cell = this.cells[index];
@@ -1464,24 +1495,26 @@ Column.prototype = {
     // Only sort the array if we are sorting based on this column
     if (this.sorted == 1) {
       items.sort((a, b) => {
-        const val1 = (a[this.id] instanceof Node) ?
-            a[this.id].textContent : a[this.id];
-        const val2 = (b[this.id] instanceof Node) ?
-            b[this.id].textContent : b[this.id];
+        const val1 =
+          a[this.id] instanceof Node ? a[this.id].textContent : a[this.id];
+        const val2 =
+          b[this.id] instanceof Node ? b[this.id].textContent : b[this.id];
         return naturalSortCaseInsensitive(val1, val2);
       });
     } else if (this.sorted > 1) {
       items.sort((a, b) => {
-        const val1 = (a[this.id] instanceof Node) ?
-            a[this.id].textContent : a[this.id];
-        const val2 = (b[this.id] instanceof Node) ?
-            b[this.id].textContent : b[this.id];
+        const val1 =
+          a[this.id] instanceof Node ? a[this.id].textContent : a[this.id];
+        const val2 =
+          b[this.id] instanceof Node ? b[this.id].textContent : b[this.id];
         return naturalSortCaseInsensitive(val2, val1);
       });
     }
 
     if (this.selectedRow) {
-      this.cells[this.items[this.selectedRow]].classList.remove("theme-selected");
+      this.cells[this.items[this.selectedRow]].classList.remove(
+        "theme-selected"
+      );
     }
     this.items = {};
     // Otherwise, just use the sorted array passed to update the cells value.
@@ -1533,9 +1566,11 @@ Column.prototype = {
   onMousedown: function(event) {
     const target = event.originalTarget;
 
-    if (target.nodeType !== target.ELEMENT_NODE ||
-        target == this.column ||
-        target == this.header) {
+    if (
+      target.nodeType !== target.ELEMENT_NODE ||
+      target == this.column ||
+      target == this.header
+    ) {
       return;
     }
     if (event.button == 0) {
@@ -1579,7 +1614,7 @@ function Cell(column, item, nextCell) {
 
   if (column.table.cellContextMenuId) {
     this.label.setAttribute("context", column.table.cellContextMenuId);
-    this.label.addEventListener("contextmenu", (event) => {
+    this.label.addEventListener("contextmenu", event => {
       // Make the ID of the clicked cell available as a property on the table.
       // It's then available for the popupshowing or command handler.
       column.table.contextMenuRowId = this.id;
@@ -1591,7 +1626,6 @@ function Cell(column, item, nextCell) {
 }
 
 Cell.prototype = {
-
   set id(value) {
     this._id = value;
     this.label.setAttribute("data-id", value);
@@ -1729,7 +1763,7 @@ EditableFieldsEngine.prototype = {
   INPUT_ID: "inlineEditor",
 
   get changePending() {
-    return this.isEditing && (this.textbox.value !== this.currentValue);
+    return this.isEditing && this.textbox.value !== this.currentValue;
   },
 
   get isEditing() {
@@ -1758,7 +1792,7 @@ EditableFieldsEngine.prototype = {
    * @param  {EventTarget} target
    *         Calling event's target.
    */
-  onTrigger: function({target}) {
+  onTrigger: function({ target }) {
     this.edit(target);
   },
 

@@ -6,7 +6,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test clear cache<script>abcdef</script>";
+const TEST_URI =
+  "data:text/html;charset=utf8,Test clear cache<script>abcdef</script>";
 const EXPECTED_REPORT = "ReferenceError: abcdef is not defined";
 
 add_task(async function() {
@@ -23,7 +24,9 @@ add_task(async function() {
   await waitFor(() => findMessage(hud, EXPECTED_REPORT));
   await waitFor(() => findMessage(hud, CACHED_MESSAGE));
 
-  info("Click the clear output button and wait until there's no messages in the output");
+  info(
+    "Click the clear output button and wait until there's no messages in the output"
+  );
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
   await waitFor(() => findMessages(hud, "").length === 0);
 
@@ -33,9 +36,16 @@ add_task(async function() {
 
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Smoke message");
-  is(findMessage(hud, CACHED_MESSAGE), null, "The cached message is not visible anymore");
-  is(findMessage(hud, EXPECTED_REPORT), null,
-    "The cached error message is not visible anymore as well");
+  is(
+    findMessage(hud, CACHED_MESSAGE),
+    null,
+    "The cached message is not visible anymore"
+  );
+  is(
+    findMessage(hud, EXPECTED_REPORT),
+    null,
+    "The cached error message is not visible anymore as well"
+  );
 
   // Test that we also clear the cache when calling console.clear().
   const NEW_CACHED_MESSAGE = "NEW_CACHED_MESSAGE";
@@ -54,8 +64,11 @@ add_task(async function() {
 
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Second smoke message");
-  is(findMessage(hud, NEW_CACHED_MESSAGE), null,
-    "The new cached message is not visible anymore");
+  is(
+    findMessage(hud, NEW_CACHED_MESSAGE),
+    null,
+    "The new cached message is not visible anymore"
+  );
 });
 
 function logTextToConsole(hud, text) {

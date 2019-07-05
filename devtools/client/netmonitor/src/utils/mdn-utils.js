@@ -112,10 +112,12 @@ const getGAParams = (panelId = "netmonitor") => {
  */
 function getHeadersURL(header) {
   const lowerCaseHeader = header.toLowerCase();
-  const idx = SUPPORTED_HEADERS.findIndex(item =>
-    item.toLowerCase() === lowerCaseHeader);
-  return idx > -1 ?
-    `${MDN_URL}Web/HTTP/Headers/${SUPPORTED_HEADERS[idx] + getGAParams()}` : null;
+  const idx = SUPPORTED_HEADERS.findIndex(
+    item => item.toLowerCase() === lowerCaseHeader
+  );
+  return idx > -1
+    ? `${MDN_URL}Web/HTTP/Headers/${SUPPORTED_HEADERS[idx] + getGAParams()}`
+    : null;
 }
 
 /**
@@ -127,10 +129,10 @@ function getHeadersURL(header) {
  */
 function getHTTPStatusCodeURL(statusCode, panelId) {
   return (
-    SUPPORTED_HTTP_CODES.includes(statusCode)
+    (SUPPORTED_HTTP_CODES.includes(statusCode)
       ? `${MDN_URL}Web/HTTP/Status/${statusCode}`
-      : MDN_STATUS_CODES_LIST_URL
-    ) + getGAParams(panelId);
+      : MDN_STATUS_CODES_LIST_URL) + getGAParams(panelId)
+  );
 }
 
 /**
@@ -157,8 +159,10 @@ function getPerformanceAnalysisURL() {
  * @return {string} The MDN URL for the documentation of Filter box.
  */
 function getFilterBoxURL() {
-  return `${MDN_URL}Tools/Network_Monitor/request_list${getGAParams()}` +
-    `#Filtering_by_properties`;
+  return (
+    `${MDN_URL}Tools/Network_Monitor/request_list${getGAParams()}` +
+    `#Filtering_by_properties`
+  );
 }
 
 /**

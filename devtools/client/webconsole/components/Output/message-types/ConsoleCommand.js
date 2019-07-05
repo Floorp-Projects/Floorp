@@ -7,9 +7,14 @@
 "use strict";
 
 // React & Redux
-const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  createElement,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Message = createFactory(require("devtools/client/webconsole/components/Output/Message"));
+const Message = createFactory(
+  require("devtools/client/webconsole/components/Output/Message")
+);
 
 ConsoleCommand.displayName = "ConsoleCommand";
 
@@ -31,14 +36,7 @@ function ConsoleCommand(props) {
     maybeScrollToBottom,
   } = props;
 
-  const {
-    indent,
-    source,
-    type,
-    level,
-    messageText,
-    timeStamp,
-  } = message;
+  const { indent, source, type, level, messageText, timeStamp } = message;
 
   // This uses a Custom Element to syntax highlight when possible. If it's not
   // (no CodeMirror editor), then it will just render text.

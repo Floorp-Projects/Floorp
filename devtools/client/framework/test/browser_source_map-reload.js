@@ -37,7 +37,9 @@ add_task(async function() {
   await refreshTab();
   await sourceSeen;
 
-  info(`checking post-reload original location for ${JS_URL}:${GENERATED_LINE}`);
+  info(
+    `checking post-reload original location for ${JS_URL}:${GENERATED_LINE}`
+  );
   newLoc = await service.originalPositionFor(JS_URL, GENERATED_LINE);
   is(newLoc.sourceUrl, ORIGINAL_URL_2, "check post-reload mapped URL");
   is(newLoc.line, ORIGINAL_LINE, "check post-reload mapped line number");

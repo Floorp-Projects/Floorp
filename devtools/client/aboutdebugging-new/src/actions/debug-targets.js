@@ -5,13 +5,16 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
+const {
+  remoteClientManager,
+} = require("devtools/client/shared/remote-debugging/remote-client-manager");
 const Services = require("Services");
 
 const { l10n } = require("../modules/l10n");
 
-const { isSupportedDebugTargetPane } = require("../modules/debug-target-support");
+const {
+  isSupportedDebugTargetPane,
+} = require("../modules/debug-target-support");
 
 const {
   openTemporaryExtension,
@@ -54,14 +57,19 @@ function isCachedActorNeeded(runtime, type, id) {
   // older browsers, the id falls back to the actor ID. Check if the target id is a worker
   // actorID (which means getActor() should return an actor with id).
   // Can be removed when Firefox 68 is in Release channel.
-  return type === DEBUG_TARGETS.WORKER &&
-         runtime.runtimeDetails.clientWrapper.client.getActor(id);
+  return (
+    type === DEBUG_TARGETS.WORKER &&
+    runtime.runtimeDetails.clientWrapper.client.getActor(id)
+  );
 }
 
 function getTabForUrl(url) {
   for (const navigator of Services.wm.getEnumerator("navigator:browser")) {
     for (const browser of navigator.gBrowser.browsers) {
-      if (browser.contentWindow && browser.contentWindow.location.href === url) {
+      if (
+        browser.contentWindow &&
+        browser.contentWindow.location.href === url
+      ) {
         return navigator.gBrowser.getTabForBrowser(browser);
       }
     }
@@ -76,7 +84,10 @@ function inspectDebugTarget(type, id) {
     id = encodeURIComponent(id);
 
     let url;
-    if (runtime.id === RUNTIMES.THIS_FIREFOX && !isCachedActorNeeded(runtime, type, id)) {
+    if (
+      runtime.id === RUNTIMES.THIS_FIREFOX &&
+      !isCachedActorNeeded(runtime, type, id)
+    ) {
       // Even when debugging on This Firefox we need to re-use the client since the worker
       // actor is cached in the client instance. Instead we should pass an id that does
       // not depend on the client (such as the worker url). This will be fixed in
@@ -88,7 +99,10 @@ function inspectDebugTarget(type, id) {
       // will fail. See Bug 1534201.
       url = `about:devtools-toolbox?type=${type}&id=${id}`;
     } else {
-      const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
+      const remoteId = remoteClientManager.getRemoteId(
+        runtime.id,
+        runtime.type
+      );
       url = `about:devtools-toolbox?type=${type}&id=${id}&remoteId=${remoteId}`;
     }
 
@@ -101,15 +115,19 @@ function inspectDebugTarget(type, id) {
       window.open(url);
     }
 
-    dispatch(Actions.recordTelemetryEvent("inspect", {
-      "target_type": type.toUpperCase(),
-      "runtime_type": runtime.type,
-    }));
+    dispatch(
+      Actions.recordTelemetryEvent("inspect", {
+        target_type: type.toUpperCase(),
+        runtime_type: runtime.type,
+      })
+    );
   };
 }
 
 function installTemporaryExtension() {
-  const message = l10n.getString("about-debugging-tmp-extension-install-message");
+  const message = l10n.getString(
+    "about-debugging-tmp-extension-install-message"
+  );
   return async (dispatch, getState) => {
     dispatch({ type: TEMPORARY_EXTENSION_INSTALL_START });
     const file = await openTemporaryExtension(window, message);
@@ -169,9 +187,13 @@ function requestTabs() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const isSupported = isSupportedDebugTargetPane(runtime.runtimeDetails.info.type,
-                                                     DEBUG_TARGET_PANE.TAB);
-      const tabs = isSupported ? (await clientWrapper.listTabs({ favicons: true })) : [];
+      const isSupported = isSupportedDebugTargetPane(
+        runtime.runtimeDetails.info.type,
+        DEBUG_TARGET_PANE.TAB
+      );
+      const tabs = isSupported
+        ? await clientWrapper.listTabs({ favicons: true })
+        : [];
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {
@@ -189,8 +211,9 @@ function requestExtensions() {
 
     try {
       const isIconDataURLRequired = runtime.type !== RUNTIMES.THIS_FIREFOX;
-      const addons =
-        await clientWrapper.listAddons({ iconDataURL: isIconDataURLRequired });
+      const addons = await clientWrapper.listAddons({
+        iconDataURL: isIconDataURLRequired,
+      });
       let extensions = addons.filter(a => a.debuggable);
 
       // Filter out hidden & system addons unless the dedicated preference is set to true.
@@ -209,8 +232,12 @@ function requestExtensions() {
         });
       }
 
-      const installedExtensions = extensions.filter(e => !e.temporarilyInstalled);
-      const temporaryExtensions = extensions.filter(e => e.temporarilyInstalled);
+      const installedExtensions = extensions.filter(
+        e => !e.temporarilyInstalled
+      );
+      const temporaryExtensions = extensions.filter(
+        e => e.temporarilyInstalled
+      );
 
       dispatch({
         type: REQUEST_EXTENSIONS_SUCCESS,

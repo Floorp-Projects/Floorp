@@ -18,11 +18,9 @@ class NegativeEndDelayPath extends NegativePath {
     const startTime = endTime + state.endDelay;
     const segments = helper.createPathSegments(startTime, endTime);
 
-    return dom.path(
-      {
-        d: helper.toPathString(segments),
-      }
-    );
+    return dom.path({
+      d: helper.toPathString(segments),
+    });
   }
 }
 
