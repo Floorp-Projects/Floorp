@@ -1,4 +1,3 @@
-
 function run_test() {
   var base = NetUtil.newURI("http://www.example.com");
   var about1 = NetUtil.newURI("about:blank");
@@ -6,19 +5,18 @@ function run_test() {
 
   var chan1 = NetUtil.newChannel({
     uri: about1,
-    loadUsingSystemPrincipal: true 
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIPropertyBag2);
 
   var chan2 = NetUtil.newChannel({
     uri: about2,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIPropertyBag2);
 
   var haveProp = false;
   var propVal = null;
   try {
-    propVal = chan1.getPropertyAsInterface("baseURI",
-                                           Ci.nsIURI);
+    propVal = chan1.getPropertyAsInterface("baseURI", Ci.nsIURI);
     haveProp = true;
   } catch (e) {
     if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
@@ -28,7 +26,5 @@ function run_test() {
   }
   Assert.equal(propVal, null);
   Assert.equal(haveProp, false);
-  Assert.equal(chan2.getPropertyAsInterface("baseURI",
-                                            Ci.nsIURI),
-               base);
+  Assert.equal(chan2.getPropertyAsInterface("baseURI", Ci.nsIURI), base);
 }

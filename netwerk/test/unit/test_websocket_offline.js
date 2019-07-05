@@ -13,17 +13,15 @@ var listener = {
   onBinaryMessageAvailable(aContext, aMsg) {},
   onMessageAvailable(aContext, aMsg) {},
   onServerClose(aContext, aCode, aReason) {},
-  onStart(aContext)
-  {
+  onStart(aContext) {
     // onStart is not called when a connection fails
     Assert.ok(false);
   },
-  onStop(aContext, aStatusCode)
-  {
+  onStop(aContext, aStatusCode) {
     Assert.notEqual(aStatusCode, Cr.NS_OK);
     Services.io.offline = offlineStatus;
     do_test_finished();
-  }
+  },
 };
 
 function run_test() {
@@ -31,13 +29,16 @@ function run_test() {
   Services.io.offline = true;
 
   try {
-    chan = Cc["@mozilla.org/network/protocol;1?name=ws"].
-      createInstance(Ci.nsIWebSocketChannel);
-    chan.initLoadInfo(null, // aLoadingNode
-                      Services.scriptSecurityManager.getSystemPrincipal(),
-                      null, // aTriggeringPrincipal
-                      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                      Ci.nsIContentPolicy.TYPE_WEBSOCKET);
+    chan = Cc["@mozilla.org/network/protocol;1?name=ws"].createInstance(
+      Ci.nsIWebSocketChannel
+    );
+    chan.initLoadInfo(
+      null, // aLoadingNode
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      null, // aTriggeringPrincipal
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      Ci.nsIContentPolicy.TYPE_WEBSOCKET
+    );
 
     var uri = Services.io.newURI(url);
     chan.asyncOpen(uri, url, 0, listener, null);

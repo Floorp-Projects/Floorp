@@ -14,35 +14,66 @@ XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-   new Test(PREFIX + "/range.txt",
-            init_byterange, start_byterange, stop_byterange),
-   new Test(PREFIX + "/range.txt",
-            init_byterange2, start_byterange2),
-   new Test(PREFIX + "/range.txt",
-            init_byterange3, start_byterange3, stop_byterange3),
-   new Test(PREFIX + "/range.txt",
-            init_byterange4, start_byterange4),
-   new Test(PREFIX + "/range.txt",
-            init_byterange5, start_byterange5, stop_byterange5),
-   new Test(PREFIX + "/range.txt",
-            init_byterange6, start_byterange6, stop_byterange6),
-   new Test(PREFIX + "/range.txt",
-            init_byterange7, start_byterange7, stop_byterange7),
-   new Test(PREFIX + "/range.txt",
-            init_byterange8, start_byterange8, stop_byterange8),
-   new Test(PREFIX + "/range.txt",
-            init_byterange9, start_byterange9, stop_byterange9),
-   new Test(PREFIX + "/range.txt",
-            init_byterange10, start_byterange10),
-   new Test(PREFIX + "/range.txt",
-            init_byterange11, start_byterange11, stop_byterange11),
-   new Test(PREFIX + "/empty.txt",
-            null, start_byterange12, stop_byterange12),
-   new Test(PREFIX + "/headers.txt",
-            init_byterange13, start_byterange13, null),
-   new Test(PREFIX + "/range.txt",
-            null, start_normal, stop_normal),
-   ];
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange,
+      start_byterange,
+      stop_byterange
+    ),
+    new Test(PREFIX + "/range.txt", init_byterange2, start_byterange2),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange3,
+      start_byterange3,
+      stop_byterange3
+    ),
+    new Test(PREFIX + "/range.txt", init_byterange4, start_byterange4),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange5,
+      start_byterange5,
+      stop_byterange5
+    ),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange6,
+      start_byterange6,
+      stop_byterange6
+    ),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange7,
+      start_byterange7,
+      stop_byterange7
+    ),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange8,
+      start_byterange8,
+      stop_byterange8
+    ),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange9,
+      start_byterange9,
+      stop_byterange9
+    ),
+    new Test(PREFIX + "/range.txt", init_byterange10, start_byterange10),
+    new Test(
+      PREFIX + "/range.txt",
+      init_byterange11,
+      start_byterange11,
+      stop_byterange11
+    ),
+    new Test(PREFIX + "/empty.txt", null, start_byterange12, stop_byterange12),
+    new Test(
+      PREFIX + "/headers.txt",
+      init_byterange13,
+      start_byterange13,
+      null
+    ),
+    new Test(PREFIX + "/range.txt", null, start_normal, stop_normal),
+  ];
 });
 
 function run_test() {

@@ -1,16 +1,27 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 
 function run_test() {
   do_get_profile();
-  Services.prefs.setBoolPref("privacy.trackingprotection.annotate_channels", true);
-  Services.prefs.setBoolPref("privacy.trackingprotection.lower_network_priority", true);
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.annotate_channels",
+    true
+  );
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.lower_network_priority",
+    true
+  );
   do_test_pending();
   UrlClassifierTestUtils.addTestTrackers().then(() => {
-    run_test_in_child("../unit/test_trackingProtection_annotateChannels.js", () => {
-      UrlClassifierTestUtils.cleanupTestTrackers();
-      do_test_finished();
-    });
+    run_test_in_child(
+      "../unit/test_trackingProtection_annotateChannels.js",
+      () => {
+        UrlClassifierTestUtils.cleanupTestTrackers();
+        do_test_finished();
+      }
+    );
     do_test_finished();
   });
 }

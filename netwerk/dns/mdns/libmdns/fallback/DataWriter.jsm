@@ -66,7 +66,7 @@ class DataWriter {
     // Eliminate any trailing '.'s in the label (valid in text representation).
     label = label.replace(/\.$/, "");
     let parts = label.split(".");
-    parts.forEach((part) => {
+    parts.forEach(part => {
       this.putLengthString(part);
     });
     this.putValue(0);
@@ -74,7 +74,7 @@ class DataWriter {
 
   putLengthString(string) {
     if (string.length > 0xff) {
-        throw new Error("String too long.");
+      throw new Error("String too long.");
     }
     this.putValue(string.length);
     for (let i = 0; i < string.length; i++) {

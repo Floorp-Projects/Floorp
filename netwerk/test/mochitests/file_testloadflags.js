@@ -1,4 +1,6 @@
-const SCRIPT_URL = SimpleTest.getTestFileURL('file_testloadflags_chromescript.js');
+const SCRIPT_URL = SimpleTest.getTestFileURL(
+  "file_testloadflags_chromescript.js"
+);
 
 var gExpectedCookies;
 var gExpectedHeaders;
@@ -12,13 +14,26 @@ var gLoads = 0;
 
 // setupTest() is run from 'onload='.
 function setupTest(uri, domain, cookies, loads, headers) {
-  info("setupTest uri: " + uri + " domain: " + domain + " cookies: " + cookies +
-       " loads: " + loads + " headers: " + headers);
+  info(
+    "setupTest uri: " +
+      uri +
+      " domain: " +
+      domain +
+      " cookies: " +
+      cookies +
+      " loads: " +
+      loads +
+      " headers: " +
+      headers
+  );
 
   SimpleTest.waitForExplicitFinish();
 
   var prefSet = new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({ set: [["network.cookie.cookieBehavior", 1]] }, resolve);
+    SpecialPowers.pushPrefEnv(
+      { set: [["network.cookie.cookieBehavior", 1]] },
+      resolve
+    );
   });
 
   gExpectedCookies = cookies;
@@ -29,8 +44,11 @@ function setupTest(uri, domain, cookies, loads, headers) {
   gScript.addMessageListener("info", ({ str }) => info(str));
   gScript.addMessageListener("ok", ({ c, m }) => ok(c, m));
   gScript.addMessageListener("observer:gotCookie", ({ cookie, uri }) => {
-    isnot(cookie.indexOf("oh=hai"), -1,
-          "cookie 'oh=hai' is in header for " + uri);
+    isnot(
+      cookie.indexOf("oh=hai"),
+      -1,
+      "cookie 'oh=hai' is in header for " + uri
+    );
     ++gHeaders;
   });
 
@@ -42,15 +60,14 @@ function setupTest(uri, domain, cookies, loads, headers) {
   // Listen for MessageEvents.
   window.addEventListener("message", messageReceiver);
 
-  Promise.all([ prefSet, scriptReady ]).then(() => {
+  Promise.all([prefSet, scriptReady]).then(() => {
     // load a window which contains an iframe; each will attempt to set
     // cookies from their respective domains.
-    gPopup = window.open(uri, 'hai', 'width=100,height=100');
+    gPopup = window.open(uri, "hai", "width=100,height=100");
   });
 }
 
-function finishTest()
-{
+function finishTest() {
   gScript.addMessageListener("shutdown:return", () => {
     gScript.destroy();
     SimpleTest.finish();
@@ -60,10 +77,11 @@ function finishTest()
 
 /** Receives MessageEvents to this window. */
 // Count and check loads.
-function messageReceiver(evt)
-{
-  ok(evt.data == "f_lf_i msg data img" || evt.data == "f_lf_i msg data page",
-     "message data received from popup");
+function messageReceiver(evt) {
+  ok(
+    evt.data == "f_lf_i msg data img" || evt.data == "f_lf_i msg data page",
+    "message data received from popup"
+  );
   if (evt.data == "f_lf_i msg data img") {
     info("message data received from popup for image");
   }

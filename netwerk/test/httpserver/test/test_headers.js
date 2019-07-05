@@ -8,7 +8,6 @@
 // structure and is not to be used directly outside of httpd.js itself except
 // for testing purposes
 
-
 /**
  * Ensures that a fieldname-fieldvalue combination is a valid header.
  *
@@ -40,13 +39,15 @@ function assertValidHeader(fieldName, fieldValue, headers) {
 function assertInvalidHeader(fieldName, fieldValue, headers) {
   try {
     headers.setHeader(fieldName, fieldValue, false);
-    throw new Error(`Setting (${fieldName}, ${fieldValue}) as header succeeded!`);
+    throw new Error(
+      `Setting (${fieldName}, ${fieldValue}) as header succeeded!`
+    );
   } catch (e) {
-    if (e.result !== Cr.NS_ERROR_INVALID_ARG)
+    if (e.result !== Cr.NS_ERROR_INVALID_ARG) {
       do_throw("Unexpected exception thrown: " + e);
+    }
   }
 }
-
 
 function run_test() {
   testHeaderValidity();
@@ -65,7 +66,7 @@ function testHeaderValidity() {
   assertInvalidHeader("@xml", "bar", headers);
   assertInvalidHeader("fiz(", "bar", headers);
   assertInvalidHeader("HTTP/1.1", "bar", headers);
-  assertInvalidHeader("b\"b", "bar", headers);
+  assertInvalidHeader('b"b', "bar", headers);
   assertInvalidHeader("ascsd\t", "bar", headers);
   assertInvalidHeader("{fds", "bar", headers);
   assertInvalidHeader("baz?", "bar", headers);
@@ -106,31 +107,33 @@ function testGetHeader() {
     headers.getHeader(":");
     throw new Error("Failed to throw for invalid header");
   } catch (e) {
-    if (e.result !== Cr.NS_ERROR_INVALID_ARG)
+    if (e.result !== Cr.NS_ERROR_INVALID_ARG) {
       do_throw("headers.getHeader(':') must throw invalid arg");
+    }
   }
 
   try {
     headers.getHeader("valid");
     throw new Error("header doesn't exist");
   } catch (e) {
-    if (e.result !== Cr.NS_ERROR_NOT_AVAILABLE)
+    if (e.result !== Cr.NS_ERROR_NOT_AVAILABLE) {
       do_throw("shouldn't be a header named 'valid' in headers!");
+    }
   }
 }
 
 function testHeaderEnumerator() {
   var headers = new nsHttpHeaders();
 
-  var heads =
-    {
-      "foo": "17",
-      "baz": "two six niner",
-      "decaf": "class Program { int .7; int main(){ .7 = 5; return 7 - .7; } }",
-    };
+  var heads = {
+    foo: "17",
+    baz: "two six niner",
+    decaf: "class Program { int .7; int main(){ .7 = 5; return 7 - .7; } }",
+  };
 
-  for (var i in heads)
+  for (var i in heads) {
     headers.setHeader(i, heads[i], false);
+  }
 
   var en = headers.enumerator;
   while (en.hasMoreElements()) {
@@ -159,7 +162,8 @@ function testHasHeader() {
     headers.hasHeader(":");
     throw new Error("failed to throw");
   } catch (e) {
-    if (e.result !== Cr.NS_ERROR_INVALID_ARG)
+    if (e.result !== Cr.NS_ERROR_INVALID_ARG) {
       do_throw(".hasHeader for an invalid name should throw");
+    }
   }
 }

@@ -6,11 +6,11 @@
 /* globals runningInParent, do_send_remote_message */
 /* globals ChannelListener */
 
-'use strict';
+"use strict";
 
 /* globals NetUtil*/
 /* globals HttpServer */
-const {HttpServer} = ChromeUtils.import('resource://testing-common/httpd.js');
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let httpserver;
 let port;
@@ -18,17 +18,17 @@ let port;
 function startHttpServer() {
   httpserver = new HttpServer();
 
-  httpserver.registerPathHandler('/resource', (metadata, response) => {
-    response.setStatusLine(metadata.httpVersion, 200, 'OK');
-    response.setHeader('Content-Type', 'text/plain', false);
-    response.setHeader('Cache-Control', 'no-cache', false);
+  httpserver.registerPathHandler("/resource", (metadata, response) => {
+    response.setStatusLine(metadata.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setHeader("Cache-Control", "no-cache", false);
     response.bodyOutputStream.write("data", 4);
   });
 
-  httpserver.registerPathHandler('/redirect', (metadata, response) => {
-    response.setStatusLine(metadata.httpVersion, 302, 'Redirect');
-    response.setHeader('Location', '/resource', false);
-    response.setHeader('Cache-Control', 'no-cache', false);
+  httpserver.registerPathHandler("/redirect", (metadata, response) => {
+    response.setStatusLine(metadata.httpVersion, 302, "Redirect");
+    response.setHeader("Location", "/resource", false);
+    response.setHeader("Cache-Control", "no-cache", false);
   });
 
   httpserver.start(-1);
@@ -36,11 +36,14 @@ function startHttpServer() {
 }
 
 function stopHttpServer() {
-  httpserver.stop(()=>{});
+  httpserver.stop(() => {});
 }
 
 function makeRequest(uri) {
-  let requestChannel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
+  let requestChannel = NetUtil.newChannel({
+    uri,
+    loadUsingSystemPrincipal: true,
+  });
   requestChannel.QueryInterface(Ci.nsISupportsPriority);
   requestChannel.priority = Ci.nsISupportsPriority.PRIORITY_HIGHEST;
   requestChannel.asyncOpen(new ChannelListener(checkResponse, requestChannel));
@@ -48,11 +51,17 @@ function makeRequest(uri) {
 
 function checkResponse(request, buffer, requestChannel) {
   requestChannel.QueryInterface(Ci.nsISupportsPriority);
-  Assert.equal(requestChannel.priority, Ci.nsISupportsPriority.PRIORITY_HIGHEST);
+  Assert.equal(
+    requestChannel.priority,
+    Ci.nsISupportsPriority.PRIORITY_HIGHEST
+  );
 
   // the response channel can be different (if it was redirected)
   let responseChannel = request.QueryInterface(Ci.nsISupportsPriority);
-  Assert.equal(responseChannel.priority, Ci.nsISupportsPriority.PRIORITY_HIGHEST);
+  Assert.equal(
+    responseChannel.priority,
+    Ci.nsISupportsPriority.PRIORITY_HIGHEST
+  );
 
   run_next_test();
 }
@@ -65,12 +74,13 @@ add_test(function test_redirect() {
   makeRequest(`http://localhost:${port}/redirect`);
 });
 
-function run_test() { // jshint ignore:line
+function run_test() {
+  // jshint ignore:line
   if (!runningInParent) {
     // add a task to report test finished to parent process at the end of test queue,
     // since do_register_cleanup is not available in child xpcshell test script.
-    add_test(function () {
-      do_send_remote_message('finished');
+    add_test(function() {
+      do_send_remote_message("finished");
       run_next_test();
     });
 
@@ -84,7 +94,8 @@ function run_test() { // jshint ignore:line
 }
 
 // This is used by unit_ipc/test_channel_priority_wrap.js for e10s XPCShell test
-function configPort(serverPort) { // jshint ignore:line
+function configPort(serverPort) {
+  // jshint ignore:line
   port = serverPort;
   run_next_test();
 }

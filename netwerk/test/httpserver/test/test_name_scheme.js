@@ -16,35 +16,42 @@ XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-    new Test(PREFIX + "/bar.html^",
-            null, start_bar_html_, null),
-    new Test(PREFIX + "/foo.html^",
-            null, start_foo_html_, null),
-    new Test(PREFIX + "/normal-file.txt",
-            null, start_normal_file_txt, null),
-    new Test(PREFIX + "/folder^/file.txt",
-            null, start_folder__file_txt, null),
+    new Test(PREFIX + "/bar.html^", null, start_bar_html_, null),
+    new Test(PREFIX + "/foo.html^", null, start_foo_html_, null),
+    new Test(PREFIX + "/normal-file.txt", null, start_normal_file_txt, null),
+    new Test(PREFIX + "/folder^/file.txt", null, start_folder__file_txt, null),
 
-    new Test(PREFIX + "/foo/bar.html^",
-            null, start_bar_html_, null),
-    new Test(PREFIX + "/foo/foo.html^",
-            null, start_foo_html_, null),
-    new Test(PREFIX + "/foo/normal-file.txt",
-            null, start_normal_file_txt, null),
-    new Test(PREFIX + "/foo/folder^/file.txt",
-            null, start_folder__file_txt, null),
+    new Test(PREFIX + "/foo/bar.html^", null, start_bar_html_, null),
+    new Test(PREFIX + "/foo/foo.html^", null, start_foo_html_, null),
+    new Test(
+      PREFIX + "/foo/normal-file.txt",
+      null,
+      start_normal_file_txt,
+      null
+    ),
+    new Test(
+      PREFIX + "/foo/folder^/file.txt",
+      null,
+      start_folder__file_txt,
+      null
+    ),
 
-    new Test(PREFIX + "/end-caret^/bar.html^",
-            null, start_bar_html_, null),
-    new Test(PREFIX + "/end-caret^/foo.html^",
-            null, start_foo_html_, null),
-    new Test(PREFIX + "/end-caret^/normal-file.txt",
-            null, start_normal_file_txt, null),
-    new Test(PREFIX + "/end-caret^/folder^/file.txt",
-            null, start_folder__file_txt, null),
-    ];
+    new Test(PREFIX + "/end-caret^/bar.html^", null, start_bar_html_, null),
+    new Test(PREFIX + "/end-caret^/foo.html^", null, start_foo_html_, null),
+    new Test(
+      PREFIX + "/end-caret^/normal-file.txt",
+      null,
+      start_normal_file_txt,
+      null
+    ),
+    new Test(
+      PREFIX + "/end-caret^/folder^/file.txt",
+      null,
+      start_folder__file_txt,
+      null
+    ),
+  ];
 });
-
 
 function run_test() {
   srv = createServer();
@@ -60,7 +67,6 @@ function run_test() {
 
   runHttpTests(tests, testComplete(srv));
 }
-
 
 // TEST DATA
 

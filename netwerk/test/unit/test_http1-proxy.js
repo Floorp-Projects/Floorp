@@ -35,11 +35,20 @@ class ProxyFilter {
       cb.onProxyFilterResult(pi);
       return;
     }
-    cb.onProxyFilterResult(pps.newProxyInfo(
-      this._type, this._host, this._port,
-      "", "", this._flags, 1000, null));
+    cb.onProxyFilterResult(
+      pps.newProxyInfo(
+        this._type,
+        this._host,
+        this._port,
+        "",
+        "",
+        this._flags,
+        1000,
+        null
+      )
+    );
   }
-};
+}
 
 class UnxpectedAuthPrompt2 {
   constructor(signal) {
@@ -50,7 +59,7 @@ class UnxpectedAuthPrompt2 {
     this.signal.triggered = true;
     throw Cr.ERROR_UNEXPECTED;
   }
-};
+}
 
 class AuthRequestor {
   constructor(prompt) {
@@ -63,7 +72,7 @@ class AuthRequestor {
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
-};
+}
 
 function make_channel(url) {
   return NetUtil.newChannel({
@@ -76,13 +85,19 @@ function make_channel(url) {
 
 function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL) {
   return new Promise(resolve => {
-    channel.asyncOpen(new ChannelListener((request, data) => {
-      request.QueryInterface(Ci.nsIHttpChannel);
-      const status = request.status;
-      const http_code = status ? undefined : request.responseStatus;
+    channel.asyncOpen(
+      new ChannelListener(
+        (request, data) => {
+          request.QueryInterface(Ci.nsIHttpChannel);
+          const status = request.status;
+          const http_code = status ? undefined : request.responseStatus;
 
-      resolve({ status, http_code, data });
-    }, null, flags));
+          resolve({ status, http_code, data });
+        },
+        null,
+        flags
+      )
+    );
   });
 }
 
@@ -137,7 +152,9 @@ registerCleanupFunction(() => {
 add_task(async function proxy_auth_failure() {
   const chan = make_channel(`https://407.example.com/`);
   const auth_prompt = { triggered: false };
-  chan.notificationCallbacks = new AuthRequestor(() => new UnxpectedAuthPrompt2(auth_prompt));
+  chan.notificationCallbacks = new AuthRequestor(
+    () => new UnxpectedAuthPrompt2(auth_prompt)
+  );
   const { status, http_code } = await get_response(chan, CL_EXPECT_FAILURE);
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_AUTHENTICATION_FAILED);
@@ -147,7 +164,10 @@ add_task(async function proxy_auth_failure() {
 
 // 502 Bad gateway code returned by the proxy.
 add_task(async function proxy_bad_gateway_failure() {
-  const { status, http_code } = await get_response(make_channel(`https://502.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://502.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
   Assert.equal(http_code, undefined);
@@ -155,7 +175,10 @@ add_task(async function proxy_bad_gateway_failure() {
 
 // 504 Gateway timeout code returned by the proxy.
 add_task(async function proxy_gateway_timeout_failure() {
-  const { status, http_code } = await get_response(make_channel(`https://504.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://504.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_GATEWAY_TIMEOUT);
   Assert.equal(http_code, undefined);
@@ -163,7 +186,10 @@ add_task(async function proxy_gateway_timeout_failure() {
 
 // 404 Not Found means the proxy could not resolve the host.
 add_task(async function proxy_host_not_found_failure() {
-  const { status, http_code } = await get_response(make_channel(`https://404.example.com/`), CL_EXPECT_FAILURE);
+  const { status, http_code } = await get_response(
+    make_channel(`https://404.example.com/`),
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
   Assert.equal(http_code, undefined);
