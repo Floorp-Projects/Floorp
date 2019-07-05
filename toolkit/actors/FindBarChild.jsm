@@ -6,12 +6,19 @@
 
 var EXPORTED_SYMBOLS = ["FindBarChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
 class FindBarChild extends ActorChild {
   constructor(dispatcher) {
@@ -19,11 +26,16 @@ class FindBarChild extends ActorChild {
 
     this._findKey = null;
 
-    XPCOMUtils.defineLazyProxy(this, "FindBarContent", () => {
-      let tmp = {};
-      ChromeUtils.import("resource://gre/modules/FindBarContent.jsm", tmp);
-      return new tmp.FindBarContent(this.mm);
-    }, {inQuickFind: false, inPassThrough: false});
+    XPCOMUtils.defineLazyProxy(
+      this,
+      "FindBarContent",
+      () => {
+        let tmp = {};
+        ChromeUtils.import("resource://gre/modules/FindBarContent.jsm", tmp);
+        return new tmp.FindBarContent(this.mm);
+      },
+      { inQuickFind: false, inPassThrough: false }
+    );
   }
 
   /**
@@ -54,10 +66,9 @@ class FindBarChild extends ActorChild {
   }
 
   onKeypress(event) {
-    let {FindBarContent} = this;
+    let { FindBarContent } = this;
 
-    if (!FindBarContent.inPassThrough &&
-        this.eventMatchesFindShortcut(event)) {
+    if (!FindBarContent.inPassThrough && this.eventMatchesFindShortcut(event)) {
       return FindBarContent.start(event);
     }
 
@@ -67,9 +78,14 @@ class FindBarChild extends ActorChild {
       return null;
     }
 
-    if (event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented ||
-        !BrowserUtils.mimeTypeIsTextBased(this.content.document.contentType) ||
-        !BrowserUtils.canFindInPage(location)) {
+    if (
+      event.ctrlKey ||
+      event.altKey ||
+      event.metaKey ||
+      event.defaultPrevented ||
+      !BrowserUtils.mimeTypeIsTextBased(this.content.document.contentType) ||
+      !BrowserUtils.canFindInPage(location)
+    ) {
       return null;
     }
 
@@ -90,8 +106,13 @@ class FindBarChild extends ActorChild {
   }
 }
 
-XPCOMUtils.defineLazyPreferenceGetter(FindBarChild, "findAsYouType",
-  "accessibility.typeaheadfind");
-XPCOMUtils.defineLazyPreferenceGetter(FindBarChild, "manualFAYT",
-  "accessibility.typeaheadfind.manual");
-
+XPCOMUtils.defineLazyPreferenceGetter(
+  FindBarChild,
+  "findAsYouType",
+  "accessibility.typeaheadfind"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FindBarChild,
+  "manualFAYT",
+  "accessibility.typeaheadfind.manual"
+);

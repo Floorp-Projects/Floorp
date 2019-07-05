@@ -13,8 +13,12 @@ function debug(aStr) {
 
 var EXPORTED_SYMBOLS = ["DateTimePickerParent"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "DateTimePickerPanel", "resource://gre/modules/DateTimePickerPanel.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DateTimePickerPanel",
+  "resource://gre/modules/DateTimePickerPanel.jsm"
+);
 
 /*
  * DateTimePickerParent receives message from content side (input box) and
@@ -78,7 +82,9 @@ class DateTimePickerParent extends JSWindowActorParent {
 
     this._anchor = aBrowser.popupAnchor;
     if (!this._anchor) {
-      throw new Error("No popup anchor for this browser, cannot show date picker");
+      throw new Error(
+        "No popup anchor for this browser, cannot show date picker"
+      );
     }
 
     this._anchor.left = rect.left;
@@ -91,8 +97,10 @@ class DateTimePickerParent extends JSWindowActorParent {
 
     let window = aBrowser.ownerGlobal;
     let tabbrowser = window.gBrowser;
-    if (Services.focus.activeWindow != window ||
-        (tabbrowser && tabbrowser.selectedBrowser != aBrowser)) {
+    if (
+      Services.focus.activeWindow != window ||
+      (tabbrowser && tabbrowser.selectedBrowser != aBrowser)
+    ) {
       // We were sent a message from a window or tab that went into the
       // background, so we'll ignore it for now.
       return;
@@ -132,6 +140,9 @@ class DateTimePickerParent extends JSWindowActorParent {
       return;
     }
     this._picker.element.removeEventListener("popuphidden", this);
-    this._picker.element.removeEventListener("DateTimePickerValueChanged", this);
+    this._picker.element.removeEventListener(
+      "DateTimePickerValueChanged",
+      this
+    );
   }
 }

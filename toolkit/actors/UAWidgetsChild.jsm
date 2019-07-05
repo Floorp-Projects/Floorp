@@ -1,21 +1,17 @@
 /* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
 var EXPORTED_SYMBOLS = ["UAWidgetsChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const HANDLED_ELEMENTS = [
-  "video",
-  "audio",
-  "embed",
-  "object",
-  "marquee",
-];
+const HANDLED_ELEMENTS = ["video", "audio", "embed", "object", "marquee"];
 
 class UAWidgetsChild extends ActorChild {
   constructor(dispatcher) {
@@ -83,25 +79,33 @@ class UAWidgetsChild extends ActorChild {
     }
 
     if (!uri || !widgetName) {
-      Cu.reportError("Getting a UAWidgetSetupOrChange event on undefined element.");
+      Cu.reportError(
+        "Getting a UAWidgetSetupOrChange event on undefined element."
+      );
       return;
     }
 
     let shadowRoot = aElement.openOrClosedShadowRoot;
     if (!shadowRoot) {
-      Cu.reportError("Getting a UAWidgetSetupOrChange event without the Shadow Root.");
+      Cu.reportError(
+        "Getting a UAWidgetSetupOrChange event without the Shadow Root."
+      );
       return;
     }
 
     let isSystemPrincipal = aElement.nodePrincipal.isSystemPrincipal;
-    let sandbox = isSystemPrincipal ?
-      Object.create(null) : Cu.getUAWidgetScope(aElement.nodePrincipal);
+    let sandbox = isSystemPrincipal
+      ? Object.create(null)
+      : Cu.getUAWidgetScope(aElement.nodePrincipal);
 
     if (!sandbox[widgetName]) {
       Services.scriptloader.loadSubScript(uri, sandbox);
     }
 
-    let prefs = Cu.cloneInto(this.getPrefsForUAWidget(widgetName, prefKeys), sandbox);
+    let prefs = Cu.cloneInto(
+      this.getPrefsForUAWidget(widgetName, prefKeys),
+      sandbox
+    );
 
     let widget = new sandbox[widgetName](shadowRoot, prefs);
     if (!isSystemPrincipal) {

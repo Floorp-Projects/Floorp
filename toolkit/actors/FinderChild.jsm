@@ -6,10 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["FinderChild"];
 
-const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Finder",
-                               "resource://gre/modules/Finder.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Finder",
+  "resource://gre/modules/Finder.jsm"
+);
 
 const MESSAGES = [
   "Finder:CaseSensitive",
@@ -70,26 +75,36 @@ class FinderChild extends ActorChild {
 
       case "Finder:SetSearchStringToSelection": {
         let selection = this._finder.setSearchStringToSelection();
-        this.mm.sendAsyncMessage("Finder:CurrentSelectionResult",
-                                 { selection,
-                                   initial: false });
+        this.mm.sendAsyncMessage("Finder:CurrentSelectionResult", {
+          selection,
+          initial: false,
+        });
         break;
       }
 
       case "Finder:GetInitialSelection": {
         let selection = this._finder.getActiveSelectionText();
-        this.mm.sendAsyncMessage("Finder:CurrentSelectionResult",
-                                 { selection,
-                                   initial: true });
+        this.mm.sendAsyncMessage("Finder:CurrentSelectionResult", {
+          selection,
+          initial: true,
+        });
         break;
       }
 
       case "Finder:FastFind":
-        this._finder.fastFind(data.searchString, data.linksOnly, data.drawOutline);
+        this._finder.fastFind(
+          data.searchString,
+          data.linksOnly,
+          data.drawOutline
+        );
         break;
 
       case "Finder:FindAgain":
-        this._finder.findAgain(data.findBackwards, data.linksOnly, data.drawOutline);
+        this._finder.findAgain(
+          data.findBackwards,
+          data.linksOnly,
+          data.drawOutline
+        );
         break;
 
       case "Finder:Highlight":

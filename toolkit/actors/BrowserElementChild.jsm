@@ -8,8 +8,10 @@ var EXPORTED_SYMBOLS = ["BrowserElementChild"];
 
 class BrowserElementChild extends JSWindowActorChild {
   handleEvent(event) {
-    if (event.type == "DOMWindowClose" &&
-        !this.manager.browsingContext.parent) {
+    if (
+      event.type == "DOMWindowClose" &&
+      !this.manager.browsingContext.parent
+    ) {
       this.sendAsyncMessage("DOMWindowClose", {});
     }
   }
@@ -24,7 +26,9 @@ class BrowserElementChild extends JSWindowActorChild {
 
         let permitUnload = true;
         if (docShell && docShell.contentViewer) {
-          permitUnload = docShell.contentViewer.permitUnload(message.data.flags);
+          permitUnload = docShell.contentViewer.permitUnload(
+            message.data.flags
+          );
         }
 
         this.sendAsyncMessage("Done", { permitUnload });
