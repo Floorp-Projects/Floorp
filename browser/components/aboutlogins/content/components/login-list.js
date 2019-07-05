@@ -29,31 +29,41 @@ export default class LoginList extends HTMLElement {
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginListTemplate.content.cloneNode(true));
 
-    this._list = this.shadowRoot.querySelector("ol");
     this._count = this.shadowRoot.querySelector(".count");
+    this._list = this.shadowRoot.querySelector("ol");
+    this._sortSelect = this.shadowRoot.querySelector("#login-sort");
 
     this.render();
 
     this.shadowRoot.getElementById("login-sort")
                    .addEventListener("change", this);
+    window.addEventListener("AboutLoginsClearSelection", this);
+    window.addEventListener("AboutLoginsCreateLogin", this);
+    window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
     this.addEventListener("keydown", this);
   }
 
-  render() {
+  /**
+   *
+   * @param {object} options optional
+   *                         createLogin: When set to true will show and select
+   *                                      a blank login-list-item.
+   */
+  render(options = {}) {
     this._list.textContent = "";
 
-    if (!this._logins.length) {
-      document.l10n.setAttributes(this._count, "login-list-count", {count: 0});
-      return;
-    }
-
-    if (!this._selectedGuid) {
+    if (options.createLogin) {
       this._blankLoginListItem.classList.add("selected");
       this._blankLoginListItem.setAttribute("aria-selected", "true");
       this._list.setAttribute("aria-activedescendant", this._blankLoginListItem.id);
       this._list.append(this._blankLoginListItem);
+    }
+
+    if (!this._logins.length) {
+      document.l10n.setAttributes(this._count, "login-list-count", {count: 0});
+      return;
     }
 
     for (let login of this._logins) {
@@ -73,9 +83,23 @@ export default class LoginList extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "change": {
-        const sort = event.target.value;
+        const sort = this._sortSelect.value;
         this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
         this.render();
+        break;
+      }
+      case "AboutLoginsClearSelection": {
+        if (!this._logins.length) {
+          return;
+        }
+        window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
+          detail: this._logins[0],
+        }));
+        break;
+      }
+      case "AboutLoginsCreateLogin": {
+        this._selectedGuid = null;
+        this.render({createLogin: true});
         break;
       }
       case "AboutLoginsFilterLogins": {
@@ -83,12 +107,13 @@ export default class LoginList extends HTMLElement {
         this.render();
         break;
       }
+      case "AboutLoginsInitialLoginSelected":
       case "AboutLoginsLoginSelected": {
         if (this._selectedGuid == event.detail.guid) {
           return;
         }
 
-        this._selectedGuid = event.detail.guid || null;
+        this._selectedGuid = event.detail.guid;
         this.render();
         break;
       }
@@ -104,7 +129,21 @@ export default class LoginList extends HTMLElement {
    */
   setLogins(logins) {
     this._logins = logins;
+    const sort = this._sortSelect.value;
+    this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
+
     this.render();
+
+    if (!this._selectedGuid ||
+        !this._logins.findIndex(login => login.guid == this._selectedGuid) != -1) {
+      // Select the first visible login after any possible filter is applied.
+      let firstVisibleLogin = this._list.querySelector("login-list-item[data-guid]:not([hidden])");
+      if (firstVisibleLogin) {
+        window.dispatchEvent(new CustomEvent("AboutLoginsInitialLoginSelected", {
+          detail: firstVisibleLogin._login,
+        }));
+      }
+    }
   }
 
   /**

@@ -34,14 +34,21 @@ add_task(async function test_query_parameter_filter() {
       return loginList._logins.length == 2;
     }, "Waiting for logins to be cached");
 
-    let loginFilter = Cu.waiveXrays(content.document.querySelector("login-filter"));
-    is(loginFilter.value, logins[0].origin, "The filter should be prepopulated");
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    await ContentTaskUtils.waitForCondition(() => loginItem._login.guid == logins[0].guid,
+      "Waiting for TEST_LOGIN1 to be selected for the login-item view");
+
+    let loginFilter = content.document.querySelector("login-filter");
+    let xRayLoginFilter = Cu.waiveXrays(loginFilter);
+    is(xRayLoginFilter.value, logins[0].origin, "The filter should be prepopulated");
+    is(content.document.activeElement, loginFilter, "login-filter should be focused");
+    is(loginFilter.shadowRoot.activeElement, loginFilter.shadowRoot.querySelector(".filter"),
+      "the actual input inside of login-filter should be focused");
 
     let hiddenLoginListItems = loginList.shadowRoot.querySelectorAll("login-list-item[hidden]");
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll("login-list-item:not([hidden])");
-    is(visibleLoginListItems.length, 2, "The 'new' login and one login should be visible");
-    ok(!visibleLoginListItems[0].dataset.guid, "The 'new' login should be visible");
-    is(visibleLoginListItems[1].dataset.guid, logins[0].guid, "TEST_LOGIN1 should be visible");
+    is(visibleLoginListItems.length, 1, "The one login should be visible");
+    is(visibleLoginListItems[0].dataset.guid, logins[0].guid, "TEST_LOGIN1 should be visible");
     is(hiddenLoginListItems.length, 1, "One login should be hidden");
     is(hiddenLoginListItems[0].dataset.guid, logins[1].guid, "TEST_LOGIN2 should be hidden");
   });
