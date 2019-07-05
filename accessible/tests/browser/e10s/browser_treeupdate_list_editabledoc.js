@@ -12,7 +12,7 @@ addAccessibleTask('<ol id="list"></ol>', async function(browser, accDoc) {
 
   testAccessibleTree(list, {
     role: ROLE_LIST,
-    children: [ ]
+    children: [],
   });
 
   await invokeSetAttribute(browser, "body", "contentEditable", "true");
@@ -26,12 +26,14 @@ addAccessibleTask('<ol id="list"></ol>', async function(browser, accDoc) {
 
   testAccessibleTree(list, {
     role: ROLE_LIST,
-    children: [ {
-      role: ROLE_LISTITEM,
-      children: [
-        { role: ROLE_STATICTEXT, name: "1. ", children: [] },
-        { role: ROLE_TEXT_LEAF, children: [] }
-      ]
-    } ]
+    children: [
+      {
+        role: ROLE_LISTITEM,
+        children: [
+          { role: ROLE_STATICTEXT, name: "1. ", children: [] },
+          { role: ROLE_TEXT_LEAF, children: [] },
+        ],
+      },
+    ],
   });
 });
