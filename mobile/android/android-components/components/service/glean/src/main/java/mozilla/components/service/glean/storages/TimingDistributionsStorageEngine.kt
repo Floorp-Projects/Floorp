@@ -191,9 +191,8 @@ data class TimingDistributionData(
                 return null
             }
             val rawHistogramType = jsonObject.tryGetString("histogram_type") ?: return null
-            var histogramType: HistogramType
-            try {
-                histogramType = HistogramType.valueOf(rawHistogramType.capitalize())
+            val histogramType = try {
+                HistogramType.valueOf(rawHistogramType.capitalize())
             } catch (e: IllegalArgumentException) {
                 return null
             }
@@ -212,9 +211,8 @@ data class TimingDistributionData(
             }
             val sum = jsonObject.tryGetLong("sum") ?: return null
             val rawTimeUnit = jsonObject.tryGetString("time_unit") ?: return null
-            var timeUnit: TimeUnit
-            try {
-                timeUnit = TimeUnit.valueOf(rawTimeUnit.capitalize())
+            val timeUnit = try {
+                TimeUnit.valueOf(rawTimeUnit.capitalize())
             } catch (e: IllegalArgumentException) {
                 return null
             }
