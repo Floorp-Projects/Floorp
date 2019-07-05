@@ -1438,17 +1438,12 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
 void js::Nursery::freeChunksFrom(unsigned firstFreeChunk) {
   MOZ_ASSERT(firstFreeChunk < chunks_.length());
 
-  if (CanUseExtraThreads()) {
+  {
     AutoLockHelperThreadState lock;
     for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
       decommitTask.queueChunk(chunks_[i], lock);
     }
     decommitTask.startOrRunIfIdle(lock);
-  } else {
-    // Sequential path
-    for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
-      decommitTask.decommitChunk(chunks_[i]->toChunk(runtime()));
-    }
   }
 
   chunks_.shrinkTo(firstFreeChunk);
@@ -1485,12 +1480,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(currentChunk_ == 0);
     decommitTask.queueRange(capacity_, chunk(0), lock);
-    if (CanUseExtraThreads()) {
-      decommitTask.startOrRunIfIdle(lock);
-    } else {
-      AutoUnlockHelperThreadState unlock(lock);
-      decommitTask.runFromMainThread(runtime());
-    }
+    decommitTask.startOrRunIfIdle(lock);
   }
 }
 
