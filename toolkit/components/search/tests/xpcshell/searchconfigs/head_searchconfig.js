@@ -487,7 +487,7 @@ class SearchConfigTest {
    *   Debug string with locale + region information.
    * @param {object} engine
    *   The engine being tested.
-   * @param {object} rules
+   * @param {object} rule
    *   Rules to test.
    */
   _assertCorrectUrlCode(location, engine, rule) {
@@ -523,6 +523,7 @@ class SearchConfigTest {
    * failures. These help the tests to run faster, and avoid clogging up the
    * python test runner process.
    */
+
   assertOk(value, message) {
     if (!value || this._testDebug) {
       Assert.ok(value, message);

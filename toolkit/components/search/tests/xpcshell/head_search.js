@@ -76,7 +76,10 @@ function configureToLoadJarEngines() {
 }
 
 /**
- * Load engines from test data located in 'folder'
+ * Load engines from test data located in 'folder'.
+ *
+ * @param {string} folder
+ *   The folder name to use.
  */
 function useTestEngines(folder) {
   let searchExtensions = do_get_cwd();
@@ -134,7 +137,9 @@ async function forceExpiration() {
 
 /**
  * Clean the profile of any cache file left from a previous run.
- * Returns a boolean indicating if the cache file existed.
+ *
+ * @returns {boolean}
+ *   Indicates if the cache file existed.
  */
 function removeCacheFile() {
   let file = do_get_profile().clone();
@@ -148,6 +153,8 @@ function removeCacheFile() {
 
 /**
  * isUSTimezone taken from nsSearchService.js
+ *
+ * @returns {boolean}
  */
 function isUSTimezone() {
   // Timezone assumptions! We assume that if the system clock's timezone is
@@ -231,7 +238,7 @@ function getDefaultEngineList(isUS) {
 
 /**
  * Waits for the cache file to be saved.
- * @return {Promise} Resolved when the cache file is saved.
+ * @returns {Promise} Resolved when the cache file is saved.
  */
 function promiseAfterCache() {
   return SearchTestUtils.promiseSearchNotification(
@@ -246,6 +253,12 @@ function parseJsonFromStream(aInputStream) {
 
 /**
  * Read a JSON file and return the JS object
+ *
+ * @param {nsIFile} aFile
+ *   The file to read.
+ * @returns {object|false}
+ *   Returns the JSON object if the file was successfully read,
+ *   false otherwise.
  */
 function readJSONFile(aFile) {
   let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
@@ -265,6 +278,9 @@ function readJSONFile(aFile) {
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.
+ *
+ * @param {object} expectedObj
+ * @param {object} actualObj
  */
 function isSubObjectOf(expectedObj, actualObj) {
   for (let prop in expectedObj) {
@@ -289,7 +305,8 @@ var gDataUrl;
 /**
  * Initializes the HTTP server and ensures that it is terminated when tests end.
  *
- * @return The HttpServer object in case further customization is needed.
+ * @returns {HttpServer}
+ *   The HttpServer object in case further customization is needed.
  */
 function useHttpServer() {
   let httpServer = new HttpServer();
@@ -404,14 +421,14 @@ function checkRequest(requests, cohort = "") {
  *
  * The engines are added in the given order.
  *
- * @param aItems
- *        Array of objects with the following properties:
- *        {
- *          name: Engine name, used to wait for it to be loaded.
- *          xmlFileName: Name of the XML file in the "data" folder.
- *          details: Object containing the parameters of addEngineWithDetails,
- *                   except for the engine name.  Alternative to xmlFileName.
- *        }
+ * @param {Array<object>} aItems
+ *   Array of objects with the following properties:
+ *   {
+ *     name: Engine name, used to wait for it to be loaded.
+ *     xmlFileName: Name of the XML file in the "data" folder.
+ *     details: Object containing the parameters of addEngineWithDetails,
+ *              except for the engine name.  Alternative to xmlFileName.
+ *   }
  */
 var addTestEngines = async function(aItems) {
   if (!gDataUrl) {
@@ -452,6 +469,8 @@ var addTestEngines = async function(aItems) {
 
 /**
  * Installs a test engine into the test profile.
+ *
+ * @returns {Array<SearchEngine>}
  */
 function installTestEngine() {
   useHttpServer();
@@ -488,10 +507,10 @@ const TELEMETRY_RESULT_ENUM = {
 /**
  * Checks the value of the SEARCH_SERVICE_COUNTRY_FETCH_RESULT probe.
  *
- * @param aExpectedValue
- *        If a value from TELEMETRY_RESULT_ENUM, we expect to see this value
- *        recorded exactly once in the probe.  If |null|, we expect to see
- *        nothing recorded in the probe at all.
+ * @param {string|null} aExpectedValue
+ *   If a value from TELEMETRY_RESULT_ENUM, we expect to see this value
+ *   recorded exactly once in the probe.  If |null|, we expect to see
+ *   nothing recorded in the probe at all.
  */
 function checkCountryResultTelemetry(aExpectedValue) {
   let histogram = Services.telemetry.getHistogramById(

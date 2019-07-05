@@ -26,13 +26,14 @@ var SearchStaticData = {
   /**
    * Returns a list of alternate domains for a given search engine domain.
    *
-   * @param aDomain
-   *        Lowercase host name to look up. For example, if this argument is
-   *        "www.google.com" or "www.google.co.uk", the function returns the
-   *        full list of supported Google domains.
+   * @param {string} aDomain
+   *   Lowercase host name to look up. For example, if this argument is
+   *   "www.google.com" or "www.google.co.uk", the function returns the
+   *   full list of supported Google domains.
    *
-   * @return Array containing one entry for each alternate host name, or empty
-   *         array if none is known.  The returned array should not be modified.
+   * @returns {Array}
+   *   Containing one entry for each alternate host name, or empty array
+   *   if none is known.  The returned array should not be modified.
    */
   getAlternateDomains(aDomain) {
     return !gGoogleDomains.includes(aDomain) ? [] : gGoogleDomains;
