@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   // Generate a leaf name that is 255 characters long.
@@ -18,8 +18,12 @@ function run_test() {
     tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     do_throw("Creating an item in a folder with a very long name should throw");
   } catch (e) {
-    if (!(e instanceof Ci.nsIException &&
-          e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH)) {
+    if (
+      !(
+        e instanceof Ci.nsIException &&
+        e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH
+      )
+    ) {
       throw e;
     }
     // We expect the function not to crash but to raise this exception.

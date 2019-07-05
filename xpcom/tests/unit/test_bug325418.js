@@ -14,12 +14,16 @@ var observer1 = {
       timer.cancel();
 
       // Actual delay may not be exact, so convert to seconds and round.
-      Assert.equal(Math.round((Date.now() - gStartTime1) / 1000),
-                   kExpectedDelay1);
+      Assert.equal(
+        Math.round((Date.now() - gStartTime1) / 1000),
+        kExpectedDelay1
+      );
 
       timer = null;
 
-      info("1st timer triggered (before being cancelled). Should not have happened!");
+      info(
+        "1st timer triggered (before being cancelled). Should not have happened!"
+      );
       Assert.ok(false);
     }
   },
@@ -32,8 +36,10 @@ var observer2 = {
       timer.cancel();
 
       // Actual delay may not be exact, so convert to seconds and round.
-      Assert.equal(Math.round((Date.now() - gStartTime2) / 1000),
-                   kExpectedDelay2);
+      Assert.equal(
+        Math.round((Date.now() - gStartTime2) / 1000),
+        kExpectedDelay2
+      );
 
       timer = null;
 
@@ -49,12 +55,18 @@ function run_test() {
 
   // Initialize the timer (with some delay), then cancel it.
   gStartTime1 = Date.now();
-  timer.init(observer1, kExpectedDelay1 * 1000,
-             timer.TYPE_REPEATING_PRECISE_CAN_SKIP);
+  timer.init(
+    observer1,
+    kExpectedDelay1 * 1000,
+    timer.TYPE_REPEATING_PRECISE_CAN_SKIP
+  );
   timer.cancel();
 
   // Re-initialize the timer (with a different delay).
   gStartTime2 = Date.now();
-  timer.init(observer2, kExpectedDelay2 * 1000,
-             timer.TYPE_REPEATING_PRECISE_CAN_SKIP);
+  timer.init(
+    observer2,
+    kExpectedDelay2 * 1000,
+    timer.TYPE_REPEATING_PRECISE_CAN_SKIP
+  );
 }
