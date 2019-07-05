@@ -27,9 +27,9 @@ var tests = [test_vacuum];
 function run_test() {
   setup();
 
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
+  }
 
   cleanup();
 }
-

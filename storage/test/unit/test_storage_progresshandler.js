@@ -9,7 +9,9 @@ function setup() {
   msc.createTable("handler_tests", "id INTEGER PRIMARY KEY, num INTEGER");
   msc.beginTransaction();
 
-  var stmt = createStatement("INSERT INTO handler_tests (id, num) VALUES(?1, ?2)");
+  var stmt = createStatement(
+    "INSERT INTO handler_tests (id, num) VALUES(?1, ?2)"
+  );
   for (let i = 0; i < 100; ++i) {
     stmt.bindByIndex(0, i);
     stmt.bindByIndex(1, Math.floor(Math.random() * 1000));
@@ -53,7 +55,8 @@ function test_handler_call() {
   msc.setProgressHandler(50, testProgressHandler);
   // Some long-executing request
   var stmt = createStatement(
-    "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2");
+    "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2"
+  );
   while (stmt.executeStep()) {
     // Do nothing.
   }
@@ -67,7 +70,8 @@ function test_handler_abort() {
   msc.setProgressHandler(50, testProgressHandler);
   // Some long-executing request
   var stmt = createStatement(
-    "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2");
+    "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2"
+  );
 
   const SQLITE_INTERRUPT = 9;
   try {
@@ -89,9 +93,13 @@ function test_handler_abort() {
   }
 }
 
-var tests = [test_handler_registration, test_handler_return,
-             test_handler_removal, test_handler_call,
-             test_handler_abort];
+var tests = [
+  test_handler_registration,
+  test_handler_return,
+  test_handler_removal,
+  test_handler_call,
+  test_handler_abort,
+];
 
 function run_test() {
   setup();
