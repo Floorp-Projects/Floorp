@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = ["FissionTestHelperParent"];
 class FissionTestHelperParent extends JSWindowActorParent {
   constructor() {
     super();
-    this._testCompletePromise = new Promise((resolve) => {
+    this._testCompletePromise = new Promise(resolve => {
       this._testCompletePromiseResolver = resolve;
     });
   }
@@ -42,11 +42,18 @@ class FissionTestHelperParent extends JSWindowActorParent {
   receiveMessage(msg) {
     switch (msg.name) {
       case "ok":
-        FissionTestHelperParent.SimpleTest.ok(msg.data.cond, this.docURI() + " | " + msg.data.msg);
+        FissionTestHelperParent.SimpleTest.ok(
+          msg.data.cond,
+          this.docURI() + " | " + msg.data.msg
+        );
         break;
 
       case "is":
-        FissionTestHelperParent.SimpleTest.is(msg.data.a, msg.data.b, this.docURI() + " | " + msg.data.msg);
+        FissionTestHelperParent.SimpleTest.is(
+          msg.data.a,
+          msg.data.b,
+          this.docURI() + " | " + msg.data.msg
+        );
         break;
 
       case "Test:Complete":
@@ -56,14 +63,24 @@ class FissionTestHelperParent extends JSWindowActorParent {
       case "EmbedderToOopif":
         // This relays messages from the embedder to an OOP-iframe. The browsing
         // context id in the message data identifies the OOP-iframe.
-        let oopifBrowsingContext = BrowsingContext.get(msg.data.browsingContextId);
+        let oopifBrowsingContext = BrowsingContext.get(
+          msg.data.browsingContextId
+        );
         if (oopifBrowsingContext == null) {
-          FissionTestHelperParent.SimpleTest.ok(false, "EmbedderToOopif couldn't find oopif");
+          FissionTestHelperParent.SimpleTest.ok(
+            false,
+            "EmbedderToOopif couldn't find oopif"
+          );
           break;
         }
-        let oopifActor = oopifBrowsingContext.currentWindowGlobal.getActor("FissionTestHelper");
+        let oopifActor = oopifBrowsingContext.currentWindowGlobal.getActor(
+          "FissionTestHelper"
+        );
         if (!oopifActor) {
-          FissionTestHelperParent.SimpleTest.ok(false, "EmbedderToOopif couldn't find oopif actor");
+          FissionTestHelperParent.SimpleTest.ok(
+            false,
+            "EmbedderToOopif couldn't find oopif actor"
+          );
           break;
         }
         oopifActor.sendAsyncMessage("FromEmbedder", msg.data);
@@ -74,7 +91,10 @@ class FissionTestHelperParent extends JSWindowActorParent {
         // window which is embedding it.
         let embedderActor = this.embedderWindow().getActor("FissionTestHelper");
         if (!embedderActor) {
-          FissionTestHelperParent.SimpleTest.ok(false, "OopifToEmbedder couldn't find embedder");
+          FissionTestHelperParent.SimpleTest.ok(
+            false,
+            "OopifToEmbedder couldn't find embedder"
+          );
           break;
         }
         embedderActor.sendAsyncMessage("FromOopif", msg.data);

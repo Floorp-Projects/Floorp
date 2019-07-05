@@ -27,27 +27,36 @@ class FissionTestHelperChild extends JSWindowActorChild {
     // namespace.
 
     let cw = this.cw();
-    Cu.exportFunction((cond, msg) => this.sendAsyncMessage("ok", {cond, msg}),
-                      cw, { defineAs: "ok" });
-    Cu.exportFunction((a, b, msg) => this.sendAsyncMessage("is", {a, b, msg}),
-                      cw, { defineAs: "is" });
+    Cu.exportFunction(
+      (cond, msg) => this.sendAsyncMessage("ok", { cond, msg }),
+      cw,
+      { defineAs: "ok" }
+    );
+    Cu.exportFunction(
+      (a, b, msg) => this.sendAsyncMessage("is", { a, b, msg }),
+      cw,
+      { defineAs: "is" }
+    );
 
-    let FissionTestHelper = Cu.createObjectIn(cw, { defineAs: "FissionTestHelper" });
-    FissionTestHelper.startTestPromise =
-      new cw.Promise(
-        Cu.exportFunction(
-          (resolve) => {
-            this._startTestPromiseResolver = resolve;
-          },
-          cw));
+    let FissionTestHelper = Cu.createObjectIn(cw, {
+      defineAs: "FissionTestHelper",
+    });
+    FissionTestHelper.startTestPromise = new cw.Promise(
+      Cu.exportFunction(resolve => {
+        this._startTestPromiseResolver = resolve;
+      }, cw)
+    );
 
-    Cu.exportFunction(this.subtestDone.bind(this),
-                      FissionTestHelper, { defineAs: "subtestDone" });
+    Cu.exportFunction(this.subtestDone.bind(this), FissionTestHelper, {
+      defineAs: "subtestDone",
+    });
 
-    Cu.exportFunction(this.sendToOopif.bind(this),
-                      FissionTestHelper, { defineAs: "sendToOopif" });
-    Cu.exportFunction(this.fireEventInEmbedder.bind(this),
-                      FissionTestHelper, { defineAs: "fireEventInEmbedder" });
+    Cu.exportFunction(this.sendToOopif.bind(this), FissionTestHelper, {
+      defineAs: "sendToOopif",
+    });
+    Cu.exportFunction(this.fireEventInEmbedder.bind(this), FissionTestHelper, {
+      defineAs: "fireEventInEmbedder",
+    });
   }
 
   // Called by the subtest to indicate completion to the top-level browser-chrome
@@ -67,12 +76,15 @@ class FissionTestHelperChild extends JSWindowActorChild {
     let msgId = ++this._msgCounter;
     let cw = this.cw();
     let responsePromise = new cw.Promise(
-      Cu.exportFunction(
-        (resolve) => {
-          this._oopifResponsePromiseResolvers[msgId] = resolve;
-        },
-        cw));
-    this.sendAsyncMessage("EmbedderToOopif", {browsingContextId, msgId, stringToEval});
+      Cu.exportFunction(resolve => {
+        this._oopifResponsePromiseResolvers[msgId] = resolve;
+      }, cw)
+    );
+    this.sendAsyncMessage("EmbedderToOopif", {
+      browsingContextId,
+      msgId,
+      stringToEval,
+    });
     return responsePromise;
   }
 
@@ -81,7 +93,7 @@ class FissionTestHelperChild extends JSWindowActorChild {
   // things that happen. The embedder can use promiseOneEvent from
   // helper_fission_utils.js to listen for these events.
   fireEventInEmbedder(eventType, data) {
-    this.sendAsyncMessage("OopifToEmbedder", {eventType, data});
+    this.sendAsyncMessage("OopifToEmbedder", { eventType, data });
   }
 
   handleEvent(evt) {
@@ -91,7 +103,9 @@ class FissionTestHelperChild extends JSWindowActorChild {
         // is fired by the content. See comments in fission_subtest_init().
         // Once bug 1557486 is fixed we can just register the FissionTestHelper:Init
         // event directly instead of DOMWindowCreated.
-        this.contentWindow.addEventListener("FissionTestHelper:Init", this, { wantUntrusted: true });
+        this.contentWindow.addEventListener("FissionTestHelper:Init", this, {
+          wantUntrusted: true,
+        });
         break;
       case "FissionTestHelper:Init":
         this.initialize();
@@ -107,14 +121,23 @@ class FissionTestHelperChild extends JSWindowActorChild {
         break;
       case "FromEmbedder":
         let evalResult = this.contentWindow.eval(msg.data.stringToEval);
-        this.sendAsyncMessage("OopifToEmbedder", {msgId: msg.data.msgId, evalResult});
+        this.sendAsyncMessage("OopifToEmbedder", {
+          msgId: msg.data.msgId,
+          evalResult,
+        });
         break;
       case "FromOopif":
         if (typeof msg.data.msgId == "number") {
           if (!(msg.data.msgId in this._oopifResponsePromiseResolvers)) {
-            dump("Error: FromOopif got a message with unknown numeric msgId in " + this.contentWindow.location.href + "\n");
+            dump(
+              "Error: FromOopif got a message with unknown numeric msgId in " +
+                this.contentWindow.location.href +
+                "\n"
+            );
           }
-          this._oopifResponsePromiseResolvers[msg.data.msgId](msg.data.evalResult);
+          this._oopifResponsePromiseResolvers[msg.data.msgId](
+            msg.data.evalResult
+          );
           delete this._oopifResponsePromiseResolvers[msg.data.msgId];
         } else if (typeof msg.data.eventType == "string") {
           let cw = this.cw();
@@ -122,7 +145,11 @@ class FissionTestHelperChild extends JSWindowActorChild {
           event.data = Cu.cloneInto(msg.data.data, cw);
           this.contentWindow.dispatchEvent(event);
         } else {
-          dump("Warning: Unrecognized FromOopif message received in " + this.contentWindow.location.href + "\n");
+          dump(
+            "Warning: Unrecognized FromOopif message received in " +
+              this.contentWindow.location.href +
+              "\n"
+          );
         }
         break;
     }
