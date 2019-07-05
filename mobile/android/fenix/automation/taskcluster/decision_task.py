@@ -47,7 +47,7 @@ BUILDER = TaskBuilder(
     scheduler_id=os.environ.get('SCHEDULER_ID', 'taskcluster-github'),
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
     date_string=os.environ.get('BUILD_DATE'),
-    trust_level=os.environ.get('TRUST_LEVEL'),
+    trust_level=int(os.environ.get('TRUST_LEVEL')),
 )
 
 
