@@ -15,7 +15,7 @@ import org.robolectric.shadows.ShadowLooper
 class StoreExceptionTest {
     // This test is in a separate class because it needs to run with Robolectric (different runner, slower) while all
     // other tests only need a Java VM (fast).
-    @Test(expected = java.lang.IllegalStateException::class)
+    @Test(expected = StoreException::class)
     fun `Exception in reducer will be rethrown on main thread`() {
         val throwingReducer: (TestState, TestAction) -> TestState = { _, _ ->
             throw IllegalStateException("Not reducing today")

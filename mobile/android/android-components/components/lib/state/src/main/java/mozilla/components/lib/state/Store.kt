@@ -48,7 +48,7 @@ open class Store<S : State, A : Action>(
         // We want exceptions in the reducer to crash the app and not get silently ignored. Therefore we rethrow the
         // exception on the main thread.
         Handler(Looper.getMainLooper()).postAtFrontOfQueue {
-            throw IllegalStateException("Exception while reducing state", throwable)
+            throw StoreException("Exception while reducing state", throwable)
         }
 
         // Once an exception happened we do not want to accept any further actions. So let's cancel the scope which
@@ -141,3 +141,9 @@ open class Store<S : State, A : Action>(
         }
     }
 }
+
+/**
+ * Exception for otherwise unhandled errors caught while reducing state or
+ * while managing/notifying observers.
+ */
+class StoreException(val msg: String, val e: Throwable? = null) : Exception(msg, e)

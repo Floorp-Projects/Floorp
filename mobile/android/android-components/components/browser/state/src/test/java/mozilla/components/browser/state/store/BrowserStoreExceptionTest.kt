@@ -7,11 +7,11 @@ package mozilla.components.browser.state.store
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.lib.state.StoreException
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.shadows.ShadowLooper
-import java.lang.IllegalStateException
 
 // These tests are in a separate class because they needs to run with
 // Robolectric (different runner, slower) while all other tests only
@@ -30,7 +30,7 @@ class BrowserStoreExceptionTest {
 
             // Wait for the main looper to process the re-thrown exception.
             ShadowLooper.idleMainLooper()
-        } catch (e: IllegalStateException) {
+        } catch (e: StoreException) {
             val cause = e.cause
             if (cause != null) {
                 throw cause
