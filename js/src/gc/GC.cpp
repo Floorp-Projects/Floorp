@@ -3850,12 +3850,8 @@ void GCRuntime::queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers) {
 }
 
 void GCRuntime::startBackgroundFree() {
-  if (CanUseExtraThreads()) {
-    AutoLockHelperThreadState lock;
-    freeTask.startOrRunIfIdle(lock);
-  } else {
-    freeTask.joinAndRunFromMainThread(rt);
-  }
+  AutoLockHelperThreadState lock;
+  freeTask.startOrRunIfIdle(lock);
 }
 
 void BackgroundFreeTask::run() {
