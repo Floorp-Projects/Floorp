@@ -108,6 +108,24 @@ void js::NurseryDecommitTask::queueChunk(
   queue = chunk;
 }
 
+void js::NurseryDecommitTask::queueRange(
+    size_t newCapacity, NurseryChunk& newChunk,
+    const AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(!partialChunk || partialChunk == &newChunk);
+
+  // Only save this to decommit later if there's at least one page to
+  // decommit.
+  if (JS_ROUNDUP(newCapacity, SystemPageSize()) >=
+      JS_ROUNDDOWN(Nursery::NurseryChunkUsableSize, SystemPageSize())) {
+    // Clear the existing decommit request because it may be a larger request
+    // for the same chunk.
+    partialChunk = nullptr;
+    return;
+  }
+  partialChunk = &newChunk;
+  partialCapacity = newCapacity;
+}
+
 Chunk* js::NurseryDecommitTask::popChunk(
     const AutoLockHelperThreadState& lock) {
   if (!queue) {
@@ -127,9 +145,17 @@ void js::NurseryDecommitTask::run() {
   {
     AutoLockHelperThreadState lock;
 
-    while ((chunk = popChunk(lock))) {
-      AutoUnlockHelperThreadState unlock(lock);
-      decommitChunk(chunk);
+    while ((chunk = popChunk(lock)) || partialChunk) {
+      if (chunk) {
+        AutoUnlockHelperThreadState unlock(lock);
+        decommitChunk(chunk);
+        continue;
+      }
+
+      if (partialChunk) {
+        decommitRange(lock);
+        continue;
+      }
     }
 
     setFinishing(lock);
@@ -141,6 +167,28 @@ void js::NurseryDecommitTask::decommitChunk(Chunk* chunk) {
   {
     AutoLockGC lock(runtime());
     runtime()->gc.recycleChunk(chunk, lock);
+  }
+}
+
+void js::NurseryDecommitTask::decommitRange(AutoLockHelperThreadState& lock) {
+  uintptr_t rangeStart = JS_ROUNDUP(
+      partialChunk->start() + (uintptr_t)partialCapacity, SystemPageSize());
+  MOZ_ASSERT(rangeStart > partialChunk->start() &&
+             rangeStart < partialChunk->end());
+  uintptr_t rangeLen =
+      JS_ROUNDDOWN(partialChunk->end(), SystemPageSize()) - rangeStart;
+  MOZ_ASSERT(rangeLen < Nursery::NurseryChunkUsableSize);
+  MOZ_ASSERT(rangeLen > 0);
+  MOZ_ASSERT(rangeLen % SystemPageSize() == 0);
+
+  // Clear this field here before releasing the lock. While the lock is
+  // released the main thread may make new decommit requests or update the range
+  // of the current requested chunk, but it won't attempt to use any
+  // might-be-decommitted-soon memory.
+  partialChunk = nullptr;
+  {
+    AutoUnlockHelperThreadState unlock(lock);
+    MarkPagesUnused((void*)rangeStart, rangeLen);
   }
 }
 
@@ -1376,7 +1424,14 @@ size_t js::Nursery::roundSize(size_t size) const {
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk_ * ChunkSize);
   MOZ_ASSERT(newCapacity <= chunkCountLimit_ * ChunkSize);
+
+  if (isSubChunkMode() && CanUseExtraThreads()) {
+    // Avoid growing into an area that's about to be decommitted.
+    decommitTask.join();
+  }
+
   capacity_ = newCapacity;
+
   setCurrentEnd();
 }
 
@@ -1423,7 +1478,20 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 
   capacity_ = newCapacity;
   MOZ_ASSERT(capacity_ >= ArenaSize);
+
   setCurrentEnd();
+
+  if (isSubChunkMode()) {
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(currentChunk_ == 0);
+    decommitTask.queueRange(capacity_, chunk(0), lock);
+    if (CanUseExtraThreads()) {
+      decommitTask.startOrRunIfIdle(lock);
+    } else {
+      AutoUnlockHelperThreadState unlock(lock);
+      decommitTask.runFromMainThread(runtime());
+    }
+  }
 }
 
 void js::Nursery::minimizeAllocableSpace() {
