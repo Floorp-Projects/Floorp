@@ -8,17 +8,22 @@ function test() {
   Services.prefs.setBoolPref("security.data_uri.unique_opaque_origin", false);
   // data: URIs will only open at the top level when the pref is false
   //   or the use of system principal but we can't use that to test here.
-  Services.prefs.setBoolPref("security.data_uri.block_toplevel_data_uri_navigations", false);
+  Services.prefs.setBoolPref(
+    "security.data_uri.block_toplevel_data_uri_navigations",
+    false
+  );
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("security.data_uri.unique_opaque_origin");
-    Services.prefs.clearUserPref("security.data_uri.block_toplevel_data_uri_navigations");
+    Services.prefs.clearUserPref(
+      "security.data_uri.block_toplevel_data_uri_navigations"
+    );
   });
 
   executeSoon(startTest);
 }
 
 function startTest() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
   let browser = gBrowser.getBrowserForTab(tab);
 
@@ -33,25 +38,39 @@ function startTest() {
   function testURL(url, func) {
     let secMan = Services.scriptSecurityManager;
     let ios = Services.io;
-    let artificialPrincipal = secMan.createCodebasePrincipal(ios.newURI("http://example.com/"), {});
+    let artificialPrincipal = secMan.createCodebasePrincipal(
+      ios.newURI("http://example.com/"),
+      {}
+    );
     loadURL("http://example.com/", 0, artificialPrincipal, function() {
       let pagePrincipal = browser.contentPrincipal;
       ok(pagePrincipal, "got principal for http:// page");
 
       // Now load the URL normally
       loadURL(url, 0, artificialPrincipal, function() {
-        ok(browser.contentPrincipal.equals(pagePrincipal), url + " should inherit principal");
+        ok(
+          browser.contentPrincipal.equals(pagePrincipal),
+          url + " should inherit principal"
+        );
 
         // Now load the URL and disallow inheriting the principal
         let webNav = Ci.nsIWebNavigation;
-        loadURL(url, webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL, artificialPrincipal, function() {
-          let newPrincipal = browser.contentPrincipal;
-          ok(newPrincipal, "got inner principal");
-          ok(!newPrincipal.equals(pagePrincipal),
-             url + " should not inherit principal when loaded with DISALLOW_INHERIT_OWNER");
+        loadURL(
+          url,
+          webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL,
+          artificialPrincipal,
+          function() {
+            let newPrincipal = browser.contentPrincipal;
+            ok(newPrincipal, "got inner principal");
+            ok(
+              !newPrincipal.equals(pagePrincipal),
+              url +
+                " should not inherit principal when loaded with DISALLOW_INHERIT_OWNER"
+            );
 
-          func();
-        });
+            func();
+          }
+        );
       });
     });
   }

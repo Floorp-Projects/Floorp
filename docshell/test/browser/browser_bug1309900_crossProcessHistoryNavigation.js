@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function runTests() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:about"
+  );
 
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
@@ -21,10 +24,16 @@ add_task(async function runTests() {
   // Using a dummy onunload listener to disable the bfcache as that can prevent
   // the test browser load detection mechanism from working.
   loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURI(browser, "data:text/html,<body%20onunload=''><iframe></iframe></body>");
+  BrowserTestUtils.loadURI(
+    browser,
+    "data:text/html,<body%20onunload=''><iframe></iframe></body>"
+  );
   href = await loaded;
-  is(href, "data:text/html,<body%20onunload=''><iframe></iframe></body>",
-    "Check data URL loaded");
+  is(
+    href,
+    "data:text/html,<body%20onunload=''><iframe></iframe></body>",
+    "Check data URL loaded"
+  );
 
   loaded = BrowserTestUtils.browserLoaded(browser);
   browser.goBack();
@@ -34,6 +43,9 @@ add_task(async function runTests() {
   loaded = BrowserTestUtils.browserLoaded(browser);
   browser.goForward();
   href = await loaded;
-  is(href, "data:text/html,<body%20onunload=''><iframe></iframe></body>",
-     "Check we've gone forward to data URL");
+  is(
+    href,
+    "data:text/html,<body%20onunload=''><iframe></iframe></body>",
+    "Check we've gone forward to data URL"
+  );
 });
