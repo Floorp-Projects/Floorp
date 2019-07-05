@@ -21,20 +21,18 @@ customElements.define("x-el", class extends HTMLElement {
 </script>
 <x-el id="container" role="group"><label id="l1">label1</label></x-el>
 `;
-addAccessibleTask(snippet,
-  async function(browser, accDoc) {
-    let container = findAccessibleChildByID(accDoc, "container");
+addAccessibleTask(snippet, async function(browser, accDoc) {
+  let container = findAccessibleChildByID(accDoc, "container");
 
-    testChildrenIds(container, ["l1"]);
+  testChildrenIds(container, ["l1"]);
 
-    await contentSpawnMutation(browser, REORDER, function() {
-      let labelEl = content.document.createElement("label");
-      labelEl.id = "l2";
+  await contentSpawnMutation(browser, REORDER, function() {
+    let labelEl = content.document.createElement("label");
+    labelEl.id = "l2";
 
-      let containerEl = content.document.getElementById("container");
-      containerEl.appendChild(labelEl);
-    });
+    let containerEl = content.document.getElementById("container");
+    containerEl.appendChild(labelEl);
+  });
 
-    testChildrenIds(container, ["l1", "l2"]);
-  }
-);
+  testChildrenIds(container, ["l1", "l2"]);
+});
