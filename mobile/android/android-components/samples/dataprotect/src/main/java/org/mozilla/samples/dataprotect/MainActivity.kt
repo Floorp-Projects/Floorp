@@ -6,7 +6,6 @@ package org.mozilla.samples.dataprotect
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Base64
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
@@ -36,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         keystore.generateKey()
 
         // setup protected data key/value pairs
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this).apply {
+        val prefs = getSharedPreferences(SAMPLE_PREFS_KEY, MODE_PRIVATE).apply {
             prepareProtectedData(this)
         }
 
@@ -77,5 +76,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateToggleButton() {
         val res = if (listAdapter.unlocked) R.string.btn_toggle_lock else R.string.btn_toggle_unlock
         toggleBtn.setText(res)
+    }
+
+    companion object {
+        private const val SAMPLE_PREFS_KEY = "protectedData"
     }
 }

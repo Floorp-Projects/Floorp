@@ -44,7 +44,7 @@ class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
     companion object {
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-        fun searchPlugins(): Collection<Array<Any>> = basePath.list()
+        fun searchPlugins(): Collection<Array<Any>> = basePath.list().orEmpty()
             .mapNotNull { it as Any }
             .map { arrayOf(it) }
 

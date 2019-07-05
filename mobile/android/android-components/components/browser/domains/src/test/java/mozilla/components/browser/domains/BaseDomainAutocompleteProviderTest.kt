@@ -1,7 +1,6 @@
 package mozilla.components.browser.domains
 
 import android.content.Context
-import android.preference.PreferenceManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
@@ -9,7 +8,6 @@ import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvide
 import mozilla.components.browser.domains.autocomplete.DomainList
 import mozilla.components.browser.domains.autocomplete.DomainsLoader
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -18,14 +16,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class BaseDomainAutocompleteProviderTest {
-
-    @After
-    fun tearDown() {
-        PreferenceManager.getDefaultSharedPreferences(testContext)
-            .edit()
-            .clear()
-            .apply()
-    }
 
     @Test
     fun `empty provider with DEFAULT list returns nothing`() {
