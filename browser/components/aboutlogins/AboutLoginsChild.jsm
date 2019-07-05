@@ -111,6 +111,9 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLogins:AllLogins":
         this.sendToContent("AllLogins", message.data);
         break;
+      case "AboutLogins:UpdateBreaches":
+        this.sendToContent("UpdateBreaches", message.data);
+        break;
       case "AboutLogins:LoginAdded":
         this.sendToContent("LoginAdded", message.data);
         break;
