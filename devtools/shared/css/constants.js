@@ -8,10 +8,10 @@
  * All CSS <angle> types that properties can support.
  */
 exports.CSS_ANGLEUNIT = {
-  "deg": "deg",
-  "rad": "rad",
-  "grad": "grad",
-  "turn": "turn",
+  deg: "deg",
+  rad: "rad",
+  grad: "grad",
+  turn: "turn",
 };
 
 /**
@@ -19,9 +19,9 @@ exports.CSS_ANGLEUNIT = {
  * Kept for backwards compatibility. Remove after Firefox 70.
  */
 exports.CSS_TYPES = {
- "color": 2,
- "gradient": 4,
- "timing-function": 10,
+  color: 2,
+  gradient: 4,
+  "timing-function": 10,
 };
 
 /**

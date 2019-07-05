@@ -9,7 +9,9 @@ function run_test() {
   const snapshot = ChromeUtils.readHeapSnapshot(path);
 
   const dominatorTree = snapshot.computeDominatorTree();
-  const target = dominatorTree.getImmediatelyDominated(dominatorTree.root).pop();
+  const target = dominatorTree
+    .getImmediatelyDominated(dominatorTree.root)
+    .pop();
   ok(target);
 
   let threw = false;

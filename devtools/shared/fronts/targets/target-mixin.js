@@ -8,9 +8,23 @@
 // This shouldn't happen, but Fronts should rather be part of client anyway.
 // Otherwise gDevTools is only used for local tabs and should propably only
 // used by a subclass, specific to local tabs.
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
-loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/deprecated-thread-client");
+loader.lazyRequireGetter(
+  this,
+  "gDevTools",
+  "devtools/client/framework/devtools",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "ThreadClient",
+  "devtools/shared/client/deprecated-thread-client"
+);
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
 /**
@@ -107,7 +121,10 @@ function TargetMixin(parentClass) {
      * }
      */
     async getActorDescription(actorName) {
-      if (this._protocolDescription && this._protocolDescription.types[actorName]) {
+      if (
+        this._protocolDescription &&
+        this._protocolDescription.types[actorName]
+      ) {
         return this._protocolDescription.types[actorName];
       }
       const description = await this.client.mainRoot.protocolDescription();
@@ -182,7 +199,11 @@ function TargetMixin(parentClass) {
       if (this._inspector && this._inspector.actorID) {
         return this._inspector;
       }
-      this._inspector = await getFront(this.client, "inspector", this.targetForm);
+      this._inspector = await getFront(
+        this.client,
+        "inspector",
+        this.targetForm
+      );
       this.emit("inspector", this._inspector);
       return this._inspector;
     }
@@ -202,7 +223,10 @@ function TargetMixin(parentClass) {
     async getFront(typeName) {
       let front = this.fronts.get(typeName);
       // the front might have been destroyed and no longer have an actor ID
-      if ((front && front.actorID) || (front && typeof front.then === "function")) {
+      if (
+        (front && front.actorID) ||
+        (front && typeof front.then === "function")
+      ) {
         return front;
       }
       front = getFront(this.client, typeName, this.targetForm);
@@ -402,7 +426,8 @@ function TargetMixin(parentClass) {
     async attachThread(options = {}) {
       if (!this._threadActor) {
         throw new Error(
-          "TargetMixin sub class should set _threadActor before calling " + "attachThread"
+          "TargetMixin sub class should set _threadActor before calling " +
+            "attachThread"
         );
       }
       if (this.getTrait("hasThreadFront")) {
@@ -593,7 +618,9 @@ function TargetMixin(parentClass) {
     }
 
     toString() {
-      const id = this._tab ? this._tab : this.targetForm && this.targetForm.actor;
+      const id = this._tab
+        ? this._tab
+        : this.targetForm && this.targetForm.actor;
       return `Target:${id}`;
     }
 

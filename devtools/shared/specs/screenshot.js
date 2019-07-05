@@ -3,7 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {RetVal, Arg, generateActorSpec, types} = require("devtools/shared/protocol");
+const {
+  RetVal,
+  Arg,
+  generateActorSpec,
+  types,
+} = require("devtools/shared/protocol");
 
 types.addDictType("screenshot.args", {
   fullpage: "nullable:boolean",
@@ -23,10 +28,10 @@ const screenshotSpec = generateActorSpec({
         args: Arg(0, "screenshot.args"),
       },
       response: {
-        value: RetVal("json")},
+        value: RetVal("json"),
+      },
     },
   },
 });
 
 exports.screenshotSpec = screenshotSpec;
-

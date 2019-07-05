@@ -34,17 +34,14 @@ const description = {
     other: { count: 0, bytes: 0 },
   },
   strings: {
-    "JSString": { count: 1, bytes: 42 },
+    JSString: { count: 1, bytes: 42 },
   },
   scripts: {},
   other: {},
   domNode: {},
 };
 
-const expected = [
-  "strings",
-  "JSString",
-];
+const expected = ["strings", "JSString"];
 
 const shallowSize = 42;
 

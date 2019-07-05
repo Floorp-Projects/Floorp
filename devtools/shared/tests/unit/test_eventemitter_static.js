@@ -6,10 +6,17 @@
 const {
   ConsoleAPIListener,
 } = require("devtools/server/actors/webconsole/listeners/console-api");
-const { on, once, off, emit, count, handler } = require("devtools/shared/event-emitter");
+const {
+  on,
+  once,
+  off,
+  emit,
+  count,
+  handler,
+} = require("devtools/shared/event-emitter");
 
-const pass = (message) => ok(true, message);
-const fail = (message) => ok(false, message);
+const pass = message => ok(true, message);
+const fail = message => ok(false, message);
 
 /**
  * Each method of this object is a test; tests can be synchronous or asynchronous:
@@ -21,7 +28,7 @@ const fail = (message) => ok(false, message);
  */
 const TESTS = {
   testAddListener() {
-    const events = [ { name: "event#1" }, "event#2" ];
+    const events = [{ name: "event#1" }, "event#2"];
     const target = { name: "target" };
 
     on(target, "message", function(message) {
@@ -45,10 +52,10 @@ const TESTS = {
     on(target, "foo", listener);
 
     emit(target, "message");
-    deepEqual([ 1 ], actual, "only one message listener added");
+    deepEqual([1], actual, "only one message listener added");
 
     emit(target, "foo");
-    deepEqual([ 1, 1 ], actual, "same listener added for other event");
+    deepEqual([1, 1], actual, "same listener added for other event");
   },
 
   testEventTypeMatters() {
@@ -61,7 +68,8 @@ const TESTS = {
   },
 
   testAllArgumentsArePassed() {
-    const foo = { name: "foo" }, bar = "bar";
+    const foo = { name: "foo" },
+      bar = "bar";
     const target = { name: "target" };
 
     on(target, "message", (a, b) => {
@@ -84,7 +92,7 @@ const TESTS = {
   },
 
   testCanRemoveNextListener() {
-    const target = { name: "target"};
+    const target = { name: "target" };
 
     on(target, "data", () => {
       pass("first listener called");
@@ -104,7 +112,7 @@ const TESTS = {
     on(target, "message", () => actual.push(3));
     emit(target, "message");
 
-    deepEqual([ 1, 2, 3 ], actual, "called in order they were added");
+    deepEqual([1, 2, 3], actual, "called in order they were added");
   },
 
   testRemoveListener() {
@@ -120,13 +128,13 @@ const TESTS = {
     });
 
     emit(target, "message");
-    deepEqual([ 1 ], actual, "first listener called");
+    deepEqual([1], actual, "first listener called");
 
     emit(target, "message");
-    deepEqual([ 1, 1, 2 ], actual, "second listener called");
+    deepEqual([1, 1, 2], actual, "second listener called");
 
     emit(target, "message");
-    deepEqual([ 1, 1, 2, 2, 2 ], actual, "first listener removed");
+    deepEqual([1, 1, 2, 2, 2], actual, "first listener removed");
   },
 
   testRemoveAllListenersForType() {
@@ -142,7 +150,7 @@ const TESTS = {
     emit(target, "message");
     emit(target, "bar");
 
-    deepEqual([ "b" ], actual, "all message listeners were removed");
+    deepEqual(["b"], actual, "all message listeners were removed");
   },
 
   testRemoveAllListeners() {
@@ -164,28 +172,31 @@ const TESTS = {
 
   testFalsyArgumentsAreFine() {
     let type, listener;
-    const target = { name: "target" }, actual = [];
+    const target = { name: "target" },
+      actual = [];
     on(target, "bar", () => actual.push(0));
 
     off(target, "bar", listener);
     emit(target, "bar");
-    deepEqual([ 0 ], actual, "3rd bad arg will keep listener");
+    deepEqual([0], actual, "3rd bad arg will keep listener");
 
     off(target, type);
     emit(target, "bar");
-    deepEqual([ 0, 0 ], actual, "2nd bad arg will keep listener");
+    deepEqual([0, 0], actual, "2nd bad arg will keep listener");
 
     off(target, type, listener);
     emit(target, "bar");
-    deepEqual([ 0, 0, 0 ], actual, "2nd & 3rd bad args will keep listener");
+    deepEqual([0, 0, 0], actual, "2nd & 3rd bad args will keep listener");
   },
 
   testUnhandledExceptions(done) {
     const listener = new ConsoleAPIListener(null, {
       onConsoleAPICall(message) {
         equal(message.level, "error", "Got the first exception");
-        ok(message.arguments[0].startsWith("Error: Boom!"),
-          "unhandled exception is logged");
+        ok(
+          message.arguments[0].startsWith("Error: Boom!"),
+          "unhandled exception is logged"
+        );
 
         listener.destroy();
         done();
@@ -249,7 +260,11 @@ const TESTS = {
     const target = { name: "target" };
     const actual = [];
     const listener = function(...args) {
-      equal(this, target, "the contextual object is correct for function listener");
+      equal(
+        this,
+        target,
+        "the contextual object is correct for function listener"
+      );
       deepEqual(args, [10, 20, 30], "arguments are properly passed");
     };
 
@@ -257,7 +272,11 @@ const TESTS = {
       name: "target",
       [handler](type, ...rest) {
         actual.push(type);
-        equal(this, object, "the contextual object is correct for object listener");
+        equal(
+          this,
+          object,
+          "the contextual object is correct for object listener"
+        );
         deepEqual(rest, [10, 20, 30], "arguments are properly passed");
       },
     };
@@ -270,7 +289,11 @@ const TESTS = {
     emit(target, "bar", 10, 20, 30);
     emit(target, "baz", 10, 20, 30);
 
-    deepEqual(actual, ["bar", "baz"], "object's listener called in the expected order");
+    deepEqual(
+      actual,
+      ["bar", "baz"],
+      "object's listener called in the expected order"
+    );
   },
 
   testRemoveListenerWithHandlerMethod() {
@@ -290,13 +313,13 @@ const TESTS = {
     on(target, "message", object);
 
     emit(target, "message");
-    deepEqual([ 1 ], actual, "first listener called");
+    deepEqual([1], actual, "first listener called");
 
     emit(target, "message");
-    deepEqual([ 1, 1, 2 ], actual, "second listener called");
+    deepEqual([1, 1, 2], actual, "second listener called");
 
     emit(target, "message");
-    deepEqual([ 1, 1, 2, 2, 2 ], actual, "first listener removed");
+    deepEqual([1, 1, 2, 2, 2], actual, "first listener removed");
   },
 
   async testOnceListenerWithHandlerMethod() {
@@ -308,7 +331,11 @@ const TESTS = {
         ok(!called, "listener called only once");
         equal(type, "foo", "event type is properly passed");
         equal(value, "bar", "correct argument was passed");
-        equal(this, object, "the contextual object is correct for object listener");
+        equal(
+          this,
+          object,
+          "the contextual object is correct for object listener"
+        );
       },
     };
 
@@ -324,12 +351,11 @@ const TESTS = {
   },
 
   testCallingOffWithMoreThan3Args() {
-    const target = { name: "target"};
+    const target = { name: "target" };
     on(target, "data", fail);
     off(target, "data", fail, undefined);
     emit(target, "data", "Listener should be removed");
   },
-
 };
 
 /**
@@ -338,15 +364,16 @@ const TESTS = {
  * @param {Object} tests
  *  The tests descriptor object, contains the tests to run.
  */
-const runnable = (tests) => (async function() {
-  for (const name of Object.keys(tests)) {
-    info(name);
-    if (tests[name].length === 1) {
-      await (new Promise(resolve => tests[name](resolve)));
-    } else {
-      await tests[name]();
+const runnable = tests =>
+  async function() {
+    for (const name of Object.keys(tests)) {
+      info(name);
+      if (tests[name].length === 1) {
+        await new Promise(resolve => tests[name](resolve));
+      } else {
+        await tests[name]();
+      }
     }
-  }
-});
+  };
 
 add_task(runnable(TESTS));

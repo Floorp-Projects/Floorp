@@ -37,10 +37,10 @@ function run_test() {
 
   const REPORT = new Map([
     [abc_Stack, { bytes: 10, count: 1 }],
-    [ bc_Stack, { bytes: 10, count: 1 }],
-    [ c_Stack, { bytes: 10, count: 1 }],
+    [bc_Stack, { bytes: 10, count: 1 }],
+    [c_Stack, { bytes: 10, count: 1 }],
     [dbc_Stack, { bytes: 10, count: 1 }],
-    [ ec_Stack, { bytes: 10, count: 1 }],
+    [ec_Stack, { bytes: 10, count: 1 }],
     ["noStack", { bytes: 50, count: 5 }],
   ]);
 

@@ -9,136 +9,150 @@
  * It is largely inspired from https://mozilla.github.io/basket-example/
  */
 
-window.addEventListener("load", function() {
-  // Timeout for the subscribe XHR.
-  const REQUEST_TIMEOUT = 5000;
+window.addEventListener(
+  "load",
+  function() {
+    // Timeout for the subscribe XHR.
+    const REQUEST_TIMEOUT = 5000;
 
-  const emailInput = document.getElementById("email");
-  const newsletterErrors = document.getElementById("newsletter-errors");
-  const newsletterForm = document.getElementById("newsletter-form");
-  const newsletterPrivacySection = document.getElementById("newsletter-privacy");
-  const newsletterThanks = document.getElementById("newsletter-thanks");
+    const emailInput = document.getElementById("email");
+    const newsletterErrors = document.getElementById("newsletter-errors");
+    const newsletterForm = document.getElementById("newsletter-form");
+    const newsletterPrivacySection = document.getElementById(
+      "newsletter-privacy"
+    );
+    const newsletterThanks = document.getElementById("newsletter-thanks");
 
-  /**
-   * Update the error panel to display the provided errors. If the argument is null or
-   * empty, a default error message will be displayed.
-   *
-   * @param {Array} errors
-   *        Array of strings, each item being an error message to display.
-   */
-  async function updateErrorPanel(errors) {
-    clearErrorPanel();
+    /**
+     * Update the error panel to display the provided errors. If the argument is null or
+     * empty, a default error message will be displayed.
+     *
+     * @param {Array} errors
+     *        Array of strings, each item being an error message to display.
+     */
+    async function updateErrorPanel(errors) {
+      clearErrorPanel();
 
-    if (!errors || errors.length == 0) {
-      errors = [await document.l10n.formatValues([{id: "newsletter-error-unknown"}])];
+      if (!errors || errors.length == 0) {
+        errors = [
+          await document.l10n.formatValues([
+            { id: "newsletter-error-unknown" },
+          ]),
+        ];
+      }
+
+      // Create errors markup.
+      const fragment = document.createDocumentFragment();
+      for (const error of errors) {
+        const item = document.createElement("p");
+        item.classList.add("error");
+        item.appendChild(document.createTextNode(error));
+        fragment.appendChild(item);
+      }
+
+      newsletterErrors.appendChild(fragment);
+      newsletterErrors.classList.add("show");
     }
 
-    // Create errors markup.
-    const fragment = document.createDocumentFragment();
-    for (const error of errors) {
-      const item = document.createElement("p");
-      item.classList.add("error");
-      item.appendChild(document.createTextNode(error));
-      fragment.appendChild(item);
+    /**
+     * Hide the error panel and remove all errors.
+     */
+    function clearErrorPanel() {
+      newsletterErrors.classList.remove("show");
+      newsletterErrors.innerHTML = "";
     }
 
-    newsletterErrors.appendChild(fragment);
-    newsletterErrors.classList.add("show");
-  }
+    // Show the additional form fields on focus of the email input.
+    function onEmailInputFocus() {
+      // Create a hidden measuring container, append it to the parent of the privacy section
+      const container = document.createElement("div");
+      container.style.cssText =
+        "visibility: hidden; overflow: hidden; position: absolute";
+      newsletterPrivacySection.parentNode.appendChild(container);
 
-  /**
-   * Hide the error panel and remove all errors.
-   */
-  function clearErrorPanel() {
-    newsletterErrors.classList.remove("show");
-    newsletterErrors.innerHTML = "";
-  }
+      // Clone the privacy section, append the clone to the measuring container.
+      const clone = newsletterPrivacySection.cloneNode(true);
+      container.appendChild(clone);
 
-  // Show the additional form fields on focus of the email input.
-  function onEmailInputFocus() {
-    // Create a hidden measuring container, append it to the parent of the privacy section
-    const container = document.createElement("div");
-    container.style.cssText = "visibility: hidden; overflow: hidden; position: absolute";
-    newsletterPrivacySection.parentNode.appendChild(container);
+      // Measure the target height of the privacy section.
+      clone.style.height = "auto";
+      const height = clone.offsetHeight;
 
-    // Clone the privacy section, append the clone to the measuring container.
-    const clone = newsletterPrivacySection.cloneNode(true);
-    container.appendChild(clone);
+      // Cleanup the measuring container.
+      container.remove();
 
-    // Measure the target height of the privacy section.
-    clone.style.height = "auto";
-    const height = clone.offsetHeight;
+      // Set the animate class and set the height to the measured height.
+      newsletterPrivacySection.classList.add("animate");
+      newsletterPrivacySection.style.cssText = `height: ${height}px; margin-bottom: 0;`;
+    }
 
-    // Cleanup the measuring container.
-    container.remove();
+    // XHR subscribe; handle errors; display thanks message on success.
+    function onFormSubmit(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
 
-    // Set the animate class and set the height to the measured height.
-    newsletterPrivacySection.classList.add("animate");
-    newsletterPrivacySection.style.cssText = `height: ${height}px; margin-bottom: 0;`;
-  }
+      // New submission, clear old errors
+      clearErrorPanel();
 
-  // XHR subscribe; handle errors; display thanks message on success.
-  function onFormSubmit(evt) {
-    evt.preventDefault();
-    evt.stopPropagation();
+      const xhr = new XMLHttpRequest();
 
-    // New submission, clear old errors
-    clearErrorPanel();
+      xhr.onload = async function(r) {
+        if (r.target.status >= 200 && r.target.status < 300) {
+          const { response } = r.target;
 
-    const xhr = new XMLHttpRequest();
-
-    xhr.onload = async function(r) {
-      if (r.target.status >= 200 && r.target.status < 300) {
-        const {response} = r.target;
-
-        if (response.success === true) {
-          // Hide form and show success message.
-          newsletterForm.style.display = "none";
-          newsletterThanks.classList.add("show");
+          if (response.success === true) {
+            // Hide form and show success message.
+            newsletterForm.style.display = "none";
+            newsletterThanks.classList.add("show");
+          } else {
+            // We trust the error messages from the service to be meaningful for the user.
+            updateErrorPanel(response.errors);
+          }
         } else {
-          // We trust the error messages from the service to be meaningful for the user.
-          updateErrorPanel(response.errors);
+          const { status, statusText } = r.target;
+          const statusInfo = `${status} - ${statusText}`;
+          const error = await document.l10n.formatValues([
+            {
+              id: "newsletter-error-common",
+              args: { errorDescription: statusInfo },
+            },
+          ]);
+          updateErrorPanel([error]);
         }
-      } else {
-        const {status, statusText} = r.target;
-        const statusInfo = `${status} - ${statusText}`;
+      };
+
+      xhr.onerror = () => {
+        updateErrorPanel();
+      };
+
+      xhr.ontimeout = async () => {
         const error = await document.l10n.formatValues([
-          { id: "newsletter-error-common", args: { errorDescription: statusInfo } },
+          { id: "newsletter-error-timeout" },
         ]);
         updateErrorPanel([error]);
-      }
-    };
+      };
 
-    xhr.onerror = () => {
-      updateErrorPanel();
-    };
+      const url = newsletterForm.getAttribute("action");
 
-    xhr.ontimeout = async () => {
-      const error = await document.l10n.formatValues([
-        { id: "newsletter-error-timeout" },
-      ]);
-      updateErrorPanel([error]);
-    };
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      xhr.timeout = REQUEST_TIMEOUT;
+      xhr.responseType = "json";
 
-    const url = newsletterForm.getAttribute("action");
+      // Create form data.
+      const formData = new FormData(newsletterForm);
+      formData.append("source_url", document.location.href);
 
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-    xhr.timeout = REQUEST_TIMEOUT;
-    xhr.responseType = "json";
+      const params = new URLSearchParams(formData);
 
-    // Create form data.
-    const formData = new FormData(newsletterForm);
-    formData.append("source_url", document.location.href);
+      // Send the request.
+      xhr.send(params.toString());
+    }
 
-    const params = new URLSearchParams(formData);
-
-    // Send the request.
-    xhr.send(params.toString());
-  }
-
-  // Attach event listeners.
-  newsletterForm.addEventListener("submit", onFormSubmit);
-  emailInput.addEventListener("focus", onEmailInputFocus);
-}, { once: true });
+    // Attach event listeners.
+    newsletterForm.addEventListener("submit", onFormSubmit);
+    emailInput.addEventListener("focus", onEmailInputFocus);
+  },
+  { once: true }
+);

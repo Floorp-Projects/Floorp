@@ -4,13 +4,14 @@
 
 "use strict";
 
-const { require } =
-  ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");
-const { setTimeout, clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 Services.prefs.setBoolPref("devtools.discovery.log", true);
 
@@ -36,7 +37,6 @@ function TestTransport(port) {
 }
 
 TestTransport.prototype = {
-
   send: function(object, port) {
     log("Send to " + port + ":\n" + JSON.stringify(object, null, 2));
     if (!gTestTransports[port]) {
@@ -61,7 +61,6 @@ TestTransport.prototype = {
   },
 
   onStopListening: function(socket, status) {},
-
 };
 
 // Use TestTransport instead of the usual Transport
@@ -104,10 +103,14 @@ add_task(async function() {
   deepEqual(discovery.getRemoteDevicesWithService("penguins"), ["test-device"]);
   deepEqual(discovery.getRemoteDevices(), ["test-device"]);
 
-  deepEqual(discovery.getRemoteService("devtools", "test-device"),
-            { port: 1234, host: "localhost" });
-  deepEqual(discovery.getRemoteService("penguins", "test-device"),
-            { tux: true, host: "localhost" });
+  deepEqual(discovery.getRemoteService("devtools", "test-device"), {
+    port: 1234,
+    host: "localhost",
+  });
+  deepEqual(discovery.getRemoteService("penguins", "test-device"), {
+    tux: true,
+    host: "localhost",
+  });
 
   discovery.removeService("devtools");
   await scanForChange("devtools", "removed");
