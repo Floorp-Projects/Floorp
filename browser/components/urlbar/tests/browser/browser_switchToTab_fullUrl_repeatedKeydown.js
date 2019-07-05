@@ -17,10 +17,18 @@ add_task(async function test_switchToTab_url() {
   let testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   // Functions for TabClose and TabSelect
-  let tabClosePromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
-    "TabClose", false, event => event.target == testTab);
-  let tabSelectPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
-    "TabSelect", false, event => event.target == baseTab);
+  let tabClosePromise = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "TabClose",
+    false,
+    event => event.target == testTab
+  );
+  let tabSelectPromise = BrowserTestUtils.waitForEvent(
+    gBrowser.tabContainer,
+    "TabSelect",
+    false,
+    event => event.target == baseTab
+  );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -43,8 +51,11 @@ add_task(async function test_switchToTab_url() {
   await Promise.all([tabSelectPromise, tabClosePromise]);
 
   // Confirm that the selected tab is now the base tab
-  Assert.equal(gBrowser.selectedTab, baseTab,
-    "Should have switched to the correct tab");
+  Assert.equal(
+    gBrowser.selectedTab,
+    baseTab,
+    "Should have switched to the correct tab"
+  );
 
   gBrowser.removeTab(baseTab);
 });

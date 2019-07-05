@@ -1,4 +1,4 @@
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let server = new HttpServer();
 server.registerPathHandler("/file.html", fileHandler);
@@ -13,7 +13,7 @@ let credentialQueue = [];
 function fileHandler(metadata, response) {
   if (!metadata.hasHeader("Authorization")) {
     response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-    response.setHeader("WWW-Authenticate", "Basic realm=\"User Visible Realm\"");
+    response.setHeader("WWW-Authenticate", 'Basic realm="User Visible Realm"');
     return;
   }
 
@@ -50,4 +50,3 @@ function getResult() {
 }
 
 IsolationTestTools.runTests(FILE_URI, getResult);
-

@@ -17,7 +17,7 @@ add_task(async function testWindowCreate() {
 
       function checkWindow(expected) {
         return new Promise(resolve => {
-          _checkWindowPromise = {resolve};
+          _checkWindowPromise = { resolve };
           browser.test.sendMessage("check-window", expected);
         });
       }
@@ -31,14 +31,26 @@ add_task(async function testWindowCreate() {
           if (key == "state" && os == "mac" && params.state == "normal") {
             // OS-X doesn't have a hard distinction between "normal" and
             // "maximized" states.
-            browser.test.assertTrue(window.state == "normal" || window.state == "maximized",
-                                    `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`);
+            browser.test.assertTrue(
+              window.state == "normal" || window.state == "maximized",
+              `Expected window.state (currently ${
+                window.state
+              }) to be "normal" but will accept "maximized"`
+            );
           } else {
-            browser.test.assertEq(params[key], window[key], `Got expected value for window.${key}`);
+            browser.test.assertEq(
+              params[key],
+              window[key],
+              `Got expected value for window.${key}`
+            );
           }
         }
 
-        browser.test.assertEq(1, window.tabs.length, "tabs property got populated");
+        browser.test.assertEq(
+          1,
+          window.tabs.length,
+          "tabs property got populated"
+        );
 
         await checkWindow(expected);
         if (keep) {
@@ -48,35 +60,61 @@ add_task(async function testWindowCreate() {
         if (params.state == "fullscreen" && os == "win") {
           // FIXME: Closing a fullscreen window causes a window leak in
           // Windows tests.
-          await browser.windows.update(window.id, {state: "normal"});
+          await browser.windows.update(window.id, { state: "normal" });
         }
         await browser.windows.remove(window.id);
       }
 
       try {
-        ({os} = await browser.runtime.getPlatformInfo());
+        ({ os } = await browser.runtime.getPlatformInfo());
 
         // Set the current window to state: "normal" because the test is failing on Windows
         // where the current window is maximized.
         let currentWindow = await browser.windows.getCurrent();
-        await browser.windows.update(currentWindow.id, {state: "normal"});
+        await browser.windows.update(currentWindow.id, { state: "normal" });
 
-        await createWindow([], {state: "STATE_NORMAL"});
-        await createWindow([{state: "maximized"}], {state: "STATE_MAXIMIZED"});
-        await createWindow([{state: "minimized"}], {state: "STATE_MINIMIZED"});
-        await createWindow([{state: "normal"}], {state: "STATE_NORMAL", hiddenChrome: []});
-        await createWindow([{state: "fullscreen"}], {state: "STATE_FULLSCREEN"});
+        await createWindow([], { state: "STATE_NORMAL" });
+        await createWindow([{ state: "maximized" }], {
+          state: "STATE_MAXIMIZED",
+        });
+        await createWindow([{ state: "minimized" }], {
+          state: "STATE_MINIMIZED",
+        });
+        await createWindow([{ state: "normal" }], {
+          state: "STATE_NORMAL",
+          hiddenChrome: [],
+        });
+        await createWindow([{ state: "fullscreen" }], {
+          state: "STATE_FULLSCREEN",
+        });
 
         let window = await createWindow(
-          [{type: "popup"}],
-          {hiddenChrome: ["menubar", "toolbar", "location", "directories", "status", "extrachrome"],
-           chromeFlags: ["CHROME_OPENAS_DIALOG"]},
-          true);
+          [{ type: "popup" }],
+          {
+            hiddenChrome: [
+              "menubar",
+              "toolbar",
+              "location",
+              "directories",
+              "status",
+              "extrachrome",
+            ],
+            chromeFlags: ["CHROME_OPENAS_DIALOG"],
+          },
+          true
+        );
 
-        let tabs = await browser.tabs.query({windowType: "popup", active: true});
+        let tabs = await browser.tabs.query({
+          windowType: "popup",
+          active: true,
+        });
 
         browser.test.assertEq(1, tabs.length, "Expected only one popup");
-        browser.test.assertEq(window.id, tabs[0].windowId, "Expected new window to be returned in query");
+        browser.test.assertEq(
+          window.id,
+          tabs[0].windowId,
+          "Expected new window to be returned in query"
+        );
 
         await browser.windows.remove(window.id);
 
@@ -98,32 +136,48 @@ add_task(async function testWindowCreate() {
 
   extension.onMessage("check-window", expected => {
     if (expected.state != null) {
-      let {windowState} = latestWindow;
+      let { windowState } = latestWindow;
       if (latestWindow.fullScreen) {
         windowState = latestWindow.STATE_FULLSCREEN;
       }
 
       if (expected.state == "STATE_NORMAL") {
-        ok(windowState == window.STATE_NORMAL || windowState == window.STATE_MAXIMIZED,
-           `Expected windowState (currently ${windowState}) to be STATE_NORMAL but will accept STATE_MAXIMIZED`);
+        ok(
+          windowState == window.STATE_NORMAL ||
+            windowState == window.STATE_MAXIMIZED,
+          `Expected windowState (currently ${windowState}) to be STATE_NORMAL but will accept STATE_MAXIMIZED`
+        );
       } else {
-        is(windowState, window[expected.state],
-           `Expected window state to be ${expected.state}`);
+        is(
+          windowState,
+          window[expected.state],
+          `Expected window state to be ${expected.state}`
+        );
       }
     }
     if (expected.hiddenChrome) {
-      let chromeHidden = latestWindow.document.documentElement.getAttribute("chromehidden");
-      is(chromeHidden.trim().split(/\s+/).sort().join(" "),
-         expected.hiddenChrome.sort().join(" "),
-         "Got expected hidden chrome");
+      let chromeHidden = latestWindow.document.documentElement.getAttribute(
+        "chromehidden"
+      );
+      is(
+        chromeHidden
+          .trim()
+          .split(/\s+/)
+          .sort()
+          .join(" "),
+        expected.hiddenChrome.sort().join(" "),
+        "Got expected hidden chrome"
+      );
     }
     if (expected.chromeFlags) {
-      let {chromeFlags} = latestWindow.docShell
-                                      .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIXULWindow);
+      let { chromeFlags } = latestWindow.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIXULWindow);
       for (let flag of expected.chromeFlags) {
-        ok(chromeFlags & Ci.nsIWebBrowserChrome[flag],
-           `Expected window to have the ${flag} flag`);
+        ok(
+          chromeFlags & Ci.nsIWebBrowserChrome[flag],
+          `Expected window to have the ${flag} flag`
+        );
       }
     }
 

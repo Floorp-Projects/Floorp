@@ -8,9 +8,9 @@ const SITE_SPECIFIC_PREF = "browser.zoom.siteSpecific";
 // incognito data in event listeners it will fail.
 let monitor;
 add_task(async function startup() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
   monitor = await startIncognitoMonitorExtension();
 });
 registerCleanupFunction(async function finish() {
@@ -25,7 +25,7 @@ add_task(async function test_zoom_api() {
           if (tabId == tabId_ && attr in changeInfo) {
             browser.tabs.onUpdated.removeListener(onUpdated);
 
-            resolve({changeInfo, tab});
+            resolve({ changeInfo, tab });
           }
         };
         browser.tabs.onUpdated.addListener(onUpdated);
@@ -43,11 +43,10 @@ add_task(async function test_zoom_api() {
     function msg(...args) {
       return new Promise((resolve, reject) => {
         let id = ++_id;
-        deferred[id] = {resolve, reject};
+        deferred[id] = { resolve, reject };
         browser.test.sendMessage("msg", id, ...args);
       });
     }
-
 
     let zoomEvents = [];
     let eventPromises = [];
@@ -82,7 +81,7 @@ add_task(async function test_zoom_api() {
       let awaitEvent;
       if (oldValue != null && !zoomEvents.length) {
         awaitEvent = new Promise(resolve => {
-          eventPromises.push({resolve});
+          eventPromises.push({ resolve });
         });
       }
 
@@ -92,19 +91,55 @@ add_task(async function test_zoom_api() {
         awaitEvent,
       ]);
 
-      browser.test.assertEq(newValue, apiZoom, `Got expected zoom value from API`);
-      browser.test.assertEq(newValue, realZoom, `Got expected zoom value from parent`);
+      browser.test.assertEq(
+        newValue,
+        apiZoom,
+        `Got expected zoom value from API`
+      );
+      browser.test.assertEq(
+        newValue,
+        realZoom,
+        `Got expected zoom value from parent`
+      );
 
       if (oldValue != null) {
         let event = zoomEvents.shift();
-        browser.test.assertEq(tabId, event.tabId, `Got expected zoom event tab ID`);
-        browser.test.assertEq(newValue, event.newZoomFactor, `Got expected zoom event zoom factor`);
-        browser.test.assertEq(oldValue, event.oldZoomFactor, `Got expected zoom event old zoom factor`);
+        browser.test.assertEq(
+          tabId,
+          event.tabId,
+          `Got expected zoom event tab ID`
+        );
+        browser.test.assertEq(
+          newValue,
+          event.newZoomFactor,
+          `Got expected zoom event zoom factor`
+        );
+        browser.test.assertEq(
+          oldValue,
+          event.oldZoomFactor,
+          `Got expected zoom event old zoom factor`
+        );
 
-        browser.test.assertEq(3, Object.keys(event.zoomSettings).length, `Zoom settings should have 3 keys`);
-        browser.test.assertEq("automatic", event.zoomSettings.mode, `Mode should be "automatic"`);
-        browser.test.assertEq("per-origin", event.zoomSettings.scope, `Scope should be "per-origin"`);
-        browser.test.assertEq(1, event.zoomSettings.defaultZoomFactor, `Default zoom should be 1`);
+        browser.test.assertEq(
+          3,
+          Object.keys(event.zoomSettings).length,
+          `Zoom settings should have 3 keys`
+        );
+        browser.test.assertEq(
+          "automatic",
+          event.zoomSettings.mode,
+          `Mode should be "automatic"`
+        );
+        browser.test.assertEq(
+          "per-origin",
+          event.zoomSettings.scope,
+          `Scope should be "per-origin"`
+        );
+        browser.test.assertEq(
+          1,
+          event.zoomSettings.defaultZoomFactor,
+          `Default zoom should be 1`
+        );
       }
     };
 
@@ -119,22 +154,35 @@ add_task(async function test_zoom_api() {
       await checkZoom(tabIds[0], 2, 1);
 
       let zoomSettings = await browser.tabs.getZoomSettings(tabIds[0]);
-      browser.test.assertEq(3, Object.keys(zoomSettings).length, `Zoom settings should have 3 keys`);
-      browser.test.assertEq("automatic", zoomSettings.mode, `Mode should be "automatic"`);
-      browser.test.assertEq("per-origin", zoomSettings.scope, `Scope should be "per-origin"`);
-      browser.test.assertEq(1, zoomSettings.defaultZoomFactor, `Default zoom should be 1`);
-
+      browser.test.assertEq(
+        3,
+        Object.keys(zoomSettings).length,
+        `Zoom settings should have 3 keys`
+      );
+      browser.test.assertEq(
+        "automatic",
+        zoomSettings.mode,
+        `Mode should be "automatic"`
+      );
+      browser.test.assertEq(
+        "per-origin",
+        zoomSettings.scope,
+        `Scope should be "per-origin"`
+      );
+      browser.test.assertEq(
+        1,
+        zoomSettings.defaultZoomFactor,
+        `Default zoom should be 1`
+      );
 
       browser.test.log(`Switch to tab 2`);
-      await browser.tabs.update(tabIds[1], {active: true});
+      await browser.tabs.update(tabIds[1], { active: true });
       await checkZoom(tabIds[1], 1);
 
-
       browser.test.log(`Navigate tab 2 to origin of tab 1`);
-      browser.tabs.update(tabIds[1], {url: "http://example.com"});
+      browser.tabs.update(tabIds[1], { url: "http://example.com" });
       await promiseUpdated(tabIds[1], "url");
       await checkZoom(tabIds[1], 2, 1);
-
 
       browser.test.log(`Update zoom in tab 2, expect changes in both tabs`);
       await browser.tabs.setZoom(tabIds[1], 1.5);
@@ -144,18 +192,18 @@ add_task(async function test_zoom_api() {
       await browser.tabs.setZoom(tabIds[2], 3);
       await checkZoom(tabIds[2], 3, 1);
 
-      browser.test.log(`Switch to tab 1, expect asynchronous zoom change just after the switch`);
+      browser.test.log(
+        `Switch to tab 1, expect asynchronous zoom change just after the switch`
+      );
       await Promise.all([
         awaitZoom(tabIds[0], 1.5),
-        browser.tabs.update(tabIds[0], {active: true}),
+        browser.tabs.update(tabIds[0], { active: true }),
       ]);
       await checkZoom(tabIds[0], 1.5, 2);
-
 
       browser.test.log("Set zoom to 0, expect it set to 1");
       await browser.tabs.setZoom(tabIds[0], 0);
       await checkZoom(tabIds[0], 1, 1.5);
-
 
       browser.test.log("Change zoom externally, expect changes reflected");
       await msg("enlarge");
@@ -172,18 +220,22 @@ add_task(async function test_zoom_api() {
         checkZoom(tabIds[2], 1, 3),
       ]);
 
-
       browser.test.log("Check that invalid zoom values throw an error");
       await browser.test.assertRejects(
         browser.tabs.setZoom(tabIds[0], 42),
         /Zoom value 42 out of range/,
-        "Expected an out of range error");
+        "Expected an out of range error"
+      );
 
       browser.test.log("Disable site-specific zoom, expect correct scope");
       await msg("site-specific", false);
       zoomSettings = await browser.tabs.getZoomSettings(tabIds[0]);
 
-      browser.test.assertEq("per-tab", zoomSettings.scope, `Scope should be "per-tab"`);
+      browser.test.assertEq(
+        "per-tab",
+        zoomSettings.scope,
+        `Scope should be "per-tab"`
+      );
       await msg("site-specific", null);
 
       browser.test.notifyPass("tab-zoom");
@@ -195,14 +247,18 @@ add_task(async function test_zoom_api() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
     incognitoOverride: "spanning",
     background,
   });
 
   extension.onMessage("msg", (id, msg, ...args) => {
-    let {Management: {global: {tabTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+    let {
+      Management: {
+        global: { tabTracker },
+      },
+    } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
     let resp;
     if (msg == "get-zoom") {
@@ -226,9 +282,14 @@ add_task(async function test_zoom_api() {
 
   let url = "http://example.com/";
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.net/"
+  );
 
-  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let selectedBrowser = privateWindow.gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);

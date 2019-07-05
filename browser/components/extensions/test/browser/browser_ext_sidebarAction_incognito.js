@@ -3,9 +3,9 @@
 "use strict";
 
 add_task(async function test_sidebarAction_not_allowed() {
-  SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-  ]});
+  SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -15,42 +15,92 @@ add_task(async function test_sidebarAction_not_allowed() {
     },
     background() {
       browser.test.onMessage.addListener(async pbw => {
-        await browser.test.assertRejects(browser.sidebarAction.setTitle({
-          windowId: pbw.windowId, title: "test",
-        }), /Invalid window ID/, "should not be able to set title with windowId");
-        await browser.test.assertRejects(browser.sidebarAction.setTitle({
-          tabId: pbw.tabId, title: "test",
-        }), /Invalid tab ID/, "should not be able to set title");
-        await browser.test.assertRejects(browser.sidebarAction.getTitle({
-          windowId: pbw.windowId,
-        }), /Invalid window ID/, "should not be able to get title with windowId");
-        await browser.test.assertRejects(browser.sidebarAction.getTitle({
-          tabId: pbw.tabId,
-        }), /Invalid tab ID/, "should not be able to get title with tabId");
+        await browser.test.assertRejects(
+          browser.sidebarAction.setTitle({
+            windowId: pbw.windowId,
+            title: "test",
+          }),
+          /Invalid window ID/,
+          "should not be able to set title with windowId"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.setTitle({
+            tabId: pbw.tabId,
+            title: "test",
+          }),
+          /Invalid tab ID/,
+          "should not be able to set title"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.getTitle({
+            windowId: pbw.windowId,
+          }),
+          /Invalid window ID/,
+          "should not be able to get title with windowId"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.getTitle({
+            tabId: pbw.tabId,
+          }),
+          /Invalid tab ID/,
+          "should not be able to get title with tabId"
+        );
 
-        await browser.test.assertRejects(browser.sidebarAction.setIcon({
-          windowId: pbw.windowId, path: "test",
-        }), /Invalid window ID/, "should not be able to set icon with windowId");
-        await browser.test.assertRejects(browser.sidebarAction.setIcon({
-          tabId: pbw.tabId, path: "test",
-        }), /Invalid tab ID/, "should not be able to set icon with tabId");
+        await browser.test.assertRejects(
+          browser.sidebarAction.setIcon({
+            windowId: pbw.windowId,
+            path: "test",
+          }),
+          /Invalid window ID/,
+          "should not be able to set icon with windowId"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.setIcon({
+            tabId: pbw.tabId,
+            path: "test",
+          }),
+          /Invalid tab ID/,
+          "should not be able to set icon with tabId"
+        );
 
-        await browser.test.assertRejects(browser.sidebarAction.setPanel({
-          windowId: pbw.windowId, panel: "test",
-        }), /Invalid window ID/, "should not be able to set panel with windowId");
-        await browser.test.assertRejects(browser.sidebarAction.setPanel({
-          tabId: pbw.tabId, panel: "test",
-        }), /Invalid tab ID/, "should not be able to set panel with tabId");
-        await browser.test.assertRejects(browser.sidebarAction.getPanel({
-          windowId: pbw.windowId,
-        }), /Invalid window ID/, "should not be able to get panel with windowId");
-        await browser.test.assertRejects(browser.sidebarAction.getPanel({
-          tabId: pbw.tabId,
-        }), /Invalid tab ID/, "should not be able to get panel with tabId");
+        await browser.test.assertRejects(
+          browser.sidebarAction.setPanel({
+            windowId: pbw.windowId,
+            panel: "test",
+          }),
+          /Invalid window ID/,
+          "should not be able to set panel with windowId"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.setPanel({
+            tabId: pbw.tabId,
+            panel: "test",
+          }),
+          /Invalid tab ID/,
+          "should not be able to set panel with tabId"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.getPanel({
+            windowId: pbw.windowId,
+          }),
+          /Invalid window ID/,
+          "should not be able to get panel with windowId"
+        );
+        await browser.test.assertRejects(
+          browser.sidebarAction.getPanel({
+            tabId: pbw.tabId,
+          }),
+          /Invalid tab ID/,
+          "should not be able to get panel with tabId"
+        );
 
-        await browser.test.assertRejects(browser.sidebarAction.isOpen({
-          windowId: pbw.windowId,
-        }), /Invalid window ID/, "should not be able to determine openness with windowId");
+        await browser.test.assertRejects(
+          browser.sidebarAction.isOpen({
+            windowId: pbw.windowId,
+          }),
+          /Invalid window ID/,
+          "should not be able to determine openness with windowId"
+        );
 
         browser.test.notifyPass("pass");
       });

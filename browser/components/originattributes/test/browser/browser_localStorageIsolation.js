@@ -2,8 +2,9 @@
  * Bug 1264567 - A test case for localStorage isolation.
  */
 
-const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/" +
-                  "originattributes/test/browser/file_firstPartyBasic.html";
+const TEST_PAGE =
+  "http://mochi.test:8888/browser/browser/components/" +
+  "originattributes/test/browser/file_firstPartyBasic.html";
 
 // Use a random key so we don't access it in later tests.
 const key = Math.random().toString();

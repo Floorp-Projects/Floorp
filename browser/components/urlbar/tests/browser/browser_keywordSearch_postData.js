@@ -17,11 +17,15 @@ var gTests = [
 ];
 
 add_task(async function setup() {
-  let engineAddedPromise = TestUtils.topicObserved("browser-search-engine-modified", (subject, data) => {
-    return data == "engine-added";
-  });
+  let engineAddedPromise = TestUtils.topicObserved(
+    "browser-search-engine-modified",
+    (subject, data) => {
+      return data == "engine-added";
+    }
+  );
 
-  const url = "http://test:80/browser/browser/components/urlbar/tests/browser/POSTSearchEngine.xml";
+  const url =
+    "http://test:80/browser/browser/components/urlbar/tests/browser/POSTSearchEngine.xml";
   await Services.search.addEngine(url, null, false);
 
   let [subject, data] = await engineAddedPromise;
@@ -62,7 +66,11 @@ add_task(async function() {
 
     Assert.ok(textContent, "search page loaded");
     let needle = "searchterms=" + test.expectText;
-    Assert.equal(textContent, needle, "The query POST data should be returned in the response");
+    Assert.equal(
+      textContent,
+      needle,
+      "The query POST data should be returned in the response"
+    );
 
     BrowserTestUtils.removeTab(tab);
   }

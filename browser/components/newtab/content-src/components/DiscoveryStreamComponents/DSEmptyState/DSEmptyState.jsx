@@ -1,4 +1,4 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import React from "react";
 
 export class DSEmptyState extends React.PureComponent {
@@ -16,8 +16,8 @@ export class DSEmptyState extends React.PureComponent {
 
   onReset() {
     if (this.props.dispatch && this.props.feed) {
-      const {feed} = this.props;
-      const {url} = feed;
+      const { feed } = this.props;
+      const { url } = feed;
       this.props.dispatch({
         type: at.DISCOVERY_STREAM_FEED_UPDATE,
         data: {
@@ -32,7 +32,7 @@ export class DSEmptyState extends React.PureComponent {
         },
       });
 
-      this.setState({waiting: true});
+      this.setState({ waiting: true });
       this.timeout = setTimeout(() => {
         this.timeout = null;
         this.setState({
@@ -40,19 +40,21 @@ export class DSEmptyState extends React.PureComponent {
         });
       }, 300);
 
-      this.props.dispatch(ac.OnlyToMain({type: at.DISCOVERY_STREAM_RETRY_FEED, data: {feed}}));
+      this.props.dispatch(
+        ac.OnlyToMain({ type: at.DISCOVERY_STREAM_RETRY_FEED, data: { feed } })
+      );
     }
   }
 
   renderButton() {
     if (this.props.status === "waiting" || this.state.waiting) {
-      return (
-        <button className="try-again-button waiting">Loading...</button>
-      );
+      return <button className="try-again-button waiting">Loading...</button>;
     }
 
     return (
-      <button className="try-again-button" onClick={this.onReset}>Try Again</button>
+      <button className="try-again-button" onClick={this.onReset}>
+        Try Again
+      </button>
     );
   }
 
@@ -77,9 +79,7 @@ export class DSEmptyState extends React.PureComponent {
   render() {
     return (
       <div className="section-empty-state">
-        <div className="empty-state-message">
-          {this.renderState()}
-        </div>
+        <div className="empty-state-message">{this.renderState()}</div>
       </div>
     );
   }

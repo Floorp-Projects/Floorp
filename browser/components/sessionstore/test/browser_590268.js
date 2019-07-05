@@ -13,43 +13,49 @@ function test() {
 
   // wasLoaded will be used to keep track of tabs that have already had SSTabRestoring
   // fired for them.
-  let wasLoaded = { };
+  let wasLoaded = {};
   let restoringTabsCount = 0;
   let restoredTabsCount = 0;
-  let uniq2 = { };
+  let uniq2 = {};
   let uniq2Count = 0;
   let state = { windows: [{ tabs: [] }] };
   // We're going to put a bunch of tabs into this state
   for (let i = 0; i < NUM_TABS; i++) {
     let uniq = r();
     let tabData = {
-      entries: [{ url: "http://example.com/#" + i, triggeringPrincipal_base64}],
-      extData: { "uniq": uniq, "baz": "qux" },
+      entries: [
+        { url: "http://example.com/#" + i, triggeringPrincipal_base64 },
+      ],
+      extData: { uniq, baz: "qux" },
     };
     state.windows[0].tabs.push(tabData);
     wasLoaded[uniq] = false;
   }
-
 
   function onSSTabRestoring(aEvent) {
     restoringTabsCount++;
     let uniq = ss.getCustomTabValue(aEvent.originalTarget, "uniq");
     wasLoaded[uniq] = true;
 
-    is(ss.getCustomTabValue(aEvent.originalTarget, "foo"), "",
-       "There is no value for 'foo'");
+    is(
+      ss.getCustomTabValue(aEvent.originalTarget, "foo"),
+      "",
+      "There is no value for 'foo'"
+    );
 
     // On the first SSTabRestoring we're going to run the the real test.
     // We'll keep this listener around so we can keep marking tabs as restored.
-    if (restoringTabsCount == 1)
+    if (restoringTabsCount == 1) {
       onFirstSSTabRestoring();
-    else if (restoringTabsCount == NUM_TABS)
+    } else if (restoringTabsCount == NUM_TABS) {
       onLastSSTabRestoring();
+    }
   }
 
   function onSSTabRestored(aEvent) {
-    if (++restoredTabsCount < NUM_TABS)
+    if (++restoredTabsCount < NUM_TABS) {
       return;
+    }
     cleanup();
   }
 
@@ -103,7 +109,11 @@ function test() {
 
       // Look to see if we set a uniq2 value for this uniq value
       if (uniq in uniq2) {
-        is(ss.getCustomTabValue(tab, "uniq2"), uniq2[uniq], "tab " + i + " has correct uniq2 value");
+        is(
+          ss.getCustomTabValue(tab, "uniq2"),
+          uniq2[uniq],
+          "tab " + i + " has correct uniq2 value"
+        );
         checked++;
       }
     }
@@ -113,8 +123,15 @@ function test() {
 
   function cleanup() {
     // remove the event listener and clean up before finishing
-    gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
+    gBrowser.tabContainer.removeEventListener(
+      "SSTabRestoring",
+      onSSTabRestoring
+    );
+    gBrowser.tabContainer.removeEventListener(
+      "SSTabRestored",
+      onSSTabRestored,
+      true
+    );
     gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
     // Put this in an executeSoon because we still haven't called restoreNextTab
     // in sessionstore for the last tab (we'll call it after this). We end up
@@ -127,7 +144,11 @@ function test() {
 
   // Add the event listeners
   gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
+  gBrowser.tabContainer.addEventListener(
+    "SSTabRestored",
+    onSSTabRestored,
+    true
+  );
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
   // Restore state
   ss.setBrowserState(JSON.stringify(state));

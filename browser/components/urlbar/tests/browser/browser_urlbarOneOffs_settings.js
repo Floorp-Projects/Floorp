@@ -11,7 +11,9 @@
 let gMaxResults;
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.urlbar.oneOffSearches", true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.oneOffSearches", true]],
+  });
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   registerCleanupFunction(async function() {
@@ -32,23 +34,31 @@ add_task(async function init() {
   await PlacesTestUtils.addVisits(visits);
 });
 
-
 async function selectSettings(activateFn) {
-  await BrowserTestUtils.withNewTab({gBrowser, url: "about:blank"}, async browser => {
-    await promiseAutocompleteResultPopup("example.com");
-    await waitForAutocompleteResultAt(gMaxResults - 1);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async browser => {
+      await promiseAutocompleteResultPopup("example.com");
+      await waitForAutocompleteResultAt(gMaxResults - 1);
 
-    await UrlbarTestUtils.promisePopupClose(window, async () => {
-      let prefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
+      await UrlbarTestUtils.promisePopupClose(window, async () => {
+        let prefPaneLoaded = TestUtils.topicObserved(
+          "sync-pane-loaded",
+          () => true
+        );
 
-      activateFn();
+        activateFn();
 
-      await prefPaneLoaded;
-    });
+        await prefPaneLoaded;
+      });
 
-    Assert.equal(gBrowser.contentWindow.history.state, "paneSearch",
-      "Should have opened the search preferences pane");
-  });
+      Assert.equal(
+        gBrowser.contentWindow.history.state,
+        "paneSearch",
+        "Should have opened the search preferences pane"
+      );
+    }
+  );
 }
 
 add_task(async function test_open_settings_with_enter() {
@@ -61,9 +71,12 @@ add_task(async function test_open_settings_with_enter() {
   await selectSettings(() => {
     EventUtils.synthesizeKey("KEY_ArrowUp");
 
-    Assert.ok(UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton
-      .classList.contains("search-setting-button-compact"),
-      "Should have selected the settings button");
+    Assert.ok(
+      UrlbarTestUtils.getOneOffSearchButtons(
+        window
+      ).selectedButton.classList.contains("search-setting-button-compact"),
+      "Should have selected the settings button"
+    );
 
     EventUtils.synthesizeKey("KEY_Enter");
   });

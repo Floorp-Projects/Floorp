@@ -4,11 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "UrlbarEventBufferer",
-];
+var EXPORTED_SYMBOLS = ["UrlbarEventBufferer"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
@@ -18,7 +18,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Urlbar.EventBufferer"));
+  Log.repository.getLogger("Urlbar.EventBufferer")
+);
 
 // Maximum time events can be deferred for.
 const DEFERRING_TIMEOUT_MS = 200;
@@ -178,7 +179,7 @@ class UrlbarEventBufferer {
     // Also store the current search string, as an added safety check. If the
     // string will differ later, the event is stale and should be dropped.
     event.searchString = this._lastQuery.searchString;
-    this._eventsQueue.push({event, callback});
+    this._eventsQueue.push({ event, callback });
 
     if (!this._deferringTimeout) {
       let elapsed = Cu.now() - this._lastQuery.startDate;
@@ -205,7 +206,7 @@ class UrlbarEventBufferer {
       return;
     }
 
-    let {event, callback} = this._eventsQueue[0];
+    let { event, callback } = this._eventsQueue[0];
     if (onlyIfSafe && !this.isSafeToPlayDeferredEvent(event)) {
       return;
     }
@@ -236,16 +237,19 @@ class UrlbarEventBufferer {
 
     // At this point, no events have been deferred for this search; we must
     // figure out if this event should be deferred.
-    let isMacNavigation = AppConstants.platform == "macosx" &&
-                          event.ctrlKey &&
-                          this.input.view.isOpen &&
-                          (event.key === "n" || event.key === "p");
+    let isMacNavigation =
+      AppConstants.platform == "macosx" &&
+      event.ctrlKey &&
+      this.input.view.isOpen &&
+      (event.key === "n" || event.key === "p");
     if (!DEFERRED_KEY_CODES.has(event.keyCode) && !isMacNavigation) {
       return false;
     }
 
-    if (DEFERRED_KEY_CODES.has(event.keyCode) &&
-        this.input.controller.keyEventMovesCaret(event)) {
+    if (
+      DEFERRED_KEY_CODES.has(event.keyCode) &&
+      this.input.controller.keyEventMovesCaret(event)
+    ) {
       return false;
     }
 
@@ -274,14 +278,16 @@ class UrlbarEventBufferer {
    * @returns {boolean} Whether the event can be played.
    */
   isSafeToPlayDeferredEvent(event) {
-    let waitingFirstResult = this._lastQuery.status == QUERY_STATUS.RUNNING &&
-                             !this._lastQuery.results.length;
+    let waitingFirstResult =
+      this._lastQuery.status == QUERY_STATUS.RUNNING &&
+      !this._lastQuery.results.length;
     if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
       // Play a deferred Enter if the heuristic result is not selected, or we
       // are not waiting for the first results yet.
       let selectedResult = this.input.view.selectedResult;
-      return (selectedResult && !selectedResult.heuristic) ||
-             !waitingFirstResult;
+      return (
+        (selectedResult && !selectedResult.heuristic) || !waitingFirstResult
+      );
     }
 
     if (waitingFirstResult || !this.input.view.isOpen) {
@@ -296,10 +302,11 @@ class UrlbarEventBufferer {
       return true;
     }
 
-    let isMacDownNavigation = AppConstants.platform == "macosx" &&
-                              event.ctrlKey &&
-                              this.input.view.isOpen &&
-                              event.key === "n";
+    let isMacDownNavigation =
+      AppConstants.platform == "macosx" &&
+      event.ctrlKey &&
+      this.input.view.isOpen &&
+      event.key === "n";
     if (event.keyCode == KeyEvent.DOM_VK_DOWN || isMacDownNavigation) {
       // Don't play the event if the last result is selected so that the user
       // doesn't accidentally arrow down into the one-off buttons when they
@@ -314,7 +321,9 @@ class UrlbarEventBufferer {
     // TODO Bug 1536818: Once one-off buttons are fully implemented, it would be
     // nice to have a better way to check if the next down will focus one-off buttons.
     let results = this._lastQuery.results;
-    return results.length &&
-           results[results.length - 1] == this.input.view.selectedResult;
+    return (
+      results.length &&
+      results[results.length - 1] == this.input.view.selectedResult
+    );
   }
 }

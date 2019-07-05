@@ -8,7 +8,8 @@
 add_task(async function() {
   ok(CustomizableUI.inDefaultState, "Default state to begin");
 
-  const kWidgetId = "bug982656-add-on-widget-should-not-restore-to-default-area";
+  const kWidgetId =
+    "bug982656-add-on-widget-should-not-restore-to-default-area";
   let widgetSpec = {
     id: kWidgetId,
     defaultArea: CustomizableUI.AREA_NAVBAR,
@@ -16,26 +17,39 @@ add_task(async function() {
   CustomizableUI.createWidget(widgetSpec);
 
   ok(!CustomizableUI.inDefaultState, "Not in default state after widget added");
-  is(CustomizableUI.getPlacementOfWidget(kWidgetId).area, CustomizableUI.AREA_NAVBAR, "Widget should be in navbar");
+  is(
+    CustomizableUI.getPlacementOfWidget(kWidgetId).area,
+    CustomizableUI.AREA_NAVBAR,
+    "Widget should be in navbar"
+  );
 
   await resetCustomization();
 
   ok(CustomizableUI.inDefaultState, "Back in default state after reset");
-  is(CustomizableUI.getPlacementOfWidget(kWidgetId), null, "Widget now in palette");
+  is(
+    CustomizableUI.getPlacementOfWidget(kWidgetId),
+    null,
+    "Widget now in palette"
+  );
   CustomizableUI.destroyWidget(kWidgetId);
 });
-
 
 // resetCustomization shouldn't move 3rd party widgets out of custom toolbars
 add_task(async function() {
   const kToolbarId = "bug982656-toolbar-with-defaultset";
-  const kWidgetId = "bug982656-add-on-widget-should-restore-to-default-area-when-area-is-not-builtin";
-  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
+  const kWidgetId =
+    "bug982656-add-on-widget-should-restore-to-default-area-when-area-is-not-builtin";
+  ok(
+    CustomizableUI.inDefaultState,
+    "Everything should be in its default state."
+  );
   let toolbar = createToolbarWithPlacements(kToolbarId);
-  ok(CustomizableUI.areas.includes(kToolbarId),
-     "Toolbar has been registered.");
-  is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
-     "Area should be registered as toolbar");
+  ok(CustomizableUI.areas.includes(kToolbarId), "Toolbar has been registered.");
+  is(
+    CustomizableUI.getAreaType(kToolbarId),
+    CustomizableUI.TYPE_TOOLBAR,
+    "Area should be registered as toolbar"
+  );
 
   let widgetSpec = {
     id: kWidgetId,
@@ -43,12 +57,23 @@ add_task(async function() {
   };
   CustomizableUI.createWidget(widgetSpec);
 
-  ok(!CustomizableUI.inDefaultState, "No longer in default state after toolbar is registered and visible.");
-  is(CustomizableUI.getPlacementOfWidget(kWidgetId).area, kToolbarId, "Widget should be in custom toolbar");
+  ok(
+    !CustomizableUI.inDefaultState,
+    "No longer in default state after toolbar is registered and visible."
+  );
+  is(
+    CustomizableUI.getPlacementOfWidget(kWidgetId).area,
+    kToolbarId,
+    "Widget should be in custom toolbar"
+  );
 
   await resetCustomization();
   ok(CustomizableUI.inDefaultState, "Back in default state after reset");
-  is(CustomizableUI.getPlacementOfWidget(kWidgetId).area, kToolbarId, "Widget still in custom toolbar");
+  is(
+    CustomizableUI.getPlacementOfWidget(kWidgetId).area,
+    kToolbarId,
+    "Widget still in custom toolbar"
+  );
   ok(toolbar.collapsed, "Custom toolbar should be collapsed after reset");
 
   toolbar.remove();

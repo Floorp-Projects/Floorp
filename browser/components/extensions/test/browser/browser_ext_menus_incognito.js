@@ -2,7 +2,9 @@
 
 // Make sure that we won't trigger events for a private window.
 add_task(async function test_no_show_hide_for_private_window() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.allowPrivateBrowsingByDefault", false]],
+  });
 
   function background() {
     let events = [];
@@ -26,7 +28,7 @@ add_task(async function test_no_show_hide_for_private_window() {
     background,
     manifest: {
       applications: {
-        gecko: {id: "@private-allowed"},
+        gecko: { id: "@private-allowed" },
       },
       permissions: ["menus", "tabs"],
     },
@@ -37,7 +39,7 @@ add_task(async function test_no_show_hide_for_private_window() {
     background,
     manifest: {
       applications: {
-        gecko: {id: "@not-allowed"},
+        gecko: { id: "@not-allowed" },
       },
       permissions: ["menus", "tabs"],
     },
@@ -46,7 +48,11 @@ add_task(async function test_no_show_hide_for_private_window() {
   async function testEvents(ext, expected) {
     ext.sendMessage("check-events");
     let events = await ext.awaitMessage("events");
-    Assert.deepEqual(expected, events, `expected events received for ${ext.id}.`);
+    Assert.deepEqual(
+      expected,
+      events,
+      `expected events received for ${ext.id}.`
+    );
   }
 
   await pb_extension.startup();
@@ -66,17 +72,29 @@ add_task(async function test_no_show_hide_for_private_window() {
   let pb_extMenuId = `${makeWidgetId(pb_extension.id)}-menuitem-${id2}`;
 
   // Expected menu events
-  let baseShownEvent = {"contexts": ["page", "all"], "viewType": "tab", "frameId": 0, "editable": false};
-  let publicShown = {"menuIds": [id1], ...baseShownEvent};
-  let privateShown = {"menuIds": [id2], ...baseShownEvent};
+  let baseShownEvent = {
+    contexts: ["page", "all"],
+    viewType: "tab",
+    frameId: 0,
+    editable: false,
+  };
+  let publicShown = { menuIds: [id1], ...baseShownEvent };
+  let privateShown = { menuIds: [id2], ...baseShownEvent };
 
-  baseShownEvent = {"contexts": ["tools_menu"], "viewType": undefined, "editable": false};
-  let toolsShown = {"menuIds": [id1], ...baseShownEvent};
-  let privateToolsShown = {"menuIds": [id2], ...baseShownEvent};
+  baseShownEvent = {
+    contexts: ["tools_menu"],
+    viewType: undefined,
+    editable: false,
+  };
+  let toolsShown = { menuIds: [id1], ...baseShownEvent };
+  let privateToolsShown = { menuIds: [id2], ...baseShownEvent };
 
   // Run tests in non-private window
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:robots"
+  );
 
   // Open and close a menu on the public window.
   await openContextMenu();
@@ -98,13 +116,21 @@ add_task(async function test_no_show_hide_for_private_window() {
 
   // Run tests on private window
 
-  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
 
   // Open and close a menu on the private window.
   let menu = await openContextMenu("body", privateWindow);
   // We should not see the "not_allowed" extension here.
-  ok(!privateWindow.document.getElementById(extMenuId), `menu does not exist ${extMenuId} in private window`);
-  ok(privateWindow.document.getElementById(pb_extMenuId), `menu exists ${pb_extMenuId} in private window`);
+  ok(
+    !privateWindow.document.getElementById(extMenuId),
+    `menu does not exist ${extMenuId} in private window`
+  );
+  ok(
+    privateWindow.document.getElementById(pb_extMenuId),
+    `menu exists ${pb_extMenuId} in private window`
+  );
   await closeContextMenu(menu);
 
   await testEvents(extension, []);
@@ -112,8 +138,14 @@ add_task(async function test_no_show_hide_for_private_window() {
 
   await openToolsMenu(privateWindow);
   // We should not see the "not_allowed" extension here.
-  ok(!privateWindow.document.getElementById(extMenuId), `menu does not exist ${extMenuId} in private window`);
-  ok(privateWindow.document.getElementById(pb_extMenuId), `menu exists ${pb_extMenuId} in private window`);
+  ok(
+    !privateWindow.document.getElementById(extMenuId),
+    `menu does not exist ${extMenuId} in private window`
+  );
+  ok(
+    privateWindow.document.getElementById(pb_extMenuId),
+    `menu exists ${pb_extMenuId} in private window`
+  );
   await closeToolsMenu(undefined, privateWindow);
 
   await testEvents(extension, []);

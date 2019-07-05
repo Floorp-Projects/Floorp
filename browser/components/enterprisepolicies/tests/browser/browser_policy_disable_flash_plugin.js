@@ -21,8 +21,10 @@ async function assert_flash_locked_status(win, locked, expectedLabelText) {
 
     const pluginOptions = addonCard.querySelector("plugin-options");
     const pluginAction = pluginOptions.querySelector("panel-item[checked]");
-    ok(pluginAction.textContent.includes(expectedLabelText),
-       `Got plugin action "${expectedLabelText}"`);
+    ok(
+      pluginAction.textContent.includes(expectedLabelText),
+      `Got plugin action "${expectedLabelText}"`
+    );
 
     // All other buttons (besides the checked one and the expand action)
     // are expected to be disabled if locked is true.
@@ -30,10 +32,18 @@ async function assert_flash_locked_status(win, locked, expectedLabelText) {
       const actionName = item.getAttribute("action");
       if (actionName.includes("always")) {
         ok(item.hidden, `Plugin action "${actionName}" should be hidden.`);
-      } else if (!item.hasAttribute("checked") && actionName !== "expand" &&
-                 actionName !== "preferences") {
-        is(item.shadowRoot.querySelector("button").disabled, locked,
-           `Plugin action "${actionName}" should be ${locked ? "disabled" : "enabled"}`);
+      } else if (
+        !item.hasAttribute("checked") &&
+        actionName !== "expand" &&
+        actionName !== "preferences"
+      ) {
+        is(
+          item.shadowRoot.querySelector("button").disabled,
+          locked,
+          `Plugin action "${actionName}" should be ${
+            locked ? "disabled" : "enabled"
+          }`
+        );
       }
     }
   } else {
@@ -42,15 +52,25 @@ async function assert_flash_locked_status(win, locked, expectedLabelText) {
     let flashEntry = await BrowserTestUtils.waitForCondition(() => {
       return list.getElementsByAttribute("name", "Shockwave Flash")[0];
     }, "Get XUL about:addons entry for flash plugin");
-    let dropDown = win.document.getAnonymousElementByAttribute(flashEntry, "anonid", "state-menulist");
-    is(dropDown.label, expectedLabelText,
-      "Flash setting text should match the expected value");
-    is(dropDown.disabled, locked,
-      "Flash controls disabled state should match policy locked state");
+    let dropDown = win.document.getAnonymousElementByAttribute(
+      flashEntry,
+      "anonid",
+      "state-menulist"
+    );
+    is(
+      dropDown.label,
+      expectedLabelText,
+      "Flash setting text should match the expected value"
+    );
+    is(
+      dropDown.disabled,
+      locked,
+      "Flash controls disabled state should match policy locked state"
+    );
   }
 }
 
-async function test_flash_status({expectedLabelText, locked}) {
+async function test_flash_status({ expectedLabelText, locked }) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   const win = await BrowserOpenAddonsMgr("addons://list/plugin");
 
@@ -58,23 +78,27 @@ async function test_flash_status({expectedLabelText, locked}) {
 
   BrowserTestUtils.removeTab(tab);
 
-  is(Services.prefs.prefIsLocked("plugin.state.flash"), locked,
-    "Flash pref lock state should match policy lock state");
+  is(
+    Services.prefs.prefIsLocked("plugin.state.flash"),
+    locked,
+    "Flash pref lock state should match policy lock state"
+  );
 }
 
 add_task(async function test_enabled() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "FlashPlugin": {
-        "Default": true,
+    policies: {
+      FlashPlugin: {
+        Default: true,
       },
     },
   });
 
-  const testCase = () => test_flash_status({
-    expectedLabelText: labelTextAskToActivate,
-    locked: false,
-  });
+  const testCase = () =>
+    test_flash_status({
+      expectedLabelText: labelTextAskToActivate,
+      locked: false,
+    });
   await testOnAboutAddonsType("XUL", testCase);
   await testOnAboutAddonsType("HTML", testCase);
 
@@ -83,18 +107,19 @@ add_task(async function test_enabled() {
 
 add_task(async function test_enabled_locked() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "FlashPlugin": {
-        "Default": true,
-        "Locked": true,
+    policies: {
+      FlashPlugin: {
+        Default: true,
+        Locked: true,
       },
     },
   });
 
-  const testCase = () => test_flash_status({
-    expectedLabelText: labelTextAskToActivate,
-    locked: true,
-  });
+  const testCase = () =>
+    test_flash_status({
+      expectedLabelText: labelTextAskToActivate,
+      locked: true,
+    });
   await testOnAboutAddonsType("XUL", testCase);
   await testOnAboutAddonsType("HTML", testCase);
 
@@ -103,17 +128,18 @@ add_task(async function test_enabled_locked() {
 
 add_task(async function test_disabled() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "FlashPlugin": {
-        "Default": false,
+    policies: {
+      FlashPlugin: {
+        Default: false,
       },
     },
   });
 
-  const testCase = () => test_flash_status({
-    expectedLabelText: labelTextNeverActivate,
-    locked: false,
-  });
+  const testCase = () =>
+    test_flash_status({
+      expectedLabelText: labelTextNeverActivate,
+      locked: false,
+    });
   await testOnAboutAddonsType("XUL", testCase);
   await testOnAboutAddonsType("HTML", testCase);
 
@@ -122,18 +148,19 @@ add_task(async function test_disabled() {
 
 add_task(async function test_disabled_locked() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "FlashPlugin": {
-        "Default": false,
-        "Locked": true,
+    policies: {
+      FlashPlugin: {
+        Default: false,
+        Locked: true,
       },
     },
   });
 
-  const testCase = () => test_flash_status({
-    expectedLabelText: labelTextNeverActivate,
-    locked: true,
-  });
+  const testCase = () =>
+    test_flash_status({
+      expectedLabelText: labelTextNeverActivate,
+      locked: true,
+    });
   await testOnAboutAddonsType("XUL", testCase);
   await testOnAboutAddonsType("HTML", testCase);
 
@@ -142,16 +169,16 @@ add_task(async function test_disabled_locked() {
 
 add_task(async function test_ask() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "FlashPlugin": {
-      },
+    policies: {
+      FlashPlugin: {},
     },
   });
 
-  const testCase = () => test_flash_status({
-    expectedLabelText: labelTextAskToActivate,
-    locked: false,
-  });
+  const testCase = () =>
+    test_flash_status({
+      expectedLabelText: labelTextAskToActivate,
+      locked: false,
+    });
   await testOnAboutAddonsType("XUL", testCase);
   await testOnAboutAddonsType("HTML", testCase);
 
@@ -160,17 +187,18 @@ add_task(async function test_ask() {
 
 add_task(async function test_ask_locked() {
   await setupPolicyEngineWithJson({
-    "policies": {
-      "FlashPlugin": {
-        "Locked": true,
+    policies: {
+      FlashPlugin: {
+        Locked: true,
       },
     },
   });
 
-  const testCase = () => test_flash_status({
-    expectedLabelText: labelTextAskToActivate,
-    locked: true,
-  });
+  const testCase = () =>
+    test_flash_status({
+      expectedLabelText: labelTextAskToActivate,
+      locked: true,
+    });
   await testOnAboutAddonsType("XUL", testCase);
   await testOnAboutAddonsType("HTML", testCase);
 

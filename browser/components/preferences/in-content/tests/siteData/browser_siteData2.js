@@ -170,7 +170,10 @@ add_task(async function test_removePartialSites() {
   assertSitesListed(doc, hosts);
 
   // Test the "Save Changes" button but canceling save
-  removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("cancel", REMOVE_DIALOG_URL);
+  removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen(
+    "cancel",
+    REMOVE_DIALOG_URL
+  );
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
@@ -185,7 +188,10 @@ add_task(async function test_removePartialSites() {
   assertSitesListed(doc, hosts);
 
   // Test the "Save Changes" button and accepting save
-  removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
+  removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen(
+    "accept",
+    REMOVE_DIALOG_URL
+  );
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
@@ -203,14 +209,22 @@ add_task(async function test_removePartialSites() {
   function removeSelectedSite(removeHosts) {
     frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
     let removeBtn = frameDoc.getElementById("removeSelected");
-    is(removeBtn.disabled, true, "Should start with disabled removeSelected button");
+    is(
+      removeBtn.disabled,
+      true,
+      "Should start with disabled removeSelected button"
+    );
     let sitesList = frameDoc.getElementById("sitesList");
     removeHosts.forEach(host => {
       let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
       if (site) {
         site.click();
         let currentSelectedIndex = sitesList.selectedIndex;
-        is(removeBtn.disabled, false, "Should enable the removeSelected button");
+        is(
+          removeBtn.disabled,
+          false,
+          "Should enable the removeSelected button"
+        );
         removeBtn.doCommand();
         let newSelectedIndex = sitesList.selectedIndex;
         if (currentSelectedIndex >= sitesList.itemCount) {
@@ -267,7 +281,10 @@ add_task(async function() {
 
   // Test only removing all visible sites listed
   updatePromise = promiseSiteDataManagerSitesUpdated();
-  let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
+  let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen(
+    "accept",
+    REMOVE_DIALOG_URL
+  );
   let settingsDialogClosePromise = promiseSettingsDialogClose();
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let saveBtn = frameDoc.getElementById("save");

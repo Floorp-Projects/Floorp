@@ -4,12 +4,16 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [ "GoogleTranslator" ];
+var EXPORTED_SYMBOLS = ["GoogleTranslator"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-const {httpRequest} = ChromeUtils.import("resource://gre/modules/Http.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+const { httpRequest } = ChromeUtils.import("resource://gre/modules/Http.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 // The maximum amount of net data allowed per request on Google's API.
@@ -38,7 +42,11 @@ const URL = "https://translation.googleapis.com/language/translate/v2";
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-var GoogleTranslator = function(translationDocument, sourceLanguage, targetLanguage) {
+var GoogleTranslator = function(
+  translationDocument,
+  sourceLanguage,
+  targetLanguage
+) {
   this.translationDocument = translationDocument;
   this.sourceLanguage = sourceLanguage;
   this.targetLanguage = targetLanguage;
@@ -73,12 +81,15 @@ this.GoogleTranslator.prototype = {
 
       // Create a real request to the server, and put it on the
       // pending requests list.
-      let googleRequest = new GoogleRequest(request.data,
-                                            this.sourceLanguage,
-                                            this.targetLanguage);
+      let googleRequest = new GoogleRequest(
+        request.data,
+        this.sourceLanguage,
+        this.targetLanguage
+      );
       this._pendingRequests++;
-      googleRequest.fireRequest().then(this._chunkCompleted.bind(this),
-                                       this._chunkFailed.bind(this));
+      googleRequest
+        .fireRequest()
+        .then(this._chunkCompleted.bind(this), this._chunkFailed.bind(this));
 
       currentIndex = request.lastIndex;
       if (request.finished) {
@@ -178,11 +189,13 @@ this.GoogleTranslator.prototype = {
         if (root.isSimpleRoot && result.includes("&")) {
           // If the result contains HTML entities, we need to convert them as
           // simple roots expect a plain text result.
-          let doc = (new DOMParser()).parseFromString(result, "text/html");
+          let doc = new DOMParser().parseFromString(result, "text/html");
           result = doc.body.firstChild.nodeValue;
         }
         root.parseResult(result);
-      } catch (e) { error = true; }
+      } catch (e) {
+        error = true;
+      }
     }
 
     return !error;
@@ -211,8 +224,7 @@ this.GoogleTranslator.prototype = {
       let newCurSize = currentDataSize + text.length;
       let newChunks = currentChunks + 1;
 
-      if (newCurSize > MAX_REQUEST_DATA ||
-          newChunks > MAX_REQUEST_CHUNKS) {
+      if (newCurSize > MAX_REQUEST_DATA || newChunks > MAX_REQUEST_CHUNKS) {
         // If we've reached the API limits, let's stop accumulating data
         // for this request and return. We return information useful for
         // the caller to pass back on the next call, so that the function
@@ -259,8 +271,9 @@ GoogleRequest.prototype = {
    * Initiates the request
    */
   fireRequest() {
-    let key = Services.cpmm.sharedData.get("translationKey") ||
-              Services.prefs.getStringPref("browser.translation.google.apiKey", "");
+    let key =
+      Services.cpmm.sharedData.get("translationKey") ||
+      Services.prefs.getStringPref("browser.translation.google.apiKey", "");
     if (!key) {
       return Promise.reject("no API key");
     }

@@ -8,56 +8,72 @@ function test() {
 
   waitForExplicitFinish();
 
-  let testURL = "http://mochi.test:8888/browser/" +
+  let testURL =
+    "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_459906_sample.html";
   let uniqueValue = "<b>Unique:</b> " + Date.now();
 
   var frameCount = 0;
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
-  tab.linkedBrowser.addEventListener("load", function listener(aEvent) {
-    // wait for all frames to load completely
-    if (frameCount++ < 2)
-      return;
-    tab.linkedBrowser.removeEventListener("load", listener, true);
-
-    let iframes = tab.linkedBrowser.contentWindow.frames;
-    // eslint-disable-next-line no-unsanitized/property
-    iframes[1].document.body.innerHTML = uniqueValue;
-
-    frameCount = 0;
-    let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function loadListener(eventTab2) {
-      // wait for all frames to load (and reload!) completely
-      if (frameCount++ < 2)
+  tab.linkedBrowser.addEventListener(
+    "load",
+    function listener(aEvent) {
+      // wait for all frames to load completely
+      if (frameCount++ < 2) {
         return;
-      tab2.linkedBrowser.removeEventListener("load", loadListener, true);
+      }
+      tab.linkedBrowser.removeEventListener("load", listener, true);
 
-      executeSoon(function innerHTMLPoller() {
-        let iframesTab2 = tab2.linkedBrowser.contentWindow.frames;
-        if (iframesTab2[1].document.body.innerHTML !== uniqueValue) {
-          // Poll again the value, since we can't ensure to run
-          // after SessionStore has injected innerHTML value.
-          // See bug 521802.
-          info("Polling for innerHTML value");
-          setTimeout(innerHTMLPoller, 100);
-          return;
-        }
+      let iframes = tab.linkedBrowser.contentWindow.frames;
+      // eslint-disable-next-line no-unsanitized/property
+      iframes[1].document.body.innerHTML = uniqueValue;
 
-        is(iframesTab2[1].document.body.innerHTML, uniqueValue,
-           "rich textarea's content correctly duplicated");
+      frameCount = 0;
+      let tab2 = gBrowser.duplicateTab(tab);
+      tab2.linkedBrowser.addEventListener(
+        "load",
+        function loadListener(eventTab2) {
+          // wait for all frames to load (and reload!) completely
+          if (frameCount++ < 2) {
+            return;
+          }
+          tab2.linkedBrowser.removeEventListener("load", loadListener, true);
 
-        let innerDomain = null;
-        try {
-          innerDomain = iframesTab2[0].document.domain;
-        } catch (ex) { /* throws for chrome: documents */ }
-        is(innerDomain, "mochi.test", "XSS exploit prevented!");
+          executeSoon(function innerHTMLPoller() {
+            let iframesTab2 = tab2.linkedBrowser.contentWindow.frames;
+            if (iframesTab2[1].document.body.innerHTML !== uniqueValue) {
+              // Poll again the value, since we can't ensure to run
+              // after SessionStore has injected innerHTML value.
+              // See bug 521802.
+              info("Polling for innerHTML value");
+              setTimeout(innerHTMLPoller, 100);
+              return;
+            }
 
-        // clean up
-        gBrowser.removeTab(tab2);
-        gBrowser.removeTab(tab);
+            is(
+              iframesTab2[1].document.body.innerHTML,
+              uniqueValue,
+              "rich textarea's content correctly duplicated"
+            );
 
-        finish();
-      });
-    }, true);
-  }, true);
+            let innerDomain = null;
+            try {
+              innerDomain = iframesTab2[0].document.domain;
+            } catch (ex) {
+              /* throws for chrome: documents */
+            }
+            is(innerDomain, "mochi.test", "XSS exploit prevented!");
+
+            // clean up
+            gBrowser.removeTab(tab2);
+            gBrowser.removeTab(tab);
+
+            finish();
+          });
+        },
+        true
+      );
+    },
+    true
+  );
 }

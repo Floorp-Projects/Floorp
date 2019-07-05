@@ -10,13 +10,13 @@ add_task(async function test_1() {
   let win = await promiseNewWindowLoaded();
   await promiseTabLoad(win, "http://www.example.com/#1");
 
-  win = await promiseNewWindowLoaded({private: true});
+  win = await promiseNewWindowLoaded({ private: true });
   await promiseTabLoad(win, "http://www.example.com/#2");
 
   win = await promiseNewWindowLoaded();
   await promiseTabLoad(win, "http://www.example.com/#3");
 
-  win = await promiseNewWindowLoaded({private: true});
+  win = await promiseNewWindowLoaded({ private: true });
   await promiseTabLoad(win, "http://www.example.com/#4");
 
   let curState = JSON.parse(ss.getBrowserState());
@@ -27,14 +27,25 @@ add_task(async function test_1() {
 
   let state = JSON.parse(await promiseRecoveryFileContents());
 
-  is(state.windows.length, 2,
-     "sessionstore state: 2 windows in data being written to disk");
-  is(state.selectedWindow, 2,
-     "Selected window is updated to match one of the saved windows");
-  ok(state.windows.every(win2 => !win2.isPrivate),
-    "Saved windows are not private");
-  is(state._closedWindows.length, 0,
-     "sessionstore state: no closed windows in data being written to disk");
+  is(
+    state.windows.length,
+    2,
+    "sessionstore state: 2 windows in data being written to disk"
+  );
+  is(
+    state.selectedWindow,
+    2,
+    "Selected window is updated to match one of the saved windows"
+  );
+  ok(
+    state.windows.every(win2 => !win2.isPrivate),
+    "Saved windows are not private"
+  );
+  is(
+    state._closedWindows.length,
+    0,
+    "sessionstore state: no closed windows in data being written to disk"
+  );
 
   // Cleanup.
   await promiseAllButPrimaryWindowClosed();
@@ -43,10 +54,10 @@ add_task(async function test_1() {
 
 // Test opening default mochitest window + 2 private windows
 add_task(async function test_2() {
-  let win = await promiseNewWindowLoaded({private: true});
+  let win = await promiseNewWindowLoaded({ private: true });
   await promiseTabLoad(win, "http://www.example.com/#1");
 
-  win = await promiseNewWindowLoaded({private: true});
+  win = await promiseNewWindowLoaded({ private: true });
   await promiseTabLoad(win, "http://www.example.com/#2");
 
   let curState = JSON.parse(ss.getBrowserState());
@@ -57,12 +68,21 @@ add_task(async function test_2() {
 
   let state = JSON.parse(await promiseRecoveryFileContents());
 
-  is(state.windows.length, 0,
-     "sessionstore state: no window in data being written to disk");
-  is(state.selectedWindow, 0,
-     "Selected window updated to 0 given there are no saved windows");
-  is(state._closedWindows.length, 0,
-     "sessionstore state: no closed windows in data being written to disk");
+  is(
+    state.windows.length,
+    0,
+    "sessionstore state: no window in data being written to disk"
+  );
+  is(
+    state.selectedWindow,
+    0,
+    "Selected window updated to 0 given there are no saved windows"
+  );
+  is(
+    state._closedWindows.length,
+    0,
+    "sessionstore state: no closed windows in data being written to disk"
+  );
 
   // Cleanup.
   await promiseAllButPrimaryWindowClosed();
@@ -74,7 +94,7 @@ add_task(async function test_3() {
   let normalWindow = await promiseNewWindowLoaded();
   await promiseTabLoad(normalWindow, "http://www.example.com/#1");
 
-  let win = await promiseNewWindowLoaded({private: true});
+  let win = await promiseNewWindowLoaded({ private: true });
   await promiseTabLoad(win, "http://www.example.com/#2");
 
   win = await promiseNewWindowLoaded();
@@ -96,16 +116,29 @@ add_task(async function test_3() {
 
   let state = JSON.parse(await promiseRecoveryFileContents());
 
-  is(state.windows.length, 1,
-     "sessionstore state: 1 window in data being written to disk");
-  is(state.selectedWindow, 1,
-     "Selected window is updated to match one of the saved windows");
-  ok(state.windows.every(win2 => !win2.isPrivate),
-    "Saved windows are not private");
-  is(state._closedWindows.length, 1,
-     "sessionstore state: 1 closed window in data being written to disk");
-  ok(state._closedWindows.every(win2 => !win2.isPrivate),
-    "Closed windows are not private");
+  is(
+    state.windows.length,
+    1,
+    "sessionstore state: 1 window in data being written to disk"
+  );
+  is(
+    state.selectedWindow,
+    1,
+    "Selected window is updated to match one of the saved windows"
+  );
+  ok(
+    state.windows.every(win2 => !win2.isPrivate),
+    "Saved windows are not private"
+  );
+  is(
+    state._closedWindows.length,
+    1,
+    "sessionstore state: 1 closed window in data being written to disk"
+  );
+  ok(
+    state._closedWindows.every(win2 => !win2.isPrivate),
+    "Closed windows are not private"
+  );
 
   // Cleanup.
   await promiseAllButPrimaryWindowClosed();

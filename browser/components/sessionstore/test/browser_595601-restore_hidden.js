@@ -1,16 +1,58 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var windowState = {windows: [{tabs: [
-  {entries: [{url: "http://example.com#1", triggeringPrincipal_base64}]},
-  {entries: [{url: "http://example.com#2", triggeringPrincipal_base64}]},
-  {entries: [{url: "http://example.com#3", triggeringPrincipal_base64}]},
-  {entries: [{url: "http://example.com#4", triggeringPrincipal_base64}]},
-  {entries: [{url: "http://example.com#5", triggeringPrincipal_base64}], hidden: true},
-  {entries: [{url: "http://example.com#6", triggeringPrincipal_base64}], hidden: true},
-  {entries: [{url: "http://example.com#7", triggeringPrincipal_base64}], hidden: true},
-  {entries: [{url: "http://example.com#8", triggeringPrincipal_base64}], hidden: true},
-]}]};
+var windowState = {
+  windows: [
+    {
+      tabs: [
+        {
+          entries: [
+            { url: "http://example.com#1", triggeringPrincipal_base64 },
+          ],
+        },
+        {
+          entries: [
+            { url: "http://example.com#2", triggeringPrincipal_base64 },
+          ],
+        },
+        {
+          entries: [
+            { url: "http://example.com#3", triggeringPrincipal_base64 },
+          ],
+        },
+        {
+          entries: [
+            { url: "http://example.com#4", triggeringPrincipal_base64 },
+          ],
+        },
+        {
+          entries: [
+            { url: "http://example.com#5", triggeringPrincipal_base64 },
+          ],
+          hidden: true,
+        },
+        {
+          entries: [
+            { url: "http://example.com#6", triggeringPrincipal_base64 },
+          ],
+          hidden: true,
+        },
+        {
+          entries: [
+            { url: "http://example.com#7", triggeringPrincipal_base64 },
+          ],
+          hidden: true,
+        },
+        {
+          entries: [
+            { url: "http://example.com#8", triggeringPrincipal_base64 },
+          ],
+          hidden: true,
+        },
+      ],
+    },
+  ],
+};
 
 function test() {
   waitForExplicitFinish();
@@ -28,7 +70,10 @@ function test() {
 }
 
 function test_loadTabs(restoreHiddenTabs, callback) {
-  Services.prefs.setBoolPref("browser.sessionstore.restore_hidden_tabs", restoreHiddenTabs);
+  Services.prefs.setBoolPref(
+    "browser.sessionstore.restore_hidden_tabs",
+    restoreHiddenTabs
+  );
 
   let expectedTabs = restoreHiddenTabs ? 8 : 4;
   let firstProgress = true;
@@ -77,19 +122,27 @@ var TabsProgressListener = {
   },
 
   onRestored(browser) {
-    if (this.callback && ss.getInternalObjectState(browser) == TAB_STATE_RESTORING)
+    if (
+      this.callback &&
+      ss.getInternalObjectState(browser) == TAB_STATE_RESTORING
+    ) {
       this.callback.apply(null, [this.window].concat(this.countTabs()));
+    }
   },
 
   countTabs() {
-    let needsRestore = 0, isRestoring = 0;
+    let needsRestore = 0,
+      isRestoring = 0;
 
     for (let i = 0; i < this.window.gBrowser.tabs.length; i++) {
-      let state = ss.getInternalObjectState(this.window.gBrowser.tabs[i].linkedBrowser);
-      if (state == TAB_STATE_RESTORING)
+      let state = ss.getInternalObjectState(
+        this.window.gBrowser.tabs[i].linkedBrowser
+      );
+      if (state == TAB_STATE_RESTORING) {
         isRestoring++;
-      else if (state == TAB_STATE_NEEDS_RESTORE)
+      } else if (state == TAB_STATE_NEEDS_RESTORE) {
         needsRestore++;
+      }
     }
 
     return [needsRestore, isRestoring];

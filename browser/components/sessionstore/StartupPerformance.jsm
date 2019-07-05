@@ -6,16 +6,28 @@
 
 var EXPORTED_SYMBOLS = ["StartupPerformance"];
 
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout",
-  "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "clearTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
 
 const COLLECT_RESULTS_AFTER_MS = 10000;
 
-const OBSERVED_TOPICS = ["sessionstore-restoring-on-startup", "sessionstore-initiating-manual-restore"];
+const OBSERVED_TOPICS = [
+  "sessionstore-restoring-on-startup",
+  "sessionstore-initiating-manual-restore",
+];
 
 var StartupPerformance = {
   /**
@@ -107,20 +119,26 @@ var StartupPerformance = {
         }
 
         // Once we are done restoring tabs, update Telemetry.
-        let histogramName = isAutoRestore ?
-          "FX_SESSION_RESTORE_AUTO_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS" :
-          "FX_SESSION_RESTORE_MANUAL_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS";
+        let histogramName = isAutoRestore
+          ? "FX_SESSION_RESTORE_AUTO_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS"
+          : "FX_SESSION_RESTORE_MANUAL_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS";
         let histogram = Services.telemetry.getHistogramById(histogramName);
         let delta = this._latestRestoredTimeStamp - this._startTimeStamp;
         histogram.add(delta);
 
-        Services.telemetry.getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_EAGER_TABS_RESTORED").add(this._totalNumberOfEagerTabs);
-        Services.telemetry.getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_TABS_RESTORED").add(this._totalNumberOfTabs);
-        Services.telemetry.getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_WINDOWS_RESTORED").add(this._totalNumberOfWindows);
+        Services.telemetry
+          .getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_EAGER_TABS_RESTORED")
+          .add(this._totalNumberOfEagerTabs);
+        Services.telemetry
+          .getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_TABS_RESTORED")
+          .add(this._totalNumberOfTabs);
+        Services.telemetry
+          .getHistogramById("FX_SESSION_RESTORE_NUMBER_OF_WINDOWS_RESTORED")
+          .add(this._totalNumberOfWindows);
 
         // Reset
         this._startTimeStamp = null;
-     } catch (ex) {
+      } catch (ex) {
         console.error("StartupPerformance: error after resolving promise", ex);
       }
     });
@@ -143,7 +161,10 @@ var StartupPerformance = {
         this._deadlineTimer = null;
         this._hasFired = true;
         this._resolveFinished = null;
-        Services.obs.removeObserver(this, "sessionstore-single-window-restored");
+        Services.obs.removeObserver(
+          this,
+          "sessionstore-single-window-restored"
+        );
       }
     }, COLLECT_RESULTS_AFTER_MS);
   },
@@ -157,70 +178,77 @@ var StartupPerformance = {
         case "sessionstore-initiating-manual-restore":
           this._onRestorationStarts(false);
           break;
-        case "sessionstore-single-window-restored": {
-          // Session Restore has just opened a window with (initially empty) tabs.
-          // Some of these tabs will be restored eagerly, while others will be
-          // restored on demand. The process becomes usable only when all windows
-          // have finished restored their eager tabs.
-          //
-          // While it would be possible to track the restoration of each tab
-          // from within SessionRestore to determine exactly when the process
-          // becomes usable, experience shows that this is too invasive. Rather,
-          // we employ the following heuristic:
-          // - we maintain a timer of `COLLECT_RESULTS_AFTER_MS` that we expect
-          //   will be triggered only once all tabs have been restored;
-          // - whenever we restore a new window (hence a bunch of eager tabs),
-          //   we postpone the timer to ensure that the new eager tabs have
-          //   `COLLECT_RESULTS_AFTER_MS` to be restored;
-          // - whenever a tab is restored, we update
-          //   `this._latestRestoredTimeStamp`;
-          // - after `COLLECT_RESULTS_AFTER_MS`, we collect the final version
-          //   of `this._latestRestoredTimeStamp`, and use it to determine the
-          //   entire duration of the collection.
-          //
-          // Note that this heuristic may be inaccurate if a user clicks
-          // immediately on a restore-on-demand tab before the end of
-          // `COLLECT_RESULTS_AFTER_MS`. We assume that this will not
-          // affect too much the results.
-          //
-          // Reset the delay, to give the tabs a little (more) time to restore.
-          this._startTimer();
+        case "sessionstore-single-window-restored":
+          {
+            // Session Restore has just opened a window with (initially empty) tabs.
+            // Some of these tabs will be restored eagerly, while others will be
+            // restored on demand. The process becomes usable only when all windows
+            // have finished restored their eager tabs.
+            //
+            // While it would be possible to track the restoration of each tab
+            // from within SessionRestore to determine exactly when the process
+            // becomes usable, experience shows that this is too invasive. Rather,
+            // we employ the following heuristic:
+            // - we maintain a timer of `COLLECT_RESULTS_AFTER_MS` that we expect
+            //   will be triggered only once all tabs have been restored;
+            // - whenever we restore a new window (hence a bunch of eager tabs),
+            //   we postpone the timer to ensure that the new eager tabs have
+            //   `COLLECT_RESULTS_AFTER_MS` to be restored;
+            // - whenever a tab is restored, we update
+            //   `this._latestRestoredTimeStamp`;
+            // - after `COLLECT_RESULTS_AFTER_MS`, we collect the final version
+            //   of `this._latestRestoredTimeStamp`, and use it to determine the
+            //   entire duration of the collection.
+            //
+            // Note that this heuristic may be inaccurate if a user clicks
+            // immediately on a restore-on-demand tab before the end of
+            // `COLLECT_RESULTS_AFTER_MS`. We assume that this will not
+            // affect too much the results.
+            //
+            // Reset the delay, to give the tabs a little (more) time to restore.
+            this._startTimer();
 
-          this._totalNumberOfWindows += 1;
+            this._totalNumberOfWindows += 1;
 
-          // Observe the restoration of all tabs. We assume that all tabs of this
-          // window will have been restored before `COLLECT_RESULTS_AFTER_MS`.
-          // The last call to `observer` will let us determine how long it took
-          // to reach that point.
-          let win = subject;
+            // Observe the restoration of all tabs. We assume that all tabs of this
+            // window will have been restored before `COLLECT_RESULTS_AFTER_MS`.
+            // The last call to `observer` will let us determine how long it took
+            // to reach that point.
+            let win = subject;
 
-          let observer = (event) => {
-            // We don't care about tab restorations that are due to
-            // a browser flipping from out-of-main-process to in-main-process
-            // or vice-versa. We only care about restorations that are due
-            // to the user switching to a lazily restored tab, or for tabs
-            // that are restoring eagerly.
-            if (!event.detail.isRemotenessUpdate) {
-              if (Services.profiler) {
-                Services.profiler.AddMarker("SSTabRestored");
+            let observer = event => {
+              // We don't care about tab restorations that are due to
+              // a browser flipping from out-of-main-process to in-main-process
+              // or vice-versa. We only care about restorations that are due
+              // to the user switching to a lazily restored tab, or for tabs
+              // that are restoring eagerly.
+              if (!event.detail.isRemotenessUpdate) {
+                if (Services.profiler) {
+                  Services.profiler.AddMarker("SSTabRestored");
+                }
+                this._latestRestoredTimeStamp = Date.now();
+                this._totalNumberOfEagerTabs += 1;
               }
-              this._latestRestoredTimeStamp = Date.now();
-              this._totalNumberOfEagerTabs += 1;
-            }
-          };
-          win.gBrowser.tabContainer.addEventListener("SSTabRestored", observer);
-          this._totalNumberOfTabs += win.gBrowser.tabContainer.itemCount;
+            };
+            win.gBrowser.tabContainer.addEventListener(
+              "SSTabRestored",
+              observer
+            );
+            this._totalNumberOfTabs += win.gBrowser.tabContainer.itemCount;
 
-          // Once we have finished collecting the results, clean up the observers.
-          this._promiseFinished.then(() => {
-            if (!win.gBrowser.tabContainer) {
-              // May be undefined during shutdown and/or some tests.
-              return;
-            }
-            win.gBrowser.tabContainer.removeEventListener("SSTabRestored", observer);
-          });
-        }
-        break;
+            // Once we have finished collecting the results, clean up the observers.
+            this._promiseFinished.then(() => {
+              if (!win.gBrowser.tabContainer) {
+                // May be undefined during shutdown and/or some tests.
+                return;
+              }
+              win.gBrowser.tabContainer.removeEventListener(
+                "SSTabRestored",
+                observer
+              );
+            });
+          }
+          break;
         default:
           throw new Error(`Unexpected topic ${topic}`);
       }

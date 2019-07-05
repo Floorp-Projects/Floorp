@@ -2,18 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
 const ROOT = getRootDirectory(gTestPath);
-const HTTPROOT = ROOT.replace("chrome://mochitests/content/", "http://example.com/");
-const FRAME_SCRIPTS = [
-  ROOT + "content.js",
-  ROOT + "content-forms.js",
-];
+const HTTPROOT = ROOT.replace(
+  "chrome://mochitests/content/",
+  "http://example.com/"
+);
+const FRAME_SCRIPTS = [ROOT + "content.js", ROOT + "content-forms.js"];
 
 for (let script of FRAME_SCRIPTS) {
   Services.mm.loadFrameScript(script, true);
@@ -25,10 +27,18 @@ registerCleanupFunction(() => {
   }
 });
 
-const {SessionSaver} = ChromeUtils.import("resource:///modules/sessionstore/SessionSaver.jsm");
-const {SessionFile} = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm");
-const {TabState} = ChromeUtils.import("resource:///modules/sessionstore/TabState.jsm");
-const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
+const { SessionSaver } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionSaver.jsm"
+);
+const { SessionFile } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionFile.jsm"
+);
+const { TabState } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabState.jsm"
+);
+const { TabStateFlusher } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
 const ss = SessionStore;
 
 // Some tests here assume that all restored tabs are loaded without waiting for
@@ -45,7 +55,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.sessionstore.debug");
 });
 
-
 // This kicks off the search service used on about:home and allows the
 // session restore tests to be run standalone without triggering errors.
 Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler).defaultArgs;
@@ -57,7 +66,12 @@ function provideWindow(aCallback, aURL, aFeatures) {
     });
   }
 
-  let win = openDialog(AppConstants.BROWSER_CHROME_URL, "", aFeatures || "chrome,all,dialog=no", aURL || "about:blank");
+  let win = openDialog(
+    AppConstants.BROWSER_CHROME_URL,
+    "",
+    aFeatures || "chrome,all,dialog=no",
+    aURL || "about:blank"
+  );
   whenWindowLoaded(win, function onWindowLoaded(aWin) {
     if (!aURL) {
       info("Loaded a blank window.");
@@ -65,9 +79,13 @@ function provideWindow(aCallback, aURL, aFeatures) {
       return;
     }
 
-    aWin.gBrowser.selectedBrowser.addEventListener("load", function() {
-      callbackSoon(aWin);
-    }, {capture: true, once: true});
+    aWin.gBrowser.selectedBrowser.addEventListener(
+      "load",
+      function() {
+        callbackSoon(aWin);
+      },
+      { capture: true, once: true }
+    );
   });
 }
 
@@ -77,7 +95,9 @@ function waitForBrowserState(aState, aSetStateCallback) {
     aState = JSON.parse(aState);
   }
   if (typeof aState != "object") {
-    throw new TypeError("Argument must be an object or a JSON representation of an object");
+    throw new TypeError(
+      "Argument must be an object or a JSON representation of an object"
+    );
   }
   let windows = [window];
   let tabsRestored = 0;
@@ -87,14 +107,17 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let listening = false;
   let windowObserving = false;
   let restoreHiddenTabs = Services.prefs.getBoolPref(
-                          "browser.sessionstore.restore_hidden_tabs");
+    "browser.sessionstore.restore_hidden_tabs"
+  );
   let restoreTabsLazily = Services.prefs.getBoolPref(
-                          "browser.sessionstore.restore_tabs_lazily");
+    "browser.sessionstore.restore_tabs_lazily"
+  );
 
   aState.windows.forEach(function(winState) {
     winState.tabs.forEach(function(tabState) {
-      if (!restoreTabsLazily && (restoreHiddenTabs || !tabState.hidden))
+      if (!restoreTabsLazily && (restoreHiddenTabs || !tabState.hidden)) {
         expectedTabsRestored++;
+      }
     });
   });
 
@@ -111,7 +134,11 @@ function waitForBrowserState(aState, aSetStateCallback) {
     if (++tabsRestored == expectedTabsRestored) {
       // Remove the event listener from each window
       windows.forEach(function(win) {
-        win.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
+        win.gBrowser.tabContainer.removeEventListener(
+          "SSTabRestored",
+          onSSTabRestored,
+          true
+        );
       });
       listening = false;
       info("running " + aSetStateCallback.name);
@@ -124,17 +151,25 @@ function waitForBrowserState(aState, aSetStateCallback) {
   function windowObserver(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
       let newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      newWindow.addEventListener("load", function() {
-        if (++windowsOpen == expectedWindows) {
-          Services.ww.unregisterNotification(windowObserver);
-          windowObserving = false;
-        }
+      newWindow.addEventListener(
+        "load",
+        function() {
+          if (++windowsOpen == expectedWindows) {
+            Services.ww.unregisterNotification(windowObserver);
+            windowObserving = false;
+          }
 
-        // Track this window so we can remove the progress listener later
-        windows.push(newWindow);
-        // Add the progress listener
-        newWindow.gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
-      }, {once: true});
+          // Track this window so we can remove the progress listener later
+          windows.push(newWindow);
+          // Add the progress listener
+          newWindow.gBrowser.tabContainer.addEventListener(
+            "SSTabRestored",
+            onSSTabRestored,
+            true
+          );
+        },
+        { once: true }
+      );
     }
   }
 
@@ -152,13 +187,21 @@ function waitForBrowserState(aState, aSetStateCallback) {
   registerCleanupFunction(function() {
     if (listening) {
       windows.forEach(function(win) {
-        win.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
+        win.gBrowser.tabContainer.removeEventListener(
+          "SSTabRestored",
+          onSSTabRestored,
+          true
+        );
       });
     }
   });
   // Add the event listener for this window as well.
   listening = true;
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
+  gBrowser.tabContainer.addEventListener(
+    "SSTabRestored",
+    onSSTabRestored,
+    true
+  );
 
   // Ensure setBrowserState() doesn't remove the initial tab.
   gBrowser.selectedTab = gBrowser.tabs[0];
@@ -172,7 +215,7 @@ function promiseBrowserState(aState) {
 }
 
 function promiseTabState(tab, state) {
-  if (typeof(state) != "string") {
+  if (typeof state != "string") {
     state = JSON.stringify(state);
   }
 
@@ -182,7 +225,9 @@ function promiseTabState(tab, state) {
 }
 
 function promiseWindowRestored(win) {
-  return new Promise(resolve => win.addEventListener("SSWindowRestored", resolve, {once: true}));
+  return new Promise(resolve =>
+    win.addEventListener("SSWindowRestored", resolve, { once: true })
+  );
 }
 
 async function setBrowserState(state, win = window) {
@@ -191,7 +236,11 @@ async function setBrowserState(state, win = window) {
 }
 
 async function setWindowState(win, state, overwrite = false) {
-  ss.setWindowState(win, typeof state != "string" ? JSON.stringify(state) : state, overwrite);
+  ss.setWindowState(
+    win,
+    typeof state != "string" ? JSON.stringify(state) : state,
+    overwrite
+  );
   await promiseWindowRestored(win);
 }
 
@@ -219,8 +268,9 @@ function promiseContentMessage(browser, name) {
 function waitForTopic(aTopic, aTimeout, aCallback) {
   let observing = false;
   function removeObserver() {
-    if (!observing)
+    if (!observing) {
       return;
+    }
     Services.obs.removeObserver(observer, aTopic);
     observing = false;
   }
@@ -256,8 +306,8 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
  * otherwise, it is passed |false|.
  */
 function waitForSaveState(aCallback) {
-  let timeout = 100 +
-    Services.prefs.getIntPref("browser.sessionstore.interval");
+  let timeout =
+    100 + Services.prefs.getIntPref("browser.sessionstore.interval");
   return waitForTopic("sessionstore-state-write-complete", timeout, aCallback);
 }
 function promiseSaveState() {
@@ -278,7 +328,10 @@ function forceSaveState() {
 function promiseRecoveryFileContents() {
   let promise = forceSaveState();
   return promise.then(function() {
-    return OS.File.read(SessionFile.Paths.recovery, { encoding: "utf-8", compression: "lz4" });
+    return OS.File.read(SessionFile.Paths.recovery, {
+      encoding: "utf-8",
+      compression: "lz4",
+    });
   });
 }
 
@@ -286,7 +339,10 @@ var promiseForEachSessionRestoreFile = async function(cb) {
   for (let key of SessionFile.Paths.loadOrder) {
     let data = "";
     try {
-      data = await OS.File.read(SessionFile.Paths[key], { encoding: "utf-8", compression: "lz4" });
+      data = await OS.File.read(SessionFile.Paths[key], {
+        encoding: "utf-8",
+        compression: "lz4",
+      });
     } catch (ex) {
       // Ignore missing files
       if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
@@ -297,16 +353,24 @@ var promiseForEachSessionRestoreFile = async function(cb) {
   }
 };
 
-function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true, wantLoad = null) {
+function promiseBrowserLoaded(
+  aBrowser,
+  ignoreSubFrames = true,
+  wantLoad = null
+) {
   return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames, wantLoad);
 }
 
 function whenWindowLoaded(aWindow, aCallback) {
-  aWindow.addEventListener("load", function() {
-    executeSoon(function executeWhenWindowLoaded() {
-      aCallback(aWindow);
-    });
-  }, {once: true});
+  aWindow.addEventListener(
+    "load",
+    function() {
+      executeSoon(function executeWhenWindowLoaded() {
+        aCallback(aWindow);
+      });
+    },
+    { once: true }
+  );
 }
 function promiseWindowLoaded(aWindow) {
   return new Promise(resolve => whenWindowLoaded(aWindow, resolve));
@@ -314,7 +378,7 @@ function promiseWindowLoaded(aWindow) {
 
 var gUniqueCounter = 0;
 function r() {
-  return Date.now() + "-" + (++gUniqueCounter);
+  return Date.now() + "-" + ++gUniqueCounter;
 }
 
 function* BrowserWindowIterator() {
@@ -342,11 +406,12 @@ var gWebProgressListener = {
     }
   },
 
-  onStateChange(aBrowser, aWebProgress, aRequest,
-                           aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (
+      aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+      aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+      aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW
+    ) {
       this._callback(aBrowser);
     }
   },
@@ -367,7 +432,7 @@ var gProgressListener = {
   unsetCallback() {
     if (this._callback) {
       this._callback = null;
-    Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
+      Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
     }
   },
 
@@ -383,18 +448,21 @@ var gProgressListener = {
   },
 
   _countTabs() {
-    let needsRestore = 0, isRestoring = 0, wasRestored = 0;
+    let needsRestore = 0,
+      isRestoring = 0,
+      wasRestored = 0;
 
     for (let win of BrowserWindowIterator()) {
       for (let i = 0; i < win.gBrowser.tabs.length; i++) {
         let browser = win.gBrowser.tabs[i].linkedBrowser;
         let state = ss.getInternalObjectState(browser);
-        if (browser.isConnected && !state)
+        if (browser.isConnected && !state) {
           wasRestored++;
-        else if (state == TAB_STATE_RESTORING)
+        } else if (state == TAB_STATE_RESTORING) {
           isRestoring++;
-        else if (state == TAB_STATE_NEEDS_RESTORE || !browser.isConnected)
+        } else if (state == TAB_STATE_NEEDS_RESTORE || !browser.isConnected) {
           needsRestore++;
+        }
       }
     }
     return [needsRestore, isRestoring, wasRestored];
@@ -436,12 +504,17 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   let features = "";
   let url = "about:blank";
 
-  if (aOptions && aOptions.private || false) {
+  if ((aOptions && aOptions.private) || false) {
     features = ",private";
     url = "about:privatebrowsing";
   }
 
-  let win = openDialog(AppConstants.BROWSER_CHROME_URL, "", "chrome,all,dialog=no" + features, url);
+  let win = openDialog(
+    AppConstants.BROWSER_CHROME_URL,
+    "",
+    "chrome,all,dialog=no" + features,
+    url
+  );
   let delayedStartup = promiseDelayedStartupFinished(win);
 
   let browserLoaded = new Promise(resolve => {
@@ -450,10 +523,14 @@ function whenNewWindowLoaded(aOptions, aCallback) {
       return;
     }
 
-    win.addEventListener("load", function() {
-      let browser = win.gBrowser.selectedBrowser;
-      promiseBrowserLoaded(browser).then(resolve);
-    }, {once: true});
+    win.addEventListener(
+      "load",
+      function() {
+        let browser = win.gBrowser.selectedBrowser;
+        promiseBrowserLoaded(browser).then(resolve);
+      },
+      { once: true }
+    );
   });
 
   Promise.all([delayedStartup, browserLoaded]).then(() => aCallback(win));
@@ -501,11 +578,16 @@ function sendMessage(browser, name, data = {}) {
           setFileNameArray */
 const FORM_HELPERS = [
   "getTextContent",
-  "getInputValue", "setInputValue",
-  "getInputChecked", "setInputChecked",
-  "getSelectedIndex", "setSelectedIndex",
-  "getMultipleSelected", "setMultipleSelected",
-  "getFileNameArray", "setFileNameArray",
+  "getInputValue",
+  "setInputValue",
+  "getInputChecked",
+  "setInputChecked",
+  "getSelectedIndex",
+  "setSelectedIndex",
+  "getMultipleSelected",
+  "setMultipleSelected",
+  "getFileNameArray",
+  "setFileNameArray",
 ];
 
 for (let name of FORM_HELPERS) {
@@ -523,41 +605,53 @@ function promiseRemoveTabAndSessionState(tab) {
 
 // Write DOMSessionStorage data to the given browser.
 function modifySessionStorage(browser, storageData, storageOptions = {}) {
-  return ContentTask.spawn(browser, [storageData, storageOptions], async function([data, options]) {
-    let frame = content;
-    if (options && "frameIndex" in options) {
-      frame = content.frames[options.frameIndex];
-    }
-
-    let keys = new Set(Object.keys(data));
-    let isClearing = !keys.size;
-    let storage = frame.sessionStorage;
-
-    return new Promise(resolve => {
-      addEventListener("MozSessionStorageChanged", function onStorageChanged(event) {
-        if (event.storageArea == storage) {
-          keys.delete(event.key);
-        }
-
-        if (keys.size == 0) {
-          removeEventListener("MozSessionStorageChanged", onStorageChanged, true);
-          resolve();
-        }
-      }, true);
-
-      if (isClearing) {
-        storage.clear();
-      } else {
-        for (let key of keys) {
-          frame.sessionStorage[key] = data[key];
-        }
+  return ContentTask.spawn(
+    browser,
+    [storageData, storageOptions],
+    async function([data, options]) {
+      let frame = content;
+      if (options && "frameIndex" in options) {
+        frame = content.frames[options.frameIndex];
       }
-    });
-  });
+
+      let keys = new Set(Object.keys(data));
+      let isClearing = !keys.size;
+      let storage = frame.sessionStorage;
+
+      return new Promise(resolve => {
+        addEventListener(
+          "MozSessionStorageChanged",
+          function onStorageChanged(event) {
+            if (event.storageArea == storage) {
+              keys.delete(event.key);
+            }
+
+            if (keys.size == 0) {
+              removeEventListener(
+                "MozSessionStorageChanged",
+                onStorageChanged,
+                true
+              );
+              resolve();
+            }
+          },
+          true
+        );
+
+        if (isClearing) {
+          storage.clear();
+        } else {
+          for (let key of keys) {
+            frame.sessionStorage[key] = data[key];
+          }
+        }
+      });
+    }
+  );
 }
 
 function pushPrefs(...aPrefs) {
-  return SpecialPowers.pushPrefEnv({"set": aPrefs});
+  return SpecialPowers.pushPrefEnv({ set: aPrefs });
 }
 
 function popPrefs() {

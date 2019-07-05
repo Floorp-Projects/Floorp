@@ -15,8 +15,11 @@ async function checkNewtabLoads(selector, message) {
   await waitForPreloaded(browser);
 
   // check what the content task thinks has been loaded.
-  let found = await ContentTask.spawn(browser, selector, arg =>
-    content.document.querySelector(arg) !== null);
+  let found = await ContentTask.spawn(
+    browser,
+    selector,
+    arg => content.document.querySelector(arg) !== null
+  );
   ok(found, message);
 
   // avoid leakage
@@ -25,7 +28,10 @@ async function checkNewtabLoads(selector, message) {
 
 // Test with activity stream on
 async function checkActivityStreamLoads() {
-  await checkNewtabLoads("body.activity-stream", "Got <body class='activity-stream'> Element");
+  await checkNewtabLoads(
+    "body.activity-stream",
+    "Got <body class='activity-stream'> Element"
+  );
 }
 
 // Run a first time not from a preloaded browser

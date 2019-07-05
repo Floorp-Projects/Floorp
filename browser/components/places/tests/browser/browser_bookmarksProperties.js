@@ -32,9 +32,12 @@ const TYPE_BOOKMARK = 1;
 const TEST_URL = "http://www.example.com/";
 
 const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xul";
-const DIALOG_URL_MINIMAL_UI = "chrome://browser/content/places/bookmarkProperties2.xul";
+const DIALOG_URL_MINIMAL_UI =
+  "chrome://browser/content/places/bookmarkProperties2.xul";
 
-const {BrowserWindowTracker} = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+const { BrowserWindowTracker } = ChromeUtils.import(
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
 var win = BrowserWindowTracker.getTopWindow();
 
 function add_bookmark(url) {
@@ -52,7 +55,8 @@ var gTests = [];
 // Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog
 
 gTests.push({
-  desc: "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
+  desc:
+    "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
   sidebar: SIDEBAR_BOOKMARKS_ID,
   action: ACTION_EDIT,
   itemType: null,
@@ -66,8 +70,7 @@ gTests.push({
     Assert.ok(this._bookmark, "Correctly added a bookmark");
 
     // Add a tag to this bookmark.
-    PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL),
-                               ["testTag"]);
+    PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL), ["testTag"]);
     var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
     Assert.equal(tags[0], "testTag", "Correctly added a tag");
   },
@@ -76,23 +79,39 @@ gTests.push({
     tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
     tree.selectItems([this._bookmark.guid]);
-    Assert.equal(tree.selectedNode.bookmarkGuid, this._bookmark.guid, "Bookmark has been selected");
+    Assert.equal(
+      tree.selectedNode.bookmarkGuid,
+      this._bookmark.guid,
+      "Bookmark has been selected"
+    );
   },
 
   async run() {
     // open tags autocomplete and press enter
-    var tagsField = this.window.document.getElementById("editBMPanel_tagsField");
+    var tagsField = this.window.document.getElementById(
+      "editBMPanel_tagsField"
+    );
     var self = this;
 
     let unloadPromise = new Promise(resolve => {
-      this.window.addEventListener("unload", function(event) {
-        tagsField.popup.removeEventListener("popuphidden", popupListener, true);
-        Assert.ok(self._cleanShutdown,
-          "Dialog window should not be closed by pressing Enter on the autocomplete popup");
-        executeSoon(function() {
-          resolve();
-        });
-      }, {capture: true, once: true});
+      this.window.addEventListener(
+        "unload",
+        function(event) {
+          tagsField.popup.removeEventListener(
+            "popuphidden",
+            popupListener,
+            true
+          );
+          Assert.ok(
+            self._cleanShutdown,
+            "Dialog window should not be closed by pressing Enter on the autocomplete popup"
+          );
+          executeSoon(function() {
+            resolve();
+          });
+        },
+        { capture: true, once: true }
+      );
     });
 
     var popupListener = {
@@ -109,10 +128,17 @@ gTests.push({
             // since we didn't set _cleanShutdown.
             let richlistbox = tagsField.popup.richlistbox;
             // Focus and select first result.
-            Assert.equal(richlistbox.itemCount, 1, "We have 1 autocomplete result");
+            Assert.equal(
+              richlistbox.itemCount,
+              1,
+              "We have 1 autocomplete result"
+            );
             tagsField.popup.selectedIndex = 0;
-            Assert.equal(richlistbox.selectedItems.length, 1,
-               "We have selected a tag from the autocomplete popup");
+            Assert.equal(
+              richlistbox.selectedItems.length,
+              1,
+              "We have selected a tag from the autocomplete popup"
+            );
             info("About to focus the autocomplete results");
             richlistbox.focus();
             EventUtils.synthesizeKey("VK_RETURN", {}, self.window);
@@ -156,7 +182,8 @@ gTests.push({
 // Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel
 
 gTests.push({
-  desc: "Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel",
+  desc:
+    "Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel",
   sidebar: SIDEBAR_BOOKMARKS_ID,
   action: ACTION_EDIT,
   itemType: null,
@@ -170,8 +197,7 @@ gTests.push({
     Assert.ok(this._bookmark, "Correctly added a bookmark");
 
     // Add a tag to this bookmark.
-    PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL),
-                               ["testTag"]);
+    PlacesUtils.tagging.tagURI(Services.io.newURI(TEST_URL), ["testTag"]);
     var tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
     Assert.equal(tags[0], "testTag", "Correctly added a tag");
   },
@@ -180,23 +206,39 @@ gTests.push({
     tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
     tree.selectItems([this._bookmark.guid]);
-    Assert.equal(tree.selectedNode.bookmarkGuid, this._bookmark.guid, "Bookmark has been selected");
+    Assert.equal(
+      tree.selectedNode.bookmarkGuid,
+      this._bookmark.guid,
+      "Bookmark has been selected"
+    );
   },
 
   async run() {
     // open tags autocomplete and press enter
-    var tagsField = this.window.document.getElementById("editBMPanel_tagsField");
+    var tagsField = this.window.document.getElementById(
+      "editBMPanel_tagsField"
+    );
     var self = this;
 
     let hiddenPromise = new Promise(resolve => {
-      this.window.addEventListener("unload", function(event) {
-        tagsField.popup.removeEventListener("popuphidden", popupListener, true);
-        Assert.ok(self._cleanShutdown,
-          "Dialog window should not be closed by pressing Escape on the autocomplete popup");
-        executeSoon(function() {
-          resolve();
-        });
-      }, {capture: true, once: true});
+      this.window.addEventListener(
+        "unload",
+        function(event) {
+          tagsField.popup.removeEventListener(
+            "popuphidden",
+            popupListener,
+            true
+          );
+          Assert.ok(
+            self._cleanShutdown,
+            "Dialog window should not be closed by pressing Escape on the autocomplete popup"
+          );
+          executeSoon(function() {
+            resolve();
+          });
+        },
+        { capture: true, once: true }
+      );
     });
 
     var popupListener = {
@@ -213,10 +255,17 @@ gTests.push({
             // since we didn't set _cleanShutdown.
             let richlistbox = tagsField.popup.richlistbox;
             // Focus and select first result.
-            Assert.equal(richlistbox.itemCount, 1, "We have 1 autocomplete result");
+            Assert.equal(
+              richlistbox.itemCount,
+              1,
+              "We have 1 autocomplete result"
+            );
             tagsField.popup.selectedIndex = 0;
-            Assert.equal(richlistbox.selectedItems.length, 1,
-               "We have selected a tag from the autocomplete popup");
+            Assert.equal(
+              richlistbox.selectedItems.length,
+              1,
+              "We have selected a tag from the autocomplete popup"
+            );
             info("About to focus the autocomplete results");
             richlistbox.focus();
             EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
@@ -247,8 +296,7 @@ gTests.push({
     Assert.equal(tags[0], "testTag", "Tag on node has not changed");
 
     // Cleanup.
-    PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL),
-                                 ["testTag"]);
+    PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL), ["testTag"]);
     await PlacesUtils.bookmarks.remove(this._bookmark);
     let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);
     Assert.ok(!bm, "should have been removed");
@@ -259,7 +307,8 @@ gTests.push({
 //  Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog
 
 gTests.push({
-  desc: " Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog",
+  desc:
+    " Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog",
   sidebar: SIDEBAR_HISTORY_ID,
   action: ACTION_ADD,
   historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
@@ -269,56 +318,89 @@ gTests.push({
     // Add a visit.
     await PlacesTestUtils.addVisits(TEST_URL);
 
-    this._addObserver = PlacesTestUtils.waitForNotification("bookmark-added", null, "places");
+    this._addObserver = PlacesTestUtils.waitForNotification(
+      "bookmark-added",
+      null,
+      "places"
+    );
   },
 
   selectNode(tree) {
     var visitNode = tree.view.nodeForTreeIndex(0);
     tree.selectNode(visitNode);
-    Assert.equal(tree.selectedNode.uri, TEST_URL, "The correct visit has been selected");
-    Assert.equal(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
+    Assert.equal(
+      tree.selectedNode.uri,
+      TEST_URL,
+      "The correct visit has been selected"
+    );
+    Assert.equal(
+      tree.selectedNode.itemId,
+      -1,
+      "The selected node is not bookmarked"
+    );
   },
 
   async run() {
     // Open folder selector.
-    var foldersExpander = this.window.document.getElementById("editBMPanel_foldersExpander");
+    var foldersExpander = this.window.document.getElementById(
+      "editBMPanel_foldersExpander"
+    );
     var folderTree = this.window.gEditItemOverlay._folderTree;
     var self = this;
 
     let unloadPromise = new Promise(resolve => {
-      this.window.addEventListener("unload", event => {
-        Assert.ok(self._cleanShutdown, "Dialog window should not be closed by pressing ESC in folder name textbox");
-        executeSoon(() => {
-          resolve();
-        });
-      }, {capture: true, once: true});
+      this.window.addEventListener(
+        "unload",
+        event => {
+          Assert.ok(
+            self._cleanShutdown,
+            "Dialog window should not be closed by pressing ESC in folder name textbox"
+          );
+          executeSoon(() => {
+            resolve();
+          });
+        },
+        { capture: true, once: true }
+      );
     });
 
-    folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(event) {
-      if (event.attrName != "place")
+    folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(
+      event
+    ) {
+      if (event.attrName != "place") {
         return;
+      }
       folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
       executeSoon(async function() {
         await self._addObserver;
-        let bookmark = await PlacesUtils.bookmarks.fetch({url: TEST_URL});
+        let bookmark = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
         self._bookmarkGuid = bookmark.guid;
 
         // Create a new folder.
-        var newFolderButton = self.window.document.getElementById("editBMPanel_newFolderButton");
+        var newFolderButton = self.window.document.getElementById(
+          "editBMPanel_newFolderButton"
+        );
         newFolderButton.doCommand();
 
         // Wait for the folder to be created and for editing to start.
-        await BrowserTestUtils.waitForCondition(() => folderTree.hasAttribute("editing"),
-           "We are editing new folder name in folder tree");
+        await BrowserTestUtils.waitForCondition(
+          () => folderTree.hasAttribute("editing"),
+          "We are editing new folder name in folder tree"
+        );
 
         // Press Escape to discard editing new folder name.
         EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
-        Assert.ok(!folderTree.hasAttribute("editing"),
-           "We have finished editing folder name in folder tree");
+        Assert.ok(
+          !folderTree.hasAttribute("editing"),
+          "We have finished editing folder name in folder tree"
+        );
 
         self._cleanShutdown = true;
-        self._removeObserver = PlacesTestUtils.waitForNotification("onItemRemoved",
-          (itemId, parentId, index, type, uri, guid) => guid == self._bookmarkGuid);
+        self._removeObserver = PlacesTestUtils.waitForNotification(
+          "onItemRemoved",
+          (itemId, parentId, index, type, uri, guid) =>
+            guid == self._bookmarkGuid
+        );
 
         self.window.document.documentElement.cancelDialog();
       });
@@ -370,13 +452,17 @@ add_task(async function test_run() {
 function execute_test_in_sidebar(test) {
   return new Promise(resolve => {
     var sidebar = document.getElementById("sidebar");
-    sidebar.addEventListener("load", function() {
-      // Need to executeSoon since the tree is initialized on sidebar load.
-      executeSoon(async () => {
-        await open_properties_dialog(test);
-        resolve();
-      });
-    }, {capture: true, once: true});
+    sidebar.addEventListener(
+      "load",
+      function() {
+        // Need to executeSoon since the tree is initialized on sidebar load.
+        executeSoon(async () => {
+          await open_properties_dialog(test);
+          resolve();
+        });
+      },
+      { capture: true, once: true }
+    );
     SidebarUI.show(test.sidebar);
   });
 }
@@ -386,33 +472,43 @@ function open_properties_dialog(test) {
     var sidebar = document.getElementById("sidebar");
 
     // If this is history sidebar, set the required view.
-    if (test.sidebar == SIDEBAR_HISTORY_ID)
+    if (test.sidebar == SIDEBAR_HISTORY_ID) {
       sidebar.contentDocument.getElementById(test.historyView).doCommand();
+    }
 
     // Get sidebar's Places tree.
-    var sidebarTreeID = test.sidebar == SIDEBAR_BOOKMARKS_ID ?
-                                        SIDEBAR_BOOKMARKS_TREE_ID :
-                                        SIDEBAR_HISTORY_TREE_ID;
+    var sidebarTreeID =
+      test.sidebar == SIDEBAR_BOOKMARKS_ID
+        ? SIDEBAR_BOOKMARKS_TREE_ID
+        : SIDEBAR_HISTORY_TREE_ID;
     var tree = sidebar.contentDocument.getElementById(sidebarTreeID);
     // The sidebar may take a moment to open from the doCommand, therefore wait
     // until it has opened before continuing.
-    await BrowserTestUtils.waitForCondition(() => tree, "Sidebar tree has been loaded");
+    await BrowserTestUtils.waitForCondition(
+      () => tree,
+      "Sidebar tree has been loaded"
+    );
 
     // Ask current test to select the node to edit.
     test.selectNode(tree);
-    Assert.ok(tree.selectedNode,
-       "We have a places node selected: " + tree.selectedNode.title);
+    Assert.ok(
+      tree.selectedNode,
+      "We have a places node selected: " + tree.selectedNode.title
+    );
 
     // Wait for the Properties dialog.
     function windowObserver(aSubject, aTopic, aData) {
-      if (aTopic != "domwindowopened")
+      if (aTopic != "domwindowopened") {
         return;
+      }
       Services.ww.unregisterNotification(windowObserver);
       let observerWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       waitForFocus(async () => {
         // Ensure overlay is loaded
         await BrowserTestUtils.waitForCondition(
-          () => observerWindow.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
+          () => observerWindow.gEditItemOverlay.initialized,
+          "EditItemOverlay is initialized"
+        );
         test.window = observerWindow;
         try {
           executeSoon(resolve);
@@ -430,12 +526,16 @@ function open_properties_dialog(test) {
         break;
       case ACTION_ADD:
         if (test.sidebar == SIDEBAR_BOOKMARKS_ID) {
-          if (test.itemType == TYPE_FOLDER)
+          if (test.itemType == TYPE_FOLDER) {
             command = "placesCmd_new:folder";
-          else if (test.itemType == TYPE_BOOKMARK)
+          } else if (test.itemType == TYPE_BOOKMARK) {
             command = "placesCmd_new:bookmark";
-          else
-            Assert.ok(false, "You didn't set a valid itemType for adding an item");
+          } else {
+            Assert.ok(
+              false,
+              "You didn't set a valid itemType for adding an item"
+            );
+          }
         } else {
           command = "placesCmd_createBookmark";
         }
@@ -444,8 +544,10 @@ function open_properties_dialog(test) {
         Assert.ok(false, "You didn't set a valid action for this test");
     }
     // Ensure command is enabled for this node.
-    Assert.ok(tree.controller.isCommandEnabled(command),
-       " command '" + command + "' on current selected node is enabled");
+    Assert.ok(
+      tree.controller.isCommandEnabled(command),
+      " command '" + command + "' on current selected node is enabled"
+    );
 
     // This will open the dialog.
     tree.controller.doCommand(command);

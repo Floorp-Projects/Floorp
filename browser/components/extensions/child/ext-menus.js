@@ -2,16 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-var {
-  withHandlingUserInput,
-} = ExtensionCommon;
+var { withHandlingUserInput } = ExtensionCommon;
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 // If id is not specified for an item we use an integer.
 // This ID need only be unique within a single addon. Since all addon code that
@@ -39,7 +38,9 @@ class ContextMenusClickPropHandler {
       // No need for runSafe or anything because we are already being run inside
       // an event handler -- the event is just being forwarded to the actual
       // handler.
-      withHandlingUserInput(this.context.contentWindow, () => onclick(info, tab));
+      withHandlingUserInput(this.context.contentWindow, () =>
+        onclick(info, tab)
+      );
     }
   }
 
@@ -47,7 +48,9 @@ class ContextMenusClickPropHandler {
   // The `onclick` function MUST be owned by `this.context`.
   setListener(id, onclick) {
     if (this.onclickMap.size === 0) {
-      this.context.childManager.getParentEvent("menusInternal.onClicked").addListener(this.dispatchEvent);
+      this.context.childManager
+        .getParentEvent("menusInternal.onClicked")
+        .addListener(this.dispatchEvent);
       this.context.callOnClose(this);
     }
     this.onclickMap.set(id, onclick);
@@ -74,7 +77,9 @@ class ContextMenusClickPropHandler {
       return;
     }
     if (this.onclickMap.size === 0) {
-      this.context.childManager.getParentEvent("menusInternal.onClicked").removeListener(this.dispatchEvent);
+      this.context.childManager
+        .getParentEvent("menusInternal.onClicked")
+        .removeListener(this.dispatchEvent);
       this.context.forgetOnClose(this);
     }
     let propHandlerMap = gPropHandlers.get(this.context.extension);
@@ -123,80 +128,97 @@ this.menusInternal = class extends ExtensionAPI {
           if (createProperties.id === null) {
             createProperties.id = ++gNextMenuItemID;
           }
-          let {onclick} = createProperties;
+          let { onclick } = createProperties;
           delete createProperties.onclick;
-          context.childManager.callParentAsyncFunction("menusInternal.create", [
-            createProperties,
-          ]).then(() => {
-            if (onclick) {
-              onClickedProp.setListener(createProperties.id, onclick);
-            }
-            if (callback) {
-              context.runSafeWithoutClone(callback);
-            }
-          }).catch(error => {
-            context.withLastError(error, null, () => {
+          context.childManager
+            .callParentAsyncFunction("menusInternal.create", [createProperties])
+            .then(() => {
+              if (onclick) {
+                onClickedProp.setListener(createProperties.id, onclick);
+              }
               if (callback) {
                 context.runSafeWithoutClone(callback);
               }
+            })
+            .catch(error => {
+              context.withLastError(error, null, () => {
+                if (callback) {
+                  context.runSafeWithoutClone(callback);
+                }
+              });
             });
-          });
           return createProperties.id;
         },
 
         update(id, updateProperties) {
-          let {onclick} = updateProperties;
+          let { onclick } = updateProperties;
           delete updateProperties.onclick;
-          return context.childManager.callParentAsyncFunction("menusInternal.update", [
-            id,
-            updateProperties,
-          ]).then(() => {
-            if (onclick) {
-              onClickedProp.setListener(id, onclick);
-            } else if (onclick === null) {
-              onClickedProp.unsetListenerFromAnyContext(id);
-            }
-            // else onclick is not set so it should not be changed.
-          });
+          return context.childManager
+            .callParentAsyncFunction("menusInternal.update", [
+              id,
+              updateProperties,
+            ])
+            .then(() => {
+              if (onclick) {
+                onClickedProp.setListener(id, onclick);
+              } else if (onclick === null) {
+                onClickedProp.unsetListenerFromAnyContext(id);
+              }
+              // else onclick is not set so it should not be changed.
+            });
         },
 
         remove(id) {
           onClickedProp.unsetListenerFromAnyContext(id);
-          return context.childManager.callParentAsyncFunction("menusInternal.remove", [
-            id,
-          ]);
+          return context.childManager.callParentAsyncFunction(
+            "menusInternal.remove",
+            [id]
+          );
         },
 
         removeAll() {
           onClickedProp.deleteAllListenersFromExtension();
 
-          return context.childManager.callParentAsyncFunction("menusInternal.removeAll", []);
+          return context.childManager.callParentAsyncFunction(
+            "menusInternal.removeAll",
+            []
+          );
         },
 
         overrideContext(contextOptions) {
           let checkValidArg = (contextType, propKey) => {
             if (contextOptions.context !== contextType) {
               if (contextOptions[propKey]) {
-                throw new ExtensionError(`Property "${propKey}" can only be used with context "${contextType}"`);
+                throw new ExtensionError(
+                  `Property "${propKey}" can only be used with context "${contextType}"`
+                );
               }
               return false;
             }
             if (contextOptions.showDefaults) {
-              throw new ExtensionError(`Property "showDefaults" cannot be used with context "${contextType}"`);
+              throw new ExtensionError(
+                `Property "showDefaults" cannot be used with context "${contextType}"`
+              );
             }
             if (!contextOptions[propKey]) {
-              throw new ExtensionError(`Property "${propKey}" is required for context "${contextType}"`);
+              throw new ExtensionError(
+                `Property "${propKey}" is required for context "${contextType}"`
+              );
             }
             return true;
           };
           if (checkValidArg("tab", "tabId")) {
             if (!context.extension.hasPermission("tabs")) {
-              throw new ExtensionError(`The "tab" context requires the "tabs" permission.`);
+              throw new ExtensionError(
+                `The "tab" context requires the "tabs" permission.`
+              );
             }
           }
           if (checkValidArg("bookmark", "bookmarkId")) {
             if (!context.extension.hasPermission("bookmarks")) {
-              throw new ExtensionError(`The "bookmark" context requires the "bookmarks" permission.`);
+              throw new ExtensionError(
+                `The "bookmark" context requires the "bookmarks" permission.`
+              );
             }
           }
 
@@ -243,11 +265,14 @@ this.menusInternal = class extends ExtensionAPI {
           name: "menus.onClicked",
           register: fire => {
             let listener = (info, tab) => {
-              withHandlingUserInput(context.contentWindow,
-                                    () => fire.sync(info, tab));
+              withHandlingUserInput(context.contentWindow, () =>
+                fire.sync(info, tab)
+              );
             };
 
-            let event = context.childManager.getParentEvent("menusInternal.onClicked");
+            let event = context.childManager.getParentEvent(
+              "menusInternal.onClicked"
+            );
             event.addListener(listener);
             return () => {
               event.removeListener(listener);

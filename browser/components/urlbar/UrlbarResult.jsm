@@ -14,7 +14,9 @@
 
 var EXPORTED_SYMBOLS = ["UrlbarResult"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -63,12 +65,12 @@ class UrlbarResult {
 
     // The payload contains result data. Some of the data is common across
     // multiple types, but most of it will vary.
-    if (!payload || (typeof payload != "object")) {
+    if (!payload || typeof payload != "object") {
       throw new Error("Invalid result payload");
     }
     this.payload = payload;
 
-    if (!payloadHighlights || (typeof payloadHighlights != "object")) {
+    if (!payloadHighlights || typeof payloadHighlights != "object") {
       throw new Error("Invalid result payload highlights");
     }
     this.payloadHighlights = payloadHighlights;
@@ -110,18 +112,18 @@ class UrlbarResult {
       case UrlbarUtils.RESULT_TYPE.URL:
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        return this.payload.title ?
-               [this.payload.title, this.payloadHighlights.title] :
-               [this.payload.url || "", this.payloadHighlights.url || []];
+        return this.payload.title
+          ? [this.payload.title, this.payloadHighlights.title]
+          : [this.payload.url || "", this.payloadHighlights.url || []];
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         if (this.payload.isKeywordOffer) {
-          return this.heuristic ?
-                 ["", []] :
-                 [this.payload.keyword, this.payloadHighlights.keyword];
+          return this.heuristic
+            ? ["", []]
+            : [this.payload.keyword, this.payloadHighlights.keyword];
         }
-        return this.payload.suggestion ?
-               [this.payload.suggestion, this.payloadHighlights.suggestion] :
-               [this.payload.query, this.payloadHighlights.query];
+        return this.payload.suggestion
+          ? [this.payload.suggestion, this.payloadHighlights.suggestion]
+          : [this.payload.query, this.payloadHighlights.query];
       default:
         return ["", []];
     }
@@ -166,13 +168,16 @@ class UrlbarResult {
   static payloadAndSimpleHighlights(tokens, payloadInfo) {
     // Convert string values in payloadInfo to [value, false] arrays.
     for (let [name, info] of Object.entries(payloadInfo)) {
-      if (typeof(info) == "string") {
+      if (typeof info == "string") {
         payloadInfo[name] = [info, false];
       }
     }
 
-    if ((!payloadInfo.title || !payloadInfo.title[0]) &&
-        payloadInfo.url && typeof payloadInfo.url[0] == "string") {
+    if (
+      (!payloadInfo.title || !payloadInfo.title[0]) &&
+      payloadInfo.url &&
+      typeof payloadInfo.url[0] == "string"
+    ) {
       // If there's no title, show the domain as the title.  Not all valid URLs
       // have a domain.
       payloadInfo.title = payloadInfo.title || ["", true];
@@ -188,15 +193,20 @@ class UrlbarResult {
       if (UrlbarPrefs.get("trimURLs")) {
         url = BrowserUtils.trimURL(url || "");
       }
-      payloadInfo.displayUrl[0] = Services.textToSubURI.unEscapeURIForUI("UTF-8", url);
+      payloadInfo.displayUrl[0] = Services.textToSubURI.unEscapeURIForUI(
+        "UTF-8",
+        url
+      );
     }
 
     // For performance reasons limit excessive string lengths, to reduce the
     // amount of string matching we do here, and avoid wasting resources to
     // handle long textruns that the user would never see anyway.
     for (let prop of ["displayUrl", "title"].filter(p => p in payloadInfo)) {
-      payloadInfo[prop][0] =
-        payloadInfo[prop][0].substring(0, UrlbarUtils.MAX_TEXT_LENGTH);
+      payloadInfo[prop][0] = payloadInfo[prop][0].substring(
+        0,
+        UrlbarUtils.MAX_TEXT_LENGTH
+      );
     }
 
     let entries = Object.entries(payloadInfo);
@@ -207,10 +217,9 @@ class UrlbarResult {
       }, {}),
       entries.reduce((highlights, [name, [val, shouldHighlight]]) => {
         if (shouldHighlight) {
-          highlights[name] =
-            !Array.isArray(val) ?
-            UrlbarUtils.getTokenMatches(tokens, val || "") :
-            val.map(subval => UrlbarUtils.getTokenMatches(tokens, subval));
+          highlights[name] = !Array.isArray(val)
+            ? UrlbarUtils.getTokenMatches(tokens, val || "")
+            : val.map(subval => UrlbarUtils.getTokenMatches(tokens, subval));
         }
         return highlights;
       }, {}),

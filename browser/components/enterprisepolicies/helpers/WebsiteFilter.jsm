@@ -26,8 +26,10 @@
  * way is to configure that with extensions or through a company firewall.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const LIST_LENGTH_LIMIT = 1000;
 
@@ -44,10 +46,11 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-var EXPORTED_SYMBOLS = [ "WebsiteFilter" ];
+var EXPORTED_SYMBOLS = ["WebsiteFilter"];
 
 function WebsiteFilter(blocklist, exceptionlist) {
-  let blockArray = [], exceptionArray = [];
+  let blockArray = [],
+    exceptionArray = [];
 
   for (let i = 0; i < blocklist.length && i < LIST_LENGTH_LIMIT; i++) {
     try {
@@ -65,9 +68,13 @@ function WebsiteFilter(blocklist, exceptionlist) {
     try {
       let pattern = new MatchPattern(exceptionlist[i]);
       exceptionArray.push(pattern);
-      log.debug(`Pattern added to WebsiteFilter. Exception: ${exceptionlist[i]}`);
+      log.debug(
+        `Pattern added to WebsiteFilter. Exception: ${exceptionlist[i]}`
+      );
     } catch (e) {
-      log.error(`Invalid pattern on WebsiteFilter. Exception: ${exceptionlist[i]}`);
+      log.error(
+        `Invalid pattern on WebsiteFilter. Exception: ${exceptionlist[i]}`
+      );
     }
   }
 
@@ -79,11 +86,14 @@ function WebsiteFilter(blocklist, exceptionlist) {
 }
 
 WebsiteFilter.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   observe(subject, topic, data) {
-    let channel, isDocument = false;
+    let channel,
+      isDocument = false;
     try {
       channel = subject.QueryInterface(Ci.nsIHttpChannel);
       isDocument = channel.isDocument;
@@ -97,8 +107,10 @@ WebsiteFilter.prototype = {
     }
 
     if (this._blockPatterns.matches(channel.URI)) {
-      if (!this._exceptionsPatterns ||
-          !this._exceptionsPatterns.matches(channel.URI)) {
+      if (
+        !this._exceptionsPatterns ||
+        !this._exceptionsPatterns.matches(channel.URI)
+      ) {
         // NS_ERROR_BLOCKED_BY_POLICY displays the error message
         // designed for policy-related blocks.
         channel.cancel(Cr.NS_ERROR_BLOCKED_BY_POLICY);
@@ -106,4 +118,3 @@ WebsiteFilter.prototype = {
     }
   },
 };
-

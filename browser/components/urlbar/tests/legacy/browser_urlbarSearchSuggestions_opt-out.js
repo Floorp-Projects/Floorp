@@ -13,7 +13,8 @@ const NO_RESULTS_TIMEOUT_MS = 500;
 
 add_task(async function prepare() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
@@ -61,8 +62,15 @@ add_task(async function focus() {
   assertFooterVisible(true);
 
   // Check the Change Options link.
-  let changeOptionsLink = document.getAnonymousElementByAttribute(gURLBar.popup, "id", "search-suggestions-change-settings");
-  let prefsPromise = BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#search");
+  let changeOptionsLink = document.getAnonymousElementByAttribute(
+    gURLBar.popup,
+    "id",
+    "search-suggestions-change-settings"
+  );
+  let prefsPromise = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    "about:preferences#search"
+  );
   changeOptionsLink.click();
   await prefsPromise;
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
@@ -100,7 +108,11 @@ add_task(async function new_tab() {
   setupVisibleHint();
   gURLBar.blur();
   // openNewForegroundTab doesn't focus the urlbar.
-  await BrowserTestUtils.synthesizeKey("t", { accelKey: true }, gBrowser.selectedBrowser);
+  await BrowserTestUtils.synthesizeKey(
+    "t",
+    { accelKey: true },
+    gBrowser.selectedBrowser
+  );
   await new Promise(resolve => setTimeout(resolve, NO_RESULTS_TIMEOUT_MS));
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -150,8 +162,9 @@ function setupVisibleHint() {
 }
 
 function assertVisible(visible, win = window) {
-  let style =
-    win.getComputedStyle(win.gURLBar.popup.searchSuggestionsNotification);
+  let style = win.getComputedStyle(
+    win.gURLBar.popup.searchSuggestionsNotification
+  );
   let check = visible ? "notEqual" : "equal";
   Assert[check](style.display, "none");
 }

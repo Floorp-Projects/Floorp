@@ -16,7 +16,10 @@ add_task(async function test_open_bookmark_from_library() {
     title: TEST_URL,
   });
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
 
   let gLibrary = await promiseLibrary("UnfiledBookmarks");
 
@@ -30,9 +33,14 @@ add_task(async function test_open_bookmark_from_library() {
   Assert.equal(bmLibrary.title, bm.title, "Found bookmark in the right pane");
 
   gLibrary.ContentTree.view.selectNode(bmLibrary);
-  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view,
-                                    { clickCount: 2 });
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+    clickCount: 2,
+  });
 
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, TEST_URL);
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    TEST_URL
+  );
   Assert.ok(true, "Expected tab was loaded");
 });

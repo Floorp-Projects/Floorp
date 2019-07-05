@@ -1,14 +1,14 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
-import {Card, PlaceholderCard} from "content-src/components/Card/Card";
-import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
-import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
-import {FluentOrText} from "content-src/components/FluentOrText/FluentOrText";
-import {connect} from "react-redux";
-import {MoreRecommendations} from "content-src/components/MoreRecommendations/MoreRecommendations";
-import {PocketLoggedInCta} from "content-src/components/PocketLoggedInCta/PocketLoggedInCta";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { Card, PlaceholderCard } from "content-src/components/Card/Card";
+import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
+import { ComponentPerfTimer } from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
+import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
+import { connect } from "react-redux";
+import { MoreRecommendations } from "content-src/components/MoreRecommendations/MoreRecommendations";
+import { PocketLoggedInCta } from "content-src/components/PocketLoggedInCta/PocketLoggedInCta";
 import React from "react";
-import {Topics} from "content-src/components/Topics/Topics";
-import {TopSites} from "content-src/components/TopSites/TopSites";
+import { Topics } from "content-src/components/Topics/Topics";
+import { TopSites } from "content-src/components/TopSites/TopSites";
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -17,14 +17,17 @@ const CARDS_PER_ROW_COMPACT_WIDE = 4;
 
 export class Section extends React.PureComponent {
   get numRows() {
-    const {rowsPref, maxRows, Prefs} = this.props;
+    const { rowsPref, maxRows, Prefs } = this.props;
     return rowsPref ? Prefs.values[rowsPref] : maxRows;
   }
 
   _dispatchImpressionStats() {
-    const {props} = this;
+    const { props } = this;
     let cardsPerRow = CARDS_PER_ROW_DEFAULT;
-    if (props.compactCards && global.matchMedia(`(min-width: 1072px)`).matches) {
+    if (
+      props.compactCards &&
+      global.matchMedia(`(min-width: 1072px)`).matches
+    ) {
       // If the section has compact cards and the viewport is wide enough, we show
       // 4 columns instead of 3.
       // $break-point-widest = 1072px (from _variables.scss)
@@ -34,10 +37,12 @@ export class Section extends React.PureComponent {
     const cards = props.rows.slice(0, maxCards);
 
     if (this.needsImpressionStats(cards)) {
-      props.dispatch(ac.ImpressionStats({
-        source: props.eventSource,
-        tiles: cards.map(link => ({id: link.guid})),
-      }));
+      props.dispatch(
+        ac.ImpressionStats({
+          source: props.eventSource,
+          tiles: cards.map(link => ({ id: link.guid })),
+        })
+      );
       this.impressionCardGuids = cards.map(link => link.guid);
     }
   }
@@ -46,7 +51,7 @@ export class Section extends React.PureComponent {
   // changes while the page is hidden (i.e. preloaded or on a hidden tab),
   // only send the event if the page becomes visible again.
   sendImpressionStatsOrAddListener() {
-    const {props} = this;
+    const { props } = this;
 
     if (!props.shouldSendImpressionStats || !props.dispatch) {
       return;
@@ -58,7 +63,10 @@ export class Section extends React.PureComponent {
       // We should only ever send the latest impression stats ping, so remove any
       // older listeners.
       if (this._onVisibilityChange) {
-        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        props.document.removeEventListener(
+          VISIBILITY_CHANGE_EVENT,
+          this._onVisibilityChange
+        );
       }
 
       // When the page becomes visible, send the impression stats ping if the section isn't collapsed.
@@ -67,10 +75,16 @@ export class Section extends React.PureComponent {
           if (!this.props.pref.collapsed) {
             this._dispatchImpressionStats();
           }
-          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+          props.document.removeEventListener(
+            VISIBILITY_CHANGE_EVENT,
+            this._onVisibilityChange
+          );
         }
       };
-      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      props.document.addEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        this._onVisibilityChange
+      );
     }
   }
 
@@ -85,19 +99,17 @@ export class Section extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    const {props} = this;
+    const { props } = this;
     const isCollapsed = props.pref.collapsed;
     const wasCollapsed = prevProps.pref.collapsed;
     if (
       // Don't send impression stats for the empty state
       props.rows.length &&
-      (
-        // We only want to send impression stats if the content of the cards has changed
-        // and the section is not collapsed...
-        (props.rows !== prevProps.rows && !isCollapsed) ||
+      // We only want to send impression stats if the content of the cards has changed
+      // and the section is not collapsed...
+      ((props.rows !== prevProps.rows && !isCollapsed) ||
         // or if we are expanding a section that was collapsed.
-        (wasCollapsed && !isCollapsed)
-      )
+        (wasCollapsed && !isCollapsed))
     ) {
       this.sendImpressionStatsOrAddListener();
     }
@@ -109,12 +121,18 @@ export class Section extends React.PureComponent {
 
   componentWillUnmount() {
     if (this._onVisibilityChange) {
-      this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      this.props.document.removeEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        this._onVisibilityChange
+      );
     }
   }
 
   needsImpressionStats(cards) {
-    if (!this.impressionCardGuids || (this.impressionCardGuids.length !== cards.length)) {
+    if (
+      !this.impressionCardGuids ||
+      this.impressionCardGuids.length !== cards.length
+    ) {
       return true;
     }
 
@@ -132,41 +150,64 @@ export class Section extends React.PureComponent {
   // have rendered that data.
   sendNewTabRehydrated(initialized) {
     if (initialized && !this.renderNotified) {
-      this.props.dispatch(ac.AlsoToMain({type: at.NEW_TAB_REHYDRATED, data: {}}));
+      this.props.dispatch(
+        ac.AlsoToMain({ type: at.NEW_TAB_REHYDRATED, data: {} })
+      );
       this.renderNotified = true;
     }
   }
 
   render() {
     const {
-      id, eventSource, title, icon, rows, Pocket, topics,
-      emptyState, dispatch, compactCards, read_more_endpoint,
-      contextMenuOptions, initialized, learnMore,
-      pref, privacyNoticeURL, isFirst, isLast,
+      id,
+      eventSource,
+      title,
+      icon,
+      rows,
+      Pocket,
+      topics,
+      emptyState,
+      dispatch,
+      compactCards,
+      read_more_endpoint,
+      contextMenuOptions,
+      initialized,
+      learnMore,
+      pref,
+      privacyNoticeURL,
+      isFirst,
+      isLast,
     } = this.props;
 
-    const waitingForSpoc = id === "topstories" && this.props.Pocket.waitingForSpoc;
-    const maxCardsPerRow = compactCards ? CARDS_PER_ROW_COMPACT_WIDE : CARDS_PER_ROW_DEFAULT;
-    const {numRows} = this;
+    const waitingForSpoc =
+      id === "topstories" && this.props.Pocket.waitingForSpoc;
+    const maxCardsPerRow = compactCards
+      ? CARDS_PER_ROW_COMPACT_WIDE
+      : CARDS_PER_ROW_DEFAULT;
+    const { numRows } = this;
     const maxCards = maxCardsPerRow * numRows;
     const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
 
-    const {pocketCta, isUserLoggedIn} = Pocket || {};
-    const {useCta} = pocketCta || {};
+    const { pocketCta, isUserLoggedIn } = Pocket || {};
+    const { useCta } = pocketCta || {};
 
     // Don't display anything until we have a definitve result from Pocket,
     // to avoid a flash of logged out state while we render.
-    const isPocketLoggedInDefined = (isUserLoggedIn === true || isUserLoggedIn === false);
+    const isPocketLoggedInDefined =
+      isUserLoggedIn === true || isUserLoggedIn === false;
 
     const hasTopics = topics && topics.length > 0;
 
-    const shouldShowPocketCta = (id === "topstories" &&
-      useCta && isUserLoggedIn === false);
+    const shouldShowPocketCta =
+      id === "topstories" && useCta && isUserLoggedIn === false;
 
     // Show topics only for top stories and if it has loaded with topics.
     // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
-    const shouldShowTopics = (id === "topstories" && hasTopics &&
-      ((useCta && isUserLoggedIn === true) || (!useCta && isPocketLoggedInDefined)));
+    const shouldShowTopics =
+      id === "topstories" &&
+      hasTopics &&
+      ((useCta && isUserLoggedIn === true) ||
+        (!useCta && isPocketLoggedInDefined));
 
     // We use topics to determine language support for read more.
     const shouldShowReadMore = read_more_endpoint && hasTopics;
@@ -183,26 +224,30 @@ export class Section extends React.PureComponent {
         const link = realRows[i];
         // On narrow viewports, we only show 3 cards per row. We'll mark the rest as
         // .hide-for-narrow to hide in CSS via @media query.
-        const className = (i >= maxCardsOnNarrow) ? "hide-for-narrow" : "";
+        const className = i >= maxCardsOnNarrow ? "hide-for-narrow" : "";
         let usePlaceholder = !link;
         // If we are in the third card and waiting for spoc,
         // use the placeholder.
         if (!usePlaceholder && i === 2 && waitingForSpoc) {
           usePlaceholder = true;
         }
-        cards.push(!usePlaceholder ? (
-          <Card key={i}
-            index={i}
-            className={className}
-            dispatch={dispatch}
-            link={link}
-            contextMenuOptions={contextMenuOptions}
-            eventSource={eventSource}
-            shouldSendImpressionStats={this.props.shouldSendImpressionStats}
-            isWebExtension={this.props.isWebExtension} />
-        ) : (
-          <PlaceholderCard key={i} className={className} />
-        ));
+        cards.push(
+          !usePlaceholder ? (
+            <Card
+              key={i}
+              index={i}
+              className={className}
+              dispatch={dispatch}
+              link={link}
+              contextMenuOptions={contextMenuOptions}
+              eventSource={eventSource}
+              shouldSendImpressionStats={this.props.shouldSendImpressionStats}
+              isWebExtension={this.props.isWebExtension}
+            />
+          ) : (
+            <PlaceholderCard key={i} className={className} />
+          )
+        );
       }
     }
 
@@ -213,57 +258,76 @@ export class Section extends React.PureComponent {
 
     // <Section> <-- React component
     // <section> <-- HTML5 element
-    return (<ComponentPerfTimer {...this.props}>
-      <CollapsibleSection className={sectionClassName} icon={icon}
-        title={title}
-        id={id}
-        eventSource={eventSource}
-        collapsed={this.props.pref.collapsed}
-        showPrefName={(pref && pref.feed) || id}
-        privacyNoticeURL={privacyNoticeURL}
-        Prefs={this.props.Prefs}
-        isFixed={this.props.isFixed}
-        isFirst={isFirst}
-        isLast={isLast}
-        learnMore={learnMore}
-        dispatch={this.props.dispatch}
-        isWebExtension={this.props.isWebExtension}>
-
-        {!shouldShowEmptyState && (<ul className="section-list" style={{padding: 0}}>
-          {cards}
-        </ul>)}
-        {shouldShowEmptyState &&
-          <div className="section-empty-state">
-            <div className="empty-state">
-              {emptyState.icon && emptyState.icon.startsWith("moz-extension://") ?
-                <span className="empty-state-icon icon" style={{"background-image": `url('${emptyState.icon}')`}} /> :
-                <span className={`empty-state-icon icon icon-${emptyState.icon}`} />}
-              <FluentOrText message={emptyState.message}>
-                <p className="empty-state-message" />
-              </FluentOrText>
-            </div>
-          </div>}
-        {id === "topstories" &&
-          <div className="top-stories-bottom-container">
-            {shouldShowTopics &&
-              <div className="wrapper-topics">
-                <Topics topics={this.props.topics} />
+    return (
+      <ComponentPerfTimer {...this.props}>
+        <CollapsibleSection
+          className={sectionClassName}
+          icon={icon}
+          title={title}
+          id={id}
+          eventSource={eventSource}
+          collapsed={this.props.pref.collapsed}
+          showPrefName={(pref && pref.feed) || id}
+          privacyNoticeURL={privacyNoticeURL}
+          Prefs={this.props.Prefs}
+          isFixed={this.props.isFixed}
+          isFirst={isFirst}
+          isLast={isLast}
+          learnMore={learnMore}
+          dispatch={this.props.dispatch}
+          isWebExtension={this.props.isWebExtension}
+        >
+          {!shouldShowEmptyState && (
+            <ul className="section-list" style={{ padding: 0 }}>
+              {cards}
+            </ul>
+          )}
+          {shouldShowEmptyState && (
+            <div className="section-empty-state">
+              <div className="empty-state">
+                {emptyState.icon &&
+                emptyState.icon.startsWith("moz-extension://") ? (
+                  <span
+                    className="empty-state-icon icon"
+                    style={{ "background-image": `url('${emptyState.icon}')` }}
+                  />
+                ) : (
+                  <span
+                    className={`empty-state-icon icon icon-${emptyState.icon}`}
+                  />
+                )}
+                <FluentOrText message={emptyState.message}>
+                  <p className="empty-state-message" />
+                </FluentOrText>
               </div>
-            }
-
-            {shouldShowPocketCta &&
-              <div className="wrapper-cta">
-                <PocketLoggedInCta />
-              </div>
-            }
-
-            <div className="wrapper-more-recommendations">
-              {shouldShowReadMore &&
-                <MoreRecommendations read_more_endpoint={read_more_endpoint} />}
             </div>
-          </div>}
-      </CollapsibleSection>
-    </ComponentPerfTimer>);
+          )}
+          {id === "topstories" && (
+            <div className="top-stories-bottom-container">
+              {shouldShowTopics && (
+                <div className="wrapper-topics">
+                  <Topics topics={this.props.topics} />
+                </div>
+              )}
+
+              {shouldShowPocketCta && (
+                <div className="wrapper-cta">
+                  <PocketLoggedInCta />
+                </div>
+              )}
+
+              <div className="wrapper-more-recommendations">
+                {shouldShowReadMore && (
+                  <MoreRecommendations
+                    read_more_endpoint={read_more_endpoint}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </CollapsibleSection>
+      </ComponentPerfTimer>
+    );
   }
 }
 
@@ -275,13 +339,21 @@ Section.defaultProps = {
   title: "",
 };
 
-export const SectionIntl = connect(state => ({Prefs: state.Prefs, Pocket: state.Pocket}))(Section);
+export const SectionIntl = connect(state => ({
+  Prefs: state.Prefs,
+  Pocket: state.Pocket,
+}))(Section);
 
 export class _Sections extends React.PureComponent {
   renderSections() {
     const sections = [];
-    const enabledSections = this.props.Sections.filter(section => section.enabled);
-    const {sectionOrder, "feeds.topsites": showTopSites} = this.props.Prefs.values;
+    const enabledSections = this.props.Sections.filter(
+      section => section.enabled
+    );
+    const {
+      sectionOrder,
+      "feeds.topsites": showTopSites,
+    } = this.props.Prefs.values;
     // Enabled sections doesn't include Top Sites, so we add it if enabled.
     const expectedCount = enabledSections.length + ~~showTopSites;
 
@@ -304,12 +376,11 @@ export class _Sections extends React.PureComponent {
   }
 
   render() {
-    return (
-      <div className="sections-list">
-        {this.renderSections()}
-      </div>
-    );
+    return <div className="sections-list">{this.renderSections()}</div>;
   }
 }
 
-export const Sections = connect(state => ({Sections: state.Sections, Prefs: state.Prefs}))(_Sections);
+export const Sections = connect(state => ({
+  Sections: state.Sections,
+  Prefs: state.Prefs,
+}))(_Sections);

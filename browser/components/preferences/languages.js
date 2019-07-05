@@ -5,9 +5,12 @@
 
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+document.documentElement.addEventListener(
+  "dialoghelp",
+  window.top.openPrefsHelp
+);
 
 Preferences.addAll([
   { id: "intl.accept_languages", type: "wstring" },
@@ -18,15 +21,15 @@ Preferences.addAll([
 ]);
 
 var gLanguagesDialog = {
-
   _availableLanguagesList: [],
-  _acceptLanguages: { },
+  _acceptLanguages: {},
 
   _selectedItemID: null,
 
   onLoad() {
-    Preferences.get("intl.accept_languages").on("change",
-      () => this._readAcceptLanguages().catch(Cu.reportError));
+    Preferences.get("intl.accept_languages").on("change", () =>
+      this._readAcceptLanguages().catch(Cu.reportError)
+    );
 
     if (!this._availableLanguagesList.length) {
       document.mozSubdialogReady = this._loadAvailableLanguages();
@@ -47,7 +50,7 @@ var gLanguagesDialog = {
     // ab[-cd].accept=true|false
     //  ab = language
     //  cd = region
-    var bundleAccepted    = document.getElementById("bundleAccepted");
+    var bundleAccepted = document.getElementById("bundleAccepted");
 
     function LocaleInfo(aLocaleName, aLocaleCode, aIsVisible) {
       this.name = aLocaleName;
@@ -67,11 +70,16 @@ var gLanguagesDialog = {
       }
     }
 
-    let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
+    let localeNames = Services.intl.getLocaleDisplayNames(
+      undefined,
+      localeCodes
+    );
 
     for (let i in localeCodes) {
-      let isVisible = localeValues[i] == "true" &&
-        (!(localeCodes[i] in this._acceptLanguages) || !this._acceptLanguages[localeCodes[i]]);
+      let isVisible =
+        localeValues[i] == "true" &&
+        (!(localeCodes[i] in this._acceptLanguages) ||
+          !this._acceptLanguages[localeCodes[i]]);
 
       let li = new LocaleInfo(localeNames[i], localeCodes[i], isVisible);
       this._availableLanguagesList.push(li);
@@ -82,9 +90,12 @@ var gLanguagesDialog = {
   },
 
   async _buildAvailableLanguageList() {
-    var availableLanguagesPopup = document.getElementById("availableLanguagesPopup");
-    while (availableLanguagesPopup.hasChildNodes())
+    var availableLanguagesPopup = document.getElementById(
+      "availableLanguagesPopup"
+    );
+    while (availableLanguagesPopup.hasChildNodes()) {
       availableLanguagesPopup.firstChild.remove();
+    }
 
     let frag = document.createDocumentFragment();
 
@@ -92,8 +103,11 @@ var gLanguagesDialog = {
     for (var i = 0; i < this._availableLanguagesList.length; ++i) {
       let locale = this._availableLanguagesList[i];
       let localeCode = locale.code;
-      if (locale.isVisible &&
-          (!(localeCode in this._acceptLanguages) || !this._acceptLanguages[localeCode])) {
+      if (
+        locale.isVisible &&
+        (!(localeCode in this._acceptLanguages) ||
+          !this._acceptLanguages[localeCode])
+      ) {
         var menuitem = document.createXULElement("menuitem");
         menuitem.id = localeCode;
         document.l10n.setAttributes(menuitem, "languages-code-format", {
@@ -122,25 +136,31 @@ var gLanguagesDialog = {
 
     availableLanguagesPopup.appendChild(frag);
 
-    this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("placeholder"));
+    this._availableLanguages.setAttribute(
+      "label",
+      this._availableLanguages.getAttribute("placeholder")
+    );
   },
 
   async _readAcceptLanguages() {
-    while (this._activeLanguages.hasChildNodes())
+    while (this._activeLanguages.hasChildNodes()) {
       this._activeLanguages.firstChild.remove();
+    }
 
     var selectedIndex = 0;
     var preference = Preferences.get("intl.accept_languages");
-    if (preference.value == "")
+    if (preference.value == "") {
       return;
+    }
     var languages = preference.value.toLowerCase().split(/\s*,\s*/);
     for (var i = 0; i < languages.length; ++i) {
       var listitem = document.createXULElement("richlistitem");
       var label = document.createXULElement("label");
       listitem.appendChild(label);
       listitem.id = languages[i];
-      if (languages[i] == this._selectedItemID)
+      if (languages[i] == this._selectedItemID) {
         selectedIndex = i;
+      }
       this._activeLanguages.appendChild(listitem);
       var localeName = this._getLocaleName(languages[i]);
       document.l10n.setAttributes(label, "languages-active-code-format", {
@@ -171,8 +191,8 @@ var gLanguagesDialog = {
   onAvailableLanguageSelect() {
     var availableLanguages = this._availableLanguages;
     var addButton = document.getElementById("addButton");
-    addButton.disabled = availableLanguages.disabled ||
-                         availableLanguages.selectedIndex < 0;
+    addButton.disabled =
+      availableLanguages.disabled || availableLanguages.selectedIndex < 0;
 
     this._availableLanguages.removeAttribute("accesskey");
   },
@@ -181,9 +201,10 @@ var gLanguagesDialog = {
     var selectedID = this._availableLanguages.selectedItem.id;
     var preference = Preferences.get("intl.accept_languages");
     var arrayOfPrefs = preference.value.toLowerCase().split(/\s*,\s*/);
-    for (var i = 0; i < arrayOfPrefs.length; ++i ) {
-      if (arrayOfPrefs[i] == selectedID)
+    for (var i = 0; i < arrayOfPrefs.length; ++i) {
+      if (arrayOfPrefs[i] == selectedID) {
         return;
+      }
     }
 
     this._selectedItemID = selectedID;
@@ -207,10 +228,11 @@ var gLanguagesDialog = {
     var languagesArray = [];
     for (var i = 0; i < this._activeLanguages.childNodes.length; ++i) {
       var item = this._activeLanguages.childNodes[i];
-      if (!item.selected)
+      if (!item.selected) {
         languagesArray.push(item.id);
-      else
+      } else {
         this._acceptLanguages[item.id] = false;
+      }
     }
     var string = languagesArray.join(",");
 
@@ -230,11 +252,13 @@ var gLanguagesDialog = {
   },
 
   _getLocaleName(localeCode) {
-    if (!this._availableLanguagesList.length)
+    if (!this._availableLanguagesList.length) {
       this._loadAvailableLanguages();
+    }
     for (var i = 0; i < this._availableLanguagesList.length; ++i) {
-      if (localeCode == this._availableLanguagesList[i].code)
+      if (localeCode == this._availableLanguagesList[i].code) {
         return this._availableLanguagesList[i].name;
+      }
     }
     return "";
   },
@@ -246,13 +270,14 @@ var gLanguagesDialog = {
     var string = "";
     for (var i = 0; i < this._activeLanguages.childNodes.length; ++i) {
       var item = this._activeLanguages.childNodes[i];
-      string += (i == 0 ? "" : ",");
-      if (item.id == previousItem.id)
+      string += i == 0 ? "" : ",";
+      if (item.id == previousItem.id) {
         string += selectedItem.id;
-      else if (item.id == selectedItem.id)
+      } else if (item.id == selectedItem.id) {
         string += previousItem.id;
-      else
+      } else {
         string += item.id;
+      }
     }
 
     this._selectedItemID = selectedItem.id;
@@ -269,13 +294,14 @@ var gLanguagesDialog = {
     var string = "";
     for (var i = 0; i < this._activeLanguages.childNodes.length; ++i) {
       var item = this._activeLanguages.childNodes[i];
-      string += (i == 0 ? "" : ",");
-      if (item.id == nextItem.id)
+      string += i == 0 ? "" : ",";
+      if (item.id == nextItem.id) {
         string += selectedItem.id;
-      else if (item.id == selectedItem.id)
+      } else if (item.id == selectedItem.id) {
         string += nextItem.id;
-      else
+      } else {
         string += item.id;
+      }
     }
 
     this._selectedItemID = selectedItem.id;
@@ -290,24 +316,28 @@ var gLanguagesDialog = {
     var downButton = document.getElementById("down");
     var removeButton = document.getElementById("remove");
     switch (this._activeLanguages.selectedCount) {
-    case 0:
-      upButton.disabled = downButton.disabled = removeButton.disabled = true;
-      break;
-    case 1:
-      upButton.disabled = this._activeLanguages.selectedIndex == 0;
-      downButton.disabled = this._activeLanguages.selectedIndex == this._activeLanguages.childNodes.length - 1;
-      removeButton.disabled = false;
-      break;
-    default:
-      upButton.disabled = true;
-      downButton.disabled = true;
-      removeButton.disabled = false;
+      case 0:
+        upButton.disabled = downButton.disabled = removeButton.disabled = true;
+        break;
+      case 1:
+        upButton.disabled = this._activeLanguages.selectedIndex == 0;
+        downButton.disabled =
+          this._activeLanguages.selectedIndex ==
+          this._activeLanguages.childNodes.length - 1;
+        removeButton.disabled = false;
+        break;
+      default:
+        upButton.disabled = true;
+        downButton.disabled = true;
+        removeButton.disabled = false;
     }
   },
 
   readSpoofEnglish() {
     var checkbox = document.getElementById("spoofEnglish");
-    var resistFingerprinting = Services.prefs.getBoolPref("privacy.resistFingerprinting");
+    var resistFingerprinting = Services.prefs.getBoolPref(
+      "privacy.resistFingerprinting"
+    );
     if (!resistFingerprinting) {
       checkbox.hidden = true;
       return false;
@@ -318,20 +348,21 @@ var gLanguagesDialog = {
     var availableLanguages = this._availableLanguages;
     checkbox.hidden = false;
     switch (spoofEnglish) {
-    case 1: // don't spoof intl.accept_languages
-      activeLanguages.disabled = false;
-      activeLanguages.selectItem(activeLanguages.firstChild);
-      availableLanguages.disabled = false;
-      this.onAvailableLanguageSelect();
-      return false;
-    case 2: // spoof intl.accept_languages
-      activeLanguages.clearSelection();
-      activeLanguages.disabled = true;
-      availableLanguages.disabled = true;
-      this.onAvailableLanguageSelect();
-      return true;
-    default: // will prompt for spoofing intl.accept_languages if resisting fingerprinting
-      return false;
+      case 1: // don't spoof intl.accept_languages
+        activeLanguages.disabled = false;
+        activeLanguages.selectItem(activeLanguages.firstChild);
+        availableLanguages.disabled = false;
+        this.onAvailableLanguageSelect();
+        return false;
+      case 2: // spoof intl.accept_languages
+        activeLanguages.clearSelection();
+        activeLanguages.disabled = true;
+        availableLanguages.disabled = true;
+        this.onAvailableLanguageSelect();
+        return true;
+      default:
+        // will prompt for spoofing intl.accept_languages if resisting fingerprinting
+        return false;
     }
   },
 

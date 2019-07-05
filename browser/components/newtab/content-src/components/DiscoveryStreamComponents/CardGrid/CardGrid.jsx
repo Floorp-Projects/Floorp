@@ -1,5 +1,5 @@
-import {DSCard, PlaceholderDSCard} from "../DSCard/DSCard.jsx";
-import {DSEmptyState} from "../DSEmptyState/DSEmptyState.jsx";
+import { DSCard, PlaceholderDSCard } from "../DSCard/DSCard.jsx";
+import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import React from "react";
 
 export class CardGrid extends React.PureComponent {
@@ -9,27 +9,30 @@ export class CardGrid extends React.PureComponent {
 
     for (let index = 0; index < this.props.items; index++) {
       const rec = recs[index];
-      cards.push(!rec || rec.placeholder ? (
-        <PlaceholderDSCard key={`dscard-${index}`} />
-      ) : (
-        <DSCard
-          key={`dscard-${index}`}
-          pos={rec.pos}
-          campaignId={rec.campaign_id}
-          image_src={rec.image_src}
-          raw_image_src={rec.raw_image_src}
-          title={rec.title}
-          excerpt={rec.excerpt}
-          url={rec.url}
-          id={rec.id}
-          shim={rec.shim}
-          type={this.props.type}
-          context={rec.context}
-          dispatch={this.props.dispatch}
-          source={rec.domain}
-          pocket_id={rec.pocket_id}
-          bookmarkGuid={rec.bookmarkGuid} />
-      ));
+      cards.push(
+        !rec || rec.placeholder ? (
+          <PlaceholderDSCard key={`dscard-${index}`} />
+        ) : (
+          <DSCard
+            key={`dscard-${index}`}
+            pos={rec.pos}
+            campaignId={rec.campaign_id}
+            image_src={rec.image_src}
+            raw_image_src={rec.raw_image_src}
+            title={rec.title}
+            excerpt={rec.excerpt}
+            url={rec.url}
+            id={rec.id}
+            shim={rec.shim}
+            type={this.props.type}
+            context={rec.context}
+            dispatch={this.props.dispatch}
+            source={rec.domain}
+            pocket_id={rec.pocket_id}
+            bookmarkGuid={rec.bookmarkGuid}
+          />
+        )
+      );
     }
 
     let divisibility = ``;
@@ -41,14 +44,18 @@ export class CardGrid extends React.PureComponent {
     }
 
     return (
-      <div className={`ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}`}>
+      <div
+        className={`ds-card-grid ds-card-grid-${
+          this.props.border
+        } ds-card-grid-${divisibility}`}
+      >
         {cards}
       </div>
     );
   }
 
   render() {
-    const {data} = this.props;
+    const { data } = this.props;
 
     // Handle a render before feed has been fetched by displaying nothing
     if (!data) {
@@ -58,15 +65,22 @@ export class CardGrid extends React.PureComponent {
     // Handle the case where a user has dismissed all recommendations
     const isEmpty = data.recommendations.length === 0;
 
-    return (<div>
-      <div className="ds-header">{this.props.title}</div>
-      {isEmpty ?
-        <div className="ds-card-grid empty">
-          <DSEmptyState status={data.status} dispatch={this.props.dispatch} feed={this.props.feed} />
-        </div> :
-        this.renderCards()
-      }
-    </div>);
+    return (
+      <div>
+        <div className="ds-header">{this.props.title}</div>
+        {isEmpty ? (
+          <div className="ds-card-grid empty">
+            <DSEmptyState
+              status={data.status}
+              dispatch={this.props.dispatch}
+              feed={this.props.feed}
+            />
+          </div>
+        ) : (
+          this.renderCards()
+        )}
+      </div>
+    );
   }
 }
 

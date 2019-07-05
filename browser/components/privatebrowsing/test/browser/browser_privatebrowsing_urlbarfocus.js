@@ -5,18 +5,23 @@
 // This test makes sure that the URL bar is focused when entering the private window.
 
 "use strict";
-let aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
-                           .getService(Ci.nsIAboutNewTabService);
+let aboutNewTabService = Cc[
+  "@mozilla.org/browser/aboutnewtab-service;1"
+].getService(Ci.nsIAboutNewTabService);
 
 function checkUrlbarFocus(win) {
   let urlbar = win.gURLBar;
-  is(win.document.activeElement, urlbar.inputField, "URL Bar should be focused");
+  is(
+    win.document.activeElement,
+    urlbar.inputField,
+    "URL Bar should be focused"
+  );
   is(urlbar.value, "", "URL Bar should be empty");
 }
 
 function openNewPrivateWindow() {
   return new Promise(resolve => {
-    whenNewWindowLoaded({private: true}, win => {
+    whenNewWindowLoaded({ private: true }, win => {
       executeSoon(() => resolve(win));
     });
   });

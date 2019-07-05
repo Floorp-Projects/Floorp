@@ -14,13 +14,11 @@
 import CurrencyAmount from "./currency-amount.js";
 import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 
-export default class PaymentDetailsItem extends ObservedPropertiesMixin(HTMLElement) {
+export default class PaymentDetailsItem extends ObservedPropertiesMixin(
+  HTMLElement
+) {
   static get observedAttributes() {
-    return [
-      "label",
-      "amount-currency",
-      "amount-value",
-    ];
+    return ["label", "amount-currency", "amount-value"];
   }
 
   constructor() {
@@ -47,4 +45,3 @@ export default class PaymentDetailsItem extends ObservedPropertiesMixin(HTMLElem
 }
 
 customElements.define("payment-details-item", PaymentDetailsItem);
-

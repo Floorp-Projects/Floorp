@@ -50,7 +50,10 @@ add_task(async function test_basic_functionality() {
   for (let i = 0; i < itemCount; i++) {
     let element = richlistbox.itemChildren[itemCount - i - 1];
     let download = DownloadsView.itemForElement(element).download;
-    is(DownloadsCommon.stateOfDownload(download), DownloadData[i].state,
-       "Download states match up");
+    is(
+      DownloadsCommon.stateOfDownload(download),
+      DownloadData[i].state,
+      "Download states match up"
+    );
   }
 });

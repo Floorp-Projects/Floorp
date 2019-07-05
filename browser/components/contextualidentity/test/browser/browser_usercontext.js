@@ -1,22 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const USER_CONTEXTS = ["default", "personal", "work"];
 
-const USER_CONTEXTS = [
-  "default",
-  "personal",
-  "work",
-];
-
-const BASE_URI = "http://mochi.test:8888/browser/browser/components/"
-  + "contextualidentity/test/browser/file_reflect_cookie_into_title.html";
-
+const BASE_URI =
+  "http://mochi.test:8888/browser/browser/components/" +
+  "contextualidentity/test/browser/file_reflect_cookie_into_title.html";
 
 // opens `uri' in a new tab with the provided userContextId and focuses it.
 // returns the newly opened tab
 function openTabInUserContext(uri, userContextId) {
   // open the tab in the correct userContextId
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // select tab and make sure its browser is focused
   gBrowser.selectedTab = tab;
@@ -27,10 +22,9 @@ function openTabInUserContext(uri, userContextId) {
 
 add_task(async function setup() {
   // make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true],
-    ["dom.ipc.processCount", 1],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true], ["dom.ipc.processCount", 1]],
+  });
 });
 
 add_task(async function test() {
@@ -74,9 +68,16 @@ add_task(async function test() {
     // check each item in the title and validate it meets expectatations
     for (let part of title) {
       let [storageMethodName, value] = part.split("=");
-      is(value, expectedContext,
-            "the title reflects the expected contextual identity of " +
-            expectedContext + " for method " + storageMethodName + ": " + value);
+      is(
+        value,
+        expectedContext,
+        "the title reflects the expected contextual identity of " +
+          expectedContext +
+          " for method " +
+          storageMethodName +
+          ": " +
+          value
+      );
     }
 
     gBrowser.removeTab(tab);

@@ -10,13 +10,16 @@ var gBms;
 add_task(async function setup() {
   gBms = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [{
-      title: "bm1",
-      url: "about:buildconfig",
-    }, {
-      title: "bm2",
-      url: "about:mozilla",
-    }],
+    children: [
+      {
+        title: "bm1",
+        url: "about:buildconfig",
+      },
+      {
+        title: "bm2",
+        url: "about:mozilla",
+      },
+    ],
   });
 
   registerCleanupFunction(async () => {
@@ -27,11 +30,13 @@ add_task(async function setup() {
 add_task(async function test_open_bookmark_from_sidebar() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  await withSidebarTree("bookmarks", async (tree) => {
+  await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([gBms[0].guid]);
 
-    let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
-      false, gBms[0].url
+    let loadedPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      gBms[0].url
     );
 
     tree.controller.doCommand("placesCmd_open");
@@ -48,11 +53,13 @@ add_task(async function test_open_bookmark_from_sidebar() {
 add_task(async function test_open_bookmark_from_sidebar_keypress() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  await withSidebarTree("bookmarks", async (tree) => {
+  await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([gBms[1].guid]);
 
-    let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
-      false, gBms[1].url
+    let loadedPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      gBms[1].url
     );
 
     tree.focus();
@@ -68,15 +75,17 @@ add_task(async function test_open_bookmark_from_sidebar_keypress() {
 });
 
 add_task(async function test_open_bookmark_in_tab_from_sidebar() {
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_LOAD_BOOKMARKS_IN_TABS, true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[PREF_LOAD_BOOKMARKS_IN_TABS, true]],
+  });
 
-  await BrowserTestUtils.withNewTab({gBrowser}, async (initialTab) => {
-    await withSidebarTree("bookmarks", async (tree) => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async initialTab => {
+    await withSidebarTree("bookmarks", async tree => {
       tree.selectItems([gBms[0].guid]);
-      let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
-        false, gBms[0].url
+      let loadedPromise = BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser,
+        false,
+        gBms[0].url
       );
       tree.focus();
       EventUtils.sendKey("return");
@@ -97,22 +106,26 @@ add_task(async function test_open_bookmark_in_tab_from_sidebar() {
 });
 
 add_task(async function test_open_bookmark_folder_from_sidebar() {
-  await withSidebarTree("bookmarks", async (tree) => {
+  await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([PlacesUtils.bookmarks.virtualUnfiledGuid]);
 
-    Assert.equal(tree.view.selection.getRangeCount(), 1,
-      "Should only have one range selected");
+    Assert.equal(
+      tree.view.selection.getRangeCount(),
+      1,
+      "Should only have one range selected"
+    );
 
     let loadedPromises = [];
 
     for (let bm of gBms) {
-      loadedPromises.push(BrowserTestUtils.waitForNewTab(gBrowser,
-        bm.url, false, true));
+      loadedPromises.push(
+        BrowserTestUtils.waitForNewTab(gBrowser, bm.url, false, true)
+      );
     }
 
-    synthesizeClickOnSelectedTreeCell(tree, {button: 1});
+    synthesizeClickOnSelectedTreeCell(tree, { button: 1 });
 
-   let tabs = await Promise.all(loadedPromises);
+    let tabs = await Promise.all(loadedPromises);
 
     for (let tab of tabs) {
       await BrowserTestUtils.removeTab(tab);

@@ -27,38 +27,65 @@ async function runTest(options) {
   tab.linkedBrowser.fullZoom = options.fullZoom;
 
   async function background(options) {
-    browser.test.log(`Test color ${options.color} at fullZoom=${options.fullZoom}`);
+    browser.test.log(
+      `Test color ${options.color} at fullZoom=${options.fullZoom}`
+    );
 
     try {
-      let [tab] = await browser.tabs.query({currentWindow: true, active: true});
+      let [tab] = await browser.tabs.query({
+        currentWindow: true,
+        active: true,
+      });
 
       let [jpeg, png, ...pngs] = await Promise.all([
-        browser.tabs.captureVisibleTab(tab.windowId, {format: "jpeg", quality: 95}),
-        browser.tabs.captureVisibleTab(tab.windowId, {format: "png", quality: 95}),
-        browser.tabs.captureVisibleTab(tab.windowId, {quality: 95}),
+        browser.tabs.captureVisibleTab(tab.windowId, {
+          format: "jpeg",
+          quality: 95,
+        }),
+        browser.tabs.captureVisibleTab(tab.windowId, {
+          format: "png",
+          quality: 95,
+        }),
+        browser.tabs.captureVisibleTab(tab.windowId, { quality: 95 }),
         browser.tabs.captureVisibleTab(tab.windowId),
       ]);
 
-      browser.test.assertTrue(pngs.every(url => url == png), "All PNGs are identical");
+      browser.test.assertTrue(
+        pngs.every(url => url == png),
+        "All PNGs are identical"
+      );
 
-      browser.test.assertTrue(jpeg.startsWith("data:image/jpeg;base64,"), "jpeg is JPEG");
-      browser.test.assertTrue(png.startsWith("data:image/png;base64,"), "png is PNG");
+      browser.test.assertTrue(
+        jpeg.startsWith("data:image/jpeg;base64,"),
+        "jpeg is JPEG"
+      );
+      browser.test.assertTrue(
+        png.startsWith("data:image/png;base64,"),
+        "png is PNG"
+      );
 
-      let promises = [jpeg, png].map(url => new Promise(resolve => {
-        let img = new Image();
-        img.src = url;
-        img.onload = () => resolve(img);
-      }));
+      let promises = [jpeg, png].map(
+        url =>
+          new Promise(resolve => {
+            let img = new Image();
+            img.src = url;
+            img.onload = () => resolve(img);
+          })
+      );
 
       [jpeg, png] = await Promise.all(promises);
       let tabDims = `${tab.width}\u00d7${tab.height}`;
 
-      let images = {jpeg, png};
+      let images = { jpeg, png };
       for (let format of Object.keys(images)) {
         let img = images[format];
 
         let dims = `${img.width}\u00d7${img.height}`;
-        browser.test.assertEq(tabDims, dims, `${format} dimensions are correct`);
+        browser.test.assertEq(
+          tabDims,
+          dims,
+          `${format} dimensions are correct`
+        );
 
         let canvas = document.createElement("canvas");
         canvas.width = img.width;
@@ -71,31 +98,51 @@ async function runTest(options) {
         // Check the colors of the first and last pixels of the image, to make
         // sure we capture the entire frame, and scale it correctly.
         let coords = [
-          {x: 0, y: 0,
-           color: options.color},
-          {x: img.width - 1,
-           y: img.height - 1,
-           color: options.color},
-          {x: img.width / 2 | 0,
-           y: img.height / 2 | 0,
-           color: options.neutral},
+          { x: 0, y: 0, color: options.color },
+          { x: img.width - 1, y: img.height - 1, color: options.color },
+          {
+            x: (img.width / 2) | 0,
+            y: (img.height / 2) | 0,
+            color: options.neutral,
+          },
         ];
 
-        for (let {x, y, color} of coords) {
+        for (let { x, y, color } of coords) {
           let imageData = ctx.getImageData(x, y, 1, 1).data;
 
           if (format == "png") {
-            browser.test.assertEq(`rgba(${color},255)`, `rgba(${[...imageData]})`, `${format} image color is correct at (${x}, ${y})`);
+            browser.test.assertEq(
+              `rgba(${color},255)`,
+              `rgba(${[...imageData]})`,
+              `${format} image color is correct at (${x}, ${y})`
+            );
           } else {
             // Allow for some deviation in JPEG version due to lossy compression.
             const SLOP = 3;
 
-            browser.test.log(`Testing ${format} image color at (${x}, ${y}), have rgba(${[...imageData]}), expecting approx. rgba(${color},255)`);
+            browser.test.log(
+              `Testing ${format} image color at (${x}, ${y}), have rgba(${[
+                ...imageData,
+              ]}), expecting approx. rgba(${color},255)`
+            );
 
-            browser.test.assertTrue(Math.abs(color[0] - imageData[0]) <= SLOP, `${format} image color.red is correct at (${x}, ${y})`);
-            browser.test.assertTrue(Math.abs(color[1] - imageData[1]) <= SLOP, `${format} image color.green is correct at (${x}, ${y})`);
-            browser.test.assertTrue(Math.abs(color[2] - imageData[2]) <= SLOP, `${format} image color.blue is correct at (${x}, ${y})`);
-            browser.test.assertEq(255, imageData[3], `${format} image color.alpha is correct at (${x}, ${y})`);
+            browser.test.assertTrue(
+              Math.abs(color[0] - imageData[0]) <= SLOP,
+              `${format} image color.red is correct at (${x}, ${y})`
+            );
+            browser.test.assertTrue(
+              Math.abs(color[1] - imageData[1]) <= SLOP,
+              `${format} image color.green is correct at (${x}, ${y})`
+            );
+            browser.test.assertTrue(
+              Math.abs(color[2] - imageData[2]) <= SLOP,
+              `${format} image color.blue is correct at (${x}, ${y})`
+            );
+            browser.test.assertEq(
+              255,
+              imageData[3],
+              `${format} image color.alpha is correct at (${x}, ${y})`
+            );
           }
         }
       }
@@ -109,7 +156,7 @@ async function runTest(options) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["<all_urls>"],
+      permissions: ["<all_urls>"],
     },
 
     background: `(${background})(${JSON.stringify(options)})`,
@@ -125,24 +172,27 @@ async function runTest(options) {
 }
 
 add_task(async function testCaptureVisibleTab() {
-  await runTest({color: [0, 0, 0], fullZoom: 1});
+  await runTest({ color: [0, 0, 0], fullZoom: 1 });
 
-  await runTest({color: [0, 0, 0], fullZoom: 2});
+  await runTest({ color: [0, 0, 0], fullZoom: 2 });
 
-  await runTest({color: [0, 0, 0], fullZoom: 0.5});
+  await runTest({ color: [0, 0, 0], fullZoom: 0.5 });
 
-  await runTest({color: [255, 255, 255], fullZoom: 1});
+  await runTest({ color: [255, 255, 255], fullZoom: 1 });
 });
 
 add_task(async function testCaptureVisibleTabPermissions() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     background() {
-      browser.test.assertEq(undefined, browser.tabs.captureVisibleTab,
-                            'Extension without "<all_urls>" permission should not have access to captureVisibleTab');
+      browser.test.assertEq(
+        undefined,
+        browser.tabs.captureVisibleTab,
+        'Extension without "<all_urls>" permission should not have access to captureVisibleTab'
+      );
       browser.test.notifyPass("captureVisibleTabPermissions");
     },
   });

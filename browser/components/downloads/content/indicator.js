@@ -83,11 +83,13 @@ const DownloadsButton = {
     indicator.open = this._anchorRequested;
 
     let widget = CustomizableUI.getWidget("downloads-button");
-     // Determine if the indicator is located on an invisible toolbar.
-     if (!isElementVisible(indicator.parentNode) &&
-         widget.areaType == CustomizableUI.TYPE_TOOLBAR) {
-       return null;
-     }
+    // Determine if the indicator is located on an invisible toolbar.
+    if (
+      !isElementVisible(indicator.parentNode) &&
+      widget.areaType == CustomizableUI.TYPE_TOOLBAR
+    ) {
+      return null;
+    }
 
     return DownloadsIndicatorView.indicatorAnchor;
   },
@@ -170,8 +172,12 @@ const DownloadsButton = {
       return;
     }
     let button = this._placeholder;
-    if (!this._customizing && this.autoHideDownloadsButton &&
-        button && button.closest("toolbar")) {
+    if (
+      !this._customizing &&
+      this.autoHideDownloadsButton &&
+      button &&
+      button.closest("toolbar")
+    ) {
       this.startAutoHide();
     } else {
       this.unhide();
@@ -215,8 +221,12 @@ const DownloadsButton = {
 
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(
-      this, "autoHideDownloadsButton", "browser.download.autohideButton",
-      true, this.checkForAutoHide.bind(this));
+      this,
+      "autoHideDownloadsButton",
+      "browser.download.autohideButton",
+      true,
+      this.checkForAutoHide.bind(this)
+    );
 
     CustomizableUI.addListener(this);
     this.checkForAutoHide();
@@ -229,12 +239,12 @@ const DownloadsButton = {
 
   get _tabsToolbar() {
     delete this._tabsToolbar;
-    return this._tabsToolbar = document.getElementById("TabsToolbar");
+    return (this._tabsToolbar = document.getElementById("TabsToolbar"));
   },
 
   get _navBar() {
     delete this._navBar;
-    return this._navBar = document.getElementById("nav-bar");
+    return (this._navBar = document.getElementById("nav-bar"));
   },
 };
 
@@ -424,9 +434,10 @@ const DownloadsIndicatorView = {
       let leftDiff = anchorRect.left - notifierRect.left;
       let heightDiff = anchorRect.height - notifierRect.height;
       let widthDiff = anchorRect.width - notifierRect.width;
-      let translateX = (leftDiff + .5 * widthDiff) + "px";
-      let translateY = (topDiff + .5 * heightDiff) + "px";
-      notifier.style.transform = "translate(" + translateX + ", " + translateY + ")";
+      let translateX = leftDiff + 0.5 * widthDiff + "px";
+      let translateY = topDiff + 0.5 * heightDiff + "px";
+      notifier.style.transform =
+        "translate(" + translateX + ", " + translateY + ")";
       notifier.setAttribute("notification", aType);
     }
     anchor.setAttribute("notification", aType);
@@ -500,7 +511,7 @@ const DownloadsIndicatorView = {
         // For arrow type only:
         // We set animationDelay to a minus value (0s ~ -100s) to show the
         // corresponding frame needed for progress.
-        this._progressIcon.style.animationDelay = (-this._percentComplete) + "s";
+        this._progressIcon.style.animationDelay = -this._percentComplete + "s";
       } else {
         this.indicator.removeAttribute("progress");
         this._progressIcon.style.animationDelay = "1s";
@@ -532,11 +543,15 @@ const DownloadsIndicatorView = {
 
     // For arrow-Styled indicator, suppress success attention if we have
     // progress in toolbar
-    let suppressAttention = !inMenu &&
+    let suppressAttention =
+      !inMenu &&
       this._attention == DownloadsCommon.ATTENTION_SUCCESS &&
       this._percentComplete >= 0;
 
-    if (suppressAttention || this._attention == DownloadsCommon.ATTENTION_NONE) {
+    if (
+      suppressAttention ||
+      this._attention == DownloadsCommon.ATTENTION_NONE
+    ) {
       this.indicator.removeAttribute("attention");
     } else {
       this.indicator.setAttribute("attention", this._attention);
@@ -552,9 +567,10 @@ const DownloadsIndicatorView = {
   },
 
   onCommand(aEvent) {
-    if ((aEvent.type == "mousedown" && aEvent.button != 0) ||
-        (aEvent.type == "keypress" &&
-         aEvent.key != " " && aEvent.key != "Enter")) {
+    if (
+      (aEvent.type == "mousedown" && aEvent.button != 0) ||
+      (aEvent.type == "keypress" && aEvent.key != " " && aEvent.key != "Enter")
+    ) {
       return;
     }
 
@@ -570,17 +586,22 @@ const DownloadsIndicatorView = {
     let dt = aEvent.dataTransfer;
     // If dragged item is from our source, do not try to
     // redownload already downloaded file.
-    if (dt.mozGetDataAt("application/x-moz-file", 0))
+    if (dt.mozGetDataAt("application/x-moz-file", 0)) {
       return;
+    }
 
     let links = browserDragAndDrop.dropLinks(aEvent);
-    if (!links.length)
+    if (!links.length) {
       return;
-    let sourceDoc = dt.mozSourceNode ? dt.mozSourceNode.ownerDocument : document;
+    }
+    let sourceDoc = dt.mozSourceNode
+      ? dt.mozSourceNode.ownerDocument
+      : document;
     let handled = false;
     for (let link of links) {
-      if (link.url.startsWith("about:"))
+      if (link.url.startsWith("about:")) {
         continue;
+      }
       saveURL(link.url, link.name, null, true, true, null, sourceDoc);
       handled = true;
     }
@@ -606,7 +627,7 @@ const DownloadsIndicatorView = {
       return null;
     }
 
-    return this._indicator = indicator;
+    return (this._indicator = indicator);
   },
 
   get indicatorAnchor() {
@@ -620,13 +641,21 @@ const DownloadsIndicatorView = {
   },
 
   get _progressIcon() {
-    return this.__progressIcon ||
-      (this.__progressIcon = document.getElementById("downloads-indicator-progress-inner"));
+    return (
+      this.__progressIcon ||
+      (this.__progressIcon = document.getElementById(
+        "downloads-indicator-progress-inner"
+      ))
+    );
   },
 
   get notifier() {
-    return this._notifier ||
-      (this._notifier = document.getElementById("downloads-notification-anchor"));
+    return (
+      this._notifier ||
+      (this._notifier = document.getElementById(
+        "downloads-notification-anchor"
+      ))
+    );
   },
 
   _onCustomizedAway() {

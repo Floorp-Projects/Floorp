@@ -3,8 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
 
@@ -14,7 +18,7 @@ this.Prefs = class Prefs extends Preferences {
    *         ACTIVITY_STREAM_PREF_BRANCH
    */
   constructor(branch = ACTIVITY_STREAM_PREF_BRANCH) {
-    super({branch});
+    super({ branch });
     this._branchObservers = new Map();
   }
 

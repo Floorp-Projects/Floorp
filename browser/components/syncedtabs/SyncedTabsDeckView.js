@@ -4,12 +4,12 @@
 
 "use strict";
 
-let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
-            .Log.repository.getLogger("Sync.RemoteTabs");
+let log = ChromeUtils.import(
+  "resource://gre/modules/Log.jsm",
+  {}
+).Log.repository.getLogger("Sync.RemoteTabs");
 
-var EXPORTED_SYMBOLS = [
-  "SyncedTabsDeckView",
-];
+var EXPORTED_SYMBOLS = ["SyncedTabsDeckView"];
 
 /**
  * SyncedTabsDeckView
@@ -40,7 +40,8 @@ SyncedTabsDeckView.prototype = {
   },
 
   create(state) {
-    let deck = this._doc.importNode(this._deckTemplate.content, true).firstElementChild;
+    let deck = this._doc.importNode(this._deckTemplate.content, true)
+      .firstElementChild;
     this._clearChilden();
 
     let tabListWrapper = this._doc.createElement("div");
@@ -65,11 +66,15 @@ SyncedTabsDeckView.prototype = {
     // container.
     for (let panel of state.panels) {
       if (panel.selected) {
-        Array.prototype.map.call(this._doc.getElementsByClassName(panel.id),
-                                 item => item.classList.add("selected"));
+        Array.prototype.map.call(
+          this._doc.getElementsByClassName(panel.id),
+          item => item.classList.add("selected")
+        );
       } else {
-        Array.prototype.map.call(this._doc.getElementsByClassName(panel.id),
-                                 item => item.classList.remove("selected"));
+        Array.prototype.map.call(
+          this._doc.getElementsByClassName(panel.id),
+          item => item.classList.remove("selected")
+        );
       }
     }
   },
@@ -85,7 +90,8 @@ SyncedTabsDeckView.prototype = {
     for (let link of syncPrefLinks) {
       link.addEventListener("click", this.props.onSyncPrefClick);
     }
-    this.container.querySelector(".connect-device").addEventListener("click", this.props.onConnectDeviceClick);
+    this.container
+      .querySelector(".connect-device")
+      .addEventListener("click", this.props.onConnectDeviceClick);
   },
 };
-

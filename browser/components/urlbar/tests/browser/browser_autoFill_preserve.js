@@ -219,7 +219,6 @@ add_task(async function backspaceNoAutofill() {
   await cleanUp();
 });
 
-
 function checkKeys(testTuples) {
   for (let [key, value, selectedIndex] of testTuples) {
     EventUtils.synthesizeKey(key);

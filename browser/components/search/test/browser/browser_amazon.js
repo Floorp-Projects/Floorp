@@ -13,7 +13,8 @@ add_task(async function test() {
   let engine = Services.search.getEngineByName("Amazon.com");
   ok(engine, "Amazon.com");
 
-  let base = "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
+  let base =
+    "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
   let url;
 
   // Test search URLs (including purposes).
@@ -22,7 +23,11 @@ add_task(async function test() {
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
-  is(url, "https://completion.amazon.com/search/complete?q=foo&search-alias=aps&mkt=1", "Check search suggestion URL for 'foo'");
+  is(
+    url,
+    "https://completion.amazon.com/search/complete?q=foo&search-alias=aps&mkt=1",
+    "Check search suggestion URL for 'foo'"
+  );
 
   // Check all other engine properties.
   const EXPECTED_ENGINE = {
@@ -68,7 +73,8 @@ add_task(async function test() {
         {
           type: "application/x-suggestions+json",
           method: "GET",
-          template: "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
+          template:
+            "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
         },
       ],
     },

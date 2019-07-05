@@ -50,9 +50,14 @@ export default class ShippingOptionPicker extends HandleEventMixin(RichPicker) {
     let selectedShippingOption = state.selectedShippingOption;
     this.dropdown.value = selectedShippingOption;
 
-    if (selectedShippingOption && selectedShippingOption !== this.dropdown.popupBox.value) {
-      throw new Error(`The option ${selectedShippingOption} ` +
-                      `does not exist in the shipping option picker`);
+    if (
+      selectedShippingOption &&
+      selectedShippingOption !== this.dropdown.popupBox.value
+    ) {
+      throw new Error(
+        `The option ${selectedShippingOption} ` +
+          `does not exist in the shipping option picker`
+      );
     }
   }
 

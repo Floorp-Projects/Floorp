@@ -5,42 +5,54 @@
 add_task(async function test_reader_mode() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
     async background() {
       let tab;
       let tabId;
-      let expected = {isInReaderMode: false};
+      let expected = { isInReaderMode: false };
       let testState = {};
       browser.test.onMessage.addListener(async (msg, ...args) => {
         switch (msg) {
           case "updateUrl":
             expected.isArticle = args[0];
             expected.url = args[1];
-            tab = await browser.tabs.update({url: expected.url});
+            tab = await browser.tabs.update({ url: expected.url });
             tabId = tab.id;
             break;
           case "enterReaderMode":
             expected.isArticle = !args[0];
             expected.isInReaderMode = true;
             tab = await browser.tabs.get(tabId);
-            browser.test.assertEq(false, tab.isInReaderMode, "The tab is not in reader mode.");
+            browser.test.assertEq(
+              false,
+              tab.isInReaderMode,
+              "The tab is not in reader mode."
+            );
             if (args[0]) {
               browser.tabs.toggleReaderMode(tabId);
             } else {
               await browser.test.assertRejects(
                 browser.tabs.toggleReaderMode(tabId),
                 /The specified tab cannot be placed into reader mode/,
-                "Toggle fails with an unreaderable document.");
-              browser.test.assertEq(false, tab.isInReaderMode, "The tab is still not in reader mode.");
+                "Toggle fails with an unreaderable document."
+              );
+              browser.test.assertEq(
+                false,
+                tab.isInReaderMode,
+                "The tab is still not in reader mode."
+              );
               browser.test.sendMessage("enterFailed");
             }
             break;
           case "leaveReaderMode":
             expected.isInReaderMode = false;
             tab = await browser.tabs.get(tabId);
-            browser.test.assertTrue(tab.isInReaderMode, "The tab is in reader mode.");
+            browser.test.assertTrue(
+              tab.isInReaderMode,
+              "The tab is in reader mode."
+            );
             browser.tabs.toggleReaderMode(tabId);
             break;
         }
@@ -58,8 +70,10 @@ add_task(async function test_reader_mode() {
             }
             return;
           }
-          if (changeInfo.isArticle == expected.isArticle
-              && changeInfo.isArticle != testState.isArticle) {
+          if (
+            changeInfo.isArticle == expected.isArticle &&
+            changeInfo.isArticle != testState.isArticle
+          ) {
             testState.isArticle = changeInfo.isArticle;
             let urlOk = expected.isInReaderMode
               ? testState.url.startsWith("about:reader")
@@ -73,14 +87,24 @@ add_task(async function test_reader_mode() {
     },
   });
 
-  const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+  const TEST_PATH = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "http://example.com"
+  );
   const READER_MODE_PREFIX = "about:reader";
 
   await extension.startup();
-  extension.sendMessage("updateUrl", true, `${TEST_PATH}readerModeArticle.html`);
+  extension.sendMessage(
+    "updateUrl",
+    true,
+    `${TEST_PATH}readerModeArticle.html`
+  );
   let tab = await extension.awaitMessage("isArticle");
 
-  ok(!tab.url.startsWith(READER_MODE_PREFIX), "Tab url does not indicate reader mode.");
+  ok(
+    !tab.url.startsWith(READER_MODE_PREFIX),
+    "Tab url does not indicate reader mode."
+  );
   ok(tab.isArticle, "Tab is readerable.");
 
   extension.sendMessage("enterReaderMode", true);
@@ -90,12 +114,22 @@ add_task(async function test_reader_mode() {
 
   extension.sendMessage("leaveReaderMode");
   tab = await extension.awaitMessage("tabUpdated");
-  ok(!tab.url.startsWith(READER_MODE_PREFIX), "Tab url does not indicate reader mode.");
+  ok(
+    !tab.url.startsWith(READER_MODE_PREFIX),
+    "Tab url does not indicate reader mode."
+  );
   ok(!tab.isInReaderMode, "tab.isInReaderMode does not indicate reader mode.");
 
-  extension.sendMessage("updateUrl", false, `${TEST_PATH}readerModeNonArticle.html`);
+  extension.sendMessage(
+    "updateUrl",
+    false,
+    `${TEST_PATH}readerModeNonArticle.html`
+  );
   tab = await extension.awaitMessage("tabUpdated");
-  ok(!tab.url.startsWith(READER_MODE_PREFIX), "Tab url does not indicate reader mode.");
+  ok(
+    !tab.url.startsWith(READER_MODE_PREFIX),
+    "Tab url does not indicate reader mode."
+  );
   ok(!tab.isArticle, "Tab is not readerable.");
   ok(!tab.isInReaderMode, "tab.isInReaderMode does not indicate reader mode.");
 

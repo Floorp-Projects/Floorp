@@ -10,8 +10,8 @@
 add_task(async function testSwitchToTabTextDisplay() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "omnibox": {
-        "keyword": "omniboxtest",
+      omnibox: {
+        keyword: "omniboxtest",
       },
 
       background() {
@@ -51,7 +51,8 @@ add_task(async function testSwitchToTabTextDisplay() {
     }
   }
 
-  await UrlbarTestUtils.promisePopupClose(window,
-    () => EventUtils.synthesizeKey("KEY_Escape"));
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
   await extension.unload();
 });

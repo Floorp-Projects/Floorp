@@ -1,15 +1,23 @@
 "use strict";
 
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
 const SESSION = {
-  windows: [{
-    tabs: [
-      {entries: [{url: "about:blank", triggeringPrincipal_base64}]},
-      {entries: [{url: "https://example.com/", triggeringPrincipal_base64}]},
-    ],
-  }],
+  windows: [
+    {
+      tabs: [
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+        {
+          entries: [
+            { url: "https://example.com/", triggeringPrincipal_base64 },
+          ],
+        },
+      ],
+    },
+  ],
 };
 
 add_task(async function() {
@@ -21,7 +29,7 @@ add_task(async function() {
   is(tab.linkedBrowser.isConnected, false, "The tab is lazy");
 
   async function background() {
-    const [tab] = await browser.tabs.query({url: "https://example.com/"});
+    const [tab] = await browser.tabs.query({ url: "https://example.com/" });
     browser.test.assertRejects(
       browser.tabs.sendMessage(tab.id, "void"),
       /Could not establish connection. Receiving end does not exist/,
@@ -30,8 +38,8 @@ add_task(async function() {
     browser.test.notifyPass("lazy");
   }
 
-  const manifest = {permissions: ["tabs"]};
-  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+  const manifest = { permissions: ["tabs"] };
+  const extension = ExtensionTestUtils.loadExtension({ manifest, background });
 
   await extension.startup();
   await extension.awaitFinish("lazy");

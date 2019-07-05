@@ -3,17 +3,32 @@
 
 add_task(async function test() {
   gURLBar.focus();
-  is(document.activeElement, gURLBar.inputField, "urlbar is focused before restoring");
+  is(
+    document.activeElement,
+    gURLBar.inputField,
+    "urlbar is focused before restoring"
+  );
 
   await promiseBrowserState({
-    windows: [{
-      tabs: [{
-        entries: [{
-          url: "http://example.org/", triggeringPrincipal_base64,
-        }],
-      }],
-      selected: 1,
-    }],
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [
+              {
+                url: "http://example.org/",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+        ],
+        selected: 1,
+      },
+    ],
   });
-  is(document.activeElement, gBrowser.selectedBrowser, "content area is focused after restoring");
+  is(
+    document.activeElement,
+    gBrowser.selectedBrowser,
+    "content area is focused after restoring"
+  );
 });

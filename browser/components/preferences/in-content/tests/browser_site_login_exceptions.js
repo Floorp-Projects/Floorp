@@ -5,7 +5,10 @@ var exceptionsDialog;
 
 add_task(async function openLoginExceptionsSubDialog() {
   // ensure rememberSignons is off for this test;
-  ok(!Services.prefs.getBoolPref("signon.rememberSignons"), "Check initial value of signon.rememberSignons pref");
+  ok(
+    !Services.prefs.getBoolPref("signon.rememberSignons"),
+    "Check initial value of signon.rememberSignons pref"
+  );
 
   // Undo the save password change.
   registerCleanupFunction(async function() {
@@ -20,15 +23,17 @@ add_task(async function openLoginExceptionsSubDialog() {
     gBrowser.removeCurrentTab();
   });
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   let dialogOpened = promiseLoadSubDialog(PERMISSIONS_URL);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
     let savePasswordCheckBox = doc.getElementById("savePasswords");
-    Assert.ok(!savePasswordCheckBox.checked,
-              "Save Password CheckBox should be unchecked by default");
+    Assert.ok(
+      !savePasswordCheckBox.checked,
+      "Save Password CheckBox should be unchecked by default"
+    );
     savePasswordCheckBox.click();
 
     let loginExceptionsButton = doc.getElementById("passwordExceptions");
@@ -66,8 +71,11 @@ add_task(async function deleteALoginException() {
 
   let richlistbox = doc.getElementById("permissionsBox");
   let currentItems = 2;
-  Assert.equal(richlistbox.itemCount, currentItems,
-               `Row count should initially be ${currentItems}`);
+  Assert.equal(
+    richlistbox.itemCount,
+    currentItems,
+    `Row count should initially be ${currentItems}`
+  );
   richlistbox.focus();
 
   while (richlistbox.itemCount) {
@@ -81,8 +89,12 @@ add_task(async function deleteALoginException() {
 
     currentItems -= 1;
 
-    await TestUtils.waitForCondition(() => richlistbox.itemCount == currentItems);
-    is_element_visible(content.gSubDialog._dialogs[0]._box,
-      "Subdialog is visible after deleting an element");
+    await TestUtils.waitForCondition(
+      () => richlistbox.itemCount == currentItems
+    );
+    is_element_visible(
+      content.gSubDialog._dialogs[0]._box,
+      "Subdialog is visible after deleting an element"
+    );
   }
 });

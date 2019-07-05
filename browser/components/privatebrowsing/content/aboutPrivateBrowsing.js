@@ -8,15 +8,21 @@ document.addEventListener("DOMContentLoaded", function() {
   if (!RPMIsWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");
-    document.getElementById("startPrivateBrowsing").addEventListener("click", function() {
-      RPMSendAsyncMessage("OpenPrivateWindow");
-    });
+    document
+      .getElementById("startPrivateBrowsing")
+      .addEventListener("click", function() {
+        RPMSendAsyncMessage("OpenPrivateWindow");
+      });
     return;
   }
 
   // Setup the private browsing myths link.
-  document.getElementById("private-browsing-myths").setAttribute("href",
-    RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths");
+  document
+    .getElementById("private-browsing-myths")
+    .setAttribute(
+      "href",
+      RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
+    );
 
   // Setup the search hand-off box.
   let btn = document.getElementById("search-handoff-button");
@@ -36,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function handoffSearch(text) {
-    RPMSendAsyncMessage(SEARCH_HANDOFF_TOPIC, {text});
+    RPMSendAsyncMessage(SEARCH_HANDOFF_TOPIC, { text });
     RPMAddMessageListener(SHOW_SEARCH_TOPIC, showSearch);
     if (text) {
       hideSearch();
@@ -70,5 +76,10 @@ document.addEventListener("DOMContentLoaded", function() {
   // we need and have it do the common search handoff work for
   // about:newtab and about:privatebrowsing.
   let input = document.getElementById("dummy-input");
-  new window.ContentSearchUIController(input, input.parentNode, "aboutprivatebrowsing", "aboutprivatebrowsing");
+  new window.ContentSearchUIController(
+    input,
+    input.parentNode,
+    "aboutprivatebrowsing",
+    "aboutprivatebrowsing"
+  );
 });

@@ -1,5 +1,8 @@
-import {ContextMenu, ContextMenuItem} from "content-src/components/ContextMenu/ContextMenu";
-import {mount, shallow} from "enzyme";
+import {
+  ContextMenu,
+  ContextMenuItem,
+} from "content-src/components/ContextMenu/ContextMenu";
+import { mount, shallow } from "enzyme";
 import React from "react";
 
 const DEFAULT_PROPS = {
@@ -10,69 +13,106 @@ const DEFAULT_PROPS = {
 
 describe("<ContextMenu>", () => {
   it("should render all the options provided", () => {
-    const options = [{label: "item1"}, {type: "separator"}, {label: "item2"}];
-    const wrapper = shallow(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const options = [
+      { label: "item1" },
+      { type: "separator" },
+      { label: "item2" },
+    ];
+    const wrapper = shallow(
+      <ContextMenu {...DEFAULT_PROPS} options={options} />
+    );
     assert.lengthOf(wrapper.find(".context-menu-list").children(), 3);
   });
   it("should not add a link for a separator", () => {
-    const options = [{label: "item1"}, {type: "separator"}];
-    const wrapper = shallow(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const options = [{ label: "item1" }, { type: "separator" }];
+    const wrapper = shallow(
+      <ContextMenu {...DEFAULT_PROPS} options={options} />
+    );
     assert.lengthOf(wrapper.find(".separator"), 1);
   });
   it("should add a link for all types that are not separators", () => {
-    const options = [{label: "item1"}, {type: "separator"}];
-    const wrapper = shallow(<ContextMenu {...DEFAULT_PROPS} options={options} />);
+    const options = [{ label: "item1" }, { type: "separator" }];
+    const wrapper = shallow(
+      <ContextMenu {...DEFAULT_PROPS} options={options} />
+    );
     assert.lengthOf(wrapper.find(ContextMenuItem), 1);
   });
   it("should add an icon to items that need icons", () => {
-    const options = [{label: "item1", icon: "icon1"}, {type: "separator"}];
+    const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.lengthOf(wrapper.find(".icon-icon1"), 1);
   });
   it("should be tabbable", () => {
-    const options = [{label: "item1", icon: "icon1"}, {type: "separator"}];
+    const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.equal(wrapper.find(".context-menu-item").props().role, "menuitem");
   });
   it("should call onUpdate with false when an option is clicked", () => {
     const onUpdate = sinon.spy();
     const onClick = sinon.spy();
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} onUpdate={onUpdate} options={[{label: "item1", onClick}]} />);
+    const wrapper = mount(
+      <ContextMenu
+        {...DEFAULT_PROPS}
+        onUpdate={onUpdate}
+        options={[{ label: "item1", onClick }]}
+      />
+    );
     wrapper.find(".context-menu-item button").simulate("click");
     assert.calledOnce(onUpdate);
     assert.calledOnce(onClick);
   });
   it("should not have disabled className by default", () => {
-    const options = [{label: "item1", icon: "icon1"}, {type: "separator"}];
+    const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.lengthOf(wrapper.find(".context-menu-item a.disabled"), 0);
   });
   it("should add disabled className to any disabled options", () => {
-    const options = [{label: "item1", icon: "icon1", disabled: true}, {type: "separator"}];
+    const options = [
+      { label: "item1", icon: "icon1", disabled: true },
+      { type: "separator" },
+    ];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.lengthOf(wrapper.find(".context-menu-item button.disabled"), 1);
   });
   it("should have the context-menu-item class", () => {
-    const options = [{label: "item1", icon: "icon1"}];
+    const options = [{ label: "item1", icon: "icon1" }];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.lengthOf(wrapper.find(".context-menu-item"), 1);
   });
   it("should call onClick when onKeyDown is called", () => {
     const onClick = sinon.spy();
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={[{label: "item1", onClick}]} />);
-    wrapper.find(".context-menu-item button").simulate("keydown", {key: "Enter"});
+    const wrapper = mount(
+      <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1", onClick }]} />
+    );
+    wrapper
+      .find(".context-menu-item button")
+      .simulate("keydown", { key: "Enter" });
     assert.calledOnce(onClick);
   });
   it("should call focusSibling when onKeyDown is called with ArrowUp", () => {
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={[{label: "item1"}]} />);
-    const focusSibling = sinon.stub(wrapper.find(ContextMenuItem).instance(), "focusSibling");
-    wrapper.find(".context-menu-item button").simulate("keydown", {key: "ArrowUp"});
+    const wrapper = mount(
+      <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1" }]} />
+    );
+    const focusSibling = sinon.stub(
+      wrapper.find(ContextMenuItem).instance(),
+      "focusSibling"
+    );
+    wrapper
+      .find(".context-menu-item button")
+      .simulate("keydown", { key: "ArrowUp" });
     assert.calledOnce(focusSibling);
   });
   it("should call focusSibling when onKeyDown is called with ArrowDown", () => {
-    const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={[{label: "item1"}]} />);
-    const focusSibling = sinon.stub(wrapper.find(ContextMenuItem).instance(), "focusSibling");
-    wrapper.find(".context-menu-item button").simulate("keydown", {key: "ArrowDown"});
+    const wrapper = mount(
+      <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1" }]} />
+    );
+    const focusSibling = sinon.stub(
+      wrapper.find(ContextMenuItem).instance(),
+      "focusSibling"
+    );
+    wrapper
+      .find(".context-menu-item button")
+      .simulate("keydown", { key: "ArrowDown" });
     assert.calledOnce(focusSibling);
   });
 });

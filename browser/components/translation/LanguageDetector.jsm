@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["LanguageDetector"];
 
-const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { clearTimeout, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 // Since Emscripten can handle heap growth, but not heap shrinkage, we
 // need to refresh the worker after we've processed a particularly large
@@ -29,39 +31,44 @@ var workerManager = {
   detectionQueue: [],
 
   detectLanguage(aParams) {
-    return this.workerReady.then(worker => {
-      return new Promise(resolve => {
-        this.detectionQueue.push({resolve});
-        worker.postMessage(aParams);
-      });
-    }).then(result => {
-      // We have our asynchronous result from the worker.
-      //
-      // Determine if our input was large enough to trigger heap growth,
-      // or if we're already waiting to destroy the worker when it's
-      // idle. If so, schedule termination after the idle timeout.
-      if (aParams.text.length >= LARGE_STRING || this._idleTimeout != null)
-        this.flushWorker();
+    return this.workerReady
+      .then(worker => {
+        return new Promise(resolve => {
+          this.detectionQueue.push({ resolve });
+          worker.postMessage(aParams);
+        });
+      })
+      .then(result => {
+        // We have our asynchronous result from the worker.
+        //
+        // Determine if our input was large enough to trigger heap growth,
+        // or if we're already waiting to destroy the worker when it's
+        // idle. If so, schedule termination after the idle timeout.
+        if (aParams.text.length >= LARGE_STRING || this._idleTimeout != null) {
+          this.flushWorker();
+        }
 
-      return result;
-    });
+        return result;
+      });
   },
 
   _worker: null,
   _workerReadyPromise: null,
 
   get workerReady() {
-    if (!this._workerReadyPromise)
+    if (!this._workerReadyPromise) {
       this._workerReadyPromise = new Promise(resolve => {
         let worker = new Worker(WORKER_URL);
-        worker.onmessage = (aMsg) => {
-          if (aMsg.data == "ready")
+        worker.onmessage = aMsg => {
+          if (aMsg.data == "ready") {
             resolve(worker);
-          else
+          } else {
             this.detectionQueue.shift().resolve(aMsg.data);
+          }
         };
         this._worker = worker;
       });
+    }
 
     return this._workerReadyPromise;
   },
@@ -71,8 +78,9 @@ var workerManager = {
 
   // Schedule the current worker to be terminated after the idle timeout.
   flushWorker() {
-    if (this._idleTimeout != null)
+    if (this._idleTimeout != null) {
       clearTimeout(this._idleTimeout);
+    }
 
     this._idleTimeout = setTimeout(this._flushWorker.bind(this), IDLE_TIMEOUT);
   },
@@ -84,8 +92,9 @@ var workerManager = {
     if (this.detectionQueue.length) {
       this.flushWorker();
     } else {
-      if (this._worker)
+      if (this._worker) {
         this._worker.terminate();
+      }
 
       this._worker = null;
       this._workerReadyPromise = null;
@@ -134,8 +143,9 @@ var LanguageDetector = {
    *      the text which is unknown.
    */
   detectLanguage(aParams) {
-    if (typeof aParams == "string")
+    if (typeof aParams == "string") {
       aParams = { text: aParams };
+    }
 
     return workerManager.detectLanguage(aParams);
   },

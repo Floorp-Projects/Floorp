@@ -44,16 +44,24 @@ add_task(async function test_override_postupdate_page() {
   writeUpdatesToXMLFile(XML_UPDATE);
   reloadUpdateManagerData();
 
-  is(getPostUpdatePage(), UPDATE_PROVIDED_PAGE, "Post-update page was provided by update.xml.");
+  is(
+    getPostUpdatePage(),
+    UPDATE_PROVIDED_PAGE,
+    "Post-update page was provided by update.xml."
+  );
 
   // Now perform the same action but set the policy to override this page
   await setupPolicyEngineWithJson({
-    "policies": {
-      "OverridePostUpdatePage": POLICY_PROVIDED_PAGE,
+    policies: {
+      OverridePostUpdatePage: POLICY_PROVIDED_PAGE,
     },
   });
 
-  is(getPostUpdatePage(), POLICY_PROVIDED_PAGE, "Post-update page was provided by policy.");
+  is(
+    getPostUpdatePage(),
+    POLICY_PROVIDED_PAGE,
+    "Post-update page was provided by policy."
+  );
 
   // Clean-up
   writeUpdatesToXMLFile(XML_EMPTY);
@@ -64,32 +72,32 @@ add_task(async function test_override_postupdate_page() {
   reloadUpdateManagerData();
 });
 
-
 function getPostUpdatePage() {
   Services.prefs.setCharPref(PREF_MSTONE, "PreviousMilestone");
-  return Cc["@mozilla.org/browser/clh;1"]
-           .getService(Ci.nsIBrowserHandler)
-           .defaultArgs;
+  return Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler)
+    .defaultArgs;
 }
 
 function reloadUpdateManagerData() {
   // Reloads the update metadata from disk
-  Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager).
-  QueryInterface(Ci.nsIObserver).observe(null, "um-reload-update-data", "");
+  Cc["@mozilla.org/updates/update-manager;1"]
+    .getService(Ci.nsIUpdateManager)
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "um-reload-update-data", "");
 }
-
 
 function writeUpdatesToXMLFile(aText) {
   const PERMS_FILE = 0o644;
 
-  const MODE_WRONLY   = 0x02;
-  const MODE_CREATE   = 0x08;
+  const MODE_WRONLY = 0x02;
+  const MODE_CREATE = 0x08;
   const MODE_TRUNCATE = 0x20;
 
   let file = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
   file.append("updates.xml");
-  let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(Ci.nsIFileOutputStream);
+  let fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
   if (!file.exists()) {
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }

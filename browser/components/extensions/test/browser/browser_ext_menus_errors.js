@@ -11,11 +11,18 @@ add_task(async function test_create_error() {
     SimpleTest.waitForExplicitFinish();
     SimpleTest.monitorConsole(resolve, [
       // Callback exists, lastError is checked. Should not be logged.
-      {message: /Unchecked lastError value: Error: ID already exists: some_id/, forbid: true},
+      {
+        message: /Unchecked lastError value: Error: ID already exists: some_id/,
+        forbid: true,
+      },
       // No callback, lastError not checked. Should be logged.
-      {message: /Unchecked lastError value: Error: Could not find any MenuItem with id: noCb/},
+      {
+        message: /Unchecked lastError value: Error: Could not find any MenuItem with id: noCb/,
+      },
       // Callback exists, lastError not checked. Should be logged.
-      {message: /Unchecked lastError value: Error: Could not find any MenuItem with id: cbIgnoreError/},
+      {
+        message: /Unchecked lastError value: Error: Could not find any MenuItem with id: cbIgnoreError/,
+      },
     ]);
   });
 
@@ -23,28 +30,39 @@ add_task(async function test_create_error() {
     // Note: browser.menus.create returns the menu ID instead of a promise, so
     // we have to use callbacks.
     await new Promise(resolve => {
-      browser.menus.create({id: "some_id", title: "menu item"}, () => {
-        browser.test.assertEq(null, browser.runtime.lastError, "Expected no error");
+      browser.menus.create({ id: "some_id", title: "menu item" }, () => {
+        browser.test.assertEq(
+          null,
+          browser.runtime.lastError,
+          "Expected no error"
+        );
         resolve();
       });
     });
 
     // Callback exists, lastError is checked:
     await new Promise(resolve => {
-      browser.menus.create({id: "some_id", title: "menu item"}, () => {
-        browser.test.assertEq("ID already exists: some_id", browser.runtime.lastError.message, "Expected error");
+      browser.menus.create({ id: "some_id", title: "menu item" }, () => {
+        browser.test.assertEq(
+          "ID already exists: some_id",
+          browser.runtime.lastError.message,
+          "Expected error"
+        );
         resolve();
       });
     });
 
     // No callback, lastError not checked:
-    browser.menus.create({id: "noCb", parentId: "noCb", title: "menu item"});
+    browser.menus.create({ id: "noCb", parentId: "noCb", title: "menu item" });
 
     // Callback exists, lastError not checked:
     await new Promise(resolve => {
-      browser.menus.create({id: "cbIgnoreError", parentId: "cbIgnoreError", title: "menu item"}, () => {
-        resolve();
-      });
+      browser.menus.create(
+        { id: "cbIgnoreError", parentId: "cbIgnoreError", title: "menu item" },
+        () => {
+          resolve();
+        }
+      );
     });
 
     // Do another roundtrip with the menus API to ensure that any console
@@ -55,7 +73,7 @@ add_task(async function test_create_error() {
   }
 
   const extension = ExtensionTestUtils.loadExtension({
-    manifest: {permissions: ["menus"]},
+    manifest: { permissions: ["menus"] },
     background,
   });
   await extension.startup();
@@ -69,23 +87,25 @@ add_task(async function test_create_error() {
 
 add_task(async function test_update_error() {
   async function background() {
-    const id = browser.menus.create({title: "menu item"});
+    const id = browser.menus.create({ title: "menu item" });
 
     await browser.test.assertRejects(
-      browser.menus.update(id, {parentId: "bogus"}),
+      browser.menus.update(id, { parentId: "bogus" }),
       "Could not find any MenuItem with id: bogus",
-      "menus.update with invalid parentMenuId should fail");
+      "menus.update with invalid parentMenuId should fail"
+    );
 
     await browser.test.assertRejects(
-      browser.menus.update(id, {parentId: id}),
+      browser.menus.update(id, { parentId: id }),
       "MenuItem cannot be an ancestor (or self) of its new parent.",
-      "menus.update cannot assign itself as the parent of a menu.");
+      "menus.update cannot assign itself as the parent of a menu."
+    );
 
     browser.test.sendMessage("done");
   }
 
   const extension = ExtensionTestUtils.loadExtension({
-    manifest: {permissions: ["menus"]},
+    manifest: { permissions: ["menus"] },
     background,
   });
   await extension.startup();

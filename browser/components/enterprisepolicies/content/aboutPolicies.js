@@ -4,8 +4,10 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   schema: "resource:///modules/policies/schema.jsm",
@@ -63,23 +65,37 @@ function generateActivePolicies(data) {
 
     if (schema.properties[policyName].type == "array") {
       for (let count in data[policyName]) {
-        let isFirstRow = (count == 0);
-        let isLastRow = (count == data[policyName].length - 1);
+        let isFirstRow = count == 0;
+        let isLastRow = count == data[policyName].length - 1;
         let row = document.createElement("tr");
         row.classList.add(color_class);
         row.appendChild(col(isFirstRow ? policyName : ""));
-        generatePolicy(data[policyName][count], row, 1, new_cont, isLastRow, data[policyName].length > 1);
+        generatePolicy(
+          data[policyName][count],
+          row,
+          1,
+          new_cont,
+          isLastRow,
+          data[policyName].length > 1
+        );
       }
     } else if (schema.properties[policyName].type == "object") {
       let count = 0;
       for (let obj in data[policyName]) {
-        let isFirstRow = (count == 0);
-        let isLastRow = (count == Object.keys(data[policyName]).length - 1);
+        let isFirstRow = count == 0;
+        let isLastRow = count == Object.keys(data[policyName]).length - 1;
         let row = document.createElement("tr");
         row.classList.add(color_class);
         row.appendChild(col(isFirstRow ? policyName : ""));
         row.appendChild(col(obj));
-        generatePolicy(data[policyName][obj], row, 2, new_cont, isLastRow, true);
+        generatePolicy(
+          data[policyName][obj],
+          row,
+          2,
+          new_cont,
+          isLastRow,
+          true
+        );
         count++;
       }
     } else {
@@ -115,7 +131,14 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
     for (let count in data) {
       if (count == 0) {
         if (count == data.length - 1) {
-          generatePolicy(data[count], row, depth + 1, new_cont, islast ? islast : false, true);
+          generatePolicy(
+            data[count],
+            row,
+            depth + 1,
+            new_cont,
+            islast ? islast : false,
+            true
+          );
         } else {
           generatePolicy(data[count], row, depth + 1, new_cont, false, false);
         }
@@ -124,10 +147,17 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
         last_row.classList.add(color_class, "arr_sep");
 
         for (let i = 0; i < depth; i++) {
-            last_row.appendChild(col(""));
+          last_row.appendChild(col(""));
         }
 
-        generatePolicy(data[count], last_row, depth + 1, new_cont, islast ? islast : false, arr_sep);
+        generatePolicy(
+          data[count],
+          last_row,
+          depth + 1,
+          new_cont,
+          islast ? islast : false,
+          arr_sep
+        );
       } else {
         let new_row = document.createElement("tr");
         new_row.classList.add(color_class);
@@ -141,41 +171,55 @@ function generatePolicy(data, row, depth, new_cont, islast, arr_sep = false) {
     }
   } else if (typeof data == "object" && Object.keys(data).length > 0) {
     let count = 0;
-      for (let obj in data) {
-        if (count == 0) {
-          row.appendChild(col(obj));
-          if (count == Object.keys(data).length - 1) {
-            generatePolicy(data[obj], row, depth + 1, new_cont, islast ? islast : false, arr_sep);
-          } else {
-            generatePolicy(data[obj], row, depth + 1, new_cont, false, false);
-          }
-        } else if (count == Object.keys(data).length - 1) {
-          let last_row = document.createElement("tr");
-          for (let i = 0; i < depth; i++) {
-            last_row.appendChild(col(""));
-          }
-
-          last_row.appendChild(col(obj));
-          last_row.classList.add(color_class);
-
-          if (arr_sep) {
-            last_row.classList.add("arr_sep");
-          }
-
-          generatePolicy(data[obj], last_row, depth + 1, new_cont, islast ? islast : false, false);
+    for (let obj in data) {
+      if (count == 0) {
+        row.appendChild(col(obj));
+        if (count == Object.keys(data).length - 1) {
+          generatePolicy(
+            data[obj],
+            row,
+            depth + 1,
+            new_cont,
+            islast ? islast : false,
+            arr_sep
+          );
         } else {
-          let new_row = document.createElement("tr");
-          new_row.classList.add(color_class);
-
-          for (let i = 0; i < depth; i++) {
-            new_row.appendChild(col(""));
-          }
-
-          new_row.appendChild(col(obj));
-          generatePolicy(data[obj], new_row, depth + 1, new_cont, false, false);
+          generatePolicy(data[obj], row, depth + 1, new_cont, false, false);
         }
-        count++;
+      } else if (count == Object.keys(data).length - 1) {
+        let last_row = document.createElement("tr");
+        for (let i = 0; i < depth; i++) {
+          last_row.appendChild(col(""));
+        }
+
+        last_row.appendChild(col(obj));
+        last_row.classList.add(color_class);
+
+        if (arr_sep) {
+          last_row.classList.add("arr_sep");
+        }
+
+        generatePolicy(
+          data[obj],
+          last_row,
+          depth + 1,
+          new_cont,
+          islast ? islast : false,
+          false
+        );
+      } else {
+        let new_row = document.createElement("tr");
+        new_row.classList.add(color_class);
+
+        for (let i = 0; i < depth; i++) {
+          new_row.appendChild(col(""));
+        }
+
+        new_row.appendChild(col(obj));
+        generatePolicy(data[obj], new_row, depth + 1, new_cont, false, false);
       }
+      count++;
+    }
   } else {
     row.appendChild(col(JSON.stringify(data)));
 
@@ -193,15 +237,17 @@ function generateErrors() {
   const consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
   const storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   const consoleEvents = storage.getEvents();
-  const prefixes = ["Enterprise Policies",
-                    "JsonSchemaValidator.jsm",
-                    "Policies.jsm",
-                    "GPOParser.jsm",
-                    "Enterprise Policies Child",
-                    "BookmarksPolicies.jsm",
-                    "ProxyPolicies.jsm",
-                    "WebsiteFilter Policy",
-                    "macOSPoliciesParser.jsm"];
+  const prefixes = [
+    "Enterprise Policies",
+    "JsonSchemaValidator.jsm",
+    "Policies.jsm",
+    "GPOParser.jsm",
+    "Enterprise Policies Child",
+    "BookmarksPolicies.jsm",
+    "ProxyPolicies.jsm",
+    "WebsiteFilter Policy",
+    "macOSPoliciesParser.jsm",
+  ];
 
   let new_cont = document.getElementById("errorsContent");
   new_cont.classList.add("errors");
@@ -228,9 +274,9 @@ function generateDocumentation() {
   // map specific policies to a different string ID, to allow updates to
   // existing descriptions
   let string_mapping = {
-    "DisableSetDesktopBackground": "DisableSetAsDesktopBackground",
-    "Certificates": "CertificatesDescription",
-    "SanitizeOnShutdown": "SanitizeOnShutdown2",
+    DisableSetDesktopBackground: "DisableSetAsDesktopBackground",
+    Certificates: "CertificatesDescription",
+    SanitizeOnShutdown: "SanitizeOnShutdown2",
   };
 
   for (let policyName in schema.properties) {
@@ -252,12 +298,18 @@ function generateDocumentation() {
     sec_tbody.classList.add("content-style");
     let schema_row = document.createElement("tr");
     if (schema.properties[policyName].properties) {
-      let column = col(JSON.stringify(schema.properties[policyName].properties, null, 1), "schema");
+      let column = col(
+        JSON.stringify(schema.properties[policyName].properties, null, 1),
+        "schema"
+      );
       column.colSpan = "2";
       schema_row.appendChild(column);
       sec_tbody.appendChild(schema_row);
     } else if (schema.properties[policyName].items) {
-      let column = col(JSON.stringify(schema.properties[policyName], null, 1), "schema");
+      let column = col(
+        JSON.stringify(schema.properties[policyName], null, 1),
+        "schema"
+      );
       column.colSpan = "2";
       schema_row.appendChild(column);
       sec_tbody.appendChild(schema_row);
@@ -268,7 +320,11 @@ function generateDocumentation() {
       sec_tbody.appendChild(schema_row);
       if (schema.properties[policyName].enum) {
         let enum_row = document.createElement("tr");
-        column = col("enum: " + JSON.stringify(schema.properties[policyName].enum, null, 1), "schema");
+        column = col(
+          "enum: " +
+            JSON.stringify(schema.properties[policyName].enum, null, 1),
+          "schema"
+        );
         column.colSpan = "2";
         enum_row.appendChild(column);
         sec_tbody.appendChild(enum_row);
@@ -298,15 +354,19 @@ window.onload = function() {
   }
 
   if (location.hash) {
-    let sectionButton = document.getElementById("category-" + location.hash.substring(1));
+    let sectionButton = document.getElementById(
+      "category-" + location.hash.substring(1)
+    );
     if (sectionButton) {
       sectionButton.click();
     }
   }
 
   window.addEventListener("hashchange", function() {
-   if (location.hash) {
-      let sectionButton = document.getElementById("category-" + location.hash.substring(1));
+    if (location.hash) {
+      let sectionButton = document.getElementById(
+        "category-" + location.hash.substring(1)
+      );
       sectionButton.click();
     }
   });
@@ -316,8 +376,9 @@ function show(button) {
   let current_tab = document.querySelector(".active");
   let category = button.getAttribute("id").substring("category-".length);
   let content = document.getElementById(category);
-  if (current_tab == content)
+  if (current_tab == content) {
     return;
+  }
   saveScrollPosition(current_tab.id);
   current_tab.classList.remove("active");
   current_tab.hidden = true;
@@ -345,4 +406,3 @@ function restoreScrollPosition(category) {
   const mainContent = document.querySelector(".main-content");
   mainContent.scrollTo(0, scrollY);
 }
-

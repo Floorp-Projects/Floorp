@@ -11,7 +11,13 @@
 // A test helper that retrives an old and new value after a given delay
 // and then check that calls an `isCompleted` callback to check that
 // the value has reached the expected value.
-function waitUntilValue({getValue, isCompleted, message, delay: delayTime, times = 1} = {}) {
+function waitUntilValue({
+  getValue,
+  isCompleted,
+  message,
+  delay: delayTime,
+  times = 1,
+} = {}) {
   let i = 0;
   return BrowserTestUtils.waitForCondition(async () => {
     const oldVal = await getValue();
@@ -29,14 +35,18 @@ function waitUntilValue({getValue, isCompleted, message, delay: delayTime, times
   }, message);
 }
 
-async function testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
+async function testPopupSize(
+  standardsMode,
+  browserWin = window,
+  arrowSide = "top"
+) {
   let docType = standardsMode ? "<!DOCTYPE html>" : "";
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
-        "default_popup": "popup.html",
-        "browser_style": false,
+      browser_action: {
+        default_popup: "popup.html",
+        browser_style: false,
       },
     },
 
@@ -83,9 +93,13 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
     let dims = await promiseContentDimensions(browser);
 
-    is(dims.isStandards, standardsMode, "Document has the expected compat mode");
+    is(
+      dims.isStandards,
+      standardsMode,
+      "Document has the expected compat mode"
+    );
 
-    let {innerWidth, innerHeight} = dims.window;
+    let { innerWidth, innerHeight } = dims.window;
 
     dims = await alterContent(browser, () => {
       content.document.body.classList.add("bigger");
@@ -93,8 +107,10 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
     let win = dims.window;
     is(win.innerHeight, innerHeight, "Window height should not change");
-    ok(win.innerWidth > innerWidth, `Window width should increase (${win.innerWidth} > ${innerWidth})`);
-
+    ok(
+      win.innerWidth > innerWidth,
+      `Window width should increase (${win.innerWidth} > ${innerWidth})`
+    );
 
     dims = await alterContent(browser, () => {
       content.document.body.classList.remove("bigger");
@@ -105,12 +121,15 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
     // The getContentSize calculation is not always reliable to single-pixel
     // precision.
-    ok(Math.abs(win.innerWidth - innerWidth) <= 1,
-       `Window width should return to approximately its original value (${win.innerWidth} ~= ${innerWidth})`);
+    ok(
+      Math.abs(win.innerWidth - innerWidth) <= 1,
+      `Window width should return to approximately its original value (${
+        win.innerWidth
+      } ~= ${innerWidth})`
+    );
 
     await closeBrowserAction(extension, browserWin);
   }
-
 
   // Test the PanelUI panel for a menu panel button.
   let widget = getBrowserActionWidget(extension);
@@ -123,8 +142,11 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   let widgetId = makeWidgetId(extension.id);
   // The 'ViewShown' event is the only way to correctly determine when the extensions'
   // panelview has finished transitioning and is fully in view.
-  let shownPromise = BrowserTestUtils.waitForEvent(panelMultiView, "ViewShown",
-                                                   e => (e.originalTarget.id || "").includes(widgetId));
+  let shownPromise = BrowserTestUtils.waitForEvent(
+    panelMultiView,
+    "ViewShown",
+    e => (e.originalTarget.id || "").includes(widgetId)
+  );
   let browser = await openBrowserActionPanel(extension, browserWin);
 
   // Wait long enough to make sure the initial popup positioning has been completed (
@@ -143,22 +165,45 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   // Check that the panel is still positioned as expected.
   let checkPanelPosition = () => {
-    is(panel.getAttribute("side"), arrowSide, "Panel arrow is positioned as expected");
+    is(
+      panel.getAttribute("side"),
+      arrowSide,
+      "Panel arrow is positioned as expected"
+    );
 
     let panelRect = panel.getBoundingClientRect();
     if (arrowSide == "top") {
       is(panelRect.top, origPanelRect.top, "Panel has not moved downwards");
-      ok(panelRect.bottom >= origPanelRect.bottom, `Panel has not shrunk from original size (${panelRect.bottom} >= ${origPanelRect.bottom})`);
+      ok(
+        panelRect.bottom >= origPanelRect.bottom,
+        `Panel has not shrunk from original size (${panelRect.bottom} >= ${
+          origPanelRect.bottom
+        })`
+      );
 
-      let screenBottom = browserWin.screen.availTop + browserWin.screen.availHeight;
+      let screenBottom =
+        browserWin.screen.availTop + browserWin.screen.availHeight;
       let panelBottom = browserWin.mozInnerScreenY + panelRect.bottom;
-      ok(Math.round(panelBottom) <= screenBottom, `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`);
+      ok(
+        Math.round(panelBottom) <= screenBottom,
+        `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`
+      );
     } else {
       is(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
-      ok(panelRect.top <= origPanelRect.top, `Panel has not shrunk from original size (${panelRect.top} <= ${origPanelRect.top})`);
+      ok(
+        panelRect.top <= origPanelRect.top,
+        `Panel has not shrunk from original size (${panelRect.top} <= ${
+          origPanelRect.top
+        })`
+      );
 
       let panelTop = browserWin.mozInnerScreenY + panelRect.top;
-      ok(panelTop >= browserWin.screen.availTop, `Top of popup should be on-screen. (${panelTop} >= ${browserWin.screen.availTop})`);
+      ok(
+        panelTop >= browserWin.screen.availTop,
+        `Top of popup should be on-screen. (${panelTop} >= ${
+          browserWin.screen.availTop
+        })`
+      );
     }
   };
 
@@ -170,8 +215,10 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   await waitUntilValue({
     getValue: () => promiseContentDimensions(browser),
     isCompleted: (oldDims, newDims) => {
-      return oldDims.window.innerWidth === newDims.window.innerWidth &&
-        oldDims.window.innerHeight === newDims.window.innerHeight;
+      return (
+        oldDims.window.innerWidth === newDims.window.innerWidth &&
+        oldDims.window.innerHeight === newDims.window.innerHeight
+      );
     },
     message: "Wait the popup resize to be completed",
     delay: 500,
@@ -187,60 +234,92 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   // correct, so check that explicitly.
   let getHeight = () => parseFloat(browser.style.height);
 
-  let {innerWidth, innerHeight} = dims.window;
+  let { innerWidth, innerHeight } = dims.window;
   let height = getHeight();
 
   let setClass = className => {
     content.document.body.className = className;
   };
 
-  info("Increase body children's width. " +
-       "Expect them to wrap, and the frame to grow vertically rather than widen.");
+  info(
+    "Increase body children's width. " +
+      "Expect them to wrap, and the frame to grow vertically rather than widen."
+  );
 
   dims = await alterContent(browser, setClass, "big");
   let win = dims.window;
 
-  ok(getHeight() > height, `Browser height should increase (${getHeight()} > ${height})`);
+  ok(
+    getHeight() > height,
+    `Browser height should increase (${getHeight()} > ${height})`
+  );
 
   is(win.innerWidth, innerWidth, "Window width should not change");
-  ok(win.innerHeight >= innerHeight, `Window height should increase (${win.innerHeight} >= ${innerHeight})`);
-  Assert.lessOrEqual(win.scrollMaxY, 1, "Document should not be vertically scrollable");
+  ok(
+    win.innerHeight >= innerHeight,
+    `Window height should increase (${win.innerHeight} >= ${innerHeight})`
+  );
+  Assert.lessOrEqual(
+    win.scrollMaxY,
+    1,
+    "Document should not be vertically scrollable"
+  );
 
   checkPanelPosition();
 
-
-  info("Increase body children's width and height. " +
-       "Expect them to wrap, and the frame to grow vertically rather than widen.");
+  info(
+    "Increase body children's width and height. " +
+      "Expect them to wrap, and the frame to grow vertically rather than widen."
+  );
 
   dims = await alterContent(browser, setClass, "bigger");
   win = dims.window;
 
-  ok(getHeight() > height, `Browser height should increase (${getHeight()} > ${height})`);
+  ok(
+    getHeight() > height,
+    `Browser height should increase (${getHeight()} > ${height})`
+  );
 
   is(win.innerWidth, innerWidth, "Window width should not change");
-  ok(win.innerHeight >= innerHeight, `Window height should increase (${win.innerHeight} >= ${innerHeight})`);
-  Assert.lessOrEqual(win.scrollMaxY, 1, "Document should not be vertically scrollable");
+  ok(
+    win.innerHeight >= innerHeight,
+    `Window height should increase (${win.innerHeight} >= ${innerHeight})`
+  );
+  Assert.lessOrEqual(
+    win.scrollMaxY,
+    1,
+    "Document should not be vertically scrollable"
+  );
 
   checkPanelPosition();
 
-
-  info("Increase body height beyond the height of the screen. " +
-       "Expect the panel to grow to accommodate, but not larger than the height of the screen.");
+  info(
+    "Increase body height beyond the height of the screen. " +
+      "Expect the panel to grow to accommodate, but not larger than the height of the screen."
+  );
 
   dims = await alterContent(browser, setClass, "huge");
   win = dims.window;
 
-  ok(getHeight() > height, `Browser height should increase (${getHeight()} > ${height})`);
+  ok(
+    getHeight() > height,
+    `Browser height should increase (${getHeight()} > ${height})`
+  );
 
   is(win.innerWidth, innerWidth, "Window width should not change");
-  ok(win.innerHeight > innerHeight, `Window height should increase (${win.innerHeight} > ${innerHeight})`);
+  ok(
+    win.innerHeight > innerHeight,
+    `Window height should increase (${win.innerHeight} > ${innerHeight})`
+  );
   // Commented out check for the window height here which mysteriously breaks
   // on infra but not locally. bug 1396843 covers re-enabling this.
   // ok(win.innerHeight < screen.height, `Window height be less than the screen height (${win.innerHeight} < ${screen.height})`);
-  ok(win.scrollMaxY > 0, `Document should be vertically scrollable (${win.scrollMaxY} > 0)`);
+  ok(
+    win.scrollMaxY > 0,
+    `Document should be vertically scrollable (${win.scrollMaxY} > 0)`
+  );
 
   checkPanelPosition();
-
 
   info("Restore original styling. Expect original dimensions.");
   dims = await alterContent(browser, setClass, "");
@@ -249,8 +328,16 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
   is(getHeight(), height, "Browser height should return to its original value");
 
   is(win.innerWidth, innerWidth, "Window width should not change");
-  is(win.innerHeight, innerHeight, "Window height should return to its original value");
-  Assert.lessOrEqual(win.scrollMaxY, 1, "Document should not be vertically scrollable");
+  is(
+    win.innerHeight,
+    innerHeight,
+    "Window height should return to its original value"
+  );
+  Assert.lessOrEqual(
+    win.scrollMaxY,
+    1,
+    "Document should not be vertically scrollable"
+  );
 
   checkPanelPosition();
 

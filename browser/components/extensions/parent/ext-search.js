@@ -7,21 +7,25 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "searchLoadInBackground",
-                                      "browser.search.context.loadInBackground");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "searchLoadInBackground",
+  "browser.search.context.loadInBackground"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "btoa"]);
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 async function getDataURI(resourceURI) {
   let response = await fetch(resourceURI);
@@ -40,25 +44,29 @@ this.search = class extends ExtensionAPI {
           await searchInitialized;
           let visibleEngines = await Services.search.getVisibleEngines();
           let defaultEngine = await Services.search.getDefault();
-          return Promise.all(visibleEngines.map(async engine => {
-            let favIconUrl;
-            if (engine.iconURI) {
-              if (engine.iconURI.schemeIs("resource") ||
-                  engine.iconURI.schemeIs("chrome")) {
-                // Convert internal URLs to data URLs
-                favIconUrl = await getDataURI(engine.iconURI.spec);
-              } else {
-                favIconUrl = engine.iconURI.spec;
+          return Promise.all(
+            visibleEngines.map(async engine => {
+              let favIconUrl;
+              if (engine.iconURI) {
+                if (
+                  engine.iconURI.schemeIs("resource") ||
+                  engine.iconURI.schemeIs("chrome")
+                ) {
+                  // Convert internal URLs to data URLs
+                  favIconUrl = await getDataURI(engine.iconURI.spec);
+                } else {
+                  favIconUrl = engine.iconURI.spec;
+                }
               }
-            }
 
-            return {
-              name: engine.name,
-              isDefault: engine.name === defaultEngine.name,
-              alias: engine.alias || undefined,
-              favIconUrl,
-            };
-          }));
+              return {
+                name: engine.name,
+                isDefault: engine.name === defaultEngine.name,
+                alias: engine.alias || undefined,
+                favIconUrl,
+              };
+            })
+          );
         },
 
         async search(searchProperties) {
@@ -67,19 +75,25 @@ this.search = class extends ExtensionAPI {
           if (searchProperties.engine) {
             engine = Services.search.getEngineByName(searchProperties.engine);
             if (!engine) {
-              throw new ExtensionError(`${searchProperties.engine} was not found`);
+              throw new ExtensionError(
+                `${searchProperties.engine} was not found`
+              );
             }
           } else {
             engine = await Services.search.getDefault();
           }
-          let submission = engine.getSubmission(searchProperties.query, null, "webextension");
+          let submission = engine.getSubmission(
+            searchProperties.query,
+            null,
+            "webextension"
+          );
           let options = {
             postData: submission.postData,
             triggeringPrincipal: context.principal,
           };
           let tabbrowser;
           if (searchProperties.tabId === null) {
-            let {gBrowser} = windowTracker.topWindow;
+            let { gBrowser } = windowTracker.topWindow;
             let nativeTab = gBrowser.addTab(submission.uri.spec, options);
             if (!searchLoadInBackground) {
               gBrowser.selectedTab = nativeTab;
@@ -90,7 +104,11 @@ this.search = class extends ExtensionAPI {
             tab.linkedBrowser.loadURI(submission.uri.spec, options);
             tabbrowser = tab.linkedBrowser.getTabBrowser();
           }
-          BrowserUsageTelemetry.recordSearch(tabbrowser, engine, "webextension");
+          BrowserUsageTelemetry.recordSearch(
+            tabbrowser,
+            engine,
+            "webextension"
+          );
         },
       },
     };

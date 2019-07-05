@@ -1,5 +1,5 @@
-import {filterAdult} from "lib/FilterAdult.jsm";
-import {GlobalOverrider} from "test/unit/utils";
+import { filterAdult } from "lib/FilterAdult.jsm";
+import { GlobalOverrider } from "test/unit/utils";
 
 describe("filterAdult", () => {
   let hashStub;
@@ -35,7 +35,7 @@ describe("filterAdult", () => {
     assert.equal(result[0], empty);
   });
   it("should not filter out non-adult urls", () => {
-    const link = {url: "https://mozilla.org/"};
+    const link = { url: "https://mozilla.org/" };
 
     const result = filterAdult([link]);
 
@@ -45,7 +45,7 @@ describe("filterAdult", () => {
   it("should filter out adult urls", () => {
     // Use a hash value that is in the adult set
     hashValue = "+/UCpAhZhz368iGioEO8aQ==";
-    const link = {url: "https://some-adult-site/"};
+    const link = { url: "https://some-adult-site/" };
 
     const result = filterAdult([link]);
 

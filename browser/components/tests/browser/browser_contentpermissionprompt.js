@@ -6,12 +6,17 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 ChromeUtils.import("resource://gre/modules/Integration.jsm", this);
 
-XPCOMUtils.defineLazyServiceGetter(this, "ContentPermissionPrompt",
-                                   "@mozilla.org/content-permission/prompt;1",
-                                   "nsIContentPermissionPrompt");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ContentPermissionPrompt",
+  "@mozilla.org/content-permission/prompt;1",
+  "nsIContentPermissionPrompt"
+);
 
 /**
  * This is a partial implementation of nsIContentPermissionType.
@@ -71,9 +76,13 @@ MockContentPermissionRequest.prototype = {
  */
 add_task(async function test_empty_types() {
   let mockRequest = new MockContentPermissionRequest([]);
-  Assert.throws(() => { ContentPermissionPrompt.prompt(mockRequest); },
-                /NS_ERROR_UNEXPECTED/,
-                "Should have thrown NS_ERROR_UNEXPECTED.");
+  Assert.throws(
+    () => {
+      ContentPermissionPrompt.prompt(mockRequest);
+    },
+    /NS_ERROR_UNEXPECTED/,
+    "Should have thrown NS_ERROR_UNEXPECTED."
+  );
   Assert.ok(mockRequest.cancelled, "Should have cancelled the request.");
 });
 
@@ -88,8 +97,9 @@ add_task(async function test_multiple_types() {
     new MockContentPermissionType("test2"),
   ]);
 
-  Assert.throws(() => { ContentPermissionPrompt.prompt(mockRequest); },
-                /NS_ERROR_UNEXPECTED/);
+  Assert.throws(() => {
+    ContentPermissionPrompt.prompt(mockRequest);
+  }, /NS_ERROR_UNEXPECTED/);
   Assert.ok(mockRequest.cancelled, "Should have cancelled the request.");
 });
 
@@ -103,8 +113,9 @@ add_task(async function test_not_permission_type() {
     { QueryInterface: ChromeUtils.generateQI([]) },
   ]);
 
-  Assert.throws(() => { ContentPermissionPrompt.prompt(mockRequest); },
-                /NS_NOINTERFACE/);
+  Assert.throws(() => {
+    ContentPermissionPrompt.prompt(mockRequest);
+  }, /NS_NOINTERFACE/);
   Assert.ok(mockRequest.cancelled, "Should have cancelled the request.");
 });
 
@@ -118,8 +129,9 @@ add_task(async function test_unrecognized_type() {
     new MockContentPermissionType("test1"),
   ]);
 
-  Assert.throws(() => { ContentPermissionPrompt.prompt(mockRequest); },
-                /NS_ERROR_FAILURE/);
+  Assert.throws(() => {
+    ContentPermissionPrompt.prompt(mockRequest);
+  }, /NS_ERROR_FAILURE/);
   Assert.ok(mockRequest.cancelled, "Should have cancelled the request.");
 });
 
@@ -144,10 +156,12 @@ add_task(async function test_working_request() {
     },
   };
 
-  let integration = (base) => ({
+  let integration = base => ({
     createPermissionPrompt(type, request) {
       Assert.equal(type, "test-permission-type");
-      Assert.ok(Object.is(request.wrappedJSObject, mockRequest.wrappedJSObject));
+      Assert.ok(
+        Object.is(request.wrappedJSObject, mockRequest.wrappedJSObject)
+      );
       return mockPermissionPrompt;
     },
   });
@@ -158,8 +172,7 @@ add_task(async function test_working_request() {
     Integration.contentPermission.register(integration);
 
     ContentPermissionPrompt.prompt(mockRequest);
-    Assert.ok(!mockRequest.cancelled,
-              "Should not have cancelled the request.");
+    Assert.ok(!mockRequest.cancelled, "Should not have cancelled the request.");
     Assert.ok(didPrompt, "Should have tried to show the prompt");
   } finally {
     Integration.contentPermission.unregister(integration);

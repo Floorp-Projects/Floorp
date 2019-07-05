@@ -34,14 +34,17 @@ add_task(async function setup() {
   // Ensure we start from a clean situation.
   await PlacesUtils.history.clear();
 
-  await PlacesTestUtils.addVisits([{
-    uri: `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}`,
-    title: "test visit for speculative connection",
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
-  }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}`,
+      title: "test visit for speculative connection",
+      transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+    },
+  ]);
 
   let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   let oldCurrentEngine = Services.search.defaultEngine;
   Services.search.defaultEngine = engine;
 
@@ -54,9 +57,7 @@ add_task(async function setup() {
 add_task(async function search_test() {
   // We speculative connect to the search engine only if suggestions are enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.search.suggest.enabled", true],
-    ],
+    set: [["browser.search.suggest.enabled", true]],
   });
   await withHttpServer(serverInfo, async server => {
     let connectionNumber = server.connectionNumber;
@@ -64,8 +65,15 @@ add_task(async function search_test() {
     await promiseAutocompleteResultPopup("foo", window, true);
     // Check if the first result is with type "searchengine"
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-    Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.SEARCH, "The first result is a search");
-    await UrlbarTestUtils.promiseSpeculativeConnections(server, connectionNumber + 1);
+    Assert.equal(
+      details.type,
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      "The first result is a search"
+    );
+    await UrlbarTestUtils.promiseSpeculativeConnections(
+      server,
+      connectionNumber + 1
+    );
   });
 });
 
@@ -81,18 +89,31 @@ add_task(async function popup_mousedown_test() {
   await withHttpServer(serverInfo, async server => {
     let connectionNumber = server.connectionNumber;
     let searchString = "ocal";
-    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}/`;
+    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
+      serverInfo.port
+    }/`;
     info(`Searching for '${searchString}'`);
 
     await promiseAutocompleteResultPopup(searchString, window, true);
     let listitem = await waitForAutocompleteResultAt(1);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    Assert.equal(details.url, completeValue, "The second item has the url we visited.");
+    Assert.equal(
+      details.url,
+      completeValue,
+      "The second item has the url we visited."
+    );
 
     info("Clicking on the second result");
-    EventUtils.synthesizeMouseAtCenter(listitem, {type: "mousedown"}, window);
-    Assert.equal(UrlbarTestUtils.getSelectedElement(window), listitem, "The second item is selected");
-    await UrlbarTestUtils.promiseSpeculativeConnections(server, connectionNumber + 1);
+    EventUtils.synthesizeMouseAtCenter(listitem, { type: "mousedown" }, window);
+    Assert.equal(
+      UrlbarTestUtils.getSelectedElement(window),
+      listitem,
+      "The second item is selected"
+    );
+    await UrlbarTestUtils.promiseSpeculativeConnections(
+      server,
+      connectionNumber + 1
+    );
   });
 });
 
@@ -111,15 +132,22 @@ add_task(async function test_autofill() {
 
     await promiseAutocompleteResultPopup(searchString, window, true);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}/`;
+    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
+      serverInfo.port
+    }/`;
     Assert.equal(details.url, completeValue, `Autofilled value is as expected`);
-    await UrlbarTestUtils.promiseSpeculativeConnections(server, connectionNumber + 1);
+    await UrlbarTestUtils.promiseSpeculativeConnections(
+      server,
+      connectionNumber + 1
+    );
   });
 });
 
 add_task(async function test_autofill_privateContext() {
   info("Autofill in private context.");
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   registerCleanupFunction(async () => {
     let promisePBExit = TestUtils.topicObserved("last-pb-context-exited");
     await BrowserTestUtils.closeWindow(privateWin);
@@ -132,9 +160,14 @@ add_task(async function test_autofill_privateContext() {
 
     await promiseAutocompleteResultPopup(searchString, privateWin, true);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(privateWin, 0);
-    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${serverInfo.port}/`;
+    let completeValue = `${serverInfo.scheme}://${serverInfo.host}:${
+      serverInfo.port
+    }/`;
     Assert.equal(details.url, completeValue, `Autofilled value is as expected`);
-    await UrlbarTestUtils.promiseSpeculativeConnections(server, connectionNumber);
+    await UrlbarTestUtils.promiseSpeculativeConnections(
+      server,
+      connectionNumber
+    );
   });
 });
 
@@ -147,6 +180,9 @@ add_task(async function test_no_heuristic_result() {
     ok(UrlbarTestUtils.getResultCount(window) > 0, "Has results");
     let result = await UrlbarTestUtils.getSelectedElement(window);
     Assert.strictEqual(result, null, `Should have no selection`);
-    await UrlbarTestUtils.promiseSpeculativeConnections(server, connectionNumber);
+    await UrlbarTestUtils.promiseSpeculativeConnections(
+      server,
+      connectionNumber
+    );
   });
 });

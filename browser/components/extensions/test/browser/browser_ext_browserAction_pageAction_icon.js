@@ -19,7 +19,12 @@ add_task(async function testDetailsObjects() {
 
       return {
         url: canvas.toDataURL("image/png"),
-        imageData: canvasContext.getImageData(0, 0, canvas.width, canvas.height),
+        imageData: canvasContext.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        ),
       };
     }
 
@@ -31,140 +36,227 @@ add_task(async function testDetailsObjects() {
     /* eslint-disable indent, indent-legacy */
     let iconDetails = [
       // Only paths.
-      {details: {"path": "a.png"},
+      {
+        details: { path: "a.png" },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a.png")}},
-      {details: {"path": "/a.png"},
+          "2": browser.runtime.getURL("data/a.png"),
+        },
+      },
+      {
+        details: { path: "/a.png" },
         resolutions: {
           "1": browser.runtime.getURL("a.png"),
-          "2": browser.runtime.getURL("a.png")}},
-      {details: {"path": {"19": "a.png"}},
+          "2": browser.runtime.getURL("a.png"),
+        },
+      },
+      {
+        details: { path: { "19": "a.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a.png")}},
-      {details: {"path": {"38": "a.png"}},
+          "2": browser.runtime.getURL("data/a.png"),
+        },
+      },
+      {
+        details: { path: { "38": "a.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a.png")}},
-      {details: {"path": {"19": "a.png", "38": "a-x2.png"}},
+          "2": browser.runtime.getURL("data/a.png"),
+        },
+      },
+      {
+        details: { path: { "19": "a.png", "38": "a-x2.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a-x2.png")}},
+          "2": browser.runtime.getURL("data/a-x2.png"),
+        },
+      },
 
       // Test that CSS strings are escaped properly.
-      {details: {"path": 'a.png#" \\'},
+      {
+        details: { path: 'a.png#" \\' },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png#%22%20%5C"),
-          "2": browser.runtime.getURL("data/a.png#%22%20%5C")}},
+          "2": browser.runtime.getURL("data/a.png#%22%20%5C"),
+        },
+      },
 
       // Only ImageData objects.
-      {details: {"imageData": imageData.red.imageData},
+      {
+        details: { imageData: imageData.red.imageData },
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.red.url}},
-      {details: {"imageData": {"19": imageData.red.imageData}},
+          "2": imageData.red.url,
+        },
+      },
+      {
+        details: { imageData: { "19": imageData.red.imageData } },
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.red.url}},
-      {details: {"imageData": {"38": imageData.red.imageData}},
+          "2": imageData.red.url,
+        },
+      },
+      {
+        details: { imageData: { "38": imageData.red.imageData } },
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.red.url}},
-      {details: {"imageData": {
-          "19": imageData.red.imageData,
-          "38": imageData.green.imageData}},
+          "2": imageData.red.url,
+        },
+      },
+      {
+        details: {
+          imageData: {
+            "19": imageData.red.imageData,
+            "38": imageData.green.imageData,
+          },
+        },
         resolutions: {
           "1": imageData.red.url,
-          "2": imageData.green.url}},
+          "2": imageData.green.url,
+        },
+      },
 
       // Mixed path and imageData objects.
       //
       // The behavior is currently undefined if both |path| and
       // |imageData| specify icons of the same size.
-      {details: {
-          "path": {"19": "a.png"},
-          "imageData": {"38": imageData.red.imageData}},
+      {
+        details: {
+          path: { "19": "a.png" },
+          imageData: { "38": imageData.red.imageData },
+        },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": imageData.red.url}},
-      {details: {
-          "path": {"38": "a.png"},
-          "imageData": {"19": imageData.red.imageData}},
+          "2": imageData.red.url,
+        },
+      },
+      {
+        details: {
+          path: { "38": "a.png" },
+          imageData: { "19": imageData.red.imageData },
+        },
         resolutions: {
           "1": imageData.red.url,
-          "2": browser.runtime.getURL("data/a.png")}},
+          "2": browser.runtime.getURL("data/a.png"),
+        },
+      },
 
       // A path or ImageData object by itself is treated as a 19px icon.
-      {details: {
-          "path": "a.png",
-          "imageData": {"38": imageData.red.imageData}},
+      {
+        details: {
+          path: "a.png",
+          imageData: { "38": imageData.red.imageData },
+        },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": imageData.red.url}},
-      {details: {
-          "path": {"38": "a.png"},
-          "imageData": imageData.red.imageData},
+          "2": imageData.red.url,
+        },
+      },
+      {
+        details: {
+          path: { "38": "a.png" },
+          imageData: imageData.red.imageData,
+        },
         resolutions: {
           "1": imageData.red.url,
-          "2": browser.runtime.getURL("data/a.png")}},
+          "2": browser.runtime.getURL("data/a.png"),
+        },
+      },
 
       // Various resolutions
-      {details: {"path": {"18": "a.png", "36": "a-x2.png"}},
+      {
+        details: { path: { "18": "a.png", "36": "a-x2.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a-x2.png")}},
-      {details: {"path": {"16": "a.png", "30": "a-x2.png"}},
+          "2": browser.runtime.getURL("data/a-x2.png"),
+        },
+      },
+      {
+        details: { path: { "16": "a.png", "30": "a-x2.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
-          "2": browser.runtime.getURL("data/a-x2.png")}},
-      {details: {"path": {"16": "16.png", "100": "100.png"}},
+          "2": browser.runtime.getURL("data/a-x2.png"),
+        },
+      },
+      {
+        details: { path: { "16": "16.png", "100": "100.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/16.png"),
-          "2": browser.runtime.getURL("data/100.png")}},
-      {details: {"path": {"2": "2.png"}},
+          "2": browser.runtime.getURL("data/100.png"),
+        },
+      },
+      {
+        details: { path: { "2": "2.png" } },
         resolutions: {
           "1": browser.runtime.getURL("data/2.png"),
-          "2": browser.runtime.getURL("data/2.png")}},
-      {details: {"path": {
-        "16": "16.svg",
-        "18": "18.svg"}},
+          "2": browser.runtime.getURL("data/2.png"),
+        },
+      },
+      {
+        details: {
+          path: {
+            "16": "16.svg",
+            "18": "18.svg",
+          },
+        },
         resolutions: {
           "1": browser.runtime.getURL("data/16.svg"),
-          "2": browser.runtime.getURL("data/18.svg")}},
-      {details: {"path": {
-        "6": "6.png",
-        "18": "18.png",
-        "36": "36.png",
-        "48": "48.png",
-        "128": "128.png"}},
+          "2": browser.runtime.getURL("data/18.svg"),
+        },
+      },
+      {
+        details: {
+          path: {
+            "6": "6.png",
+            "18": "18.png",
+            "36": "36.png",
+            "48": "48.png",
+            "128": "128.png",
+          },
+        },
         resolutions: {
           "1": browser.runtime.getURL("data/18.png"),
-          "2": browser.runtime.getURL("data/36.png")},
+          "2": browser.runtime.getURL("data/36.png"),
+        },
         menuResolutions: {
           "1": browser.runtime.getURL("data/36.png"),
-          "2": browser.runtime.getURL("data/128.png")}},
-      {details: {"path": {
-        "16": "16.png",
-        "18": "18.png",
-        "32": "32.png",
-        "48": "48.png",
-        "64": "64.png",
-        "128": "128.png"}},
+          "2": browser.runtime.getURL("data/128.png"),
+        },
+      },
+      {
+        details: {
+          path: {
+            "16": "16.png",
+            "18": "18.png",
+            "32": "32.png",
+            "48": "48.png",
+            "64": "64.png",
+            "128": "128.png",
+          },
+        },
         resolutions: {
           "1": browser.runtime.getURL("data/16.png"),
-          "2": browser.runtime.getURL("data/32.png")},
+          "2": browser.runtime.getURL("data/32.png"),
+        },
         menuResolutions: {
           "1": browser.runtime.getURL("data/32.png"),
-          "2": browser.runtime.getURL("data/64.png")}},
-      {details: {"path": {
-        "18": "18.png",
-        "32": "32.png",
-        "48": "48.png",
-        "128": "128.png"}},
+          "2": browser.runtime.getURL("data/64.png"),
+        },
+      },
+      {
+        details: {
+          path: {
+            "18": "18.png",
+            "32": "32.png",
+            "48": "48.png",
+            "128": "128.png",
+          },
+        },
         resolutions: {
           "1": browser.runtime.getURL("data/32.png"),
-          "2": browser.runtime.getURL("data/32.png")}},
+          "2": browser.runtime.getURL("data/32.png"),
+        },
+      },
     ];
     /* eslint-enable indent, indent-legacy */
 
@@ -181,11 +273,17 @@ add_task(async function testDetailsObjects() {
       let details = iconDetails[test.index];
 
       let detailString = JSON.stringify(details);
-      browser.test.log(`Setting browerAction/pageAction to ${detailString} expecting URLs ${JSON.stringify(details.resolutions)}`);
+      browser.test.log(
+        `Setting browerAction/pageAction to ${detailString} expecting URLs ${JSON.stringify(
+          details.resolutions
+        )}`
+      );
 
       Promise.all([
-        browser.browserAction.setIcon(Object.assign({tabId}, details.details)),
-        browser.pageAction.setIcon(Object.assign({tabId}, details.details)),
+        browser.browserAction.setIcon(
+          Object.assign({ tabId }, details.details)
+        ),
+        browser.pageAction.setIcon(Object.assign({ tabId }, details.details)),
       ]).then(() => {
         browser.test.sendMessage("iconSet");
       });
@@ -214,7 +312,7 @@ add_task(async function testDetailsObjects() {
     // between each test.
     tests.sort(test => test.resolution);
 
-    browser.tabs.query({active: true, currentWindow: true}, tabs => {
+    browser.tabs.query({ active: true, currentWindow: true }, tabs => {
       tabId = tabs[0].id;
       browser.pageAction.show(tabId).then(() => {
         browser.test.sendMessage("ready", tests);
@@ -224,10 +322,10 @@ add_task(async function testDetailsObjects() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {},
-      "page_action": {},
-      "background": {
-        "page": "data/background.html",
+      browser_action: {},
+      page_action: {},
+      background: {
+        page: "data/background.html",
       },
     },
 
@@ -258,7 +356,9 @@ add_task(async function testDetailsObjects() {
 
   await extension.startup();
 
-  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
   let browserActionWidget = getBrowserActionWidget(extension);
 
   let tests = await extension.awaitMessage("ready");
@@ -268,8 +368,16 @@ add_task(async function testDetailsObjects() {
   const DEFAULT_ICON = "chrome://browser/content/extension.svg";
   let browserActionButton = browserActionWidget.forWindow(window).node;
   let pageActionImage = document.getElementById(pageActionId);
-  is(getListStyleImage(browserActionButton), DEFAULT_ICON, `browser action has the correct default image`);
-  is(getListStyleImage(pageActionImage), DEFAULT_ICON, `page action has the correct default image`);
+  is(
+    getListStyleImage(browserActionButton),
+    DEFAULT_ICON,
+    `browser action has the correct default image`
+  );
+  is(
+    getListStyleImage(pageActionImage),
+    DEFAULT_ICON,
+    `page action has the correct default image`
+  );
 
   for (let test of tests) {
     extension.sendMessage("setIcon", test);
@@ -279,13 +387,25 @@ add_task(async function testDetailsObjects() {
 
     // Test icon sizes in the toolbar/urlbar.
     for (let resolution of Object.keys(test.resolutions)) {
-      await SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
+      await SpecialPowers.pushPrefEnv({ set: [[RESOLUTION_PREF, resolution]] });
 
-      is(window.devicePixelRatio, +resolution, "window has the required resolution");
+      is(
+        window.devicePixelRatio,
+        +resolution,
+        "window has the required resolution"
+      );
 
       let imageURL = test.resolutions[resolution];
-      is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct image at ${resolution}x resolution`);
-      is(getListStyleImage(pageActionImage), imageURL, `page action has the correct image at ${resolution}x resolution`);
+      is(
+        getListStyleImage(browserActionButton),
+        imageURL,
+        `browser action has the correct image at ${resolution}x resolution`
+      );
+      is(
+        getListStyleImage(pageActionImage),
+        imageURL,
+        `page action has the correct image at ${resolution}x resolution`
+      );
 
       await SpecialPowers.popPrefEnv();
     }
@@ -313,7 +433,7 @@ add_task(async function testDetailsObjects() {
 // in the opposite order and the test is not able to reproduce the issue anymore.
 add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
   async function background() {
-    const tabs = await browser.tabs.query({active: true});
+    const tabs = await browser.tabs.query({ active: true });
     await browser.pageAction.show(tabs[0].id);
 
     browser.test.sendMessage("ready");
@@ -322,31 +442,31 @@ add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
   const extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      "name": "Foo Extension",
+      name: "Foo Extension",
 
-      "browser_action": {
-        "default_icon": "common_cached_icon.png",
-        "default_popup": "default_popup.html",
-        "default_title": "BrowserAction title",
-        "theme_icons": [
+      browser_action: {
+        default_icon: "common_cached_icon.png",
+        default_popup: "default_popup.html",
+        default_title: "BrowserAction title",
+        theme_icons: [
           {
-            "dark": "1.png",
-            "light": "2.png",
-            "size": 16,
+            dark: "1.png",
+            light: "2.png",
+            size: 16,
           },
         ],
       },
 
-      "page_action": {
-        "default_icon": "common_cached_icon.png",
-        "default_popup": "default_popup.html",
-        "default_title": "PageAction title",
+      page_action: {
+        default_icon: "common_cached_icon.png",
+        default_popup: "default_popup.html",
+        default_title: "PageAction title",
       },
 
-      "permissions": ["tabs"],
+      permissions: ["tabs"],
     },
 
-    "files": {
+    files: {
       "common_cached_icon.png": imageBuffer,
       "1.png": imageBuffer,
       "2.png": imageBuffer,
@@ -360,12 +480,18 @@ add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
 
   await promiseAnimationFrame();
 
-  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
   let pageActionImage = document.getElementById(pageActionId);
 
   const iconURL = new URL(getListStyleImage(pageActionImage));
 
-  is(iconURL.pathname, "/common_cached_icon.png", "Got the expected pageAction icon url");
+  is(
+    iconURL.pathname,
+    "/common_cached_icon.png",
+    "Got the expected pageAction icon url"
+  );
 
   await extension.unload();
 });

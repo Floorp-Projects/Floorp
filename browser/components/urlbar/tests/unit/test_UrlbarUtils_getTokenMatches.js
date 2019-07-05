@@ -150,12 +150,15 @@ add_task(function test() {
       expected: [[0, 2], [8, 2], [19, 4]],
     },
   ];
-  for (let {tokens, phrase, expected} of tests) {
+  for (let { tokens, phrase, expected } of tests) {
     tokens = tokens.map(t => ({
       value: t,
       lowerCaseValue: t.toLocaleLowerCase(),
     }));
-    Assert.deepEqual(UrlbarUtils.getTokenMatches(tokens, phrase), expected,
-                     `Match "${tokens.map(t => t.value).join(", ")}" on "${phrase}"`);
+    Assert.deepEqual(
+      UrlbarUtils.getTokenMatches(tokens, phrase),
+      expected,
+      `Match "${tokens.map(t => t.value).join(", ")}" on "${phrase}"`
+    );
   }
 });

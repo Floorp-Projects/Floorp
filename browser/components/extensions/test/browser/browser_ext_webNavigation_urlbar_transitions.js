@@ -2,10 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "UrlbarTestUtils",
-                               "resource://testing-common/UrlbarTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UrlbarTestUtils",
+  "resource://testing-common/UrlbarTestUtils.jsm"
+);
 
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
@@ -69,15 +75,23 @@ async function prepareSearchEngine() {
 
 add_task(async function test_webnavigation_urlbar_typed_transitions() {
   function backgroundScript() {
-    browser.webNavigation.onCommitted.addListener((msg) => {
-      browser.test.assertEq("http://example.com/?q=typed", msg.url,
-                            "Got the expected url");
+    browser.webNavigation.onCommitted.addListener(msg => {
+      browser.test.assertEq(
+        "http://example.com/?q=typed",
+        msg.url,
+        "Got the expected url"
+      );
       // assert from_address_bar transition qualifier
-      browser.test.assertTrue(msg.transitionQualifiers &&
-                          msg.transitionQualifiers.includes("from_address_bar"),
-                              "Got the expected from_address_bar transitionQualifier");
-      browser.test.assertEq("typed", msg.transitionType,
-                            "Got the expected transitionType");
+      browser.test.assertTrue(
+        msg.transitionQualifiers &&
+          msg.transitionQualifiers.includes("from_address_bar"),
+        "Got the expected from_address_bar transitionQualifier"
+      );
+      browser.test.assertEq(
+        "typed",
+        msg.transitionType,
+        "Got the expected transitionType"
+      );
       browser.test.notifyPass("webNavigation.from_address_bar.typed");
     });
 
@@ -100,65 +114,83 @@ add_task(async function test_webnavigation_urlbar_typed_transitions() {
   const inputValue = "http://example.com/?q=typed";
   gURLBar.inputField.value = inputValue.slice(0, -1);
   EventUtils.sendString(inputValue.slice(-1));
-  EventUtils.synthesizeKey("VK_RETURN", {altKey: true});
+  EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
 
   await extension.awaitFinish("webNavigation.from_address_bar.typed");
 
   await extension.unload();
 });
 
-add_task(async function test_webnavigation_urlbar_typed_closed_popup_transitions() {
-  function backgroundScript() {
-    browser.webNavigation.onCommitted.addListener((msg) => {
-      browser.test.assertEq("http://example.com/?q=typedClosed", msg.url,
-                            "Got the expected url");
-      // assert from_address_bar transition qualifier
-      browser.test.assertTrue(msg.transitionQualifiers &&
-                              msg.transitionQualifiers.includes("from_address_bar"),
-                              "Got the expected from_address_bar transitionQualifier");
-      browser.test.assertEq("typed", msg.transitionType,
-                            "Got the expected transitionType");
-      browser.test.notifyPass("webNavigation.from_address_bar.typed");
+add_task(
+  async function test_webnavigation_urlbar_typed_closed_popup_transitions() {
+    function backgroundScript() {
+      browser.webNavigation.onCommitted.addListener(msg => {
+        browser.test.assertEq(
+          "http://example.com/?q=typedClosed",
+          msg.url,
+          "Got the expected url"
+        );
+        // assert from_address_bar transition qualifier
+        browser.test.assertTrue(
+          msg.transitionQualifiers &&
+            msg.transitionQualifiers.includes("from_address_bar"),
+          "Got the expected from_address_bar transitionQualifier"
+        );
+        browser.test.assertEq(
+          "typed",
+          msg.transitionType,
+          "Got the expected transitionType"
+        );
+        browser.test.notifyPass("webNavigation.from_address_bar.typed");
+      });
+
+      browser.test.sendMessage("ready");
+    }
+
+    let extension = ExtensionTestUtils.loadExtension({
+      background: backgroundScript,
+      manifest: {
+        permissions: ["webNavigation"],
+      },
     });
 
-    browser.test.sendMessage("ready");
+    await extension.startup();
+    await SimpleTest.promiseFocus(window);
+
+    await extension.awaitMessage("ready");
+    await promiseAutocompleteResultPopup("http://example.com/?q=typedClosed");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    // Closing the popup forces a different code route that handles no results
+    // being displayed.
+    await UrlbarTestUtils.promisePopupClose(window);
+    EventUtils.synthesizeKey("VK_RETURN", {});
+
+    await extension.awaitFinish("webNavigation.from_address_bar.typed");
+
+    await extension.unload();
   }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: backgroundScript,
-    manifest: {
-      permissions: ["webNavigation"],
-    },
-  });
-
-  await extension.startup();
-  await SimpleTest.promiseFocus(window);
-
-  await extension.awaitMessage("ready");
-  await promiseAutocompleteResultPopup("http://example.com/?q=typedClosed");
-  await UrlbarTestUtils.promiseSearchComplete(window);
-  // Closing the popup forces a different code route that handles no results
-  // being displayed.
-  await UrlbarTestUtils.promisePopupClose(window);
-  EventUtils.synthesizeKey("VK_RETURN", {});
-
-  await extension.awaitFinish("webNavigation.from_address_bar.typed");
-
-  await extension.unload();
-});
+);
 
 add_task(async function test_webnavigation_urlbar_bookmark_transitions() {
   function backgroundScript() {
-    browser.webNavigation.onCommitted.addListener((msg) => {
-      browser.test.assertEq("http://example.com/?q=bookmark", msg.url,
-                            "Got the expected url");
+    browser.webNavigation.onCommitted.addListener(msg => {
+      browser.test.assertEq(
+        "http://example.com/?q=bookmark",
+        msg.url,
+        "Got the expected url"
+      );
 
       // assert from_address_bar transition qualifier
-      browser.test.assertTrue(msg.transitionQualifiers &&
-                          msg.transitionQualifiers.includes("from_address_bar"),
-                              "Got the expected from_address_bar transitionQualifier");
-      browser.test.assertEq("auto_bookmark", msg.transitionType,
-                            "Got the expected transitionType");
+      browser.test.assertTrue(
+        msg.transitionQualifiers &&
+          msg.transitionQualifiers.includes("from_address_bar"),
+        "Got the expected from_address_bar transitionQualifier"
+      );
+      browser.test.assertEq(
+        "auto_bookmark",
+        msg.transitionType,
+        "Got the expected transitionType"
+      );
       browser.test.notifyPass("webNavigation.from_address_bar.auto_bookmark");
     });
 
@@ -193,16 +225,24 @@ add_task(async function test_webnavigation_urlbar_bookmark_transitions() {
 
 add_task(async function test_webnavigation_urlbar_keyword_transition() {
   function backgroundScript() {
-    browser.webNavigation.onCommitted.addListener((msg) => {
-      browser.test.assertEq(`http://example.com/?q=search`, msg.url,
-                            "Got the expected url");
+    browser.webNavigation.onCommitted.addListener(msg => {
+      browser.test.assertEq(
+        `http://example.com/?q=search`,
+        msg.url,
+        "Got the expected url"
+      );
 
       // assert from_address_bar transition qualifier
-      browser.test.assertTrue(msg.transitionQualifiers &&
-                          msg.transitionQualifiers.includes("from_address_bar"),
-                              "Got the expected from_address_bar transitionQualifier");
-      browser.test.assertEq("keyword", msg.transitionType,
-                            "Got the expected transitionType");
+      browser.test.assertTrue(
+        msg.transitionQualifiers &&
+          msg.transitionQualifiers.includes("from_address_bar"),
+        "Got the expected from_address_bar transitionQualifier"
+      );
+      browser.test.assertEq(
+        "keyword",
+        msg.transitionType,
+        "Got the expected transitionType"
+      );
       browser.test.notifyPass("webNavigation.from_address_bar.keyword");
     });
 
@@ -239,16 +279,24 @@ add_task(async function test_webnavigation_urlbar_keyword_transition() {
 
 add_task(async function test_webnavigation_urlbar_search_transitions() {
   function backgroundScript() {
-    browser.webNavigation.onCommitted.addListener((msg) => {
-      browser.test.assertEq("http://mochi.test:8888/", msg.url,
-                            "Got the expected url");
+    browser.webNavigation.onCommitted.addListener(msg => {
+      browser.test.assertEq(
+        "http://mochi.test:8888/",
+        msg.url,
+        "Got the expected url"
+      );
 
       // assert from_address_bar transition qualifier
-      browser.test.assertTrue(msg.transitionQualifiers &&
-                          msg.transitionQualifiers.includes("from_address_bar"),
-                              "Got the expected from_address_bar transitionQualifier");
-      browser.test.assertEq("generated", msg.transitionType,
-                            "Got the expected 'generated' transitionType");
+      browser.test.assertTrue(
+        msg.transitionQualifiers &&
+          msg.transitionQualifiers.includes("from_address_bar"),
+        "Got the expected from_address_bar transitionQualifier"
+      );
+      browser.test.assertEq(
+        "generated",
+        msg.transitionType,
+        "Got the expected 'generated' transitionType"
+      );
       browser.test.notifyPass("webNavigation.from_address_bar.generated");
     });
 

@@ -49,26 +49,33 @@ add_task(async function test_tags() {
   let tagsNode = PO._places.selectedNode;
   Assert.notEqual(tagsNode, null, "Should have a valid selection");
   let tagsTitle = PlacesUtils.getString("TagsFolderTitle");
-  Assert.equal(tagsNode.title, tagsTitle,
-               "Should have selected the Tags node");
+  Assert.equal(tagsNode.title, tagsTitle, "Should have selected the Tags node");
 
   // Now select the tag.
   PlacesUtils.asContainer(tagsNode).containerOpen = true;
   let tag = tagsNode.getChild(0);
   PO._places.selectNode(tag);
-  Assert.equal(PO._places.selectedNode.title, "test",
-               "Should have selected the created tag");
+  Assert.equal(
+    PO._places.selectedNode.title,
+    "test",
+    "Should have selected the created tag"
+  );
 
   let ContentTree = library.ContentTree;
 
   for (let i = 0; i < uris.length; i++) {
     ContentTree.view.selectNode(ContentTree.view.result.root.getChild(0));
 
-    Assert.equal(ContentTree.view.selectedNode.title, `bm${i}`,
-                 `Should have selected bm${i}`);
+    Assert.equal(
+      ContentTree.view.selectedNode.title,
+      `bm${i}`,
+      `Should have selected bm${i}`
+    );
 
-    let promiseNotification = PlacesTestUtils.waitForNotification("onItemChanged",
-      (id, property) => property == "tags");
+    let promiseNotification = PlacesTestUtils.waitForNotification(
+      "onItemChanged",
+      (id, property) => property == "tags"
+    );
 
     ContentTree.view.controller.doCommand("cmd_delete");
 
@@ -77,18 +84,27 @@ add_task(async function test_tags() {
     for (let j = 0; j < uris.length; j++) {
       let tags = PlacesUtils.tagging.getTagsForURI(uris[j]);
       if (j <= i) {
-        Assert.equal(tags.length, 0,
-                     `There should be no tags for the URI: ${uris[j].spec}`);
+        Assert.equal(
+          tags.length,
+          0,
+          `There should be no tags for the URI: ${uris[j].spec}`
+        );
       } else {
-        Assert.equal(tags.length, 1,
-                     `There should be one tag for the URI: ${uris[j].spec}`);
+        Assert.equal(
+          tags.length,
+          1,
+          `There should be one tag for the URI: ${uris[j].spec}`
+        );
       }
     }
   }
 
   // The tag should now not exist.
-  Assert.equal(await PlacesUtils.bookmarks.fetch({tags: ["test"]}), null,
-                   "There should be no URIs remaining for the tag");
+  Assert.equal(
+    await PlacesUtils.bookmarks.fetch({ tags: ["test"] }),
+    null,
+    "There should be no URIs remaining for the tag"
+  );
 
   tagsNode.containerOpen = false;
 

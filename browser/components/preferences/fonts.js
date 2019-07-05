@@ -7,18 +7,21 @@
 
 // browser.display.languageList LOCK ALL when LOCKED
 
-const kDefaultFontType          = "font.default.%LANG%";
-const kFontNameFmtSerif         = "font.name.serif.%LANG%";
-const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
-const kFontNameFmtMonospace     = "font.name.monospace.%LANG%";
-const kFontNameListFmtSerif     = "font.name-list.serif.%LANG%";
+const kDefaultFontType = "font.default.%LANG%";
+const kFontNameFmtSerif = "font.name.serif.%LANG%";
+const kFontNameFmtSansSerif = "font.name.sans-serif.%LANG%";
+const kFontNameFmtMonospace = "font.name.monospace.%LANG%";
+const kFontNameListFmtSerif = "font.name-list.serif.%LANG%";
 const kFontNameListFmtSansSerif = "font.name-list.sans-serif.%LANG%";
 const kFontNameListFmtMonospace = "font.name-list.monospace.%LANG%";
-const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
-const kFontSizeFmtFixed         = "font.size.monospace.%LANG%";
-const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
+const kFontSizeFmtVariable = "font.size.variable.%LANG%";
+const kFontSizeFmtFixed = "font.size.monospace.%LANG%";
+const kFontMinSizeFmt = "font.minimum-size.%LANG%";
 
-document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+document.documentElement.addEventListener(
+  "dialoghelp",
+  window.top.openPrefsHelp
+);
 
 Preferences.addAll([
   { id: "font.language.group", type: "wstring" },
@@ -41,16 +44,66 @@ var gFontsDialog = {
       await this._selectLanguageGroupPromise;
 
       var prefs = [
-        { format: kDefaultFontType,          type: "string",   element: "defaultFontType", fonttype: null     },
-        { format: kFontNameFmtSerif,         type: "fontname", element: "serif",      fonttype: "serif"       },
-        { format: kFontNameFmtSansSerif,     type: "fontname", element: "sans-serif", fonttype: "sans-serif"  },
-        { format: kFontNameFmtMonospace,     type: "fontname", element: "monospace",  fonttype: "monospace"   },
-        { format: kFontNameListFmtSerif,     type: "unichar",  element: null,         fonttype: "serif"       },
-        { format: kFontNameListFmtSansSerif, type: "unichar",  element: null,         fonttype: "sans-serif"  },
-        { format: kFontNameListFmtMonospace, type: "unichar",  element: null,         fonttype: "monospace"   },
-        { format: kFontSizeFmtVariable,      type: "int",      element: "sizeVar",    fonttype: null          },
-        { format: kFontSizeFmtFixed,         type: "int",      element: "sizeMono",   fonttype: null          },
-        { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          },
+        {
+          format: kDefaultFontType,
+          type: "string",
+          element: "defaultFontType",
+          fonttype: null,
+        },
+        {
+          format: kFontNameFmtSerif,
+          type: "fontname",
+          element: "serif",
+          fonttype: "serif",
+        },
+        {
+          format: kFontNameFmtSansSerif,
+          type: "fontname",
+          element: "sans-serif",
+          fonttype: "sans-serif",
+        },
+        {
+          format: kFontNameFmtMonospace,
+          type: "fontname",
+          element: "monospace",
+          fonttype: "monospace",
+        },
+        {
+          format: kFontNameListFmtSerif,
+          type: "unichar",
+          element: null,
+          fonttype: "serif",
+        },
+        {
+          format: kFontNameListFmtSansSerif,
+          type: "unichar",
+          element: null,
+          fonttype: "sans-serif",
+        },
+        {
+          format: kFontNameListFmtMonospace,
+          type: "unichar",
+          element: null,
+          fonttype: "monospace",
+        },
+        {
+          format: kFontSizeFmtVariable,
+          type: "int",
+          element: "sizeVar",
+          fonttype: null,
+        },
+        {
+          format: kFontSizeFmtFixed,
+          type: "int",
+          element: "sizeMono",
+          fonttype: null,
+        },
+        {
+          format: kFontMinSizeFmt,
+          type: "int",
+          element: "minSize",
+          fonttype: null,
+        },
       ];
       for (var i = 0; i < prefs.length; ++i) {
         var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
@@ -59,21 +112,26 @@ var gFontsDialog = {
           preference = Preferences.add({ id: name, type: prefs[i].type });
         }
 
-        if (!prefs[i].element)
+        if (!prefs[i].element) {
           continue;
+        }
 
         var element = document.getElementById(prefs[i].element);
         if (element) {
           element.setAttribute("preference", preference.id);
 
-          if (prefs[i].fonttype)
-            await FontBuilder.buildFontList(aLanguageGroup, prefs[i].fonttype, element);
+          if (prefs[i].fonttype) {
+            await FontBuilder.buildFontList(
+              aLanguageGroup,
+              prefs[i].fonttype,
+              element
+            );
+          }
 
           preference.setElementValue(element);
         }
       }
-    })()
-      .catch(Cu.reportError);
+    })().catch(Cu.reportError);
   },
 
   readFontLanguageGroup() {

@@ -1,7 +1,10 @@
 "use strict";
 
 let EventUtils = {};
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+Services.scriptloader.loadSubScript(
+  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+  EventUtils
+);
 
 /**
  * Dragging an URL to a tab without userContextId set.
@@ -11,7 +14,11 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://test1.example.com/", true);
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "http://test1.example.com/",
+    true
+  );
 
   // A drop type of "link" onto an existing tab would normally trigger a
   // load in that same tab, but tabbrowser code in _getDragTargetTab treats
@@ -25,16 +32,30 @@ add_task(async function() {
     screenX: 0,
     screenY: 0,
   };
-  EventUtils.synthesizeDrop(tab, tab, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window, undefined, event);
+  EventUtils.synthesizeDrop(
+    tab,
+    tab,
+    [[{ type: "text/plain", data: "http://test1.example.com/" }]],
+    "link",
+    window,
+    undefined,
+    event
+  );
 
   await awaitDrop;
 
   let tab2 = await newTabPromise;
-  Assert.ok(!tab2.hasAttribute("usercontextid"), "Tab shouldn't have usercontextid attribute");
+  Assert.ok(
+    !tab2.hasAttribute("usercontextid"),
+    "Tab shouldn't have usercontextid attribute"
+  );
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
-    Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 0);
+    Assert.equal(
+      content.document.nodePrincipal.originAttributes.userContextId,
+      0
+    );
 
     // referrer is empty when urls are dragged to new or existing tabs.
     // If this changes in the future, it would be okay to send the referrer
@@ -52,11 +73,17 @@ add_task(async function() {
  * userContextId as the original tab.
  */
 add_task(async function() {
-  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {userContextId: 1});
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {
+    userContextId: 1,
+  });
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://test1.example.com/", true);
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "http://test1.example.com/",
+    true
+  );
 
   // A drop type of "link" onto an existing tab would normally trigger a
   // load in that same tab, but tabbrowser code in _getDragTargetTab treats
@@ -70,7 +97,15 @@ add_task(async function() {
     screenX: 0,
     screenY: 0,
   };
-  EventUtils.synthesizeDrop(tab, tab, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window, undefined, event);
+  EventUtils.synthesizeDrop(
+    tab,
+    tab,
+    [[{ type: "text/plain", data: "http://test1.example.com/" }]],
+    "link",
+    window,
+    undefined,
+    event
+  );
 
   await awaitDrop;
 
@@ -79,7 +114,10 @@ add_task(async function() {
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
-    Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 1);
+    Assert.equal(
+      content.document.nodePrincipal.originAttributes.userContextId,
+      1
+    );
 
     // referrer is empty when urls are dragged to new or existing tabs.
     // If this changes in the future, it would be okay to send the referrer
@@ -99,15 +137,25 @@ add_task(async function() {
  * userContext 2, the link will open in tab 2 with userContext 2.
  */
 add_task(async function() {
-  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {userContextId: 1});
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {
+    userContextId: 1,
+  });
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  let tab2 = BrowserTestUtils.addTab(gBrowser, "http://example.org/", {userContextId: 2});
+  let tab2 = BrowserTestUtils.addTab(gBrowser, "http://example.org/", {
+    userContextId: 2,
+  });
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
 
-  EventUtils.synthesizeDrop(tab, tab2, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window);
+  EventUtils.synthesizeDrop(
+    tab,
+    tab2,
+    [[{ type: "text/plain", data: "http://test1.example.com/" }]],
+    "link",
+    window
+  );
 
   await awaitDrop;
   Assert.equal(tab2.getAttribute("usercontextid"), 2);
@@ -116,7 +164,10 @@ add_task(async function() {
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
-    Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 2);
+    Assert.equal(
+      content.document.nodePrincipal.originAttributes.userContextId,
+      2
+    );
 
     // referrer is empty when urls are dragged to new or existing tabs.
     // If this changes in the future, we should ensure that we are not sending

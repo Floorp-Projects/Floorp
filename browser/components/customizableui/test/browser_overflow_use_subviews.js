@@ -6,7 +6,9 @@ var gOriginalWidth;
 async function stopOverflowing() {
   kOverflowPanel.removeAttribute("animate");
   window.resizeTo(gOriginalWidth, window.outerHeight);
-  await waitForCondition(() => !document.getElementById("nav-bar").hasAttribute("overflowing"));
+  await waitForCondition(
+    () => !document.getElementById("nav-bar").hasAttribute("overflowing")
+  );
   CustomizableUI.reset();
 }
 
@@ -21,10 +23,16 @@ add_task(async function check_developer_subview_in_overflow() {
   kOverflowPanel.setAttribute("animate", "false");
   gOriginalWidth = window.outerWidth;
 
-  CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea(
+    "developer-button",
+    CustomizableUI.AREA_NAVBAR
+  );
 
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-  ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
+  ok(
+    !navbar.hasAttribute("overflowing"),
+    "Should start with a non-overflowing toolbar."
+  );
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
 
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
@@ -40,8 +48,14 @@ add_task(async function check_developer_subview_in_overflow() {
   button.click();
   await subviewShownPromise;
   let hasSubviews = !!kOverflowPanel.querySelector("panelmultiview");
-  let expectedPanel = hasSubviews ? kOverflowPanel : document.getElementById("customizationui-widget-panel");
-  is(developerView.closest("panel"), expectedPanel, "Should be inside the panel");
+  let expectedPanel = hasSubviews
+    ? kOverflowPanel
+    : document.getElementById("customizationui-widget-panel");
+  is(
+    developerView.closest("panel"),
+    expectedPanel,
+    "Should be inside the panel"
+  );
   expectedPanel.hidePopup();
   await Promise.resolve(); // wait for popup to hide fully.
   await stopOverflowing();
@@ -69,6 +83,10 @@ add_task(async function check_downloads_panel_in_overflow() {
     return panel && panel.state != "closed";
   });
   let downloadsPanel = document.getElementById("downloadsPanel");
-  isnot(downloadsPanel.state, "closed", "Should be attempting to show the downloads panel.");
+  isnot(
+    downloadsPanel.state,
+    "closed",
+    "Should be attempting to show the downloads panel."
+  );
   downloadsPanel.hidePopup();
 });

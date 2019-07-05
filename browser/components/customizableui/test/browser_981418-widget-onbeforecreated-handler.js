@@ -42,7 +42,10 @@ add_task(async function testAddOnBeforeCreatedWidget() {
   widgetPanel.hidePopup();
   await panelHiddenPromise;
 
-  CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    kWidgetId,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   await waitForOverflowButtonShown();
   await document.getElementById("nav-bar").overflowable.show();
 

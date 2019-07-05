@@ -5,16 +5,18 @@
 loadTestSubscript("head_webNavigation.js");
 
 async function background() {
-  const tabs = await browser.tabs.query({active: true, currentWindow: true});
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   const sourceTabId = tabs[0].id;
 
-  const sourceTabFrames = await browser.webNavigation.getAllFrames({tabId: sourceTabId});
+  const sourceTabFrames = await browser.webNavigation.getAllFrames({
+    tabId: sourceTabId,
+  });
 
-  browser.webNavigation.onCreatedNavigationTarget.addListener((msg) => {
+  browser.webNavigation.onCreatedNavigationTarget.addListener(msg => {
     browser.test.sendMessage("webNavOnCreated", msg);
   });
 
-  browser.webNavigation.onCompleted.addListener(async (msg) => {
+  browser.webNavigation.onCompleted.addListener(async msg => {
     // NOTE: checking the url is currently necessary because of Bug 1252129
     // ( Filter out webNavigation events related to new window initialization phase).
     if (msg.tabId !== sourceTabId && msg.url !== "about:blank") {
@@ -23,23 +25,27 @@ async function background() {
     }
   });
 
-  browser.tabs.onCreated.addListener((tab) => {
+  browser.tabs.onCreated.addListener(tab => {
     browser.test.sendMessage("tabsOnCreated", tab.id);
   });
 
-  browser.test.onMessage.addListener(({type, code}) => {
+  browser.test.onMessage.addListener(({ type, code }) => {
     if (type === "execute-contentscript") {
-      browser.tabs.executeScript(sourceTabId, {code: code});
+      browser.tabs.executeScript(sourceTabId, { code: code });
     }
   });
 
   browser.test.sendMessage("expectedSourceTab", {
-    sourceTabId, sourceTabFrames,
+    sourceTabId,
+    sourceTabFrames,
   });
 }
 
 add_task(async function test_window_open_from_subframe() {
-  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    SOURCE_PAGE
+  );
 
   gBrowser.selectedTab = tab1;
 
@@ -96,7 +102,10 @@ add_task(async function test_window_open_from_subframe() {
 });
 
 add_task(async function test_window_open_close_from_browserAction_popup() {
-  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SOURCE_PAGE);
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    SOURCE_PAGE
+  );
 
   gBrowser.selectedTab = tab1;
 

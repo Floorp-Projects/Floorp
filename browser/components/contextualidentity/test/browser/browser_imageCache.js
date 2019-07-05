@@ -1,4 +1,4 @@
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const NUM_USER_CONTEXTS = 3;
 
@@ -18,7 +18,8 @@ function imageHandler(metadata, response) {
   response.setHeader("Cache-Control", "max-age=10000", false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "image/png", false);
-  var body = "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
+  var body =
+    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -31,14 +32,16 @@ function fileHandler(metadata, response) {
 
 add_task(async function setup() {
   // make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [["privacy.userContext.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 });
 
 // opens `uri' in a new tab with the provided userContextId and focuses it.
 // returns the newly opened tab
 async function openTabInUserContext(uri, userContextId) {
   // open the tab in the correct userContextId
-  let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
 
   // select tab and make sure its browser is focused
   gBrowser.selectedTab = tab;
@@ -50,9 +53,17 @@ async function openTabInUserContext(uri, userContextId) {
 }
 
 add_task(async function test() {
-  for (let userContextId = 0; userContextId < NUM_USER_CONTEXTS; userContextId++) {
+  for (
+    let userContextId = 0;
+    userContextId < NUM_USER_CONTEXTS;
+    userContextId++
+  ) {
     let tab = await openTabInUserContext(FILE_URI, userContextId);
     gBrowser.removeTab(tab);
   }
-  is(gHits, NUM_USER_CONTEXTS, "should get an image request for each user contexts");
+  is(
+    gHits,
+    NUM_USER_CONTEXTS,
+    "should get an image request for each user contexts"
+  );
 });

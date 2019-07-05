@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-CustomizableUI.createWidget({id: "cui-panel-item-to-drag-to", defaultArea: CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, label: "Item in panel to drag to"});
+CustomizableUI.createWidget({
+  id: "cui-panel-item-to-drag-to",
+  defaultArea: CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+  label: "Item in panel to drag to",
+});
 
 // Dragging an item from the palette to another button in the panel should work.
 add_task(async function() {
@@ -13,10 +17,15 @@ add_task(async function() {
 
   let lastButtonIndex = placements.length - 1;
   let lastButton = placements[lastButtonIndex];
-  let placementsAfterInsert = placements.slice(0, lastButtonIndex).concat(["new-window-button", lastButton]);
+  let placementsAfterInsert = placements
+    .slice(0, lastButtonIndex)
+    .concat(["new-window-button", lastButton]);
   let lastButtonNode = document.getElementById(lastButton);
   simulateItemDrag(btn, lastButtonNode, "start");
-  assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterInsert);
+  assertAreaPlacements(
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    placementsAfterInsert
+  );
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
   simulateItemDrag(btn, palette);
@@ -26,7 +35,10 @@ add_task(async function() {
 
 // Dragging an item from the palette to the panel itself should also work.
 add_task(async function() {
-  CustomizableUI.addWidgetToArea("cui-panel-item-to-drag-to", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    "cui-panel-item-to-drag-to",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   await startCustomizing();
   let btn = document.getElementById("new-window-button");
   let panel = document.getElementById(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
@@ -34,7 +46,10 @@ add_task(async function() {
 
   let placementsAfterAppend = placements.concat(["new-window-button"]);
   simulateItemDrag(btn, panel);
-  assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterAppend);
+  assertAreaPlacements(
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    placementsAfterAppend
+  );
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
   simulateItemDrag(btn, palette);
@@ -56,7 +71,10 @@ add_task(async function() {
 
   let placementsAfterAppend = ["new-window-button"];
   simulateItemDrag(btn, panel);
-  assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterAppend);
+  assertAreaPlacements(
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    placementsAfterAppend
+  );
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
   simulateItemDrag(btn, palette);

@@ -11,7 +11,7 @@ add_task(async function() {
   let otherToolbox = newWindow.gNavToolbox;
 
   let handlerCalledCount = 0;
-  let handler = (ev) => {
+  let handler = ev => {
     handlerCalledCount++;
   };
 

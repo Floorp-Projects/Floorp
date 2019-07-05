@@ -81,25 +81,42 @@ add_task(async function test_grouping() {
   let frameDoc = dialogFrame.contentDocument;
 
   let siteItems = frameDoc.getElementsByTagName("richlistitem");
-  is(siteItems.length, 1, "Should group sites across scheme, port and origin attributes");
+  is(
+    siteItems.length,
+    1,
+    "Should group sites across scheme, port and origin attributes"
+  );
 
   let columns = siteItems[0].querySelectorAll(".item-box > label");
 
   let expected = "account.xyz.com";
   is(columns[0].value, expected, "Should group and list sites by host");
 
-  is(columns[1].value, "5", "Should group cookies across scheme, port and origin attributes");
+  is(
+    columns[1].value,
+    "5",
+    "Should group cookies across scheme, port and origin attributes"
+  );
 
   let [value, unit] = DownloadUtils.convertByteUnits(quotaUsage * 4);
   let l10nAttributes = frameDoc.l10n.getAttributes(columns[2]);
-  is(l10nAttributes.id, "site-storage-persistent",
-    "Should show the site as persistent if one origin is persistent.");
+  is(
+    l10nAttributes.id,
+    "site-storage-persistent",
+    "Should show the site as persistent if one origin is persistent."
+  );
   // The shown quota can be slightly larger than the raw data we put in (though it should
   // never be smaller), but that doesn't really matter to us since we only want to test that
   // the site data dialog accumulates this into a single column.
-  ok(parseFloat(l10nAttributes.args.value) >= parseFloat(value),
-    "Should show the correct accumulated quota size.");
-  is(l10nAttributes.args.unit, unit, "Should show the correct quota size unit.");
+  ok(
+    parseFloat(l10nAttributes.args.value) >= parseFloat(value),
+    "Should show the correct accumulated quota size."
+  );
+  is(
+    l10nAttributes.args.unit,
+    unit,
+    "Should show the correct quota size unit."
+  );
 
   await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -153,32 +170,53 @@ add_task(async function test_sorting() {
   }
 
   // Test default sorting by usage, descending.
-  Assert.deepEqual(getHostOrder(),
-    ["cinema.bar.com", "books.foo.com", "account.xyz.com"], "Has sorted descending by usage");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["cinema.bar.com", "books.foo.com", "account.xyz.com"],
+    "Has sorted descending by usage"
+  );
 
   // Test sorting on the usage column
   usageCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["account.xyz.com", "books.foo.com", "cinema.bar.com"], "Has sorted ascending by usage");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["account.xyz.com", "books.foo.com", "cinema.bar.com"],
+    "Has sorted ascending by usage"
+  );
   usageCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["cinema.bar.com", "books.foo.com", "account.xyz.com"], "Has sorted descending by usage");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["cinema.bar.com", "books.foo.com", "account.xyz.com"],
+    "Has sorted descending by usage"
+  );
 
   // Test sorting on the host column
   hostCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["cinema.bar.com", "books.foo.com", "account.xyz.com"], "Has sorted ascending by base domain");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["cinema.bar.com", "books.foo.com", "account.xyz.com"],
+    "Has sorted ascending by base domain"
+  );
   hostCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["account.xyz.com", "books.foo.com", "cinema.bar.com"], "Has sorted descending by base domain");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["account.xyz.com", "books.foo.com", "cinema.bar.com"],
+    "Has sorted descending by base domain"
+  );
 
   // Test sorting on the cookies column
   cookiesCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["books.foo.com", "cinema.bar.com", "account.xyz.com"], "Has sorted ascending by cookies");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["books.foo.com", "cinema.bar.com", "account.xyz.com"],
+    "Has sorted ascending by cookies"
+  );
   cookiesCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["account.xyz.com", "cinema.bar.com", "books.foo.com"], "Has sorted descending by cookies");
+  Assert.deepEqual(
+    getHostOrder(),
+    ["account.xyz.com", "cinema.bar.com", "books.foo.com"],
+    "Has sorted descending by cookies"
+  );
 
   await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

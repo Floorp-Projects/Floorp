@@ -8,8 +8,9 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
     // has been created, and every sub-frame of that top level devtools frame will
     // receive the same information when the context has been created from the
     // `ExtensionChild.createExtensionContext` method.
-    let tabId = (context.devtoolsToolboxInfo &&
-                 context.devtoolsToolboxInfo.inspectedWindowTabId);
+    let tabId =
+      context.devtoolsToolboxInfo &&
+      context.devtoolsToolboxInfo.inspectedWindowTabId;
 
     return {
       devtools: {

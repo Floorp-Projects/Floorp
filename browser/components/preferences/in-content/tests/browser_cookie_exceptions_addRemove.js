@@ -16,15 +16,19 @@ async function openCookiesDialog(doc) {
 
 function checkCookiesDialog(dialog) {
   ok(dialog, "dialog loaded");
-  let buttonIds = ["removePermission", "removeAllPermissions", "btnApplyChanges"];
+  let buttonIds = [
+    "removePermission",
+    "removeAllPermissions",
+    "btnApplyChanges",
+  ];
 
   for (let buttonId of buttonIds) {
     let button = dialog.document.getElementById(buttonId);
     ok(button, `${buttonId} found`);
   }
 
-  let cancelButton =
-    dialog.document.getElementsByClassName("actionButtons")[1].children[0];
+  let cancelButton = dialog.document.getElementsByClassName("actionButtons")[1]
+    .children[0];
 
   is(cancelButton.getAttribute("label"), "Cancel", "cancelButton found");
 }
@@ -36,18 +40,26 @@ function addNewPermission(websiteAddress, dialog) {
   let currentPermissions = permissionsBox.itemCount;
 
   url.value = websiteAddress;
-  url.dispatchEvent(new Event("input", {bubbles: true}));
-  is(buttonDialog.hasAttribute("disabled"), false,
-     "When the user add an url the button should be clickable");
+  url.dispatchEvent(new Event("input", { bubbles: true }));
+  is(
+    buttonDialog.hasAttribute("disabled"),
+    false,
+    "When the user add an url the button should be clickable"
+  );
   buttonDialog.click();
 
-  is(permissionsBox.itemCount, currentPermissions + 1,
-     "Website added in url should be in the list");
+  is(
+    permissionsBox.itemCount,
+    currentPermissions + 1,
+    "Website added in url should be in the list"
+  );
 }
 
 async function cleanList(dialog) {
   let removeAllButton = dialog.document.getElementById("removeAllPermissions");
-  if (!removeAllButton.hasAttribute("disabled")) removeAllButton.click();
+  if (!removeAllButton.hasAttribute("disabled")) {
+    removeAllButton.click();
+  }
 }
 
 function addData(websites, dialog) {
@@ -61,9 +73,14 @@ function deletePermission(permission, dialog) {
   let elements = permissionsBox.getElementsByAttribute("origin", permission);
   is(elements.length, 1, "It should find only one entry");
   permissionsBox.selectItem(elements[0]);
-  let removePermissionButton = dialog.document.getElementById("removePermission");
-  is(removePermissionButton.hasAttribute("disabled"), false,
-     "The button should be clickable to remove selected item");
+  let removePermissionButton = dialog.document.getElementById(
+    "removePermission"
+  );
+  is(
+    removePermissionButton.hasAttribute("disabled"),
+    false,
+    "The button should be clickable to remove selected item"
+  );
   removePermissionButton.click();
 }
 
@@ -73,8 +90,8 @@ function save(dialog) {
 }
 
 function cancel(dialog) {
-  let cancelButton =
-    dialog.document.getElementsByClassName("actionButtons")[1].children[0];
+  let cancelButton = dialog.document.getElementsByClassName("actionButtons")[1]
+    .children[0];
   is(cancelButton.getAttribute("label"), "Cancel", "cancelButton found");
   cancelButton.click();
 }
@@ -83,8 +100,11 @@ async function checkExpected(expected, doc) {
   let dialog = await openCookiesDialog(doc);
   let permissionsBox = dialog.document.getElementById("permissionsBox");
 
-  is(permissionsBox.itemCount, expected.length,
-     `There should be ${expected.length} elements in the list`);
+  is(
+    permissionsBox.itemCount,
+    expected.length,
+    `There should be ${expected.length} elements in the list`
+  );
 
   for (let website of expected) {
     let elements = permissionsBox.getElementsByAttribute("origin", website);
@@ -124,7 +144,7 @@ async function runTest(test, websites, doc) {
         dialog = await openCookiesDialog(doc);
         break;
       default:
-        // code block
+      // code block
     }
   }
   dialog = await checkExpected(test.expected, doc);
@@ -133,105 +153,140 @@ async function runTest(test, websites, doc) {
 }
 
 add_task(async function checkPermissions() {
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
   let websites = ["http://test1.com", "http://test2.com"];
 
-  let tests = [{
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save"],
-    "expected": ["https://mytest.com"], // when open the pane again it should find this in the list
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "cancel"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "deletePermission", "save"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "deletePermission", "cancel"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save", "openPane", "deletePermission", "save"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save", "openPane", "deletePermission", "cancel"],
-    "expected": ["https://mytest.com"],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "deleteAllPermission", "save"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "deleteAllPermission", "cancel"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save", "openPane", "deleteAllPermission", "save"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save", "openPane", "deleteAllPermission", "cancel"],
-    "expected": ["https://mytest.com"],
-  },
-  {
-    "needPreviousData": true,
-    "newData": "https://mytest.com",
-    "steps": ["deleteAllPermission", "save"],
-    "expected": [],
-  },
-  {
-    "needPreviousData": true,
-    "newData": "https://mytest.com",
-    "steps": ["deleteAllPermission", "cancel"],
-    "expected": websites,
-  },
-  {
-    "needPreviousData": true,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save"],
-    "expected": (function() {
-      let result = websites.slice();
-      result.push("https://mytest.com");
-      return result;
-    }()),
-  },
-  {
-    "needPreviousData": true,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "cancel"],
-    "expected": websites,
-  },
-  {
-    "needPreviousData": false,
-    "newData": "https://mytest.com",
-    "steps": ["addNewPermission", "save", "openPane", "deleteAllPermission", "addNewPermission",  "save"],
-    "expected": ["https://mytest.com"],
-  }];
+  let tests = [
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "save"],
+      expected: ["https://mytest.com"], // when open the pane again it should find this in the list
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "cancel"],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "deletePermission", "save"],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "deletePermission", "cancel"],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: [
+        "addNewPermission",
+        "save",
+        "openPane",
+        "deletePermission",
+        "save",
+      ],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: [
+        "addNewPermission",
+        "save",
+        "openPane",
+        "deletePermission",
+        "cancel",
+      ],
+      expected: ["https://mytest.com"],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "deleteAllPermission", "save"],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "deleteAllPermission", "cancel"],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: [
+        "addNewPermission",
+        "save",
+        "openPane",
+        "deleteAllPermission",
+        "save",
+      ],
+      expected: [],
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: [
+        "addNewPermission",
+        "save",
+        "openPane",
+        "deleteAllPermission",
+        "cancel",
+      ],
+      expected: ["https://mytest.com"],
+    },
+    {
+      needPreviousData: true,
+      newData: "https://mytest.com",
+      steps: ["deleteAllPermission", "save"],
+      expected: [],
+    },
+    {
+      needPreviousData: true,
+      newData: "https://mytest.com",
+      steps: ["deleteAllPermission", "cancel"],
+      expected: websites,
+    },
+    {
+      needPreviousData: true,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "save"],
+      expected: (function() {
+        let result = websites.slice();
+        result.push("https://mytest.com");
+        return result;
+      })(),
+    },
+    {
+      needPreviousData: true,
+      newData: "https://mytest.com",
+      steps: ["addNewPermission", "cancel"],
+      expected: websites,
+    },
+    {
+      needPreviousData: false,
+      newData: "https://mytest.com",
+      steps: [
+        "addNewPermission",
+        "save",
+        "openPane",
+        "deleteAllPermission",
+        "addNewPermission",
+        "save",
+      ],
+      expected: ["https://mytest.com"],
+    },
+  ];
 
   for (let test of tests) {
     await runTest(test, websites, doc);

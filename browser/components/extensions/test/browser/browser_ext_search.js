@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 const SEARCH_TERM = "test";
 const SEARCH_URL = "https://localhost/?q={searchTerms}";
@@ -22,7 +24,7 @@ add_task(async function test_search() {
           if (info.status === "complete") {
             browser.tabs.onUpdated.removeListener(listener);
             await browser.tabs.remove(tabId);
-            resolve({tabId, url: changedTab.url});
+            resolve({ tabId, url: changedTab.url });
           }
         }
 
@@ -34,14 +36,17 @@ add_task(async function test_search() {
     browser.test.sendMessage("engines", engines);
 
     // Search with no tabId
-    browser.search.search({query: SEARCH_TERM + "1", engine: "Search Test"});
+    browser.search.search({ query: SEARCH_TERM + "1", engine: "Search Test" });
     let result = await awaitSearchResult();
     browser.test.sendMessage("searchLoaded", result.url);
 
     // Search with tabId
-    let tab = await browser.tabs.create({url: "about:blank"});
-    browser.search.search({query: SEARCH_TERM + "2", engine: "Search Test",
-                           tabId: tab.id});
+    let tab = await browser.tabs.create({ url: "about:blank" });
+    browser.search.search({
+      query: SEARCH_TERM + "2",
+      engine: "Search Test",
+      tabId: tab.id,
+    });
     result = await awaitSearchResult();
     browser.test.assertEq(result.tabId, tab.id, "Page loaded in right tab");
     browser.test.sendMessage("searchLoaded", result.url);
@@ -50,10 +55,10 @@ add_task(async function test_search() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["search", "tabs"],
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "Search Test",
-          "search_url": SEARCH_URL,
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "Search Test",
+          search_url: SEARCH_URL,
         },
       },
     },
@@ -64,17 +69,31 @@ add_task(async function test_search() {
   await AddonTestUtils.waitForSearchProviderStartup(extension);
 
   let addonEngines = await extension.awaitMessage("engines");
-  let engines = (await Services.search.getEngines()).filter(engine => !engine.hidden);
+  let engines = (await Services.search.getEngines()).filter(
+    engine => !engine.hidden
+  );
   is(addonEngines.length, engines.length, "Engine lengths are the same.");
   let defaultEngine = addonEngines.filter(engine => engine.isDefault === true);
   is(defaultEngine.length, 1, "One default engine");
-  is(defaultEngine[0].name, (await Services.search.getDefault()).name, "Default engine is correct");
+  is(
+    defaultEngine[0].name,
+    (await Services.search.getDefault()).name,
+    "Default engine is correct"
+  );
 
   let url = await extension.awaitMessage("searchLoaded");
-  is(url, SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "1"), "Loaded page matches search");
+  is(
+    url,
+    SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "1"),
+    "Loaded page matches search"
+  );
 
   url = await extension.awaitMessage("searchLoaded");
-  is(url, SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "2"), "Loaded page matches search");
+  is(
+    url,
+    SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "2"),
+    "Loaded page matches search"
+  );
 
   await extension.unload();
 });
@@ -87,7 +106,7 @@ add_task(async function test_search_default_engine() {
     background() {
       browser.test.onMessage.addListener((msg, tabId) => {
         browser.test.assertEq(msg, "search");
-        browser.search.search({query: "searchTermForDefaultEngine", tabId});
+        browser.search.search({ query: "searchTermForDefaultEngine", tabId });
       });
       browser.test.sendMessage("extension-origin", browser.runtime.getURL("/"));
     },
@@ -100,20 +119,24 @@ add_task(async function test_search_default_engine() {
   // 1) the search appears as a normal request in the webRequest API.
   // 2) the request is associated with the triggering extension.
   let extensionWithObserver = ExtensionTestUtils.loadExtension({
-    manifest: {permissions: ["webRequest", "webRequestBlocking", "*://*/*"]},
+    manifest: { permissions: ["webRequest", "webRequestBlocking", "*://*/*"] },
     async background() {
-      let tab = await browser.tabs.create({url: "about:blank"});
-      browser.webRequest.onBeforeRequest.addListener(details => {
-        browser.test.log(`Intercepted request ${JSON.stringify(details)}`);
-        browser.tabs.remove(tab.id).then(() => {
-          browser.test.sendMessage("detectedSearch", details);
-        });
-        return {cancel: true};
-      }, {
-        tabId: tab.id,
-        types: ["main_frame"],
-        urls: ["*://*/*"],
-      }, ["blocking"]);
+      let tab = await browser.tabs.create({ url: "about:blank" });
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          browser.test.log(`Intercepted request ${JSON.stringify(details)}`);
+          browser.tabs.remove(tab.id).then(() => {
+            browser.test.sendMessage("detectedSearch", details);
+          });
+          return { cancel: true };
+        },
+        {
+          tabId: tab.id,
+          types: ["main_frame"],
+          urls: ["*://*/*"],
+        },
+        ["blocking"]
+      );
       browser.test.sendMessage("ready", tab.id);
     },
   });
@@ -124,10 +147,19 @@ add_task(async function test_search_default_engine() {
   let tabId = await extensionWithObserver.awaitMessage("ready");
 
   extension.sendMessage("search", tabId);
-  let requestDetails = await extensionWithObserver.awaitMessage("detectedSearch");
+  let requestDetails = await extensionWithObserver.awaitMessage(
+    "detectedSearch"
+  );
   await extension.unload();
   await extensionWithObserver.unload();
 
-  ok(requestDetails.url.includes("searchTermForDefaultEngine"), `Expected search term in ${requestDetails.url}`);
-  is(requestDetails.originUrl, EXPECTED_ORIGIN, "Search request's should be associated with the originating extension.");
+  ok(
+    requestDetails.url.includes("searchTermForDefaultEngine"),
+    `Expected search term in ${requestDetails.url}`
+  );
+  is(
+    requestDetails.originUrl,
+    EXPECTED_ORIGIN,
+    "Search request's should be associated with the originating extension."
+  );
 });

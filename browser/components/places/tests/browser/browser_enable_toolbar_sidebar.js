@@ -27,8 +27,14 @@ async function selectAppMenuView(buttonId, viewId) {
 
 async function openBookmarkingToolsPanelInLibraryToolbarButton() {
   await selectAppMenuView("library-button", "appMenu-libraryView");
-  await selectAppMenuView("appMenu-library-bookmarks-button", "PanelUI-bookmarks");
-  await selectAppMenuView("panelMenu_bookmarkingTools", "PanelUI-bookmarkingTools");
+  await selectAppMenuView(
+    "appMenu-library-bookmarks-button",
+    "PanelUI-bookmarks"
+  );
+  await selectAppMenuView(
+    "panelMenu_bookmarkingTools",
+    "PanelUI-bookmarkingTools"
+  );
 }
 
 add_task(async function test_enable_toolbar() {
@@ -36,7 +42,9 @@ add_task(async function test_enable_toolbar() {
 
   let viewBookmarksToolbarBtn;
   await BrowserTestUtils.waitForCondition(() => {
-    viewBookmarksToolbarBtn = document.getElementById("panelMenu_viewBookmarksToolbar");
+    viewBookmarksToolbarBtn = document.getElementById(
+      "panelMenu_viewBookmarksToolbar"
+    );
     return viewBookmarksToolbarBtn;
   }, "Should have the library 'View Bookmarks Toolbar' button.");
   viewBookmarksToolbarBtn.click();
@@ -53,7 +61,9 @@ add_task(async function test_enable_sidebar() {
 
   let viewBookmarksSidebarBtn;
   await BrowserTestUtils.waitForCondition(() => {
-    viewBookmarksSidebarBtn = document.getElementById("panelMenu_viewBookmarksSidebar");
+    viewBookmarksSidebarBtn = document.getElementById(
+      "panelMenu_viewBookmarksSidebar"
+    );
     return viewBookmarksSidebarBtn;
   }, "Should have the library 'View Bookmarks Sidebar' button.");
   viewBookmarksSidebarBtn.click();

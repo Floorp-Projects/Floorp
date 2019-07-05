@@ -8,18 +8,28 @@ add_task(async function test_filter_url() {
       permissions: ["tabs"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.fail(`received unexpected onUpdated event ${JSON.stringify(changeInfo)}`);
-      }, {urls: ["*://*.mozilla.org/*"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.fail(
+            `received unexpected onUpdated event ${JSON.stringify(changeInfo)}`
+          );
+        },
+        { urls: ["*://*.mozilla.org/*"] }
+      );
     },
   });
   await ext_fail.startup();
 
   let ext_perm = ExtensionTestUtils.loadExtension({
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.fail(`received unexpected onUpdated event without tabs permission`);
-      }, {urls: ["*://mochi.test/*"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.fail(
+            `received unexpected onUpdated event without tabs permission`
+          );
+        },
+        { urls: ["*://mochi.test/*"] }
+      );
     },
   });
   await ext_perm.startup();
@@ -29,18 +39,24 @@ add_task(async function test_filter_url() {
       permissions: ["tabs"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
-        if (changeInfo.status === "complete") {
-          browser.test.notifyPass("onUpdated");
-        }
-      }, {urls: ["*://mochi.test/*"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
+          if (changeInfo.status === "complete") {
+            browser.test.notifyPass("onUpdated");
+          }
+        },
+        { urls: ["*://mochi.test/*"] }
+      );
     },
   });
   await ext_ok.startup();
   let ok1 = ext_ok.awaitFinish("onUpdated");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
   await ok1;
 
   await ext_ok.unload();
@@ -56,9 +72,14 @@ add_task(async function test_filter_url_activeTab() {
       permissions: ["activeTab"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.fail("should only have notification for activeTab, selectedTab is not activeTab");
-      }, {urls: ["*://mochi.test/*"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.fail(
+            "should only have notification for activeTab, selectedTab is not activeTab"
+          );
+        },
+        { urls: ["*://mochi.test/*"] }
+      );
     },
   });
   await ext.startup();
@@ -68,17 +89,23 @@ add_task(async function test_filter_url_activeTab() {
       permissions: ["tabs"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        if (changeInfo.status === "complete") {
-          browser.test.notifyPass("onUpdated");
-        }
-      }, {urls: ["*://mochi.test/*"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          if (changeInfo.status === "complete") {
+            browser.test.notifyPass("onUpdated");
+          }
+        },
+        { urls: ["*://mochi.test/*"] }
+      );
     },
   });
   await ext2.startup();
   let ok = ext2.awaitFinish("onUpdated");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/#foreground");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/#foreground"
+  );
   await Promise.all([ok]);
 
   await ext.unload();
@@ -92,9 +119,14 @@ add_task(async function test_filter_tabId() {
       permissions: ["tabs"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.fail(`received unexpected onUpdated event ${JSON.stringify(changeInfo)}`);
-      }, {tabId: 12345});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.fail(
+            `received unexpected onUpdated event ${JSON.stringify(changeInfo)}`
+          );
+        },
+        { tabId: 12345 }
+      );
     },
   });
   await ext_fail.startup();
@@ -120,11 +152,14 @@ add_task(async function test_filter_tabId() {
     },
     background() {
       browser.tabs.onCreated.addListener(tab => {
-        browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-          if (changeInfo.status === "complete") {
-            browser.test.notifyPass("onUpdated");
-          }
-        }, {tabId: tab.id});
+        browser.tabs.onUpdated.addListener(
+          (tabId, changeInfo) => {
+            if (changeInfo.status === "complete") {
+              browser.test.notifyPass("onUpdated");
+            }
+          },
+          { tabId: tab.id }
+        );
         browser.test.log(`Tab specific tab listener on tab ${tab.id}`);
       });
     },
@@ -132,7 +167,10 @@ add_task(async function test_filter_tabId() {
   await ext_ok2.startup();
   let ok2 = ext_ok2.awaitFinish("onUpdated");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
   await Promise.all([ok, ok2]);
 
   await ext_ok.unload();
@@ -148,9 +186,14 @@ add_task(async function test_filter_windowId() {
       permissions: ["tabs"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.fail(`received unexpected onUpdated event ${JSON.stringify(changeInfo)}`);
-      }, {windowId: 12345});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.fail(
+            `received unexpected onUpdated event ${JSON.stringify(changeInfo)}`
+          );
+        },
+        { windowId: 12345 }
+      );
     },
   });
   await ext_fail.startup();
@@ -160,11 +203,14 @@ add_task(async function test_filter_windowId() {
       permissions: ["tabs"],
     },
     background() {
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        if (changeInfo.status === "complete") {
-          browser.test.notifyPass("onUpdated");
-        }
-      }, {windowId: browser.windows.WINDOW_ID_CURRENT});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          if (changeInfo.status === "complete") {
+            browser.test.notifyPass("onUpdated");
+          }
+        },
+        { windowId: browser.windows.WINDOW_ID_CURRENT }
+      );
     },
   });
   await ext_ok.startup();
@@ -177,11 +223,14 @@ add_task(async function test_filter_windowId() {
     async background() {
       let window = await browser.windows.getCurrent();
       browser.test.log(`Window specific tab listener on window ${window.id}`);
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        if (changeInfo.status === "complete") {
-          browser.test.notifyPass("onUpdated");
-        }
-      }, {windowId: window.id});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          if (changeInfo.status === "complete") {
+            browser.test.notifyPass("onUpdated");
+          }
+        },
+        { windowId: window.id }
+      );
       browser.test.sendMessage("ready");
     },
   });
@@ -189,7 +238,10 @@ add_task(async function test_filter_windowId() {
   await ext_ok2.awaitMessage("ready");
   let ok2 = ext_ok2.awaitFinish("onUpdated");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
   await Promise.all([ok, ok2]);
 
   await ext_ok.unload();
@@ -207,18 +259,24 @@ add_task(async function test_filter_isarticle_deprecated() {
     },
     background() {
       // We expect only status updates, anything else is a failure.
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
-        if ("isArticle" in changeInfo) {
-          browser.test.notifyPass("isarticle");
-        }
-      }, {properties: ["isarticle"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
+          if ("isArticle" in changeInfo) {
+            browser.test.notifyPass("isarticle");
+          }
+        },
+        { properties: ["isarticle"] }
+      );
     },
   });
   await extension.startup();
   let ok = extension.awaitFinish("isarticle");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
   await ok;
 
   await extension.unload();
@@ -233,18 +291,24 @@ add_task(async function test_filter_isArticle() {
     },
     background() {
       // We expect only status updates, anything else is a failure.
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
-        if ("isArticle" in changeInfo) {
-          browser.test.notifyPass("isArticle");
-        }
-      }, {properties: ["isArticle"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
+          if ("isArticle" in changeInfo) {
+            browser.test.notifyPass("isArticle");
+          }
+        },
+        { properties: ["isArticle"] }
+      );
     },
   });
   await extension.startup();
   let ok = extension.awaitFinish("isArticle");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
   await ok;
 
   await extension.unload();
@@ -270,22 +334,32 @@ add_task(async function test_filter_property() {
         "sharingState",
         "title",
       ]);
-      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-        browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
-        browser.test.assertTrue(!!changeInfo.status, "changeInfo has status");
-        if (Object.keys(changeInfo).some(p => properties.has(p))) {
-          browser.test.fail(`received unexpected onUpdated event ${JSON.stringify(changeInfo)}`);
-        }
-        if (changeInfo.status === "complete") {
-          browser.test.notifyPass("onUpdated");
-        }
-      }, {properties: ["status"]});
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo) => {
+          browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
+          browser.test.assertTrue(!!changeInfo.status, "changeInfo has status");
+          if (Object.keys(changeInfo).some(p => properties.has(p))) {
+            browser.test.fail(
+              `received unexpected onUpdated event ${JSON.stringify(
+                changeInfo
+              )}`
+            );
+          }
+          if (changeInfo.status === "complete") {
+            browser.test.notifyPass("onUpdated");
+          }
+        },
+        { properties: ["status"] }
+      );
     },
   });
   await extension.startup();
   let ok = extension.awaitFinish("onUpdated");
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/"
+  );
   await ok;
 
   await extension.unload();

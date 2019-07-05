@@ -1,14 +1,25 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
-const {AddonStudies} = ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm");
-const {NormandyTestUtils} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-var {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { AddonStudies } = ChromeUtils.import(
+  "resource://normandy/lib/AddonStudies.jsm"
+);
+const { NormandyTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NormandyTestUtils.jsm"
+);
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+var { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
-
-const {addonStudyFactory} = NormandyTestUtils.factories;
+const { addonStudyFactory } = NormandyTestUtils.factories;
 
 AddonTestUtils.init(this);
 
@@ -48,21 +59,29 @@ add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });
 
-add_task(async function test_normandyAddonStudy_without_normandyAddonStudy_permission_privileged() {
-  await run({
-    backgroundScript: () => {
-      browser.test.assertTrue(!browser.normandyAddonStudy, "'normandyAddonStudy' permission is required");
-      browser.test.notifyPass("normandyAddonStudy_permission");
-    },
-    permissions: [],
-    doneSignal: "normandyAddonStudy_permission",
-  });
-});
+add_task(
+  async function test_normandyAddonStudy_without_normandyAddonStudy_permission_privileged() {
+    await run({
+      backgroundScript: () => {
+        browser.test.assertTrue(
+          !browser.normandyAddonStudy,
+          "'normandyAddonStudy' permission is required"
+        );
+        browser.test.notifyPass("normandyAddonStudy_permission");
+      },
+      permissions: [],
+      doneSignal: "normandyAddonStudy_permission",
+    });
+  }
+);
 
 add_task(async function test_normandyAddonStudy_without_privilege() {
   await run({
     backgroundScript: () => {
-      browser.test.assertTrue(!browser.normandyAddonStudy, "Extension must be privileged");
+      browser.test.assertTrue(
+        !browser.normandyAddonStudy,
+        "Extension must be privileged"
+      );
       browser.test.notifyPass("normandyAddonStudy_permission");
     },
     isPrivileged: false,
@@ -84,7 +103,11 @@ add_task(async function test_getStudy_works() {
       },
       validationScript: async extension => {
         let studyResult = await extension.awaitMessage("study");
-        deepEqual(studyResult, study, "normandyAddonStudy.getStudy returns the correct study");
+        deepEqual(
+          studyResult,
+          study,
+          "normandyAddonStudy.getStudy returns the correct study"
+        );
       },
     });
   });
@@ -105,9 +128,12 @@ add_task(async function test_endStudy_works() {
       },
       validationScript: async () => {
         // Check that `AddonStudies.markAsEnded` was called
-        await TestUtils.topicObserved("shield-study-ended", (subject, message) => {
-          return message === `${study.recipeId}`;
-        });
+        await TestUtils.topicObserved(
+          "shield-study-ended",
+          (subject, message) => {
+            return message === `${study.recipeId}`;
+          }
+        );
 
         const addon = await AddonManager.getAddonByID(study.addonId);
         equal(addon, undefined, "Addon should be uninstalled.");
@@ -136,13 +162,14 @@ add_task(async function test_getClientMetadata_works() {
         let clientMetadata = await extension.awaitMessage("clientMetadata");
 
         ok(
-          clientMetadata.updateChannel === Services.appinfo.defaultUpdateChannel,
-          "clientMetadata contains correct updateChannel",
+          clientMetadata.updateChannel ===
+            Services.appinfo.defaultUpdateChannel,
+          "clientMetadata contains correct updateChannel"
         );
 
         ok(
           clientMetadata.fxVersion === Services.appinfo.version,
-          "clientMetadata contains correct fxVersion",
+          "clientMetadata contains correct fxVersion"
         );
 
         ok("clientID" in clientMetadata, "clientMetadata contains a clientID");

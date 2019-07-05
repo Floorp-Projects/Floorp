@@ -6,12 +6,16 @@ const phishyUserPassPref = "network.http.phishy-userpass-length";
 const decodeURLpref = "browser.urlbar.decodeURLsOnCopy";
 
 function getUrl(hostname, file) {
-  return getRootDirectory(gTestPath)
-    .replace("chrome://mochitests/content", hostname) + file;
+  return (
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      hostname
+    ) + file
+  );
 }
 
 function test() {
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
@@ -100,9 +104,18 @@ var tests = [
 
   // Test that userPass is stripped out
   {
-    loadURL: getUrl("http://user:pass@mochi.test:8888", "authenticate.sjs?user=user&pass=pass"),
-    expectedURL: getUrl("mochi.test:8888", "authenticate.sjs?user=user&pass=pass"),
-    copyExpected: getUrl("http://mochi.test:8888", "authenticate.sjs?user=user&pass=pass"),
+    loadURL: getUrl(
+      "http://user:pass@mochi.test:8888",
+      "authenticate.sjs?user=user&pass=pass"
+    ),
+    expectedURL: getUrl(
+      "mochi.test:8888",
+      "authenticate.sjs?user=user&pass=pass"
+    ),
+    copyExpected: getUrl(
+      "http://mochi.test:8888",
+      "authenticate.sjs?user=user&pass=pass"
+    ),
   },
 
   // Test escaping
@@ -133,7 +146,8 @@ var tests = [
     copyVal: "<example.com/\xe9>\xe9",
     copyExpected: "http://example.com/\xe9",
   },
-  { // Note: it seems BrowserTestUtils.loadURI fails for unicode domains
+  {
+    // Note: it seems BrowserTestUtils.loadURI fails for unicode domains
     loadURL: "http://sub2.xn--lt-uia.mochi.test:8888/foo",
     expectedURL: "sub2.ält.mochi.test:8888/foo",
     copyExpected: "http://sub2.ält.mochi.test:8888/foo",
@@ -211,8 +225,11 @@ var tests = [
     copyExpected: "data:text/html,(%C3%A9 %25P",
   },
   {
-    setup() { Services.prefs.setBoolPref(decodeURLpref, true); },
-    loadURL: "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
+    setup() {
+      Services.prefs.setBoolPref(decodeURLpref, true);
+    },
+    loadURL:
+      "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
     expectedURL: "example.com/биография",
     copyExpected: "http://example.com/биография",
   },
@@ -224,10 +241,11 @@ var tests = [
 
 function nextTest() {
   let testCase = tests.shift();
-  if (tests.length == 0)
+  if (tests.length == 0) {
     runTest(testCase, finish);
-  else
+  } else {
     runTest(testCase, nextTest);
+  }
 }
 
 function runTest(testCase, cb) {
@@ -248,8 +266,9 @@ function runTest(testCase, cb) {
     info(`Loading : ${testCase.loadURL}\n`);
     loadURL(testCase.loadURL, doCheck);
   } else {
-    if (testCase.setURL)
+    if (testCase.setURL) {
       gURLBar.value = testCase.setURL;
+    }
     doCheck();
   }
 }
@@ -273,8 +292,7 @@ function testCopy(copyVal, targetValue, cb) {
       offsets.push([startBracket, endBracket - 1]);
       copyVal = copyVal.replace("<", "").replace(">", "");
     }
-    if (offsets.length == 0 ||
-        copyVal != gURLBar.textValue) {
+    if (offsets.length == 0 || copyVal != gURLBar.textValue) {
       ok(false, "invalid copyVal: " + copyVal);
     }
     gURLBar.selectionStart = offsets[0][0];
@@ -295,12 +313,19 @@ function testCopy(copyVal, targetValue, cb) {
     gURLBar.select();
   }
 
-  waitForClipboard(targetValue, function() {
-    goDoCommand("cmd_copy");
-  }, cb, cb);
+  waitForClipboard(
+    targetValue,
+    function() {
+      goDoCommand("cmd_copy");
+    },
+    cb,
+    cb
+  );
 }
 
 function loadURL(aURL, aCB) {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, aURL);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, aURL).then(aCB);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, aURL).then(
+    aCB
+  );
 }

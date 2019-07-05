@@ -1,9 +1,12 @@
-import {DSCard, PlaceholderDSCard} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
-import {actionCreators as ac} from "common/Actions.jsm";
-import {DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
+import {
+  DSCard,
+  PlaceholderDSCard,
+} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import { actionCreators as ac } from "common/Actions.jsm";
+import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
-import {SafeAnchor} from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import {shallow} from "enzyme";
+import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
+import { shallow } from "enzyme";
 
 describe("<DSCard>", () => {
   let wrapper;
@@ -24,18 +27,44 @@ describe("<DSCard>", () => {
   });
 
   it("should render a SafeAnchor", () => {
-    wrapper.setProps({url: "https://foo.com"});
+    wrapper.setProps({ url: "https://foo.com" });
 
-    assert.equal(wrapper.children().at(0).type(), SafeAnchor);
-    assert.propertyVal(wrapper.children().at(0).props(), "url", "https://foo.com");
+    assert.equal(
+      wrapper
+        .children()
+        .at(0)
+        .type(),
+      SafeAnchor
+    );
+    assert.propertyVal(
+      wrapper
+        .children()
+        .at(0)
+        .props(),
+      "url",
+      "https://foo.com"
+    );
   });
 
   it("should pass onLinkClick prop", () => {
-    assert.propertyVal(wrapper.children().at(0).props(), "onLinkClick", wrapper.instance().onLinkClick);
+    assert.propertyVal(
+      wrapper
+        .children()
+        .at(0)
+        .props(),
+      "onLinkClick",
+      wrapper.instance().onLinkClick
+    );
   });
 
   it("should render DSLinkMenu", () => {
-    assert.equal(wrapper.children().at(1).type(), DSLinkMenu);
+    assert.equal(
+      wrapper
+        .children()
+        .at(1)
+        .type(),
+      DSLinkMenu
+    );
   });
 
   it("should start with no .active class", () => {
@@ -51,21 +80,27 @@ describe("<DSCard>", () => {
     });
 
     it("should call dispatch with the correct events", () => {
-      wrapper.setProps({id: "fooidx", pos: 1, type: "foo"});
+      wrapper.setProps({ id: "fooidx", pos: 1, type: "foo" });
 
       wrapper.instance().onLinkClick();
 
       assert.calledTwice(dispatch);
-      assert.calledWith(dispatch, ac.UserEvent({
-        event: "CLICK",
-        source: "FOO",
-        action_position: 1,
-      }));
-      assert.calledWith(dispatch, ac.ImpressionStats({
-        click: 0,
-        source: "FOO",
-        tiles: [{id: "fooidx", pos: 1}],
-      }));
+      assert.calledWith(
+        dispatch,
+        ac.UserEvent({
+          event: "CLICK",
+          source: "FOO",
+          action_position: 1,
+        })
+      );
+      assert.calledWith(
+        dispatch,
+        ac.ImpressionStats({
+          click: 0,
+          source: "FOO",
+          tiles: [{ id: "fooidx", pos: 1 }],
+        })
+      );
     });
 
     it("should call dispatch with a shim", () => {
@@ -81,16 +116,22 @@ describe("<DSCard>", () => {
       wrapper.instance().onLinkClick();
 
       assert.calledTwice(dispatch);
-      assert.calledWith(dispatch, ac.UserEvent({
-        event: "CLICK",
-        source: "FOO",
-        action_position: 1,
-      }));
-      assert.calledWith(dispatch, ac.ImpressionStats({
-        click: 0,
-        source: "FOO",
-        tiles: [{id: "fooidx", pos: 1, shim: "click shim"}],
-      }));
+      assert.calledWith(
+        dispatch,
+        ac.UserEvent({
+          event: "CLICK",
+          source: "FOO",
+          action_position: 1,
+        })
+      );
+      assert.calledWith(
+        dispatch,
+        ac.ImpressionStats({
+          click: 0,
+          source: "FOO",
+          tiles: [{ id: "fooidx", pos: 1, shim: "click shim" }],
+        })
+      );
     });
   });
 });

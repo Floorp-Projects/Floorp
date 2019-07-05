@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
 
 // Returns whether the passed in params match the criteria.
 // To match, they must contain all the params specified in criteria and the values
@@ -11,9 +13,11 @@ const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote
 function _hasParams(criteria, params) {
   for (let param of criteria) {
     const val = params.get(param.key);
-    if (val === null ||
-        (param.value && param.value !== val) ||
-        (param.prefix && !val.startsWith(param.prefix))) {
+    if (
+      val === null ||
+      (param.value && param.value !== val) ||
+      (param.prefix && !val.startsWith(param.prefix))
+    ) {
       return false;
     }
   }
@@ -68,7 +72,9 @@ async function classifySite(url, RS = RemoteSettings) {
     // NOTE: there will be an initial/default local copy of the data in m-c.
     // Therefore, this should never return an empty list [].
     const siteTypes = await RS("sites-classification").get();
-    const sortedSiteTypes = siteTypes.sort((x, y) => (y.weight || 0) - (x.weight || 0));
+    const sortedSiteTypes = siteTypes.sort(
+      (x, y) => (y.weight || 0) - (x.weight || 0)
+    );
     for (let type of sortedSiteTypes) {
       for (let criteria of type.criteria) {
         if (criteria.url && criteria.url !== url) {

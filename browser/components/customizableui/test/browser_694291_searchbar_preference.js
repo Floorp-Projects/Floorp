@@ -24,7 +24,10 @@ add_task(async function test_syncPreferenceWithWidget() {
 
   // Moving the widget to any position outside of the navigation toolbar should
   // turn the preference back to false.
-  CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  CustomizableUI.addWidgetToArea(
+    WIDGET_ID,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
   ok(!Services.prefs.getBoolPref(PREF_NAME));
 });
 
@@ -34,8 +37,10 @@ add_task(async function test_syncWidgetWithPreference() {
   Services.prefs.setBoolPref(PREF_NAME, true);
   let placement = CustomizableUI.getPlacementOfWidget(WIDGET_ID);
   is(placement.area, CustomizableUI.AREA_NAVBAR);
-  is(placement.position,
-     CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1);
+  is(
+    placement.position,
+    CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
+  );
 
   // This should move the widget back to the customization palette.
   Services.prefs.setBoolPref(PREF_NAME, false);

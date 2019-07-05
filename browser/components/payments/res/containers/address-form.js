@@ -21,8 +21,9 @@ import HandleEventMixin from "../mixins/HandleEventMixin.js";
  * as it will be much easier to share the logic once we switch to Fluent.
  */
 
-export default class AddressForm extends
-    HandleEventMixin(PaymentStateSubscriberMixin(PaymentRequestPage)) {
+export default class AddressForm extends HandleEventMixin(
+  PaymentStateSubscriberMixin(PaymentRequestPage)
+) {
   constructor() {
     super();
 
@@ -95,14 +96,18 @@ export default class AddressForm extends
       this.body.appendChild(form);
 
       let record = undefined;
-      this.formHandler = new EditAddress({
-        form,
-      }, record, {
-        DEFAULT_REGION: PaymentDialogUtils.DEFAULT_REGION,
-        getFormFormat: PaymentDialogUtils.getFormFormat,
-        findAddressSelectOption: PaymentDialogUtils.findAddressSelectOption,
-        countries: PaymentDialogUtils.countries,
-      });
+      this.formHandler = new EditAddress(
+        {
+          form,
+        },
+        record,
+        {
+          DEFAULT_REGION: PaymentDialogUtils.DEFAULT_REGION,
+          getFormFormat: PaymentDialogUtils.getFormFormat,
+          findAddressSelectOption: PaymentDialogUtils.findAddressSelectOption,
+          countries: PaymentDialogUtils.countries,
+        }
+      );
 
       // The EditAddress constructor adds `input` event listeners on the same element,
       // which update field validity. By adding our event listeners after this constructor,
@@ -134,10 +139,7 @@ export default class AddressForm extends
       throw new Error("AddressForm without an id");
     }
     let record;
-    let {
-      page,
-      [this.id]: addressPage,
-    } = state;
+    let { page, [this.id]: addressPage } = state;
 
     if (this.id && page && page.id !== this.id) {
       log.debug(`${this.id}: no need to further render inactive page`);
@@ -159,7 +161,9 @@ export default class AddressForm extends
     this.backButton.hidden = page.onboardingWizard;
     this.cancelButton.hidden = !page.onboardingWizard;
 
-    this.pageTitleHeading.textContent = editing ? this.dataset.titleEdit : this.dataset.titleAdd;
+    this.pageTitleHeading.textContent = editing
+      ? this.dataset.titleEdit
+      : this.dataset.titleAdd;
     this.genericErrorText.textContent = page.error;
 
     let addresses = paymentRequest.getAddresses(state);
@@ -168,20 +172,25 @@ export default class AddressForm extends
     if (editing) {
       record = addresses[addressPage.guid];
       if (!record) {
-        throw new Error("Trying to edit a non-existing address: " + addressPage.guid);
+        throw new Error(
+          "Trying to edit a non-existing address: " + addressPage.guid
+        );
       }
       // When editing an existing record, prevent changes to persistence
       this.persistCheckbox.hidden = true;
     } else {
-      let {saveAddressDefaultChecked} = PaymentDialogUtils.getDefaultPreferences();
+      let {
+        saveAddressDefaultChecked,
+      } = PaymentDialogUtils.getDefaultPreferences();
       if (typeof saveAddressDefaultChecked != "boolean") {
         throw new Error(`Unexpected non-boolean value for saveAddressDefaultChecked from
           PaymentDialogUtils.getDefaultPreferences(): ${typeof saveAddressDefaultChecked}`);
       }
       // Adding a new record: default persistence to the pref value when in a not-private session
       this.persistCheckbox.hidden = false;
-      this.persistCheckbox.checked = state.isPrivate ? false :
-                                                       saveAddressDefaultChecked;
+      this.persistCheckbox.checked = state.isPrivate
+        ? false
+        : saveAddressDefaultChecked;
     }
 
     let selectedStateKey = this.getAttribute("selected-state-key").split("|");
@@ -198,13 +207,19 @@ export default class AddressForm extends
     this.updateRequiredState();
 
     // Show merchant errors for the appropriate address form.
-    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(state, selectedStateKey);
-    for (let [errorName, errorSelector] of Object.entries(this._errorFieldMap)) {
+    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(
+      state,
+      selectedStateKey
+    );
+    for (let [errorName, errorSelector] of Object.entries(
+      this._errorFieldMap
+    )) {
       let errorText = "";
       // Never show errors on an 'add' screen as they would be for a different address.
       if (editing && merchantFieldErrors) {
         if (errorName == "region" || errorName == "regionCode") {
-          errorText = merchantFieldErrors.regionCode || merchantFieldErrors.region || "";
+          errorText =
+            merchantFieldErrors.regionCode || merchantFieldErrors.region || "";
         } else {
           errorText = merchantFieldErrors[errorName] || "";
         }
@@ -295,7 +310,10 @@ export default class AddressForm extends
         continue;
       }
       let span = container.querySelector(".label-text");
-      span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
+      span.setAttribute(
+        "fieldRequiredSymbol",
+        this.dataset.fieldRequiredSymbol
+      );
       container.toggleAttribute("required", field.required && !field.disabled);
     }
   }
@@ -315,7 +333,11 @@ export default class AddressForm extends
     } = currentState;
     let editing = !!addressPage.guid;
 
-    if (editing ? (addressPage.guid in tempAddresses) : !this.persistCheckbox.checked) {
+    if (
+      editing
+        ? addressPage.guid in tempAddresses
+        : !this.persistCheckbox.checked
+    ) {
       record.isTemporary = true;
     }
 
@@ -345,12 +367,19 @@ export default class AddressForm extends
     }
 
     if (previousId) {
-      successStateChange[previousId] = Object.assign({}, currentState[previousId]);
+      successStateChange[previousId] = Object.assign(
+        {},
+        currentState[previousId]
+      );
       successStateChange[previousId].preserveFieldValues = true;
     }
 
     try {
-      let {guid} = await paymentRequest.updateAutofillRecord("addresses", record, addressPage.guid);
+      let { guid } = await paymentRequest.updateAutofillRecord(
+        "addresses",
+        record,
+        addressPage.guid
+      );
       let selectedStateKey = this.getAttribute("selected-state-key").split("|");
 
       if (selectedStateKey.length == 1) {
@@ -365,7 +394,9 @@ export default class AddressForm extends
           [selectedStateKey[0]]: subObj,
         });
       } else {
-        throw new Error(`selectedStateKey not supported: '${selectedStateKey}'`);
+        throw new Error(
+          `selectedStateKey not supported: '${selectedStateKey}'`
+        );
       }
 
       this.requestStore.setState(successStateChange);
@@ -390,7 +421,7 @@ export default class AddressForm extends
    *                   merchant-provided error strings.
    */
   static merchantFieldErrorsForForm(state, stateKey) {
-    let {paymentDetails} = state.request;
+    let { paymentDetails } = state.request;
     switch (stateKey.join("|")) {
       case "selectedShippingAddress": {
         return paymentDetails.shippingAddressErrors;
@@ -400,8 +431,11 @@ export default class AddressForm extends
       }
       case "basic-card-page|billingAddressGUID": {
         // `paymentMethod` can be null.
-        return (paymentDetails.paymentMethodErrors
-                && paymentDetails.paymentMethodErrors.billingAddress) || {};
+        return (
+          (paymentDetails.paymentMethodErrors &&
+            paymentDetails.paymentMethodErrors.billingAddress) ||
+          {}
+        );
       }
       default: {
         throw new Error("Unknown selectedStateKey");

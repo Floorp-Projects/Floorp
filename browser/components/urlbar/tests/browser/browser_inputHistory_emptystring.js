@@ -11,46 +11,52 @@
 "use strict";
 
 async function checkInputHistory(len = 0) {
-  await PlacesUtils.withConnectionWrapper("test::checkInputHistory", async db => {
-    let rows = await db.executeCached(`SELECT input FROM moz_inputhistory`);
-    Assert.equal(rows.length, len, "There should only be 1 entry");
-    if (len) {
-      Assert.equal(rows[0].getResultByIndex(0), "", "Input should be empty");
+  await PlacesUtils.withConnectionWrapper(
+    "test::checkInputHistory",
+    async db => {
+      let rows = await db.executeCached(`SELECT input FROM moz_inputhistory`);
+      Assert.equal(rows.length, len, "There should only be 1 entry");
+      if (len) {
+        Assert.equal(rows[0].getResultByIndex(0), "", "Input should be empty");
+      }
     }
-  });
+  );
 }
 
 async function clearInputHistory() {
   await PlacesUtils.withConnectionWrapper("test::clearInputHistory", db => {
     return db.executeCached(`DELETE FROM moz_inputhistory`);
   });
- }
+}
 
 const TEST_URL = "http://example.com/";
 
 async function do_test(openFn, pickMethod) {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:blank",
-  }, async function(browser) {
-    await clearInputHistory();
-    if (!await openFn()) {
-      return;
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    async function(browser) {
+      await clearInputHistory();
+      if (!(await openFn())) {
+        return;
+      }
+      await UrlbarTestUtils.promiseSearchComplete(window);
+      let promise = BrowserTestUtils.waitForDocLoadAndStopIt(TEST_URL, browser);
+      if (pickMethod == "keyboard") {
+        info(`Test pressing Enter`);
+        EventUtils.sendKey("down");
+        EventUtils.sendKey("return");
+      } else {
+        info("Test with click");
+        let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+        EventUtils.synthesizeMouseAtCenter(result.element.row, {});
+      }
+      await promise;
+      await checkInputHistory(1);
     }
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    let promise = BrowserTestUtils.waitForDocLoadAndStopIt(TEST_URL, browser);
-    if (pickMethod == "keyboard") {
-      info(`Test pressing Enter`);
-      EventUtils.sendKey("down");
-      EventUtils.sendKey("return");
-    } else {
-      info("Test with click");
-      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      EventUtils.synthesizeMouseAtCenter(result.element.row, {});
-    }
-    await promise;
-    await checkInputHistory(1);
-  });
+  );
 }
 
 add_task(async function setup() {

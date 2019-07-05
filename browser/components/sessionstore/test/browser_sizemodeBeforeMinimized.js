@@ -11,7 +11,11 @@ add_task(async function test() {
   function checkCurrentState(sizemodeBeforeMinimized) {
     let state = JSON.parse(ss.getWindowState(win));
     let winState = state.windows[0];
-    is(winState.sizemodeBeforeMinimized, sizemodeBeforeMinimized, "sizemodeBeforeMinimized should match");
+    is(
+      winState.sizemodeBeforeMinimized,
+      sizemodeBeforeMinimized,
+      "sizemodeBeforeMinimized should match"
+    );
   }
 
   // Note: Uses ss.getWindowState(win); as a more time efficient alternative to forceSaveState(); (causing timeouts).

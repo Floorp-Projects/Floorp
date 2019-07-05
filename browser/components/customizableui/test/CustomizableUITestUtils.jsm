@@ -10,12 +10,19 @@
 
 var EXPORTED_SYMBOLS = ["CustomizableUITestUtils"];
 
-const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
-const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
-                               "resource:///modules/CustomizableUI.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm"
+);
 
 class CustomizableUITestUtils {
   /**
@@ -35,9 +42,12 @@ class CustomizableUITestUtils {
     if (panel.state == "open") {
       // Some tests may intermittently leave the panel open. We report this, but
       // don't fail so we don't introduce new intermittent test failures.
-      Assert.ok(true, "A previous test left the panel open. This should be" +
-                      " fixed, but we can still do a best-effort recovery and" +
-                      " assume that the requested view will be made visible.");
+      Assert.ok(
+        true,
+        "A previous test left the panel open. This should be" +
+          " fixed, but we can still do a best-effort recovery and" +
+          " assume that the requested view will be made visible."
+      );
       await openFn();
       return;
     }
@@ -48,9 +58,12 @@ class CustomizableUITestUtils {
       // or may not be fully closed when the following test runs. We handle this
       // case gracefully so we don't risk introducing new intermittent test
       // failures that may show up at a later time.
-      Assert.ok(true, "A previous test requested the panel to close but" +
-                      " didn't wait for the operation to complete. While" +
-                      " the test should be fixed, we can still continue.");
+      Assert.ok(
+        true,
+        "A previous test requested the panel to close but" +
+          " didn't wait for the operation to complete. While" +
+          " the test should be fixed, we can still continue."
+      );
     } else {
       Assert.equal(panel.state, "closed", "The panel is closed to begin with.");
     }
@@ -76,16 +89,20 @@ class CustomizableUITestUtils {
    * Opens the main menu and waits for it to become fully interactive.
    */
   async openMainMenu() {
-    await this.openPanelMultiView(this.PanelUI.panel, this.PanelUI.mainView,
-                                  () => this.PanelUI.show());
+    await this.openPanelMultiView(
+      this.PanelUI.panel,
+      this.PanelUI.mainView,
+      () => this.PanelUI.show()
+    );
   }
 
   /**
    * Closes the main menu and waits for the operation to complete.
    */
   async hideMainMenu() {
-    await this.hidePanelMultiView(this.PanelUI.panel,
-                                  () => this.PanelUI.hide());
+    await this.hidePanelMultiView(this.PanelUI.panel, () =>
+      this.PanelUI.hide()
+    );
   }
 
   /**
@@ -97,8 +114,10 @@ class CustomizableUITestUtils {
    */
   async addSearchBar() {
     CustomizableUI.addWidgetToArea(
-      "search-container", CustomizableUI.AREA_NAVBAR,
-      CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1);
+      "search-container",
+      CustomizableUI.AREA_NAVBAR,
+      CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
+    );
 
     // addWidgetToArea adds the search bar into the nav bar first.  If the
     // search bar overflows, OverflowableToolbar for the nav bar moves the
@@ -113,7 +132,9 @@ class CustomizableUITestUtils {
     // Check if the OverflowableToolbar is handling the overflow event.
     // _lastOverflowCounter property is incremented synchronously at the top
     // of the overflow event handler, and is set to 0 when it finishes.
-    let navbar = this.window.document.getElementById(CustomizableUI.AREA_NAVBAR);
+    let navbar = this.window.document.getElementById(
+      CustomizableUI.AREA_NAVBAR
+    );
     await TestUtils.waitForCondition(() => {
       // This test is using a private variable, that can be renamed or removed
       // in the future.  Use === so that this won't silently skip if the value
@@ -131,9 +152,11 @@ class CustomizableUITestUtils {
     // We cannot use navbar's property to check if overflow happens, since it
     // can be different widget than the search bar that overflows.
     if (searchbar.closest("#widget-overflow")) {
-      throw new Error("The search bar should not overflow from the nav bar. " +
-                      "This test fails if the screen resolution is small and " +
-                      "the search bar overflows from the nav bar.");
+      throw new Error(
+        "The search bar should not overflow from the nav bar. " +
+          "This test fails if the screen resolution is small and " +
+          "the search bar overflows from the nav bar."
+      );
     }
 
     return searchbar;

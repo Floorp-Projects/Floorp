@@ -8,7 +8,11 @@ var tempElements = [];
 
 function insertTempItemsIntoMenu(parentMenu) {
   // Last element is null to insert at the end:
-  let beforeEls = [parentMenu.firstElementChild, parentMenu.lastElementChild, null];
+  let beforeEls = [
+    parentMenu.firstElementChild,
+    parentMenu.lastElementChild,
+    null,
+  ];
   for (let i = 0; i < beforeEls.length; i++) {
     let sep = document.createXULElement("menuseparator");
     tempElements.push(sep);
@@ -29,7 +33,10 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
     let menu = document.getElementById(menuId);
     insertTempItemsIntoMenu(menu);
 
-    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+    CustomizableUI.addWidgetToArea(
+      buttonId,
+      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+    );
 
     await waitForOverflowButtonShown();
 
@@ -42,12 +49,19 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
 
     let subviewBody = subview.firstElementChild;
     ok(subviewBody.firstElementChild, "Subview should have a kid");
-    is(subviewBody.firstElementChild.localName, "toolbarbutton", "There should be no separators to start with");
+    is(
+      subviewBody.firstElementChild.localName,
+      "toolbarbutton",
+      "There should be no separators to start with"
+    );
 
     for (let kid of subviewBody.children) {
       if (kid.localName == "menuseparator") {
-        ok(kid.previousElementSibling && kid.previousElementSibling.localName != "menuseparator",
-           "Separators should never have another separator next to them, and should never be the first node.");
+        ok(
+          kid.previousElementSibling &&
+            kid.previousElementSibling.localName != "menuseparator",
+          "Separators should never have another separator next to them, and should never be the first node."
+        );
       }
     }
 
@@ -59,7 +73,13 @@ function checkSeparatorInsertion(menuId, buttonId, subviewId) {
   };
 }
 
-add_task(checkSeparatorInsertion("menuWebDeveloperPopup", "developer-button", "PanelUI-developer"));
+add_task(
+  checkSeparatorInsertion(
+    "menuWebDeveloperPopup",
+    "developer-button",
+    "PanelUI-developer"
+  )
+);
 
 registerCleanupFunction(function() {
   for (let el of tempElements) {

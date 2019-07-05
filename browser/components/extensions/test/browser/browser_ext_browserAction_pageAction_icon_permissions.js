@@ -6,12 +6,12 @@
 add_task(async function testInvalidIconSizes() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {},
-      "page_action": {},
+      browser_action: {},
+      page_action: {},
     },
 
     background: function() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
         let promises = [];
@@ -22,7 +22,8 @@ add_task(async function testInvalidIconSizes() {
             browser.test.assertThrows(
               () => browser[api].setIcon(detail),
               /an unexpected .* property/,
-              "setIcon with invalid icon size");
+              "setIcon with invalid icon size"
+            );
           };
 
           let imageData = new ImageData(1, 1);
@@ -31,16 +32,22 @@ add_task(async function testInvalidIconSizes() {
           for (let type of ["path", "imageData"]) {
             let img = type == "imageData" ? imageData : "test.png";
 
-            assertSetIconThrows({[type]: {"abcdef": img}});
-            assertSetIconThrows({[type]: {"48px": img}});
-            assertSetIconThrows({[type]: {"20.5": img}});
-            assertSetIconThrows({[type]: {"5.0": img}});
-            assertSetIconThrows({[type]: {"-300": img}});
-            assertSetIconThrows({[type]: {"abc": img, "5": img}});
+            assertSetIconThrows({ [type]: { abcdef: img } });
+            assertSetIconThrows({ [type]: { "48px": img } });
+            assertSetIconThrows({ [type]: { "20.5": img } });
+            assertSetIconThrows({ [type]: { "5.0": img } });
+            assertSetIconThrows({ [type]: { "-300": img } });
+            assertSetIconThrows({ [type]: { abc: img, "5": img } });
           }
 
-          assertSetIconThrows({imageData: {"abcdef": imageData}, path: {"5": "test.png"}});
-          assertSetIconThrows({path: {"abcdef": "test.png"}, imageData: {"5": imageData}});
+          assertSetIconThrows({
+            imageData: { abcdef: imageData },
+            path: { "5": "test.png" },
+          });
+          assertSetIconThrows({
+            path: { abcdef: "test.png" },
+            imageData: { "5": imageData },
+          });
         }
 
         Promise.all(promises).then(() => {
@@ -50,11 +57,13 @@ add_task(async function testInvalidIconSizes() {
     },
   });
 
-  await Promise.all([extension.startup(), extension.awaitFinish("setIcon with invalid icon size")]);
+  await Promise.all([
+    extension.startup(),
+    extension.awaitFinish("setIcon with invalid icon size"),
+  ]);
 
   await extension.unload();
 });
-
 
 // Test that default icon details in the manifest.json file are handled
 // correctly.
@@ -63,27 +72,29 @@ add_task(async function testDefaultDetails() {
   let icons = [
     "foo/bar.png",
     "/foo/bar.png",
-    {"19": "foo/bar.png"},
-    {"38": "foo/bar.png"},
+    { "19": "foo/bar.png" },
+    { "38": "foo/bar.png" },
   ];
 
   if (window.devicePixelRatio > 1) {
-    icons.push({"19": "baz/quux.png", "38": "foo/bar.png"});
+    icons.push({ "19": "baz/quux.png", "38": "foo/bar.png" });
   } else {
-    icons.push({"19": "foo/bar.png", "38": "baz/quux@2x.png"});
+    icons.push({ "19": "foo/bar.png", "38": "baz/quux@2x.png" });
   }
 
-  let expectedURL = new RegExp(String.raw`^moz-extension://[^/]+/foo/bar\.png$`);
+  let expectedURL = new RegExp(
+    String.raw`^moz-extension://[^/]+/foo/bar\.png$`
+  );
 
   for (let icon of icons) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        "browser_action": {"default_icon": icon},
-        "page_action": {"default_icon": icon},
+        browser_action: { default_icon: icon },
+        page_action: { default_icon: icon },
       },
 
       background: function() {
-        browser.tabs.query({active: true, currentWindow: true}, tabs => {
+        browser.tabs.query({ active: true, currentWindow: true }, tabs => {
           let tabId = tabs[0].id;
 
           browser.pageAction.show(tabId).then(() => {
@@ -102,19 +113,27 @@ add_task(async function testDefaultDetails() {
     await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
     let browserActionId = makeWidgetId(extension.id) + "-browser-action";
-    let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+    let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
+      makeWidgetId(extension.id)
+    );
 
     await promiseAnimationFrame();
 
     let browserActionButton = document.getElementById(browserActionId);
     let image = getListStyleImage(browserActionButton);
 
-    ok(expectedURL.test(image), `browser action image ${image} matches ${expectedURL}`);
+    ok(
+      expectedURL.test(image),
+      `browser action image ${image} matches ${expectedURL}`
+    );
 
     let pageActionImage = document.getElementById(pageActionId);
     image = getListStyleImage(pageActionImage);
 
-    ok(expectedURL.test(image), `page action image ${image} matches ${expectedURL}`);
+    ok(
+      expectedURL.test(image),
+      `page action image ${image} matches ${expectedURL}`
+    );
 
     await extension.unload();
 
@@ -123,32 +142,35 @@ add_task(async function testDefaultDetails() {
   }
 });
 
-
 // Check that attempts to load a privileged URL as an icon image fail.
 add_task(async function testSecureURLsDenied() {
   // Test URLs passed to setIcon.
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {},
-      "page_action": {},
+      browser_action: {},
+      page_action: {},
     },
 
     background: function() {
-      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
-        let urls = ["chrome://browser/content/browser.xhtml",
-                    "javascript:true"];
+        let urls = [
+          "chrome://browser/content/browser.xhtml",
+          "javascript:true",
+        ];
 
         let promises = [];
         for (let url of urls) {
           for (let api of ["pageAction", "browserAction"]) {
             promises.push(
               browser.test.assertRejects(
-                browser[api].setIcon({tabId, path: url}),
+                browser[api].setIcon({ tabId, path: url }),
                 /Illegal URL/,
-                `Load of '${url}' should fail.`));
+                `Load of '${url}' should fail.`
+              )
+            );
           }
         }
 
@@ -165,12 +187,10 @@ add_task(async function testSecureURLsDenied() {
   await extension.unload();
 });
 
-
 add_task(async function testSecureManifestURLsDenied() {
   // Test URLs included in the manifest.
 
-  let urls = ["chrome://browser/content/browser.xhtml",
-              "javascript:true"];
+  let urls = ["chrome://browser/content/browser.xhtml", "javascript:true"];
 
   let apis = ["browser_action", "page_action"];
 
@@ -195,14 +215,16 @@ add_task(async function testSecureManifestURLsDenied() {
       let extension = ExtensionTestUtils.loadExtension({
         manifest: {
           [api]: {
-            "default_icon": url,
+            default_icon: url,
           },
         },
       });
 
-      await Assert.rejects(extension.startup(),
-                           /startup failed/,
-                           "Manifest rejected");
+      await Assert.rejects(
+        extension.startup(),
+        /startup failed/,
+        "Manifest rejected"
+      );
 
       SimpleTest.endMonitorConsole();
       await waitForConsole;

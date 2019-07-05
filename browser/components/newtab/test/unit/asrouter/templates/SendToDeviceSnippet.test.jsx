@@ -1,13 +1,17 @@
-import {mount} from "enzyme";
+import { mount } from "enzyme";
 import React from "react";
 import schema from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet.schema.json";
-import {SendToDeviceSnippet} from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
-import {SnippetsTestMessageProvider} from "lib/SnippetsTestMessageProvider.jsm";
+import { SendToDeviceSnippet } from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
+import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
-const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(msg => msg.template === "send_to_device_snippet").content;
+const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(
+  msg => msg.template === "send_to_device_snippet"
+).content;
 
 async function testBodyContains(body, key, value) {
-  const regex = new RegExp(`Content-Disposition: form-data; name="${key}"${value}`);
+  const regex = new RegExp(
+    `Content-Disposition: form-data; name="${key}"${value}`
+  );
   const match = regex.exec(body);
   return match;
 }
@@ -22,9 +26,9 @@ function openFormAndSetValue(wrapper, value, setCustomValidity = () => {}) {
   // expand
   wrapper.find(".ASRouterButton").simulate("click");
   // Fill in email
-  const input =  wrapper.find(".mainInput");
+  const input = wrapper.find(".mainInput");
   input.instance().value = value;
-  input.simulate("change", {target: {value, setCustomValidity}});
+  input.simulate("change", { target: { value, setCustomValidity } });
   wrapper.find("form").simulate("submit");
 }
 
@@ -50,9 +54,10 @@ describe("SendToDeviceSnippet", () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    jsonResponse = {status: "ok"};
-    fetchStub = sandbox.stub(global, "fetch")
-      .returns(Promise.resolve({json: () => Promise.resolve(jsonResponse)}));
+    jsonResponse = { status: "ok" };
+    fetchStub = sandbox
+      .stub(global, "fetch")
+      .returns(Promise.resolve({ json: () => Promise.resolve(jsonResponse) }));
   });
   afterEach(() => {
     sandbox.restore();
@@ -70,37 +75,44 @@ describe("SendToDeviceSnippet", () => {
     };
     const wrapper = mount(<SendToDeviceSnippet {...defaults} />);
     // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
-    const {props} = wrapper.children().get(0);
+    const { props } = wrapper.children().get(0);
 
-    const defaultProperties = Object.keys(schema.properties)
-      .filter(prop => schema.properties[prop].default);
+    const defaultProperties = Object.keys(schema.properties).filter(
+      prop => schema.properties[prop].default
+    );
     assert.lengthOf(defaultProperties, 6);
-    defaultProperties.forEach(prop => assert.propertyVal(props.content, prop, schema.properties[prop].default));
+    defaultProperties.forEach(prop =>
+      assert.propertyVal(props.content, prop, schema.properties[prop].default)
+    );
 
-    const defaultHiddenProperties = Object.keys(schema.properties.hidden_inputs.properties)
-      .filter(prop => schema.properties.hidden_inputs.properties[prop].default);
+    const defaultHiddenProperties = Object.keys(
+      schema.properties.hidden_inputs.properties
+    ).filter(prop => schema.properties.hidden_inputs.properties[prop].default);
     assert.lengthOf(defaultHiddenProperties, 0);
   });
 
   describe("form input", () => {
     it("should set the input type to text if content.include_sms is true", () => {
-      const wrapper = mountAndCheckProps({include_sms: true});
+      const wrapper = mountAndCheckProps({ include_sms: true });
       wrapper.find(".ASRouterButton").simulate("click");
       assert.equal(wrapper.find(".mainInput").instance().type, "text");
     });
     it("should set the input type to email if content.include_sms is false", () => {
-      const wrapper = mountAndCheckProps({include_sms: false});
+      const wrapper = mountAndCheckProps({ include_sms: false });
       wrapper.find(".ASRouterButton").simulate("click");
       assert.equal(wrapper.find(".mainInput").instance().type, "email");
     });
     it("should validate the input with isEmailOrPhoneNumber if include_sms is true", () => {
-      const wrapper = mountAndCheckProps({include_sms: true});
+      const wrapper = mountAndCheckProps({ include_sms: true });
       const setCustomValidity = sandbox.stub();
       openFormAndSetValue(wrapper, "foo", setCustomValidity);
-      assert.calledWith(setCustomValidity, "Must be an email or a phone number.");
+      assert.calledWith(
+        setCustomValidity,
+        "Must be an email or a phone number."
+      );
     });
     it("should not custom validate the input if include_sms is false", () => {
-      const wrapper = mountAndCheckProps({include_sms: false});
+      const wrapper = mountAndCheckProps({ include_sms: false });
       const setCustomValidity = sandbox.stub();
       openFormAndSetValue(wrapper, "foo", setCustomValidity);
       assert.notCalled(setCustomValidity);
@@ -125,8 +137,14 @@ describe("SendToDeviceSnippet", () => {
       const body = await request.text();
       assert.ok(testBodyContains(body, "email", "foo@bar.com"), "has email");
       assert.ok(testBodyContains(body, "lang", "fr-CA"), "has lang");
-      assert.ok(testBodyContains(body, "newsletters", "foo"), "has newsletters");
-      assert.ok(testBodyContains(body, "source_url", "foo"), "https%3A%2F%2Fsnippets.mozilla.com%2Fshow%2Ffoo123");
+      assert.ok(
+        testBodyContains(body, "newsletters", "foo"),
+        "has newsletters"
+      );
+      assert.ok(
+        testBodyContains(body, "source_url", "foo"),
+        "https%3A%2F%2Fsnippets.mozilla.com%2Fshow%2Ffoo123"
+      );
     });
     it("should send the right information for an sms", async () => {
       const wrapper = mountAndCheckProps({
@@ -142,9 +160,15 @@ describe("SendToDeviceSnippet", () => {
       assert.calledOnce(fetchStub);
       const [request] = fetchStub.firstCall.args;
 
-      assert.equal(request.url, "https://basket.mozilla.org/news/subscribe_sms/");
+      assert.equal(
+        request.url,
+        "https://basket.mozilla.org/news/subscribe_sms/"
+      );
       const body = await request.text();
-      assert.ok(testBodyContains(body, "mobile_number", "5371283767"), "has number");
+      assert.ok(
+        testBodyContains(body, "mobile_number", "5371283767"),
+        "has number"
+      );
       assert.ok(testBodyContains(body, "lang", "fr-CA"), "has lang");
       assert.ok(testBodyContains(body, "country", "CA"), "CA");
       assert.ok(testBodyContains(body, "msg_name", "foo"), "has msg_name");

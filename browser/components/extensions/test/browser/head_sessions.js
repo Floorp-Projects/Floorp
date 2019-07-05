@@ -19,7 +19,11 @@ function checkWindow(window) {
     is(window[prop], false, `closed window has the expected value for ${prop}`);
   }
   for (let prop of ["state", "type"]) {
-    is(window[prop], "normal", `closed window has the expected value for ${prop}`);
+    is(
+      window[prop],
+      "normal",
+      `closed window has the expected value for ${prop}`
+    );
   }
 }
 
@@ -28,12 +32,25 @@ function checkTab(tab, windowId, incognito) {
     is(tab[prop], false, `closed tab has the expected value for ${prop}`);
   }
   is(tab.windowId, windowId, "closed tab has the expected value for windowId");
-  is(tab.incognito, incognito, "closed tab has the expected value for incognito");
+  is(
+    tab.incognito,
+    incognito,
+    "closed tab has the expected value for incognito"
+  );
 }
 
-function checkRecentlyClosed(recentlyClosed, expectedCount, windowId, incognito = false) {
+function checkRecentlyClosed(
+  recentlyClosed,
+  expectedCount,
+  windowId,
+  incognito = false
+) {
   let sessionIds = new Set();
-  is(recentlyClosed.length, expectedCount, "the expected number of closed tabs/windows was found");
+  is(
+    recentlyClosed.length,
+    expectedCount,
+    "the expected number of closed tabs/windows was found"
+  );
   for (let item of recentlyClosed) {
     if (item.window) {
       sessionIds.add(item.window.sessionId);

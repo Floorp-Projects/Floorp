@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- "use strict";
+"use strict";
 
 /**
  * Tests that multiple tags can be added to a bookmark using the star-shaped button, the library and the sidebar.
@@ -57,38 +57,76 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   await hideBookmarksPanel(async () => {
     // Click the bookmark star to bookmark the page.
     await clickBookmarkStar();
-    Assert.equal(bookmarkPanelTitle.value, gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle"), "Bookmark title is correct");
-    Assert.equal(bookmarkStar.getAttribute("starred"), "true", "Page is starred");
+    Assert.equal(
+      bookmarkPanelTitle.value,
+      gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle"),
+      "Bookmark title is correct"
+    );
+    Assert.equal(
+      bookmarkStar.getAttribute("starred"),
+      "true",
+      "Page is starred"
+    );
   });
 
   // Click the bookmark star again to add tags.
   await clickBookmarkStar();
-  Assert.equal(bookmarkPanelTitle.value, gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"), "Bookmark title is correct");
-  let promiseNotification =
-    PlacesTestUtils.waitForNotification("bookmark-added",
-                                        events => events.some(({url}) => !url || url == TEST_URL),
-                                        "places");
+  Assert.equal(
+    bookmarkPanelTitle.value,
+    gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
+    "Bookmark title is correct"
+  );
+  let promiseNotification = PlacesTestUtils.waitForNotification(
+    "bookmark-added",
+    events => events.some(({ url }) => !url || url == TEST_URL),
+    "places"
+  );
   await fillBookmarkTextField("editBMPanel_tagsField", "tag1", window);
   await promiseNotification;
   let bookmarks = [];
-  await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm => bookmarks.push(bm));
-  Assert.equal(PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)).length, 1, "Found the right number of tags");
-  Assert.deepEqual(PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)), ["tag1"]);
+  await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm =>
+    bookmarks.push(bm)
+  );
+  Assert.equal(
+    PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)).length,
+    1,
+    "Found the right number of tags"
+  );
+  Assert.deepEqual(
+    PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)),
+    ["tag1"]
+  );
   let doneButton = document.getElementById("editBookmarkPanelDoneButton");
   await hideBookmarksPanel(() => doneButton.click());
 
   // Click the bookmark star again, add more tags.
   await clickBookmarkStar();
-  promiseNotification = PlacesTestUtils.waitForNotification("onItemChanged", (id, property) => property == "tags");
-  await fillBookmarkTextField("editBMPanel_tagsField", "tag1, tag2, tag3", window);
+  promiseNotification = PlacesTestUtils.waitForNotification(
+    "onItemChanged",
+    (id, property) => property == "tags"
+  );
+  await fillBookmarkTextField(
+    "editBMPanel_tagsField",
+    "tag1, tag2, tag3",
+    window
+  );
   await promiseNotification;
   await hideBookmarksPanel(() => doneButton.click());
 
   bookmarks = [];
-  await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm => bookmarks.push(bm));
+  await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm =>
+    bookmarks.push(bm)
+  );
   Assert.equal(bookmarks.length, 1, "Only one bookmark should exist");
-  Assert.equal(PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)).length, 3, "Found the right number of tags");
-  Assert.deepEqual(PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)), ["tag1", "tag2", "tag3"]);
+  Assert.equal(
+    PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)).length,
+    3,
+    "Found the right number of tags"
+  );
+  Assert.deepEqual(
+    PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL)),
+    ["tag1", "tag2", "tag3"]
+  );
 
   // Cleanup.
   await PlacesUtils.bookmarks.eraseEverything();
@@ -112,17 +150,27 @@ add_task(async function test_add_bookmark_tags_from_library() {
   });
 
   let bookmarkNode = library.ContentTree.view.selectedNode;
-  Assert.equal(bookmarkNode.uri, "http://example.com/", "Found the expected bookmark");
+  Assert.equal(
+    bookmarkNode.uri,
+    "http://example.com/",
+    "Found the expected bookmark"
+  );
 
   // Add a tag to the bookmark.
   fillBookmarkTextField("editBMPanel_tagsField", "tag1", library);
 
-  await waitForCondition(() => bookmarkNode.tags === "tag1", "Node tag is correct");
+  await waitForCondition(
+    () => bookmarkNode.tags === "tag1",
+    "Node tag is correct"
+  );
 
   // Add a new tag to the bookmark.
   fillBookmarkTextField("editBMPanel_tagsField", "tag1, tag2", library);
 
-  await waitForCondition(() => bookmarkNode.tags === "tag1, tag2", "Node tag is correct");
+  await waitForCondition(
+    () => bookmarkNode.tags === "tag1, tag2",
+    "Node tag is correct"
+  );
 
   // Check the tag change has been completed.
   let tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(uri));
@@ -158,12 +206,15 @@ add_task(async function test_add_bookmark_tags_from_sidebar() {
       },
       async function test(dialogWin) {
         PlacesUtils.tagging.tagURI(makeURI(TEST_URL), tagValue);
-        let tags = PlacesUtils.tagging.getTagsForURI(Services.io.newURI(TEST_URL));
+        let tags = PlacesUtils.tagging.getTagsForURI(
+          Services.io.newURI(TEST_URL)
+        );
 
         Assert.deepEqual(tags, expected, "Tags field is correctly populated");
 
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
-      });
+      }
+    );
   }
 
   // Cleanup.

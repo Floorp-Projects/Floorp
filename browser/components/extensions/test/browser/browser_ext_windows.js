@@ -4,40 +4,52 @@
 
 add_task(async function testWindowGetAll() {
   let raisedWin = Services.ww.openWindow(
-    null, AppConstants.BROWSER_CHROME_URL, "_blank",
-    "chrome,dialog=no,all,alwaysRaised", null);
+    null,
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    "chrome,dialog=no,all,alwaysRaised",
+    null
+  );
 
-  await TestUtils.topicObserved("browser-delayed-startup-finished",
-                                subject => subject == raisedWin);
+  await TestUtils.topicObserved(
+    "browser-delayed-startup-finished",
+    subject => subject == raisedWin
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     background: async function() {
       let wins = await browser.windows.getAll();
       browser.test.assertEq(2, wins.length, "Expect two windows");
 
-      browser.test.assertEq(false, wins[0].alwaysOnTop,
-                            "Expect first window not to be always on top");
-      browser.test.assertEq(true, wins[1].alwaysOnTop,
-                            "Expect first window to be always on top");
+      browser.test.assertEq(
+        false,
+        wins[0].alwaysOnTop,
+        "Expect first window not to be always on top"
+      );
+      browser.test.assertEq(
+        true,
+        wins[1].alwaysOnTop,
+        "Expect first window to be always on top"
+      );
 
-      let win = await browser.windows.create({url: "http://example.com", type: "popup"});
+      let win = await browser.windows.create({
+        url: "http://example.com",
+        type: "popup",
+      });
 
       wins = await browser.windows.getAll();
       browser.test.assertEq(3, wins.length, "Expect three windows");
 
-      wins = await browser.windows.getAll({windowTypes: ["popup"]});
+      wins = await browser.windows.getAll({ windowTypes: ["popup"] });
       browser.test.assertEq(1, wins.length, "Expect one window");
-      browser.test.assertEq("popup", wins[0].type,
-                            "Expect type to be popup");
+      browser.test.assertEq("popup", wins[0].type, "Expect type to be popup");
 
-      wins = await browser.windows.getAll({windowTypes: ["normal"]});
+      wins = await browser.windows.getAll({ windowTypes: ["normal"] });
       browser.test.assertEq(2, wins.length, "Expect two windows");
-      browser.test.assertEq("normal", wins[0].type,
-                            "Expect type to be normal");
-      browser.test.assertEq("normal", wins[1].type,
-                            "Expect type to be normal");
+      browser.test.assertEq("normal", wins[0].type, "Expect type to be normal");
+      browser.test.assertEq("normal", wins[1].type, "Expect type to be normal");
 
-      wins = await browser.windows.getAll({windowTypes: ["popup", "normal"]});
+      wins = await browser.windows.getAll({ windowTypes: ["popup", "normal"] });
       browser.test.assertEq(3, wins.length, "Expect three windows");
 
       await browser.windows.remove(win.id);
@@ -56,31 +68,43 @@ add_task(async function testWindowGetAll() {
 add_task(async function testWindowTitle() {
   const PREFACE1 = "My prefix1 - ";
   const PREFACE2 = "My prefix2 - ";
-  const START_URL = "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
+  const START_URL =
+    "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
   const START_TITLE = "Dummy test page";
-  const NEW_URL = "http://example.com/browser/browser/components/extensions/test/browser/file_title.html";
+  const NEW_URL =
+    "http://example.com/browser/browser/components/extensions/test/browser/file_title.html";
   const NEW_TITLE = "Different title test page";
 
   async function background() {
-    browser.test.onMessage.addListener(async (msg, options, windowId, expected) => {
-      if (msg === "create") {
-        let win = await browser.windows.create(options);
-        browser.test.sendMessage("created", win);
+    browser.test.onMessage.addListener(
+      async (msg, options, windowId, expected) => {
+        if (msg === "create") {
+          let win = await browser.windows.create(options);
+          browser.test.sendMessage("created", win);
+        }
+        if (msg === "update") {
+          let win = await browser.windows.get(windowId);
+          browser.test.assertTrue(
+            win.title.startsWith(expected.before.preface),
+            "Window has the expected title preface before update."
+          );
+          browser.test.assertTrue(
+            win.title.includes(expected.before.text),
+            "Window has the expected title text before update."
+          );
+          win = await browser.windows.update(windowId, options);
+          browser.test.assertTrue(
+            win.title.startsWith(expected.after.preface),
+            "Window has the expected title preface after update."
+          );
+          browser.test.assertTrue(
+            win.title.includes(expected.after.text),
+            "Window has the expected title text after update."
+          );
+          browser.test.sendMessage("updated", win);
+        }
       }
-      if (msg === "update") {
-        let win = await browser.windows.get(windowId);
-        browser.test.assertTrue(win.title.startsWith(expected.before.preface),
-                                "Window has the expected title preface before update.");
-        browser.test.assertTrue(win.title.includes(expected.before.text),
-                                "Window has the expected title text before update.");
-        win = await browser.windows.update(windowId, options);
-        browser.test.assertTrue(win.title.startsWith(expected.after.preface),
-                                "Window has the expected title preface after update.");
-        browser.test.assertTrue(win.title.includes(expected.after.text),
-                                "Window has the expected title text after update.");
-        browser.test.sendMessage("updated", win);
-      }
-    });
+    );
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -91,19 +115,27 @@ add_task(async function testWindowTitle() {
   });
 
   await extension.startup();
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  let {
+    Management: {
+      global: { windowTracker },
+    },
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
 
   async function createApiWin(options) {
-    let promiseLoaded = BrowserTestUtils.waitForNewWindow({url: START_URL});
+    let promiseLoaded = BrowserTestUtils.waitForNewWindow({ url: START_URL });
     extension.sendMessage("create", options);
     let apiWin = await extension.awaitMessage("created");
     let realWin = windowTracker.getWindow(apiWin.id);
     await promiseLoaded;
     let expectedPreface = options.titlePreface ? options.titlePreface : "";
-    ok(realWin.document.title.startsWith(expectedPreface),
-       "Created window has the expected title preface.");
-    ok(realWin.document.title.includes(START_TITLE),
-       "Created window has the expected title text.");
+    ok(
+      realWin.document.title.startsWith(expectedPreface),
+      "Created window has the expected title preface."
+    );
+    ok(
+      realWin.document.title.includes(START_TITLE),
+      "Created window has the expected title text."
+    );
     return apiWin;
   }
 
@@ -111,15 +143,19 @@ add_task(async function testWindowTitle() {
     extension.sendMessage("update", options, apiWin.id, expected);
     await extension.awaitMessage("updated");
     let realWin = windowTracker.getWindow(apiWin.id);
-    ok(realWin.document.title.startsWith(expected.after.preface),
-       "Updated window has the expected title preface.");
-    ok(realWin.document.title.includes(expected.after.text),
-       "Updated window has the expected title text.");
+    ok(
+      realWin.document.title.startsWith(expected.after.preface),
+      "Updated window has the expected title preface."
+    );
+    ok(
+      realWin.document.title.includes(expected.after.text),
+      "Updated window has the expected title text."
+    );
     await BrowserTestUtils.closeWindow(realWin);
   }
 
   // Create a window without a preface.
-  let apiWin = await createApiWin({url: START_URL});
+  let apiWin = await createApiWin({ url: START_URL });
 
   // Add a titlePreface to the window.
   let expected = {
@@ -132,20 +168,26 @@ add_task(async function testWindowTitle() {
       text: START_TITLE,
     },
   };
-  await updateWindow({titlePreface: PREFACE1}, apiWin, expected);
+  await updateWindow({ titlePreface: PREFACE1 }, apiWin, expected);
 
   // Create a window with a preface.
-  apiWin = await createApiWin({url: START_URL, titlePreface: PREFACE1});
+  apiWin = await createApiWin({ url: START_URL, titlePreface: PREFACE1 });
 
   // Navigate to a different url and check that title is reflected.
   let realWin = windowTracker.getWindow(apiWin.id);
-  let promiseLoaded = BrowserTestUtils.browserLoaded(realWin.gBrowser.selectedBrowser);
+  let promiseLoaded = BrowserTestUtils.browserLoaded(
+    realWin.gBrowser.selectedBrowser
+  );
   await BrowserTestUtils.loadURI(realWin.gBrowser.selectedBrowser, NEW_URL);
   await promiseLoaded;
-  ok(realWin.document.title.startsWith(PREFACE1),
-     "Updated window has the expected title preface.");
-  ok(realWin.document.title.includes(NEW_TITLE),
-     "Updated window has the expected title text.");
+  ok(
+    realWin.document.title.startsWith(PREFACE1),
+    "Updated window has the expected title preface."
+  );
+  ok(
+    realWin.document.title.includes(NEW_TITLE),
+    "Updated window has the expected title text."
+  );
 
   // Update the titlePreface of the window.
   expected = {
@@ -158,10 +200,10 @@ add_task(async function testWindowTitle() {
       text: NEW_TITLE,
     },
   };
-  await updateWindow({titlePreface: PREFACE2}, apiWin, expected);
+  await updateWindow({ titlePreface: PREFACE2 }, apiWin, expected);
 
   // Create a window with a preface.
-  apiWin = await createApiWin({url: START_URL, titlePreface: PREFACE1});
+  apiWin = await createApiWin({ url: START_URL, titlePreface: PREFACE1 });
   realWin = windowTracker.getWindow(apiWin.id);
 
   // Update the titlePreface of the window with an empty string.
@@ -175,11 +217,14 @@ add_task(async function testWindowTitle() {
       text: START_TITLE,
     },
   };
-  await updateWindow({titlePreface: ""}, apiWin, expected);
-  ok(!realWin.document.title.startsWith(expected.before.preface), "Updated window has the expected empty title preface.");
+  await updateWindow({ titlePreface: "" }, apiWin, expected);
+  ok(
+    !realWin.document.title.startsWith(expected.before.preface),
+    "Updated window has the expected empty title preface."
+  );
 
   // Create a window with a preface.
-  apiWin = await createApiWin({url: START_URL, titlePreface: PREFACE1});
+  apiWin = await createApiWin({ url: START_URL, titlePreface: PREFACE1 });
   realWin = windowTracker.getWindow(apiWin.id);
 
   // Update the window without a titlePreface.
@@ -201,7 +246,10 @@ add_task(async function testWindowTitle() {
 // Test that the window title is only available with the correct tab
 // permissions.
 add_task(async function testWindowTitlePermissions() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.com/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "http://example.com/"
+  );
 
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
@@ -218,15 +266,21 @@ add_task(async function testWindowTitlePermissions() {
 
       let window = await browser.windows.getCurrent();
 
-      browser.test.assertEq(undefined, window.title,
-                            "Window title should be null without tab permission");
+      browser.test.assertEq(
+        undefined,
+        window.title,
+        "Window title should be null without tab permission"
+      );
 
       browser.test.sendMessage("grant-activeTab");
       let expectedTitle = await awaitMessage("title");
 
       window = await browser.windows.getCurrent();
-      browser.test.assertEq(expectedTitle, window.title,
-                            "Window should have the expected title with tab permission granted");
+      browser.test.assertEq(
+        expectedTitle,
+        window.title,
+        "Window should have the expected title with tab permission granted"
+      );
 
       await browser.test.notifyPass("window-title-permissions");
     },
@@ -256,7 +310,8 @@ add_task(async function testInvalidWindowId() {
         // Assuming that this windowId does not exist.
         browser.windows.get(123456789),
         /Invalid window/,
-        "Should receive invalid window");
+        "Should receive invalid window"
+      );
       browser.test.notifyPass("windows.get.invalid");
     },
   });

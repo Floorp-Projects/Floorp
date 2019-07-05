@@ -1,4 +1,4 @@
-import {A11yLinkButton} from "content-src/components/A11yLinkButton/A11yLinkButton";
+import { A11yLinkButton } from "content-src/components/A11yLinkButton/A11yLinkButton";
 import React from "react";
 
 export class ErrorBoundaryFallback extends React.PureComponent {
@@ -30,31 +30,35 @@ export class ErrorBoundaryFallback extends React.PureComponent {
       <div className={className}>
         <div data-l10n-id="newtab-error-fallback-info" />
         <span>
-          <A11yLinkButton className="reload-button" onClick={this.onClick} data-l10n-id="newtab-error-fallback-refresh-link" />
+          <A11yLinkButton
+            className="reload-button"
+            onClick={this.onClick}
+            data-l10n-id="newtab-error-fallback-refresh-link"
+          />
         </span>
       </div>
     );
   }
 }
-ErrorBoundaryFallback.defaultProps = {className: "as-error-fallback"};
+ErrorBoundaryFallback.defaultProps = { className: "as-error-fallback" };
 
 export class ErrorBoundary extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.state = {hasError: false};
+    this.state = { hasError: false };
   }
 
   componentDidCatch(error, info) {
-    this.setState({hasError: true});
+    this.setState({ hasError: true });
   }
 
   render() {
     if (!this.state.hasError) {
-      return (this.props.children);
+      return this.props.children;
     }
 
     return <this.props.FallbackComponent className={this.props.className} />;
   }
 }
 
-ErrorBoundary.defaultProps = {FallbackComponent: ErrorBoundaryFallback};
+ErrorBoundary.defaultProps = { FallbackComponent: ErrorBoundaryFallback };

@@ -3,15 +3,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
-const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm");
-const {insertPinned, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm");
-const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm");
-const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm");
-const {getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm");
+const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
+  "resource://activity-stream/common/Actions.jsm"
+);
+const { TippyTopProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/TippyTopProvider.jsm"
+);
+const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } = ChromeUtils.import(
+  "resource://activity-stream/common/Reducers.jsm"
+);
+const { Dedupe } = ChromeUtils.import(
+  "resource://activity-stream/common/Dedupe.jsm"
+);
+const { shortURL } = ChromeUtils.import(
+  "resource://activity-stream/lib/ShortURL.jsm"
+);
+const { getDefaultOptions } = ChromeUtils.import(
+  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
+);
 const {
   CUSTOM_SEARCH_SHORTCUTS,
   SEARCH_SHORTCUTS_EXPERIMENT,
@@ -21,23 +35,42 @@ const {
   getSearchProvider,
 } = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm");
 
-ChromeUtils.defineModuleGetter(this, "filterAdult",
-  "resource://activity-stream/lib/FilterAdult.jsm");
-ChromeUtils.defineModuleGetter(this, "LinksCache",
-  "resource://activity-stream/lib/LinksCache.jsm");
-ChromeUtils.defineModuleGetter(this, "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Screenshots",
-  "resource://activity-stream/lib/Screenshots.jsm");
-ChromeUtils.defineModuleGetter(this, "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "filterAdult",
+  "resource://activity-stream/lib/FilterAdult.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LinksCache",
+  "resource://activity-stream/lib/LinksCache.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Screenshots",
+  "resource://activity-stream/lib/Screenshots.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PageThumbs",
+  "resource://gre/modules/PageThumbs.jsm"
+);
 
 const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
 const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot", "customScreenshot"];
-const PINNED_FAVICON_PROPS_TO_MIGRATE = ["favicon", "faviconRef", "faviconSize"];
+const PINNED_FAVICON_PROPS_TO_MIGRATE = [
+  "favicon",
+  "faviconRef",
+  "faviconSize",
+];
 const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 
@@ -53,29 +86,41 @@ const SEARCH_FILTERS = [
 ];
 
 function getShortURLForCurrentSearch() {
-  const url = shortURL({url: Services.search.defaultEngine.searchForm});
+  const url = shortURL({ url: Services.search.defaultEngine.searchForm });
   return url;
 }
 
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
-    XPCOMUtils.defineLazyGetter(this, "_currentSearchHostname", getShortURLForCurrentSearch);
+    XPCOMUtils.defineLazyGetter(
+      this,
+      "_currentSearchHostname",
+      getShortURLForCurrentSearch
+    );
     this.dedupe = new Dedupe(this._dedupeKey);
-    this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
-      "getTopSites", CACHED_LINK_PROPS_TO_MIGRATE, (oldOptions, newOptions) =>
+    this.frecentCache = new LinksCache(
+      NewTabUtils.activityStreamLinks,
+      "getTopSites",
+      CACHED_LINK_PROPS_TO_MIGRATE,
+      (oldOptions, newOptions) =>
         // Refresh if no old options or requesting more items
-        !(oldOptions.numItems >= newOptions.numItems));
-    this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks, "links",
-      [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]);
+        !(oldOptions.numItems >= newOptions.numItems)
+    );
+    this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks, "links", [
+      ...CACHED_LINK_PROPS_TO_MIGRATE,
+      ...PINNED_FAVICON_PROPS_TO_MIGRATE,
+    ]);
     PageThumbs.addExpirationFilter(this);
   }
 
   init() {
     // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
-    this.refreshDefaults(this.store.getState().Prefs.values[DEFAULT_SITES_PREF]);
+    this.refreshDefaults(
+      this.store.getState().Prefs.values[DEFAULT_SITES_PREF]
+    );
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
-    this.refresh({broadcast: true});
+    this.refresh({ broadcast: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
   }
 
@@ -87,10 +132,14 @@ this.TopSitesFeed = class TopSitesFeed {
   observe(subj, topic, data) {
     // We should update the current top sites if the search engine has been changed since
     // the search engine that gets filtered out of top sites has changed.
-    if (topic === "browser-search-engine-modified" && data === "engine-default" && this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF]) {
+    if (
+      topic === "browser-search-engine-modified" &&
+      data === "engine-default" &&
+      this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF]
+    ) {
       delete this._currentSearchHostname;
       this._currentSearchHostname = getShortURLForCurrentSearch();
-      this.refresh({broadcast: true});
+      this.refresh({ broadcast: true });
     }
   }
 
@@ -116,14 +165,16 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   filterForThumbnailExpiration(callback) {
-    const {rows} = this.store.getState().TopSites;
-    callback(rows.reduce((acc, site) => {
-      acc.push(site.url);
-      if (site.customScreenshotURL) {
-        acc.push(site.customScreenshotURL);
-      }
-      return acc;
-    }, []));
+    const { rows } = this.store.getState().TopSites;
+    callback(
+      rows.reduce((acc, site) => {
+        acc.push(site.url);
+        if (site.customScreenshotURL) {
+          acc.push(site.customScreenshotURL);
+        }
+        return acc;
+      }, [])
+    );
   }
 
   /**
@@ -133,8 +184,11 @@ this.TopSitesFeed = class TopSitesFeed {
    * @returns {bool}
    */
   shouldFilterSearchTile(hostname) {
-    if (this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF] &&
-      (SEARCH_FILTERS.includes(hostname) || hostname === this._currentSearchHostname)) {
+    if (
+      this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF] &&
+      (SEARCH_FILTERS.includes(hostname) ||
+        hostname === this._currentSearchHostname)
+    ) {
       return true;
     }
     return false;
@@ -150,21 +204,30 @@ this.TopSitesFeed = class TopSitesFeed {
     // Only insert shortcuts if the experiment is running
     if (this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT]) {
       // We don't want to insert shortcuts we've previously inserted
-      const prevInsertedShortcuts = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF]
-        .split(",").filter(s => s); // Filter out empty strings
+      const prevInsertedShortcuts = this.store
+        .getState()
+        .Prefs.values[SEARCH_SHORTCUTS_HAVE_PINNED_PREF].split(",")
+        .filter(s => s); // Filter out empty strings
       const newInsertedShortcuts = [];
 
-      const shouldPin = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF]
-        .split(",")
+      const shouldPin = this.store
+        .getState()
+        .Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF].split(",")
         .map(getSearchProvider)
         .filter(s => s && s.shortURL !== this._currentSearchHostname);
 
       // If we've previously inserted all search shortcuts return early
-      if (shouldPin.every(shortcut => prevInsertedShortcuts.includes(shortcut.shortURL))) {
+      if (
+        shouldPin.every(shortcut =>
+          prevInsertedShortcuts.includes(shortcut.shortURL)
+        )
+      ) {
         return false;
       }
 
-      const numberOfSlots = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+      const numberOfSlots =
+        this.store.getState().Prefs.values[ROWS_PREF] *
+        TOP_SITES_MAX_SITES_PER_ROW;
 
       // The plainPinnedSites array is populated with pinned sites at their
       // respective indices, and null everywhere else, but is not always the
@@ -183,9 +246,9 @@ this.TopSitesFeed = class TopSitesFeed {
           !pinnedSites.find(s => s && s.hostname === shortcut.shortURL) &&
           !prevInsertedShortcuts.includes(shortcut.shortURL) &&
           nextAvailable > -1 &&
-          await checkHasSearchEngine(shortcut.keyword)
+          (await checkHasSearchEngine(shortcut.keyword))
         ) {
-          const site = await this.topSiteToSearchTopSite({url: shortcut.url});
+          const site = await this.topSiteToSearchTopSite({ url: shortcut.url });
           this._pinSiteAt(site, nextAvailable);
           pinnedSites[nextAvailable] = site;
           newInsertedShortcuts.push(shortcut.shortURL);
@@ -197,7 +260,12 @@ this.TopSitesFeed = class TopSitesFeed {
       }
 
       if (newInsertedShortcuts.length) {
-        this.store.dispatch(ac.SetPref(SEARCH_SHORTCUTS_HAVE_PINNED_PREF, prevInsertedShortcuts.concat(newInsertedShortcuts).join(",")));
+        this.store.dispatch(
+          ac.SetPref(
+            SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
+            prevInsertedShortcuts.concat(newInsertedShortcuts).join(",")
+          )
+        );
         return true;
       }
     }
@@ -206,8 +274,12 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   async getLinksWithDefaults() {
-    const numItems = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
-    const searchShortcutsExperiment = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT];
+    const numItems =
+      this.store.getState().Prefs.values[ROWS_PREF] *
+      TOP_SITES_MAX_SITES_PER_ROW;
+    const searchShortcutsExperiment = this.store.getState().Prefs.values[
+      SEARCH_SHORTCUTS_EXPERIMENT
+    ];
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
     await Services.search.init();
@@ -223,7 +295,9 @@ this.TopSitesFeed = class TopSitesFeed {
       const hostname = shortURL(link);
       if (!this.shouldFilterSearchTile(hostname)) {
         frecent.push({
-          ...(searchShortcutsExperiment ? await this.topSiteToSearchTopSite(link) : link),
+          ...(searchShortcutsExperiment
+            ? await this.topSiteToSearchTopSite(link)
+            : link),
           hostname,
         });
       }
@@ -233,17 +307,22 @@ this.TopSitesFeed = class TopSitesFeed {
     let notBlockedDefaultSites = [];
     for (let link of DEFAULT_TOP_SITES) {
       const searchProvider = getSearchProvider(shortURL(link));
-      if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
+      if (NewTabUtils.blockedLinks.isBlocked({ url: link.url })) {
         continue;
       } else if (this.shouldFilterSearchTile(link.hostname)) {
         continue;
         // If we've previously blocked a search shortcut, remove the default top site
         // that matches the hostname
-      } else if (searchProvider && NewTabUtils.blockedLinks.isBlocked({url: searchProvider.url})) {
+      } else if (
+        searchProvider &&
+        NewTabUtils.blockedLinks.isBlocked({ url: searchProvider.url })
+      ) {
         continue;
       }
       notBlockedDefaultSites.push(
-        searchShortcutsExperiment ? await this.topSiteToSearchTopSite(link) : link,
+        searchShortcutsExperiment
+          ? await this.topSiteToSearchTopSite(link)
+          : link
       );
     }
 
@@ -258,54 +337,61 @@ this.TopSitesFeed = class TopSitesFeed {
       plainPinned = await this.pinnedCache.request();
     }
 
-    const pinned = await Promise.all(plainPinned.map(async link => {
-      if (!link) {
-        return link;
-      }
-
-      // Copy all properties from a frecent link and add more
-      const finder = other => other.url === link.url;
-
-      // Remove frecent link's screenshot if pinned link has a custom one
-      const frecentSite = frecent.find(finder);
-      if (frecentSite && link.customScreenshotURL) {
-        delete frecentSite.screenshot;
-      }
-      // If the link is a frecent site, do not copy over 'isDefault', else check
-      // if the site is a default site
-      const copy = Object.assign(
-        {},
-        frecentSite || {isDefault: !!notBlockedDefaultSites.find(finder)},
-        link,
-        {hostname: shortURL(link)},
-        {searchTopSite: !!link.searchTopSite}
-      );
-
-      // Add in favicons if we don't already have it
-      if (!copy.favicon) {
-        try {
-          NewTabUtils.activityStreamProvider._faviconBytesToDataURI(await
-            NewTabUtils.activityStreamProvider._addFavicons([copy]));
-
-          for (const prop of PINNED_FAVICON_PROPS_TO_MIGRATE) {
-            copy.__sharedCache.updateLink(prop, copy[prop]);
-          }
-        } catch (e) {
-          // Some issue with favicon, so just continue without one
+    const pinned = await Promise.all(
+      plainPinned.map(async link => {
+        if (!link) {
+          return link;
         }
-      }
 
-      return copy;
-    }));
+        // Copy all properties from a frecent link and add more
+        const finder = other => other.url === link.url;
+
+        // Remove frecent link's screenshot if pinned link has a custom one
+        const frecentSite = frecent.find(finder);
+        if (frecentSite && link.customScreenshotURL) {
+          delete frecentSite.screenshot;
+        }
+        // If the link is a frecent site, do not copy over 'isDefault', else check
+        // if the site is a default site
+        const copy = Object.assign(
+          {},
+          frecentSite || { isDefault: !!notBlockedDefaultSites.find(finder) },
+          link,
+          { hostname: shortURL(link) },
+          { searchTopSite: !!link.searchTopSite }
+        );
+
+        // Add in favicons if we don't already have it
+        if (!copy.favicon) {
+          try {
+            NewTabUtils.activityStreamProvider._faviconBytesToDataURI(
+              await NewTabUtils.activityStreamProvider._addFavicons([copy])
+            );
+
+            for (const prop of PINNED_FAVICON_PROPS_TO_MIGRATE) {
+              copy.__sharedCache.updateLink(prop, copy[prop]);
+            }
+          } catch (e) {
+            // Some issue with favicon, so just continue without one
+          }
+        }
+
+        return copy;
+      })
+    );
 
     // Remove any duplicates from frecent and default sites
     const [, dedupedFrecent, dedupedDefaults] = this.dedupe.group(
-      pinned, frecent, notBlockedDefaultSites);
+      pinned,
+      frecent,
+      notBlockedDefaultSites
+    );
     const dedupedUnpinned = [...dedupedFrecent, ...dedupedDefaults];
 
     // Remove adult sites if we need to
-    const checkedAdult = this.store.getState().Prefs.values.filterAdult ?
-      filterAdult(dedupedUnpinned) : dedupedUnpinned;
+    const checkedAdult = this.store.getState().Prefs.values.filterAdult
+      ? filterAdult(dedupedUnpinned)
+      : dedupedUnpinned;
 
     // Insert the original pinned sites into the deduped frecent and defaults
     const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
@@ -343,10 +429,10 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     const links = await this.getLinksWithDefaults();
-    const newAction = {type: at.TOP_SITES_UPDATED, data: {links}};
+    const newAction = { type: at.TOP_SITES_UPDATED, data: { links } };
     let storedPrefs;
     try {
-      storedPrefs = await this._storage.get(SECTION_ID) || {};
+      storedPrefs = (await this._storage.get(SECTION_ID)) || {};
     } catch (e) {
       storedPrefs = {};
       Cu.reportError("Problem getting stored prefs for TopSites");
@@ -372,22 +458,32 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     // Populate the state with available search shortcuts
-    const searchShortcuts = (await Services.search.getDefaultEngines()).reduce((result, engine) => {
-      const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s => engine.wrappedJSObject._internalAliases.includes(s.keyword));
-      if (shortcut) {
-        result.push(this._tippyTopProvider.processSite({...shortcut}));
-      }
-      return result;
-    }, []);
-    this.store.dispatch(ac.BroadcastToContent({
-      type: at.UPDATE_SEARCH_SHORTCUTS,
-      data: {searchShortcuts},
-    }));
+    const searchShortcuts = (await Services.search.getDefaultEngines()).reduce(
+      (result, engine) => {
+        const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s =>
+          engine.wrappedJSObject._internalAliases.includes(s.keyword)
+        );
+        if (shortcut) {
+          result.push(this._tippyTopProvider.processSite({ ...shortcut }));
+        }
+        return result;
+      },
+      []
+    );
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.UPDATE_SEARCH_SHORTCUTS,
+        data: { searchShortcuts },
+      })
+    );
   }
 
   async topSiteToSearchTopSite(site) {
     const searchProvider = getSearchProvider(shortURL(site));
-    if (!searchProvider || !await checkHasSearchEngine(searchProvider.keyword)) {
+    if (
+      !searchProvider ||
+      !(await checkHasSearchEngine(searchProvider.keyword))
+    ) {
       return site;
     }
     return {
@@ -428,11 +524,18 @@ this.TopSitesFeed = class TopSitesFeed {
     if (link.screenshot) {
       return;
     }
-    await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
-      screenshot => this.store.dispatch(ac.BroadcastToContent({
-        data: {screenshot, url: link.url},
-        type: at.SCREENSHOT_UPDATED,
-      })));
+    await Screenshots.maybeCacheScreenshot(
+      link,
+      url,
+      "screenshot",
+      screenshot =>
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            data: { screenshot, url: link.url },
+            type: at.SCREENSHOT_UPDATED,
+          })
+        )
+    );
   }
 
   /**
@@ -441,22 +544,32 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param target {string} Id of content process where to dispatch the result
    */
   async getScreenshotPreview(url, target) {
-    const preview = await Screenshots.getScreenshotForURL(url) || "";
-    this.store.dispatch(ac.OnlyToOneContent({
-      data: {url, preview},
-      type: at.PREVIEW_RESPONSE,
-    }, target));
+    const preview = (await Screenshots.getScreenshotForURL(url)) || "";
+    this.store.dispatch(
+      ac.OnlyToOneContent(
+        {
+          data: { url, preview },
+          type: at.PREVIEW_RESPONSE,
+        },
+        target
+      )
+    );
   }
 
   _requestRichIcon(url) {
     this.store.dispatch({
       type: at.RICH_ICON_MISSING,
-      data: {url},
+      data: { url },
     });
   }
 
   updateSectionPrefs(collapsed) {
-    this.store.dispatch(ac.BroadcastToContent({type: at.TOP_SITES_PREFS_UPDATED, data: {pref: collapsed}}));
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.TOP_SITES_PREFS_UPDATED,
+        data: { pref: collapsed },
+      })
+    );
   }
 
   /**
@@ -467,7 +580,7 @@ this.TopSitesFeed = class TopSitesFeed {
     this.pinnedCache.expire();
 
     // Refresh to update pinned sites with screenshots, trigger deduping, etc.
-    this.refresh({broadcast: true});
+    this.refresh({ broadcast: true });
   }
 
   /**
@@ -475,8 +588,8 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param customScreenshotURL {string} User set URL of preview image for site
    * @param label {string} User set string of custom site name
    */
-  async _pinSiteAt({customScreenshotURL, label, url, searchTopSite}, index) {
-    const toPin = {url};
+  async _pinSiteAt({ customScreenshotURL, label, url, searchTopSite }, index) {
+    const toPin = { url };
     if (label) {
       toPin.label = label;
     }
@@ -488,7 +601,7 @@ this.TopSitesFeed = class TopSitesFeed {
     }
     NewTabUtils.pinnedLinks.pin(toPin, index);
 
-    await this._clearLinkCustomScreenshot({customScreenshotURL, url});
+    await this._clearLinkCustomScreenshot({ customScreenshotURL, url });
   }
 
   async _clearLinkCustomScreenshot(site) {
@@ -506,7 +619,7 @@ this.TopSitesFeed = class TopSitesFeed {
    * Handle a pin action of a site to a position.
    */
   async pin(action) {
-    const {site, index} = action.data;
+    const { site, index } = action.data;
     // If valid index provided, pin at that position
     if (index >= 0) {
       await this._pinSiteAt(site, index);
@@ -516,7 +629,7 @@ this.TopSitesFeed = class TopSitesFeed {
       // then we want to make sure to unblock that link if it has previously been
       // blocked. We know if the site has been added because the index will be -1.
       if (index === -1) {
-        NewTabUtils.blockedLinks.unblock({url: site.url});
+        NewTabUtils.blockedLinks.unblock({ url: site.url });
         this.frecentCache.expire();
       }
       this.insert(action);
@@ -527,13 +640,15 @@ this.TopSitesFeed = class TopSitesFeed {
    * Handle an unpin action of a site.
    */
   unpin(action) {
-    const {site} = action.data;
+    const { site } = action.data;
     NewTabUtils.pinnedLinks.unpin(site);
     this._broadcastPinnedSitesUpdated();
   }
 
   disableSearchImprovements() {
-    Services.prefs.clearUserPref(`browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_HAVE_PINNED_PREF}`);
+    Services.prefs.clearUserPref(
+      `browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_HAVE_PINNED_PREF}`
+    );
     this.unpinAllSearchShortcuts();
   }
 
@@ -553,7 +668,9 @@ this.TopSitesFeed = class TopSitesFeed {
     // Don't insert any pins past the end of the visible top sites. Otherwise,
     // we can end up with a bunch of pinned sites that can never be unpinned again
     // from the UI.
-    const topSitesCount = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+    const topSitesCount =
+      this.store.getState().Prefs.values[ROWS_PREF] *
+      TOP_SITES_MAX_SITES_PER_ROW;
     if (index >= topSitesCount) {
       return;
     }
@@ -592,7 +709,7 @@ this.TopSitesFeed = class TopSitesFeed {
    * Handle an insert (drop/add) action of a site.
    */
   async insert(action) {
-    let {index} = action.data;
+    let { index } = action.data;
     // Treat invalid pin index values (e.g., -1, undefined) as insert in the first position
     if (!(index > 0)) {
       index = 0;
@@ -601,25 +718,35 @@ this.TopSitesFeed = class TopSitesFeed {
     // Inserting a top site pins it in the specified slot, pushing over any link already
     // pinned in the slot (unless it's the last slot, then it replaces).
     this._insertPin(
-      action.data.site, index,
-      action.data.draggedFromIndex !== undefined ? action.data.draggedFromIndex : this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW);
+      action.data.site,
+      index,
+      action.data.draggedFromIndex !== undefined
+        ? action.data.draggedFromIndex
+        : this.store.getState().Prefs.values[ROWS_PREF] *
+            TOP_SITES_MAX_SITES_PER_ROW
+    );
 
     await this._clearLinkCustomScreenshot(action.data.site);
     this._broadcastPinnedSitesUpdated();
   }
 
-  updatePinnedSearchShortcuts({addedShortcuts, deletedShortcuts}) {
+  updatePinnedSearchShortcuts({ addedShortcuts, deletedShortcuts }) {
     // Unpin the deletedShortcuts.
-    deletedShortcuts.forEach(({url}) => {
-      NewTabUtils.pinnedLinks.unpin({url});
+    deletedShortcuts.forEach(({ url }) => {
+      NewTabUtils.pinnedLinks.unpin({ url });
     });
 
     // Pin the addedShortcuts.
-    const numberOfSlots = this.store.getState().Prefs.values[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+    const numberOfSlots =
+      this.store.getState().Prefs.values[ROWS_PREF] *
+      TOP_SITES_MAX_SITES_PER_ROW;
     addedShortcuts.forEach(shortcut => {
       // Find first hole in pinnedLinks.
       let index = NewTabUtils.pinnedLinks.links.findIndex(link => !link);
-      if (index < 0 && NewTabUtils.pinnedLinks.links.length + 1 < numberOfSlots) {
+      if (
+        index < 0 &&
+        NewTabUtils.pinnedLinks.links.length + 1 < numberOfSlots
+      ) {
         // pinnedLinks can have less slots than the total available.
         index = NewTabUtils.pinnedLinks.links.length;
       }
@@ -641,22 +768,22 @@ this.TopSitesFeed = class TopSitesFeed {
         this.updateCustomSearchShortcuts();
         break;
       case at.SYSTEM_TICK:
-        this.refresh({broadcast: false});
+        this.refresh({ broadcast: false });
         break;
       // All these actions mean we need new top sites
       case at.PLACES_HISTORY_CLEARED:
       case at.PLACES_LINK_DELETED:
         this.frecentCache.expire();
-        this.refresh({broadcast: true});
+        this.refresh({ broadcast: true });
         break;
       case at.PLACES_LINKS_CHANGED:
         this.frecentCache.expire();
-        this.refresh({broadcast: false});
+        this.refresh({ broadcast: false });
         break;
       case at.PLACES_LINK_BLOCKED:
         this.frecentCache.expire();
         this.pinnedCache.expire();
-        this.refresh({broadcast: true});
+        this.refresh({ broadcast: true });
         break;
       case at.PREF_CHANGED:
         switch (action.data.name) {
@@ -666,7 +793,7 @@ this.TopSitesFeed = class TopSitesFeed {
           case ROWS_PREF:
           case FILTER_DEFAULT_SEARCH_PREF:
           case SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF:
-            this.refresh({broadcast: true});
+            this.refresh({ broadcast: true });
             break;
           case SEARCH_SHORTCUTS_EXPERIMENT:
             if (action.data.value) {
@@ -674,7 +801,7 @@ this.TopSitesFeed = class TopSitesFeed {
             } else {
               this.disableSearchImprovements();
             }
-            this.refresh({broadcast: true});
+            this.refresh({ broadcast: true });
         }
         break;
       case at.UPDATE_SECTION_PREFS:

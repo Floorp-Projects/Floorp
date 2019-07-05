@@ -16,9 +16,11 @@ async function assertDialogResult({ args, buttonToClick, expectedResult }) {
  * Tests the "unblock" dialog, for each of the possible verdicts.
  */
 add_task(async function test_unblock_dialog_unblock() {
-  for (let verdict of [Downloads.Error.BLOCK_VERDICT_MALWARE,
-                       Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
-                       Downloads.Error.BLOCK_VERDICT_UNCOMMON]) {
+  for (let verdict of [
+    Downloads.Error.BLOCK_VERDICT_MALWARE,
+    Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED,
+    Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+  ]) {
     let args = { verdict, window, dialogType: "unblock" };
 
     // Test both buttons.

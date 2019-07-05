@@ -27,12 +27,14 @@ function test() {
   // delete existing sessionstore.js, to make sure we're not reading
   // the mtime of an old one initially.
   let sessionStoreJS = getSessionstoreFile();
-  if (sessionStoreJS.exists())
+  if (sessionStoreJS.exists()) {
     sessionStoreJS.remove(false);
+  }
 
   // test content URL
-  const TEST_URL = "data:text/html;charset=utf-8,"
-    + "<body style='width: 100000px; height: 100000px;'><p>top</p></body>";
+  const TEST_URL =
+    "data:text/html;charset=utf-8," +
+    "<body style='width: 100000px; height: 100000px;'><p>top</p></body>";
 
   // preferences that we use
   const PREF_INTERVAL = "browser.sessionstore.interval";
@@ -58,12 +60,16 @@ function test() {
       tab.linkedBrowser.contentWindow.scrollTo(1100, 1200);
       setTimeout(function step2() {
         let mtime2 = getSessionstorejsModificationTime();
-        is(mtime2, mtime1,
-           "tab selection and scrolling: sessionstore.js not updated");
+        is(
+          mtime2,
+          mtime1,
+          "tab selection and scrolling: sessionstore.js not updated"
+        );
 
         // ok, done, cleanup and finish
-        if (Services.prefs.prefHasUserValue(PREF_INTERVAL))
+        if (Services.prefs.prefHasUserValue(PREF_INTERVAL)) {
           Services.prefs.clearUserPref(PREF_INTERVAL);
+        }
         gBrowser.removeTab(tab);
         finish();
       }, 3500); // end of sleep after tab selection and scrolling

@@ -3,9 +3,16 @@
 "use strict";
 
 async function testReturnStatus(expectedStatus) {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.net/"
+  );
 
-  let saveDir = FileUtils.getDir("TmpD", [`testSaveDir-${Math.random()}`], true);
+  let saveDir = FileUtils.getDir(
+    "TmpD",
+    [`testSaveDir-${Math.random()}`],
+    true
+  );
 
   let saveFile = saveDir.clone();
   saveFile.append("testSaveFile.pdf");
@@ -42,7 +49,7 @@ async function testReturnStatus(expectedStatus) {
   };
 
   let manifest = {
-    "description": expectedStatus,
+    description: expectedStatus,
   };
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -67,7 +74,10 @@ async function testReturnStatus(expectedStatus) {
 
   if (expectedStatus == "saved" || expectedStatus == "replaced") {
     // Check that first four bytes of saved PDF file are "%PDF"
-    let text = await OS.File.read(saveFile.path, {encoding: "utf-8", bytes: 4});
+    let text = await OS.File.read(saveFile.path, {
+      encoding: "utf-8",
+      bytes: 4,
+    });
     is(text, "%PDF", "Got correct magic number");
   }
 

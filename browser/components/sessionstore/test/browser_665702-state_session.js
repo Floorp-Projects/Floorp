@@ -19,6 +19,8 @@ function test() {
 
   let keys = Object.keys(currentState.session);
   let expectedKeys = ["lastUpdate", "startTime", "recentCrashes"];
-  ok(compareArray(keys.sort(), expectedKeys.sort()),
-     "session object from getBrowserState has correct keys");
+  ok(
+    compareArray(keys.sort(), expectedKeys.sort()),
+    "session object from getBrowserState has correct keys"
+  );
 }

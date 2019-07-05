@@ -12,16 +12,15 @@ async function paste(str) {
       .copyString(str);
   });
   gURLBar.select();
-  document.commandDispatcher.getControllerForCommand("cmd_paste")
-                            .doCommand("cmd_paste");
+  document.commandDispatcher
+    .getControllerForCommand("cmd_paste")
+    .doCommand("cmd_paste");
 }
 
 add_task(async function test() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
-  await PlacesTestUtils.addVisits([
-    "http://example.com/",
-  ]);
+  await PlacesTestUtils.addVisits(["http://example.com/"]);
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
   });

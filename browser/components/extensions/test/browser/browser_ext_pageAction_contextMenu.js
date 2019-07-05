@@ -4,9 +4,9 @@
 
 let extData = {
   manifest: {
-    "permissions": ["contextMenus"],
-    "page_action": {
-      "default_popup": "popup.html",
+    permissions: ["contextMenus"],
+    page_action: {
+      default_popup: "popup.html",
     },
   },
   useAddonManager: "temporary",
@@ -30,7 +30,7 @@ let extData = {
       title: "Click me!",
       contexts: ["all"],
     });
-    browser.tabs.query({active: true, currentWindow: true}, tabs => {
+    browser.tabs.query({ active: true, currentWindow: true }, tabs => {
       const tabId = tabs[0].id;
 
       browser.pageAction.show(tabId).then(() => {
@@ -59,7 +59,10 @@ add_task(async function pageaction_popup_contextmenu() {
   await clickPageAction(extension, window);
 
   let contentAreaContextMenu = await openContextMenuInPopup(extension);
-  let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
+  let item = contentAreaContextMenu.getElementsByAttribute(
+    "label",
+    "Click me!"
+  );
   is(item.length, 1, "contextMenu item for page was found");
   await closeContextMenu(contentAreaContextMenu);
 
@@ -104,7 +107,10 @@ add_task(async function pageaction_popup_image_contextmenu() {
 
   await clickPageAction(extension, window);
 
-  let contentAreaContextMenu = await openContextMenuInPopup(extension, "#testimg");
+  let contentAreaContextMenu = await openContextMenuInPopup(
+    extension,
+    "#testimg"
+  );
 
   let item = contentAreaContextMenu.querySelector("#context-viewimageinfo");
   ok(!item.hidden);

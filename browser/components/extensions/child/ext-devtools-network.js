@@ -16,13 +16,14 @@ class ChildNetworkResponseLoader {
   }
 
   api() {
-    const {context, requestId} = this;
+    const { context, requestId } = this;
     return {
       getContent(callback) {
         return context.childManager.callParentAsyncFunction(
           "devtools.network.Request.getContent",
           [requestId],
-          callback);
+          callback
+        );
       },
     };
   }
@@ -37,16 +38,21 @@ this.devtools_network = class extends ExtensionAPI {
             context,
             name: "devtools.network.onRequestFinished",
             register: fire => {
-              let onFinished = (data) => {
-                const loader = new ChildNetworkResponseLoader(context, data.requestId);
-                const harEntry = {...data.harEntry, ...loader.api()};
+              let onFinished = data => {
+                const loader = new ChildNetworkResponseLoader(
+                  context,
+                  data.requestId
+                );
+                const harEntry = { ...data.harEntry, ...loader.api() };
                 const result = Cu.cloneInto(harEntry, context.cloneScope, {
                   cloneFunctions: true,
                 });
                 fire.asyncWithoutClone(result);
               };
 
-              let parent = context.childManager.getParentEvent("devtools.network.onRequestFinished");
+              let parent = context.childManager.getParentEvent(
+                "devtools.network.onRequestFinished"
+              );
               parent.addListener(onFinished);
               return () => {
                 parent.removeListener(onFinished);

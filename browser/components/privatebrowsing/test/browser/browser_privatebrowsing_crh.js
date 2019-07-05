@@ -10,22 +10,29 @@ add_task(async function test() {
     let crhCommand = aWindow.document.getElementById("Tools:Sanitize");
     ok(crhCommand, "The clear recent history command should exist");
 
-    is(PrivateBrowsingUtils.isWindowPrivate(aWindow), aPrivateMode,
-      "PrivateBrowsingUtils should report the correct per-window private browsing status");
-    is(crhCommand.hasAttribute("disabled"), aPrivateMode,
-      "Clear Recent History command should be disabled according to the private browsing mode");
+    is(
+      PrivateBrowsingUtils.isWindowPrivate(aWindow),
+      aPrivateMode,
+      "PrivateBrowsingUtils should report the correct per-window private browsing status"
+    );
+    is(
+      crhCommand.hasAttribute("disabled"),
+      aPrivateMode,
+      "Clear Recent History command should be disabled according to the private browsing mode"
+    );
   }
 
   let testURI = "http://mochi.test:8888/";
 
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
   let privateBrowser = privateWin.gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(privateBrowser, testURI);
   await BrowserTestUtils.browserLoaded(privateBrowser);
 
   info("Test on private window");
   checkDisableOption(true, privateWin);
-
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let browser = win.gBrowser.selectedBrowser;
@@ -34,7 +41,6 @@ add_task(async function test() {
 
   info("Test on public window");
   checkDisableOption(false, win);
-
 
   // Cleanup
   await BrowserTestUtils.closeWindow(privateWin);

@@ -5,10 +5,10 @@
 add_task(async function test_simple() {
   let extensionData = {
     manifest: {
-      "name": "Simple extension test",
-      "version": "1.0",
-      "manifest_version": 2,
-      "description": "",
+      name: "Simple extension test",
+      version: "1.0",
+      manifest_version: 2,
+      description: "",
     },
   };
 
@@ -37,16 +37,19 @@ add_task(async function test_background() {
   let extensionData = {
     background: "(" + backgroundScript.toString() + ")()",
     manifest: {
-      "name": "Simple extension test",
-      "version": "1.0",
-      "manifest_version": 2,
-      "description": "",
+      name: "Simple extension test",
+      version: "1.0",
+      manifest_version: 2,
+      description: "",
     },
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   info("load complete");
-  let [, x] = await Promise.all([extension.startup(), extension.awaitMessage("running")]);
+  let [, x] = await Promise.all([
+    extension.startup(),
+    extension.awaitMessage("running"),
+  ]);
   is(x, 1, "got correct value from extension");
   info("startup complete");
   extension.sendMessage(10, 20);

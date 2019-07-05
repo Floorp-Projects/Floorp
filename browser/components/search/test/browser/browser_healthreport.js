@@ -3,7 +3,10 @@
 
 "use strict";
 
-var Preferences = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+var Preferences = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm",
+  {}
+).Preferences;
 
 function test() {
   waitForExplicitFinish();
@@ -17,7 +20,9 @@ function test() {
     let histogramKey = (engine.identifier || "other-Foo") + ".searchbar";
     let numSearchesBefore = 0;
     try {
-      let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+      let hs = Services.telemetry
+        .getKeyedHistogramById("SEARCH_COUNTS")
+        .snapshot();
       if (histogramKey in hs) {
         numSearchesBefore = hs[histogramKey].sum;
       }
@@ -33,22 +38,30 @@ function test() {
     searchBar.value = "firefox health report";
     searchBar.focus();
 
-     function afterSearch() {
-        searchBar.value = "";
-        gBrowser.removeTab(tab);
+    function afterSearch() {
+      searchBar.value = "";
+      gBrowser.removeTab(tab);
 
-        // Make sure that the context searches are correctly recorded.
-        let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
-        Assert.ok(histogramKey in hs, "The histogram must contain the correct key");
-        Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
-                     "Performing a search increments the related SEARCH_COUNTS key by 1.");
+      // Make sure that the context searches are correctly recorded.
+      let hs = Services.telemetry
+        .getKeyedHistogramById("SEARCH_COUNTS")
+        .snapshot();
+      Assert.ok(
+        histogramKey in hs,
+        "The histogram must contain the correct key"
+      );
+      Assert.equal(
+        hs[histogramKey].sum,
+        numSearchesBefore + 1,
+        "Performing a search increments the related SEARCH_COUNTS key by 1."
+      );
 
-        let fooEngine = Services.search.getEngineByName("Foo");
-        Services.search.removeEngine(fooEngine);
-      }
+      let fooEngine = Services.search.getEngineByName("Foo");
+      Services.search.removeEngine(fooEngine);
+    }
 
-      EventUtils.synthesizeKey("KEY_Enter");
-      executeSoon(() => executeSoon(afterSearch));
+    EventUtils.synthesizeKey("KEY_Enter");
+    executeSoon(() => executeSoon(afterSearch));
   }
 
   function observer(subject, topic, data) {
@@ -62,7 +75,11 @@ function test() {
       case "engine-default":
         // We may be called again when resetting the engine at the end.
         if (!calledTestTelemetry) {
-          is(Services.search.defaultEngine.name, "Foo", "Current engine is Foo");
+          is(
+            Services.search.defaultEngine.name,
+            "Foo",
+            "Current engine is Foo"
+          );
           testTelemetry();
         }
         break;
@@ -77,12 +94,18 @@ function test() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
   gCUITestUtils.addSearchBar().then(function() {
-    Services.search.addEngine("http://mochi.test:8888/browser/browser/components/search/test/browser/testEngine.xml",
-                              "data:image/x-icon,%00", false);
+    Services.search.addEngine(
+      "http://mochi.test:8888/browser/browser/components/search/test/browser/testEngine.xml",
+      "data:image/x-icon,%00",
+      false
+    );
   });
 }
 
 function resetPreferences() {
   Preferences.resetBranch("datareporting.policy.");
-  Preferences.set("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+  Preferences.set(
+    "datareporting.policy.dataSubmissionPolicyBypassNotification",
+    true
+  );
 }

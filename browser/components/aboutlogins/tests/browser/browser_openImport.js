@@ -2,7 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function setup() {
-  let aboutLoginsTab = await BrowserTestUtils.openNewForegroundTab({gBrowser, url: "about:logins"});
+  let aboutLoginsTab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:logins",
+  });
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(aboutLoginsTab);
   });
@@ -15,10 +18,10 @@ add_task(async function test_open_import() {
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
   await ContentTask.spawn(browser, null, async () => {
     return ContentTaskUtils.waitForCondition(() => {
-      let menuButton = Cu.waiveXrays(content.document.querySelector("menu-button"));
-      return !menuButton.shadowRoot
-                        .querySelector(".menu")
-                        .hidden;
+      let menuButton = Cu.waiveXrays(
+        content.document.querySelector("menu-button")
+      );
+      return !menuButton.shadowRoot.querySelector(".menu").hidden;
     }, "waiting for menu to open");
   });
 
@@ -27,8 +30,10 @@ add_task(async function test_open_import() {
   // thinks that the shadow DOM element is in another document and throws an exception
   // when trying to call element.ownerGlobal on the targeted shadow DOM node. This is
   // on file as bug 1557489. As a workaround, this manually calculates the position to click.
-  let {x, y} = await ContentTask.spawn(browser, null, async () => {
-    let menuButton = Cu.waiveXrays(content.document.querySelector("menu-button"));
+  let { x, y } = await ContentTask.spawn(browser, null, async () => {
+    let menuButton = Cu.waiveXrays(
+      content.document.querySelector("menu-button")
+    );
     let prefsItem = menuButton.shadowRoot.querySelector(".menuitem-import");
     return prefsItem.getBoundingClientRect();
   });

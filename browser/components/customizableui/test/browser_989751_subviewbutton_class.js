@@ -18,14 +18,22 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
   return async function() {
     // Initialize DevTools before starting the test in order to create menuitems in
     // menuWebDeveloperPopup.
-    ChromeUtils.import("resource://devtools/shared/Loader.jsm", {})
-        .require("devtools/client/framework/devtools-browser");
+    ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}).require(
+      "devtools/client/framework/devtools-browser"
+    );
 
-    info("Checking for items without the subviewbutton class in " + buttonId + " widget");
+    info(
+      "Checking for items without the subviewbutton class in " +
+        buttonId +
+        " widget"
+    );
     let menu = document.getElementById(menuId);
     insertClassNameToMenuChildren(menu);
 
-    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+    CustomizableUI.addWidgetToArea(
+      buttonId,
+      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+    );
 
     await waitForOverflowButtonShown();
 
@@ -40,10 +48,17 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
     let subviewchildren = subview.querySelectorAll("toolbarbutton");
     for (let i = 0; i < subviewchildren.length; i++) {
       let item = subviewchildren[i];
-      let itemReadable = "Item '" + item.label + "' (classes: " + item.className + ")";
-      ok(item.classList.contains("subviewbutton"), itemReadable + " should have the subviewbutton class.");
+      let itemReadable =
+        "Item '" + item.label + "' (classes: " + item.className + ")";
+      ok(
+        item.classList.contains("subviewbutton"),
+        itemReadable + " should have the subviewbutton class."
+      );
       if (i == 0) {
-        ok(item.classList.contains(kCustomClass), itemReadable + " should still have its own class, too.");
+        ok(
+          item.classList.contains(kCustomClass),
+          itemReadable + " should still have its own class, too."
+        );
       }
     }
 
@@ -55,7 +70,13 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
   };
 }
 
-add_task(checkSubviewButtonClass("menuWebDeveloperPopup", "developer-button", "PanelUI-developerItems"));
+add_task(
+  checkSubviewButtonClass(
+    "menuWebDeveloperPopup",
+    "developer-button",
+    "PanelUI-developerItems"
+  )
+);
 
 registerCleanupFunction(function() {
   tempElement.classList.remove(kCustomClass);

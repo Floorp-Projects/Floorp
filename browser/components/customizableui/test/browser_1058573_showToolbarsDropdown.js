@@ -13,10 +13,14 @@ add_task(async function() {
   info("Enter customization mode");
   await startCustomizing();
 
-  let toolbarsToggle = document.getElementById("customization-toolbar-visibility-button");
+  let toolbarsToggle = document.getElementById(
+    "customization-toolbar-visibility-button"
+  );
   ok(toolbarsToggle, "The toolbars toggle dropdown exists");
-  ok(!toolbarsToggle.hasAttribute("hidden"),
-     "The toolbars toggle dropdown is displayed");
+  ok(
+    !toolbarsToggle.hasAttribute("hidden"),
+    "The toolbars toggle dropdown is displayed"
+  );
 });
 
 add_task(async function asyncCleanup() {

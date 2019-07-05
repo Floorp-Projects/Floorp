@@ -4,41 +4,58 @@
 
 let EventUtils = {};
 Services.scriptloader.loadSubScript(
-  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+  EventUtils
+);
 
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
-                              "resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                              "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 const TEST_SITE = "http://example.net";
 const TEST_THIRD_PARTY_SITE = "http://mochi.test:8888";
 
-const TEST_PAGE = TEST_SITE + "/browser/browser/components/originattributes/" +
-                  "test/browser/file_favicon.html";
-const FAVICON_URI = TEST_SITE + "/browser/browser/components/originattributes/" +
-                    "test/browser/file_favicon.png";
-const TEST_THIRD_PARTY_PAGE = "http://example.com/browser/browser/components/" +
-                              "originattributes/test/browser/file_favicon_thirdParty.html";
-const THIRD_PARTY_FAVICON_URI = TEST_THIRD_PARTY_SITE + "/browser/browser/components/" +
-                                "originattributes/test/browser/file_favicon.png";
+const TEST_PAGE =
+  TEST_SITE +
+  "/browser/browser/components/originattributes/" +
+  "test/browser/file_favicon.html";
+const FAVICON_URI =
+  TEST_SITE +
+  "/browser/browser/components/originattributes/" +
+  "test/browser/file_favicon.png";
+const TEST_THIRD_PARTY_PAGE =
+  "http://example.com/browser/browser/components/" +
+  "originattributes/test/browser/file_favicon_thirdParty.html";
+const THIRD_PARTY_FAVICON_URI =
+  TEST_THIRD_PARTY_SITE +
+  "/browser/browser/components/" +
+  "originattributes/test/browser/file_favicon.png";
 
 const USER_CONTEXT_ID_PERSONAL = 1;
-const USER_CONTEXT_ID_WORK     = 2;
+const USER_CONTEXT_ID_WORK = 2;
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 function clearAllImageCaches() {
-  var tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
-                             .getService(SpecialPowers.Ci.imgITools);
+  var tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(
+    SpecialPowers.Ci.imgITools
+  );
   var imageCache = tools.getImgCacheForDocument(window.document);
   imageCache.clearCache(true); // true=chrome
   imageCache.clearCache(false); // false=content
 }
 
 function clearAllPlacesFavicons() {
-  let faviconService = Cc["@mozilla.org/browser/favicon-service;1"]
-                          .getService(Ci.nsIFaviconService);
+  let faviconService = Cc["@mozilla.org/browser/favicon-service;1"].getService(
+    Ci.nsIFaviconService
+  );
 
   return new Promise(resolve => {
     let observer = {
@@ -55,7 +72,12 @@ function clearAllPlacesFavicons() {
   });
 }
 
-function FaviconObserver(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
+function FaviconObserver(
+  aUserContextId,
+  aExpectedCookie,
+  aPageURI,
+  aFaviconURL
+) {
   this.reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL);
 }
 
@@ -85,17 +107,28 @@ FaviconObserver.prototype = {
       }
 
       // Check the userContextId.
-      is(reqLoadInfo.originAttributes.userContextId, this._curUserContextId,
-        "The loadInfo has correct userContextId");
+      is(
+        reqLoadInfo.originAttributes.userContextId,
+        this._curUserContextId,
+        "The loadInfo has correct userContextId"
+      );
 
-      ok(loadingPrincipal.equals(this._expectedPrincipal),
-        "The loadingPrincipal of favicon loading from content should be the content prinicpal");
-      ok(triggeringPrincipal.equals(this._expectedPrincipal),
-        "The triggeringPrincipal of favicon loading from content should be the content prinicpal");
+      ok(
+        loadingPrincipal.equals(this._expectedPrincipal),
+        "The loadingPrincipal of favicon loading from content should be the content prinicpal"
+      );
+      ok(
+        triggeringPrincipal.equals(this._expectedPrincipal),
+        "The triggeringPrincipal of favicon loading from content should be the content prinicpal"
+      );
 
       let faviconCookie = httpChannel.getRequestHeader("cookie");
 
-      is(faviconCookie, this._expectedCookie, "The cookie of the favicon loading is correct.");
+      is(
+        faviconCookie,
+        this._expectedCookie,
+        "The cookie of the favicon loading is correct."
+      );
     } else {
       ok(false, "Received unexpected topic: ", aTopic);
     }
@@ -106,8 +139,10 @@ FaviconObserver.prototype = {
   reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
     this._curUserContextId = aUserContextId;
     this._expectedCookie = aExpectedCookie;
-    this._expectedPrincipal = Services.scriptSecurityManager
-                                      .createCodebasePrincipal(aPageURI, { userContextId: aUserContextId });
+    this._expectedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+      aPageURI,
+      { userContextId: aUserContextId }
+    );
     this._faviconURL = aFaviconURL;
     this._faviconLoaded = PromiseUtils.defer();
   },
@@ -120,9 +155,11 @@ FaviconObserver.prototype = {
 function waitOnFaviconLoaded(aFaviconURL) {
   return PlacesTestUtils.waitForNotification(
     "onPageChanged",
-    (uri, attr, value, id) => attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
-                              value === aFaviconURL,
-    "history");
+    (uri, attr, value, id) =>
+      attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+      value === aFaviconURL,
+    "history"
+  );
 }
 
 async function generateCookies(aHost) {
@@ -155,7 +192,12 @@ async function doTest(aTestPage, aFaviconHost, aFaviconURL) {
 
   // Create the observer object for observing request channels of the personal
   // container.
-  let observer = new FaviconObserver(USER_CONTEXT_ID_PERSONAL, cookies[0], pageURI, aFaviconURL);
+  let observer = new FaviconObserver(
+    USER_CONTEXT_ID_PERSONAL,
+    cookies[0],
+    pageURI,
+    aFaviconURL
+  );
 
   // Add the observer earlier in case we miss it.
   let promiseWaitOnFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
@@ -189,7 +231,11 @@ async function doTest(aTestPage, aFaviconHost, aFaviconURL) {
 }
 
 function assertIconIsData(item) {
-  is(item.getAttribute("image").substring(0, 5), "data:", "Expected the image element to be a data URI");
+  is(
+    item.getAttribute("image").substring(0, 5),
+    "data:",
+    "Expected the image element to be a data URI"
+  );
 }
 
 async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
@@ -214,14 +260,22 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
 
   // Make the popup of allTabs showing up and trigger the loading of the favicon.
   let allTabsView = document.getElementById("allTabsMenu-allTabsView");
-  let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsView, "ViewShown");
+  let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
+    allTabsView,
+    "ViewShown"
+  );
   gTabsPanel.showAllTabsPanel();
   await allTabsPopupShownPromise;
 
-  assertIconIsData(gTabsPanel.allTabsViewTabs.lastElementChild.firstElementChild);
+  assertIconIsData(
+    gTabsPanel.allTabsViewTabs.lastElementChild.firstElementChild
+  );
 
   // Close the popup of allTabs and wait until it's done.
-  let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsView.panelMultiView, "PanelMultiViewHidden");
+  let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(
+    allTabsView.panelMultiView,
+    "PanelMultiViewHidden"
+  );
   gTabsPanel.hideAllTabsPanel();
   await allTabsPopupHiddenPromise;
 
@@ -240,14 +294,22 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   clearAllImageCaches();
 
   // Make the popup of allTabs showing up again.
-  allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsView, "ViewShown");
+  allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
+    allTabsView,
+    "ViewShown"
+  );
   gTabsPanel.showAllTabsPanel();
   await allTabsPopupShownPromise;
 
-  assertIconIsData(gTabsPanel.allTabsViewTabs.lastElementChild.firstElementChild);
+  assertIconIsData(
+    gTabsPanel.allTabsViewTabs.lastElementChild.firstElementChild
+  );
 
   // Close the popup of allTabs and wait until it's done.
-  allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsView.panelMultiView, "PanelMultiViewHidden");
+  allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(
+    allTabsView.panelMultiView,
+    "PanelMultiViewHidden"
+  );
   gTabsPanel.hideAllTabsPanel();
   await allTabsPopupHiddenPromise;
 
@@ -260,9 +322,9 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
 
 add_task(async function setup() {
   // Make sure userContext is enabled.
-  await SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.userContext.enabled", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 });
 
 // A clean up function to prevent affecting other tests.
@@ -302,7 +364,11 @@ add_task(async function test_thirdPartyFavicon_userContextId() {
   // Clear Places favicon caches.
   await clearAllPlacesFavicons();
 
-  await doTest(TEST_THIRD_PARTY_PAGE, TEST_THIRD_PARTY_SITE, THIRD_PARTY_FAVICON_URI);
+  await doTest(
+    TEST_THIRD_PARTY_PAGE,
+    TEST_THIRD_PARTY_SITE,
+    THIRD_PARTY_FAVICON_URI
+  );
 });
 
 add_task(async function test_allTabs_favicon_userContextId() {
@@ -328,5 +394,9 @@ add_task(async function test_allTabs_thirdPartyFavicon_userContextId() {
   // Clear Places favicon caches.
   await clearAllPlacesFavicons();
 
-  await doTestForAllTabsFavicon(TEST_THIRD_PARTY_PAGE, TEST_THIRD_PARTY_SITE, THIRD_PARTY_FAVICON_URI);
+  await doTestForAllTabsFavicon(
+    TEST_THIRD_PARTY_PAGE,
+    TEST_THIRD_PARTY_SITE,
+    THIRD_PARTY_FAVICON_URI
+  );
 });

@@ -1,6 +1,8 @@
 "use strict";
 
-let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm");
+let { EventEmitter } = ChromeUtils.import(
+  "resource:///modules/syncedtabs/EventEmitter.jsm"
+);
 
 add_task(async function testSingleListener() {
   let eventEmitter = new EventEmitter();
@@ -32,4 +34,3 @@ add_task(async function testMultipleListeners() {
   Assert.ok(spy1.calledOnce);
   Assert.ok(spy2.calledTwice);
 });
-

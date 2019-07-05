@@ -15,7 +15,10 @@ registerCleanupFunction(async function() {
 
 var showSidebar = async function(win = window) {
   let button = win.document.getElementById("sidebar-button");
-  let sidebarFocusedPromise = BrowserTestUtils.waitForEvent(win.document, "SidebarFocused");
+  let sidebarFocusedPromise = BrowserTestUtils.waitForEvent(
+    win.document,
+    "SidebarFocused"
+  );
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
   await sidebarFocusedPromise;
   ok(win.SidebarUI.isOpen, "Sidebar is opened");
@@ -44,7 +47,11 @@ add_task(async function() {
   await hideSidebar();
   let otherWin = await BrowserTestUtils.openNewBrowserWindow();
   await showSidebar(otherWin);
-  is(otherWin.SidebarUI.currentID, "viewHistorySidebar", "Selected sidebar remembered across windows");
+  is(
+    otherWin.SidebarUI.currentID,
+    "viewHistorySidebar",
+    "Selected sidebar remembered across windows"
+  );
   await hideSidebar(otherWin);
 
   await BrowserTestUtils.closeWindow(otherWin);

@@ -1,12 +1,17 @@
 "use strict";
 
-const {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
+const { ForgetAboutSite } = ChromeUtils.import(
+  "resource://gre/modules/ForgetAboutSite.jsm"
+);
 
 add_task(async function() {
   registerFakePath("ULibDir", do_get_file("Library/"));
   let migrator = await MigrationUtils.getMigrator("chrome");
 
-  Assert.ok(await migrator.isSourceAvailable(), "Sanity check the source exists");
+  Assert.ok(
+    await migrator.isSourceAvailable(),
+    "Sanity check the source exists"
+  );
 
   const COOKIE = {
     expiry: 2145934800,
@@ -19,8 +24,11 @@ add_task(async function() {
   };
 
   // Sanity check.
-  Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 0,
-               "There are no cookies initially");
+  Assert.equal(
+    Services.cookies.countCookiesFromHost(COOKIE.host),
+    0,
+    "There are no cookies initially"
+  );
 
   const PROFILE = {
     id: "Default",
@@ -28,12 +36,22 @@ add_task(async function() {
   };
 
   // Migrate unencrypted cookies.
-  await promiseMigration(migrator, MigrationUtils.resourceTypes.COOKIES, PROFILE);
+  await promiseMigration(
+    migrator,
+    MigrationUtils.resourceTypes.COOKIES,
+    PROFILE
+  );
 
-  Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 1,
-               "Migrated the expected number of unencrypted cookies");
-  Assert.equal(Services.cookies.countCookiesFromHost("encryptedcookie.invalid"), 0,
-               "Migrated the expected number of encrypted cookies");
+  Assert.equal(
+    Services.cookies.countCookiesFromHost(COOKIE.host),
+    1,
+    "Migrated the expected number of unencrypted cookies"
+  );
+  Assert.equal(
+    Services.cookies.countCookiesFromHost("encryptedcookie.invalid"),
+    0,
+    "Migrated the expected number of encrypted cookies"
+  );
 
   // Now check the cookie details.
   let enumerator = Services.cookies.getCookiesFromHost(COOKIE.host, {});
@@ -46,6 +64,9 @@ add_task(async function() {
 
   // Cleanup.
   await ForgetAboutSite.removeDataFromDomain(COOKIE.host);
-  Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 0,
-               "There are no cookies after cleanup");
+  Assert.equal(
+    Services.cookies.countCookiesFromHost(COOKIE.host),
+    0,
+    "There are no cookies after cleanup"
+  );
 });

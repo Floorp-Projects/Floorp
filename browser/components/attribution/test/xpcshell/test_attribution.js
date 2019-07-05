@@ -4,13 +4,16 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AttributionCode } = ChromeUtils.import(
+  "resource:///modules/AttributionCode.jsm"
+);
 
 add_task(async function test_attribution() {
   let appPath = Services.dirsvc.get("GreD", Ci.nsIFile).parent.parent.path;
-  let attributionSvc = Cc["@mozilla.org/mac-attribution;1"]
-                         .getService(Ci.nsIMacAttributionService);
+  let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+    Ci.nsIMacAttributionService
+  );
 
   attributionSvc.setReferrerUrl(appPath, "", true);
   let referrer = attributionSvc.getReferrerUrl(appPath);
@@ -28,5 +31,9 @@ add_task(async function test_attribution() {
   equal(referrer, url, "referrer url is not changed");
 
   let result = await AttributionCode.getAttrDataAsync();
-  Assert.deepEqual(result, {content: "foo", source: "bar"}, "parsed attributes match");
+  Assert.deepEqual(
+    result,
+    { content: "foo", source: "bar" },
+    "parsed attributes match"
+  );
 });

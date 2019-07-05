@@ -5,7 +5,7 @@
 add_task(async function testDisabled() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {},
+      browser_action: {},
     },
 
     background: function() {

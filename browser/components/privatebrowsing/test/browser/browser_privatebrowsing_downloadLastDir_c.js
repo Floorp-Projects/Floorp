@@ -6,10 +6,12 @@
 function test() {
   waitForExplicitFinish();
 
-  let FileUtils =
-    ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
-  let DownloadLastDir =
-    ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm", {}).DownloadLastDir;
+  let FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {})
+    .FileUtils;
+  let DownloadLastDir = ChromeUtils.import(
+    "resource://gre/modules/DownloadLastDir.jsm",
+    {}
+  ).DownloadLastDir;
   let MockFilePicker = SpecialPowers.MockFilePicker;
 
   MockFilePicker.init(window);
@@ -37,7 +39,13 @@ function test() {
   validateFileName = foo => foo;
 
   let params = {
-    fileInfo: new FileInfo("test.txt", "test.txt", "test", "txt", "http://mozilla.org/test.txt"),
+    fileInfo: new FileInfo(
+      "test.txt",
+      "test.txt",
+      "test",
+      "txt",
+      "http://mozilla.org/test.txt"
+    ),
     contentType: "text/plain",
     saveMode: SAVEMODE_FILEONLY,
     saveAsType: kSaveAsType_Complete,
@@ -47,48 +55,91 @@ function test() {
   prefs.setComplexValue("lastDir", Ci.nsIFile, tmpDir);
 
   function testOnWindow(aPrivate, aCallback) {
-    whenNewWindowLoaded({private: aPrivate}, function(win) {
+    whenNewWindowLoaded({ private: aPrivate }, function(win) {
       let gDownloadLastDir = new DownloadLastDir(win);
       aCallback(win, gDownloadLastDir);
     });
   }
 
-  function testDownloadDir(aWin, gDownloadLastDir, aFile, aDisplayDir, aLastDir,
-                           aGlobalLastDir, aCallback) {
+  function testDownloadDir(
+    aWin,
+    gDownloadLastDir,
+    aFile,
+    aDisplayDir,
+    aLastDir,
+    aGlobalLastDir,
+    aCallback
+  ) {
     // Check lastDir preference.
-    is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aDisplayDir.path,
-       "LastDir should be the expected display dir");
+    is(
+      prefs.getComplexValue("lastDir", Ci.nsIFile).path,
+      aDisplayDir.path,
+      "LastDir should be the expected display dir"
+    );
     // Check gDownloadLastDir value.
-    is(gDownloadLastDir.file.path, aDisplayDir.path,
-       "gDownloadLastDir should be the expected display dir");
+    is(
+      gDownloadLastDir.file.path,
+      aDisplayDir.path,
+      "gDownloadLastDir should be the expected display dir"
+    );
 
     MockFilePicker.setFiles([aFile]);
     MockFilePicker.displayDirectory = null;
-    aWin.promiseTargetFile(params).then(function() {
-      // File picker should start with expected display dir.
-      is(MockFilePicker.displayDirectory.path, aDisplayDir.path,
-         "File picker should start with browser.download.lastDir");
-      // browser.download.lastDir should be modified on not private windows
-      is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aLastDir.path,
-         "LastDir should be the expected last dir");
-      // gDownloadLastDir should be usable outside of private windows
-      is(gDownloadLastDir.file.path, aGlobalLastDir.path,
-         "gDownloadLastDir should be the expected global last dir");
+    aWin
+      .promiseTargetFile(params)
+      .then(function() {
+        // File picker should start with expected display dir.
+        is(
+          MockFilePicker.displayDirectory.path,
+          aDisplayDir.path,
+          "File picker should start with browser.download.lastDir"
+        );
+        // browser.download.lastDir should be modified on not private windows
+        is(
+          prefs.getComplexValue("lastDir", Ci.nsIFile).path,
+          aLastDir.path,
+          "LastDir should be the expected last dir"
+        );
+        // gDownloadLastDir should be usable outside of private windows
+        is(
+          gDownloadLastDir.file.path,
+          aGlobalLastDir.path,
+          "gDownloadLastDir should be the expected global last dir"
+        );
 
-      gDownloadLastDir.cleanupPrivateFile();
-      aWin.close();
-      aCallback();
-    }).catch(function() { ok(false); });
+        gDownloadLastDir.cleanupPrivateFile();
+        aWin.close();
+        aCallback();
+      })
+      .catch(function() {
+        ok(false);
+      });
   }
 
   testOnWindow(false, function(win, downloadDir) {
     testDownloadDir(win, downloadDir, file1, tmpDir, dir1, dir1, function() {
       testOnWindow(true, function(win1, downloadDir1) {
-        testDownloadDir(win1, downloadDir1, file2, dir1, dir1, dir2, function() {
-          testOnWindow(false, function(win2, downloadDir2) {
-            testDownloadDir(win2, downloadDir2, file3, dir1, dir3, dir3, finish);
-          });
-        });
+        testDownloadDir(
+          win1,
+          downloadDir1,
+          file2,
+          dir1,
+          dir1,
+          dir2,
+          function() {
+            testOnWindow(false, function(win2, downloadDir2) {
+              testDownloadDir(
+                win2,
+                downloadDir2,
+                file3,
+                dir1,
+                dir3,
+                dir3,
+                finish
+              );
+            });
+          }
+        );
       });
     });
   });

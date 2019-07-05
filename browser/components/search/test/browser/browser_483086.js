@@ -11,8 +11,11 @@ function test() {
       case "engine-added":
         let engine = gSS.getEngineByName("483086a");
         ok(engine, "Test engine 1 installed");
-        isnot(engine.searchForm, "foo://example.com",
-              "Invalid SearchForm URL dropped");
+        isnot(
+          engine.searchForm,
+          "foo://example.com",
+          "Invalid SearchForm URL dropped"
+        );
         gSS.removeEngine(engine);
         break;
       case "engine-removed":
@@ -23,8 +26,11 @@ function test() {
   }
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
-  gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/browser/483086-1.xml",
-                "data:image/x-icon;%00", false);
+  gSS.addEngine(
+    "http://mochi.test:8888/browser/browser/components/search/test/browser/483086-1.xml",
+    "data:image/x-icon;%00",
+    false
+  );
 }
 
 function test2() {
@@ -44,6 +50,9 @@ function test2() {
   }
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
-  gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/browser/483086-2.xml",
-                "data:image/x-icon;%00", false);
+  gSS.addEngine(
+    "http://mochi.test:8888/browser/browser/components/search/test/browser/483086-2.xml",
+    "data:image/x-icon;%00",
+    false
+  );
 }

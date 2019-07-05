@@ -4,19 +4,21 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
-            .Log.repository.getLogger("Sync.RemoteTabs");
+let log = ChromeUtils.import(
+  "resource://gre/modules/Log.jsm",
+  {}
+).Log.repository.getLogger("Sync.RemoteTabs");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
 });
 
-var EXPORTED_SYMBOLS = [
-  "TabListComponent",
-];
+var EXPORTED_SYMBOLS = ["TabListComponent"];
 
 /**
  * TabListComponent
@@ -27,8 +29,14 @@ var EXPORTED_SYMBOLS = [
  * to state changes so it can rerender.
  */
 
-function TabListComponent({window, store, View, SyncedTabs, clipboardHelper,
-                           getChromeWindow}) {
+function TabListComponent({
+  window,
+  store,
+  View,
+  SyncedTabs,
+  clipboardHelper,
+  getChromeWindow,
+}) {
   this._window = window;
   this._store = store;
   this._View = View;
@@ -63,7 +71,7 @@ TabListComponent.prototype = {
     });
 
     this._store.on("change", state => this._view.render(state));
-    this._view.render({clients: []});
+    this._view.render({ clients: [] });
     // get what's already available...
     this._store.getData();
     this._store.focusInput();
@@ -106,8 +114,9 @@ TabListComponent.prototype = {
   },
 
   onBookmarkTab(uri, title) {
-    this._window.top.PlacesCommandHook.bookmarkLink(uri, title)
-                                      .catch(Cu.reportError);
+    this._window.top.PlacesCommandHook.bookmarkLink(uri, title).catch(
+      Cu.reportError
+    );
   },
 
   onOpenTab(url, where, params) {
@@ -119,8 +128,12 @@ TabListComponent.prototype = {
       return;
     }
     if (where == "window") {
-      this._window.openDialog(this._window.AppConstants.BROWSER_CHROME_URL, "_blank",
-                              "chrome,dialog=no,all", urls.join("|"));
+      this._window.openDialog(
+        this._window.AppConstants.BROWSER_CHROME_URL,
+        "_blank",
+        "chrome,dialog=no,all",
+        urls.join("|")
+      );
     } else {
       let loadInBackground = where == "tabshifted";
       this._getChromeWindow(this._window).gBrowser.loadTabs(urls, {

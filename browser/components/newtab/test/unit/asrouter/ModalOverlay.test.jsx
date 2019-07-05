@@ -1,5 +1,5 @@
-import {ModalOverlayWrapper} from "content-src/asrouter/components/ModalOverlay/ModalOverlay";
-import {mount} from "enzyme";
+import { ModalOverlayWrapper } from "content-src/asrouter/components/ModalOverlay/ModalOverlay";
+import { mount } from "enzyme";
 import React from "react";
 
 describe("ModalOverlayWrapper", () => {
@@ -10,7 +10,7 @@ describe("ModalOverlayWrapper", () => {
     fakeDoc = {
       addEventListener: sandbox.stub(),
       removeEventListener: sandbox.stub(),
-      body: {classList: {add: sandbox.stub(), remove: sandbox.stub()}},
+      body: { classList: { add: sandbox.stub(), remove: sandbox.stub() } },
     };
   });
   afterEach(() => {
@@ -36,7 +36,7 @@ describe("ModalOverlayWrapper", () => {
 
     // Simulate onkeydown being called
     const [, callback] = fakeDoc.addEventListener.firstCall.args;
-    callback({key: "Escape"});
+    callback({ key: "Escape" });
 
     assert.calledOnce(onClose);
   });
@@ -47,7 +47,7 @@ describe("ModalOverlayWrapper", () => {
 
     // Simulate onkeydown being called
     const [, callback] = fakeDoc.addEventListener.firstCall.args;
-    callback({key: "Ctrl"});
+    callback({ key: "Ctrl" });
 
     assert.notCalled(onClose);
   });

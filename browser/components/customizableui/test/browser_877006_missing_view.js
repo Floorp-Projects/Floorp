@@ -12,8 +12,7 @@ add_task(function testAddbrokenViewWidget() {
     type: "view",
     viewId: "idontexist",
     /* Empty handler so we try to attach it maybe? */
-    onViewShowing() {
-    },
+    onViewShowing() {},
   };
 
   let noError = true;
@@ -24,7 +23,10 @@ add_task(function testAddbrokenViewWidget() {
     Cu.reportError(ex);
     noError = false;
   }
-  ok(noError, "Should not throw an exception trying to add a broken view widget.");
+  ok(
+    noError,
+    "Should not throw an exception trying to add a broken view widget."
+  );
 
   noError = true;
   try {
@@ -33,7 +35,10 @@ add_task(function testAddbrokenViewWidget() {
     Cu.reportError(ex);
     noError = false;
   }
-  ok(noError, "Should not throw an exception trying to remove the broken view widget.");
+  ok(
+    noError,
+    "Should not throw an exception trying to remove the broken view widget."
+  );
 });
 
 add_task(async function asyncCleanup() {

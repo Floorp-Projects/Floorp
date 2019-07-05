@@ -5,7 +5,7 @@
 
 const PERMISSIONS_URL = "chrome://browser/content/preferences/permissions.xul";
 
-const _checkAndOpenCookiesDialog = async (doc) => {
+const _checkAndOpenCookiesDialog = async doc => {
   let cookieExceptionsButton = doc.getElementById("cookieExceptions");
   ok(cookieExceptionsButton, "cookieExceptionsButton found");
   let dialogPromise = promiseLoadSubDialog(PERMISSIONS_URL);
@@ -23,17 +23,29 @@ const _checkCookiesDialog = (dialog, buttonIds) => {
   for (let buttonId of buttonIds) {
     let buttonDialog = dialog.document.getElementById(buttonId);
     ok(buttonDialog, "blockButtonDialog found");
-    is(buttonDialog.hasAttribute("disabled"), true, "If the user hasn't added an url the button shouldn't be clickable");
+    is(
+      buttonDialog.hasAttribute("disabled"),
+      true,
+      "If the user hasn't added an url the button shouldn't be clickable"
+    );
   }
   return dialog;
 };
 
-const _addWebsiteAddressToPermissionBox = (websiteAddress, dialog, buttonId) => {
+const _addWebsiteAddressToPermissionBox = (
+  websiteAddress,
+  dialog,
+  buttonId
+) => {
   let url = dialog.document.getElementById("url");
   let buttonDialog = dialog.document.getElementById(buttonId);
   url.value = websiteAddress;
-  url.dispatchEvent(new Event("input", {bubbles: true}));
-  is(buttonDialog.hasAttribute("disabled"), false, "When the user add an url the button should be clickable");
+  url.dispatchEvent(new Event("input", { bubbles: true }));
+  is(
+    buttonDialog.hasAttribute("disabled"),
+    false,
+    "When the user add an url the button should be clickable"
+  );
   buttonDialog.click();
   let permissionsBox = dialog.document.getElementById("permissionsBox");
   let children = permissionsBox.getElementsByAttribute("origin", "*");
@@ -48,15 +60,23 @@ const _checkIfPermissionsWereAdded = (dialog, expectedResult) => {
   }
 };
 
-const _removesAllSitesInPermissionBox = (dialog) => {
-  let removeAllWebsitesButton = dialog.document.getElementById("removeAllPermissions");
+const _removesAllSitesInPermissionBox = dialog => {
+  let removeAllWebsitesButton = dialog.document.getElementById(
+    "removeAllPermissions"
+  );
   ok(removeAllWebsitesButton, "removeAllWebsitesButton found");
-  is(removeAllWebsitesButton.hasAttribute("disabled"), false, "There should be websites in the list");
+  is(
+    removeAllWebsitesButton.hasAttribute("disabled"),
+    false,
+    "There should be websites in the list"
+  );
   removeAllWebsitesButton.click();
 };
 
 add_task(async function checkCookiePermissions() {
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
   let win = gBrowser.selectedBrowser.contentWindow;
   let doc = win.document;
   let buttonIds = ["btnBlock", "btnSession", "btnAllow"];
@@ -64,29 +84,33 @@ add_task(async function checkCookiePermissions() {
   let dialog = await _checkAndOpenCookiesDialog(doc);
   _checkCookiesDialog(dialog, buttonIds);
 
-  let tests = [{
-      "inputWebsite": "google.com",
-      "expectedResult": ["http://google.com", "https://google.com"],
+  let tests = [
+    {
+      inputWebsite: "google.com",
+      expectedResult: ["http://google.com", "https://google.com"],
     },
     {
-      "inputWebsite": "https://google.com",
-      "expectedResult": ["https://google.com"],
+      inputWebsite: "https://google.com",
+      expectedResult: ["https://google.com"],
     },
     {
-      "inputWebsite": "http://",
-      "expectedResult": ["http://http", "https://http"],
+      inputWebsite: "http://",
+      expectedResult: ["http://http", "https://http"],
     },
     {
-      "inputWebsite": "s3.eu-central-1.amazonaws.com",
-      "expectedResult": ["http://s3.eu-central-1.amazonaws.com", "https://s3.eu-central-1.amazonaws.com"],
+      inputWebsite: "s3.eu-central-1.amazonaws.com",
+      expectedResult: [
+        "http://s3.eu-central-1.amazonaws.com",
+        "https://s3.eu-central-1.amazonaws.com",
+      ],
     },
     {
-      "inputWebsite": "file://",
-      "expectedResult": ["file:///"],
+      inputWebsite: "file://",
+      expectedResult: ["file:///"],
     },
     {
-      "inputWebsite": "about:config",
-      "expectedResult": ["about:config"],
+      inputWebsite: "about:config",
+      expectedResult: ["about:config"],
     },
   ];
 

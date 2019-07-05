@@ -14,12 +14,11 @@ import RichOption from "./rich-option.js";
  * Note: The only supported way to change the selected option is via the
  *       `value` setter.
  */
-export default class RichSelect extends HandleEventMixin(ObservedPropertiesMixin(HTMLElement)) {
+export default class RichSelect extends HandleEventMixin(
+  ObservedPropertiesMixin(HTMLElement)
+) {
   static get observedAttributes() {
-    return [
-      "disabled",
-      "hidden",
-    ];
+    return ["disabled", "hidden"];
   }
 
   constructor() {
@@ -55,7 +54,9 @@ export default class RichSelect extends HandleEventMixin(ObservedPropertiesMixin
   }
 
   getOptionByValue(value) {
-    return this.popupBox.querySelector(`:scope > [value="${CSS.escape(value)}"]`);
+    return this.popupBox.querySelector(
+      `:scope > [value="${CSS.escape(value)}"]`
+    );
   }
 
   onChange(event) {
@@ -65,7 +66,9 @@ export default class RichSelect extends HandleEventMixin(ObservedPropertiesMixin
   }
 
   render() {
-    let selectedRichOption = this.querySelector(":scope > .rich-select-selected-option");
+    let selectedRichOption = this.querySelector(
+      ":scope > .rich-select-selected-option"
+    );
     if (selectedRichOption) {
       selectedRichOption.remove();
     }

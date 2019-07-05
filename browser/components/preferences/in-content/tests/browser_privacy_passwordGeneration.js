@@ -1,4 +1,6 @@
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 add_task(async function initialState() {
   // check pref permutations to verify the UI opens in the correct state
@@ -43,33 +45,42 @@ add_task(async function initialState() {
 
     // open about:privacy in a tab
     // verify expected conditions
-    await BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: "about:preferences#privacy",
-    }, async function(browser) {
-      let doc = browser.contentDocument;
-      let checkbox = doc.getElementById("generatePasswords");
-      doc.getElementById("passwordSettings").scrollIntoView();
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:preferences#privacy",
+      },
+      async function(browser) {
+        let doc = browser.contentDocument;
+        let checkbox = doc.getElementById("generatePasswords");
+        doc.getElementById("passwordSettings").scrollIntoView();
 
-      info("initialState, assert on expected state:" + test.expected);
-      switch (test.expected) {
-        case "hidden":
-          is_element_hidden(checkbox, "#generatePasswords checkbox is hidden");
-          break;
-        case "checked":
-          is_element_visible(checkbox, "#generatePasswords checkbox is visible");
-          ok(checkbox.checked, "#generatePasswords checkbox is checked");
-          break;
-        case "unchecked":
-          ok(!checkbox.checked, "#generatePasswords checkbox is un-checked");
-          break;
-        case "disabled":
-          ok(checkbox.disabled, "#generatePasswords checkbox is disabled");
-          break;
-        default:
-          ok(false, "Unknown expected state: " + test.expected);
+        info("initialState, assert on expected state:" + test.expected);
+        switch (test.expected) {
+          case "hidden":
+            is_element_hidden(
+              checkbox,
+              "#generatePasswords checkbox is hidden"
+            );
+            break;
+          case "checked":
+            is_element_visible(
+              checkbox,
+              "#generatePasswords checkbox is visible"
+            );
+            ok(checkbox.checked, "#generatePasswords checkbox is checked");
+            break;
+          case "unchecked":
+            ok(!checkbox.checked, "#generatePasswords checkbox is un-checked");
+            break;
+          case "disabled":
+            ok(checkbox.disabled, "#generatePasswords checkbox is disabled");
+            break;
+          default:
+            ok(false, "Unknown expected state: " + test.expected);
+        }
       }
-    });
+    );
     await SpecialPowers.popPrefEnv();
   }
 });
@@ -84,28 +95,36 @@ add_task(async function toggleGenerationEnabled() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:preferences#privacy",
-  }, async function(browser) {
-    let doc = browser.contentDocument;
-    let checkbox = doc.getElementById("generatePasswords");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:preferences#privacy",
+    },
+    async function(browser) {
+      let doc = browser.contentDocument;
+      let checkbox = doc.getElementById("generatePasswords");
 
-    info("waiting for the browser to have focus");
-    await SimpleTest.promiseFocus(browser);
-    let prefChanged = TestUtils.waitForPrefChange("signon.generation.enabled");
+      info("waiting for the browser to have focus");
+      await SimpleTest.promiseFocus(browser);
+      let prefChanged = TestUtils.waitForPrefChange(
+        "signon.generation.enabled"
+      );
 
-    // the preferences "Search" bar obscures the checkbox if we scrollIntoView and try to click on it
-    // so use keyboard events instead
-    checkbox.focus();
-    is(doc.activeElement, checkbox, "checkbox is focused");
-    EventUtils.synthesizeKey(" ");
+      // the preferences "Search" bar obscures the checkbox if we scrollIntoView and try to click on it
+      // so use keyboard events instead
+      checkbox.focus();
+      is(doc.activeElement, checkbox, "checkbox is focused");
+      EventUtils.synthesizeKey(" ");
 
-    info("waiting for pref to change");
-    await prefChanged;
-    ok(checkbox.checked, "#generatePasswords checkbox is checked");
-    ok(Services.prefs.getBoolPref("signon.generation.enabled"), "enabled pref is now true");
-  });
+      info("waiting for pref to change");
+      await prefChanged;
+      ok(checkbox.checked, "#generatePasswords checkbox is checked");
+      ok(
+        Services.prefs.getBoolPref("signon.generation.enabled"),
+        "enabled pref is now true"
+      );
+    }
+  );
   await SpecialPowers.popPrefEnv();
 });
 
@@ -119,31 +138,36 @@ add_task(async function toggleRememberSignon() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "about:preferences#privacy",
-  }, async function(browser) {
-    let doc = browser.contentDocument;
-    let checkbox = doc.getElementById("savePasswords");
-    let generationCheckbox = doc.getElementById("generatePasswords");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:preferences#privacy",
+    },
+    async function(browser) {
+      let doc = browser.contentDocument;
+      let checkbox = doc.getElementById("savePasswords");
+      let generationCheckbox = doc.getElementById("generatePasswords");
 
-    ok(!generationCheckbox.disabled, "generation checkbox is not initially disabled");
+      ok(
+        !generationCheckbox.disabled,
+        "generation checkbox is not initially disabled"
+      );
 
-    info("waiting for the browser to have focus");
-    await SimpleTest.promiseFocus(browser);
-    let prefChanged = TestUtils.waitForPrefChange("signon.rememberSignons");
+      info("waiting for the browser to have focus");
+      await SimpleTest.promiseFocus(browser);
+      let prefChanged = TestUtils.waitForPrefChange("signon.rememberSignons");
 
-    // the preferences "Search" bar obscures the checkbox if we scrollIntoView and try to click on it
-    // so use keyboard events instead
-    checkbox.focus();
-    is(doc.activeElement, checkbox, "checkbox is focused");
-    EventUtils.synthesizeKey(" ");
+      // the preferences "Search" bar obscures the checkbox if we scrollIntoView and try to click on it
+      // so use keyboard events instead
+      checkbox.focus();
+      is(doc.activeElement, checkbox, "checkbox is focused");
+      EventUtils.synthesizeKey(" ");
 
-    info("waiting for pref to change");
-    await prefChanged;
-    ok(!checkbox.checked, "#savePasswords checkbox is un-checked");
-    ok(generationCheckbox.disabled, "generation checkbox becomes disabled");
-  });
+      info("waiting for pref to change");
+      await prefChanged;
+      ok(!checkbox.checked, "#savePasswords checkbox is un-checked");
+      ok(generationCheckbox.disabled, "generation checkbox becomes disabled");
+    }
+  );
   await SpecialPowers.popPrefEnv();
 });
-
