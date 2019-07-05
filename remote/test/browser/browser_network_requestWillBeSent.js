@@ -6,13 +6,15 @@
 // Test the Network.requestWillBeSent event
 
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-const PAGE_URI = "http://example.com/browser/remote/test/browser/doc_network_requestWillBeSent.html";
-const JS_URI = "http://example.com/browser/remote/test/browser/file_network_requestWillBeSent.js";
+const PAGE_URI =
+  "http://example.com/browser/remote/test/browser/doc_network_requestWillBeSent.html";
+const JS_URI =
+  "http://example.com/browser/remote/test/browser/file_network_requestWillBeSent.js";
 
 add_task(async function() {
-  const {client} = await setupTestForUri(TEST_URI);
+  const { client } = await setupTestForUri(TEST_URI);
 
-  const {Page, Network} = client;
+  const { Page, Network } = client;
 
   await Network.enable();
   ok(true, "Network domain has been enabled");
@@ -25,7 +27,11 @@ add_task(async function() {
         case 1:
           is(event.request.url, PAGE_URI, "Got the page request");
           is(event.type, "Document", "The page request has 'Document' type");
-          is(event.requestId, event.loaderId, "The page request has requestId = loaderId (puppeteer assumes that to detect the page start request)");
+          is(
+            event.requestId,
+            event.loaderId,
+            "The page request has requestId = loaderId (puppeteer assumes that to detect the page start request)"
+          );
           break;
         case 2:
           is(event.request.url, JS_URI, "Got the JS request");

@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["Performance"];
 
-const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/domains/ContentProcessDomain.jsm"
+);
 
 class Performance extends ContentProcessDomain {
   constructor(session) {

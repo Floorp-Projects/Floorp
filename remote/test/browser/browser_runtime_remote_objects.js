@@ -8,7 +8,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
 add_task(async function() {
-  const {client} = await setupTestForUri(TEST_URI);
+  const { client } = await setupTestForUri(TEST_URI);
 
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;
@@ -38,7 +38,10 @@ async function testRuntimeEnable({ Runtime }) {
 }
 
 async function testObjectRelease({ Runtime }, contextId) {
-  const { result } = await Runtime.evaluate({ contextId, expression: "({ foo: 42 })" });
+  const { result } = await Runtime.evaluate({
+    contextId,
+    expression: "({ foo: 42 })",
+  });
   is(result.subtype, null, "JS Object have no subtype");
   is(result.type, "object", "The type is correct");
   ok(!!result.objectId, "Got an object id");
@@ -71,7 +74,10 @@ async function testObjectRelease({ Runtime }, contextId) {
     });
     ok(false, "callFunctionOn with a released object as argument should throw");
   } catch (e) {
-    ok(e.message.includes("Cannot find object with ID:"), "callFunctionOn throws on released argument");
+    ok(
+      e.message.includes("Cannot find object with ID:"),
+      "callFunctionOn throws on released argument"
+    );
   }
   try {
     await Runtime.callFunctionOn({
@@ -80,6 +86,9 @@ async function testObjectRelease({ Runtime }, contextId) {
     });
     ok(false, "callFunctionOn with a released object as target should throw");
   } catch (e) {
-    ok(e.message.includes("Unable to get the context for object with id"), "callFunctionOn throws on released target");
+    ok(
+      e.message.includes("Unable to get the context for object with id"),
+      "callFunctionOn throws on released target"
+    );
   }
 }

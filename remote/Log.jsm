@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const {Log: StdLog} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log: StdLog } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const LOG_LEVEL = "remote.log.level";
 
