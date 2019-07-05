@@ -21,14 +21,17 @@ add_task(async function() {
     manifest: {
       name: "Test disabling hidden add-ons, non-hidden add-on case.",
       version: "1.0",
-      applications: {gecko: {id: NORMAL_ID}},
+      applications: { gecko: { id: NORMAL_ID } },
     },
   });
 
   let addon = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon, null);
   Assert.equal(addon.version, "1.0");
-  Assert.equal(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
+  Assert.equal(
+    addon.name,
+    "Test disabling hidden add-ons, non-hidden add-on case."
+  );
   Assert.ok(addon.isCompatible);
   Assert.ok(!addon.appDisabled);
   Assert.ok(!addon.userDisabled);
@@ -40,7 +43,10 @@ add_task(async function() {
 
   Assert.notEqual(addon, null);
   Assert.equal(addon.version, "1.0");
-  Assert.equal(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
+  Assert.equal(
+    addon.name,
+    "Test disabling hidden add-ons, non-hidden add-on case."
+  );
   Assert.ok(addon.isCompatible);
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.userDisabled);
@@ -58,18 +64,21 @@ add_task(async function() {
     manifest: {
       name: "Test disabling hidden add-ons, hidden system add-on case.",
       version: "1.0",
-      applications: {gecko: {id: SYSTEM_ID}},
+      applications: { gecko: { id: SYSTEM_ID } },
     },
   });
   xpi.copyTo(distroDir, `${SYSTEM_ID}.xpi`);
-  await overrideBuiltIns({ "system": [SYSTEM_ID] });
+  await overrideBuiltIns({ system: [SYSTEM_ID] });
 
   await promiseStartupManager();
 
   let addon = await promiseAddonByID(SYSTEM_ID);
   Assert.notEqual(addon, null);
   Assert.equal(addon.version, "1.0");
-  Assert.equal(addon.name, "Test disabling hidden add-ons, hidden system add-on case.");
+  Assert.equal(
+    addon.name,
+    "Test disabling hidden add-ons, hidden system add-on case."
+  );
   Assert.ok(addon.isCompatible);
   Assert.ok(!addon.appDisabled);
   Assert.ok(!addon.userDisabled);
@@ -77,9 +86,11 @@ add_task(async function() {
   Assert.equal(addon.type, "extension");
 
   // system add-ons cannot be disabled by the user.
-  await Assert.rejects(addon.disable(),
-                       err => err.message == `Cannot disable system add-on ${SYSTEM_ID}`,
-                       "disable() on a hidden add-on should fail");
+  await Assert.rejects(
+    addon.disable(),
+    err => err.message == `Cannot disable system add-on ${SYSTEM_ID}`,
+    "disable() on a hidden add-on should fail"
+  );
 
   Assert.ok(!addon.userDisabled);
   Assert.ok(addon.isActive);

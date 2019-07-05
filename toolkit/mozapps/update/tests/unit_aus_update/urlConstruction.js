@@ -17,10 +17,10 @@ async function run_test() {
   let url = URL_PREFIX;
   debugDump("testing url force param is present: " + url);
   setUpdateURL(url);
-  await waitForUpdateCheck(false, {url: url + "?force=1"});
+  await waitForUpdateCheck(false, { url: url + "?force=1" });
   url = URL_PREFIX + "?testparam=1";
   debugDump("testing url force param when there is already a param: " + url);
   setUpdateURL(url);
-  await waitForUpdateCheck(false, {url: url + "&force=1"});
+  await waitForUpdateCheck(false, { url: url + "&force=1" });
   doTestFinish();
 }

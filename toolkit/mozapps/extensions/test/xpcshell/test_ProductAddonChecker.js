@@ -1,30 +1,46 @@
 "use strict";
 
-const {ProductAddonChecker} = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+const { ProductAddonChecker } = ChromeUtils.import(
+  "resource://gre/modules/addons/ProductAddonChecker.jsm"
+);
 
-const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath");
+const LocalFile = new Components.Constructor(
+  "@mozilla.org/file/local;1",
+  Ci.nsIFile,
+  "initWithPath"
+);
 
 Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
 
 var testserver = new HttpServer();
 testserver.registerDirectory("/data/", do_get_file("data/productaddons"));
 testserver.start();
-var root = testserver.identity.primaryScheme + "://" +
-           testserver.identity.primaryHost + ":" +
-           testserver.identity.primaryPort + "/data/";
+var root =
+  testserver.identity.primaryScheme +
+  "://" +
+  testserver.identity.primaryHost +
+  ":" +
+  testserver.identity.primaryPort +
+  "/data/";
 
 /**
  * Compares binary data of 2 arrays and returns true if they are the same
  *
  * @param arr1 The first array to compare
  * @param arr2 The second array to compare
-*/
+ */
 function compareBinaryData(arr1, arr2) {
   Assert.equal(arr1.length, arr2.length);
   for (let i = 0; i < arr1.length; i++) {
     if (arr1[i] != arr2[i]) {
-      info("Data differs at index " + i +
-           ", arr1: " + arr1[i] + ", arr2: " + arr2[i]);
+      info(
+        "Data differs at index " +
+          i +
+          ", arr1: " +
+          arr1[i] +
+          ", arr2: " +
+          arr2[i]
+      );
       return false;
     }
   }
@@ -36,15 +52,17 @@ function compareBinaryData(arr1, arr2) {
  *
  * @param file The file to read the data from
  * @return array of bytes for the data in the file.
-*/
+ */
 function getBinaryFileData(file) {
-  let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
+  let fileStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   // Open as RD_ONLY with default permissions.
   fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
 
-  let stream = Cc["@mozilla.org/binaryinputstream;1"].
-               createInstance(Ci.nsIBinaryInputStream);
+  let stream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   stream.setInputStream(fileStream);
   let bytes = stream.readByteArray(stream.available());
   fileStream.close();
@@ -56,7 +74,7 @@ function getBinaryFileData(file) {
  *
  * @param file1 The first file to compare
  * @param file2 The second file to compare
-*/
+ */
 function compareFiles(file1, file2) {
   return compareBinaryData(getBinaryFileData(file1), getBinaryFileData(file2));
 }
@@ -82,7 +100,9 @@ add_task(async function test_wrong_xml() {
 });
 
 add_task(async function test_missing() {
-  let addons = await ProductAddonChecker.getProductAddonList(root + "missing.xml");
+  let addons = await ProductAddonChecker.getProductAddonList(
+    root + "missing.xml"
+  );
   Assert.equal(addons, null);
 });
 
@@ -147,7 +167,10 @@ add_task(async function test_download_nourl() {
     await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a missing url");
   } catch (e) {
-    Assert.ok(true, "Should have thrown when downloading a file with a missing url.");
+    Assert.ok(
+      true,
+      "Should have thrown when downloading a file with a missing url."
+    );
   }
 });
 
@@ -173,7 +196,12 @@ add_task(async function test_download_noverify() {
   Assert.ok(!stat.isDir);
   Assert.equal(stat.size, 452);
 
-  Assert.ok(compareFiles(do_get_file("data/productaddons/unsigned.xpi"), new LocalFile(path)));
+  Assert.ok(
+    compareFiles(
+      do_get_file("data/productaddons/unsigned.xpi"),
+      new LocalFile(path)
+    )
+  );
 
   await OS.File.remove(path);
 });
@@ -188,7 +216,10 @@ add_task(async function test_download_badsize() {
     await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad size");
   } catch (e) {
-    Assert.ok(true, "Should have thrown when downloading a file with a bad size.");
+    Assert.ok(
+      true,
+      "Should have thrown when downloading a file with a bad size."
+    );
   }
 });
 
@@ -197,13 +228,17 @@ add_task(async function test_download_badhashfn() {
     let path = await ProductAddonChecker.downloadAddon({
       URL: root + "unsigned.xpi",
       hashFunction: "sha2567",
-      hashValue: "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
+      hashValue:
+        "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
     });
 
     await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad hash function");
   } catch (e) {
-    Assert.ok(true, "Should have thrown when downloading a file with a bad hash function.");
+    Assert.ok(
+      true,
+      "Should have thrown when downloading a file with a bad hash function."
+    );
   }
 });
 
@@ -212,13 +247,17 @@ add_task(async function test_download_badhash() {
     let path = await ProductAddonChecker.downloadAddon({
       URL: root + "unsigned.xpi",
       hashFunction: "sha256",
-      hashValue: "8b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
+      hashValue:
+        "8b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
     });
 
     await OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad hash");
   } catch (e) {
-    Assert.ok(true, "Should have thrown when downloading a file with a bad hash.");
+    Assert.ok(
+      true,
+      "Should have thrown when downloading a file with a bad hash."
+    );
   }
 });
 
@@ -227,13 +266,19 @@ add_task(async function test_download_works() {
     URL: root + "unsigned.xpi",
     size: 452,
     hashFunction: "sha256",
-    hashValue: "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
+    hashValue:
+      "9b9abf7ddfc1a6d7ffc7e0247481dcc202363e4445ad3494fb22036f1698c7f3",
   });
 
   let stat = await OS.File.stat(path);
   Assert.ok(!stat.isDir);
 
-  Assert.ok(compareFiles(do_get_file("data/productaddons/unsigned.xpi"), new LocalFile(path)));
+  Assert.ok(
+    compareFiles(
+      do_get_file("data/productaddons/unsigned.xpi"),
+      new LocalFile(path)
+    )
+  );
 
   await OS.File.remove(path);
 });

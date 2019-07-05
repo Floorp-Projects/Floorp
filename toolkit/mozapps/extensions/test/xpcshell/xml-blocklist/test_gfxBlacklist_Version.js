@@ -6,15 +6,18 @@
 // successfully blocked.
 // Uses test_gfxBlacklist_AllOS.xml
 
-var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var gTestserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 gPort = gTestserver.identity.primaryPort;
 gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
-                             gPort + "/data/" + file);
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(Ci.nsITimerCallback);
+  Services.prefs.setCharPref(
+    "extensions.blocklist.url",
+    "http://localhost:" + gPort + "/data/" + file
+  );
+  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(
+    Ci.nsITimerCallback
+  );
   blocklist.notify(null);
 }
 
@@ -65,19 +68,31 @@ async function run_test() {
     var failureId = {};
     var status;
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DIRECT2D,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_g1");
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_g2");
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_10_LAYERS, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DIRECT3D_10_LAYERS,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     Assert.equal(failureId.value, "");
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_10_1_LAYERS, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DIRECT3D_10_1_LAYERS,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     Assert.equal(failureId.value, "");
 
@@ -86,11 +101,17 @@ async function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_g11");
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
 
@@ -98,31 +119,58 @@ async function run_test() {
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_STAGEFRIGHT, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_STAGEFRIGHT,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_LAYERS, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_LAYERS,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_ANGLE, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_ANGLE,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DX_INTEROP2, failureId);
+    status = gfxInfo.getFeatureStatus(
+      Ci.nsIGfxInfo.FEATURE_DX_INTEROP2,
+      failureId
+    );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     do_test_finished();

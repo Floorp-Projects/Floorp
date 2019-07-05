@@ -54,7 +54,7 @@ add_task(async function setup() {
     manifest: {
       name: "Mozilla Corp.",
       version: "1.0",
-      applications: {gecko: {id: "block1@tests.mozilla.org"}},
+      applications: { gecko: { id: "block1@tests.mozilla.org" } },
     },
   });
 
@@ -89,9 +89,11 @@ add_task(async function setup() {
     },
   });
 
-  let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                                                        "block2@tests.mozilla.org",
-                                                        "block3@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([
+    "block1@tests.mozilla.org",
+    "block2@tests.mozilla.org",
+    "block3@tests.mozilla.org",
+  ]);
   Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -100,9 +102,11 @@ add_task(async function setup() {
 add_task(async function test_blocks() {
   await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA);
 
-  let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                                                        "block2@tests.mozilla.org",
-                                                        "block3@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([
+    "block1@tests.mozilla.org",
+    "block2@tests.mozilla.org",
+    "block3@tests.mozilla.org",
+  ]);
   Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
   Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);

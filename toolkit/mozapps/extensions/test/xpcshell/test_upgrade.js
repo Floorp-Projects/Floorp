@@ -8,9 +8,10 @@
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
 // Enable loading extensions from the application scope
-Services.prefs.setIntPref("extensions.enabledScopes",
-                          AddonManager.SCOPE_PROFILE +
-                          AddonManager.SCOPE_APPLICATION);
+Services.prefs.setIntPref(
+  "extensions.enabledScopes",
+  AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
+);
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
@@ -33,27 +34,27 @@ add_task(async function setup() {
   // Will be compatible in the first version and incompatible in subsequent versions
   let xpi = await createAddon({
     id: ID1,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    targetPlatforms: [
-      {os: "XPCShell"},
-      {os: "WINNT_x86"},
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1",
+      },
     ],
+    targetPlatforms: [{ os: "XPCShell" }, { os: "WINNT_x86" }],
   });
   await manuallyInstall(xpi, profileDir, ID1);
-
 
   // Works in all tested versions
   xpi = await createAddon({
     id: ID2,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "2",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "2",
+      },
+    ],
     targetPlatforms: [
       {
         os: "XPCShell",
@@ -66,11 +67,13 @@ add_task(async function setup() {
   // Will be disabled in the first version and enabled in the second.
   xpi = createAddon({
     id: ID3,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "2",
-      maxVersion: "2",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "2",
+        maxVersion: "2",
+      },
+    ],
   });
   await manuallyInstall(xpi, profileDir, ID3);
 
@@ -78,11 +81,13 @@ add_task(async function setup() {
   xpi = await createAddon({
     id: ID4,
     version: "1.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1",
+      },
+    ],
   });
   await manuallyInstall(xpi, globalDir, ID4);
   await promiseSetExtensionModifiedTime(PATH4, gInstallTime);
@@ -124,11 +129,13 @@ add_task(async function test_2() {
   let xpi = createAddon({
     id: ID4,
     version: "2.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "2",
-      maxVersion: "2",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "2",
+        maxVersion: "2",
+      },
+    ],
   });
   await manuallyInstall(xpi, globalDir, ID4);
   await promiseSetExtensionModifiedTime(PATH4, gInstallTime);
@@ -157,11 +164,13 @@ add_task(async function test_3() {
   let xpi = createAddon({
     id: ID4,
     version: "3.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "3",
-      maxVersion: "3",
-    }],
+    targetApplications: [
+      {
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "3",
+        maxVersion: "3",
+      },
+    ],
   });
   await manuallyInstall(xpi, globalDir, ID4);
   await promiseSetExtensionModifiedTime(PATH4, gInstallTime);
@@ -187,4 +196,3 @@ add_task(async function test_3() {
 
   await promiseShutdownManager();
 });
-

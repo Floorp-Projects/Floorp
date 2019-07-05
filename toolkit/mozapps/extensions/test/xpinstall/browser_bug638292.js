@@ -1,21 +1,31 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.enabled is working
 add_task(async function() {
-  let testtab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "bug638292.html");
+  let testtab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TESTROOT + "bug638292.html"
+  );
 
   async function verify(link, button) {
     info("Clicking " + link);
 
     let loadedPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-    await BrowserTestUtils.synthesizeMouseAtCenter("#" + link, { button },
-                                                   gBrowser.selectedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + link,
+      { button },
+      gBrowser.selectedBrowser
+    );
 
     let newtab = await loadedPromise;
 
-    let result = await ContentTask.spawn(newtab.linkedBrowser, { }, async function() {
-      return (content.document.getElementById("enabled").textContent == "true");
-    });
+    let result = await ContentTask.spawn(
+      newtab.linkedBrowser,
+      {},
+      async function() {
+        return content.document.getElementById("enabled").textContent == "true";
+      }
+    );
 
     ok(result, "installTrigger for " + link + " should have been enabled");
 
@@ -32,5 +42,3 @@ add_task(async function() {
 
   gBrowser.removeCurrentTab();
 });
-
-

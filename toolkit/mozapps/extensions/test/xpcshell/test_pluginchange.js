@@ -2,11 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const LIST_UPDATED_TOPIC     = "plugins-list-updated";
+const LIST_UPDATED_TOPIC = "plugins-list-updated";
 
 class PluginTag extends MockPluginTag {
   constructor(name, description) {
-    super({name, description, version: "1.0"});
+    super({ name, description, version: "1.0" });
     this.description = description;
   }
 }
@@ -89,19 +89,17 @@ async function run_test_3() {
   PLUGINS.push(tag);
   let id = tag.name + tag.description;
 
-  await expectEvents({
-    addonEvents: {
-      [id]: [
-        {event: "onInstalling"},
-        {event: "onInstalled"},
-      ],
+  await expectEvents(
+    {
+      addonEvents: {
+        [id]: [{ event: "onInstalling" }, { event: "onInstalled" }],
+      },
+      installEvents: [{ event: "onExternalInstall" }],
     },
-    installEvents: [
-      {event: "onExternalInstall"},
-    ],
-  }, async () => {
-    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-  });
+    async () => {
+      Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+    }
+  );
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -123,16 +121,16 @@ async function run_test_4() {
   let tag = PLUGINS.splice(1, 1)[0];
   let id = tag.name + tag.description;
 
-  await expectEvents({
-    addonEvents: {
-      [id]: [
-        {event: "onUninstalling"},
-        {event: "onUninstalled"},
-      ],
+  await expectEvents(
+    {
+      addonEvents: {
+        [id]: [{ event: "onUninstalling" }, { event: "onUninstalled" }],
+      },
     },
-  }, async () => {
-    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-  });
+    async () => {
+      Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+    }
+  );
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -173,23 +171,24 @@ async function run_test_6() {
   newTag.disabled = true;
   PLUGINS.push(newTag);
 
-  await expectEvents({
-    addonEvents: {
-      [oldTag.name + oldTag.description]: [
-        {event: "onUninstalling"},
-        {event: "onUninstalled"},
-      ],
-      [newTag.name + newTag.description]: [
-        {event: "onInstalling"},
-        {event: "onInstalled"},
-      ],
+  await expectEvents(
+    {
+      addonEvents: {
+        [oldTag.name + oldTag.description]: [
+          { event: "onUninstalling" },
+          { event: "onUninstalled" },
+        ],
+        [newTag.name + newTag.description]: [
+          { event: "onInstalling" },
+          { event: "onInstalled" },
+        ],
+      },
+      installEvents: [{ event: "onExternalInstall" }],
     },
-    installEvents: [
-      {event: "onExternalInstall"},
-    ],
-  }, async () => {
-    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-  });
+    async () => {
+      Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+    }
+  );
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);
@@ -211,20 +210,23 @@ async function run_test_7() {
   PLUGINS[0].disabled = true;
   PLUGINS[1] = new PluginTag("Flash 2", "A new crash-free Flash!");
 
-  await expectEvents({
-    addonEvents: {
-      [PLUGINS[0].name + PLUGINS[0].description]: [
-        {event: "onDisabling"},
-        {event: "onDisabled"},
-      ],
-      [PLUGINS[1].name + PLUGINS[1].description]: [
-        {event: "onEnabling"},
-        {event: "onEnabled"},
-      ],
+  await expectEvents(
+    {
+      addonEvents: {
+        [PLUGINS[0].name + PLUGINS[0].description]: [
+          { event: "onDisabling" },
+          { event: "onDisabled" },
+        ],
+        [PLUGINS[1].name + PLUGINS[1].description]: [
+          { event: "onEnabling" },
+          { event: "onEnabled" },
+        ],
+      },
     },
-  }, async () => {
-    Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
-  });
+    async () => {
+      Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
+    }
+  );
 
   let addons = await AddonManager.getAddonsByTypes(["plugin"]);
   sortAddons(addons);

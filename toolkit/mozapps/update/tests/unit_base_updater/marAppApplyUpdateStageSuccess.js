@@ -31,20 +31,19 @@ async function run_test() {
   checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   let updatesDir = getUpdateDirFile(DIR_PATCH);
-  Assert.ok(updatesDir.exists(),
-            MSG_SHOULD_EXIST + getMsgPath(updatesDir.path));
+  Assert.ok(
+    updatesDir.exists(),
+    MSG_SHOULD_EXIST + getMsgPath(updatesDir.path)
+  );
 
   let log = getUpdateDirFile(FILE_UPDATE_LOG);
-  Assert.ok(!log.exists(),
-            MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
   log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
-  Assert.ok(log.exists(),
-            MSG_SHOULD_EXIST + getMsgPath(log.path));
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST + getMsgPath(log.path));
 
   log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
-  Assert.ok(log.exists(),
-            MSG_SHOULD_EXIST + getMsgPath(log.path));
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST + getMsgPath(log.path));
 
   waitForFilesInUse();
 }

@@ -23,8 +23,7 @@ function promiseWriteWebExtension(path, data) {
 function promiseWritePointer(aId, aName) {
   let path = OS.Path.join(profileDir.path, aName || aId);
 
-  let target = OS.Path.join(sourceDir.path,
-                            do_get_expected_addon_name(aId));
+  let target = OS.Path.join(sourceDir.path, do_get_expected_addon_name(aId));
 
   return OS.File.writeAtomic(path, new TextEncoder().encode(target));
 }
@@ -56,7 +55,7 @@ add_task(async function test_new_pointer_install() {
   await promiseWriteWebExtension(target, {
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
   await promiseWritePointer(ID1);
@@ -83,11 +82,14 @@ add_task(async function test_addon_over_pointer() {
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
 
-  let install = await AddonManager.getInstallForFile(xpi, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForFile(
+    xpi,
+    "application/x-xpinstall"
+  );
   await install.install();
 
   let addon = await AddonManager.getAddonByID(ID1);
@@ -98,7 +100,7 @@ add_task(async function test_addon_over_pointer() {
   if (url instanceof Ci.nsIJARURI) {
     url = url.JARFile;
   }
-  let {file} = url.QueryInterface(Ci.nsIFileURL);
+  let { file } = url.QueryInterface(Ci.nsIFileURL);
   equal(file.parent.path, profileDir.path);
 
   let rootUri = do_get_addon_root_uri(profileDir, ID1);
@@ -162,7 +164,7 @@ add_task(async function test_bad_pointer_id() {
   await promiseWriteWebExtension(dir.path, {
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: ID2}},
+      applications: { gecko: { id: ID2 } },
     },
   });
   setExtensionModifiedTime(dir, dir.lastModifiedTime - 5000);
@@ -190,7 +192,7 @@ add_task(async function test_remove_pointer() {
   await promiseWriteWebExtension(dir.path, {
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
 
@@ -229,7 +231,7 @@ add_task(async function test_replace_pointer() {
   await promiseWriteWebExtension(OS.Path.join(profileDir.path, ID1), {
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
 
@@ -256,7 +258,7 @@ add_task(async function test_change_pointer_sources() {
   await promiseWriteWebExtension(dir.path, {
     manifest: {
       version: "2.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
   setExtensionModifiedTime(dir, dir.lastModifiedTime - 5000);
@@ -276,7 +278,7 @@ add_task(async function test_remove_pointer_target() {
   await promiseWriteWebExtension(target, {
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
   await promiseWritePointer(ID1);
@@ -298,14 +300,13 @@ add_task(async function test_remove_pointer_target() {
   ok(!pointer.exists());
 });
 
-
 // Tests that installing a new add-on by pointer with a relative path works
 add_task(async function test_new_relative_pointer() {
   let target = OS.Path.join(sourceDir.path, ID1);
   await promiseWriteWebExtension(target, {
     manifest: {
       version: "1.0",
-      applications: {gecko: {id: ID1}},
+      applications: { gecko: { id: ID1 } },
     },
   });
   await promiseWriteRelativePointer(ID1);
@@ -314,7 +315,7 @@ add_task(async function test_new_relative_pointer() {
   let addon = await AddonManager.getAddonByID(ID1);
   equal(addon.version, "1.0");
 
-  let {file} = addon.getResourceURI().QueryInterface(Ci.nsIFileURL);
+  let { file } = addon.getResourceURI().QueryInterface(Ci.nsIFileURL);
   equal(file.parent.path, sourceDir.path);
 
   let rootUri = do_get_addon_root_uri(sourceDir, ID1);

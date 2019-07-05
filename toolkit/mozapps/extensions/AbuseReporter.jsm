@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [ "AbuseReporter", "AbuseReportError" ];
+const EXPORTED_SYMBOLS = ["AbuseReporter", "AbuseReportError"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 Cu.importGlobalProperties(["fetch"]);
 
-const PREF_ABUSE_REPORT_URL  = "extensions.abuseReport.url";
+const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";
 
 // Maximum length of the string properties sent to the API endpoint.
 const MAX_STRING_LENGTH = 255;
@@ -24,7 +26,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "ABUSE_REPORT_URL", PREF_ABUSE_REPORT_URL);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "ABUSE_REPORT_URL",
+  PREF_ABUSE_REPORT_URL
+);
 
 const PRIVATE_REPORT_PROPS = Symbol("privateReportProps");
 
@@ -44,8 +50,7 @@ class AbuseReportError extends Error {
       throw new Error(`Unknown AbuseReportError type "${errorType}"`);
     }
 
-    let message = errorInfo ?
-      `${errorType} - ${errorInfo}` : errorType;
+    let message = errorInfo ? `${errorType} - ${errorInfo}` : errorType;
 
     super(message);
     this.name = "AbuseReportError";
@@ -93,7 +98,7 @@ const AbuseReporter = {
    *          An instance of the AbuseReport class, which represent an ongoing
    *          report.
    */
-  async createAbuseReport(addonId, {reportEntryPoint} = {}) {
+  async createAbuseReport(addonId, { reportEntryPoint } = {}) {
     const addon = await AddonManager.getAddonByID(addonId);
 
     if (!addon) {
@@ -128,7 +133,7 @@ const AbuseReporter = {
    *         An object that contains the collected details.
    */
   async getReportData(addon) {
-    const truncateString = (text) =>
+    const truncateString = text =>
       typeof text == "string" ? text.slice(0, MAX_STRING_LENGTH) : text;
 
     const data = {
@@ -136,7 +141,8 @@ const AbuseReporter = {
       addon_version: addon.version,
       addon_name: truncateString(addon.name),
       addon_summary: truncateString(addon.description),
-      addon_install_origin: addon.sourceURI && truncateString(addon.sourceURI.spec),
+      addon_install_origin:
+        addon.sourceURI && truncateString(addon.sourceURI.spec),
       install_date: addon.installDate && addon.installDate.toISOString(),
     };
 
@@ -145,7 +151,7 @@ const AbuseReporter = {
     // https://addons-server.readthedocs.io/en/latest/topics/api/abuse.html).
     let install_method = "other";
     if (addon.installTelemetryInfo) {
-      const {source, method} = addon.installTelemetryInfo;
+      const { source, method } = addon.installTelemetryInfo;
       switch (source) {
         case "enterprise-policy":
         case "file-url":
@@ -248,7 +254,7 @@ const AbuseReporter = {
  *        A string that identify how the report has been triggered.
  */
 class AbuseReport {
-  constructor({addon, createErrorType, reportData, reportEntryPoint}) {
+  constructor({ addon, createErrorType, reportData, reportEntryPoint }) {
     this[PRIVATE_REPORT_PROPS] = {
       aborted: false,
       abortController: new AbortController(),
@@ -259,7 +265,7 @@ class AbuseReport {
   }
 
   recordTelemetry(errorType) {
-    const {addon, reportEntryPoint} = this;
+    const { addon, reportEntryPoint } = this;
     AMTelemetry.recordReportEvent({
       addonId: addon.id,
       addonType: addon.type,
@@ -282,15 +288,13 @@ class AbuseReport {
    *          It rejects with an AbuseReportError if the report couldn't be
    *          submitted for a known reason (or another Error type otherwise).
    */
-  async submit({reason, message}) {
-    const {
-      aborted, abortController,
-      reportData,
-      reportEntryPoint,
-    } = this[PRIVATE_REPORT_PROPS];
+  async submit({ reason, message }) {
+    const { aborted, abortController, reportData, reportEntryPoint } = this[
+      PRIVATE_REPORT_PROPS
+    ];
 
     // Record telemetry event and throw an AbuseReportError.
-    const rejectReportError = async (errorType, {response} = {}) => {
+    const rejectReportError = async (errorType, { response } = {}) => {
       this.recordTelemetry(errorType);
 
       let errorInfo;
@@ -325,7 +329,7 @@ class AbuseReport {
         method: "POST",
         credentials: "omit",
         referrerPolicy: "no-referrer",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...reportData,
           report_entry_point: reportEntryPoint,
@@ -355,22 +359,22 @@ class AbuseReport {
     }
 
     if (response.status >= 400 && response.status < 500) {
-      return rejectReportError("ERROR_CLIENT", {response});
+      return rejectReportError("ERROR_CLIENT", { response });
     }
 
     if (response.status >= 500 && response.status < 600) {
-      return rejectReportError("ERROR_SERVER", {response});
+      return rejectReportError("ERROR_SERVER", { response });
     }
 
     // We got an unexpected HTTP status code.
-    return rejectReportError("ERROR_UNKNOWN", {response});
+    return rejectReportError("ERROR_UNKNOWN", { response });
   }
 
   /**
    * Abort the report submission.
    */
   abort() {
-    const {abortController} = this[PRIVATE_REPORT_PROPS];
+    const { abortController } = this[PRIVATE_REPORT_PROPS];
     abortController.abort();
     this[PRIVATE_REPORT_PROPS].aborted = true;
   }

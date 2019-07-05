@@ -16,8 +16,16 @@ function test() {
 }
 
 function allow_blocked(installInfo) {
-  is(installInfo.browser, gBrowser.selectedBrowser, "Install should have been triggered by the right browser");
-  is(installInfo.originatingURI.spec, gBrowser.currentURI.spec, "Install should have been triggered by the right uri");
+  is(
+    installInfo.browser,
+    gBrowser.selectedBrowser,
+    "Install should have been triggered by the right browser"
+  );
+  is(
+    installInfo.originatingURI.spec,
+    gBrowser.currentURI.spec,
+    "Install should have been triggered by the right uri"
+  );
   return false;
 }
 

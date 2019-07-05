@@ -18,20 +18,22 @@ add_task(async function() {
 
   let provider = new MockProvider();
 
-  provider.createAddons([{
-    id: "signed@tests.mozilla.org",
-    name: "Signed langpack",
-    type: "locale",
-    signedState: AddonManager.SIGNEDSTATE_SIGNED,
-    isCorrectlySigned: true,
-  }, {
-    id: "unsigned@tests.mozilla.org",
-    name: "Unsigned langpack",
-    type: "locale",
-    signedState: AddonManager.SIGNEDSTATE_MISSING,
-    isCorrectlySigned: false,
-  }]);
-
+  provider.createAddons([
+    {
+      id: "signed@tests.mozilla.org",
+      name: "Signed langpack",
+      type: "locale",
+      signedState: AddonManager.SIGNEDSTATE_SIGNED,
+      isCorrectlySigned: true,
+    },
+    {
+      id: "unsigned@tests.mozilla.org",
+      name: "Unsigned langpack",
+      type: "locale",
+      signedState: AddonManager.SIGNEDSTATE_MISSING,
+      isCorrectlySigned: false,
+    },
+  ]);
 
   let mgrWin = await open_manager(null);
 
@@ -58,21 +60,46 @@ add_task(async function() {
         errorVisible = false;
       }
 
-      let warning = mgrWin.document.getAnonymousElementByAttribute(item, "anonid", "warning");
-      let warningLink = mgrWin.document.getAnonymousElementByAttribute(item, "anonid", "warning-link");
+      let warning = mgrWin.document.getAnonymousElementByAttribute(
+        item,
+        "anonid",
+        "warning"
+      );
+      let warningLink = mgrWin.document.getAnonymousElementByAttribute(
+        item,
+        "anonid",
+        "warning-link"
+      );
       if (warningVisible) {
         is_element_visible(warning, `Warning should be visible for ${what}`);
-        is_element_visible(warningLink, `Warning link should be visible for ${what}`);
+        is_element_visible(
+          warningLink,
+          `Warning link should be visible for ${what}`
+        );
       } else {
         is_element_hidden(warning, `Warning should be hidden for ${what}`);
-        is_element_hidden(warningLink, `Warning link should be hidden for ${what}`);
+        is_element_hidden(
+          warningLink,
+          `Warning link should be hidden for ${what}`
+        );
       }
 
-      let error = mgrWin.document.getAnonymousElementByAttribute(item, "anonid", "error");
-      let errorLink = mgrWin.document.getAnonymousElementByAttribute(item, "anonid", "error-link");
+      let error = mgrWin.document.getAnonymousElementByAttribute(
+        item,
+        "anonid",
+        "error"
+      );
+      let errorLink = mgrWin.document.getAnonymousElementByAttribute(
+        item,
+        "anonid",
+        "error-link"
+      );
       if (errorVisible) {
         is_element_visible(error, `Error should be visible for ${what}`);
-        is_element_visible(errorLink, `Error link should be visible for ${what}`);
+        is_element_visible(
+          errorLink,
+          `Error link should be visible for ${what}`
+        );
       } else {
         is_element_hidden(error, `Error should be hidden for ${what}`);
         is_element_hidden(errorLink, `Error link should be hidden for ${what}`);

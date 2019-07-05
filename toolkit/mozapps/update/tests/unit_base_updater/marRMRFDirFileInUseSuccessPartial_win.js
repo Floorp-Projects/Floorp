@@ -11,8 +11,10 @@ async function run_test() {
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
   await setupUpdaterTest(FILE_PARTIAL_MAR, false);
-  await runHelperFileInUse(gTestDirs[2].relPathDir + gTestDirs[2].files[0],
-                           true);
+  await runHelperFileInUse(
+    gTestDirs[2].relPathDir + gTestDirs[2].files[0],
+    true
+  );
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await waitForHelperExit();
   await checkPostUpdateAppLog();

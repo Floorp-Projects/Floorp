@@ -12,56 +12,64 @@ class MockPlugin extends MockPluginTag {
   }
 }
 
-var PLUGINS = [{
-  name: "Duplicate Plugin 1",
-  description: "A duplicate plugin",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin1.so",
-}, {
-  name: "Duplicate Plugin 1",
-  description: "A duplicate plugin",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/usr/lib/plugins/dupplugin1.so",
-}, {
-  name: "Duplicate Plugin 2",
-  description: "Another duplicate plugin",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin2.so",
-}, {
-  name: "Duplicate Plugin 2",
-  description: "Another duplicate plugin",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/usr/lib/plugins/dupplugin2.so",
-}, {
-  name: "Non-duplicate Plugin", // 3
-  description: "Not a duplicate plugin",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin3.so",
-}, {
-  name: "Non-duplicate Plugin", // 4
-  description: "Not a duplicate because the descriptions are different",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/usr/lib/plugins/dupplugin4.so",
-}, {
-  name: "Another Non-duplicate Plugin", // 5
-  description: "Not a duplicate plugin",
-  version: "1",
-  blocklisted: false,
-  enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin5.so",
-}].map(opts => new MockPlugin(opts));
+var PLUGINS = [
+  {
+    name: "Duplicate Plugin 1",
+    description: "A duplicate plugin",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/home/mozilla/.plugins/dupplugin1.so",
+  },
+  {
+    name: "Duplicate Plugin 1",
+    description: "A duplicate plugin",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/usr/lib/plugins/dupplugin1.so",
+  },
+  {
+    name: "Duplicate Plugin 2",
+    description: "Another duplicate plugin",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/home/mozilla/.plugins/dupplugin2.so",
+  },
+  {
+    name: "Duplicate Plugin 2",
+    description: "Another duplicate plugin",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/usr/lib/plugins/dupplugin2.so",
+  },
+  {
+    name: "Non-duplicate Plugin", // 3
+    description: "Not a duplicate plugin",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/home/mozilla/.plugins/dupplugin3.so",
+  },
+  {
+    name: "Non-duplicate Plugin", // 4
+    description: "Not a duplicate because the descriptions are different",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/usr/lib/plugins/dupplugin4.so",
+  },
+  {
+    name: "Another Non-duplicate Plugin", // 5
+    description: "Not a duplicate plugin",
+    version: "1",
+    blocklisted: false,
+    enabledState: Ci.nsIPluginTag.STATE_ENABLED,
+    filename: "/home/mozilla/.plugins/dupplugin5.so",
+  },
+].map(opts => new MockPlugin(opts));
 
 mockPluginHost(PLUGINS);
 
@@ -78,8 +86,9 @@ async function run_test() {
 }
 
 function found_plugin(aNum, aId) {
-  if (gPluginIDs[aNum])
+  if (gPluginIDs[aNum]) {
     do_throw("Found duplicate of plugin " + aNum);
+  }
   gPluginIDs[aNum] = aId;
 }
 
@@ -98,12 +107,18 @@ async function run_test_1() {
       found_plugin(5, aAddon.id);
       Assert.equal(aAddon.description, "Not a duplicate plugin");
     } else if (aAddon.name == "Non-duplicate Plugin") {
-      if (aAddon.description == "Not a duplicate plugin")
+      if (aAddon.description == "Not a duplicate plugin") {
         found_plugin(3, aAddon.id);
-      else if (aAddon.description == "Not a duplicate because the descriptions are different")
+      } else if (
+        aAddon.description ==
+        "Not a duplicate because the descriptions are different"
+      ) {
         found_plugin(4, aAddon.id);
-      else
-        do_throw("Found unexpected plugin with description " + aAddon.description);
+      } else {
+        do_throw(
+          "Found unexpected plugin with description " + aAddon.description
+        );
+      }
     } else {
       do_throw("Found unexpected plugin " + aAddon.name);
     }

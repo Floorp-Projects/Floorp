@@ -10,11 +10,16 @@ function test() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-  var triggers = encodeURIComponent(JSON.stringify({
-    "Signed XPI": TESTROOT + "amosigned.xpi",
-  }));
+  var triggers = encodeURIComponent(
+    JSON.stringify({
+      "Signed XPI": TESTROOT + "amosigned.xpi",
+    })
+  );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(
+    gBrowser,
+    TESTROOT + "installtrigger.html?" + triggers
+  );
 }
 
 function confirm_install(panel) {
