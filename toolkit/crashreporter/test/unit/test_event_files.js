@@ -21,17 +21,21 @@ add_task(async function test_main_process_crash() {
       function() {
         // TelemetrySession setup will trigger the session annotation
         let scope = {};
-        ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
+        ChromeUtils.import(
+          "resource://gre/modules/TelemetryController.jsm",
+          scope
+        );
         scope.TelemetryController.testSetup();
         crashType = CrashTestUtils.CRASH_MOZ_CRASH;
         crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
       },
       (minidump, extra) => {
         basename = minidump.leafName;
-        Object.defineProperty(cm, "_eventsDirs", {value: [getEventDir()]});
+        Object.defineProperty(cm, "_eventsDirs", { value: [getEventDir()] });
         cm.aggregateEventsFiles().then(resolve, reject);
       },
-      true);
+      true
+    );
   });
   Assert.equal(count, 1, "A single crash event file was seen.");
   let crashes = await cm.getCrashes();
@@ -42,7 +46,11 @@ add_task(async function test_main_process_crash() {
   Assert.equal(crash.metadata.ShutdownProgress, "event-test");
   Assert.ok("TelemetrySessionId" in crash.metadata);
   Assert.ok("UptimeTS" in crash.metadata);
-  Assert.ok(/^[0-9a-f]{8}\-([0-9a-f]{4}\-){3}[0-9a-f]{12}$/.test(crash.metadata.TelemetrySessionId));
+  Assert.ok(
+    /^[0-9a-f]{8}\-([0-9a-f]{4}\-){3}[0-9a-f]{12}$/.test(
+      crash.metadata.TelemetrySessionId
+    )
+  );
   Assert.ok("CrashTime" in crash.metadata);
   Assert.ok(/^\d+$/.test(crash.metadata.CrashTime));
 });

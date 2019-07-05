@@ -1,6 +1,8 @@
 function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
-    dump("INFO | test_crash_after_js_oom_recovered.js | Can't test crashreporter in a non-libxul build.\n");
+    dump(
+      "INFO | test_crash_after_js_oom_recovered.js | Can't test crashreporter in a non-libxul build.\n"
+    );
     return;
   }
 
@@ -15,5 +17,6 @@ function run_test() {
       Assert.equal(extra.TestKey, "Yes");
       Assert.equal(extra.JSOutOfMemory, "Recovered");
     },
-    true);
+    true
+  );
 }

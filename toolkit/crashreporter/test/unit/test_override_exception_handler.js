@@ -3,9 +3,9 @@ function run_test() {
   // us to lose our exception handler.
   do_crash(
     function() {
-        CrashTestUtils.TryOverrideExceptionHandler();
+      CrashTestUtils.TryOverrideExceptionHandler();
     },
-    function(mdump, extra) {
-    },
-    true);
+    function(mdump, extra) {},
+    true
+  );
 }

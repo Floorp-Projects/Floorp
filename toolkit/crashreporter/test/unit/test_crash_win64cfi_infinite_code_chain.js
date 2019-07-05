@@ -1,4 +1,3 @@
-
 function run_test() {
   // Test that minidump-analyzer gracefully handles chained
   // unwind code entries that form a circular reference
@@ -12,10 +11,12 @@ function run_test() {
   // but should not be calculated via CFI. If we see CFI here that would be an
   // indication that either our alternative EXE was not used, or we failed to
   // abandon unwind info parsing.
-  do_x64CFITest("CRASH_X64CFI_ALLOC_SMALL",
+  do_x64CFITest(
+    "CRASH_X64CFI_ALLOC_SMALL",
     [
       { symbol: "CRASH_X64CFI_ALLOC_SMALL", trust: "context" },
       { symbol: null, trust: "!cfi" },
     ],
-    ["--force-use-module", exe.path]);
+    ["--force-use-module", exe.path]
+  );
 }

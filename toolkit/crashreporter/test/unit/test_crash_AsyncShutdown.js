@@ -49,7 +49,10 @@ function setup_osfile_crash_noerror() {
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
-  OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
+  OS.File.profileBeforeChange.addBlocker(
+    "Adding a blocker that will never be resolved",
+    () => Promise.defer().promise
+  );
   OS.File.getCurrentDirectory();
 
   Services.obs.notifyObservers(null, "profile-before-change");
@@ -80,7 +83,10 @@ function setup_osfile_crash_exn() {
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
-  OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
+  OS.File.profileBeforeChange.addBlocker(
+    "Adding a blocker that will never be resolved",
+    () => Promise.defer().promise
+  );
   OS.File.read("I do not exist");
 
   Services.obs.notifyObservers(null, "profile-before-change");
