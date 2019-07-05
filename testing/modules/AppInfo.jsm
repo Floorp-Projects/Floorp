@@ -4,19 +4,16 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "newAppInfo",
-  "getAppInfo",
-  "updateAppInfo",
-];
+var EXPORTED_SYMBOLS = ["newAppInfo", "getAppInfo", "updateAppInfo"];
 
-
-let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
-    .getService(Ci.nsIPlatformInfo);
+let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"].getService(
+  Ci.nsIPlatformInfo
+);
 
 // eslint-disable-next-line mozilla/use-services
-let origRuntime = Cc["@mozilla.org/xre/app-info;1"]
-    .getService(Ci.nsIXULRuntime);
+let origRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(
+  Ci.nsIXULRuntime
+);
 
 /**
  * Create new XULAppInfo instance with specified options.
@@ -32,13 +29,13 @@ let origRuntime = Cc["@mozilla.org/xre/app-info;1"]
  *   extraProps:      extra properties added to XULAppInfo
  */
 var newAppInfo = function(options = {}) {
-  let ID = ("ID" in options) ? options.ID : "xpcshell@tests.mozilla.org";
-  let name = ("name" in options) ? options.name : "xpcshell";
-  let version = ("version" in options) ? options.version : "1";
-  let platformVersion
-      = ("platformVersion" in options) ? options.platformVersion : "p-ver";
-  let OS = ("OS" in options) ? options.OS : "XPCShell";
-  let extraProps = ("extraProps" in options) ? options.extraProps : {};
+  let ID = "ID" in options ? options.ID : "xpcshell@tests.mozilla.org";
+  let name = "name" in options ? options.name : "xpcshell";
+  let version = "version" in options ? options.version : "1";
+  let platformVersion =
+    "platformVersion" in options ? options.platformVersion : "p-ver";
+  let OS = "OS" in options ? options.OS : "XPCShell";
+  let extraProps = "extraProps" in options ? options.extraProps : {};
 
   let appInfo = {
     // nsIXULAppInfo
@@ -68,9 +65,7 @@ var newAppInfo = function(options = {}) {
     },
   };
 
-  let interfaces = [Ci.nsIXULAppInfo,
-                    Ci.nsIPlatformInfo,
-                    Ci.nsIXULRuntime];
+  let interfaces = [Ci.nsIXULAppInfo, Ci.nsIPlatformInfo, Ci.nsIXULRuntime];
   if ("nsIWinAppHelper" in Ci) {
     interfaces.push(Ci.nsIWinAppHelper);
   }
@@ -98,7 +93,9 @@ var currentAppInfo = newAppInfo();
 /**
  * Obtain a reference to the current object used to define XULAppInfo.
  */
-var getAppInfo = function() { return currentAppInfo; };
+var getAppInfo = function() {
+  return currentAppInfo;
+};
 
 /**
  * Update the current application info.
@@ -117,7 +114,10 @@ var updateAppInfo = function(options) {
 
   // Unregister an existing factory if one exists.
   try {
-    let existing = Components.manager.getClassObjectByContractID(contractid, Ci.nsIFactory);
+    let existing = Components.manager.getClassObjectByContractID(
+      contractid,
+      Ci.nsIFactory
+    );
     registrar.unregisterFactory(id, existing);
   } catch (ex) {}
 

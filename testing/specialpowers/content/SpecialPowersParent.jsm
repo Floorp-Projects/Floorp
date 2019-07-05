@@ -11,9 +11,11 @@
 
 var EXPORTED_SYMBOLS = ["SpecialPowersParent"];
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const {SpecialPowersAPIParent} = ChromeUtils.import("resource://specialpowers/SpecialPowersAPIParent.jsm");
+const { SpecialPowersAPIParent } = ChromeUtils.import(
+  "resource://specialpowers/SpecialPowersAPIParent.jsm"
+);
 
 class SpecialPowersParent extends SpecialPowersAPIParent {
   constructor() {
@@ -82,8 +84,9 @@ class SpecialPowersParent extends SpecialPowersAPIParent {
     // difficult. For the time being, let the child process know when a test
     // registers a service worker so it can ask, synchronously, at the end if
     // the service worker had unregister called on it.
-    let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-                .getService(Ci.nsIServiceWorkerManager);
+    let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+      Ci.nsIServiceWorkerManager
+    );
     let self = this;
     this._serviceWorkerListener = {
       onRegister() {
@@ -100,13 +103,14 @@ class SpecialPowersParent extends SpecialPowersAPIParent {
   uninit() {
     var obs = Services.obs;
     obs.removeObserver(this._observer, "http-on-modify-request");
-    this._registerObservers._topics.splice(0).forEach((element) => {
+    this._registerObservers._topics.splice(0).forEach(element => {
       obs.removeObserver(this._registerObservers, element);
     });
     this._removeProcessCrashObservers();
 
-    let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-                .getService(Ci.nsIServiceWorkerManager);
+    let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+      Ci.nsIServiceWorkerManager
+    );
     swm.removeListener(this._serviceWorkerListener);
   }
 
@@ -161,16 +165,26 @@ class SpecialPowersParent extends SpecialPowersAPIParent {
             } else {
               testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
             }
-            let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-            outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-                           filePerms, 0);
+            let outStream = Cc[
+              "@mozilla.org/network/file-output-stream;1"
+            ].createInstance(Ci.nsIFileOutputStream);
+            outStream.init(
+              testFile,
+              0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+              filePerms,
+              0
+            );
             if (request.data) {
               outStream.write(request.data, request.data.length);
             }
             outStream.close();
-            promises.push(File.createFromFileName(testFile.path, request.options).then(function(file) {
-              filePaths.push(file);
-            }));
+            promises.push(
+              File.createFromFileName(testFile.path, request.options).then(
+                function(file) {
+                  filePaths.push(file);
+                }
+              )
+            );
             createdFiles.push(testFile);
           });
 
@@ -202,7 +216,6 @@ class SpecialPowersParent extends SpecialPowersAPIParent {
   }
 
   onRegister() {
-    this.sendAsyncMessage("SPServiceWorkerRegistered",
-      { registered: true });
+    this.sendAsyncMessage("SPServiceWorkerRegistered", { registered: true });
   }
 }

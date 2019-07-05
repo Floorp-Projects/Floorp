@@ -5,12 +5,20 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["SpecialPowers", "SpecialPowersChild", "attachSpecialPowersToWindow"];
+var EXPORTED_SYMBOLS = [
+  "SpecialPowers",
+  "SpecialPowersChild",
+  "attachSpecialPowersToWindow",
+];
 
-const {bindDOMWindowUtils, SpecialPowersAPI} = ChromeUtils.import("resource://specialpowers/SpecialPowersAPI.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { bindDOMWindowUtils, SpecialPowersAPI } = ChromeUtils.import(
+  "resource://specialpowers/SpecialPowersAPI.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
 Cu.forcePermissiveCOWs();
 
@@ -22,12 +30,14 @@ class SpecialPowersChild extends SpecialPowersAPI {
     this.DOMWindowUtils = null;
 
     this._encounteredCrashDumpFiles = [];
-    this._unexpectedCrashDumpFiles = { };
+    this._unexpectedCrashDumpFiles = {};
     this._crashDumpDir = null;
     this._serviceWorkerRegistered = false;
     this._serviceWorkerCleanUpRequests = new Map();
     Object.defineProperty(this, "Components", {
-        configurable: true, enumerable: true, value: this.getFullComponents(),
+      configurable: true,
+      enumerable: true,
+      value: this.getFullComponents(),
     });
     this._createFilesOnError = null;
     this._createFilesOnSuccess = null;
@@ -56,8 +66,12 @@ class SpecialPowersChild extends SpecialPowersAPI {
     return this.contentWindow;
   }
 
-  toString() { return "[SpecialPowers]"; }
-  sanityCheck() { return "foo"; }
+  toString() {
+    return "[SpecialPowers]";
+  }
+  sanityCheck() {
+    return "foo";
+  }
 
   _addMessageListener(msgname, listener) {
     this._messageListeners.get(msgname).add(listener);
@@ -72,7 +86,9 @@ class SpecialPowersChild extends SpecialPowersAPI {
   }
 
   unregisterProcessCrashObservers() {
-    this.sendAsyncMessage("SPProcessCrashService", { op: "unregister-observer" });
+    this.sendAsyncMessage("SPProcessCrashService", {
+      op: "unregister-observer",
+    });
   }
 
   receiveMessage(aMessage) {
@@ -122,7 +138,7 @@ class SpecialPowersChild extends SpecialPowersAPI {
         break;
 
       case "Spawn":
-        let {task, args, caller, taskId} = aMessage.data;
+        let { task, args, caller, taskId } = aMessage.data;
         return this._spawnTask(task, args, caller, taskId);
 
       default:
@@ -141,7 +157,10 @@ class SpecialPowersChild extends SpecialPowersAPI {
   // file to be created in the profile directory. If the request has a |data| field
   // then that data will be written to the file.
   createFiles(fileRequests, onCreation, onError) {
-    return this.sendQuery("SpecialPowers.CreateFiles", fileRequests).then(onCreation, onError);
+    return this.sendQuery("SpecialPowers.CreateFiles", fileRequests).then(
+      onCreation,
+      onError
+    );
   }
 
   // Remove the files that were created using |SpecialPowers.createFiles()|.
@@ -158,15 +177,21 @@ class SpecialPowersChild extends SpecialPowersAPI {
     // For the time being, if parent_intercept is false, we can assume that
     // ServiceWorkers registered by the current test are all known to the SWM in
     // this process.
-    if (!Services.prefs.getBoolPref("dom.serviceWorkers.parent_intercept", false)) {
-      let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-                  .getService(Ci.nsIServiceWorkerManager);
+    if (
+      !Services.prefs.getBoolPref("dom.serviceWorkers.parent_intercept", false)
+    ) {
+      let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+        Ci.nsIServiceWorkerManager
+      );
       let regs = swm.getAllRegistrations();
 
       // XXX This is shared with SpecialPowersAPIParent.jsm
       let workers = new Array(regs.length);
       for (let i = 0; i < workers.length; ++i) {
-        let { scope, scriptSpec } = regs.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+        let { scope, scriptSpec } = regs.queryElementAt(
+          i,
+          Ci.nsIServiceWorkerRegistrationInfo
+        );
         workers[i] = { scope, scriptSpec };
       }
 

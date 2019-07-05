@@ -4,8 +4,14 @@
 
 "use strict";
 
-const { openToolbox, closeToolbox, runTest, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolbox,
+  closeToolbox,
+  runTest,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 
 /**
  * Measure the time necessary to perform successive childList mutations in the content
@@ -22,8 +28,10 @@ module.exports = async function() {
   const LIMIT = 100;
   const DELAY = 5;
 
-  messageManager.loadFrameScript("data:,(" + encodeURIComponent(
-    `function () {
+  messageManager.loadFrameScript(
+    "data:,(" +
+      encodeURIComponent(
+        `function () {
       const LIMIT = ${LIMIT};
       addMessageListener("start-mutations-test", function () {
         let addElement = function(index) {
@@ -38,7 +46,10 @@ module.exports = async function() {
         addElement(0);
       });
     }`
-  ) + ")()", false);
+      ) +
+      ")()",
+    false
+  );
 
   let test = runTest("inspector.mutations");
 

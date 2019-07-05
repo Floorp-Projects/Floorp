@@ -4,19 +4,22 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "MockRegistrar",
-];
+var EXPORTED_SYMBOLS = ["MockRegistrar"];
 
 const Cm = Components.manager;
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 var logger = Log.repository.getLogger("MockRegistrar");
 
-XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
 
 var MockRegistrar = Object.freeze({
   _registeredComponents: new Map(),
@@ -80,10 +83,12 @@ var MockRegistrar = Object.freeze({
       QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
     };
 
-    this.registrar.registerFactory(cid,
-                                   "A Mock for " + contractID,
-                                   contractID,
-                                   factory);
+    this.registrar.registerFactory(
+      cid,
+      "A Mock for " + contractID,
+      contractID,
+      factory
+    );
 
     this._registeredComponents.set(cid, {
       contractID,
@@ -109,9 +114,12 @@ var MockRegistrar = Object.freeze({
     if (component.originalCID) {
       // Passing `null` for the factory re-maps the contract ID to the
       // entry for its original CID.
-      this.registrar.registerFactory(component.originalCID, "",
-                                     component.contractID,
-                                     null);
+      this.registrar.registerFactory(
+        component.originalCID,
+        "",
+        component.contractID,
+        null
+      );
     }
 
     this._registeredComponents.delete(cid);
@@ -125,5 +133,4 @@ var MockRegistrar = Object.freeze({
       this.unregister(cid);
     }
   },
-
 });

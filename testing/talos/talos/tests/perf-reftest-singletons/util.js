@@ -20,8 +20,9 @@ function build_dom(n, elemName, options) {
     var leftSize = Math.floor(n / 2);
     var rightSize = Math.floor((n - 1) / 2);
     ours.appendChild(build_dom(leftSize, elemNameLeft, options));
-    if (rightSize > 0)
+    if (rightSize > 0) {
       ours.appendChild(build_dom(rightSize, elemNameRight, options));
+    }
   }
   return ours;
 }
@@ -29,16 +30,25 @@ function build_dom(n, elemName, options) {
 function build_rule(selector, selectorRepeat, declaration, ruleRepeat) {
   ruleRepeat = ruleRepeat || 1;
   var s = document.createElement("style");
-  var rule = Array(selectorRepeat).fill(selector).join(", ") + declaration;
-  s.textContent = Array(ruleRepeat).fill(rule).join("\n\n");
+  var rule =
+    Array(selectorRepeat)
+      .fill(selector)
+      .join(", ") + declaration;
+  s.textContent = Array(ruleRepeat)
+    .fill(rule)
+    .join("\n\n");
   return s;
 }
 
 function build_text(word, wordRepeat, paraRepeat) {
   wordRepeat = wordRepeat || 1;
   paraRepeat = paraRepeat || 1;
-  let para = Array(wordRepeat).fill(word).join(" ");
-  return Array(paraRepeat).fill(para).join("\n");
+  let para = Array(wordRepeat)
+    .fill(word)
+    .join(" ");
+  return Array(paraRepeat)
+    .fill(para)
+    .join("\n");
 }
 
 function flush_style(element) {
@@ -77,7 +87,10 @@ function perf_finish() {
     window.tpRecordTime(end - start, start);
   } else if (window.parent && window.parent.report_perf_reftest_time) {
     // Running in the perf-reftest runner.
-    window.parent.report_perf_reftest_time({ type: "time", value: end - start });
+    window.parent.report_perf_reftest_time({
+      type: "time",
+      value: end - start,
+    });
   } else {
     // Running standalone; just alert.
     console.log(end);

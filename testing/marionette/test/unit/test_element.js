@@ -10,7 +10,9 @@ const {
   element,
   WebElement,
 } = ChromeUtils.import("chrome://marionette/content/element.js");
-const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js");
+const { InvalidArgumentError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
@@ -27,8 +29,12 @@ class Element {
     }
   }
 
-  get nodeType() { return 1; }
-  get ELEMENT_NODE() { return 1; }
+  get nodeType() {
+    return 1;
+  }
+  get ELEMENT_NODE() {
+    return 1;
+  }
 
   // this is a severely limited CSS selector
   // that only supports lists of tag names
@@ -46,7 +52,7 @@ class DOMElement extends Element {
       this.namespaceURI = XHTMLNS;
     }
     if (typeof this.ownerDocument == "undefined") {
-      this.ownerDocument = {designMode: "off"};
+      this.ownerDocument = { designMode: "off" };
     }
     if (typeof this.type == "undefined") {
       this.type = "text";
@@ -56,7 +62,10 @@ class DOMElement extends Element {
       this.selected = false;
     }
 
-    if (this.localName == "input" && ["checkbox", "radio"].includes(this.type)) {
+    if (
+      this.localName == "input" &&
+      ["checkbox", "radio"].includes(this.type)
+    ) {
       this.checked = false;
     }
   }
@@ -98,14 +107,22 @@ const xulEl = new XULElement("browser");
 const xblEl = new XBLElement("framebox");
 
 class WindowProxy {
-  get parent() { return this; }
-  get self() { return this; }
-  toString() { return "[object Window]"; }
+  get parent() {
+    return this;
+  }
+  get self() {
+    return this;
+  }
+  toString() {
+    return "[object Window]";
+  }
 }
 const domWin = new WindowProxy();
-const domFrame = new class extends WindowProxy {
-  get parent() { return domWin; }
-};
+const domFrame = new (class extends WindowProxy {
+  get parent() {
+    return domWin;
+  }
+})();
 
 add_test(function test_findClosest() {
   equal(element.findClosest(domEl, "foo"), null);
@@ -119,7 +136,7 @@ add_test(function test_findClosest() {
 });
 
 add_test(function test_isSelected() {
-  let checkbox = new DOMElement("input", {type: "checkbox"});
+  let checkbox = new DOMElement("input", { type: "checkbox" });
   ok(!element.isSelected(checkbox));
   checkbox.checked = true;
   ok(element.isSelected(checkbox));
@@ -203,41 +220,45 @@ add_test(function test_isDOMWindow() {
 add_test(function test_isReadOnly() {
   ok(!element.isReadOnly(null));
   ok(!element.isReadOnly(domEl));
-  ok(!element.isReadOnly(new DOMElement("p", {readOnly: true})));
-  ok(element.isReadOnly(new DOMElement("input", {readOnly: true})));
-  ok(element.isReadOnly(new DOMElement("textarea", {readOnly: true})));
+  ok(!element.isReadOnly(new DOMElement("p", { readOnly: true })));
+  ok(element.isReadOnly(new DOMElement("input", { readOnly: true })));
+  ok(element.isReadOnly(new DOMElement("textarea", { readOnly: true })));
 
   run_next_test();
 });
 
 add_test(function test_isDisabled() {
   ok(!element.isDisabled(new DOMElement("p")));
-  ok(!element.isDisabled(new SVGElement("rect", {disabled: true})));
-  ok(!element.isDisabled(new XULElement("browser", {disabled: true})));
+  ok(!element.isDisabled(new SVGElement("rect", { disabled: true })));
+  ok(!element.isDisabled(new XULElement("browser", { disabled: true })));
 
-  let select = new DOMElement("select", {disabled: true});
+  let select = new DOMElement("select", { disabled: true });
   let option = new DOMElement("option");
   option.parentNode = select;
   ok(element.isDisabled(option));
 
-  let optgroup = new DOMElement("optgroup", {disabled: true});
+  let optgroup = new DOMElement("optgroup", { disabled: true });
   option.parentNode = optgroup;
   optgroup.parentNode = select;
   select.disabled = false;
   ok(element.isDisabled(option));
 
-  ok(element.isDisabled(new DOMElement("button", {disabled: true})));
-  ok(element.isDisabled(new DOMElement("input", {disabled: true})));
-  ok(element.isDisabled(new DOMElement("select", {disabled: true})));
-  ok(element.isDisabled(new DOMElement("textarea", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("button", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("input", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("select", { disabled: true })));
+  ok(element.isDisabled(new DOMElement("textarea", { disabled: true })));
 
   run_next_test();
 });
 
 add_test(function test_isEditingHost() {
   ok(!element.isEditingHost(null));
-  ok(element.isEditingHost(new DOMElement("p", {isContentEditable: true})));
-  ok(element.isEditingHost(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
+  ok(element.isEditingHost(new DOMElement("p", { isContentEditable: true })));
+  ok(
+    element.isEditingHost(
+      new DOMElement("p", { ownerDocument: { designMode: "on" } })
+    )
+  );
 
   run_next_test();
 });
@@ -245,26 +266,45 @@ add_test(function test_isEditingHost() {
 add_test(function test_isEditable() {
   ok(!element.isEditable(null));
   ok(!element.isEditable(domEl));
-  ok(!element.isEditable(new DOMElement("textarea", {readOnly: true})));
-  ok(!element.isEditable(new DOMElement("textarea", {disabled: true})));
+  ok(!element.isEditable(new DOMElement("textarea", { readOnly: true })));
+  ok(!element.isEditable(new DOMElement("textarea", { disabled: true })));
 
-  for (let type of ["checkbox", "radio", "hidden", "submit", "button", "image"]) {
-    ok(!element.isEditable(new DOMElement("input", {type})));
+  for (let type of [
+    "checkbox",
+    "radio",
+    "hidden",
+    "submit",
+    "button",
+    "image",
+  ]) {
+    ok(!element.isEditable(new DOMElement("input", { type })));
   }
-  ok(element.isEditable(new DOMElement("input", {type: "text"})));
+  ok(element.isEditable(new DOMElement("input", { type: "text" })));
   ok(element.isEditable(new DOMElement("input")));
 
   ok(element.isEditable(new DOMElement("textarea")));
-  ok(element.isEditable(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
-  ok(element.isEditable(new DOMElement("p", {isContentEditable: true})));
+  ok(
+    element.isEditable(
+      new DOMElement("p", { ownerDocument: { designMode: "on" } })
+    )
+  );
+  ok(element.isEditable(new DOMElement("p", { isContentEditable: true })));
 
   run_next_test();
 });
 
 add_test(function test_isMutableFormControlElement() {
   ok(!element.isMutableFormControl(null));
-  ok(!element.isMutableFormControl(new DOMElement("textarea", {readOnly: true})));
-  ok(!element.isMutableFormControl(new DOMElement("textarea", {disabled: true})));
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("textarea", { readOnly: true })
+    )
+  );
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("textarea", { disabled: true })
+    )
+  );
 
   const mutableStates = new Set([
     "color",
@@ -283,14 +323,24 @@ add_test(function test_isMutableFormControlElement() {
     "week",
   ]);
   for (let type of mutableStates) {
-    ok(element.isMutableFormControl(new DOMElement("input", {type})));
+    ok(element.isMutableFormControl(new DOMElement("input", { type })));
   }
   ok(element.isMutableFormControl(new DOMElement("textarea")));
 
-  ok(!element.isMutableFormControl(new DOMElement("input", {type: "hidden"})));
+  ok(
+    !element.isMutableFormControl(new DOMElement("input", { type: "hidden" }))
+  );
   ok(!element.isMutableFormControl(new DOMElement("p")));
-  ok(!element.isMutableFormControl(new DOMElement("p", {isContentEditable: true})));
-  ok(!element.isMutableFormControl(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("p", { isContentEditable: true })
+    )
+  );
+  ok(
+    !element.isMutableFormControl(
+      new DOMElement("p", { ownerDocument: { designMode: "on" } })
+    )
+  );
 
   run_next_test();
 });
@@ -302,21 +352,48 @@ add_test(function test_coordinates() {
   equal("number", typeof p.x);
   equal("number", typeof p.y);
 
-  deepEqual({x: 50, y: 50}, element.coordinates(domEl));
-  deepEqual({x: 10, y: 10}, element.coordinates(domEl, 10, 10));
-  deepEqual({x: -5, y: -5}, element.coordinates(domEl, -5, -5));
+  deepEqual({ x: 50, y: 50 }, element.coordinates(domEl));
+  deepEqual({ x: 10, y: 10 }, element.coordinates(domEl, 10, 10));
+  deepEqual({ x: -5, y: -5 }, element.coordinates(domEl, -5, -5));
 
   Assert.throws(() => element.coordinates(null), /node is null/);
 
-  Assert.throws(() => element.coordinates(domEl, "string", undefined), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, undefined, "string"), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, "string", "string"), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, {}, undefined), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, undefined, {}), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, {}, {}), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, [], undefined), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, undefined, []), /Offset must be a number/);
-  Assert.throws(() => element.coordinates(domEl, [], []), /Offset must be a number/);
+  Assert.throws(
+    () => element.coordinates(domEl, "string", undefined),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, undefined, "string"),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, "string", "string"),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, {}, undefined),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, undefined, {}),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, {}, {}),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, [], undefined),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, undefined, []),
+    /Offset must be a number/
+  );
+  Assert.throws(
+    () => element.coordinates(domEl, [], []),
+    /Offset must be a number/
+  );
 
   run_next_test();
 });
@@ -358,9 +435,9 @@ add_test(function test_WebElement_from() {
 });
 
 add_test(function test_WebElement_fromJSON_ContentWebElement() {
-  const {Identifier} = ContentWebElement;
+  const { Identifier } = ContentWebElement;
 
-  let ref = {[Identifier]: "foo"};
+  let ref = { [Identifier]: "foo" };
   let webEl = WebElement.fromJSON(ref);
   ok(webEl instanceof ContentWebElement);
   equal(webEl.uuid, "foo");
@@ -376,7 +453,7 @@ add_test(function test_WebElement_fromJSON_ContentWebElement() {
 });
 
 add_test(function test_WebElement_fromJSON_ContentWebWindow() {
-  let ref = {[ContentWebWindow.Identifier]: "foo"};
+  let ref = { [ContentWebWindow.Identifier]: "foo" };
   let win = WebElement.fromJSON(ref);
   ok(win instanceof ContentWebWindow);
   equal(win.uuid, "foo");
@@ -385,7 +462,7 @@ add_test(function test_WebElement_fromJSON_ContentWebWindow() {
 });
 
 add_test(function test_WebElement_fromJSON_ContentWebFrame() {
-  let ref = {[ContentWebFrame.Identifier]: "foo"};
+  let ref = { [ContentWebFrame.Identifier]: "foo" };
   let frame = WebElement.fromJSON(ref);
   ok(frame instanceof ContentWebFrame);
   equal(frame.uuid, "foo");
@@ -394,7 +471,7 @@ add_test(function test_WebElement_fromJSON_ContentWebFrame() {
 });
 
 add_test(function test_WebElement_fromJSON_ChromeWebElement() {
-  let ref = {[ChromeWebElement.Identifier]: "foo"};
+  let ref = { [ChromeWebElement.Identifier]: "foo" };
   let el = WebElement.fromJSON(ref);
   ok(el instanceof ChromeWebElement);
   equal(el.uuid, "foo");
@@ -427,10 +504,10 @@ add_test(function test_WebElement_isReference() {
     ok(!WebElement.isReference(t));
   }
 
-  ok(WebElement.isReference({[ContentWebElement.Identifier]: "foo"}));
-  ok(WebElement.isReference({[ContentWebWindow.Identifier]: "foo"}));
-  ok(WebElement.isReference({[ContentWebFrame.Identifier]: "foo"}));
-  ok(WebElement.isReference({[ChromeWebElement.Identifier]: "foo"}));
+  ok(WebElement.isReference({ [ContentWebElement.Identifier]: "foo" }));
+  ok(WebElement.isReference({ [ContentWebWindow.Identifier]: "foo" }));
+  ok(WebElement.isReference({ [ContentWebFrame.Identifier]: "foo" }));
+  ok(WebElement.isReference({ [ChromeWebElement.Identifier]: "foo" }));
 
   run_next_test();
 });
@@ -441,7 +518,7 @@ add_test(function test_WebElement_generateUUID() {
 });
 
 add_test(function test_ContentWebElement_toJSON() {
-  const {Identifier} = ContentWebElement;
+  const { Identifier } = ContentWebElement;
 
   let el = new ContentWebElement("foo");
   let json = el.toJSON();
@@ -453,9 +530,9 @@ add_test(function test_ContentWebElement_toJSON() {
 });
 
 add_test(function test_ContentWebElement_fromJSON() {
-  const {Identifier} = ContentWebElement;
+  const { Identifier } = ContentWebElement;
 
-  let el = ContentWebElement.fromJSON({[Identifier]: "foo"});
+  let el = ContentWebElement.fromJSON({ [Identifier]: "foo" });
   ok(el instanceof ContentWebElement);
   equal(el.uuid, "foo");
 
@@ -474,7 +551,7 @@ add_test(function test_ContentWebWindow_toJSON() {
 });
 
 add_test(function test_ContentWebWindow_fromJSON() {
-  let ref = {[ContentWebWindow.Identifier]: "foo"};
+  let ref = { [ContentWebWindow.Identifier]: "foo" };
   let win = ContentWebWindow.fromJSON(ref);
   ok(win instanceof ContentWebWindow);
   equal(win.uuid, "foo");
@@ -492,7 +569,7 @@ add_test(function test_ContentWebFrame_toJSON() {
 });
 
 add_test(function test_ContentWebFrame_fromJSON() {
-  let ref = {[ContentWebFrame.Identifier]: "foo"};
+  let ref = { [ContentWebFrame.Identifier]: "foo" };
   let win = ContentWebFrame.fromJSON(ref);
   ok(win instanceof ContentWebFrame);
   equal(win.uuid, "foo");
@@ -510,7 +587,7 @@ add_test(function test_ChromeWebElement_toJSON() {
 });
 
 add_test(function test_ChromeWebElement_fromJSON() {
-  let ref = {[ChromeWebElement.Identifier]: "foo"};
+  let ref = { [ChromeWebElement.Identifier]: "foo" };
   let win = ChromeWebElement.fromJSON(ref);
   ok(win instanceof ChromeWebElement);
   equal(win.uuid, "foo");

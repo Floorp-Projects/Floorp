@@ -4,10 +4,14 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js");
-const {Log} = ChromeUtils.import("chrome://marionette/content/log.js");
+const { InvalidArgumentError } = ChromeUtils.import(
+  "chrome://marionette/content/error.js"
+);
+const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
@@ -48,13 +52,9 @@ capture.element = function(node, highlights = []) {
   let win = node.ownerGlobal;
   let rect = node.getBoundingClientRect();
 
-  return capture.canvas(
-      win,
-      rect.left,
-      rect.top,
-      rect.width,
-      rect.height,
-      {highlights});
+  return capture.canvas(win, rect.left, rect.top, rect.width, rect.height, {
+    highlights,
+  });
 };
 
 /**
@@ -73,12 +73,13 @@ capture.element = function(node, highlights = []) {
  */
 capture.viewport = function(win, highlights = []) {
   return capture.canvas(
-      win,
-      win.pageXOffset,
-      win.pageYOffset,
-      win.innerWidth,
-      win.innerHeight,
-      {highlights});
+    win,
+    win.pageXOffset,
+    win.pageYOffset,
+    win.innerWidth,
+    win.innerHeight,
+    { highlights }
+  );
 };
 
 /**
@@ -108,8 +109,14 @@ capture.viewport = function(win, highlights = []) {
  *     The canvas on which the selection from the window's framebuffer
  *     has been painted on.
  */
-capture.canvas = function(win, left, top, width, height,
-    {highlights = [], canvas = null, flags = null} = {}) {
+capture.canvas = function(
+  win,
+  left,
+  top,
+  width,
+  height,
+  { highlights = [], canvas = null, flags = null } = {}
+) {
   const scale = win.devicePixelRatio;
 
   if (canvas === null) {
@@ -117,14 +124,20 @@ capture.canvas = function(win, left, top, width, height,
     let canvasHeight = height * scale;
 
     if (canvasWidth > MAX_SKIA_DIMENSIONS) {
-      logger.warn("Reducing screenshot width because it exceeds " +
-          MAX_SKIA_DIMENSIONS + " pixels");
+      logger.warn(
+        "Reducing screenshot width because it exceeds " +
+          MAX_SKIA_DIMENSIONS +
+          " pixels"
+      );
       canvasWidth = MAX_SKIA_DIMENSIONS;
     }
 
     if (canvasHeight > MAX_SKIA_DIMENSIONS) {
-      logger.warn("Reducing screenshot height because it exceeds " +
-          MAX_SKIA_DIMENSIONS + " pixels");
+      logger.warn(
+        "Reducing screenshot height because it exceeds " +
+          MAX_SKIA_DIMENSIONS +
+          " pixels"
+      );
       canvasHeight = MAX_SKIA_DIMENSIONS;
     }
 
@@ -173,11 +186,7 @@ capture.highlight_ = function(context, highlights, top = 0, left = 0) {
     let oy = -top;
     let ox = -left;
 
-    context.strokeRect(
-        rect.left + ox,
-        rect.top + oy,
-        rect.width,
-        rect.height);
+    context.strokeRect(rect.left + ox, rect.top + oy, rect.width, rect.height);
   }
 
   return context;
@@ -198,14 +207,14 @@ capture.toBase64 = function(canvas) {
 };
 
 /**
-* Hash the contents of an HTMLCanvasElement to a SHA-256 hex digest.
-*
-* @param {HTMLCanvasElement} canvas
-*     The canvas to encode.
-*
-* @return {string}
-*     A hex digest of the SHA-256 hash of the base64 encoded string.
-*/
+ * Hash the contents of an HTMLCanvasElement to a SHA-256 hex digest.
+ *
+ * @param {HTMLCanvasElement} canvas
+ *     The canvas to encode.
+ *
+ * @return {string}
+ *     A hex digest of the SHA-256 hash of the base64 encoded string.
+ */
 capture.toHash = function(canvas) {
   let u = capture.toBase64(canvas);
   let buffer = new TextEncoder("utf-8").encode(u);
@@ -213,14 +222,14 @@ capture.toHash = function(canvas) {
 };
 
 /**
-* Convert buffer into to hex.
-*
-* @param {ArrayBuffer} buffer
-*     The buffer containing the data to convert to hex.
-*
-* @return {string}
-*     A hex digest of the input buffer.
-*/
+ * Convert buffer into to hex.
+ *
+ * @param {ArrayBuffer} buffer
+ *     The buffer containing the data to convert to hex.
+ *
+ * @return {string}
+ *     A hex digest of the input buffer.
+ */
 function hex(buffer) {
   let hexCodes = [];
   let view = new DataView(buffer);

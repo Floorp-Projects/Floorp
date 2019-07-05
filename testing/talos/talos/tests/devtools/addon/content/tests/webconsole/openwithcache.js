@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { openToolboxAndLog, closeToolbox, testSetup,
-        testTeardown, SIMPLE_URL } = require("../head");
+const {
+  openToolboxAndLog,
+  closeToolbox,
+  testSetup,
+  testTeardown,
+  SIMPLE_URL,
+} = require("../head");
 
 const TOTAL_MESSAGES = 100;
 
@@ -14,18 +19,20 @@ module.exports = async function() {
 
   // Load a frame script using a data URI so we can do logs
   // from the page.  So this is running in content.
-  tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(`
+  tab.linkedBrowser.messageManager.loadFrameScript(
+    "data:,(" +
+      encodeURIComponent(`
     function () {
       for (var i = 0; i < ${TOTAL_MESSAGES}; i++) {
         content.console.log('damp', i+1, content);
       }
-    }`
-  ) + ")()", true);
+    }`) +
+      ")()",
+    true
+  );
 
   await openToolboxAndLog("console.openwithcache", "webconsole");
   await closeToolbox();
 
   await testTeardown();
 };
-
-

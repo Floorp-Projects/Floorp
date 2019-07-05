@@ -40,7 +40,6 @@ toolkit/components/telemetry/datareporting-prefs.js
 toolkit/components/telemetry/healthreport-prefs.js
 
 # Ignore all top-level directories for now.
-testing/**
 toolkit/**
 tools/**
 uriloader/**
@@ -80,6 +79,9 @@ devtools/platform/**
 devtools/server/**
 devtools/shared/**
 devtools/startup/**
+
+# Ignore testing pref files which aren't parsed normally.
+testing/profiles/**/user.js
 
 # Ignore CORS fixtures which require specific resource hashes.
 dom/security/test/sri/script*

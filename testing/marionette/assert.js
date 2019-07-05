@@ -4,9 +4,13 @@
 
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const {
   InvalidArgumentError,
@@ -16,7 +20,7 @@ const {
   UnexpectedAlertOpenError,
   UnsupportedOperationError,
 } = ChromeUtils.import("chrome://marionette/content/error.js");
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js");
+const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   evaluate: "chrome://marionette/content/evaluate.js",
@@ -27,9 +31,9 @@ this.EXPORTED_SYMBOLS = ["assert"];
 
 const isFennec = () => AppConstants.platform == "android";
 const isFirefox = () =>
-    Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+  Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const isThunderbird = () =>
-    Services.appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
+  Services.appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 
 /**
  * Shorthands for common assertions made in Marionette.
@@ -73,8 +77,9 @@ assert.acyclic = function(obj, msg = "", error = JavaScriptError) {
  *     If <var>driver</var> does not have a session ID.
  */
 assert.session = function(driver, msg = "") {
-  assert.that(sessionID => sessionID,
-      msg, InvalidSessionIDError)(driver.sessionID);
+  assert.that(sessionID => sessionID, msg, InvalidSessionIDError)(
+    driver.sessionID
+  );
   return driver.sessionID;
 };
 
@@ -103,8 +108,11 @@ assert.firefox = function(msg = "") {
  */
 assert.desktop = function(msg = "") {
   msg = msg || "Only supported in desktop applications";
-  assert.that(obj => isFirefox(obj) || isThunderbird(obj),
-      msg, UnsupportedOperationError)();
+  assert.that(
+    obj => isFirefox(obj) || isThunderbird(obj),
+    msg,
+    UnsupportedOperationError
+  )();
 };
 
 /**
@@ -137,7 +145,9 @@ assert.fennec = function(msg = "") {
  */
 assert.content = function(context, msg = "") {
   msg = msg || "Only supported in content context";
-  assert.that(c => c.toString() == "content", msg, UnsupportedOperationError)(context);
+  assert.that(c => c.toString() == "content", msg, UnsupportedOperationError)(
+    context
+  );
 };
 
 /**
@@ -170,9 +180,9 @@ assert.open = function(context, msg = "") {
   }
 
   msg = msg || "Browsing context has been discarded";
-  return assert.that(ctx => ctx && !ctx.closed,
-      msg,
-      NoSuchWindowError)(context);
+  return assert.that(ctx => ctx && !ctx.closed, msg, NoSuchWindowError)(
+    context
+  );
 };
 
 /**
@@ -187,9 +197,11 @@ assert.open = function(context, msg = "") {
  *     If there is a user prompt.
  */
 assert.noUserPrompt = function(dialog, msg = "") {
-  assert.that(d => d === null || typeof d == "undefined",
-      msg,
-      UnexpectedAlertOpenError)(dialog);
+  assert.that(
+    d => d === null || typeof d == "undefined",
+    msg,
+    UnexpectedAlertOpenError
+  )(dialog);
 };
 
 /**
@@ -410,8 +422,7 @@ assert.array = function(obj, msg = "") {
  *     and which may throw <var>error</var> with <var>message</var>
  *     if <var>predicate</var> evaluates to false.
  */
-assert.that = function(
-    predicate, message = "", error = InvalidArgumentError) {
+assert.that = function(predicate, message = "", error = InvalidArgumentError) {
   return obj => {
     if (!predicate(obj)) {
       throw new error(message);

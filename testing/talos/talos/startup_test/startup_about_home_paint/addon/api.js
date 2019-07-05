@@ -4,7 +4,9 @@
 
 /* globals ExtensionAPI */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -57,9 +59,9 @@ this.startup_about_home_paint = class extends ExtensionAPI {
       // eslint-disable-next-line mozilla/avoid-Date-timing
       dump("__startTimestamp" + Date.now() + "__endTimestamp\n");
 
-
-      let env = Cc["@mozilla.org/process/environment;1"]
-                  .getService(Ci.nsIEnvironment);
+      let env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
 
       if (env.exists("TPPROFILINGINFO")) {
         let profilingInfo = env.get("TPPROFILINGINFO");
@@ -86,7 +88,5 @@ this.startup_about_home_paint = class extends ExtensionAPI {
     }
   }
 
-  onShutdown() {
-
-  }
+  onShutdown() {}
 };
