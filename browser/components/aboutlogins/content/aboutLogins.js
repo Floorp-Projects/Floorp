@@ -18,14 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   gElements.newLoginButton.addEventListener("click", () => {
-    window.dispatchEvent(new CustomEvent("AboutLoginsLoginSelected", {
-      detail: {},
-    }));
-
+    window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
     recordTelemetryEvent({object: "new_login", method: "new"});
   });
 
   document.dispatchEvent(new CustomEvent("AboutLoginsInit", {bubbles: true}));
+
+  gElements.loginFilter.focus();
 }, {once: true});
 
 window.addEventListener("AboutLoginsChromeToContent", event => {

@@ -18,6 +18,7 @@
     <script type="module" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
+    <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
     <link rel="icon" href="chrome://browser/content/aboutlogins/icons/favicon.svg">
   </head>
   <body>
@@ -33,6 +34,7 @@
 
     <template id="confirm-delete-dialog-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/confirm-delete-dialog.css">
       <div class="overlay">
         <div class="container" role="dialog" aria-labelledby="title" aria-describedby="message">
@@ -53,6 +55,7 @@
 
     <template id="login-list-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
       <div class="meta">
         <label for="login-sort">
@@ -71,6 +74,7 @@
 
     <template id="login-list-item-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
       <span class="title"></span>
       <span class="username"></span>
@@ -92,7 +96,7 @@
         <div class="detail-row">
           <label class="detail-cell">
             <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
-            <input type="url" name="origin" required data-l10n-id="login-item-origin"/>
+            <input type="url" name="origin" class="origin-input" required data-l10n-id="login-item-origin"/>
           </label>
           <button class="open-site-button" data-l10n-id="login-item-open-site-button"></button>
         </div>
@@ -131,6 +135,7 @@
 
     <template id="login-filter-template">
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
       <input data-l10n-id="login-filter" class="filter" type="text"/>
     </template>
