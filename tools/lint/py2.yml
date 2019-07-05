@@ -23,7 +23,6 @@ py2:
         - other-licenses
         - python/devtools
         - python/mach
-        - python/mozbuild
         - security
         - servo
         - taskcluster/docker/funsize-update-generator
