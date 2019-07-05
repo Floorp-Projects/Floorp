@@ -45,7 +45,6 @@ module.exports = {
   "overrides": [{
       "files": [
         "devtools/**",
-        "view/**",
         "widget/**",
         "xpcom/**",
         "xpfe/**",
