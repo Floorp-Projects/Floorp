@@ -7,23 +7,34 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "HandlerServiceTestUtils",
-];
+var EXPORTED_SYMBOLS = ["HandlerServiceTestUtils"];
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gExternalProtocolService",
-                                   "@mozilla.org/uriloader/external-protocol-service;1",
-                                   "nsIExternalProtocolService");
-XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
-XPCOMUtils.defineLazyServiceGetter(this, "gHandlerService",
-                                  "@mozilla.org/uriloader/handler-service;1",
-                                  "nsIHandlerService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gExternalProtocolService",
+  "@mozilla.org/uriloader/external-protocol-service;1",
+  "nsIExternalProtocolService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gMIMEService",
+  "@mozilla.org/mime;1",
+  "nsIMIMEService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gHandlerService",
+  "@mozilla.org/uriloader/handler-service;1",
+  "nsIHandlerService"
+);
 
 var HandlerServiceTestUtils = {
   /**
@@ -34,9 +45,7 @@ var HandlerServiceTestUtils = {
    *         alphabetically regardless of category.
    */
   getAllHandlerInfoTypes() {
-    return Array.from(gHandlerService.enumerate(),
-                      info => info.type)
-                .sort();
+    return Array.from(gHandlerService.enumerate(), info => info.type).sort();
   },
 
   /**
@@ -97,12 +106,16 @@ var HandlerServiceTestUtils = {
     // method does on the default nsIHandlerService instance.
     let osDefaultHandlerFound = {};
     let handlerInfo = gExternalProtocolService.getProtocolHandlerInfoFromOS(
-                                                  type, osDefaultHandlerFound);
+      type,
+      osDefaultHandlerFound
+    );
     if (gHandlerService.exists(handlerInfo)) {
       gHandlerService.fillHandlerInfo(handlerInfo, "");
     } else {
       gExternalProtocolService.setProtocolHandlerDefaults(
-                                  handlerInfo, osDefaultHandlerFound.value);
+        handlerInfo,
+        osDefaultHandlerFound.value
+      );
     }
     return handlerInfo;
   },
@@ -130,8 +143,8 @@ var HandlerServiceTestUtils = {
       // handler existed, and as such we initialize them to useSystemDefault.
       // This is because the AndroidBridge is not available in xpcshell tests.
       preferredAction = type.includes("/")
-                        ? Ci.nsIHandlerInfo.useHelperApp
-                        : Ci.nsIHandlerInfo.useSystemDefault;
+        ? Ci.nsIHandlerInfo.useHelperApp
+        : Ci.nsIHandlerInfo.useSystemDefault;
       // On Android, the default handler application is always the internal one.
       preferredApplicationHandler = {
         name: "Android chooser",
@@ -140,8 +153,8 @@ var HandlerServiceTestUtils = {
       // On Desktop, the default preferredAction for MIME types is saveToDisk,
       // while for protocols it is alwaysAsk.
       preferredAction = type.includes("/")
-                        ? Ci.nsIHandlerInfo.saveToDisk
-                        : Ci.nsIHandlerInfo.alwaysAsk;
+        ? Ci.nsIHandlerInfo.saveToDisk
+        : Ci.nsIHandlerInfo.alwaysAsk;
       preferredApplicationHandler = null;
     }
 
@@ -158,15 +171,18 @@ var HandlerServiceTestUtils = {
    * Checks whether an nsIHandlerInfo instance matches the provided object.
    */
   assertHandlerInfoMatches(handlerInfo, expected) {
-    let expectedInterface = expected.type.includes("/") ? Ci.nsIMIMEInfo
-                                                        : Ci.nsIHandlerInfo;
+    let expectedInterface = expected.type.includes("/")
+      ? Ci.nsIMIMEInfo
+      : Ci.nsIHandlerInfo;
     Assert.ok(handlerInfo instanceof expectedInterface);
     Assert.equal(handlerInfo.type, expected.type);
 
     if (!expected.preferredActionOSDependent) {
       Assert.equal(handlerInfo.preferredAction, expected.preferredAction);
-      Assert.equal(handlerInfo.alwaysAskBeforeHandling,
-                   expected.alwaysAskBeforeHandling);
+      Assert.equal(
+        handlerInfo.alwaysAskBeforeHandling,
+        expected.alwaysAskBeforeHandling
+      );
     }
 
     if (expectedInterface == Ci.nsIMIMEInfo) {
@@ -178,14 +194,15 @@ var HandlerServiceTestUtils = {
     }
 
     if (expected.preferredApplicationHandler) {
-      this.assertHandlerAppMatches(handlerInfo.preferredApplicationHandler,
-                                   expected.preferredApplicationHandler);
+      this.assertHandlerAppMatches(
+        handlerInfo.preferredApplicationHandler,
+        expected.preferredApplicationHandler
+      );
     } else {
       Assert.equal(handlerInfo.preferredApplicationHandler, null);
     }
 
-    let handlerAppsArrayEnumerator =
-        handlerInfo.possibleApplicationHandlers.enumerate();
+    let handlerAppsArrayEnumerator = handlerInfo.possibleApplicationHandlers.enumerate();
     if (AppConstants.platform == "android") {
       // On Android, the first handler application is always the internal one.
       this.assertHandlerAppMatches(handlerAppsArrayEnumerator.getNext(), {
@@ -193,8 +210,10 @@ var HandlerServiceTestUtils = {
       });
     }
     for (let expectedHandlerApp of expected.possibleApplicationHandlers || []) {
-      this.assertHandlerAppMatches(handlerAppsArrayEnumerator.getNext(),
-                                   expectedHandlerApp);
+      this.assertHandlerAppMatches(
+        handlerAppsArrayEnumerator.getNext(),
+        expectedHandlerApp
+      );
     }
     Assert.ok(!handlerAppsArrayEnumerator.hasMoreElements());
   },

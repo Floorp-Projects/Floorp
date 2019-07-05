@@ -21,21 +21,33 @@ function run_test() {
   registerMockWindowsRegKeyFactory();
 
   // Check the mock has been properly activated.
-  let regKey = Cc["@mozilla.org/windows-registry-key;1"]
-                 .createInstance(Ci.nsIWindowsRegKey);
-  regKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT, FILE_EXTENSION,
-              Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE);
-  Assert.equal(regKey.readStringValue("content type"), "",
-               "Check the mock replied as expected.");
+  let regKey = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+    Ci.nsIWindowsRegKey
+  );
+  regKey.open(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT,
+    FILE_EXTENSION,
+    Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE
+  );
+  Assert.equal(
+    regKey.readStringValue("content type"),
+    "",
+    "Check the mock replied as expected."
+  );
   Assert.ok(gTestUsedOurMock, "The test properly used the mock registry");
   // Reset gTestUsedOurMock, because we just used it.
   gTestUsedOurMock = false;
   // Try and get the MIME type associated with the extension. If this
   // operation does not throw an unexpected exception, the test succeeds.
-  Assert.throws(() => {
-    Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
-                             .getTypeFromExtension(FILE_EXTENSION);
-  }, /NS_ERROR_NOT_AVAILABLE/, "Should throw a NOT_AVAILABLE exception");
+  Assert.throws(
+    () => {
+      Cc["@mozilla.org/mime;1"]
+        .getService(Ci.nsIMIMEService)
+        .getTypeFromExtension(FILE_EXTENSION);
+    },
+    /NS_ERROR_NOT_AVAILABLE/,
+    "Should throw a NOT_AVAILABLE exception"
+  );
 
   Assert.ok(gTestUsedOurMock, "The test properly used the mock registry");
 }
@@ -122,9 +134,11 @@ MockWindowsRegKey.prototype = {
 
   readStringValue(aName) {
     // If this is the key under test, return a fake value
-    if (this._rootKey == Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT &&
-        this._relPath.toLowerCase() == FILE_EXTENSION &&
-        aName.toLowerCase() == "content type") {
+    if (
+      this._rootKey == Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT &&
+      this._relPath.toLowerCase() == FILE_EXTENSION &&
+      aName.toLowerCase() == "content type"
+    ) {
       gTestUsedOurMock = true;
       return "";
     }
@@ -140,8 +154,9 @@ function registerMockWindowsRegKeyFactory() {
   let originalWindowsRegKeyCID = Cc[kWindowsRegKeyContractID].number;
 
   info("Create a mock RegKey factory");
-  let originalRegKey = Cc["@mozilla.org/windows-registry-key;1"]
-                          .createInstance(Ci.nsIWindowsRegKey);
+  let originalRegKey = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+    Ci.nsIWindowsRegKey
+  );
   let mockWindowsRegKeyFactory = {
     createInstance(outer, iid) {
       if (outer != null) {
@@ -163,10 +178,7 @@ function registerMockWindowsRegKeyFactory() {
 
   registerCleanupFunction(() => {
     // Free references to the mock factory
-    registrar.unregisterFactory(
-      kMockCID,
-      mockWindowsRegKeyFactory
-    );
+    registrar.unregisterFactory(kMockCID, mockWindowsRegKeyFactory);
     // Restore the original factory
     registrar.registerFactory(
       Components.ID(originalWindowsRegKeyCID),
