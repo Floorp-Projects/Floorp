@@ -10,9 +10,11 @@
 /* import-globals-from subprocess_shared.js */
 /* import-globals-from subprocess_shared_win.js */
 /* import-globals-from subprocess_worker_common.js */
-importScripts("resource://gre/modules/subprocess/subprocess_shared.js",
-              "resource://gre/modules/subprocess/subprocess_shared_win.js",
-              "resource://gre/modules/subprocess/subprocess_worker_common.js");
+importScripts(
+  "resource://gre/modules/subprocess/subprocess_shared.js",
+  "resource://gre/modules/subprocess/subprocess_shared_win.js",
+  "resource://gre/modules/subprocess/subprocess_worker_common.js"
+);
 
 const POLL_TIMEOUT = 5000;
 
@@ -30,8 +32,15 @@ class Pipe extends BasePipe {
     let handle = win32.HANDLE();
 
     let curProc = libc.GetCurrentProcess();
-    libc.DuplicateHandle(curProc, origHandle, curProc, handle.address(),
-                         0, false /* inheritable */, win32.DUPLICATE_SAME_ACCESS);
+    libc.DuplicateHandle(
+      curProc,
+      origHandle,
+      curProc,
+      handle.address(),
+      0,
+      false /* inheritable */,
+      win32.DUPLICATE_SAME_ACCESS
+    );
 
     origHandle.dispose();
 
@@ -76,7 +85,7 @@ class Pipe extends BasePipe {
       return this.closedPromise;
     }
 
-    for (let {reject} of this.pending) {
+    for (let { reject } of this.pending) {
       let error = new Error("File closed");
       error.errorCode = SubprocessConstants.ERROR_END_OF_FILE;
       reject(error);
@@ -129,8 +138,11 @@ class InputPipe extends Pipe {
       let read = win32.DWORD();
 
       let ok = libc.GetOverlappedResult(
-        this.handle, this.overlapped.address(),
-        read.address(), false);
+        this.handle,
+        this.overlapped.address(),
+        read.address(),
+        false
+      );
 
       if (!ok) {
         this.onError();
@@ -154,7 +166,7 @@ class InputPipe extends Pipe {
     }
 
     return new Promise((resolve, reject) => {
-      this.pending.push({resolve, reject, length});
+      this.pending.push({ resolve, reject, length });
       this.readNext();
     });
   }
@@ -170,8 +182,13 @@ class InputPipe extends Pipe {
   readBuffer(count) {
     this.buffer = new ArrayBuffer(count);
 
-    let ok = libc.ReadFile(this.handle, this.buffer, count,
-                           null, this.overlapped.address());
+    let ok = libc.ReadFile(
+      this.handle,
+      this.buffer,
+      count,
+      null,
+      this.overlapped.address()
+    );
 
     if (!ok && (!this.process.handle || libc.winLastError)) {
       this.onError();
@@ -188,8 +205,11 @@ class InputPipe extends Pipe {
     let read = win32.DWORD();
 
     let ok = libc.GetOverlappedResult(
-      this.handle, this.overlapped.address(),
-      read.address(), false);
+      this.handle,
+      this.overlapped.address(),
+      read.address(),
+      false
+    );
 
     read = read.value;
 
@@ -199,7 +219,7 @@ class InputPipe extends Pipe {
       let buffer = this.buffer;
       this.buffer = null;
 
-      let {resolve} = this.shiftPending();
+      let { resolve } = this.shiftPending();
 
       if (read == buffer.byteLength) {
         resolve(buffer);
@@ -244,7 +264,7 @@ class OutputPipe extends Pipe {
     }
 
     return new Promise((resolve, reject) => {
-      this.pending.push({resolve, reject, buffer});
+      this.pending.push({ resolve, reject, buffer });
       this.writeNext();
     });
   }
@@ -259,8 +279,13 @@ class OutputPipe extends Pipe {
   writeBuffer(buffer) {
     this.buffer = buffer;
 
-    let ok = libc.WriteFile(this.handle, buffer, buffer.byteLength,
-                            null, this.overlapped.address());
+    let ok = libc.WriteFile(
+      this.handle,
+      buffer,
+      buffer.byteLength,
+      null,
+      this.overlapped.address()
+    );
 
     if (!ok && libc.winLastError) {
       this.onError();
@@ -277,15 +302,18 @@ class OutputPipe extends Pipe {
     let written = win32.DWORD();
 
     let ok = libc.GetOverlappedResult(
-      this.handle, this.overlapped.address(),
-      written.address(), false);
+      this.handle,
+      this.overlapped.address(),
+      written.address(),
+      false
+    );
 
     written = written.value;
 
     if (!ok || written != this.buffer.byteLength) {
       this.onError();
     } else if (written > 0) {
-      let {resolve} = this.shiftPending();
+      let { resolve } = this.shiftPending();
 
       this.buffer = null;
       resolve(written);
@@ -348,7 +376,7 @@ class Process extends BaseProcess {
    * @returns {win32.Handle[]}
    *          The array of file handles belonging to the spawned process.
    */
-  initPipes({stderr}) {
+  initPipes({ stderr }) {
     let our_pipes = [];
     let their_pipes = [];
 
@@ -381,16 +409,24 @@ class Process extends BaseProcess {
       }
 
       // If we don't have a valid stderr handle, just pass it along without duplicating.
-      if (String(srcHandle) == win32.INVALID_HANDLE_VALUE ||
-          String(srcHandle) == win32.NULL_HANDLE_VALUE) {
+      if (
+        String(srcHandle) == win32.INVALID_HANDLE_VALUE ||
+        String(srcHandle) == win32.NULL_HANDLE_VALUE
+      ) {
         their_pipes[2] = srcHandle;
       } else {
         let handle = win32.HANDLE();
 
         let curProc = libc.GetCurrentProcess();
-        let ok = libc.DuplicateHandle(curProc, srcHandle, curProc, handle.address(),
-                                      0, true /* inheritable */,
-                                      win32.DUPLICATE_SAME_ACCESS);
+        let ok = libc.DuplicateHandle(
+          curProc,
+          srcHandle,
+          curProc,
+          handle.address(),
+          0,
+          true /* inheritable */,
+          win32.DUPLICATE_SAME_ACCESS
+        );
 
         their_pipes[2] = ok && win32.Handle(handle);
       }
@@ -446,9 +482,13 @@ class Process extends BaseProcess {
   }
 
   spawn(options) {
-    let {command, arguments: args} = options;
+    let { command, arguments: args } = options;
 
-    if (/\\cmd\.exe$/i.test(command) && args.length == 3 && /^(\/S)?\/C$/i.test(args[1])) {
+    if (
+      /\\cmd\.exe$/i.test(command) &&
+      args.length == 3 &&
+      /^(\/S)?\/C$/i.test(args[1])
+    ) {
       // cmd.exe is insane and requires special treatment.
       args = [this.quoteString(args[0]), "/S/C", `"${args[2]}"`];
     } else {
@@ -464,9 +504,10 @@ class Process extends BaseProcess {
 
     let handles = this.initPipes(options);
 
-    let processFlags = win32.CREATE_NO_WINDOW
-                     | win32.CREATE_SUSPENDED
-                     | win32.CREATE_UNICODE_ENVIRONMENT;
+    let processFlags =
+      win32.CREATE_NO_WINDOW |
+      win32.CREATE_SUSPENDED |
+      win32.CREATE_UNICODE_ENVIRONMENT;
 
     if (io.breakAwayFromJob) {
       processFlags |= win32.CREATE_BREAKAWAY_FROM_JOB;
@@ -499,13 +540,17 @@ class Process extends BaseProcess {
 
     let errorMessage = "Failed to create process";
     let ok = libc.CreateProcessW(
-      command, args.join(" "),
-      null, /* Security attributes */
-      null, /* Thread security attributes */
-      true, /* Inherits handles */
-      processFlags, envp, options.workdir,
+      command,
+      args.join(" "),
+      null /* Security attributes */,
+      null /* Thread security attributes */,
+      true /* Inherits handles */,
+      processFlags,
+      envp,
+      options.workdir,
       startupInfo.address(),
-      procInfo.address());
+      procInfo.address()
+    );
 
     for (let handle of new Set(handles)) {
       // If any of our handles are invalid, they don't have finalizers.
@@ -522,18 +567,26 @@ class Process extends BaseProcess {
       this.jobHandle = win32.Handle(libc.CreateJobObjectW(null, null));
 
       let info = win32.JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
-      info.BasicLimitInformation.LimitFlags = win32.JOB_OBJECT_LIMIT_BREAKAWAY_OK;
+      info.BasicLimitInformation.LimitFlags =
+        win32.JOB_OBJECT_LIMIT_BREAKAWAY_OK;
 
-      ok = libc.SetInformationJobObject(this.jobHandle, win32.JobObjectExtendedLimitInformation,
-                                        ctypes.cast(info.address(), ctypes.voidptr_t),
-                                        info.constructor.size);
-      errorMessage = `Failed to set job limits: 0x${(ctypes.winLastError || 0).toString(16)}`;
+      ok = libc.SetInformationJobObject(
+        this.jobHandle,
+        win32.JobObjectExtendedLimitInformation,
+        ctypes.cast(info.address(), ctypes.voidptr_t),
+        info.constructor.size
+      );
+      errorMessage = `Failed to set job limits: 0x${(
+        ctypes.winLastError || 0
+      ).toString(16)}`;
     }
 
     if (ok) {
       ok = libc.AssignProcessToJobObject(this.jobHandle, procInfo.hProcess);
       if (!ok) {
-        errorMessage = `Failed to attach process to job object: 0x${(ctypes.winLastError || 0).toString(16)}`;
+        errorMessage = `Failed to attach process to job object: 0x${(
+          ctypes.winLastError || 0
+        ).toString(16)}`;
         libc.TerminateProcess(procInfo.hProcess, TERMINATE_EXIT_CODE);
       }
     }
@@ -621,8 +674,10 @@ io = {
   init(details) {
     this.comspec = details.comspec;
 
-    let signalEvent = ctypes.cast(ctypes.uintptr_t(details.signalEvent),
-                                  win32.HANDLE);
+    let signalEvent = ctypes.cast(
+      ctypes.uintptr_t(details.signalEvent),
+      win32.HANDLE
+    );
     this.signal = new Signal(signalEvent);
     this.updatePollEvents();
 
@@ -638,7 +693,7 @@ io = {
       this.signal.cleanup();
       this.signal = null;
 
-      self.postMessage({msg: "close"});
+      self.postMessage({ msg: "close" });
       self.close();
     }
   },
@@ -664,9 +719,11 @@ io = {
   },
 
   updatePollEvents() {
-    let handlers = [this.signal,
-                    ...this.pipes.values(),
-                    ...this.processes.values()];
+    let handlers = [
+      this.signal,
+      ...this.pipes.values(),
+      ...this.processes.values(),
+    ];
 
     handlers = handlers.filter(handler => handler.event);
 
@@ -693,15 +750,18 @@ io = {
     }
   },
 
-
   poll() {
     let timeout = this.messageCount > 0 ? 0 : POLL_TIMEOUT;
-    for (;; timeout = 0) {
+    for (; ; timeout = 0) {
       let events = this.events;
       let handlers = this.eventHandlers;
 
-      let result = libc.WaitForMultipleObjects(events.length, events,
-                                               false, timeout);
+      let result = libc.WaitForMultipleObjects(
+        events.length,
+        events,
+        false,
+        timeout
+      );
 
       if (result < handlers.length) {
         try {

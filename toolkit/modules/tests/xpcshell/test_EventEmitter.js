@@ -3,7 +3,9 @@
 
 var Cm = Components.manager;
 
-const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
 add_task(async function test_extractFiles() {
   testEmitter(new EventEmitter());
@@ -14,7 +16,6 @@ add_task(async function test_extractFiles() {
 
   await testPromise();
 });
-
 
 function testEmitter(emitter) {
   Assert.ok(emitter, "We have an event emitter");
@@ -44,7 +45,7 @@ function testEmitter(emitter) {
   }
 
   function onlyOnce() {
-    Assert.ok(!beenHere2, "\"once\" listener has been called once");
+    Assert.ok(!beenHere2, '"once" listener has been called once');
     beenHere2 = true;
     emitter.emit("onlyonce");
 
@@ -155,7 +156,7 @@ function testPromise() {
 
   Assert.equal(secondCallbackCalled, false, "second callback not called yet");
 
-  return Promise.all([ check1, check2, check3 ]).then(args => {
+  return Promise.all([check1, check2, check3]).then(args => {
     Assert.equal(args[0], "rval from c1", "callback 1 done good");
     Assert.equal(args[1], "rval from c2", "callback 2 done good");
     Assert.equal(args[2], "rval from c3", "callback 3 done good");

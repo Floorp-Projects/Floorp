@@ -6,9 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["AsyncPrefs"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const kInChildProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+const kInChildProcess =
+  Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
 const kAllowedPrefs = new Set([
   // NB: please leave the testing prefs at the top, and sort the rest alphabetically if you add
@@ -50,8 +51,10 @@ function maybeReturnErrorForSet(pref, value) {
     return `Can't set pref ${pref} to value of type ${valueType}.`;
   }
   let prefType = Services.prefs.getPrefType(pref);
-  if (prefType != Services.prefs.PREF_INVALID &&
-      prefType != kPrefTypeMap.get(valueType)) {
+  if (
+    prefType != Services.prefs.PREF_INVALID &&
+    prefType != kPrefTypeMap.get(valueType)
+  ) {
     return `Can't set pref ${pref} to a value with type ${valueType} that doesn't match the pref's type ${prefType}.`;
   }
   return false;
@@ -71,8 +74,12 @@ if (kInChildProcess) {
 
       let msgId = ++gUniqueId;
       return new Promise((resolve, reject) => {
-        gMsgMap.set(msgId, {resolve, reject});
-        Services.cpmm.sendAsyncMessage("AsyncPrefs:SetPref", {pref, value, msgId});
+        gMsgMap.set(msgId, { resolve, reject });
+        Services.cpmm.sendAsyncMessage("AsyncPrefs:SetPref", {
+          pref,
+          value,
+          msgId,
+        });
       });
     },
 
@@ -84,8 +91,8 @@ if (kInChildProcess) {
 
       let msgId = ++gUniqueId;
       return new Promise((resolve, reject) => {
-        gMsgMap.set(msgId, {resolve, reject});
-        Services.cpmm.sendAsyncMessage("AsyncPrefs:ResetPref", {pref, msgId});
+        gMsgMap.set(msgId, { resolve, reject });
+        Services.cpmm.sendAsyncMessage("AsyncPrefs:ResetPref", { pref, msgId });
       });
     },
 
@@ -151,21 +158,41 @@ if (kInChildProcess) {
     },
 
     onPrefReset(msg) {
-      let {pref, msgId} = msg.data;
-      this.reset(pref).then(function() {
-        msg.target.sendAsyncMessage("AsyncPrefs:PrefResetFinished", {msgId, success: true});
-      }, function(msg) {
-        msg.target.sendAsyncMessage("AsyncPrefs:PrefResetFinished", {msgId, success: false, message: msg});
-      });
+      let { pref, msgId } = msg.data;
+      this.reset(pref).then(
+        function() {
+          msg.target.sendAsyncMessage("AsyncPrefs:PrefResetFinished", {
+            msgId,
+            success: true,
+          });
+        },
+        function(msg) {
+          msg.target.sendAsyncMessage("AsyncPrefs:PrefResetFinished", {
+            msgId,
+            success: false,
+            message: msg,
+          });
+        }
+      );
     },
 
     onPrefSet(msg) {
-      let {pref, value, msgId} = msg.data;
-      this.set(pref, value).then(function() {
-        msg.target.sendAsyncMessage("AsyncPrefs:PrefSetFinished", {msgId, success: true});
-      }, function(msg) {
-        msg.target.sendAsyncMessage("AsyncPrefs:PrefSetFinished", {msgId, success: false, message: msg});
-      });
+      let { pref, value, msgId } = msg.data;
+      this.set(pref, value).then(
+        function() {
+          msg.target.sendAsyncMessage("AsyncPrefs:PrefSetFinished", {
+            msgId,
+            success: true,
+          });
+        },
+        function(msg) {
+          msg.target.sendAsyncMessage("AsyncPrefs:PrefSetFinished", {
+            msgId,
+            success: false,
+            message: msg,
+          });
+        }
+      );
     },
 
     init() {

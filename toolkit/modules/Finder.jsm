@@ -5,25 +5,38 @@
 
 var EXPORTED_SYMBOLS = ["Finder", "GetClipboardSearchString"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Rect} = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "Clipboard",
-                                         "@mozilla.org/widget/clipboard;1",
-                                         "nsIClipboard");
-XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
-                                         "@mozilla.org/widget/clipboardhelper;1",
-                                         "nsIClipboardHelper");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "Clipboard",
+  "@mozilla.org/widget/clipboard;1",
+  "nsIClipboard"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ClipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
 
 const kSelectionMaxLen = 150;
 const kMatchesCountLimitPref = "accessibility.typeaheadfind.matchesCountLimit";
 
 function Finder(docShell) {
-  this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
+  this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(
+    Ci.nsITypeAheadFind
+  );
   this._fastFind.init(docShell);
 
   this._currentFoundRange = null;
@@ -33,24 +46,32 @@ function Finder(docShell) {
   this._searchString = null;
   this._highlighter = null;
 
-  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebProgress)
-          .addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
-  BrowserUtils.getRootWindow(this._docShell).addEventListener("unload",
-    this.onLocationChange.bind(this, { isTopLevel: true }));
+  docShell
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebProgress)
+    .addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+  BrowserUtils.getRootWindow(this._docShell).addEventListener(
+    "unload",
+    this.onLocationChange.bind(this, { isTopLevel: true })
+  );
 }
 
 Finder.prototype = {
   get iterator() {
-    if (this._iterator)
+    if (this._iterator) {
       return this._iterator;
-    this._iterator = ChromeUtils.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
+    }
+    this._iterator = ChromeUtils.import(
+      "resource://gre/modules/FinderIterator.jsm",
+      null
+    ).FinderIterator;
     return this._iterator;
   },
 
   destroy() {
-    if (this._iterator)
+    if (this._iterator) {
       this._iterator.reset();
+    }
     let window = this._getWindow();
     if (this._highlighter && window) {
       // if we clear all the references before we hide the highlights (in both
@@ -60,17 +81,18 @@ Finder.prototype = {
       this._highlighter.clear(window);
     }
     this.listeners = [];
-    this._docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+    this._docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress)
       .removeProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
     this._listeners = [];
-    this._currentFoundRange = this._fastFind = this._docShell = this._previousLink =
-      this._highlighter = null;
+    this._currentFoundRange = this._fastFind = this._docShell = this._previousLink = this._highlighter = null;
   },
 
   addResultListener(aListener) {
-    if (!this._listeners.includes(aListener))
+    if (!this._listeners.includes(aListener)) {
       this._listeners.push(aListener);
+    }
   },
 
   removeResultListener(aListener) {
@@ -78,8 +100,9 @@ Finder.prototype = {
   },
 
   _notify(options) {
-    if (typeof options.storeResult != "boolean")
+    if (typeof options.storeResult != "boolean") {
       options.storeResult = true;
+    }
 
     if (options.storeResult) {
       this._searchString = options.searchString;
@@ -91,22 +114,28 @@ Finder.prototype = {
     if (foundLink) {
       let docCharset = null;
       let ownerDoc = foundLink.ownerDocument;
-      if (ownerDoc)
+      if (ownerDoc) {
         docCharset = ownerDoc.characterSet;
+      }
 
-      linkURL = Services.textToSubURI.unEscapeURIForUI(docCharset, foundLink.href);
+      linkURL = Services.textToSubURI.unEscapeURIForUI(
+        docCharset,
+        foundLink.href
+      );
     }
 
     options.linkURL = linkURL;
     options.rect = this._getResultRect();
     options.searchString = this._searchString;
 
-    if (!this.iterator.continueRunning({
-      caseSensitive: this._fastFind.caseSensitive,
-      entireWord: this._fastFind.entireWord,
-      linksOnly: options.linksOnly,
-      word: options.searchString,
-    })) {
+    if (
+      !this.iterator.continueRunning({
+        caseSensitive: this._fastFind.caseSensitive,
+        entireWord: this._fastFind.entireWord,
+        linksOnly: options.linksOnly,
+        word: options.searchString,
+      })
+    ) {
       this.iterator.stop();
     }
 
@@ -123,52 +152,63 @@ Finder.prototype = {
   },
 
   get searchString() {
-    if (!this._searchString && this._fastFind.searchString)
+    if (!this._searchString && this._fastFind.searchString) {
       this._searchString = this._fastFind.searchString;
+    }
     return this._searchString;
   },
 
   get clipboardSearchString() {
-    return GetClipboardSearchString(this._getWindow()
-                                        .docShell
-                                        .QueryInterface(Ci.nsILoadContext));
+    return GetClipboardSearchString(
+      this._getWindow().docShell.QueryInterface(Ci.nsILoadContext)
+    );
   },
 
   set clipboardSearchString(aSearchString) {
-    if (!aSearchString || !Clipboard.supportsFindClipboard())
+    if (!aSearchString || !Clipboard.supportsFindClipboard()) {
       return;
+    }
 
-    ClipboardHelper.copyStringToClipboard(aSearchString,
-                                          Ci.nsIClipboard.kFindClipboard);
+    ClipboardHelper.copyStringToClipboard(
+      aSearchString,
+      Ci.nsIClipboard.kFindClipboard
+    );
   },
 
   set caseSensitive(aSensitive) {
-    if (this._fastFind.caseSensitive === aSensitive)
+    if (this._fastFind.caseSensitive === aSensitive) {
       return;
+    }
     this._fastFind.caseSensitive = aSensitive;
     this.iterator.reset();
   },
 
   set entireWord(aEntireWord) {
-    if (this._fastFind.entireWord === aEntireWord)
+    if (this._fastFind.entireWord === aEntireWord) {
       return;
+    }
     this._fastFind.entireWord = aEntireWord;
     this.iterator.reset();
   },
 
   get highlighter() {
-    if (this._highlighter)
+    if (this._highlighter) {
       return this._highlighter;
+    }
 
-    const {FinderHighlighter} = ChromeUtils.import("resource://gre/modules/FinderHighlighter.jsm");
-    return this._highlighter = new FinderHighlighter(this);
+    const { FinderHighlighter } = ChromeUtils.import(
+      "resource://gre/modules/FinderHighlighter.jsm"
+    );
+    return (this._highlighter = new FinderHighlighter(this));
   },
 
   get matchesCountLimit() {
-    if (typeof this._matchesCountLimit == "number")
+    if (typeof this._matchesCountLimit == "number") {
       return this._matchesCountLimit;
+    }
 
-    this._matchesCountLimit = Services.prefs.getIntPref(kMatchesCountLimitPref) || 0;
+    this._matchesCountLimit =
+      Services.prefs.getIntPref(kMatchesCountLimitPref) || 0;
     return this._matchesCountLimit;
   },
 
@@ -224,8 +264,9 @@ Finder.prototype = {
     let searchString = this.getActiveSelectionText();
 
     // Empty strings are rather useless to search for.
-    if (!searchString.length)
+    if (!searchString.length) {
       return null;
+    }
 
     this.clipboardSearchString = searchString;
     return searchString;
@@ -248,9 +289,11 @@ Finder.prototype = {
 
   getActiveSelectionText() {
     let focusedWindow = {};
-    let focusedElement =
-      Services.focus.getFocusedElementForWindow(this._getWindow(), true,
-                                                focusedWindow);
+    let focusedElement = Services.focus.getFocusedElementForWindow(
+      this._getWindow(),
+      true,
+      focusedWindow
+    );
     focusedWindow = focusedWindow.value;
 
     let selText;
@@ -265,16 +308,18 @@ Finder.prototype = {
       selText = focusedWindow.getSelection().toString();
     }
 
-    if (!selText)
+    if (!selText) {
       return "";
+    }
 
     // Process our text to get rid of unwanted characters.
     selText = selText.trim().replace(/\s+/g, " ");
     let truncLength = kSelectionMaxLen;
     if (selText.length > truncLength) {
       let truncChar = selText.charAt(truncLength).charCodeAt(0);
-      if (truncChar >= 0xDC00 && truncChar <= 0xDFFF)
+      if (truncChar >= 0xdc00 && truncChar <= 0xdfff) {
         truncLength++;
+      }
       selText = selText.substr(0, truncLength);
     }
 
@@ -282,7 +327,9 @@ Finder.prototype = {
   },
 
   enableSelection() {
-    this._fastFind.setSelectionModeAndRepaint(Ci.nsISelectionController.SELECTION_ON);
+    this._fastFind.setSelectionModeAndRepaint(
+      Ci.nsISelectionController.SELECTION_ON
+    );
     this._restoreOriginalOutline();
   },
 
@@ -296,9 +343,9 @@ Finder.prototype = {
     // Allow Finder listeners to cancel focusing the content.
     for (let l of this._listeners) {
       try {
-        if ("shouldFocusContent" in l &&
-            !l.shouldFocusContent())
+        if ("shouldFocusContent" in l && !l.shouldFocusContent()) {
           return;
+        }
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -310,9 +357,15 @@ Finder.prototype = {
       // block scrolling on focus since find already scrolls. Further
       // scrolling is due to user action, so don't override this.
       if (fastFind.foundLink) {
-        Services.focus.setFocus(fastFind.foundLink, Services.focus.FLAG_NOSCROLL);
+        Services.focus.setFocus(
+          fastFind.foundLink,
+          Services.focus.FLAG_NOSCROLL
+        );
       } else if (fastFind.foundEditable) {
-        Services.focus.setFocus(fastFind.foundEditable, Services.focus.FLAG_NOSCROLL);
+        Services.focus.setFocus(
+          fastFind.foundEditable,
+          Services.focus.FLAG_NOSCROLL
+        );
         fastFind.collapseSelection();
       } else {
         this._getWindow().focus();
@@ -332,15 +385,18 @@ Finder.prototype = {
   },
 
   onModalHighlightChange(useModalHighlight) {
-    if (this._highlighter)
+    if (this._highlighter) {
       this._highlighter.onModalHighlightChange(useModalHighlight);
+    }
   },
 
   onHighlightAllChange(highlightAll) {
-    if (this._highlighter)
+    if (this._highlighter) {
       this._highlighter.onHighlightAllChange(highlightAll);
-    if (this._iterator)
+    }
+    if (this._iterator) {
       this._iterator.reset();
+    }
   },
 
   keyPress(aEvent) {
@@ -350,15 +406,17 @@ Finder.prototype = {
       case aEvent.DOM_VK_RETURN:
         if (this._fastFind.foundLink) {
           let view = this._fastFind.foundLink.ownerGlobal;
-          this._fastFind.foundLink.dispatchEvent(new view.MouseEvent("click", {
-            view,
-            cancelable: true,
-            bubbles: true,
-            ctrlKey: aEvent.ctrlKey,
-            altKey: aEvent.altKey,
-            shiftKey: aEvent.shiftKey,
-            metaKey: aEvent.metaKey,
-          }));
+          this._fastFind.foundLink.dispatchEvent(
+            new view.MouseEvent("click", {
+              view,
+              cancelable: true,
+              bubbles: true,
+              ctrlKey: aEvent.ctrlKey,
+              altKey: aEvent.altKey,
+              shiftKey: aEvent.shiftKey,
+              metaKey: aEvent.metaKey,
+            })
+          );
         }
         break;
       case aEvent.DOM_VK_TAB:
@@ -387,8 +445,9 @@ Finder.prototype = {
     // The `_currentFound` property is only used for internal bookkeeping.
     delete result._currentFound;
     result.limit = this.matchesCountLimit;
-    if (result.total == result.limit)
+    if (result.total == result.limit) {
       result.total = -1;
+    }
 
     for (let l of this._listeners) {
       try {
@@ -400,8 +459,12 @@ Finder.prototype = {
   },
 
   requestMatchesCount(aWord, aLinksOnly) {
-    if (this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
-        this.searchString == "" || !aWord || !this.matchesCountLimit) {
+    if (
+      this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
+      this.searchString == "" ||
+      !aWord ||
+      !this.matchesCountLimit
+    ) {
       this._notifyMatchesCount({
         total: 0,
         current: 0,
@@ -417,38 +480,49 @@ Finder.prototype = {
       linksOnly: aLinksOnly,
       word: aWord,
     };
-    if (!this.iterator.continueRunning(params))
+    if (!this.iterator.continueRunning(params)) {
       this.iterator.stop();
+    }
 
-    this.iterator.start(Object.assign(params, {
-      finder: this,
-      limit: this.matchesCountLimit,
-      listener: this,
-      useCache: true,
-    })).then(() => {
-      // Without a valid result, there's nothing to notify about. This happens
-      // when the iterator was started before and won the race.
-      if (!this._currentMatchesCountResult || !this._currentMatchesCountResult.total)
-        return;
-      this._notifyMatchesCount();
-    });
+    this.iterator
+      .start(
+        Object.assign(params, {
+          finder: this,
+          limit: this.matchesCountLimit,
+          listener: this,
+          useCache: true,
+        })
+      )
+      .then(() => {
+        // Without a valid result, there's nothing to notify about. This happens
+        // when the iterator was started before and won the race.
+        if (
+          !this._currentMatchesCountResult ||
+          !this._currentMatchesCountResult.total
+        ) {
+          return;
+        }
+        this._notifyMatchesCount();
+      });
   },
 
   // FinderIterator listener implementation
 
   onIteratorRangeFound(range) {
     let result = this._currentMatchesCountResult;
-    if (!result)
+    if (!result) {
       return;
+    }
 
     ++result.total;
     if (!result._currentFound) {
       ++result.current;
-      result._currentFound = (this._currentFoundRange &&
+      result._currentFound =
+        this._currentFoundRange &&
         range.startContainer == this._currentFoundRange.startContainer &&
         range.startOffset == this._currentFoundRange.startOffset &&
         range.endContainer == this._currentFoundRange.endContainer &&
-        range.endOffset == this._currentFoundRange.endOffset);
+        range.endOffset == this._currentFoundRange.endOffset;
     }
   },
 
@@ -467,8 +541,9 @@ Finder.prototype = {
   },
 
   _getWindow() {
-    if (!this._docShell)
+    if (!this._docShell) {
       return null;
+    }
     return this._docShell.domWindow;
   },
 
@@ -479,8 +554,9 @@ Finder.prototype = {
   _getResultRect() {
     let topWin = this._getWindow();
     let win = this._fastFind.currentWindow;
-    if (!win)
+    if (!win) {
       return null;
+    }
 
     let selection = win.getSelection();
     if (!selection.rangeCount || selection.isCollapsed) {
@@ -490,7 +566,9 @@ Finder.prototype = {
         if (node.editor) {
           try {
             let sc = node.editor.selectionController;
-            selection = sc.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+            selection = sc.getSelection(
+              Ci.nsISelectionController.SELECTION_NORMAL
+            );
             if (selection.rangeCount && !selection.isCollapsed) {
               break;
             }
@@ -508,7 +586,8 @@ Finder.prototype = {
 
     let utils = topWin.windowUtils;
 
-    let scrollX = {}, scrollY = {};
+    let scrollX = {},
+      scrollY = {};
     utils.getScrollXY(false, scrollX, scrollY);
 
     for (let frame = win; frame != topWin; frame = frame.parent) {
@@ -527,8 +606,9 @@ Finder.prototype = {
 
     // Optimization: We are drawing outlines and we matched
     // the same link before, so don't duplicate work.
-    if (foundLink == this._previousLink && aDrawOutline)
+    if (foundLink == this._previousLink && aDrawOutline) {
       return;
+    }
 
     this._restoreOriginalOutline();
 
@@ -561,8 +641,9 @@ Finder.prototype = {
   _getSelectionController(aWindow) {
     // display: none iframes don't have a selection controller, see bug 493658
     try {
-      if (!aWindow.innerWidth || !aWindow.innerHeight)
+      if (!aWindow.innerWidth || !aWindow.innerHeight) {
         return null;
+      }
     } catch (e) {
       // If getting innerWidth or innerHeight throws, we can't get a selection
       // controller.
@@ -572,20 +653,23 @@ Finder.prototype = {
     // Yuck. See bug 138068.
     let docShell = aWindow.docShell;
 
-    let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsISelectionDisplay)
-                             .QueryInterface(Ci.nsISelectionController);
+    let controller = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsISelectionDisplay)
+      .QueryInterface(Ci.nsISelectionController);
     return controller;
   },
 
   // Start of nsIWebProgressListener implementation.
 
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-    if (!aWebProgress.isTopLevel)
+    if (!aWebProgress.isTopLevel) {
       return;
+    }
     // Ignore events that don't change the document.
-    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       return;
+    }
 
     // Avoid leaking if we change the page.
     this._lastFindResult = this._previousLink = this._currentFoundRange = null;
@@ -593,18 +677,22 @@ Finder.prototype = {
     this.iterator.reset();
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 function GetClipboardSearchString(aLoadContext) {
   let searchString = "";
-  if (!Clipboard.supportsFindClipboard())
+  if (!Clipboard.supportsFindClipboard()) {
     return searchString;
+  }
 
   try {
-    let trans = Cc["@mozilla.org/widget/transferable;1"]
-                  .createInstance(Ci.nsITransferable);
+    let trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+      Ci.nsITransferable
+    );
     trans.init(aLoadContext);
     trans.addDataFlavor("text/unicode");
 
@@ -620,4 +708,3 @@ function GetClipboardSearchString(aLoadContext) {
 
   return searchString;
 }
-

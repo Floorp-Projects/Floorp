@@ -62,17 +62,26 @@ var tests = {
     let r1 = new Rect(10, 10, 100, 100);
     let r2 = new Rect(50, 50, 100, 100);
     r1.expandToContain(r2);
-    ok(r1.equals(new Rect(10, 10, 140, 140)), "correct expandToContain on intersecting rectangles");
+    ok(
+      r1.equals(new Rect(10, 10, 140, 140)),
+      "correct expandToContain on intersecting rectangles"
+    );
 
     r1 = new Rect(10, 10, 100, 100);
     r2 = new Rect(120, 120, 100, 100);
     r1.expandToContain(r2);
-    ok(r1.equals(new Rect(10, 10, 210, 210)), "correct expandToContain on non-intersecting rectangles");
+    ok(
+      r1.equals(new Rect(10, 10, 210, 210)),
+      "correct expandToContain on non-intersecting rectangles"
+    );
 
     r1 = new Rect(10, 10, 100, 100);
     r2 = new Rect(0, 0, 0, 0);
     r1.expandToContain(r2);
-    ok(r1.equals(new Rect(10, 10, 100, 100)), "expandToContain of rect and empty is rect");
+    ok(
+      r1.equals(new Rect(10, 10, 100, 100)),
+      "expandToContain of rect and empty is rect"
+    );
 
     r1 = new Rect(10, 10, 0, 0);
     r2 = new Rect(0, 0, 0, 0);
@@ -82,30 +91,45 @@ var tests = {
 
   testSubtract: function testSubtract() {
     function equals(rects1, rects2) {
-      return rects1.length == rects2.length && rects1.every(function(r, i) {
-        return r.equals(rects2[i]);
-      });
+      return (
+        rects1.length == rects2.length &&
+        rects1.every(function(r, i) {
+          return r.equals(rects2[i]);
+        })
+      );
     }
 
     let r1 = new Rect(0, 0, 100, 100);
     let r2 = new Rect(500, 500, 100, 100);
-    ok(equals(r1.subtract(r2), [r1]), "subtract area outside of region yields same region");
+    ok(
+      equals(r1.subtract(r2), [r1]),
+      "subtract area outside of region yields same region"
+    );
 
     r1 = new Rect(0, 0, 100, 100);
     r2 = new Rect(-10, -10, 50, 120);
-    ok(equals(r1.subtract(r2), [new Rect(40, 0, 60, 100)]), "subtracting vertical bar from edge leaves one rect");
+    ok(
+      equals(r1.subtract(r2), [new Rect(40, 0, 60, 100)]),
+      "subtracting vertical bar from edge leaves one rect"
+    );
 
     r1 = new Rect(0, 0, 100, 100);
     r2 = new Rect(-10, -10, 120, 50);
-    ok(equals(r1.subtract(r2), [new Rect(0, 40, 100, 60)]), "subtracting horizontal bar from edge leaves one rect");
+    ok(
+      equals(r1.subtract(r2), [new Rect(0, 40, 100, 60)]),
+      "subtracting horizontal bar from edge leaves one rect"
+    );
 
     r1 = new Rect(0, 0, 100, 100);
     r2 = new Rect(40, 40, 20, 20);
-    ok(equals(r1.subtract(r2), [
-      new Rect(0, 0, 40, 100),
-      new Rect(40, 0, 20, 40),
-      new Rect(40, 60, 20, 40),
-      new Rect(60, 0, 40, 100)]),
-      "subtracting rect in middle leaves union of rects");
+    ok(
+      equals(r1.subtract(r2), [
+        new Rect(0, 0, 40, 100),
+        new Rect(40, 0, 20, 40),
+        new Rect(40, 60, 20, 40),
+        new Rect(60, 0, 40, 100),
+      ]),
+      "subtracting rect in middle leaves union of rects"
+    );
   },
 };

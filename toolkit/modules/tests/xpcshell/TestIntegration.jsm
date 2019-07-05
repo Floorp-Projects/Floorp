@@ -7,9 +7,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "TestIntegration",
-];
+var EXPORTED_SYMBOLS = ["TestIntegration"];
 
 var TestIntegration = {
   value: "value",
