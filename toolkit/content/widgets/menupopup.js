@@ -21,8 +21,15 @@
       this.addEventListener("popupshowing", event => {
         let array = [];
         let width = 0;
-        for (let menuitem = this.firstElementChild; menuitem; menuitem = menuitem.nextElementSibling) {
-          if (menuitem.localName == "menuitem" && menuitem.hasAttribute("acceltext")) {
+        for (
+          let menuitem = this.firstElementChild;
+          menuitem;
+          menuitem = menuitem.nextElementSibling
+        ) {
+          if (
+            menuitem.localName == "menuitem" &&
+            menuitem.hasAttribute("acceltext")
+          ) {
             let accel = menuitem.querySelector(".menu-accel-container");
             if (accel && accel.boxObject) {
               array.push(accel);
@@ -32,7 +39,7 @@
             }
           }
         }
-        array.forEach(accel => accel.width = width);
+        array.forEach(accel => (accel.width = width));
       });
     }
 
@@ -41,12 +48,14 @@
         return;
       }
       this.hasConnected = true;
-      this.appendChild(MozXULElement.parseXULToFragment(`
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
         <arrowscrollbox class="popup-internal-box"
                         flex="1"
                         orient="vertical"
                         smoothscroll="false"/>
-      `));
+      `)
+      );
       this.scrollBox = this.querySelector(".popup-internal-box");
 
       if (this.parentNode && this.parentNode.localName == "menulist") {
@@ -93,10 +102,12 @@
           return;
         }
 
-        if (this.state == "open" &&
+        if (
+          this.state == "open" &&
           (event.target.localName == "menuitem" ||
             event.target.localName == "menu" ||
-            event.target.localName == "menucaption")) {
+            event.target.localName == "menucaption")
+        ) {
           this._enableDragScrolling(true);
         }
       });
@@ -133,18 +144,24 @@
         // does not start until the mouse has moved over the menupopup first,
         // preventing scrolling while over the dropdown button.
         let popupRect = this.getOuterScreenRect();
-        if (event.screenX >= popupRect.left &&
-          event.screenX <= popupRect.right) {
+        if (
+          event.screenX >= popupRect.left &&
+          event.screenX <= popupRect.right
+        ) {
           if (this._draggingState == this.DRAG_OVER_BUTTON) {
-            if (event.screenY > popupRect.top &&
-              event.screenY < popupRect.bottom) {
+            if (
+              event.screenY > popupRect.top &&
+              event.screenY < popupRect.bottom
+            ) {
               this._draggingState = this.DRAG_OVER_POPUP;
             }
           }
 
-          if (this._draggingState == this.DRAG_OVER_POPUP &&
+          if (
+            this._draggingState == this.DRAG_OVER_POPUP &&
             (event.screenY <= popupRect.top ||
-              event.screenY >= popupRect.bottom)) {
+              event.screenY >= popupRect.bottom)
+          ) {
             let scrollAmount = event.screenY <= popupRect.top ? -1 : 1;
             this.scrollBox.scrollByIndex(scrollAmount, true);
 

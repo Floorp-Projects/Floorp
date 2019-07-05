@@ -6,8 +6,9 @@
 const NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
 const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
 
-var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                    getService(Ci.nsIXULChromeRegistry);
+var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIXULChromeRegistry
+);
 
 // Create the temporary file in the profile, instead of in TmpD, because
 // we know the mochitest harness kills off the profile when it's done.
@@ -22,8 +23,8 @@ function copyToTemporaryFile(f) {
 }
 
 function* dirIter(directory) {
-  var testsDir = Services.io.newURI(directory)
-                  .QueryInterface(Ci.nsIFileURL).file;
+  var testsDir = Services.io.newURI(directory).QueryInterface(Ci.nsIFileURL)
+    .file;
 
   let en = testsDir.directoryEntries;
   while (en.hasMoreElements()) {
@@ -81,8 +82,7 @@ function chromeURIToFile(chromeURI) {
     return tmpDir;
   }
 
-  return convertChromeURI(chromeURI).
-    QueryInterface(Ci.nsIFileURL).file;
+  return convertChromeURI(chromeURI).QueryInterface(Ci.nsIFileURL).file;
 }
 
 // Register a chrome manifest temporarily and return a function which un-does
@@ -92,16 +92,17 @@ function createManifestTemporarily(tempDir, manifestText) {
 
   tempDir.append("temp.manifest");
 
-  let foStream = Cc["@mozilla.org/network/file-output-stream;1"]
-                   .createInstance(Ci.nsIFileOutputStream);
-  foStream.init(tempDir,
-                0x02 | 0x08 | 0x20, 0o664, 0); // write, create, truncate
+  let foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  foStream.init(tempDir, 0x02 | 0x08 | 0x20, 0o664, 0); // write, create, truncate
   foStream.write(manifestText, manifestText.length);
   foStream.close();
   let tempfile = copyToTemporaryFile(tempDir);
 
-  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
-    autoRegister(tempfile);
+  Components.manager
+    .QueryInterface(Ci.nsIComponentRegistrar)
+    .autoRegister(tempfile);
 
   return function() {
     tempfile.fileSize = 0; // truncate the manifest
@@ -118,8 +119,9 @@ function registerManifestTemporarily(manifestURI) {
   let file = chromeURIToFile(manifestURI);
 
   let tempfile = copyToTemporaryFile(file);
-  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
-    autoRegister(tempfile);
+  Components.manager
+    .QueryInterface(Ci.nsIComponentRegistrar)
+    .autoRegister(tempfile);
 
   return function() {
     tempfile.fileSize = 0; // truncate the manifest
@@ -131,7 +133,8 @@ function registerManifestTemporarily(manifestURI) {
 function registerManifestPermanently(manifestURI) {
   var chromepath = chromeURIToFile(manifestURI);
 
-  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
-    autoRegister(chromepath);
+  Components.manager
+    .QueryInterface(Ci.nsIComponentRegistrar)
+    .autoRegister(chromepath);
   return chromepath;
 }

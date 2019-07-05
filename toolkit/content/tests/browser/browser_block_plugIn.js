@@ -1,11 +1,14 @@
-const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_plugIn.html";
+const PAGE =
+  "https://example.com/browser/toolkit/content/tests/browser/file_plugIn.html";
 
 add_task(async function setup_test_preference() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["media.useAudioChannelService.testing", true],
+      ["media.block-autoplay-until-in-foreground", true],
+    ],
+  });
 });
 
 add_task(async function block_plug_in() {
