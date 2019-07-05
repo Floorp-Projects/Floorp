@@ -1,5 +1,8 @@
 /* globals state:true */
-is(document.readyState, "interactive", "readyState should be interactive during defer.");
+is(
+  document.readyState,
+  "interactive",
+  "readyState should be interactive during defer."
+);
 is(state, "readyState interactive", "Bad state upon defer");
 state = "defer";
-
