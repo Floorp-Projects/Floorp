@@ -73,11 +73,10 @@ namespace jit {
 class MacroAssembler;
 }  // namespace jit
 
-class NurseryDecommitChunksTask
-    : public GCParallelTaskHelper<NurseryDecommitChunksTask> {
+class NurseryDecommitTask : public GCParallelTaskHelper<NurseryDecommitTask> {
  public:
-  explicit NurseryDecommitChunksTask(JSRuntime* rt)
-      : GCParallelTaskHelper(rt) {}
+  explicit NurseryDecommitTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+
   void queueChunk(NurseryChunk* chunk, const AutoLockHelperThreadState& lock);
   void run();
   void decommitChunk(gc::Chunk* chunk);
@@ -422,7 +421,7 @@ class Nursery {
   static const size_t NurseryChunkUsableSize =
       gc::ChunkSize - gc::ChunkTrailerSize;
 
-  void joinDecommitTask() { decommitChunksTask.join(); }
+  void joinDecommitTask() { decommitTask.join(); }
 
  private:
   JSRuntime* runtime_;
@@ -568,7 +567,7 @@ class Nursery {
   Vector<MapObject*, 0, SystemAllocPolicy> mapsWithNurseryMemory_;
   Vector<SetObject*, 0, SystemAllocPolicy> setsWithNurseryMemory_;
 
-  NurseryDecommitChunksTask decommitChunksTask;
+  NurseryDecommitTask decommitTask;
 
 #ifdef JS_GC_ZEAL
   struct Canary;
