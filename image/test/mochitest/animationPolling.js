@@ -3,49 +3,56 @@ var currentTest;
 var gIsRefImageLoaded = false;
 const gShouldOutputDebugInfo = false;
 
-function pollForSuccess()
-{
+function pollForSuccess() {
   if (!currentTest.isTestFinished) {
-    if (!currentTest.reusingReferenceImage || (currentTest.reusingReferenceImage
-        && gRefImageLoaded)) {
+    if (
+      !currentTest.reusingReferenceImage ||
+      (currentTest.reusingReferenceImage && gRefImageLoaded)
+    ) {
       currentTest.checkImage();
     }
 
     setTimeout(pollForSuccess, currentTest.pollFreq);
   }
-};
+}
 
-function referencePoller()
-{
+function referencePoller() {
   currentTest.takeReferenceSnapshot();
 }
 
-function reuseImageCallback()
-{
+function reuseImageCallback() {
   gIsRefImageLoaded = true;
 }
 
-function failTest()
-{
+function failTest() {
   if (currentTest.isTestFinished || currentTest.closeFunc) {
     return;
   }
 
-  ok(false, "timing out after " + currentTest.timeout + "ms.  "
-     + "Animated image still doesn't look correct, after poll #"
-     + currentTest.pollCounter);
+  ok(
+    false,
+    "timing out after " +
+      currentTest.timeout +
+      "ms.  " +
+      "Animated image still doesn't look correct, after poll #" +
+      currentTest.pollCounter
+  );
   currentTest.wereFailures = true;
 
   if (currentTest.currentSnapshotDataURI) {
-    currentTest.outputDebugInfo("Snapshot #" + currentTest.pollCounter,
-                                "snapNum" + currentTest.pollCounter,
-                                currentTest.currentSnapshotDataURI);
+    currentTest.outputDebugInfo(
+      "Snapshot #" + currentTest.pollCounter,
+      "snapNum" + currentTest.pollCounter,
+      currentTest.currentSnapshotDataURI
+    );
   }
 
-  currentTest.enableDisplay(document.getElementById(currentTest.debugElementId));
+  currentTest.enableDisplay(
+    document.getElementById(currentTest.debugElementId)
+  );
 
   currentTest.cleanUpAndFinish();
-};
+}
 
 /**
  * Create a new AnimationTest object.
@@ -75,9 +82,17 @@ function failTest()
  *        chain tests together, so they are all finished exactly once.
  * @returns {AnimationTest}
  */
-function AnimationTest(pollFreq, timeout, referenceElementId, imageElementId,
-                       debugElementId, cleanId, srcAttr, xulTest, closeFunc)
-{
+function AnimationTest(
+  pollFreq,
+  timeout,
+  referenceElementId,
+  imageElementId,
+  debugElementId,
+  cleanId,
+  srcAttr,
+  xulTest,
+  closeFunc
+) {
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
   clearAllImageCaches();
@@ -103,24 +118,24 @@ function AnimationTest(pollFreq, timeout, referenceElementId, imageElementId,
   this.numRefsTaken = 0;
   this.blankWaitTime = 0;
 
-  this.cleanId = cleanId ? cleanId : '';
-  this.xulTest = xulTest ? xulTest : '';
-  this.closeFunc = closeFunc ? closeFunc : '';
-};
+  this.cleanId = cleanId ? cleanId : "";
+  this.xulTest = xulTest ? xulTest : "";
+  this.closeFunc = closeFunc ? closeFunc : "";
+}
 
-AnimationTest.prototype.preloadImage = function()
-{
+AnimationTest.prototype.preloadImage = function() {
   if (this.srcAttr) {
     this.myImage = new Image();
-    this.myImage.onload = function() { currentTest.continueTest(); };
+    this.myImage.onload = function() {
+      currentTest.continueTest();
+    };
     this.myImage.src = this.srcAttr;
   } else {
     this.continueTest();
   }
 };
 
-AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri)
-{
+AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri) {
   if (!gShouldOutputDebugInfo) {
     return;
   }
@@ -135,13 +150,11 @@ AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri)
   todo(false, "Debug (" + id + "): " + message + " " + dataUri);
 };
 
-AnimationTest.prototype.isFinished = function()
-{
+AnimationTest.prototype.isFinished = function() {
   return this.isTestFinished;
 };
 
-AnimationTest.prototype.takeCleanSnapshot = function()
-{
+AnimationTest.prototype.takeCleanSnapshot = function() {
   var cleanElement;
   if (this.cleanId) {
     cleanElement = document.getElementById(this.cleanId);
@@ -161,18 +174,23 @@ AnimationTest.prototype.takeCleanSnapshot = function()
   }
 
   var dataString1 = "Clean Snapshot";
-  this.outputDebugInfo(dataString1, 'cleanSnap',
-                       this.cleanSnapshot.toDataURL());
+  this.outputDebugInfo(
+    dataString1,
+    "cleanSnap",
+    this.cleanSnapshot.toDataURL()
+  );
 };
 
-AnimationTest.prototype.takeBlankSnapshot = function()
-{
+AnimationTest.prototype.takeBlankSnapshot = function() {
   // Take a snapshot of the initial (essentially blank) page
   this.blankSnapshot = snapshotWindow(window, false);
 
   var dataString1 = "Initial Blank Snapshot";
-  this.outputDebugInfo(dataString1, 'blank1Snap',
-                       this.blankSnapshot.toDataURL());
+  this.outputDebugInfo(
+    dataString1,
+    "blank1Snap",
+    this.blankSnapshot.toDataURL()
+  );
 };
 
 /**
@@ -182,8 +200,7 @@ AnimationTest.prototype.takeBlankSnapshot = function()
  * image, if applicable, and then asynchronously call continueTest(), or if not
  * applicable, synchronously trigger a call to continueTest().
  */
-AnimationTest.prototype.beginTest = function()
-{
+AnimationTest.prototype.beginTest = function() {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestFlakyTimeout("untriaged");
 
@@ -196,8 +213,7 @@ AnimationTest.prototype.beginTest = function()
  * beginTest() either synchronously or asynchronously, as an image load
  * callback.
  */
-AnimationTest.prototype.continueTest = function()
-{
+AnimationTest.prototype.continueTest = function() {
   // In case something goes wrong, fail earlier than mochitest timeout,
   // and with more information.
   setTimeout(failTest, this.timeout);
@@ -211,34 +227,35 @@ AnimationTest.prototype.continueTest = function()
   SimpleTest.executeSoon(pollForSuccess);
 };
 
-AnimationTest.prototype.setupPolledImage = function ()
-{
+AnimationTest.prototype.setupPolledImage = function() {
   // Make sure the image is visible
   if (!this.reusingImageAsReference) {
     this.enableDisplay(document.getElementById(this.imageElementId));
     var currentSnapshot = snapshotWindow(window, false);
-    var result = compareSnapshots(currentSnapshot,
-                                  this.referenceSnapshot, true);
+    var result = compareSnapshots(
+      currentSnapshot,
+      this.referenceSnapshot,
+      true
+    );
 
     this.currentSnapshotDataURI = currentSnapshot.toDataURL();
 
     if (result[0]) {
       // SUCCESS!
-      ok(true, "Animated image looks correct, at poll #"
-         + this.pollCounter);
+      ok(true, "Animated image looks correct, at poll #" + this.pollCounter);
 
       this.cleanUpAndFinish();
     }
   } else if (!gIsRefImageLoaded) {
-      this.myImage = new Image();
-      this.myImage.onload = reuseImageCallback;
-      document.getElementById(this.imageElementId).setAttribute('src',
-        this.referenceElementId);
-    }
-}
+    this.myImage = new Image();
+    this.myImage.onload = reuseImageCallback;
+    document
+      .getElementById(this.imageElementId)
+      .setAttribute("src", this.referenceElementId);
+  }
+};
 
-AnimationTest.prototype.checkImage = function ()
-{
+AnimationTest.prototype.checkImage = function() {
   if (this.isTestFinished) {
     return;
   }
@@ -258,15 +275,13 @@ AnimationTest.prototype.checkImage = function ()
 
   if (result[0]) {
     // SUCCESS!
-    ok(true, "Animated image looks correct, at poll #"
-       + this.pollCounter);
+    ok(true, "Animated image looks correct, at poll #" + this.pollCounter);
 
     this.cleanUpAndFinish();
   }
 };
 
-AnimationTest.prototype.takeReferenceSnapshot = function ()
-{
+AnimationTest.prototype.takeReferenceSnapshot = function() {
   this.numRefsTaken++;
 
   // Test to make sure the reference image doesn't match a clean snapshot
@@ -286,15 +301,20 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
 
     this.referenceSnapshot = snapshotWindow(window, false);
 
-    var snapResult = compareSnapshots(this.cleanSnapshot,
-                                      this.referenceSnapshot, false);
+    var snapResult = compareSnapshots(
+      this.cleanSnapshot,
+      this.referenceSnapshot,
+      false
+    );
     if (!snapResult[0]) {
       if (this.blankWaitTime > 2000) {
         // if it took longer than two seconds to load the image, we probably
         // have a problem.
         this.wereFailures = true;
-        ok(snapResult[0],
-           "Reference snapshot shouldn't match clean (non-image) snapshot");
+        ok(
+          snapResult[0],
+          "Reference snapshot shouldn't match clean (non-image) snapshot"
+        );
       } else {
         this.blankWaitTime += currentTest.pollFreq;
         // let's wait a bit and see if it clears up
@@ -303,12 +323,17 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
       }
     }
 
-    ok(snapResult[0],
-       "Reference snapshot shouldn't match clean (non-image) snapshot");
+    ok(
+      snapResult[0],
+      "Reference snapshot shouldn't match clean (non-image) snapshot"
+    );
 
     var dataString = "Reference Snapshot #" + this.numRefsTaken;
-    this.outputDebugInfo(dataString, 'refSnapId',
-                         this.referenceSnapshot.toDataURL());
+    this.outputDebugInfo(
+      dataString,
+      "refSnapId",
+      this.referenceSnapshot.toDataURL()
+    );
   } else {
     // Make sure the animation section is hidden
     this.disableDisplay(document.getElementById(this.imageElementId));
@@ -318,15 +343,20 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
     this.enableDisplay(referenceDiv);
 
     this.referenceSnapshot = snapshotWindow(window, false);
-    var snapResult = compareSnapshots(this.cleanSnapshot,
-                                      this.referenceSnapshot, false);
+    var snapResult = compareSnapshots(
+      this.cleanSnapshot,
+      this.referenceSnapshot,
+      false
+    );
     if (!snapResult[0]) {
       if (this.blankWaitTime > 2000) {
         // if it took longer than two seconds to load the image, we probably
         // have a problem.
         this.wereFailures = true;
-        ok(snapResult[0],
-           "Reference snapshot shouldn't match clean (non-image) snapshot");
+        ok(
+          snapResult[0],
+          "Reference snapshot shouldn't match clean (non-image) snapshot"
+        );
       } else {
         this.blankWaitTime += 20;
         // let's wait a bit and see if it clears up
@@ -335,12 +365,17 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
       }
     }
 
-    ok(snapResult[0],
-       "Reference snapshot shouldn't match clean (non-image) snapshot");
+    ok(
+      snapResult[0],
+      "Reference snapshot shouldn't match clean (non-image) snapshot"
+    );
 
     var dataString = "Reference Snapshot #" + this.numRefsTaken;
-    this.outputDebugInfo(dataString, 'refSnapId',
-                         this.referenceSnapshot.toDataURL());
+    this.outputDebugInfo(
+      dataString,
+      "refSnapId",
+      this.referenceSnapshot.toDataURL()
+    );
 
     // Re-hide reference div, and take another snapshot to be sure it's gone
     this.disableDisplay(referenceDiv);
@@ -348,47 +383,46 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
   }
 };
 
-AnimationTest.prototype.enableDisplay = function(element)
-{
+AnimationTest.prototype.enableDisplay = function(element) {
   if (!element) {
     return;
   }
 
   if (!this.xulTest) {
-    element.style.display = '';
+    element.style.display = "";
   } else {
-    element.setAttribute('hidden', 'false');
+    element.setAttribute("hidden", "false");
   }
 };
 
-AnimationTest.prototype.disableDisplay = function(element)
-{
+AnimationTest.prototype.disableDisplay = function(element) {
   if (!element) {
     return;
   }
 
   if (!this.xulTest) {
-    element.style.display = 'none';
+    element.style.display = "none";
   } else {
-    element.setAttribute('hidden', 'true');
+    element.setAttribute("hidden", "true");
   }
 };
 
-AnimationTest.prototype.testBlankCameBack = function()
-{
+AnimationTest.prototype.testBlankCameBack = function() {
   var blankSnapshot2 = snapshotWindow(window, false);
   var result = compareSnapshots(this.blankSnapshot, blankSnapshot2, true);
-  ok(result[0], "Reference image should disappear when it becomes display:none");
+  ok(
+    result[0],
+    "Reference image should disappear when it becomes display:none"
+  );
 
   if (!result[0]) {
     this.wereFailures = true;
     var dataString = "Second Blank Snapshot";
-    this.outputDebugInfo(dataString, 'blank2SnapId', result[2]);
+    this.outputDebugInfo(dataString, "blank2SnapId", result[2]);
   }
 };
 
-AnimationTest.prototype.cleanUpAndFinish = function ()
-{
+AnimationTest.prototype.cleanUpAndFinish = function() {
   // On the off chance that failTest and checkImage are triggered
   // back-to-back, use a flag to prevent multiple calls to SimpleTest.finish.
   if (this.isTestFinished) {
@@ -404,7 +438,7 @@ AnimationTest.prototype.cleanUpAndFinish = function ()
   }
 
   if (this.wereFailures) {
-    document.getElementById(this.debugElementId).style.display = 'block';
+    document.getElementById(this.debugElementId).style.display = "block";
   }
 
   SimpleTest.finish();
