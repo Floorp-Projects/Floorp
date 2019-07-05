@@ -23,7 +23,7 @@ py3:
         - testing/gtest
         - testing/mochitest
         - testing/mozharness
-        - testing/tools/iceserver
+        - testing/tps
         - testing/web-platform
         - toolkit
         - tools/jprof
