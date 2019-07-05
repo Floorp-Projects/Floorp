@@ -536,7 +536,7 @@ class TaskBuilder(object):
         elif variant.abi == 'arm':
             treeherder_platform = 'android-hw-g5-7-0-arm7-api-16'
         elif variant.abi == 'aarch64':
-            treeherder_platform = 'android-hw-p2-8-0-aarch64'
+            treeherder_platform = 'android-hw-p2-8-0-android-aarch64'
         else:
             raise ValueError('Unsupported architecture "{}"'.format(variant.abi))
 
