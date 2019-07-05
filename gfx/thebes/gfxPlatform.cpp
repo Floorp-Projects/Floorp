@@ -2960,12 +2960,6 @@ void gfxPlatform::InitWebRenderConfig() {
         NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
   }
 
-#ifndef MOZ_BUILD_WEBRENDER
-  featureWebRender.ForceDisable(
-      FeatureStatus::UnavailableNotBuilt, "Build doesn't include WebRender",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_WEBRENDER"));
-#endif
-
 #ifdef XP_WIN
   if (Preferences::GetBool("gfx.webrender.force-angle", false)) {
     if (!gfxConfig::IsEnabled(Feature::D3D11_HW_ANGLE)) {
