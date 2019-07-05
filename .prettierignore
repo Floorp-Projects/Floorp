@@ -40,7 +40,6 @@ toolkit/components/telemetry/datareporting-prefs.js
 toolkit/components/telemetry/healthreport-prefs.js
 
 # Ignore all top-level directories for now.
-js/**
 layout/**
 media/**
 memory/**
@@ -107,6 +106,10 @@ dom/security/test/sri/script*
 # Ignore other DOM fixtures with funky chars.
 dom/base/test/file_bug687859-charset.js
 dom/base/test/file_bug687859-inherit.js
+
+# Ignore preprocessed files.
+js/src/builtin/**/*.js
+js/src/shell/**/*.js
 
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.prettierignore
