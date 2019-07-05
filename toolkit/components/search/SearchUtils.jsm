@@ -129,9 +129,11 @@ var SearchUtils = {
 
   /**
    * Wrapper function for nsIIOService::newChannel.
+   *
    * @param {string|nsIURI} url
-   *        The URL string from which to create an nsIChannel.
-   * @returns an nsIChannel object, or null if the url is invalid.
+   *   The URL string from which to create an nsIChannel.
+   * @returns {nsIChannel}
+   *   an nsIChannel object, or null if the url is invalid.
    */
   makeChannel(url) {
     try {
