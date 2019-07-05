@@ -30,7 +30,9 @@ add_task(async function() {
 
   const version = await Browser.getVersion();
 
-  const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+  const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(
+    Ci.nsIGfxInfo
+  );
   const expectedProduct = isHeadless ? "Headless Firefox" : "Firefox";
   is(version.product, expectedProduct, "Browser.getVersion works");
 
