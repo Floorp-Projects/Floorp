@@ -2759,29 +2759,40 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
     return;
   }
 
-#ifdef MOZ_WIDGET_GTK
-  // Performance is not great on 4k screens with WebRender + Linux.
-  // Disable it for now if it is too large.
-  const int32_t kMaxPixelsLinux = 3440 * 1440;  // UWQHD
-  if (aScreenPixels > kMaxPixelsLinux) {
+  // Performance is not great on 4k screens with WebRender.
+  // Disable it for now on all release platforms, and also on Linux
+  // nightly. We only allow it on Windows nightly.
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  // Windows nightly, so don't do screen size checks
+#else
+  // Windows release, Linux nightly, Linux release. Do screen size
+  // checks. (macOS is still completely blocked by the blocklist).
+  const int32_t kMaxPixels = 3440 * 1440;  // UWQHD
+  if (aScreenPixels > kMaxPixels) {
     aFeature.Disable(
         FeatureStatus::BlockedScreenTooLarge, "Screen size too large",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_TOO_LARGE"));
-  } else if (aScreenPixels <= 0) {
+    return;
+  }
+  if (aScreenPixels <= 0) {
     aFeature.Disable(
         FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
         NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
-  } else {
-#endif  // MOZ_WIDGET_GTK
-#ifndef NIGHTLY_BUILD
-    aFeature.Disable(
-        FeatureStatus::BlockedReleaseChannelIntel,
-        "Release channel and Intel",
-        NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_INTEL"));
-#endif  // !NIGHTLY_BUILD
-#ifdef MOZ_WIDGET_GTK
+    return;
   }
-#endif  // MOZ_WIDGET_GTK
+#endif
+
+#if ((defined(XP_WIN) && defined(EARLY_BETA_OR_EARLIER)) || \
+     (defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)))
+  // Qualify Intel graphics cards on Windows up to early beta, and
+  // on Linux nightly.
+#else
+  // Disqualify everywhere else
+  aFeature.Disable(
+      FeatureStatus::BlockedReleaseChannelIntel,
+      "Release channel and Intel",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_INTEL"));
+#endif
 }
 
 static FeatureState& WebRenderHardwareQualificationStatus(
