@@ -3358,24 +3358,19 @@ impl Renderer {
 
         let _timer = self.gpu_profile.start_timer(GPU_TAG_SCALE);
 
-        match source {
-            TextureSource::PrevPassColor => {
-                self.shaders.borrow_mut().cs_scale_rgba8.bind(&mut self.device,
-                                                              &projection,
-                                                              &mut self.renderer_errors);
-            }
-            TextureSource::PrevPassAlpha => {
-                self.shaders.borrow_mut().cs_scale_a8.bind(&mut self.device,
-                                                           &projection,
-                                                           &mut self.renderer_errors);
-            }
-            _ => unreachable!(),
-        }
+        self.shaders
+            .borrow_mut()
+            .cs_scale
+            .bind(
+                &mut self.device,
+                &projection,
+                &mut self.renderer_errors,
+            );
 
         self.draw_instanced_batch(
             &scalings,
             VertexArrayKind::Scale,
-            &BatchTextures::no_texture(),
+            &BatchTextures::color(source),
             stats,
         );
     }
