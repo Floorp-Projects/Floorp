@@ -1,10 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
- /* import-globals-from browser_content_sandbox_utils.js */
+/* import-globals-from browser_content_sandbox_utils.js */
 "use strict";
 
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
-    "security/sandbox/test/browser_content_sandbox_utils.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/" +
+    "security/sandbox/test/browser_content_sandbox_utils.js",
+  this
+);
 
 /*
  * This test is for executing system calls in content processes to validate
@@ -16,36 +19,46 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
 // Calls the native execv library function. Include imports so this can be
 // safely serialized and run remotely by ContentTask.spawn.
 function callExec(args) {
-  const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-  let {lib, cmd} = args;
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let { lib, cmd } = args;
   let libc = ctypes.open(lib);
-  let exec = libc.declare("execv", ctypes.default_abi,
-      ctypes.int, ctypes.char.ptr);
+  let exec = libc.declare(
+    "execv",
+    ctypes.default_abi,
+    ctypes.int,
+    ctypes.char.ptr
+  );
   let rv = exec(cmd);
   libc.close();
-  return (rv);
+  return rv;
 }
 
 // Calls the native fork syscall.
 function callFork(args) {
-  const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-  let {lib} = args;
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let { lib } = args;
   let libc = ctypes.open(lib);
   let fork = libc.declare("fork", ctypes.default_abi, ctypes.int);
   let rv = fork();
   libc.close();
-  return (rv);
+  return rv;
 }
 
 // Calls the native sysctl syscall.
 function callSysctl(args) {
-  const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-  let {lib, name} = args;
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let { lib, name } = args;
   let libc = ctypes.open(lib);
-  let sysctlbyname = libc.declare("sysctlbyname", ctypes.default_abi,
-                                  ctypes.int, ctypes.char.ptr,
-                                  ctypes.voidptr_t, ctypes.size_t.ptr,
-                                  ctypes.voidptr_t, ctypes.size_t.ptr);
+  let sysctlbyname = libc.declare(
+    "sysctlbyname",
+    ctypes.default_abi,
+    ctypes.int,
+    ctypes.char.ptr,
+    ctypes.voidptr_t,
+    ctypes.size_t.ptr,
+    ctypes.voidptr_t,
+    ctypes.size_t.ptr
+  );
   let rv = sysctlbyname(name, null, null, null, null);
   libc.close();
   return rv;
@@ -53,17 +66,21 @@ function callSysctl(args) {
 
 // Calls the native open/close syscalls.
 function callOpen(args) {
-  const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-  let {lib, path, flags} = args;
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let { lib, path, flags } = args;
   let libc = ctypes.open(lib);
-  let open = libc.declare("open", ctypes.default_abi,
-                          ctypes.int, ctypes.char.ptr, ctypes.int);
-  let close = libc.declare("close", ctypes.default_abi,
-                           ctypes.int, ctypes.int);
+  let open = libc.declare(
+    "open",
+    ctypes.default_abi,
+    ctypes.int,
+    ctypes.char.ptr,
+    ctypes.int
+  );
+  let close = libc.declare("close", ctypes.default_abi, ctypes.int, ctypes.int);
   let fd = open(path, flags);
   close(fd);
   libc.close();
-  return (fd);
+  return fd;
 }
 
 // open syscall flags
@@ -71,13 +88,13 @@ function openWriteCreateFlags() {
   Assert.ok(isMac() || isLinux());
   if (isMac()) {
     let O_WRONLY = 0x001;
-    let O_CREAT  = 0x200;
-    return (O_WRONLY | O_CREAT);
+    let O_CREAT = 0x200;
+    return O_WRONLY | O_CREAT;
   }
   // Linux
   let O_WRONLY = 0x01;
-  let O_CREAT  = 0x40;
-  return (O_WRONLY | O_CREAT);
+  let O_CREAT = 0x40;
+  return O_WRONLY | O_CREAT;
 }
 
 // Returns the name of the native library needed for native syscalls
@@ -98,7 +115,7 @@ function getOSLib() {
 // Returns a harmless command to execute with execv
 function getOSExecCmd() {
   Assert.ok(!isWin());
-  return ("/bin/cat");
+  return "/bin/cat";
 }
 
 // Returns true if the current content sandbox level, passed in
@@ -123,7 +140,7 @@ function areContentSyscallsSandboxed(level) {
       Assert.ok(false, "Unknown OS");
   }
 
-  return (level >= syscallsSandboxMinLevel);
+  return level >= syscallsSandboxMinLevel;
 }
 
 //
@@ -179,7 +196,7 @@ add_task(async function() {
   if (isMac()) {
     // exec something harmless, this should fail
     let cmd = getOSExecCmd();
-    let rv = await ContentTask.spawn(browser, {lib, cmd}, callExec);
+    let rv = await ContentTask.spawn(browser, { lib, cmd }, callExec);
     ok(rv == -1, `exec(${cmd}) is not permitted`);
   }
 
@@ -188,7 +205,7 @@ add_task(async function() {
     // open a file for writing in $HOME, this should fail
     let path = fileInHomeDir().path;
     let flags = openWriteCreateFlags();
-    let fd = await ContentTask.spawn(browser, {lib, path, flags}, callOpen);
+    let fd = await ContentTask.spawn(browser, { lib, path, flags }, callOpen);
     ok(fd < 0, "opening a file for writing in home is not permitted");
   }
 
@@ -199,9 +216,12 @@ add_task(async function() {
     // the file for us
     let path = fileInTempDir().path;
     let flags = openWriteCreateFlags();
-    let fd = await ContentTask.spawn(browser, {lib, path, flags}, callOpen);
+    let fd = await ContentTask.spawn(browser, { lib, path, flags }, callOpen);
     if (isMac()) {
-      ok(fd === -1, "opening a file for writing in content temp is not permitted");
+      ok(
+        fd === -1,
+        "opening a file for writing in content temp is not permitted"
+      );
     } else {
       ok(fd >= 0, "opening a file for writing in content temp is permitted");
     }
@@ -209,7 +229,7 @@ add_task(async function() {
 
   // use fork syscall
   if (isLinux() || isMac()) {
-    let rv = await ContentTask.spawn(browser, {lib}, callFork);
+    let rv = await ContentTask.spawn(browser, { lib }, callFork);
     ok(rv == -1, "calling fork is not permitted");
   }
 
@@ -218,15 +238,21 @@ add_task(async function() {
   // tests (Darwin 14.0.0 is macOS 10.10). This branch can be removed when we
   // remove support for macOS 10.9.
   if (isMac() && Services.sysinfo.getProperty("version") >= "14.0.0") {
-    let rv = await ContentTask.spawn(browser, {lib, name: "kern.boottime"},
-                                     callSysctl);
+    let rv = await ContentTask.spawn(
+      browser,
+      { lib, name: "kern.boottime" },
+      callSysctl
+    );
     ok(rv == -1, "calling sysctl('kern.boottime') is not permitted");
 
-    rv = await ContentTask.spawn(browser, {lib, name: "net.inet.ip.ttl"},
-                                 callSysctl);
+    rv = await ContentTask.spawn(
+      browser,
+      { lib, name: "net.inet.ip.ttl" },
+      callSysctl
+    );
     ok(rv == -1, "calling sysctl('net.inet.ip.ttl') is not permitted");
 
-    rv = await ContentTask.spawn(browser, {lib, name: "hw.ncpu"}, callSysctl);
+    rv = await ContentTask.spawn(browser, { lib, name: "hw.ncpu" }, callSysctl);
     ok(rv == 0, "calling sysctl('hw.ncpu') is permitted");
   }
 });

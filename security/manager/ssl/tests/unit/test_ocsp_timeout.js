@@ -30,8 +30,9 @@ function run_test() {
 
   add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
-  let socket = Cc["@mozilla.org/network/server-socket;1"]
-                 .createInstance(Ci.nsIServerSocket);
+  let socket = Cc["@mozilla.org/network/server-socket;1"].createInstance(
+    Ci.nsIServerSocket
+  );
   socket.init(8888, true, -1);
   socket.asyncListen(gSocketListener);
 
@@ -43,22 +44,27 @@ function run_test() {
   add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 10000);
   add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 15000);
 
-  add_test(function() { socket.close(); run_next_test(); });
+  add_test(function() {
+    socket.close();
+    run_next_test();
+  });
   run_next_test();
 }
 
 function add_one_test(useHardFail, timeoutPrefName, timeoutMilliseconds) {
   let startTime;
-  add_test(function () {
+  add_test(function() {
     Services.prefs.setBoolPref("security.OCSP.require", useHardFail);
     Services.prefs.setIntPref(timeoutPrefName, timeoutMilliseconds);
     startTime = new Date();
     run_next_test();
   });
 
-  add_connection_test("ocsp-stapling-none.example.com", useHardFail
-                      ? SEC_ERROR_OCSP_SERVER_ERROR
-                      : PRErrorCodeSuccess, clearSessionCache);
+  add_connection_test(
+    "ocsp-stapling-none.example.com",
+    useHardFail ? SEC_ERROR_OCSP_SERVER_ERROR : PRErrorCodeSuccess,
+    clearSessionCache
+  );
 
   add_test(function() {
     let endTime = new Date();
@@ -71,15 +77,19 @@ function add_one_test(useHardFail, timeoutPrefName, timeoutMilliseconds) {
     // prevent intermittent failures (this only appeared to be a problem on
     // Windows XP). See Bug 1121117.
     const FUZZ_MS = 300;
-    ok(timeDifference + FUZZ_MS > timeoutMilliseconds,
-       `OCSP timeout should be ~${timeoutMilliseconds}s for ` +
-       `${useHardFail ? "hard" : "soft"}-fail`);
+    ok(
+      timeDifference + FUZZ_MS > timeoutMilliseconds,
+      `OCSP timeout should be ~${timeoutMilliseconds}s for ` +
+        `${useHardFail ? "hard" : "soft"}-fail`
+    );
     // Make sure we didn't wait too long.
     // (Unfortunately, we probably can't have a tight upper bound on
     // how long is too long for this test, because we might be running
     // on slow hardware.)
-    ok(timeDifference < 60000,
-       "Automatic OCSP timeout shouldn't be more than 60s");
+    ok(
+      timeDifference < 60000,
+      "Automatic OCSP timeout shouldn't be more than 60s"
+    );
 
     // Reset state
     clearOCSPCache();

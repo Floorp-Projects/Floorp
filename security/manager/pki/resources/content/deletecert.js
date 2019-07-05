@@ -51,7 +51,9 @@ function getLabelForCertTreeItem(certTreeItem) {
     }
   }
 
-  document.l10n.setAttributes(element, "cert-with-serial", { serialNumber: cert.serialNumber});
+  document.l10n.setAttributes(element, "cert-with-serial", {
+    serialNumber: cert.serialNumber,
+  });
   return element;
 }
 
@@ -80,7 +82,10 @@ function onLoad() {
       return;
   }
 
-  document.l10n.setAttributes(document.documentElement, prefixForType + "title");
+  document.l10n.setAttributes(
+    document.documentElement,
+    prefixForType + "title"
+  );
   document.l10n.setAttributes(confirm, prefixForType + "confirm");
   document.l10n.setAttributes(impact, prefixForType + "impact");
 

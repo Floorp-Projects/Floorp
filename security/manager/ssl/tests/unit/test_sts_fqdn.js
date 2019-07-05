@@ -5,8 +5,9 @@
 "use strict";
 
 function run_test() {
-  let SSService = Cc["@mozilla.org/ssservice;1"]
-                    .getService(Ci.nsISiteSecurityService);
+  let SSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   let uri = Services.io.newURI("https://example.com");
   let uri1 = Services.io.newURI("https://example.com.");
   let uri2 = Services.io.newURI("https://example.com..");
@@ -16,9 +17,14 @@ function run_test() {
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri2, 0));
 
   let secInfo = new FakeTransportSecurityInfo();
-  SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=1000;includeSubdomains", secInfo, 0,
-                          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
+  SSService.processHeader(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
+    uri,
+    "max-age=1000;includeSubdomains",
+    secInfo,
+    0,
+    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+  );
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri1, 0));
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri2, 0));
@@ -32,7 +38,11 @@ function run_test() {
   // gracefully.
   uri = Services.io.newURI("https://../foo");
   equal(uri.host, "..");
-  throws(() => {
-    SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
-  }, /NS_ERROR_UNEXPECTED/, "Malformed URI should be rejected");
+  throws(
+    () => {
+      SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+    },
+    /NS_ERROR_UNEXPECTED/,
+    "Malformed URI should be rejected"
+  );
 }

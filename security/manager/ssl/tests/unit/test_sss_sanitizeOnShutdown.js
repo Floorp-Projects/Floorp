@@ -23,22 +23,34 @@ function getStateFileContents() {
 add_task(async function run_test() {
   Services.prefs.setIntPref("test.datastorage.write_timer_ms", 100);
   do_get_profile();
-  let SSService = Cc["@mozilla.org/ssservice;1"]
-                    .getService(Ci.nsISiteSecurityService);
+  let SSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   let secInfo = new FakeTransportSecurityInfo();
   let header = "max-age=50000";
-  SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
-                          Services.io.newURI("http://example.com"),
-                          header,
-                          secInfo,
-                          0,
-                          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
-  await TestUtils.topicObserved("data-storage-written", (_, data) => data == SSS_STATE_FILE_NAME);
+  SSService.processHeader(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
+    Services.io.newURI("http://example.com"),
+    header,
+    secInfo,
+    0,
+    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+  );
+  await TestUtils.topicObserved(
+    "data-storage-written",
+    (_, data) => data == SSS_STATE_FILE_NAME
+  );
   let stateFileContents = getStateFileContents();
-  ok(stateFileContents.includes("example.com"), "should have written out state file");
+  ok(
+    stateFileContents.includes("example.com"),
+    "should have written out state file"
+  );
 
   // Configure Firefox to clear this data on shutdown.
-  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "siteSettings", true);
+  Services.prefs.setBoolPref(
+    Sanitizer.PREF_SHUTDOWN_BRANCH + "siteSettings",
+    true
+  );
   Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, true);
 
   // Simulate shutdown.
