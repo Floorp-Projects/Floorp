@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["TestParent"];
 
@@ -17,7 +17,7 @@ class TestParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "init":
-        aMessage.data.initial =  true;
+        aMessage.data.initial = true;
         this.sendAsyncMessage("toChild", aMessage.data);
         break;
       case "toParent":
@@ -25,12 +25,15 @@ class TestParent extends JSWindowActorParent {
         this.sendAsyncMessage("done", aMessage.data);
         break;
       case "asyncMul":
-        let {a, b} = aMessage.data;
+        let { a, b } = aMessage.data;
         return { result: a * b };
 
       case "event":
         Services.obs.notifyObservers(
-          this, "test-js-window-actor-parent-event", aMessage.data.type);
+          this,
+          "test-js-window-actor-parent-event",
+          aMessage.data.type
+        );
         break;
     }
 
