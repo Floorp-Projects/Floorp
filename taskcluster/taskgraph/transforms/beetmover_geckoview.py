@@ -16,7 +16,7 @@ from taskgraph.transforms.beetmover import \
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
-                                         generate_beetmover_compressed_upstream_artifacts,
+                                         generate_beetmover_upstream_artifacts,
                                          get_worker_type_for_scope)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
@@ -122,15 +122,6 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(build_task_ref):
-    return [{
-        'taskId': {'task-reference': build_task_ref},
-        'taskType': 'build',
-        'paths': ['public/build/target.maven.zip'],
-        'zipExtract': True,
-    }]
-
-
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
@@ -147,10 +138,6 @@ def make_task_worker(config, jobs):
             'release-properties': craft_release_properties(config, job),
         }
 
-        upstream_artifacts = generate_beetmover_compressed_upstream_artifacts(job)
-
-        worker['upstream-artifacts'] = upstream_artifacts
-
         version_groups = re.match(r'(\d+).(\d+).*', config.params['version'])
         if version_groups:
             major_version, minor_version = version_groups.groups()
@@ -162,7 +149,15 @@ def make_task_worker(config, jobs):
             'minor_version': minor_version,
         }
         worker['artifact-map'] = generate_beetmover_artifact_map(
-            config, job, **template_vars)
+            config, job, **template_vars
+        )
+        upstream_artifacts = generate_beetmover_upstream_artifacts(
+            config, job, platform='', **template_vars
+        )
+        worker['upstream-artifacts'] = [{
+            key: value for key, value in upstream_artifact.items()
+            if key != 'locale'
+        } for upstream_artifact in upstream_artifacts]
 
         job["worker"] = worker
 
