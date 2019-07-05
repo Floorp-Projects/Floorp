@@ -10,7 +10,6 @@ py2:
         - dom
         - editor
         - gfx
-        - intl
         - ipc
         - js/src
         - js/xpconnect
