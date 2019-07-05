@@ -7,7 +7,10 @@
 let FormAutofillParent;
 
 add_task(async function setup() {
-  ({FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", null));
+  ({ FormAutofillParent } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillParent.jsm",
+    null
+  ));
 });
 
 add_task(async function test_profileSavedFieldNames_init() {
@@ -35,7 +38,11 @@ add_task(async function test_profileSavedFieldNames_observe() {
 
   // profile metadata updated => no need to trigger updateValidFields
   formAutofillParent._updateSavedFieldNames.resetHistory();
-  formAutofillParent.observe(null, "formautofill-storage-changed", "notifyUsed");
+  formAutofillParent.observe(
+    null,
+    "formautofill-storage-changed",
+    "notifyUsed"
+  );
   Assert.equal(formAutofillParent._updateSavedFieldNames.called, false);
 });
 
@@ -48,40 +55,50 @@ add_task(async function test_profileSavedFieldNames_update() {
 
   Object.defineProperty(
     formAutofillParent.formAutofillStorage.addresses,
-    "_data", {writable: true});
+    "_data",
+    { writable: true }
+  );
 
   formAutofillParent.formAutofillStorage.addresses._data = [];
 
   // The set is empty if there's no profile in the store.
   formAutofillParent._updateSavedFieldNames();
-  Assert.equal(Services.ppmm.sharedData.get("FormAutofill:savedFieldNames").size, 0);
+  Assert.equal(
+    Services.ppmm.sharedData.get("FormAutofill:savedFieldNames").size,
+    0
+  );
 
   // 2 profiles with 4 valid fields.
-  formAutofillParent.formAutofillStorage.addresses._data = [{
-    guid: "test-guid-1",
-    organization: "Sesame Street",
-    "street-address": "123 Sesame Street.",
-    tel: "1-345-345-3456",
-    email: "",
-    timeCreated: 0,
-    timeLastUsed: 0,
-    timeLastModified: 0,
-    timesUsed: 0,
-  }, {
-    guid: "test-guid-2",
-    organization: "Mozilla",
-    "street-address": "331 E. Evelyn Avenue",
-    tel: "1-650-903-0800",
-    country: "US",
-    timeCreated: 0,
-    timeLastUsed: 0,
-    timeLastModified: 0,
-    timesUsed: 0,
-  }];
+  formAutofillParent.formAutofillStorage.addresses._data = [
+    {
+      guid: "test-guid-1",
+      organization: "Sesame Street",
+      "street-address": "123 Sesame Street.",
+      tel: "1-345-345-3456",
+      email: "",
+      timeCreated: 0,
+      timeLastUsed: 0,
+      timeLastModified: 0,
+      timesUsed: 0,
+    },
+    {
+      guid: "test-guid-2",
+      organization: "Mozilla",
+      "street-address": "331 E. Evelyn Avenue",
+      tel: "1-650-903-0800",
+      country: "US",
+      timeCreated: 0,
+      timeLastUsed: 0,
+      timeLastModified: 0,
+      timesUsed: 0,
+    },
+  ];
 
   formAutofillParent._updateSavedFieldNames();
 
-  let autofillSavedFieldNames = Services.ppmm.sharedData.get("FormAutofill:savedFieldNames");
+  let autofillSavedFieldNames = Services.ppmm.sharedData.get(
+    "FormAutofill:savedFieldNames"
+  );
   Assert.equal(autofillSavedFieldNames.size, 4);
   Assert.equal(autofillSavedFieldNames.has("organization"), true);
   Assert.equal(autofillSavedFieldNames.has("street-address"), true);

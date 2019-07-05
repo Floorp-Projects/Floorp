@@ -9,14 +9,21 @@ const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const classID = Components.ID("{97bf9550-2a7b-11e9-b56e-0800200c9a66}");
 
 if (!Cm.isCIDRegistered(classID)) {
-  const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  const { XPCOMUtils } = ChromeUtils.import(
+    "resource://gre/modules/XPCOMUtils.jsm"
+  );
 
   const factory = XPCOMUtils.generateSingletonFactory(function() {
-    const {AboutCompat} = ChromeUtils.import("resource://webcompat/AboutCompat.jsm");
+    const { AboutCompat } = ChromeUtils.import(
+      "resource://webcompat/AboutCompat.jsm"
+    );
     return new AboutCompat();
   });
 
-  Cm.registerFactory(classID, "about:compat",
-                     "@mozilla.org/network/protocol/about;1?what=compat",
-                     factory);
+  Cm.registerFactory(
+    classID,
+    "about:compat",
+    "@mozilla.org/network/protocol/about;1?what=compat",
+    factory
+  );
 }

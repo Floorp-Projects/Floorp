@@ -10,15 +10,27 @@
 
 /* eslint-env mozilla/frame-script */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-                               "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofill",
-                               "resource://formautofill/FormAutofill.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillContent",
-                               "resource://formautofill/FormAutofillContent.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofill",
+  "resource://formautofill/FormAutofill.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillContent",
+  "resource://formautofill/FormAutofillContent.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FormAutofillUtils",
+  "resource://formautofill/FormAutofillUtils.jsm"
+);
 
 /**
  * Handles content's interactions for the frame.
@@ -89,7 +101,11 @@ var FormAutofillFrameScript = {
       if (doc.readyState === "loading") {
         if (!this._hasDOMContentLoadedHandler) {
           this._hasDOMContentLoadedHandler = true;
-          doc.addEventListener("DOMContentLoaded", () => this._doIdentifyAutofillFields(), {once: true});
+          doc.addEventListener(
+            "DOMContentLoaded",
+            () => this._doIdentifyAutofillFields(),
+            { once: true }
+          );
         }
         return;
       }
@@ -119,7 +135,7 @@ var FormAutofillFrameScript = {
     }
 
     const doc = content.document;
-    const {chromeEventHandler} = doc.ownerGlobal.docShell;
+    const { chromeEventHandler } = doc.ownerGlobal.docShell;
 
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {
@@ -133,15 +149,21 @@ var FormAutofillFrameScript = {
       case "FormAutoComplete:PopupClosed": {
         FormAutofillContent.onPopupClosed(message.data.selectedRowStyle);
         Services.tm.dispatchToMainThread(() => {
-          chromeEventHandler.removeEventListener("keydown", FormAutofillContent._onKeyDown,
-                                                 true);
+          chromeEventHandler.removeEventListener(
+            "keydown",
+            FormAutofillContent._onKeyDown,
+            true
+          );
         });
 
         break;
       }
       case "FormAutoComplete:PopupOpened": {
-        chromeEventHandler.addEventListener("keydown", FormAutofillContent._onKeyDown,
-                                            true);
+        chromeEventHandler.addEventListener(
+          "keydown",
+          FormAutofillContent._onKeyDown,
+          true
+        );
         break;
       }
     }
