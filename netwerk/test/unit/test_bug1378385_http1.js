@@ -25,7 +25,7 @@
 //    Second, we check if the request id of the rest requests is equal to focused
 //    window id.
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var server = new HttpServer();
 server.start(-1);
@@ -48,7 +48,10 @@ function log(msg) {
 }
 
 function make_channel(url) {
-  var request = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var request = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  });
   request.QueryInterface(Ci.nsIHttpChannel);
   return request;
 }
@@ -71,7 +74,7 @@ function createHttpRequest(windowId, requestId, priority) {
 
 function setup_dummyHttpRequests() {
   log("setup_dummyHttpRequests");
-  for (var i = 0; i < maxConnections ; i++) {
+  for (var i = 0; i < maxConnections; i++) {
     createHttpRequest(0, i, Ci.nsISupportsPriority.PRIORITY_NORMAL);
     do_test_pending();
   }
@@ -79,64 +82,68 @@ function setup_dummyHttpRequests() {
 
 function setup_focusedWindowHttpRequests() {
   log("setup_focusedWindowHttpRequests");
-  for (var i = 0; i < FOCUSED_WINDOW_REQUEST_COUNT ; i++) {
-    createHttpRequest(FOCUSED_WINDOW_ID, FOCUSED_WINDOW_ID,
-                      Ci.nsISupportsPriority.PRIORITY_NORMAL);
+  for (var i = 0; i < FOCUSED_WINDOW_REQUEST_COUNT; i++) {
+    createHttpRequest(
+      FOCUSED_WINDOW_ID,
+      FOCUSED_WINDOW_ID,
+      Ci.nsISupportsPriority.PRIORITY_NORMAL
+    );
     do_test_pending();
   }
 }
 
 function setup_nonFocusedWindowHttpRequests() {
   log("setup_nonFocusedWindowHttpRequests");
-  for (var i = 0; i < NON_FOCUSED_WINDOW_REQUEST_COUNT ; i++) {
-    createHttpRequest(NON_FOCUSED_WINDOW_ID, NON_FOCUSED_WINDOW_ID,
-                      Ci.nsISupportsPriority.PRIORITY_HIGHEST);
+  for (var i = 0; i < NON_FOCUSED_WINDOW_REQUEST_COUNT; i++) {
+    createHttpRequest(
+      NON_FOCUSED_WINDOW_ID,
+      NON_FOCUSED_WINDOW_ID,
+      Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    );
     do_test_pending();
   }
 }
 
-function HttpResponseListener(id)
-{
-  this.id = id
+function HttpResponseListener(id) {
+  this.id = id;
 }
 
-HttpResponseListener.prototype =
-{
-  onStartRequest (request) {
-  },
+HttpResponseListener.prototype = {
+  onStartRequest(request) {},
 
-  onDataAvailable (request, stream, off, cnt) {
-  },
+  onDataAvailable(request, stream, off, cnt) {},
 
-  onStopRequest (request, status) {
+  onStopRequest(request, status) {
     log("STOP id=" + this.id);
     do_test_finished();
-  }
+  },
 };
 
-function check_response_id(responses, windowId)
-{
+function check_response_id(responses, windowId) {
   for (var i = 0; i < responses.length; i++) {
     var id = responses[i].getHeader("X-ID");
-    log("response id=" + id  + " windowId=" + windowId);
+    log("response id=" + id + " windowId=" + windowId);
     Assert.equal(id, windowId);
   }
 }
 
 var responseQueue = new Array();
-function setup_http_server()
-{
+function setup_http_server() {
   log("setup_http_server");
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  maxConnections = prefs.getIntPref("network.http.max-persistent-connections-per-server");
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  maxConnections = prefs.getIntPref(
+    "network.http.max-persistent-connections-per-server"
+  );
   FOCUSED_WINDOW_REQUEST_COUNT = Math.floor(maxConnections * 0.5);
-  NON_FOCUSED_WINDOW_REQUEST_COUNT = maxConnections - FOCUSED_WINDOW_REQUEST_COUNT;
+  NON_FOCUSED_WINDOW_REQUEST_COUNT =
+    maxConnections - FOCUSED_WINDOW_REQUEST_COUNT;
   NON_FOCUSED_WINDOW_ID = FOCUSED_WINDOW_ID + FOCUSED_WINDOW_REQUEST_COUNT;
 
   var allDummyHttpRequestReceived = false;
   // Start server; will be stopped at test cleanup time.
-  server.registerPathHandler('/', function(metadata, response)
-  {
+  server.registerPathHandler("/", function(metadata, response) {
     var id = metadata.getHeader("X-ID");
     log("Server recived the response id=" + id);
 
@@ -144,26 +151,33 @@ function setup_http_server()
     response.setHeader("X-ID", id);
     responseQueue.push(response);
 
-    if (responseQueue.length == maxConnections && !allDummyHttpRequestReceived) {
+    if (
+      responseQueue.length == maxConnections &&
+      !allDummyHttpRequestReceived
+    ) {
       log("received all dummy http requets");
       allDummyHttpRequestReceived = true;
       setup_nonFocusedWindowHttpRequests();
       setup_focusedWindowHttpRequests();
       processResponses();
     } else if (responseQueue.length == maxConnections) {
-      var nonFocusedWindowResponses = responseQueue.slice(0, NON_FOCUSED_WINDOW_REQUEST_COUNT);
-      var focusedWindowResponses = responseQueue.slice(NON_FOCUSED_WINDOW_REQUEST_COUNT, responseQueue.length);
+      var nonFocusedWindowResponses = responseQueue.slice(
+        0,
+        NON_FOCUSED_WINDOW_REQUEST_COUNT
+      );
+      var focusedWindowResponses = responseQueue.slice(
+        NON_FOCUSED_WINDOW_REQUEST_COUNT,
+        responseQueue.length
+      );
       check_response_id(nonFocusedWindowResponses, NON_FOCUSED_WINDOW_ID);
       check_response_id(focusedWindowResponses, FOCUSED_WINDOW_ID);
       processResponses();
     }
-
   });
 
   registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
-
 }
 
 function processResponses() {
@@ -176,8 +190,9 @@ function processResponses() {
 function run_test() {
   // Set "network.http.active_tab_priority" to false, so we can expect to
   // receive http requests with higher priority first.
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Ci.nsIPrefBranch);
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   prefs.setBoolPref("network.http.active_tab_priority", false);
 
   setup_http_server();

@@ -1,6 +1,6 @@
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var response_code;
 var response_body;
@@ -20,26 +20,22 @@ var resource_url = base_url + resource;
 // Test flags
 var hit_server = false;
 
-function make_channel(aUrl)
-{
+function make_channel(aUrl) {
   // Reset test global status
   hit_server = false;
 
-  var req = NetUtil.newChannel({uri: aUrl, loadUsingSystemPrincipal: true});
+  var req = NetUtil.newChannel({ uri: aUrl, loadUsingSystemPrincipal: true });
   req.QueryInterface(Ci.nsIHttpChannel);
   req.setRequestHeader("If-Modified-Since", request_time, false);
   return req;
 }
 
-function make_uri(aUrl)
-{
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
+function make_uri(aUrl) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   return ios.newURI(aUrl);
 }
 
-function resource_handler(aMetadata, aResponse)
-{
+function resource_handler(aMetadata, aResponse) {
   hit_server = true;
   Assert.ok(aMetadata.hasHeader("If-Modified-Since"));
   Assert.equal(aMetadata.getHeader("If-Modified-Since"), request_time);
@@ -56,9 +52,12 @@ function resource_handler(aMetadata, aResponse)
   }
 }
 
-function check_cached_data(aCachedData, aCallback)
-{
-  asyncOpenCacheEntry(resource_url, "disk", Ci.nsICacheStorage.OPEN_READONLY, null,
+function check_cached_data(aCachedData, aCallback) {
+  asyncOpenCacheEntry(
+    resource_url,
+    "disk",
+    Ci.nsICacheStorage.OPEN_READONLY,
+    null,
     function(aStatus, aEntry) {
       Assert.equal(aStatus, Cr.NS_OK);
       pumpReadStream(aEntry.openInputStream(0), function(aData) {
@@ -69,8 +68,7 @@ function check_cached_data(aCachedData, aCallback)
   );
 }
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
   evict_cache_entries();
 
@@ -91,14 +89,19 @@ add_test(() => {
   response_time = "Thu, 1 Jan 2009 00:00:00 GMT";
 
   var ch = make_channel(resource_url);
-  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
-    Assert.ok(hit_server);
-    Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 304);
-    Assert.ok(!cache_storage.exists(make_uri(resource_url), ""));
-    Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
+  ch.asyncOpen(
+    new ChannelListener(function(aRequest, aData) {
+      Assert.ok(hit_server);
+      Assert.equal(
+        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+        304
+      );
+      Assert.ok(!cache_storage.exists(make_uri(resource_url), ""));
+      Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
 
-    run_next_test();
-  }, null));
+      run_next_test();
+    }, null)
+  );
 });
 
 // 2. send custom conditional request when we don't have an entry
@@ -110,13 +113,18 @@ add_test(() => {
   response_time = "Fri, 2 Jan 2009 00:00:00 GMT";
 
   var ch = make_channel(resource_url);
-  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
-    Assert.ok(hit_server);
-    Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
-    Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
+  ch.asyncOpen(
+    new ChannelListener(function(aRequest, aData) {
+      Assert.ok(hit_server);
+      Assert.equal(
+        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+        200
+      );
+      Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
 
-    check_cached_data(response_body, run_next_test);
-  }, null));
+      check_cached_data(response_body, run_next_test);
+    }, null)
+  );
 });
 
 // 3. send custom conditional request when we have an entry
@@ -129,16 +137,21 @@ add_test(() => {
   response_time = "Fri, 2 Jan 2009 00:00:00 GMT";
 
   var ch = make_channel(resource_url);
-  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
-    Assert.ok(hit_server);
-    Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 304);
-    Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
-    Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
-    Assert.equal(aData, "");
+  ch.asyncOpen(
+    new ChannelListener(function(aRequest, aData) {
+      Assert.ok(hit_server);
+      Assert.equal(
+        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+        304
+      );
+      Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
+      Assert.equal(aRequest.getResponseHeader("Returned-From-Handler"), "1");
+      Assert.equal(aData, "");
 
-    // Check the cache data is not changed
-    check_cached_data(cached_body, run_next_test);
-  }, null));
+      // Check the cache data is not changed
+      check_cached_data(cached_body, run_next_test);
+    }, null)
+  );
 });
 
 // 4. send custom conditional request when we have an entry
@@ -149,15 +162,20 @@ add_test(() => {
   request_time = "Fri, 2 Jan 2009 00:00:00 GMT";
   response_time = "Sat, 3 Jan 2009 00:00:00 GMT";
   var ch = make_channel(resource_url);
-  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
-    Assert.ok(hit_server);
-    Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
-    Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
+  ch.asyncOpen(
+    new ChannelListener(function(aRequest, aData) {
+      Assert.ok(hit_server);
+      Assert.equal(
+        aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus,
+        200
+      );
+      Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
 
-    // Check the cache data is updated
-    check_cached_data(response_body, () => {
-      run_next_test();
-      httpserver.stop(do_test_finished);
-    });
-  }, null));
+      // Check the cache data is updated
+      check_cached_data(response_body, () => {
+        run_next_test();
+        httpserver.stop(do_test_finished);
+      });
+    }, null)
+  );
 });

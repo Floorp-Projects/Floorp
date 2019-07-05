@@ -3,11 +3,13 @@
 
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = Components.Constructor(
-  "@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream",
-  "setInputStream");
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 const NS_ERROR_IN_PROGRESS = 0x804b000f;
 const NS_ERROR_ALREADY_OPENED = 0x804b0049;
@@ -21,25 +23,25 @@ var httpserv = null;
   test_file_channel,
   // Commented by default as it relies on external ressources
   //test_ftp_channel,
-  end
+  end,
 ].forEach(f => add_test(f));
 
 // Utility functions
 
 function makeChan(url) {
-  return chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                       .QueryInterface(Ci.nsIChannel);
+  return (chan = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIChannel));
 }
 
 function new_file_channel(file) {
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   return NetUtil.newChannel({
     uri: ios.newFileURI(file),
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
 }
-
 
 function check_throws(closure, error) {
   var thrown = false;
@@ -73,8 +75,7 @@ var listener = {
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
 
-  onDataAvailable: function test_ODA(request, inputStream,
-                                     offset, count) {
+  onDataAvailable: function test_ODA(request, inputStream, offset, count) {
     new BinaryInputStream(inputStream).readByteArray(count); // required by API
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
@@ -84,7 +85,7 @@ var listener = {
     // opened
     check_async_open_throws(NS_ERROR_ALREADY_OPENED);
     do_timeout(0, after_channel_closed);
-  }
+  },
 };
 
 function after_channel_closed() {
@@ -99,7 +100,7 @@ function test_channel(createChanClosure) {
   var inputStream = chan.open();
   check_open_throws(NS_ERROR_IN_PROGRESS);
   check_async_open_throws([NS_ERROR_IN_PROGRESS, NS_ERROR_ALREADY_OPENED]);
-  
+
   // Then, asynchronous one
   chan = createChanClosure();
   chan.asyncOpen(listener);

@@ -1,4 +1,4 @@
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort;
@@ -38,10 +38,14 @@ function Listener(userContextId) {
 let gTestsRun = 0;
 Listener.prototype = {
   onStartRequest(request) {
-    request.QueryInterface(Ci.nsIHttpChannel)
-           .QueryInterface(Ci.nsIHttpChannelInternal);
+    request
+      .QueryInterface(Ci.nsIHttpChannel)
+      .QueryInterface(Ci.nsIHttpChannelInternal);
 
-    Assert.equal(request.loadInfo.originAttributes.userContextId, this.userContextId);
+    Assert.equal(
+      request.loadInfo.originAttributes.userContextId,
+      this.userContextId
+    );
 
     let hashKey = request.connectionInfoHashKey;
     if (gSecondRoundStarted) {
@@ -94,4 +98,3 @@ function run_test() {
 
   doTest();
 }
-

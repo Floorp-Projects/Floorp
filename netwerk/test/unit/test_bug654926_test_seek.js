@@ -1,24 +1,28 @@
-function gen_1MiB()
-{
+function gen_1MiB() {
   var i;
-  var data="x";
-  for (i=0 ; i < 20 ; i++)
-    data+=data;
+  var data = "x";
+  for (i = 0; i < 20; i++) {
+    data += data;
+  }
   return data;
 }
 
-function write_and_check(str, data, len)
-{
+function write_and_check(str, data, len) {
   var written = str.write(data, len);
   if (written != len) {
-    do_throw("str.write has not written all data!\n" +
-             "  Expected: " + len  + "\n" +
-             "  Actual: " + written + "\n");
+    do_throw(
+      "str.write has not written all data!\n" +
+        "  Expected: " +
+        len +
+        "\n" +
+        "  Actual: " +
+        written +
+        "\n"
+    );
   }
 }
 
-function write_datafile(status, entry)
-{
+function write_datafile(status, entry) {
   Assert.equal(status, Cr.NS_OK);
   var data = gen_1MiB();
   var os = entry.openOutputStream(0, data.length);
@@ -29,13 +33,16 @@ function write_datafile(status, entry)
   entry.close();
 
   // try to open the entry for appending
-  asyncOpenCacheEntry("http://data/",
-                      "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
-                      open_for_readwrite);
+  asyncOpenCacheEntry(
+    "http://data/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
+    open_for_readwrite
+  );
 }
 
-function open_for_readwrite(status, entry)
-{
+function open_for_readwrite(status, entry) {
   Assert.equal(status, Cr.NS_OK);
   var os = entry.openOutputStream(entry.dataSize, -1);
 
@@ -55,9 +62,13 @@ function run_test() {
   // clear the cache
   evict_cache_entries();
 
-  asyncOpenCacheEntry("http://data/",
-                      "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
-                      write_datafile);
+  asyncOpenCacheEntry(
+    "http://data/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
+    write_datafile
+  );
 
   do_test_pending();
 }

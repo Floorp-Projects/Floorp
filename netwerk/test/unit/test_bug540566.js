@@ -11,8 +11,12 @@ function continue_test(status, entry) {
 }
 
 function run_test() {
-  asyncOpenCacheEntry("http://some.key/",
-                      "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
-                      continue_test);
+  asyncOpenCacheEntry(
+    "http://some.key/",
+    "disk",
+    Ci.nsICacheStorage.OPEN_NORMALLY,
+    null,
+    continue_test
+  );
   do_test_pending();
 }

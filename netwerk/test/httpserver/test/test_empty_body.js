@@ -11,10 +11,18 @@ var srv;
 
 XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
-    new Test("http://localhost:" + srv.identity.primaryPort + "/empty-body-unwritten",
-             null, ensureEmpty, null),
-    new Test("http://localhost:" + srv.identity.primaryPort + "/empty-body-written",
-             null, ensureEmpty, null),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/empty-body-unwritten",
+      null,
+      ensureEmpty,
+      null
+    ),
+    new Test(
+      "http://localhost:" + srv.identity.primaryPort + "/empty-body-written",
+      null,
+      ensureEmpty,
+      null
+    ),
   ];
 });
 

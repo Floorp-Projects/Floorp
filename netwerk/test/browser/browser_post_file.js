@@ -2,7 +2,7 @@
  * Tests for bug 1241100: Post to local file should not overwrite the file.
  */
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 async function createTestFile(filename, content) {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, filename);
@@ -78,7 +78,10 @@ add_task(async function() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, postURI);
   let browser = gBrowser.selectedBrowser;
-  browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
+  browser.messageManager.loadFrameScript(
+    "data:,(" + frameScript.toString() + ")();",
+    true
+  );
   await new Promise(resolve => {
     let manager = browser.messageManager;
 

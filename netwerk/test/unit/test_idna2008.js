@@ -30,7 +30,7 @@ const transitionalExpected = [
   "xn--mgba3gch31f",
   "xn--10cl1a0b",
   "",
-  ""
+  "",
 ];
 
 const nonTransitionalExpected = [
@@ -39,22 +39,21 @@ const nonTransitionalExpected = [
   "xn--mgba3gch31f060k",
   "xn--10cl1a0b660p",
   "",
-  ""
+  "",
 ];
 
 // Test options for converting IDN URLs under IDNA2008
-function run_test()
-{
-  var idnService = Cc["@mozilla.org/network/idn-service;1"]
-                     .getService(Ci.nsIIDNService);
-
+function run_test() {
+  var idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+    Ci.nsIIDNService
+  );
 
   for (var i = 0; i < labels.length; ++i) {
     var result;
     try {
-        result = idnService.convertUTF8toACE(labels[i]);
-    } catch(e) {
-        result = "";
+      result = idnService.convertUTF8toACE(labels[i]);
+    } catch (e) {
+      result = "";
     }
 
     if (kTransitionalProcessing) {
