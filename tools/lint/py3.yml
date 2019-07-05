@@ -16,7 +16,6 @@ py3:
         - layout/style
         - layout/tools/reftest
         - media
-        - modules/freetype2
         - security/manager/ssl
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
