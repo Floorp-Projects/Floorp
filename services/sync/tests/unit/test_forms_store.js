@@ -1,9 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-_("Make sure the form store follows the Store api and correctly accesses the backend form storage");
-const {FormEngine} = ChromeUtils.import("resource://services-sync/engines/forms.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+_(
+  "Make sure the form store follows the Store api and correctly accesses the backend form storage"
+);
+const { FormEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/forms.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   let engine = new FormEngine(Service);
@@ -21,25 +25,30 @@ add_task(async function run_test() {
   }
 
   _("Add a form entry");
-  await applyEnsureNoFailures([{
-    id: Utils.makeGUID(),
-    name: "name!!",
-    value: "value??",
-  }]);
+  await applyEnsureNoFailures([
+    {
+      id: Utils.makeGUID(),
+      name: "name!!",
+      value: "value??",
+    },
+  ]);
 
   _("Should have 1 entry now");
   let id = "";
-  for (let _id in (await store.getAllIDs())) {
+  for (let _id in await store.getAllIDs()) {
     if (id == "") {
       id = _id;
     } else {
       do_throw("Should have only gotten one!");
     }
   }
-  Assert.ok((store.itemExists(id)));
+  Assert.ok(store.itemExists(id));
 
   _("Should be able to find this entry as a dupe");
-  Assert.equal((await engine._findDupe({name: "name!!", value: "value??"})), id);
+  Assert.equal(
+    await engine._findDupe({ name: "name!!", value: "value??" }),
+    id
+  );
 
   let rec = await store.createRecord(id);
   _("Got record for id", id, rec);
@@ -59,13 +68,15 @@ add_task(async function run_test() {
   }
 
   _("Add another entry");
-  await applyEnsureNoFailures([{
-    id: Utils.makeGUID(),
-    name: "another",
-    value: "entry",
-  }]);
+  await applyEnsureNoFailures([
+    {
+      id: Utils.makeGUID(),
+      name: "another",
+      value: "entry",
+    },
+  ]);
   id = "";
-  for (let _id in (await store.getAllIDs())) {
+  for (let _id in await store.getAllIDs()) {
     if (id == "") {
       id = _id;
     } else {
@@ -77,7 +88,7 @@ add_task(async function run_test() {
   await store.changeItemID(id, "newid");
 
   _("Make sure it's there");
-  Assert.ok((store.itemExists("newid")));
+  Assert.ok(store.itemExists("newid"));
 
   _("Remove the entry");
   await store.remove({
@@ -103,14 +114,14 @@ add_task(async function run_test() {
   };
   await applyEnsureNoFailures([toDelete]);
   id = "";
-  for (let _id in (await store.getAllIDs())) {
+  for (let _id in await store.getAllIDs()) {
     if (id == "") {
       id = _id;
     } else {
       do_throw("Should have only gotten one!");
     }
   }
-  Assert.ok((store.itemExists(id)));
+  Assert.ok(store.itemExists(id));
   // mark entry as deleted
   toDelete.id = id;
   toDelete.deleted = true;
@@ -120,11 +131,13 @@ add_task(async function run_test() {
   }
 
   _("Add an entry to wipe");
-  await applyEnsureNoFailures([{
-    id: Utils.makeGUID(),
-    name: "towipe",
-    value: "entry",
-  }]);
+  await applyEnsureNoFailures([
+    {
+      id: Utils.makeGUID(),
+      name: "towipe",
+      value: "entry",
+    },
+  ]);
 
   await store.wipe();
 
@@ -140,11 +153,13 @@ add_task(async function run_test() {
       do_throw("Shouldn't get any ids!");
     }
     // an update.
-    await applyEnsureNoFailures([{
-      id: Utils.makeGUID(),
-      name: "some",
-      value: "entry",
-    }]);
+    await applyEnsureNoFailures([
+      {
+        id: Utils.makeGUID(),
+        name: "some",
+        value: "entry",
+      },
+    ]);
   } finally {
     Services.prefs.clearUserPref("browser.formfill.enable");
     await store.wipe();

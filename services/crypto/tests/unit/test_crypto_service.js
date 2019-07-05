@@ -3,8 +3,9 @@
 
 "use strict";
 
-const idService = Cc["@mozilla.org/identity/crypto-service;1"]
-                    .getService(Ci.nsIIdentityCryptoService);
+const idService = Cc["@mozilla.org/identity/crypto-service;1"].getService(
+  Ci.nsIIdentityCryptoService
+);
 
 const ALG_DSA = "DS160";
 const ALG_RSA = "RS256";
@@ -24,8 +25,10 @@ const BASE64_URL_ENCODINGS = [
 
   // A few extra to be really sure
   ["andré@example.com", "YW5kcsOpQGV4YW1wbGUuY29t"],
-  ["πόλλ' οἶδ' ἀλώπηξ, ἀλλ' ἐχῖνος ἓν μέγα",
-   "z4DPjM67zrsnIM6_4by2zrQnIOG8gM67z47PgM63zr4sIOG8gM67zrsnIOG8kM-H4b-Wzr3Ov8-CIOG8k869IM68zq3Os86x"],
+  [
+    "πόλλ' οἶδ' ἀλώπηξ, ἀλλ' ἐχῖνος ἓν μέγα",
+    "z4DPjM67zrsnIM6_4by2zrQnIOG8gM67z47PgM63zr4sIOG8gM67zrsnIOG8kM-H4b-Wzr3Ov8-CIOG8k869IM68zq3Os86x",
+  ],
 ];
 
 let log = Log.repository.getLogger("crypto.service.test");
@@ -33,12 +36,11 @@ let log = Log.repository.getLogger("crypto.service.test");
   let appender = new Log.DumpAppender();
   log.level = Log.Level.Debug;
   log.addAppender(appender);
-  }
-)();
+})();
 
 // When the output of an operation is a
 function do_check_eq_or_slightly_less(x, y) {
-  Assert.ok(x >= y - (3 * 8));
+  Assert.ok(x >= y - 3 * 8);
 }
 
 function test_base64_roundtrip() {
@@ -56,10 +58,16 @@ function test_dsa() {
     Assert.ok(Components.isSuccessCode(rv));
     Assert.equal(typeof keyPair.sign, "function");
     Assert.equal(keyPair.keyType, ALG_DSA);
-    do_check_eq_or_slightly_less(keyPair.hexDSAGenerator.length, 1024 / 8 * 2);
-    do_check_eq_or_slightly_less(keyPair.hexDSAPrime.length, 1024 / 8 * 2);
-    do_check_eq_or_slightly_less(keyPair.hexDSASubPrime.length, 160 / 8 * 2);
-    do_check_eq_or_slightly_less(keyPair.hexDSAPublicValue.length, 1024 / 8 * 2);
+    do_check_eq_or_slightly_less(
+      keyPair.hexDSAGenerator.length,
+      (1024 / 8) * 2
+    );
+    do_check_eq_or_slightly_less(keyPair.hexDSAPrime.length, (1024 / 8) * 2);
+    do_check_eq_or_slightly_less(keyPair.hexDSASubPrime.length, (160 / 8) * 2);
+    do_check_eq_or_slightly_less(
+      keyPair.hexDSAPublicValue.length,
+      (1024 / 8) * 2
+    );
     // XXX: test that RSA parameters throw the correct error
 
     log.debug("about to sign with DSA key");
@@ -79,8 +87,10 @@ function test_rsa() {
     Assert.ok(Components.isSuccessCode(rv));
     Assert.equal(typeof keyPair.sign, "function");
     Assert.equal(keyPair.keyType, ALG_RSA);
-    do_check_eq_or_slightly_less(keyPair.hexRSAPublicKeyModulus.length,
-                                 2048 / 8);
+    do_check_eq_or_slightly_less(
+      keyPair.hexRSAPublicKeyModulus.length,
+      2048 / 8
+    );
     Assert.ok(keyPair.hexRSAPublicKeyExponent.length > 1);
 
     log.debug("about to sign with RSA key");
@@ -101,8 +111,9 @@ function test_base64UrlEncode() {
 }
 
 function test_base64UrlDecode() {
-  let utf8Converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                        .createInstance(Ci.nsIScriptableUnicodeConverter);
+  let utf8Converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   utf8Converter.charset = "UTF-8";
 
   // We know the encoding of our inputs - on conversion back out again, make

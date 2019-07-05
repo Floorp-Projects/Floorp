@@ -3,11 +3,19 @@
 
 "use strict";
 
-const {SyncDisconnect, SyncDisconnectInternal} = ChromeUtils.import("resource://services-sync/SyncDisconnect.jsm", null);
-const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+const { SyncDisconnect, SyncDisconnectInternal } = ChromeUtils.import(
+  "resource://services-sync/SyncDisconnect.jsm",
+  null
+);
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
 add_task(async function test_shutdown_blocker() {
-  let spySignout = sinon.stub(SyncDisconnectInternal, "doSyncAndAccountDisconnect");
+  let spySignout = sinon.stub(
+    SyncDisconnectInternal,
+    "doSyncAndAccountDisconnect"
+  );
 
   // We don't need to check for the lock regularly as we end up aborting the wait.
   SyncDisconnectInternal.lockRetryInterval = 1000;
@@ -49,7 +57,9 @@ add_task(async function test_shutdown_blocker() {
   let weaveStub = sinon.stub(SyncDisconnectInternal, "getWeave");
   weaveStub.returns(Weave);
 
-  let promiseDisconnected = SyncDisconnect.disconnect({sanitizeSyncData: true});
+  let promiseDisconnected = SyncDisconnect.disconnect({
+    sanitizeSyncData: true,
+  });
 
   // Pretend we hit the shutdown blocker.
   info("simulating quitApplicationGranted");
@@ -60,11 +70,27 @@ add_task(async function test_shutdown_blocker() {
   info("waiting for disconnect to complete");
   await promiseDisconnected;
 
-  Assert.equal(Weave.Service.unlock.callCount, 0, "should not have unlocked at the end");
+  Assert.equal(
+    Weave.Service.unlock.callCount,
+    0,
+    "should not have unlocked at the end"
+  );
   Assert.ok(!Weave.Service.enabled, "Weave should be and remain disabled");
-  Assert.equal(Weave.Service.errorHandler.resetFileLog.callCount, 1, "should have reset the log");
-  Assert.equal(mockEngine1.wipeClient.callCount, 1, "enabled engine should have been wiped");
-  Assert.equal(mockEngine2.wipeClient.callCount, 0, "disabled engine should not have been wiped");
+  Assert.equal(
+    Weave.Service.errorHandler.resetFileLog.callCount,
+    1,
+    "should have reset the log"
+  );
+  Assert.equal(
+    mockEngine1.wipeClient.callCount,
+    1,
+    "enabled engine should have been wiped"
+  );
+  Assert.equal(
+    mockEngine2.wipeClient.callCount,
+    0,
+    "disabled engine should not have been wiped"
+  );
   Assert.equal(spyBrowser.callCount, 0, "should not sanitize the browser");
   Assert.equal(spySignout.callCount, 1, "should have signed out of FxA");
 });

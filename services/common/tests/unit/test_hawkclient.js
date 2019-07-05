@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {HawkClient} = ChromeUtils.import("resource://services-common/hawkclient.js");
+const { HawkClient } = ChromeUtils.import(
+  "resource://services-common/hawkclient.js"
+);
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
@@ -30,7 +32,9 @@ add_task(function test_updateClockOffset() {
   let serverDate = now.toUTCString();
 
   // Client's clock is off
-  client.now = () => { return now.valueOf() + HOUR_MS; };
+  client.now = () => {
+    return now.valueOf() + HOUR_MS;
+  };
 
   client._updateClockOffset(serverDate);
 
@@ -44,10 +48,11 @@ add_task(function test_updateClockOffset() {
 });
 
 add_task(async function test_authenticated_get_request() {
-  let message = "{\"msg\": \"Great Success!\"}";
+  let message = '{"msg": "Great Success!"}';
   let method = "GET";
 
-  let server = httpd_setup({"/foo": (request, response) => {
+  let server = httpd_setup({
+    "/foo": (request, response) => {
       Assert.ok(request.hasHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -66,18 +71,24 @@ add_task(async function test_authenticated_get_request() {
 });
 
 async function check_authenticated_request(method) {
-  let server = httpd_setup({"/foo": (request, response) => {
+  let server = httpd_setup({
+    "/foo": (request, response) => {
       Assert.ok(request.hasHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
-      response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
+      response.bodyOutputStream.writeFrom(
+        request.bodyInputStream,
+        request.bodyInputStream.available()
+      );
     },
   });
 
   let client = new HawkClient(server.baseURI);
 
-  let response = await client.request("/foo", method, TEST_CREDS, {foo: "bar"});
+  let response = await client.request("/foo", method, TEST_CREDS, {
+    foo: "bar",
+  });
   let result = JSON.parse(response.body);
 
   Assert.equal("bar", result.foo);
@@ -98,21 +109,30 @@ add_task(async function test_authenticated_patch_request() {
 });
 
 add_task(async function test_extra_headers() {
-  let server = httpd_setup({"/foo": (request, response) => {
+  let server = httpd_setup({
+    "/foo": (request, response) => {
       Assert.ok(request.hasHeader("Authorization"));
       Assert.ok(request.hasHeader("myHeader"));
       Assert.equal(request.getHeader("myHeader"), "fake");
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
-      response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
+      response.bodyOutputStream.writeFrom(
+        request.bodyInputStream,
+        request.bodyInputStream.available()
+      );
     },
   });
 
   let client = new HawkClient(server.baseURI);
 
-  let response = await client.request("/foo", "POST", TEST_CREDS, {foo: "bar"},
-                                      {"myHeader": "fake"});
+  let response = await client.request(
+    "/foo",
+    "POST",
+    TEST_CREDS,
+    { foo: "bar" },
+    { myHeader: "fake" }
+  );
   let result = JSON.parse(response.body);
 
   Assert.equal("bar", result.foo);
@@ -126,7 +146,7 @@ add_task(async function test_credentials_optional() {
     "/foo": (request, response) => {
       Assert.ok(!request.hasHeader("Authorization"));
 
-      let message = JSON.stringify({msg: "you're in the friend zone"});
+      let message = JSON.stringify({ msg: "you're in the friend zone" });
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
       response.bodyOutputStream.write(message, message.length);
@@ -144,7 +164,8 @@ add_task(async function test_server_error() {
   let message = "Ohai!";
   let method = "GET";
 
-  let server = httpd_setup({"/foo": (request, response) => {
+  let server = httpd_setup({
+    "/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 418, "I am a Teapot");
       response.bodyOutputStream.write(message, message.length);
     },
@@ -164,11 +185,16 @@ add_task(async function test_server_error() {
 });
 
 add_task(async function test_server_error_json() {
-  let message = JSON.stringify({error: "Cannot get ye flask."});
+  let message = JSON.stringify({ error: "Cannot get ye flask." });
   let method = "GET";
 
-  let server = httpd_setup({"/foo": (request, response) => {
-      response.setStatusLine(request.httpVersion, 400, "What wouldst thou deau?");
+  let server = httpd_setup({
+    "/foo": (request, response) => {
+      response.setStatusLine(
+        request.httpVersion,
+        400,
+        "What wouldst thou deau?"
+      );
       response.bodyOutputStream.write(message, message.length);
     },
   });
@@ -189,7 +215,8 @@ add_task(async function test_offset_after_request() {
   let message = "Ohai!";
   let method = "GET";
 
-  let server = httpd_setup({"/foo": (request, response) => {
+  let server = httpd_setup({
+    "/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
     },
@@ -197,7 +224,9 @@ add_task(async function test_offset_after_request() {
 
   let client = new HawkClient(server.baseURI);
   let now = Date.now();
-  client.now = () => { return now + HOUR_MS; };
+  client.now = () => {
+    return now + HOUR_MS;
+  };
 
   Assert.equal(client.localtimeOffsetMsec, 0);
 
@@ -260,7 +289,8 @@ add_task(async function test_2xx_success() {
   };
   let method = "GET";
 
-  let server = httpd_setup({"/foo": (request, response) => {
+  let server = httpd_setup({
+    "/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 202, "Accepted");
     },
   });
@@ -474,7 +504,8 @@ add_task(async function test_401_then_500() {
 
 function getTimestampDelta(authHeader, now = Date.now()) {
   let tsMS = new Date(
-      parseInt(/ts="(\d+)"/.exec(authHeader)[1], 10) * SECOND_MS);
+    parseInt(/ts="(\d+)"/.exec(authHeader)[1], 10) * SECOND_MS
+  );
   return Math.abs(tsMS - now);
 }
 

@@ -5,7 +5,9 @@
 // hit.
 "use strict";
 
-const {FxAccountsOAuthGrantClient} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+const { FxAccountsOAuthGrantClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm"
+);
 
 // handlers for our server.
 var numTokenFetches;
@@ -16,13 +18,14 @@ function authorize(request, response) {
   let token = "token" + numTokenFetches;
   numTokenFetches += 1;
   activeTokens.add(token);
-  response.write(JSON.stringify({access_token: token}));
+  response.write(JSON.stringify({ access_token: token }));
 }
 
 function destroy(request, response) {
   // Getting the body seems harder than it should be!
-  let sis = Cc["@mozilla.org/scriptableinputstream;1"]
-            .createInstance(Ci.nsIScriptableInputStream);
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
   sis.init(request.bodyInputStream);
   let body = JSON.parse(sis.read(sis.available()));
   sis.close();

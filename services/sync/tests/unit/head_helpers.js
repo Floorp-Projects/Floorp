@@ -10,19 +10,51 @@
 // is used (from service.js).
 /* global Service */
 
-var {AddonTestUtils, MockAsyncShutdown} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-var {Async} = ChromeUtils.import("resource://services-common/async.js");
-var {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-var {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
-var {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-var {SerializableSet, Svc, Utils, getChromeWindow} = ChromeUtils.import("resource://services-sync/util.js");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-var {PlacesSyncUtils} = ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
-var {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-var {AccountState, MockFxaStorageManager, SyncTestingInfrastructure, configureFxAccountIdentity, configureIdentity, encryptPayload, getLoginTelemetryScalar, makeFxAccountsInternalMock, makeIdentityConfig, promiseNamedTimer, promiseZeroTimer, sumHistogram, syncTestLogging, waitForZeroTimer} = ChromeUtils.import("resource://testing-common/services/sync/utils.js");
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+var { Async } = ChromeUtils.import("resource://services-common/async.js");
+var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
+var { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+var { SerializableSet, Svc, Utils, getChromeWindow } = ChromeUtils.import(
+  "resource://services-sync/util.js"
+);
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+var { PlacesSyncUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesSyncUtils.jsm"
+);
+var { ObjectUtils } = ChromeUtils.import(
+  "resource://gre/modules/ObjectUtils.jsm"
+);
+var {
+  AccountState,
+  MockFxaStorageManager,
+  SyncTestingInfrastructure,
+  configureFxAccountIdentity,
+  configureIdentity,
+  encryptPayload,
+  getLoginTelemetryScalar,
+  makeFxAccountsInternalMock,
+  makeIdentityConfig,
+  promiseNamedTimer,
+  promiseZeroTimer,
+  sumHistogram,
+  syncTestLogging,
+  waitForZeroTimer,
+} = ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 add_task(async function head_setup() {
   // Initialize logging. This will sometimes be reset by a pref reset,
@@ -38,15 +70,21 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
   let ns = {};
   ChromeUtils.import("resource://gre/modules/FileUtils.jsm", ns);
   ChromeUtils.import("resource://gre/modules/NetUtil.jsm", ns);
-  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-               .createInstance(Ci.nsIFileInputStream);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   let schema;
   try {
     let schemaFile = do_get_file("sync_ping_schema.json");
-    stream.init(schemaFile, ns.FileUtils.MODE_RDONLY, ns.FileUtils.PERMS_FILE, 0);
+    stream.init(
+      schemaFile,
+      ns.FileUtils.MODE_RDONLY,
+      ns.FileUtils.PERMS_FILE,
+      0
+    );
 
     let bytes = ns.NetUtil.readInputStream(stream, stream.available());
-    schema = JSON.parse((new TextDecoder()).decode(bytes));
+    schema = JSON.parse(new TextDecoder().decode(bytes));
   } finally {
     stream.close();
   }
@@ -167,8 +205,7 @@ async function generateNewKeys(collectionKeys, collections = null) {
 // and stub part of Service.wm.
 
 function mockShouldSkipWindow(win) {
-  return win.closed ||
-         win.mockIsPrivate;
+  return win.closed || win.mockIsPrivate;
 }
 
 function mockGetTabState(tab) {
@@ -180,7 +217,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
 
   function url2entry(urlToConvert) {
     return {
-      url: ((typeof urlToConvert == "function") ? urlToConvert() : urlToConvert),
+      url: typeof urlToConvert == "function" ? urlToConvert() : urlToConvert,
       title: "title",
     };
   }
@@ -197,14 +234,21 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
     elements.push(win);
 
     for (let t = 0; t < numTabs; ++t) {
-      tabs.push(Cu.cloneInto({
-        index: indexes ? indexes() : 1,
-        entries: (moreURLs ? [url].concat(moreURLs()) : [url]).map(url2entry),
-        attributes: {
-          image: "image",
-        },
-        lastAccessed: 1499,
-      }, {}));
+      tabs.push(
+        Cu.cloneInto(
+          {
+            index: indexes ? indexes() : 1,
+            entries: (moreURLs ? [url].concat(moreURLs()) : [url]).map(
+              url2entry
+            ),
+            attributes: {
+              image: "image",
+            },
+            lastAccessed: 1499,
+          },
+          {}
+        )
+      );
     }
   }
 
@@ -254,8 +298,14 @@ function assert_valid_ping(record) {
         // the ping actually was - so be helpful.
         info("telemetry ping validation failed");
         info("the ping data is: " + JSON.stringify(record, undefined, 2));
-        info("the validation failures: " + JSON.stringify(SyncPingValidator.errors, undefined, 2));
-        ok(false, "Sync telemetry ping validation failed - see output above for details");
+        info(
+          "the validation failures: " +
+            JSON.stringify(SyncPingValidator.errors, undefined, 2)
+        );
+        ok(
+          false,
+          "Sync telemetry ping validation failed - see output above for details"
+        );
       }
     }
     equal(record.version, 1);
@@ -263,8 +313,11 @@ function assert_valid_ping(record) {
       lessOrEqual(p.when, Date.now());
       if (p.devices) {
         ok(!p.devices.some(device => device.id == record.deviceID));
-        equal(new Set(p.devices.map(device => device.id)).size,
-              p.devices.length, "Duplicate device ids in ping devices list");
+        equal(
+          new Set(p.devices.map(device => device.id)).size,
+          p.devices.length,
+          "Duplicate device ids in ping devices list"
+        );
       }
     });
   }
@@ -346,7 +399,11 @@ function sync_and_validate_telem(allowErrorPings, getFullPing = false) {
 // engine is actually synced, but we still want to ensure we're generating a
 // valid ping. Returns a promise that resolves to the ping, or rejects with the
 // thrown error after calling an optional callback.
-async function sync_engine_and_validate_telem(engine, allowErrorPings, onError) {
+async function sync_engine_and_validate_telem(
+  engine,
+  allowErrorPings,
+  onError
+) {
   let telem = get_sync_test_telemetry();
   let caughtError = null;
   // Clear out status, so failures from previous syncs won't show up in the
@@ -372,22 +429,27 @@ async function sync_engine_and_validate_telem(engine, allowErrorPings, onError) 
       ping.syncs.forEach(record => {
         if (record && record.status) {
           // did we see anything to lead us to believe that something bad actually happened
-          let realProblem = record.failureReason || record.engines.some(e => {
-            if (e.failureReason || e.status) {
-              return true;
-            }
-            if (e.outgoing && e.outgoing.some(o => o.failed > 0)) {
-              return true;
-            }
-            return e.incoming && e.incoming.failed;
-          });
+          let realProblem =
+            record.failureReason ||
+            record.engines.some(e => {
+              if (e.failureReason || e.status) {
+                return true;
+              }
+              if (e.outgoing && e.outgoing.some(o => o.failed > 0)) {
+                return true;
+              }
+              return e.incoming && e.incoming.failed;
+            });
           if (!realProblem) {
             // no, so if the status is the same as it was initially, just assume
             // that its leftover and that we can ignore it.
             if (record.status.sync && record.status.sync == initialSyncStatus) {
               delete record.status.sync;
             }
-            if (record.status.service && record.status.service == initialServiceStatus) {
+            if (
+              record.status.service &&
+              record.status.service == initialServiceStatus
+            ) {
               delete record.status.service;
             }
             if (!record.status.sync && !record.status.service) {
@@ -457,8 +519,9 @@ Utils.getDefaultDeviceName = function() {
 };
 
 async function registerRotaryEngine() {
-  let {RotaryEngine} =
-    ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
+  let { RotaryEngine } = ChromeUtils.import(
+    "resource://testing-common/services/sync/rotaryengine.js"
+  );
   await Service.engineManager.clear();
 
   await Service.engineManager.register(RotaryEngine);
@@ -519,7 +582,7 @@ async function serverForFoo(engine, callback) {
   // do an engine sync only, there's no locking - so we end up with multiple
   // syncs running. Neuter that by making the threshold very large.
   Service.scheduler.syncThreshold = 10000000;
-  return serverForEnginesWithKeys({"foo": "password"}, engine, callback);
+  return serverForEnginesWithKeys({ foo: "password" }, engine, callback);
 }
 
 // Places notifies history observers asynchronously, so `addVisits` might return
@@ -530,8 +593,10 @@ async function promiseVisit(expectedType, expectedURI) {
     function done(type, uri) {
       if (uri == expectedURI.spec && type == expectedType) {
         PlacesUtils.history.removeObserver(observer);
-        PlacesObservers.removeListener(["page-visited"],
-                                       observer.handlePlacesEvents);
+        PlacesObservers.removeListener(
+          ["page-visited"],
+          observer.handlePlacesEvents
+        );
         resolve();
       }
     }
@@ -554,12 +619,15 @@ async function promiseVisit(expectedType, expectedURI) {
       onDeleteVisits() {},
     };
     PlacesUtils.history.addObserver(observer, false);
-    PlacesObservers.addListener(["page-visited"],
-                                observer.handlePlacesEvents);
+    PlacesObservers.addListener(["page-visited"], observer.handlePlacesEvents);
   });
 }
 
-async function addVisit(suffix, referrer = null, transition = PlacesUtils.history.TRANSITION_LINK) {
+async function addVisit(
+  suffix,
+  referrer = null,
+  transition = PlacesUtils.history.TRANSITION_LINK
+) {
   let uriString = "http://getfirefox.com/" + suffix;
   let uri = CommonUtils.makeURI(uriString);
   _("Adding visit for URI " + uriString);
@@ -587,15 +655,19 @@ function bookmarkNodesToInfos(nodes) {
     }
     // Check orphan parent anno.
     if (PlacesUtils.annotations.itemHasAnnotation(node.id, "sync/parent")) {
-      info.requestedParent =
-        PlacesUtils.annotations.getItemAnnotation(node.id, "sync/parent");
+      info.requestedParent = PlacesUtils.annotations.getItemAnnotation(
+        node.id,
+        "sync/parent"
+      );
     }
     return info;
   });
 }
 
 async function assertBookmarksTreeMatches(rootGuid, expected, message) {
-  let root = await PlacesUtils.promiseBookmarksTree(rootGuid, {includeItemIds: true});
+  let root = await PlacesUtils.promiseBookmarksTree(rootGuid, {
+    includeItemIds: true,
+  });
   let actual = bookmarkNodesToInfos(root.children);
 
   if (!ObjectUtils.deepEqual(actual, expected)) {
@@ -606,6 +678,8 @@ async function assertBookmarksTreeMatches(rootGuid, expected, message) {
 }
 
 function bufferedBookmarksEnabled() {
-  return Services.prefs.getBoolPref("services.sync.engine.bookmarks.buffer",
-    false);
+  return Services.prefs.getBoolPref(
+    "services.sync.engine.bookmarks.buffer",
+    false
+  );
 }

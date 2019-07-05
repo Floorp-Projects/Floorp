@@ -1,4 +1,3 @@
-
 const base64url =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 
@@ -15,9 +14,11 @@ function run_test() {
     Assert.equal(encodeURIComponent(newGuid).length, 12);
 
     // Verify that the GUID only contains base64url characters
-    Assert.ok(Array.prototype.every.call(newGuid, function(chr) {
-      return base64url.includes(chr);
-    }));
+    Assert.ok(
+      Array.prototype.every.call(newGuid, function(chr) {
+        return base64url.includes(chr);
+      })
+    );
 
     // Verify that Utils.checkGUID() correctly identifies them as valid.
     Assert.ok(Utils.checkGUID(newGuid));
@@ -25,7 +26,11 @@ function run_test() {
     // Verify uniqueness within our sample of 1000. This could cause random
     // failures, but they should be extremely rare. Otherwise we'd have a
     // problem with GUID collisions.
-    Assert.ok(guids.every(function(g) { return g != newGuid; }));
+    Assert.ok(
+      guids.every(function(g) {
+        return g != newGuid;
+      })
+    );
     guids.push(newGuid);
   }
 
