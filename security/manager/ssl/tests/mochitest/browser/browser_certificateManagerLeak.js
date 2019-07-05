@@ -25,7 +25,10 @@ function test() {
 
   // This test relies on the test timing out in order to indicate failure so
   // let's add a dummy pass.
-  ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
+  ok(
+    true,
+    "Each test requires at least one pass, fail or todo so here is a pass."
+  );
 
   gBugWindow = window.openDialog("chrome://pippki/content/certManager.xul");
   gBugWindow.addEventListener("load", onLoad);

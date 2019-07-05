@@ -10,14 +10,19 @@
 // See bug 1525191.
 add_task(async function() {
   do_get_profile();
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
   addCertFromFile(certDB, "bad_certs/test-ca.pem", "CTu,,");
-  let threeWeeksFromNowInSeconds = (Date.now() / 1000) +
-                                   (3 * 7 * 24 * 60 * 60);
+  let threeWeeksFromNowInSeconds = Date.now() / 1000 + 3 * 7 * 24 * 60 * 60;
   let ee = constructCertFromFile("bad_certs/default-ee.pem");
-  await checkCertErrorGenericAtTime(certDB, ee, PRErrorCodeSuccess,
-                                    certificateUsageSSLServer,
-                                    threeWeeksFromNowInSeconds, false,
-                                    "test.example.com");
+  await checkCertErrorGenericAtTime(
+    certDB,
+    ee,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer,
+    threeWeeksFromNowInSeconds,
+    false,
+    "test.example.com"
+  );
 });

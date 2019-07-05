@@ -18,20 +18,36 @@
 do_get_profile();
 
 function checkBasicAttributes(token) {
-  let bundle =
-    Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
+  let bundle = Services.strings.createBundle(
+    "chrome://pipnss/locale/pipnss.properties"
+  );
 
   let expectedTokenName = bundle.GetStringFromName("PrivateTokenDescription");
-  equal(token.tokenName, expectedTokenName,
-        "Actual and expected name should match");
-  equal(token.tokenManID, bundle.GetStringFromName("ManufacturerID"),
-        "Actual and expected manufacturer ID should match");
-  equal(token.tokenHWVersion, "0.0",
-        "Actual and expected hardware version should match");
-  equal(token.tokenFWVersion, "0.0",
-        "Actual and expected firmware version should match");
-  equal(token.tokenSerialNumber, "0000000000000000",
-        "Actual and expected serial number should match");
+  equal(
+    token.tokenName,
+    expectedTokenName,
+    "Actual and expected name should match"
+  );
+  equal(
+    token.tokenManID,
+    bundle.GetStringFromName("ManufacturerID"),
+    "Actual and expected manufacturer ID should match"
+  );
+  equal(
+    token.tokenHWVersion,
+    "0.0",
+    "Actual and expected hardware version should match"
+  );
+  equal(
+    token.tokenFWVersion,
+    "0.0",
+    "Actual and expected firmware version should match"
+  );
+  equal(
+    token.tokenSerialNumber,
+    "0000000000000000",
+    "Actual and expected serial number should match"
+  );
 }
 
 /**
@@ -45,24 +61,38 @@ function checkBasicAttributes(token) {
  *        The password that the token should have been init with.
  */
 function checkPasswordFeaturesAndResetPassword(token, initialPW) {
-  ok(!token.needsUserInit,
-     "Token should not need user init after setting a password");
-  ok(token.hasPassword,
-     "Token should have a password after setting a password");
+  ok(
+    !token.needsUserInit,
+    "Token should not need user init after setting a password"
+  );
+  ok(
+    token.hasPassword,
+    "Token should have a password after setting a password"
+  );
 
-  ok(token.checkPassword(initialPW),
-     "checkPassword() should succeed if the correct initial password is given");
+  ok(
+    token.checkPassword(initialPW),
+    "checkPassword() should succeed if the correct initial password is given"
+  );
   token.changePassword(initialPW, "newPW ÿ 一二三");
-  ok(token.checkPassword("newPW ÿ 一二三"),
-     "checkPassword() should succeed if the correct new password is given");
+  ok(
+    token.checkPassword("newPW ÿ 一二三"),
+    "checkPassword() should succeed if the correct new password is given"
+  );
 
-  ok(!token.checkPassword("wrongPW"),
-     "checkPassword() should fail if an incorrect password is given");
-  ok(!token.isLoggedIn(),
-     "Token should be logged out after an incorrect password was given");
-  ok(!token.needsUserInit,
-     "Token should still be init with a password even if an incorrect " +
-     "password was given");
+  ok(
+    !token.checkPassword("wrongPW"),
+    "checkPassword() should fail if an incorrect password is given"
+  );
+  ok(
+    !token.isLoggedIn(),
+    "Token should be logged out after an incorrect password was given"
+  );
+  ok(
+    !token.needsUserInit,
+    "Token should still be init with a password even if an incorrect " +
+      "password was given"
+  );
 
   token.reset();
   ok(token.needsUserInit, "Token should need password init after reset");
@@ -71,11 +101,15 @@ function checkPasswordFeaturesAndResetPassword(token, initialPW) {
 }
 
 function run_test() {
-  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                  .getService(Ci.nsIPK11TokenDB);
+  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+    Ci.nsIPK11TokenDB
+  );
   let token = tokenDB.getInternalKeyToken();
   notEqual(token, null, "The internal token should be present");
-  ok(token.isInternalKeyToken, "The internal token should be represented as such");
+  ok(
+    token.isInternalKeyToken,
+    "The internal token should be represented as such"
+  );
 
   checkBasicAttributes(token);
 
@@ -84,8 +118,10 @@ function run_test() {
   // does not result in an error.
   token.logoutSimple();
   ok(!token.isLoggedIn(), "Token should still not be logged into");
-  ok(!token.hasPassword,
-     "Token should not have a password before it has been set");
+  ok(
+    !token.hasPassword,
+    "Token should not have a password before it has been set"
+  );
 
   let initialPW = "foo 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/? 一二三";
   token.initPassword(initialPW);
@@ -96,12 +132,18 @@ function run_test() {
 
   // We reset the password previously, so we need to initialize again.
   token.initPassword("arbitrary");
-  ok(token.isLoggedIn(),
-     "Token should be logged into after initializing password again");
+  ok(
+    token.isLoggedIn(),
+    "Token should be logged into after initializing password again"
+  );
   token.logoutSimple();
-  ok(!token.isLoggedIn(),
-     "Token should be logged out after calling logoutSimple()");
+  ok(
+    !token.isLoggedIn(),
+    "Token should be logged out after calling logoutSimple()"
+  );
 
-  ok(token.needsLogin(),
-     "The internal token should always need authentication");
+  ok(
+    token.needsLogin(),
+    "The internal token should always need authentication"
+  );
 }

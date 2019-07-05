@@ -96,30 +96,40 @@ function checkStateWritten(aSubject, aTopic, aData) {
 function run_test() {
   Services.prefs.setIntPref("test.datastorage.write_timer_ms", 100);
   gProfileDir = do_get_profile();
-  let SSService = Cc["@mozilla.org/ssservice;1"]
-                    .getService(Ci.nsISiteSecurityService);
+  let SSService = Cc["@mozilla.org/ssservice;1"].getService(
+    Ci.nsISiteSecurityService
+  );
   // Put an HPKP entry
-  SSService.setKeyPins("dynamic-pin.example.com", true,
-                       new Date().getTime() + 1000000,
-                       [NON_ISSUED_KEY_HASH]);
+  SSService.setKeyPins(
+    "dynamic-pin.example.com",
+    true,
+    new Date().getTime() + 1000000,
+    [NON_ISSUED_KEY_HASH]
+  );
 
-  let uris = [ Services.io.newURI("http://includesubdomains.preloaded.test"),
-               Services.io.newURI("http://a.example.com"),
-               Services.io.newURI("http://b.example.com"),
-               Services.io.newURI("http://c.c.example.com"),
-               Services.io.newURI("http://d.example.com") ];
+  let uris = [
+    Services.io.newURI("http://includesubdomains.preloaded.test"),
+    Services.io.newURI("http://a.example.com"),
+    Services.io.newURI("http://b.example.com"),
+    Services.io.newURI("http://c.c.example.com"),
+    Services.io.newURI("http://d.example.com"),
+  ];
 
   for (let i = 0; i < 1000; i++) {
     let uriIndex = i % uris.length;
     // vary max-age
-    let maxAge = "max-age=" + (i * 1000);
-     // alternate setting includeSubdomains
-    let includeSubdomains = (i % 2 == 0 ? "; includeSubdomains" : "");
+    let maxAge = "max-age=" + i * 1000;
+    // alternate setting includeSubdomains
+    let includeSubdomains = i % 2 == 0 ? "; includeSubdomains" : "";
     let secInfo = new FakeTransportSecurityInfo();
-    SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            uris[uriIndex], maxAge + includeSubdomains,
-                            secInfo, 0,
-                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
+    SSService.processHeader(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      uris[uriIndex],
+      maxAge + includeSubdomains,
+      secInfo,
+      0,
+      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+    );
   }
 
   do_test_pending();

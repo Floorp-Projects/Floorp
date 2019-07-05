@@ -6,20 +6,33 @@
 "use strict";
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-var certdb = Cc["@mozilla.org/security/x509certdb;1"]
-               .getService(Ci.nsIX509CertDB);
+var certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
 
-const caList = [ "ca-no-keyUsage-extension", "ca-missing-keyCertSign",
-                 "ca-all-usages" ];
-const eeList = [ "ee-no-keyUsage-extension", "ee-keyCertSign-only",
-                 "ee-keyEncipherment-only", "ee-keyCertSign-and-keyEncipherment" ];
+const caList = [
+  "ca-no-keyUsage-extension",
+  "ca-missing-keyCertSign",
+  "ca-all-usages",
+];
+const eeList = [
+  "ee-no-keyUsage-extension",
+  "ee-keyCertSign-only",
+  "ee-keyEncipherment-only",
+  "ee-keyCertSign-and-keyEncipherment",
+];
 
-const caUsage = [ certificateUsageSSLCA ];
-const allEEUsages = [ certificateUsageSSLClient, certificateUsageSSLServer,
-                      certificateUsageEmailSigner,
-                      certificateUsageEmailRecipient ];
-const serverEEUsages = [ certificateUsageSSLServer,
-                         certificateUsageEmailRecipient ];
+const caUsage = [certificateUsageSSLCA];
+const allEEUsages = [
+  certificateUsageSSLClient,
+  certificateUsageSSLServer,
+  certificateUsageEmailSigner,
+  certificateUsageEmailRecipient,
+];
+const serverEEUsages = [
+  certificateUsageSSLServer,
+  certificateUsageEmailRecipient,
+];
 
 const expectedUsagesMap = {
   "ca-no-keyUsage-extension": caUsage,
@@ -50,8 +63,14 @@ add_task(async function() {
     await asyncTestCertificateUsages(certdb, caCert, expectedUsagesMap[ca]);
     for (let ee of eeList) {
       let eeFullName = ee + "-" + ca;
-      let eeCert = constructCertFromFile("test_cert_keyUsage/" + eeFullName + ".pem");
-      await asyncTestCertificateUsages(certdb, eeCert, expectedUsagesMap[eeFullName]);
+      let eeCert = constructCertFromFile(
+        "test_cert_keyUsage/" + eeFullName + ".pem"
+      );
+      await asyncTestCertificateUsages(
+        certdb,
+        eeCert,
+        expectedUsagesMap[eeFullName]
+      );
     }
   }
 });

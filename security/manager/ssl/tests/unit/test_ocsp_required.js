@@ -28,7 +28,7 @@ function run_test() {
   gOCSPResponse = ocspResponses[0];
 
   let ocspResponder = new HttpServer();
-  ocspResponder.registerPrefixHandler("/", function (request, response) {
+  ocspResponder.registerPrefixHandler("/", function(request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "application/ocsp-response");
     response.write(gOCSPResponse);
@@ -38,19 +38,28 @@ function run_test() {
 
   add_tests();
 
-  add_test(function () { ocspResponder.stop(run_next_test); });
+  add_test(function() {
+    ocspResponder.stop(run_next_test);
+  });
 
   run_next_test();
 }
 
 function add_tests() {
-  add_connection_test("ocsp-stapling-none.example.com",
-                      SEC_ERROR_OCSP_BAD_SIGNATURE);
-  add_connection_test("ocsp-stapling-none.example.com",
-                      SEC_ERROR_OCSP_BAD_SIGNATURE);
-  add_test(function () {
-    equal(gOCSPRequestCount, 1,
-          "OCSP request count should be 1 due to OCSP response caching");
+  add_connection_test(
+    "ocsp-stapling-none.example.com",
+    SEC_ERROR_OCSP_BAD_SIGNATURE
+  );
+  add_connection_test(
+    "ocsp-stapling-none.example.com",
+    SEC_ERROR_OCSP_BAD_SIGNATURE
+  );
+  add_test(function() {
+    equal(
+      gOCSPRequestCount,
+      1,
+      "OCSP request count should be 1 due to OCSP response caching"
+    );
     gOCSPRequestCount = 0;
     // Now set the OCSP responder to reply with 200 OK but empty content.
     gOCSPResponse = "";
@@ -58,6 +67,8 @@ function add_tests() {
     run_next_test();
   });
 
-  add_connection_test("ocsp-stapling-none.example.com",
-                      SEC_ERROR_OCSP_MALFORMED_RESPONSE);
+  add_connection_test(
+    "ocsp-stapling-none.example.com",
+    SEC_ERROR_OCSP_MALFORMED_RESPONSE
+  );
 }
