@@ -156,13 +156,13 @@ def read_file(file_path):
 
 def file_exists(file_path):
     if not os.path.exists:
-        print "The file " + file_name + " doesn't exists"
+        print("The file " + file_name + " doesn't exists")
         return False
     return True
 
 def build_deps(target, namespace):
     cmdLine = 'python ../closure-library/closure/bin/build/closurebuilder.py --root=../closure-library --root=. --namespace=' + namespace
-    print cmdLine
+    print(cmdLine)
     write_to_file(dep_filename(target), cmdLine, False)
 
 def build_all_deps():
@@ -189,7 +189,7 @@ def build_target(target, namespace):
         if len(dep) > 0:
             cmdLine += ' --js ' + dep
     cmdLine += ' --closure_entry_point=' + namespace
-    print cmdLine
+    print(cmdLine)
     filename = compiled_filename(target)
     write_to_file(filename, cmdLine, True)
     compiled = read_file(filename)
@@ -197,7 +197,7 @@ def build_target(target, namespace):
     errors = 0
     warnings = 0
     if result:
-        print target + ': ' + result.group(0)
+        print(target + ': ' + result.group(0))
         errors = int(result.group(1))
         warnings = int(result.group(2))
         total_errors += errors
@@ -215,9 +215,9 @@ def format_target(target):
     for dep in deps.split('\n'):
         dep = dep.strip()
         if len(dep) > 0 and not re.search('closure-library.*base\.js', dep):
-            print fixjsstyle + ' ' + dep
+            print(fixjsstyle + ' ' + dep)
             subprocess.call(['python', fixjsstyle, dep])
-            print reformat + ' -f ' + dep
+            print(reformat + ' -f ' + dep)
             subprocess.call(['python', reformat, '-f', dep])
 
 def format_all_targets():
@@ -226,21 +226,21 @@ def format_all_targets():
 
 def pass_or_fail():
     if total_errors + total_warnings == 0:
-        print "Passed"
+        print("Passed")
     elif len(results) > 1: #display the summary only when building more than one target
         passed = [k for k, v in results.iteritems() if v[0] + v[1] == 0]
         failed = dict((k, v) for k, v in results.iteritems() if v[0] + v[1] != 0)
-        print "\nBuild Summary:"
+        print("\nBuild Summary:")
         # Print first the tests that passed
         for target in passed:
-            print "{0:>30}\tPassed".format(target+":")
+            print("{0:>30}\tPassed".format(target+":"))
 
         # Print tests that failed. Fixed-width to improve readability
         for target in failed:
             errors = failed[target][0]
             warnings = failed[target][1]
-            print "{0:>30}\tErrors: {1:4}\tWarnings: {2:4}".format(target+":", errors, warnings)
-        print "Compilation failed: {} error(s), {} warning(s).".format(total_errors, total_warnings)
+            print("{0:>30}\tErrors: {1:4}\tWarnings: {2:4}".format(target+":", errors, warnings))
+        print("Compilation failed: {} error(s), {} warning(s).".format(total_errors, total_warnings))
 
 def main(argv):
     if len(argv) == 0:
@@ -270,9 +270,9 @@ def main(argv):
     elif (argv[0] == 'depfile'):
         buildDepsFile()
     elif (argv[0] == 'list'):
-        print "List of available targets:"
+        print("List of available targets:")
         for target in targets.keys():
-            print "\t{}".format(target)
+            print("\t{}".format(target))
     else:
         target = argv[0]
         build_deps(target, targets[target])

@@ -8,7 +8,6 @@ py3:
         - client.py
         - config
         - dom/bindings
-        - dom/canvas/test
         - dom/media/test
         - gfx
         - ipc/ipdl

@@ -12,7 +12,7 @@ from optparse import OptionParser
 from xml.dom.minidom import parse
 
 if sys.version < '2.6':
-   print 'Wrong Python Version !!!: Need >= 2.6'
+   print('Wrong Python Version !!!: Need >= 2.6')
    sys.exit(1)
 
 # each shader test generates up to 3 512x512 images.
@@ -101,7 +101,7 @@ SUBSTITUTIONS = [
 def Log(msg):
   global VERBOSE
   if VERBOSE:
-    print msg
+    print(msg)
 
 
 def TransposeMatrix(values, dim):
@@ -122,7 +122,7 @@ def GetValidTypeName(type_name):
   for subst in SUBSTITUTIONS:
     type_name = type_name.replace(subst[0], subst[1])
   if not type_name in VALID_UNIFORM_TYPES:
-    print "unknown type name: ", type_name
+    print("unknown type name: ", type_name)
     raise SyntaxError
   return type_name
 
@@ -236,7 +236,7 @@ def CopyShader(filename, src, dst):
   marker = "insert-copyright-here"
   new_text = COMMENT_RE.sub(marker, text)
   if new_text == text:
-    print "no matching license found:", s
+    print("no matching license found:", s)
     raise RuntimeError
   new_text = REMOVE_COPYRIGHT_RE.sub("", new_text)
   new_text = new_text.replace(marker, LICENSE)
@@ -256,8 +256,8 @@ def CheckForUnknownTags(valid_tags, node, depth=1):
   """do a hacky check to make sure we're not missing something."""
   for child in node.childNodes:
     if child.localName and not IsOneOf(child.localName, valid_tags[0]):
-      print "unsupported tag:", child.localName
-      print "depth:", depth
+      print("unsupported tag:", child.localName)
+      print("depth:", depth)
       raise SyntaxError
     else:
       if len(valid_tags) > 1:
@@ -282,7 +282,7 @@ class TestReader():
 
   def Print(self, msg):
     if self.verbose:
-      print msg
+      print(msg)
 
   def MakeOutPath(self, filename):
     relpath = os.path.relpath(os.path.abspath(filename), os.path.dirname(os.path.abspath(self.basepath)))
@@ -307,7 +307,7 @@ class TestReader():
         elif line.endswith(".test"):
           tests_data.extend(self.ReadTest(fname))
         else:
-          print "Error in %s:%d:%s" % (filename, count, line)
+          print("Error in %s:%d:%s" % (filename, count, line))
           raise SyntaxError()
     if len(tests_data):
       global MAX_TESTS_PER_SET
@@ -457,7 +457,7 @@ var successfullyParsed = true;
               uniform["transpose"] = (GetText(child.childNodes) == "true")
             else:
               if "type" in uniform:
-                print "utype was:", uniform["type"], " found ", child.localName
+                print("utype was:", uniform["type"], " found ", child.localName)
                 raise SyntaxError
               type_name = GetValidTypeName(child.localName)
               uniform["type"] = type_name
