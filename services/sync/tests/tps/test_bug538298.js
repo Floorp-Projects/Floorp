@@ -8,10 +8,12 @@
  */
 EnableEngines(["bookmarks"]);
 
-var phases = { "phase1": "profile1",
-               "phase2": "profile2",
-               "phase3": "profile1",
-               "phase4": "profile2" };
+var phases = {
+  phase1: "profile1",
+  phase2: "profile2",
+  phase3: "profile1",
+  phase4: "profile2",
+};
 
 /*
  * Bookmark asset lists: these define bookmarks that are used during the test
@@ -19,20 +21,18 @@ var phases = { "phase1": "profile1",
 
 // the initial list of bookmarks to add to the browser
 var bookmarks_initial = {
-  "toolbar": [
-    { uri: "http://www.google.com",
-      title: "Google",
-    },
-    { uri: "http://www.cnn.com",
+  toolbar: [
+    { uri: "http://www.google.com", title: "Google" },
+    {
+      uri: "http://www.cnn.com",
       title: "CNN",
       changes: {
         position: "Google",
       },
     },
-    { uri: "http://www.mozilla.com",
-      title: "Mozilla",
-    },
-    { uri: "http://www.firefox.com",
+    { uri: "http://www.mozilla.com", title: "Mozilla" },
+    {
+      uri: "http://www.firefox.com",
       title: "Firefox",
       changes: {
         position: "Mozilla",
@@ -42,19 +42,11 @@ var bookmarks_initial = {
 };
 
 var bookmarks_after_move = {
-  "toolbar": [
-    { uri: "http://www.cnn.com",
-      title: "CNN",
-    },
-    { uri: "http://www.google.com",
-      title: "Google",
-    },
-    { uri: "http://www.firefox.com",
-      title: "Firefox",
-    },
-    { uri: "http://www.mozilla.com",
-      title: "Mozilla",
-    },
+  toolbar: [
+    { uri: "http://www.cnn.com", title: "CNN" },
+    { uri: "http://www.google.com", title: "Google" },
+    { uri: "http://www.firefox.com", title: "Firefox" },
+    { uri: "http://www.mozilla.com", title: "Mozilla" },
   ],
 };
 
@@ -70,10 +62,7 @@ Phase("phase1", [
 ]);
 
 // Sync to profile2 and verify that all four bookmarks are present.
-Phase("phase2", [
-  [Sync],
-  [Bookmarks.verify, bookmarks_initial],
-]);
+Phase("phase2", [[Sync], [Bookmarks.verify, bookmarks_initial]]);
 
 // Change the order of the toolbar bookmarks, and sync.
 Phase("phase3", [
@@ -86,8 +75,4 @@ Phase("phase3", [
 
 // Go back to profile2, sync, and verify that the bookmarks are reordered
 // as expected.
-Phase("phase4", [
-  [Sync],
-  [Bookmarks.verify, bookmarks_after_move],
-]);
-
+Phase("phase4", [[Sync], [Bookmarks.verify, bookmarks_after_move]]);

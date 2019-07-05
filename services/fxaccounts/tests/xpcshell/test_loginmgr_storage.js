@@ -8,13 +8,20 @@
 // See verbose logging from FxAccounts.jsm
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 
-const {FxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {FXA_PWDMGR_HOST, FXA_PWDMGR_REALM} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Use a backstage pass to get at our LoginManagerStorage object, so we can
 // mock the prototype.
-var {LoginManagerStorage} = ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm", null);
+var { LoginManagerStorage } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsStorage.jsm",
+  null
+);
 var isLoggedIn = true;
 LoginManagerStorage.prototype.__defineGetter__("_isLoggedIn", () => isLoggedIn);
 
@@ -22,11 +29,14 @@ function setLoginMgrLoggedInState(loggedIn) {
   isLoggedIn = loggedIn;
 }
 
-
 initTestLogging("Trace");
 
 function getLoginMgrData() {
-  let logins = Services.logins.findLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+  let logins = Services.logins.findLogins(
+    FXA_PWDMGR_HOST,
+    null,
+    FXA_PWDMGR_REALM
+  );
   if (logins.length == 0) {
     return null;
   }
@@ -86,30 +96,78 @@ add_task(async function test_simple() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "signedInUser.json");
   let data = await CommonUtils.readJSON(path);
 
-  Assert.strictEqual(data.accountData.email, creds.email, "correct email in the clear text");
-  Assert.strictEqual(data.accountData.sessionToken, creds.sessionToken, "correct sessionToken in the clear text");
-  Assert.strictEqual(data.accountData.verified, creds.verified, "correct verified flag");
+  Assert.strictEqual(
+    data.accountData.email,
+    creds.email,
+    "correct email in the clear text"
+  );
+  Assert.strictEqual(
+    data.accountData.sessionToken,
+    creds.sessionToken,
+    "correct sessionToken in the clear text"
+  );
+  Assert.strictEqual(
+    data.accountData.verified,
+    creds.verified,
+    "correct verified flag"
+  );
 
   Assert.ok(!("kSync" in data.accountData), "kSync not stored in clear text");
   Assert.ok(!("kXCS" in data.accountData), "kXCS not stored in clear text");
-  Assert.ok(!("kExtSync" in data.accountData), "kExtSync not stored in clear text");
-  Assert.ok(!("kExtKbHash" in data.accountData), "kExtKbHash not stored in clear text");
+  Assert.ok(
+    !("kExtSync" in data.accountData),
+    "kExtSync not stored in clear text"
+  );
+  Assert.ok(
+    !("kExtKbHash" in data.accountData),
+    "kExtKbHash not stored in clear text"
+  );
 
   let login = getLoginMgrData();
   Assert.strictEqual(login.username, creds.uid, "uid used for username");
   let loginData = JSON.parse(login.password);
-  Assert.strictEqual(loginData.version, data.version, "same version flag in both places");
-  Assert.strictEqual(loginData.accountData.kSync, creds.kSync, "correct kSync in the login mgr");
-  Assert.strictEqual(loginData.accountData.kXCS, creds.kXCS, "correct kXCS in the login mgr");
-  Assert.strictEqual(loginData.accountData.kExtSync, creds.kExtSync, "correct kExtSync in the login mgr");
-  Assert.strictEqual(loginData.accountData.kExtKbHash, creds.kExtKbHash, "correct kExtKbHash in the login mgr");
+  Assert.strictEqual(
+    loginData.version,
+    data.version,
+    "same version flag in both places"
+  );
+  Assert.strictEqual(
+    loginData.accountData.kSync,
+    creds.kSync,
+    "correct kSync in the login mgr"
+  );
+  Assert.strictEqual(
+    loginData.accountData.kXCS,
+    creds.kXCS,
+    "correct kXCS in the login mgr"
+  );
+  Assert.strictEqual(
+    loginData.accountData.kExtSync,
+    creds.kExtSync,
+    "correct kExtSync in the login mgr"
+  );
+  Assert.strictEqual(
+    loginData.accountData.kExtKbHash,
+    creds.kExtKbHash,
+    "correct kExtKbHash in the login mgr"
+  );
 
   Assert.ok(!("email" in loginData), "email not stored in the login mgr json");
-  Assert.ok(!("sessionToken" in loginData), "sessionToken not stored in the login mgr json");
-  Assert.ok(!("verified" in loginData), "verified not stored in the login mgr json");
+  Assert.ok(
+    !("sessionToken" in loginData),
+    "sessionToken not stored in the login mgr json"
+  );
+  Assert.ok(
+    !("verified" in loginData),
+    "verified not stored in the login mgr json"
+  );
 
   await fxa.signOut(/* localOnly = */ true);
-  Assert.strictEqual(getLoginMgrData(), null, "login mgr data deleted on logout");
+  Assert.strictEqual(
+    getLoginMgrData(),
+    null,
+    "login mgr data deleted on logout"
+  );
 });
 
 add_task(async function test_MPLocked() {
@@ -136,19 +194,36 @@ add_task(async function test_MPLocked() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "signedInUser.json");
   let data = await CommonUtils.readJSON(path);
 
-  Assert.strictEqual(data.accountData.email, creds.email, "correct email in the clear text");
-  Assert.strictEqual(data.accountData.sessionToken, creds.sessionToken, "correct sessionToken in the clear text");
-  Assert.strictEqual(data.accountData.verified, creds.verified, "correct verified flag");
+  Assert.strictEqual(
+    data.accountData.email,
+    creds.email,
+    "correct email in the clear text"
+  );
+  Assert.strictEqual(
+    data.accountData.sessionToken,
+    creds.sessionToken,
+    "correct sessionToken in the clear text"
+  );
+  Assert.strictEqual(
+    data.accountData.verified,
+    creds.verified,
+    "correct verified flag"
+  );
 
   Assert.ok(!("kSync" in data.accountData), "kSync not stored in clear text");
   Assert.ok(!("kXCS" in data.accountData), "kXCS not stored in clear text");
-  Assert.ok(!("kExtSync" in data.accountData), "kExtSync not stored in clear text");
-  Assert.ok(!("kExtKbHash" in data.accountData), "kExtKbHash not stored in clear text");
+  Assert.ok(
+    !("kExtSync" in data.accountData),
+    "kExtSync not stored in clear text"
+  );
+  Assert.ok(
+    !("kExtKbHash" in data.accountData),
+    "kExtKbHash not stored in clear text"
+  );
 
   Assert.strictEqual(getLoginMgrData(), null, "login mgr data doesn't exist");
   await fxa.signOut(/* localOnly = */ true);
 });
-
 
 add_task(async function test_consistentWithMPEdgeCases() {
   setLoginMgrLoggedInState(true);
@@ -191,8 +266,11 @@ add_task(async function test_consistentWithMPEdgeCases() {
   let login = getLoginMgrData();
   Assert.strictEqual(login.username, creds1.uid);
   // and that we do have the first kSync in the login manager.
-  Assert.strictEqual(JSON.parse(login.password).accountData.kSync, creds1.kSync,
-                     "stale data still in login mgr");
+  Assert.strictEqual(
+    JSON.parse(login.password).accountData.kSync,
+    creds1.kSync,
+    "stale data still in login mgr"
+  );
 
   // Make a new FxA instance (otherwise the values in memory will be used)
   // and we want the login manager to be unlocked.
@@ -213,17 +291,22 @@ add_task(async function test_uidMigration() {
   Assert.strictEqual(getLoginMgrData(), null, "expect no logins at the start");
 
   // create the login entry using email as a key.
-  let contents = {kSync: "kSync"};
+  let contents = { kSync: "kSync" };
 
   let loginInfo = new Components.Constructor(
-   "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-  let login = new loginInfo(FXA_PWDMGR_HOST,
-                            null, // aFormActionOrigin,
-                            FXA_PWDMGR_REALM, // aHttpRealm,
-                            "foo@bar.com", // aUsername
-                            JSON.stringify(contents), // aPassword
-                            "", // aUsernameField
-                            "");// aPasswordField
+    "@mozilla.org/login-manager/loginInfo;1",
+    Ci.nsILoginInfo,
+    "init"
+  );
+  let login = new loginInfo(
+    FXA_PWDMGR_HOST,
+    null, // aFormActionOrigin,
+    FXA_PWDMGR_REALM, // aHttpRealm,
+    "foo@bar.com", // aUsername
+    JSON.stringify(contents), // aPassword
+    "", // aUsernameField
+    ""
+  ); // aPasswordField
   Services.logins.addLogin(login);
 
   // ensure we read it.

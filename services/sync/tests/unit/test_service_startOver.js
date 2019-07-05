@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function BlaEngine() {
   SyncEngine.call(this, "Bla", Service);
@@ -13,7 +13,6 @@ BlaEngine.prototype = {
   async removeClientData() {
     this.removed = true;
   },
-
 };
 
 add_task(async function setup() {
@@ -81,5 +80,8 @@ add_task(async function test_reset_SyncScheduler() {
   Assert.equal(Service.scheduler.numClients, 0);
   Assert.equal(Service.scheduler.nextSync, 0);
   Assert.equal(Service.scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
-  Assert.equal(Service.scheduler.syncInterval, Service.scheduler.singleDeviceInterval);
+  Assert.equal(
+    Service.scheduler.syncInterval,
+    Service.scheduler.singleDeviceInterval
+  );
 });

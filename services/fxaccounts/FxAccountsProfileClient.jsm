@@ -5,14 +5,34 @@
 /**
  * A client to fetch profile information for a Firefox Account.
  */
- "use strict;";
+"use strict;";
 
-var EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
+var EXPORTED_SYMBOLS = [
+  "FxAccountsProfileClient",
+  "FxAccountsProfileClientError",
+];
 
-const {ERRNO_NETWORK, ERRNO_PARSE, ERRNO_UNKNOWN_ERROR, ERROR_CODE_METHOD_NOT_ALLOWED, ERROR_MSG_METHOD_NOT_ALLOWED, ERROR_NETWORK, ERROR_PARSE, ERROR_UNKNOWN, log, SCOPE_PROFILE} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {fxAccounts} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {
+  ERRNO_NETWORK,
+  ERRNO_PARSE,
+  ERRNO_UNKNOWN_ERROR,
+  ERROR_CODE_METHOD_NOT_ALLOWED,
+  ERROR_MSG_METHOD_NOT_ALLOWED,
+  ERROR_NETWORK,
+  ERROR_PARSE,
+  ERROR_UNKNOWN,
+  log,
+  SCOPE_PROFILE,
+} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { RESTRequest } = ChromeUtils.import(
+  "resource://services-common/rest.js"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -85,7 +105,7 @@ this.FxAccountsProfileClient.prototype = {
       token = await this.fxa.getOAuthToken(this.oauthOptions);
     }
     try {
-      return (await this._rawRequest(path, method, token, etag));
+      return await this._rawRequest(path, method, token, etag);
     } catch (ex) {
       if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
         throw ex;
@@ -95,19 +115,23 @@ this.FxAccountsProfileClient.prototype = {
         throw ex;
       }
       // it's an auth error - assume our token expired and retry.
-      log.info("Fetching the profile returned a 401 - revoking our token and retrying");
-      await this.fxa.removeCachedOAuthToken({token});
+      log.info(
+        "Fetching the profile returned a 401 - revoking our token and retrying"
+      );
+      await this.fxa.removeCachedOAuthToken({ token });
       token = await this.fxa.getOAuthToken(this.oauthOptions);
       // and try with the new token - if that also fails then we fail after
       // revoking the token.
       try {
-        return (await this._rawRequest(path, method, token, etag));
+        return await this._rawRequest(path, method, token, etag);
       } catch (ex) {
         if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
           throw ex;
         }
-        log.info("Retry fetching the profile still returned a 401 - revoking our token and failing");
-        await this.fxa.removeCachedOAuthToken({token});
+        log.info(
+          "Retry fetching the profile still returned a 401 - revoking our token and failing"
+        );
+        await this.fxa.removeCachedOAuthToken({ token });
         throw ex;
       }
     }

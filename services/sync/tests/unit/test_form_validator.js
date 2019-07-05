@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {FormValidator} = ChromeUtils.import("resource://services-sync/engines/forms.js");
+const { FormValidator } = ChromeUtils.import(
+  "resource://services-sync/engines/forms.js"
+);
 
 function getDummyServerAndClient() {
   return {
@@ -57,14 +59,17 @@ function getDummyServerAndClient() {
 add_task(async function test_valid() {
   let { server, client } = getDummyServerAndClient();
   let validator = new FormValidator();
-  let { problemData, clientRecords, records, deletedRecords } =
-      await validator.compareClientWithServer(client, server);
+  let {
+    problemData,
+    clientRecords,
+    records,
+    deletedRecords,
+  } = await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 3);
   equal(records.length, 3);
   equal(deletedRecords.length, 0);
   deepEqual(problemData, validator.emptyProblemData());
 });
-
 
 add_task(async function test_formValidatorIgnoresMissingClients() {
   // Since history form records are not deleted from the server, the
@@ -73,8 +78,12 @@ add_task(async function test_formValidatorIgnoresMissingClients() {
   client.pop();
 
   let validator = new FormValidator();
-  let { problemData, clientRecords, records, deletedRecords } =
-      await validator.compareClientWithServer(client, server);
+  let {
+    problemData,
+    clientRecords,
+    records,
+    deletedRecords,
+  } = await validator.compareClientWithServer(client, server);
 
   equal(clientRecords.length, 2);
   equal(records.length, 3);

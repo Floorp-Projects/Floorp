@@ -4,14 +4,16 @@
 
 var EXPORTED_SYMBOLS = ["Weave"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 var Weave = {};
 ChromeUtils.import("resource://services-sync/constants.js", Weave);
 var lazies = {
-  "service.js":           ["Service"],
-  "status.js":            ["Status"],
-  "util.js":              ["Utils", "Svc"],
+  "service.js": ["Service"],
+  "status.js": ["Status"],
+  "util.js": ["Utils", "Svc"],
 };
 
 function lazyImport(module, dest, props) {
@@ -20,10 +22,12 @@ function lazyImport(module, dest, props) {
       let ns = {};
       ChromeUtils.import(module, ns);
       delete dest[prop];
-      return dest[prop] = ns[prop];
+      return (dest[prop] = ns[prop]);
     };
   }
-  props.forEach(function(prop) { dest.__defineGetter__(prop, getter(prop)); });
+  props.forEach(function(prop) {
+    dest.__defineGetter__(prop, getter(prop));
+  });
 }
 
 for (let mod in lazies) {
@@ -31,6 +35,8 @@ for (let mod in lazies) {
 }
 
 XPCOMUtils.defineLazyGetter(Weave, "Crypto", function() {
-  let { WeaveCrypto } = ChromeUtils.import("resource://services-crypto/WeaveCrypto.js");
+  let { WeaveCrypto } = ChromeUtils.import(
+    "resource://services-crypto/WeaveCrypto.js"
+  );
   return new WeaveCrypto();
 });

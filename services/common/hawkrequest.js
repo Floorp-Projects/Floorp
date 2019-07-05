@@ -9,15 +9,26 @@ var EXPORTED_SYMBOLS = [
   "deriveHawkCredentials",
 ];
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
-const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
-const {Credentials} = ChromeUtils.import("resource://gre/modules/Credentials.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { RESTRequest } = ChromeUtils.import(
+  "resource://services-common/rest.js"
+);
+const { CommonUtils } = ChromeUtils.import(
+  "resource://services-common/utils.js"
+);
+const { Credentials } = ChromeUtils.import(
+  "resource://gre/modules/Credentials.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "CryptoUtils",
-                               "resource://services-crypto/utils.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CryptoUtils",
+  "resource://services-crypto/utils.js"
+);
 
 const Prefs = new Preferences("services.common.rest.");
 
@@ -49,14 +60,19 @@ const Prefs = new Preferences("services.common.rest.");
  * milliseconds will be -120000.
  */
 
-var HAWKAuthenticatedRESTRequest =
- function HawkAuthenticatedRESTRequest(uri, credentials, extra = {}) {
+var HAWKAuthenticatedRESTRequest = function HawkAuthenticatedRESTRequest(
+  uri,
+  credentials,
+  extra = {}
+) {
   RESTRequest.call(this, uri);
 
   this.credentials = credentials;
   this.now = extra.now || Date.now();
   this.localtimeOffsetMsec = extra.localtimeOffsetMsec || 0;
-  this._log.trace("local time, offset: " + this.now + ", " + (this.localtimeOffsetMsec));
+  this._log.trace(
+    "local time, offset: " + this.now + ", " + this.localtimeOffsetMsec
+  );
   this.extraHeaders = extra.headers || {};
 
   // Expose for testing
@@ -75,7 +91,7 @@ HAWKAuthenticatedRESTRequest.prototype = {
         now: this.now,
         localtimeOffsetMsec: this.localtimeOffsetMsec,
         credentials: this.credentials,
-        payload: data && JSON.stringify(data) || "",
+        payload: (data && JSON.stringify(data)) || "",
         contentType,
       };
       let header = await CryptoUtils.computeHAWK(this.uri, method, options);
@@ -94,32 +110,36 @@ HAWKAuthenticatedRESTRequest.prototype = {
   },
 };
 
-
 /**
-  * Generic function to derive Hawk credentials.
-  *
-  * Hawk credentials are derived using shared secrets, which depend on the token
-  * in use.
-  *
-  * @param tokenHex
-  *        The current session token encoded in hex
-  * @param context
-  *        A context for the credentials. A protocol version will be prepended
-  *        to the context, see Credentials.keyWord for more information.
-  * @param size
-  *        The size in bytes of the expected derived buffer,
-  *        defaults to 3 * 32.
-  * @return credentials
-  *        Returns an object:
-  *        {
-  *          id: the Hawk id (from the first 32 bytes derived)
-  *          key: the Hawk key (from bytes 32 to 64)
-  *          extra: size - 64 extra bytes (if size > 64)
-  *        }
-  */
+ * Generic function to derive Hawk credentials.
+ *
+ * Hawk credentials are derived using shared secrets, which depend on the token
+ * in use.
+ *
+ * @param tokenHex
+ *        The current session token encoded in hex
+ * @param context
+ *        A context for the credentials. A protocol version will be prepended
+ *        to the context, see Credentials.keyWord for more information.
+ * @param size
+ *        The size in bytes of the expected derived buffer,
+ *        defaults to 3 * 32.
+ * @return credentials
+ *        Returns an object:
+ *        {
+ *          id: the Hawk id (from the first 32 bytes derived)
+ *          key: the Hawk key (from bytes 32 to 64)
+ *          extra: size - 64 extra bytes (if size > 64)
+ *        }
+ */
 async function deriveHawkCredentials(tokenHex, context, size = 96) {
   let token = CommonUtils.hexToBytes(tokenHex);
-  let out = await CryptoUtils.hkdfLegacy(token, undefined, Credentials.keyWord(context), size);
+  let out = await CryptoUtils.hkdfLegacy(
+    token,
+    undefined,
+    Credentials.keyWord(context),
+    size
+  );
 
   let result = {
     key: out.slice(32, 64),
@@ -162,7 +182,9 @@ this.Intl.prototype = {
     this._everRead = true;
     try {
       this._accepted = Services.prefs.getComplexValue(
-        "intl.accept_languages", Ci.nsIPrefLocalizedString).data;
+        "intl.accept_languages",
+        Ci.nsIPrefLocalizedString
+      ).data;
     } catch (err) {
       this._log.error("Error reading intl.accept_languages pref", err);
     }

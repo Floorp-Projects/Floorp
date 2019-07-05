@@ -3,8 +3,10 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { RESTRequest } = ChromeUtils.import(
+  "resource://services-common/rest.js"
+);
 
 function run_test() {
   Log.repository.getLogger("Services.Common.RESTRequest").level =
@@ -36,9 +38,10 @@ add_test(function test_attributes() {
   Assert.equal(request.uri.spec, uri);
   Assert.equal(request.response, null);
   Assert.equal(request.status, request.NOT_SENT);
-  let expectedLoadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE |
-                          Ci.nsIRequest.INHIBIT_CACHING |
-                          Ci.nsIRequest.LOAD_ANONYMOUS;
+  let expectedLoadFlags =
+    Ci.nsIRequest.LOAD_BYPASS_CACHE |
+    Ci.nsIRequest.INHIBIT_CACHING |
+    Ci.nsIRequest.LOAD_ANONYMOUS;
   Assert.equal(request.loadFlags, expectedLoadFlags);
 
   run_next_test();
@@ -54,7 +57,11 @@ add_task(async function test_proxy_auth_redirect() {
     pacFetched = true;
     let body = 'function FindProxyForURL(url, host) { return "DIRECT"; }';
     response.setStatusLine(metadata.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "application/x-ns-proxy-autoconfig", false);
+    response.setHeader(
+      "Content-Type",
+      "application/x-ns-proxy-autoconfig",
+      false
+    );
     response.bodyOutputStream.write(body, body.length);
   }
 
@@ -68,7 +75,7 @@ add_task(async function test_proxy_auth_redirect() {
 
   let server = httpd_setup({
     "/original": original,
-    "/pac3":     pacHandler,
+    "/pac3": pacHandler,
   });
   PACSystemSettings.PACURI = server.baseURI + "/pac3";
   installFakePAC();
@@ -93,8 +100,10 @@ add_task(async function test_proxy_auth_redirect() {
 add_task(async function test_forbidden_port() {
   let request = new RESTRequest("http://localhost:6000/");
 
-  await Assert.rejects(request.get(), error =>
-    error.result == Cr.NS_ERROR_PORT_ACCESS_NOT_ALLOWED);
+  await Assert.rejects(
+    request.get(),
+    error => error.result == Cr.NS_ERROR_PORT_ACCESS_NOT_ALLOWED
+  );
 });
 
 /**
@@ -102,7 +111,7 @@ add_task(async function test_forbidden_port() {
  */
 add_task(async function test_simple_get() {
   let handler = httpd_handler(200, "OK", "Huzzah!");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
   let request = new RESTRequest(server.baseURI + "/resource");
   let promiseResponse = request.get();
 
@@ -124,7 +133,7 @@ add_task(async function test_simple_get() {
  */
 add_task(async function test_get() {
   let handler = httpd_handler(200, "OK", "Huzzah!");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   Assert.equal(request.status, request.NOT_SENT);
@@ -161,16 +170,22 @@ add_task(async function test_get_utf8() {
   let charset = true;
   let charsetSuffix = "; charset=UTF-8";
 
-  let server = httpd_setup({"/resource": function(req, res) {
-    res.setStatusLine(req.httpVersion, 200, "OK");
-    res.setHeader("Content-Type", contentType + (charset ? charsetSuffix : ""));
+  let server = httpd_setup({
+    "/resource": function(req, res) {
+      res.setStatusLine(req.httpVersion, 200, "OK");
+      res.setHeader(
+        "Content-Type",
+        contentType + (charset ? charsetSuffix : "")
+      );
 
-    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                    .createInstance(Ci.nsIConverterOutputStream);
-    converter.init(res.bodyOutputStream, "UTF-8");
-    converter.writeString(response);
-    converter.close();
-  }});
+      let converter = Cc[
+        "@mozilla.org/intl/converter-output-stream;1"
+      ].createInstance(Ci.nsIConverterOutputStream);
+      converter.init(res.bodyOutputStream, "UTF-8");
+      converter.writeString(response);
+      converter.close();
+    },
+  });
 
   // Check if charset in Content-Type is propertly interpreted.
   let request1 = new RESTRequest(server.baseURI + "/resource");
@@ -178,8 +193,10 @@ add_task(async function test_get_utf8() {
 
   Assert.equal(request1.response.status, 200);
   Assert.equal(request1.response.body, response);
-  Assert.equal(request1.response.headers["content-type"],
-               contentType + charsetSuffix);
+  Assert.equal(
+    request1.response.headers["content-type"],
+    contentType + charsetSuffix
+  );
 
   // Check that we default to UTF-8 if Content-Type doesn't have a charset
   charset = false;
@@ -221,17 +238,20 @@ add_task(async function test_post_utf8() {
   // Given we've already tested above that responses are correctly utf-8
   // decoded we can surmise that the correct response coming back means the
   // input must also have been encoded.
-  let server = httpd_setup({"/echo": function(req, res) {
-    res.setStatusLine(req.httpVersion, 200, "OK");
-    res.setHeader("Content-Type", req.getHeader("content-type"));
-    // Get the body as bytes and write them back without touching them
-    let sis = Cc["@mozilla.org/scriptableinputstream;1"]
-              .createInstance(Ci.nsIScriptableInputStream);
-    sis.init(req.bodyInputStream);
-    let body = sis.read(sis.available());
-    sis.close();
-    res.write(body);
-  }});
+  let server = httpd_setup({
+    "/echo": function(req, res) {
+      res.setStatusLine(req.httpVersion, 200, "OK");
+      res.setHeader("Content-Type", req.getHeader("content-type"));
+      // Get the body as bytes and write them back without touching them
+      let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+        Ci.nsIScriptableInputStream
+      );
+      sis.init(req.bodyInputStream);
+      let body = sis.read(sis.available());
+      sis.close();
+      res.write(body);
+    },
+  });
 
   let data = {
     copyright: "©",
@@ -243,8 +263,10 @@ add_task(async function test_post_utf8() {
 
   Assert.equal(request1.response.status, 200);
   deepEqual(JSON.parse(request1.response.body), data);
-  Assert.equal(request1.response.headers["content-type"],
-               "application/json; charset=utf-8");
+  Assert.equal(
+    request1.response.headers["content-type"],
+    "application/json; charset=utf-8"
+  );
 
   await promiseStopServer(server);
 });
@@ -259,16 +281,22 @@ add_task(async function test_charsets() {
   let charset = true;
   let charsetSuffix = "; charset=us-ascii";
 
-  let server = httpd_setup({"/resource": function(req, res) {
-    res.setStatusLine(req.httpVersion, 200, "OK");
-    res.setHeader("Content-Type", contentType + (charset ? charsetSuffix : ""));
+  let server = httpd_setup({
+    "/resource": function(req, res) {
+      res.setStatusLine(req.httpVersion, 200, "OK");
+      res.setHeader(
+        "Content-Type",
+        contentType + (charset ? charsetSuffix : "")
+      );
 
-    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
-                    .createInstance(Ci.nsIConverterOutputStream);
-    converter.init(res.bodyOutputStream, "us-ascii");
-    converter.writeString(response);
-    converter.close();
-  }});
+      let converter = Cc[
+        "@mozilla.org/intl/converter-output-stream;1"
+      ].createInstance(Ci.nsIConverterOutputStream);
+      converter.init(res.bodyOutputStream, "us-ascii");
+      converter.writeString(response);
+      converter.close();
+    },
+  });
 
   // Check that provided charset overrides hint.
   let request1 = new RESTRequest(server.baseURI + "/resource");
@@ -276,8 +304,10 @@ add_task(async function test_charsets() {
   await request1.get();
   Assert.equal(request1.response.status, 200);
   Assert.equal(request1.response.body, response);
-  Assert.equal(request1.response.headers["content-type"],
-               contentType + charsetSuffix);
+  Assert.equal(
+    request1.response.headers["content-type"],
+    contentType + charsetSuffix
+  );
   Assert.equal(request1.response.charset, "us-ascii");
 
   // Check that hint is used if Content-Type doesn't have a charset.
@@ -300,7 +330,7 @@ add_task(async function test_charsets() {
 async function check_posting_data(method) {
   let funcName = method.toLowerCase();
   let handler = httpd_handler(200, "OK", "Got it!");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   Assert.equal(request.status, request.NOT_SENT);
@@ -321,8 +351,10 @@ async function check_posting_data(method) {
   Assert.equal(handler.request.body, "Hullo?");
   Assert.equal(handler.request.getHeader("Content-Type"), "text/plain");
 
-  await Assert.rejects(request[funcName]("Hai!"),
-                       /Request has already been sent/);
+  await Assert.rejects(
+    request[funcName]("Hai!"),
+    /Request has already been sent/
+  );
 
   await promiseStopServer(server);
 }
@@ -353,7 +385,7 @@ add_task(async function test_post() {
  */
 add_task(async function test_delete() {
   let handler = httpd_handler(200, "OK", "Got it!");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   Assert.equal(request.status, request.NOT_SENT);
@@ -380,7 +412,7 @@ add_task(async function test_delete() {
  */
 add_task(async function test_get_404() {
   let handler = httpd_handler(404, "Not Found", "Cannae find it!");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.get();
@@ -399,7 +431,7 @@ add_task(async function test_get_404() {
  */
 add_task(async function test_put_json() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let sample_data = {
     some: "sample_data",
@@ -416,7 +448,10 @@ add_task(async function test_put_json() {
 
   Assert.equal(handler.request.method, "PUT");
   Assert.equal(handler.request.body, JSON.stringify(sample_data));
-  Assert.equal(handler.request.getHeader("Content-Type"), "application/json; charset=utf-8");
+  Assert.equal(
+    handler.request.getHeader("Content-Type"),
+    "application/json; charset=utf-8"
+  );
 
   await promiseStopServer(server);
 });
@@ -427,7 +462,7 @@ add_task(async function test_put_json() {
  */
 add_task(async function test_post_json() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let sample_data = {
     some: "sample_data",
@@ -444,7 +479,10 @@ add_task(async function test_post_json() {
 
   Assert.equal(handler.request.method, "POST");
   Assert.equal(handler.request.body, JSON.stringify(sample_data));
-  Assert.equal(handler.request.getHeader("Content-Type"), "application/json; charset=utf-8");
+  Assert.equal(
+    handler.request.getHeader("Content-Type"),
+    "application/json; charset=utf-8"
+  );
 
   await promiseStopServer(server);
 });
@@ -455,7 +493,7 @@ add_task(async function test_post_json() {
  */
 add_task(async function test_post_json() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let sample_data = "hello";
   let request = new RESTRequest(server.baseURI + "/resource");
@@ -477,7 +515,7 @@ add_task(async function test_post_json() {
  */
 add_task(async function test_put_override_content_type() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   request.setHeader("Content-Type", "application/lolcat");
@@ -500,7 +538,7 @@ add_task(async function test_put_override_content_type() {
  */
 add_task(async function test_post_override_content_type() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   request.setHeader("Content-Type", "application/lolcat");
@@ -523,12 +561,21 @@ add_task(async function test_post_override_content_type() {
  */
 add_task(async function test_get_no_headers() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
-  let ignore_headers = ["host", "user-agent", "accept", "accept-language",
-                        "accept-encoding", "accept-charset", "keep-alive",
-                        "connection", "pragma", "cache-control",
-                        "content-length"];
+  let ignore_headers = [
+    "host",
+    "user-agent",
+    "accept",
+    "accept-language",
+    "accept-encoding",
+    "accept-charset",
+    "keep-alive",
+    "connection",
+    "pragma",
+    "cache-control",
+    "content-length",
+  ];
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.get();
 
@@ -551,7 +598,7 @@ add_task(async function test_get_no_headers() {
  */
 add_task(async function test_default_accept_headers() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.get();
@@ -565,8 +612,10 @@ add_task(async function test_default_accept_headers() {
   Assert.ok(!accept_header.includes("application/xhtml+xml"));
   Assert.ok(!accept_header.includes("applcation/xml"));
 
-  Assert.ok(accept_header.includes("application/json") ||
-            accept_header.includes("application/newlines"));
+  Assert.ok(
+    accept_header.includes("application/json") ||
+      accept_header.includes("application/newlines")
+  );
 
   await promiseStopServer(server);
 });
@@ -576,7 +625,7 @@ add_task(async function test_default_accept_headers() {
  */
 add_task(async function test_changing_uri() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest("http://localhost:1234/the-wrong-resource");
   request.uri = CommonUtils.makeURI(server.baseURI + "/resource");
@@ -590,7 +639,7 @@ add_task(async function test_changing_uri() {
  */
 add_task(async function test_request_setHeader() {
   let handler = httpd_handler(200, "OK");
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
 
@@ -617,7 +666,7 @@ add_task(async function test_response_headers() {
     response.setHeader("Another-Header", "Hello World");
     response.setStatusLine(request.httpVersion, 200, "OK");
   }
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.get();
 
@@ -638,9 +687,12 @@ add_task(async function test_connection_refused() {
   let request = new RESTRequest("http://localhost:1234/resource");
 
   // Fail the test if we resolve, return the error if we reject
-  await Assert.rejects(request.get(), error =>
-    error.result == Cr.NS_ERROR_CONNECTION_REFUSED &&
-    error.message == "NS_ERROR_CONNECTION_REFUSED");
+  await Assert.rejects(
+    request.get(),
+    error =>
+      error.result == Cr.NS_ERROR_CONNECTION_REFUSED &&
+      error.message == "NS_ERROR_CONNECTION_REFUSED"
+  );
 
   Assert.equal(request.status, request.COMPLETED);
 });
@@ -652,7 +704,7 @@ add_task(async function test_abort() {
   function handler() {
     do_throw("Shouldn't have gotten here!");
   }
-  let server = httpd_setup({"/resource": handler});
+  let server = httpd_setup({ "/resource": handler });
 
   let request = new RESTRequest(server.baseURI + "/resource");
 
@@ -692,14 +744,20 @@ add_task(async function test_timeout() {
   };
   server.start();
   let identity = server.identity;
-  let uri = identity.primaryScheme + "://" + identity.primaryHost + ":" +
-            identity.primaryPort;
+  let uri =
+    identity.primaryScheme +
+    "://" +
+    identity.primaryHost +
+    ":" +
+    identity.primaryPort;
 
   let request = new RESTRequest(uri + "/resource");
   request.timeout = 0.1; // 100 milliseconds
 
-  await Assert.rejects(request.get(), error =>
-    error.result == Cr.NS_ERROR_NET_TIMEOUT);
+  await Assert.rejects(
+    request.get(),
+    error => error.result == Cr.NS_ERROR_NET_TIMEOUT
+  );
 
   Assert.equal(request.status, request.ABORTED);
 
@@ -744,8 +802,8 @@ add_task(async function test_new_channel() {
     response.bodyOutputStream.write(body, body.length);
   }
 
-  let server1 = httpd_setup({"/redirect": redirectHandler});
-  let server2 = httpd_setup({"/resource": resourceHandler});
+  let server1 = httpd_setup({ "/redirect": redirectHandler });
+  let server2 = httpd_setup({ "/resource": resourceHandler });
   redirectURL = server2.baseURI + "/resource";
 
   let request = new RESTRequest(server1.baseURI + "/redirect");
@@ -779,10 +837,11 @@ add_task(async function test_not_sending_cookie() {
     response.bodyOutputStream.write(body, body.length);
     Assert.ok(!metadata.hasHeader("Cookie"));
   }
-  let server = httpd_setup({"/test": handler});
+  let server = httpd_setup({ "/test": handler });
 
-  let cookieSer = Cc["@mozilla.org/cookieService;1"]
-                    .getService(Ci.nsICookieService);
+  let cookieSer = Cc["@mozilla.org/cookieService;1"].getService(
+    Ci.nsICookieService
+  );
   let uri = CommonUtils.makeURI(server.baseURI);
   cookieSer.setCookieString(uri, null, "test=test; path=/;", null);
 

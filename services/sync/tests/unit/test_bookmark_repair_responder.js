@@ -2,8 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {BookmarkRepairResponder} = ChromeUtils.import("resource://services-sync/bookmark_repair.js");
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { BookmarkRepairResponder } = ChromeUtils.import(
+  "resource://services-sync/bookmark_repair.js"
+);
 
 // Disable validation so that we don't try to automatically repair the server
 // when we sync.
@@ -14,8 +16,8 @@ var recordedEvents = [];
 
 function checkRecordedEvents(expected) {
   // Ignore event telemetry from the merger and Places maintenance.
-  let repairEvents = recordedEvents.filter(event =>
-    !["mirror", "maintenance"].includes(event.object)
+  let repairEvents = recordedEvents.filter(
+    event => !["mirror", "maintenance"].includes(event.object)
   );
   deepEqual(repairEvents, expected);
   // and clear the list so future checks are easier to write.
@@ -68,12 +70,14 @@ add_task(async function test_responder_error() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "failed",
       value: undefined,
-      extra: { flowID: request.flowID,
-               numIDs: "0",
-               failureReason: '{"name":"unexpectederror","error":"Error: oh no!"}',
+      extra: {
+        flowID: request.flowID,
+        numIDs: "0",
+        failureReason: '{"name":"unexpectederror","error":"Error: oh no!"}',
       },
     },
   ]);
@@ -96,10 +100,11 @@ add_task(async function test_responder_no_items() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "0"},
+      extra: { flowID: request.flowID, numIDs: "0" },
     },
   ]);
 
@@ -111,19 +116,22 @@ add_task(async function test_responder_upload() {
   let server = await makeServer();
 
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), [
-    "menu",
-    "mobile",
-    "toolbar",
-    "unfiled",
-  ], "Should only upload roots on first sync");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    ["menu", "mobile", "toolbar", "unfiled"],
+    "Should only upload roots on first sync"
+  );
 
   // Pretend we've already synced this bookmark, so that we can ensure it's
   // uploaded in response to our repair request.
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                title: "Get Firefox",
-                                                url: "http://getfirefox.com/",
-                                                source: PlacesUtils.bookmarks.SOURCES.SYNC });
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Get Firefox",
+    url: "http://getfirefox.com/",
+    source: PlacesUtils.bookmarks.SOURCES.SYNC,
+  });
 
   let request = {
     request: "upload",
@@ -134,27 +142,29 @@ add_task(async function test_responder_upload() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "uploading",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
 
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), [
-    "menu",
-    "mobile",
-    "toolbar",
-    "unfiled",
-    bm.guid,
-  ].sort(), "Should upload requested bookmark on second sync");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    ["menu", "mobile", "toolbar", "unfiled", bm.guid].sort(),
+    "Should upload requested bookmark on second sync"
+  );
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
 
@@ -166,9 +176,11 @@ add_task(async function test_responder_upload() {
 add_task(async function test_responder_item_exists_locally() {
   let server = await makeServer();
 
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                title: "Get Firefox",
-                                                url: "http://getfirefox.com/" });
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Get Firefox",
+    url: "http://getfirefox.com/",
+  });
   // first sync to get the item on the server.
   _("Syncing to get item on the server");
   await Service.sync();
@@ -184,10 +196,11 @@ add_task(async function test_responder_item_exists_locally() {
 
   // We still re-upload the item.
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "uploading",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
 
@@ -195,10 +208,11 @@ add_task(async function test_responder_item_exists_locally() {
   await Service.sync();
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
   await cleanup(server);
@@ -226,13 +240,13 @@ add_task(async function test_responder_missing_items() {
   });
 
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), [
-    "menu",
-    "mobile",
-    "toolbar",
-    "unfiled",
-    fxBmk.guid,
-  ].sort(), "Should upload roots and Firefox on first sync");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    ["menu", "mobile", "toolbar", "unfiled", fxBmk.guid].sort(),
+    "Should upload roots and Firefox on first sync"
+  );
 
   let tbBmk = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -252,29 +266,30 @@ add_task(async function test_responder_missing_items() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "uploading",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "2"},
+      extra: { flowID: request.flowID, numIDs: "2" },
     },
   ]);
 
   _("Sync after requesting IDs");
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), [
-    "menu",
-    "mobile",
-    "toolbar",
-    "unfiled",
-    fxBmk.guid,
-    tbBmk.guid,
-  ].sort(), "Second sync should upload Thunderbird; skip nonexistent");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    ["menu", "mobile", "toolbar", "unfiled", fxBmk.guid, tbBmk.guid].sort(),
+    "Second sync should upload Thunderbird; skip nonexistent"
+  );
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "2"},
+      extra: { flowID: request.flowID, numIDs: "2" },
     },
   ]);
 
@@ -322,8 +337,13 @@ add_task(async function test_folder_descendants() {
     childFolder.guid,
     childSiblingBmk.guid,
   ].sort();
-  deepEqual(getServerBookmarks(server).keys().sort(), initialRecordIds,
-    "Should upload roots and partial folder contents on first sync");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    initialRecordIds,
+    "Should upload roots and partial folder contents on first sync"
+  );
 
   _("Insert missing bookmarks locally to request later");
   // Note that the fact we insert the bookmarks via PlacesSyncUtils.bookmarks.insert
@@ -353,8 +373,13 @@ add_task(async function test_folder_descendants() {
 
   _("Sync again; server contents shouldn't change");
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), initialRecordIds,
-    "Second sync should not upload missing bookmarks");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    initialRecordIds,
+    "Second sync should not upload missing bookmarks"
+  );
 
   // This assumes the parent record on the server is correct, and the server
   // is just missing the children. This isn't a correct assumption if the
@@ -370,34 +395,43 @@ add_task(async function test_folder_descendants() {
       // since it's a descendant of `parentFolder` and we requested its
       // ancestor.
       childBmk.recordId,
-      grandChildSiblingBmk.recordId],
+      grandChildSiblingBmk.recordId,
+    ],
     flowID: Utils.makeGUID(),
   };
   let responder = new BookmarkRepairResponder();
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "uploading",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "5"},
+      extra: { flowID: request.flowID, numIDs: "5" },
     },
   ]);
 
   _("Sync after requesting repair; should upload missing records");
   await Service.sync();
-  deepEqual(getServerBookmarks(server).keys().sort(), [
-    ...initialRecordIds,
-    childBmk.recordId,
-    grandChildBmk.recordId,
-    grandChildSiblingBmk.recordId,
-  ].sort(), "Third sync should upload requested items");
+  deepEqual(
+    getServerBookmarks(server)
+      .keys()
+      .sort(),
+    [
+      ...initialRecordIds,
+      childBmk.recordId,
+      grandChildBmk.recordId,
+      grandChildSiblingBmk.recordId,
+    ].sort(),
+    "Third sync should upload requested items"
+  );
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "5"},
+      extra: { flowID: request.flowID, numIDs: "5" },
     },
   ]);
 
@@ -417,12 +451,14 @@ add_task(async function test_aborts_unknown_request() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "aborted",
       value: undefined,
-      extra: { flowID: request.flowID,
-               reason: "Don't understand request type 'not-upload'",
-             },
+      extra: {
+        flowID: request.flowID,
+        reason: "Don't understand request type 'not-upload'",
+      },
     },
   ]);
   await cleanup(server);
@@ -433,10 +469,12 @@ add_task(async function test_upload_fail() {
 
   // Pretend we've already synced this bookmark, so that we can ensure it's
   // uploaded in response to our repair request.
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                title: "Get Firefox",
-                                                url: "http://getfirefox.com/",
-                                                source: PlacesUtils.bookmarks.SOURCES.SYNC });
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Get Firefox",
+    url: "http://getfirefox.com/",
+    source: PlacesUtils.bookmarks.SOURCES.SYNC,
+  });
 
   await Service.sync();
   let request = {
@@ -448,10 +486,11 @@ add_task(async function test_upload_fail() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "uploading",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
 
@@ -490,19 +529,21 @@ add_task(async function test_upload_fail() {
   await responder.repair(request, null);
 
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "uploading",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
 
   await Service.sync();
   checkRecordedEvents([
-    { object: "repairResponse",
+    {
+      object: "repairResponse",
       method: "finished",
       value: undefined,
-      extra: {flowID: request.flowID, numIDs: "1"},
+      extra: { flowID: request.flowID, numIDs: "1" },
     },
   ]);
 

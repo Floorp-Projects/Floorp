@@ -3,9 +3,13 @@
 
 "use strict";
 
-const {ExtensionStorageEngine} = ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
-const {Service} = ChromeUtils.import("resource://services-sync/service.js");
-const {extensionStorageSync} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm");
+const { ExtensionStorageEngine } = ChromeUtils.import(
+  "resource://services-sync/engines/extension-storage.js"
+);
+const { Service } = ChromeUtils.import("resource://services-sync/service.js");
+const { extensionStorageSync } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageSync.jsm"
+);
 
 let engine;
 
@@ -18,10 +22,10 @@ add_task(async function setup() {
 
 add_task(async function test_changing_extension_storage_changes_score() {
   const tracker = engine._tracker;
-  const extension = {id: "my-extension-id"};
+  const extension = { id: "my-extension-id" };
   tracker.start();
   await withSyncContext(async function(context) {
-    await extensionStorageSync.set(extension, {"a": "b"}, context);
+    await extensionStorageSync.set(extension, { a: "b" }, context);
   });
   Assert.equal(tracker.score, SCORE_INCREMENT_MEDIUM);
 

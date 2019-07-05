@@ -7,12 +7,12 @@
 EnableEngines(["addons"]);
 
 var phases = {
-  "phase01": "profile1",
-  "phase02": "profile2",
-  "phase03": "profile1",
-  "phase04": "profile2",
-  "phase05": "profile1",
-  "phase06": "profile2"
+  phase01: "profile1",
+  phase02: "profile2",
+  phase03: "profile1",
+  phase04: "profile2",
+  phase05: "profile1",
+  phase06: "profile2",
 };
 
 const id = "restartless-xpi@tests.mozilla.org";
@@ -38,17 +38,8 @@ Phase("phase03", [
   // so if we ran a validation now we'd be expecting to find errors.
   [Addons.skipValidation],
 ]);
-Phase("phase04", [
-  [EnsureTracking],
-  [Addons.uninstall, [id]],
-  [Sync],
-]);
+Phase("phase04", [[EnsureTracking], [Addons.uninstall, [id]], [Sync]]);
 
 // When we sync, the uninstall should take precedence because it was newer.
-Phase("phase05", [
-  [Sync],
-]);
-Phase("phase06", [
-  [Sync],
-  [Addons.verifyNot, [id]],
-]);
+Phase("phase05", [[Sync]]);
+Phase("phase06", [[Sync], [Addons.verifyNot, [id]]]);
