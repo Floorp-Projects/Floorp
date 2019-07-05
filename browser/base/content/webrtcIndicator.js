@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {webrtcUI} = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { webrtcUI } = ChromeUtils.import("resource:///modules/webrtcUI.jsm");
 
 const BUNDLE_URL = "chrome://browser/locale/webrtcIndicator.properties";
 var gStringBundle;
@@ -11,11 +11,14 @@ var gStringBundle;
 function init(event) {
   gStringBundle = Services.strings.createBundle(BUNDLE_URL);
 
-  let brand = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  let brand = Services.strings.createBundle(
+    "chrome://branding/locale/brand.properties"
+  );
   let brandShortName = brand.GetStringFromName("brandShortName");
-  document.title =
-    gStringBundle.formatStringFromName("webrtcIndicator.windowtitle",
-                                       [brandShortName]);
+  document.title = gStringBundle.formatStringFromName(
+    "webrtcIndicator.windowtitle",
+    [brandShortName]
+  );
 
   for (let id of ["audioVideoButton", "screenSharePopup"]) {
     let popup = document.getElementById(id);
@@ -33,14 +36,15 @@ function init(event) {
   // Alert accessibility implementations stuff just changed. We only need to do
   // this initially, because changes after this will automatically fire alert
   // events if things change materially.
-  let ev = new CustomEvent("AlertActive", {bubbles: true, cancelable: true});
+  let ev = new CustomEvent("AlertActive", { bubbles: true, cancelable: true });
   document.documentElement.dispatchEvent(ev);
 }
 
 function updateIndicatorState() {
   // If gStringBundle isn't set, the window hasn't finished loading.
-  if (!gStringBundle)
+  if (!gStringBundle) {
     return;
+  }
 
   updateWindowAttr("sharingvideo", webrtcUI.showCameraIndicator);
   updateWindowAttr("sharingaudio", webrtcUI.showMicrophoneIndicator);
@@ -48,16 +52,21 @@ function updateIndicatorState() {
 
   // Camera and microphone button tooltip.
   let shareTypes = [];
-  if (webrtcUI.showCameraIndicator)
+  if (webrtcUI.showCameraIndicator) {
     shareTypes.push("Camera");
-  if (webrtcUI.showMicrophoneIndicator)
+  }
+  if (webrtcUI.showMicrophoneIndicator) {
     shareTypes.push("Microphone");
+  }
 
   let audioVideoButton = document.getElementById("audioVideoButton");
   if (shareTypes.length) {
-    let stringId = "webrtcIndicator.sharing" + shareTypes.join("And") + ".tooltip";
-    audioVideoButton.setAttribute("tooltiptext",
-                                   gStringBundle.GetStringFromName(stringId));
+    let stringId =
+      "webrtcIndicator.sharing" + shareTypes.join("And") + ".tooltip";
+    audioVideoButton.setAttribute(
+      "tooltiptext",
+      gStringBundle.GetStringFromName(stringId)
+    );
   } else {
     audioVideoButton.removeAttribute("tooltiptext");
   }
@@ -65,10 +74,14 @@ function updateIndicatorState() {
   // Screen sharing button tooltip.
   let screenShareButton = document.getElementById("screenShareButton");
   if (webrtcUI.showScreenSharingIndicator) {
-    let stringId = "webrtcIndicator.sharing" +
-      webrtcUI.showScreenSharingIndicator + ".tooltip";
-    screenShareButton.setAttribute("tooltiptext",
-                                    gStringBundle.GetStringFromName(stringId));
+    let stringId =
+      "webrtcIndicator.sharing" +
+      webrtcUI.showScreenSharingIndicator +
+      ".tooltip";
+    screenShareButton.setAttribute(
+      "tooltiptext",
+      gStringBundle.GetStringFromName(stringId)
+    );
   } else {
     screenShareButton.removeAttribute("tooltiptext");
   }
@@ -81,20 +94,22 @@ function updateIndicatorState() {
 
 function updateWindowAttr(attr, value) {
   let docEl = document.documentElement;
-  if (value)
+  if (value) {
     docEl.setAttribute(attr, "true");
-  else
+  } else {
     docEl.removeAttribute(attr);
+  }
 }
 
 function onPopupMenuShowing(event) {
   let popup = event.target;
 
   let activeStreams;
-  if (popup.getAttribute("type") == "Devices")
+  if (popup.getAttribute("type") == "Devices") {
     activeStreams = webrtcUI.getActiveStreams(true, true, false);
-  else
+  } else {
     activeStreams = webrtcUI.getActiveStreams(false, false, true);
+  }
 
   if (activeStreams.length == 1) {
     webrtcUI.showSharingDoorhanger(activeStreams[0]);
@@ -113,8 +128,9 @@ function onPopupMenuShowing(event) {
 
 function onPopupMenuHiding(event) {
   let popup = event.target;
-  while (popup.firstChild)
+  while (popup.firstChild) {
     popup.firstChild.remove();
+  }
 }
 
 function onPopupMenuCommand(event) {
@@ -135,17 +151,19 @@ var PositionHandler = {
       // Center the window horizontally on the screen (not the available area).
       // Until we have moved the window to y=0, 'screen.width' may give a value
       // for a secondary screen, so use values from the screen manager instead.
-      let primaryScreen = Cc["@mozilla.org/gfx/screenmanager;1"]
-                            .getService(Ci.nsIScreenManager)
-                            .primaryScreen;
+      let primaryScreen = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
+        Ci.nsIScreenManager
+      ).primaryScreen;
       let widthDevPix = {};
       primaryScreen.GetRect({}, {}, widthDevPix, {});
       let availTopDevPix = {};
       primaryScreen.GetAvailRect({}, availTopDevPix, {}, {});
       let scaleFactor = primaryScreen.defaultCSSScaleFactor;
       let widthCss = widthDevPix.value / scaleFactor;
-      window.moveTo((widthCss - document.documentElement.clientWidth) / 2,
-                    availTopDevPix.value / scaleFactor);
+      window.moveTo(
+        (widthCss - document.documentElement.clientWidth) / 2,
+        availTopDevPix.value / scaleFactor
+      );
     } else {
       // This will ensure we're at y=0.
       this.setXPosition(window.screenX);
@@ -155,14 +173,17 @@ var PositionHandler = {
     // Ensure the indicator isn't moved outside the available area of the screen.
     desiredX = Math.max(desiredX, screen.availLeft);
     let maxX =
-      screen.availLeft + screen.availWidth - document.documentElement.clientWidth;
+      screen.availLeft +
+      screen.availWidth -
+      document.documentElement.clientWidth;
     window.moveTo(Math.min(desiredX, maxX), screen.availTop);
   },
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mousedown":
-        if (aEvent.button != 0 || aEvent.defaultPrevented)
+        if (aEvent.button != 0 || aEvent.defaultPrevented) {
           return;
+        }
 
         this._startMouseX = aEvent.screenX;
         this._startWindowX = window.screenX;

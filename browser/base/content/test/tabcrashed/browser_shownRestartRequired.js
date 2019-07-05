@@ -14,29 +14,32 @@ const PAGE =
  * @returns Promise
  */
 function crashTabTestHelper() {
-  return BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE,
-  }, async function(browser) {
-    // Simulate buildID mismatch.
-    TabCrashHandler.testBuildIDMismatch = true;
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: PAGE,
+    },
+    async function(browser) {
+      // Simulate buildID mismatch.
+      TabCrashHandler.testBuildIDMismatch = true;
 
-    await BrowserTestUtils.crashBrowser(browser, false);
-    let doc = browser.contentDocument;
+      await BrowserTestUtils.crashBrowser(browser, false);
+      let doc = browser.contentDocument;
 
-    // Since about:restartRequired will run in the parent process, we can safely
-    // manipulate its DOM nodes directly
-    let title = doc.getElementById("title");
-    let description = doc.getElementById("errorLongContent");
-    let restartButton = doc.getElementById("restart");
+      // Since about:restartRequired will run in the parent process, we can safely
+      // manipulate its DOM nodes directly
+      let title = doc.getElementById("title");
+      let description = doc.getElementById("errorLongContent");
+      let restartButton = doc.getElementById("restart");
 
-    ok(title, "Title element exists.");
-    ok(description, "Description element exists.");
-    ok(restartButton, "Restart button exists.");
+      ok(title, "Title element exists.");
+      ok(description, "Description element exists.");
+      ok(restartButton, "Restart button exists.");
 
-    // Reset
-    TabCrashHandler.testBuildIDMismatch = false;
-  });
+      // Reset
+      TabCrashHandler.testBuildIDMismatch = false;
+    }
+  );
 }
 
 /**

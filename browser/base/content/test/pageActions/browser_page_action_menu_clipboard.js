@@ -21,12 +21,16 @@ add_task(async function copyURL() {
     await hiddenPromise;
 
     // Check the clipboard.
-    let transferable = Cc["@mozilla.org/widget/transferable;1"]
-                         .createInstance(Ci.nsITransferable);
+    let transferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+      Ci.nsITransferable
+    );
     transferable.init(null);
     let flavor = "text/unicode";
     transferable.addDataFlavor(flavor);
-    Services.clipboard.getData(transferable, Services.clipboard.kGlobalClipboard);
+    Services.clipboard.getData(
+      transferable,
+      Services.clipboard.kGlobalClipboard
+    );
     let strObj = {};
     transferable.getTransferData(flavor, strObj);
     Assert.ok(!!strObj.value);

@@ -3,10 +3,7 @@ const PREF_WARN_ON_CLOSE = "browser.tabs.warnOnCloseOtherTabs";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_MULTISELECT_TABS, true],
-      [PREF_WARN_ON_CLOSE, false],
-    ],
+    set: [[PREF_MULTISELECT_TABS, true], [PREF_WARN_ON_CLOSE, false]],
   });
 });
 
@@ -71,7 +68,9 @@ add_task(async function usingTabContextMenu() {
   let tab4 = await addTab();
 
   let menuItemCloseTab = document.getElementById("context_closeTab");
-  let menuItemCloseSelectedTabs = document.getElementById("context_closeSelectedTabs");
+  let menuItemCloseSelectedTabs = document.getElementById(
+    "context_closeSelectedTabs"
+  );
 
   is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
@@ -109,4 +108,3 @@ add_task(async function usingTabContextMenu() {
   BrowserTestUtils.removeTab(tab3);
   BrowserTestUtils.removeTab(tab4);
 });
-

@@ -6,8 +6,10 @@ async function testSidebarKeyToggle(key, options, expectedSidebarId) {
   let promiseShown = BrowserTestUtils.waitForEvent(window, "SidebarShown");
   EventUtils.synthesizeKey(key, options);
   await promiseShown;
-  Assert.equal(document.getElementById("sidebar-box")
-                       .getAttribute("sidebarcommand"), expectedSidebarId);
+  Assert.equal(
+    document.getElementById("sidebar-box").getAttribute("sidebarcommand"),
+    expectedSidebarId
+  );
   EventUtils.synthesizeKey(key, options);
   Assert.ok(!SidebarUI.isOpen);
 }

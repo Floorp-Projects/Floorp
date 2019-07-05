@@ -4,14 +4,21 @@
 "use strict";
 
 add_task(async function() {
-  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION && !AppConstants.DEBUG) {
-    ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
-       "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
-       "non-debug build.");
+  if (
+    !AppConstants.NIGHTLY_BUILD &&
+    !AppConstants.MOZ_DEV_EDITION &&
+    !AppConstants.DEBUG
+  ) {
+    ok(
+      !("@mozilla.org/test/startuprecorder;1" in Cc),
+      "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
+        "non-debug build."
+    );
     return;
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
+    .wrappedJSObject;
   await startupRecorder.done;
 
   let extras = Cu.cloneInto(startupRecorder.data.extras, {});
@@ -19,7 +26,9 @@ add_task(async function() {
   let phasesExpectations = {
     "before profile selection": false,
     "before opening first browser window": false,
-    "before first paint": !Services.prefs.getBoolPref("toolkit.lazyHiddenWindow"),
+    "before first paint": !Services.prefs.getBoolPref(
+      "toolkit.lazyHiddenWindow"
+    ),
 
     // Bug 1531854
     "before handling user events": true,
@@ -32,7 +41,10 @@ add_task(async function() {
       continue;
     }
 
-    is(extras[phase].hiddenWindowLoaded, phasesExpectations[phase],
-       `Hidden window loaded at '${phase}': ${phasesExpectations[phase]}`);
+    is(
+      extras[phase].hiddenWindowLoaded,
+      phasesExpectations[phase],
+      `Hidden window loaded at '${phase}': ${phasesExpectations[phase]}`
+    );
   }
 });

@@ -1,11 +1,17 @@
 var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+const gTestRoot = rootDir.replace(
+  "chrome://mochitests/content/",
+  "http://127.0.0.1:8888/"
+);
 
 add_task(async function() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    setTestPluginEnabledState(
+      Ci.nsIPluginTag.STATE_ENABLED,
+      "Second Test Plug-in"
+    );
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     gBrowser.removeCurrentTab();
     window.focus();
@@ -19,7 +25,10 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_iframe.html");
+  await promiseTabLoadEvent(
+    gBrowser.selectedTab,
+    gTestRoot + "plugin_iframe.html"
+  );
 
   // Tests that the overlays are visible and actionable if the plugin is in an iframe.
 
@@ -28,8 +37,10 @@ add_task(async function() {
     let doc = frame.contentDocument;
     let plugin = doc.getElementById("test");
     let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
-    Assert.ok(plugin && overlay.classList.contains("visible"),
-      "Test 1, Plugin overlay should exist, not be hidden");
+    Assert.ok(
+      plugin && overlay.classList.contains("visible"),
+      "Test 1, Plugin overlay should exist, not be hidden"
+    );
 
     let closeIcon = plugin.openOrClosedShadowRoot.getElementById("closeIcon");
     let bounds = closeIcon.getBoundingClientRect();
@@ -38,8 +49,9 @@ add_task(async function() {
     let utils = doc.defaultView.windowUtils;
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
-    Assert.ok(!overlay.classList.contains("visible"),
-      "Test 1, Plugin overlay should exist, be hidden");
+    Assert.ok(
+      !overlay.classList.contains("visible"),
+      "Test 1, Plugin overlay should exist, be hidden"
+    );
   });
 });
-

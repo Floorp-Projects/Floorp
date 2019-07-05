@@ -25,18 +25,28 @@ add_task(async function() {
   gURLBar.goButton.click();
   await BrowserTestUtils.browserLoaded(browser);
 
-  is(appTab.linkedBrowser.currentURI.spec, TEST_LINK_CHANGED,
-     "New page loaded in the app tab");
+  is(
+    appTab.linkedBrowser.currentURI.spec,
+    TEST_LINK_CHANGED,
+    "New page loaded in the app tab"
+  );
   is(gBrowser.tabs.length, initialTabsNo, "No additional tabs were opened");
 
   // Now check that opening a link that does create a new tab works,
   // and also that it nulls out the opener.
-  let pageLoadPromise = BrowserTestUtils.browserLoaded(appTab.linkedBrowser, false, "http://example.com/");
+  let pageLoadPromise = BrowserTestUtils.browserLoaded(
+    appTab.linkedBrowser,
+    false,
+    "http://example.com/"
+  );
   await BrowserTestUtils.loadURI(appTab.linkedBrowser, "http://example.com/");
   info("Started loading example.com");
   await pageLoadPromise;
   info("Loaded example.com");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://example.org/");
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "http://example.org/"
+  );
   await ContentTask.spawn(browser, null, async function() {
     let link = content.document.createElement("a");
     link.href = "http://example.org/";
@@ -51,7 +61,6 @@ add_task(async function() {
   });
   BrowserTestUtils.removeTab(extraTab);
 });
-
 
 registerCleanupFunction(function() {
   gBrowser.removeTab(gBrowser.selectedTab);

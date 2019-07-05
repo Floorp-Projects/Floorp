@@ -5,7 +5,9 @@
 const OPEN_LOCATION_PREF = "browser.link.open_newwindow";
 const NON_REMOTE_PAGE = "about:welcomeback";
 
-const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 requestLongerTimeout(2);
 
@@ -64,8 +66,10 @@ add_task(async function test_new_tab() {
 
     // Our framescript opens to a web page which means that the
     // tab should eventually become remote.
-    ok(newTab.linkedBrowser.isRemoteBrowser,
-       "The opened browser never became remote.");
+    ok(
+      newTab.linkedBrowser.isRemoteBrowser,
+      "The opened browser never became remote."
+    );
 
     testWindow.gBrowser.removeTab(newTab);
   }
@@ -80,18 +84,26 @@ add_task(async function test_new_tab() {
  * window. Also tests with a private browsing window.
  */
 add_task(async function test_new_window() {
-  let normalWindow = await BrowserTestUtils.openNewBrowserWindow({
-    remote: true,
-  }, true);
-  let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
-    remote: true,
-    private: true,
-  }, true);
+  let normalWindow = await BrowserTestUtils.openNewBrowserWindow(
+    {
+      remote: true,
+    },
+    true
+  );
+  let privateWindow = await BrowserTestUtils.openNewBrowserWindow(
+    {
+      remote: true,
+      private: true,
+    },
+    true
+  );
 
   // Fiddle with the prefs so that we open target="_blank" links
   // in new windows instead of new tabs.
-  Services.prefs.setIntPref(OPEN_LOCATION_PREF,
-                            Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW);
+  Services.prefs.setIntPref(
+    OPEN_LOCATION_PREF,
+    Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW
+  );
 
   for (let testWindow of [normalWindow, privateWindow]) {
     await promiseWaitForFocus(testWindow);
@@ -103,12 +115,15 @@ add_task(async function test_new_window() {
     mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
 
     // Click on the link in the browser, and wait for the new window.
-    let [newWindow] =
-      await TestUtils.topicObserved("browser-delayed-startup-finished");
+    let [newWindow] = await TestUtils.topicObserved(
+      "browser-delayed-startup-finished"
+    );
 
-    is(PrivateBrowsingUtils.isWindowPrivate(testWindow),
-       PrivateBrowsingUtils.isWindowPrivate(newWindow),
-       "Private browsing state of new window does not match the original!");
+    is(
+      PrivateBrowsingUtils.isWindowPrivate(testWindow),
+      PrivateBrowsingUtils.isWindowPrivate(newWindow),
+      "Private browsing state of new window does not match the original!"
+    );
 
     let newTab = newWindow.gBrowser.selectedTab;
 
@@ -116,8 +131,10 @@ add_task(async function test_new_window() {
 
     // Our framescript opens to a web page which means that the
     // tab should eventually become remote.
-    ok(newTab.linkedBrowser.isRemoteBrowser,
-       "The opened browser never became remote.");
+    ok(
+      newTab.linkedBrowser.isRemoteBrowser,
+      "The opened browser never became remote."
+    );
     newWindow.close();
   }
 

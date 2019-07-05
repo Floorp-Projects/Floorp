@@ -1,1 +1,1 @@
-runAllCookiePermissionTests({name: "default", oa: {}});
+runAllCookiePermissionTests({ name: "default", oa: {} });

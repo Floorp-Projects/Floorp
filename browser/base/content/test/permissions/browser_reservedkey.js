@@ -45,25 +45,53 @@ add_task(async function test_reserved_shortcuts() {
   container.appendChild(keyset);
   document.documentElement.appendChild(container);
 
-  const pageUrl = "data:text/html,<body onload='document.body.firstElementChild.focus();'><div onkeydown='event.preventDefault();' tabindex=0>Test</div></body>";
+  const pageUrl =
+    "data:text/html,<body onload='document.body.firstElementChild.focus();'><div onkeydown='event.preventDefault();' tabindex=0>Test</div></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
   EventUtils.sendString("OPQ");
 
-  is(document.getElementById("kt_reserved").getAttribute("count"), "1", "reserved='true' with preference off");
-  is(document.getElementById("kt_notreserved").getAttribute("count"), "0", "reserved='false' with preference off");
-  is(document.getElementById("kt_reserveddefault").getAttribute("count"), "0", "default reserved with preference off");
+  is(
+    document.getElementById("kt_reserved").getAttribute("count"),
+    "1",
+    "reserved='true' with preference off"
+  );
+  is(
+    document.getElementById("kt_notreserved").getAttribute("count"),
+    "0",
+    "reserved='false' with preference off"
+  );
+  is(
+    document.getElementById("kt_reserveddefault").getAttribute("count"),
+    "0",
+    "default reserved with preference off"
+  );
 
   // Now try with reserved shortcut key handling enabled.
   await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
+    SpecialPowers.pushPrefEnv(
+      { set: [["permissions.default.shortcuts", 2]] },
+      resolve
+    );
   });
 
   EventUtils.sendString("OPQ");
 
-  is(document.getElementById("kt_reserved").getAttribute("count"), "2", "reserved='true' with preference on");
-  is(document.getElementById("kt_notreserved").getAttribute("count"), "0", "reserved='false' with preference on");
-  is(document.getElementById("kt_reserveddefault").getAttribute("count"), "1", "default reserved with preference on");
+  is(
+    document.getElementById("kt_reserved").getAttribute("count"),
+    "2",
+    "reserved='true' with preference on"
+  );
+  is(
+    document.getElementById("kt_notreserved").getAttribute("count"),
+    "0",
+    "reserved='false' with preference on"
+  );
+  is(
+    document.getElementById("kt_reserveddefault").getAttribute("count"),
+    "1",
+    "default reserved with preference on"
+  );
 
   document.documentElement.removeChild(container);
 
@@ -74,18 +102,22 @@ add_task(async function test_reserved_shortcuts() {
 if (!navigator.platform.includes("Mac")) {
   add_task(async function test_accesskeys_menus() {
     await new Promise(resolve => {
-      SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
+      SpecialPowers.pushPrefEnv(
+        { set: [["permissions.default.shortcuts", 2]] },
+        resolve
+      );
     });
 
-    const uri = "data:text/html,<body onkeydown='if (event.key == \"H\" || event.key == \"F10\") event.preventDefault();'>";
+    const uri =
+      'data:text/html,<body onkeydown=\'if (event.key == "H" || event.key == "F10") event.preventDefault();\'>';
     let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
     // Pressing Alt+H should open the Help menu.
     let helpPopup = document.getElementById("menu_HelpPopup");
     let popupShown = BrowserTestUtils.waitForEvent(helpPopup, "popupshown");
-    EventUtils.synthesizeKey("KEY_Alt", {type: "keydown"});
-    EventUtils.synthesizeKey("h", {altKey: true});
-    EventUtils.synthesizeKey("KEY_Alt", {type: "keyup"});
+    EventUtils.synthesizeKey("KEY_Alt", { type: "keydown" });
+    EventUtils.synthesizeKey("h", { altKey: true });
+    EventUtils.synthesizeKey("KEY_Alt", { type: "keyup" });
     await popupShown;
 
     ok(true, "Help menu opened");
@@ -97,7 +129,10 @@ if (!navigator.platform.includes("Mac")) {
     // Pressing F10 should focus the menubar. On Linux, the file menu should open, but on Windows,
     // pressing Down will open the file menu.
     let menubar = document.getElementById("main-menubar");
-    let menubarActive = BrowserTestUtils.waitForEvent(menubar, "DOMMenuBarActive");
+    let menubarActive = BrowserTestUtils.waitForEvent(
+      menubar,
+      "DOMMenuBarActive"
+    );
     EventUtils.synthesizeKey("KEY_F10");
     await menubarActive;
 
@@ -122,16 +157,20 @@ if (!navigator.platform.includes("Mac")) {
 // treated as a blocked shortcut key.
 add_task(async function test_backspace() {
   await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [["permissions.default.shortcuts", 2]]}, resolve);
+    SpecialPowers.pushPrefEnv(
+      { set: [["permissions.default.shortcuts", 2]] },
+      resolve
+    );
   });
 
   // The input field is autofocused. If this test fails, backspace can go back
   // in history so cancel the beforeunload event and adjust the field to make the test fail.
-  const uri = "data:text/html,<body onbeforeunload='document.getElementById(\"field\").value = \"failed\";'>" +
-                 "<input id='field' value='something'></body>";
+  const uri =
+    'data:text/html,<body onbeforeunload=\'document.getElementById("field").value = "failed";\'>' +
+    "<input id='field' value='something'></body>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
-  await ContentTask.spawn(tab.linkedBrowser, { }, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     content.document.getElementById("field").focus();
 
     // Add a promise that resolves when the backspace key gets received
@@ -149,11 +188,14 @@ add_task(async function test_backspace() {
   EventUtils.synthesizeKey("KEY_ArrowRight", {});
   EventUtils.synthesizeKey("KEY_Backspace", {});
 
-  let fieldValue = await ContentTask.spawn(tab.linkedBrowser, { }, async function() {
-    return content.keysPromise;
-  });
+  let fieldValue = await ContentTask.spawn(
+    tab.linkedBrowser,
+    {},
+    async function() {
+      return content.keysPromise;
+    }
+  );
   is(fieldValue, "omething", "backspace not prevented");
 
   BrowserTestUtils.removeTab(tab);
 });
-

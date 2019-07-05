@@ -3,11 +3,17 @@
 
 "use strict";
 
-const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 const ORIGIN = "https://example.com";
-const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html";
-const SUBFRAME_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "temporary_permissions_subframe.html";
+const PERMISSIONS_PAGE =
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
+  "permissions.html";
+const SUBFRAME_PAGE =
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
+  "temporary_permissions_subframe.html";
 
 // Test that setting temp permissions triggers a change in the identity block.
 add_task(async function testTempPermissionChangeEvents() {
@@ -15,20 +21,36 @@ add_task(async function testTempPermissionChangeEvents() {
   let id = "geo";
 
   await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
-    SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
+    SitePermissions.set(
+      uri,
+      id,
+      SitePermissions.BLOCK,
+      SitePermissions.SCOPE_TEMPORARY,
+      browser
+    );
 
     Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
 
-    let geoIcon = document.querySelector(".blocked-permission-icon[data-permission-id=geo]");
+    let geoIcon = document.querySelector(
+      ".blocked-permission-icon[data-permission-id=geo]"
+    );
 
-    Assert.notEqual(geoIcon.getBoundingClientRect().width, 0, "geo anchor should be visible");
+    Assert.notEqual(
+      geoIcon.getBoundingClientRect().width,
+      0,
+      "geo anchor should be visible"
+    );
 
     SitePermissions.remove(uri, id, browser);
 
-    Assert.equal(geoIcon.getBoundingClientRect().width, 0, "geo anchor should not be visible");
+    Assert.equal(
+      geoIcon.getBoundingClientRect().width,
+      0,
+      "geo anchor should not be visible"
+    );
   });
 });
 
@@ -38,7 +60,10 @@ add_task(async function testTempPermissionSubframes() {
   let id = "geo";
 
   await BrowserTestUtils.withNewTab(SUBFRAME_PAGE, async function(browser) {
-    let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    let popupshown = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
 
     // Request a permission.
     await ContentTask.spawn(browser, uri.host, function(host) {
@@ -55,7 +80,10 @@ add_task(async function testTempPermissionSubframes() {
 
     await popupshown;
 
-    let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+    let popuphidden = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popuphidden"
+    );
 
     let notification = PopupNotifications.panel.firstElementChild;
     EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});

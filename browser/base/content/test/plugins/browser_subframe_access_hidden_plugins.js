@@ -33,40 +33,58 @@ add_task(async function test_plugin_accessible_in_subframe() {
   // our registerCleanupFunction when the test ends.
   let ssm = Services.scriptSecurityManager;
   let principal = ssm.createCodebasePrincipalFromOrigin(DOMAIN_1);
-  let pluginHost = Cc["@mozilla.org/plugin/host;1"]
-                     .getService(Ci.nsIPluginHost);
+  let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
+    Ci.nsIPluginHost
+  );
   let permString = pluginHost.getPermissionStringForType("application/x-test");
-  Services.perms.addFromPrincipal(principal, permString,
-                                  Ci.nsIPermissionManager.ALLOW_ACTION,
-                                  Ci.nsIPermissionManager.EXPIRE_NEVER,
-                                  0 /* expireTime */);
+  Services.perms.addFromPrincipal(
+    principal,
+    permString,
+    Ci.nsIPermissionManager.ALLOW_ACTION,
+    Ci.nsIPermissionManager.EXPIRE_NEVER,
+    0 /* expireTime */
+  );
 
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: DOMAIN_1,
-  }, async function(browser) {
-    await ContentTask.spawn(browser, [TEST_PLUGIN_NAME, DOMAIN_2],
-                            async function([pluginName, domain2]) {
-      Assert.ok(content.navigator.plugins[pluginName],
-                "Top-level document should find Test Plugin");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: DOMAIN_1,
+    },
+    async function(browser) {
+      await ContentTask.spawn(
+        browser,
+        [TEST_PLUGIN_NAME, DOMAIN_2],
+        async function([pluginName, domain2]) {
+          Assert.ok(
+            content.navigator.plugins[pluginName],
+            "Top-level document should find Test Plugin"
+          );
 
-      // Now manually create a subframe hosted at domain2...
-      let subframe = content.document.createElement("iframe");
-      subframe.src = domain2;
-      let loadedPromise = ContentTaskUtils.waitForEvent(subframe, "load");
-      content.document.body.appendChild(subframe);
-      await loadedPromise;
+          // Now manually create a subframe hosted at domain2...
+          let subframe = content.document.createElement("iframe");
+          subframe.src = domain2;
+          let loadedPromise = ContentTaskUtils.waitForEvent(subframe, "load");
+          content.document.body.appendChild(subframe);
+          await loadedPromise;
 
-      // Make sure that the HiddenPlugin event never fires in content.
-      let sawEvent = false;
-      addEventListener("HiddenPlugin", function onHiddenPlugin(e) {
-        sawEvent = true;
-        removeEventListener("HiddenPlugin", onHiddenPlugin, true);
-      }, true);
+          // Make sure that the HiddenPlugin event never fires in content.
+          let sawEvent = false;
+          addEventListener(
+            "HiddenPlugin",
+            function onHiddenPlugin(e) {
+              sawEvent = true;
+              removeEventListener("HiddenPlugin", onHiddenPlugin, true);
+            },
+            true
+          );
 
-      Assert.ok(subframe.contentWindow.navigator.plugins[pluginName],
-                "Subframe should find Test Plugin");
-      Assert.ok(!sawEvent, "Should not have seen the HiddenPlugin event.");
-    });
-  });
+          Assert.ok(
+            subframe.contentWindow.navigator.plugins[pluginName],
+            "Subframe should find Test Plugin"
+          );
+          Assert.ok(!sawEvent, "Should not have seen the HiddenPlugin event.");
+        }
+      );
+    }
+  );
 });

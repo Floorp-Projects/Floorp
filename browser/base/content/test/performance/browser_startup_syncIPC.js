@@ -18,8 +18,7 @@ const WEBRENDER = window.windowUtils.layerManagerType == "WebRender";
 const startupPhases = {
   // Anything done before or during app-startup must have a compelling reason
   // to run before we have even selected the user profile.
-  "before profile selection": [
-  ],
+  "before profile selection": [],
 
   "before opening first browser window": [
     {
@@ -47,7 +46,8 @@ const startupPhases = {
       condition: WIN && WEBRENDER,
       maxCount: 2,
     },
-    { // bug 1373773
+    {
+      // bug 1373773
       name: "PCompositorBridge::Msg_NotifyChildCreated",
       condition: !WIN,
       maxCount: 1,
@@ -162,7 +162,8 @@ const startupPhases = {
       ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
       maxCount: 1,
     },
-    { // bug 1554234
+    {
+      // bug 1554234
       name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
       condition: WIN && WEBRENDER,
       ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
@@ -174,7 +175,8 @@ const startupPhases = {
   // and loaded lazily when used for the first time by the user should
   // be blacklisted here.
   "before becoming idle": [
-    { // bug 1373773
+    {
+      // bug 1373773
       name: "PCompositorBridge::Msg_NotifyChildCreated",
       ignoreIfUnused: true,
       maxCount: 1,
@@ -191,7 +193,8 @@ const startupPhases = {
       ignoreIfUnused: true, // Only on Win10 64
       maxCount: 1,
     },
-    { // bug 1554234
+    {
+      // bug 1554234
       name: "PLayerTransaction::Msg_GetTextureFactoryIdentifier",
       condition: WIN && WEBRENDER,
       ignoreIfUnused: true, // intermittently occurs in "before handling user events"
@@ -213,14 +216,21 @@ const startupPhases = {
 };
 
 add_task(async function() {
-  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION && !AppConstants.DEBUG) {
-    ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
-       "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
-       "non-debug build.");
+  if (
+    !AppConstants.NIGHTLY_BUILD &&
+    !AppConstants.MOZ_DEV_EDITION &&
+    !AppConstants.DEBUG
+  ) {
+    ok(
+      !("@mozilla.org/test/startuprecorder;1" in Cc),
+      "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
+        "non-debug build."
+    );
     return;
   }
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
+    .wrappedJSObject;
   await startupRecorder.done;
 
   // Check for sync IPC markers in the startup profile.
@@ -235,14 +245,19 @@ add_task(async function() {
     for (let m of profile.markers.data) {
       let markerName = profile.stringTable[m[nameCol]];
       if (markerName.startsWith("startupRecorder:")) {
-        phases[markerName.split("startupRecorder:")[1]] = markersForCurrentPhase;
+        phases[
+          markerName.split("startupRecorder:")[1]
+        ] = markersForCurrentPhase;
         markersForCurrentPhase = [];
         continue;
       }
 
       let markerData = m[dataCol];
-      if (!markerData || markerData.category != "IPC" ||
-          markerData.interval != "start") {
+      if (
+        !markerData ||
+        markerData.category != "IPC" ||
+        markerData.interval != "start"
+      ) {
         continue;
       }
 
@@ -251,16 +266,21 @@ add_task(async function() {
   }
 
   for (let phase in startupPhases) {
-    startupPhases[phase] =
-      startupPhases[phase].filter(entry => !("condition" in entry) || entry.condition);
+    startupPhases[phase] = startupPhases[phase].filter(
+      entry => !("condition" in entry) || entry.condition
+    );
   }
 
   let shouldPass = true;
   for (let phase in phases) {
     let whitelist = startupPhases[phase];
     if (whitelist.length) {
-      info(`whitelisted sync IPC ${phase}:\n` +
-           whitelist.map(e => `  ${e.name} - at most ${e.maxCount} times`).join("\n"));
+      info(
+        `whitelisted sync IPC ${phase}:\n` +
+          whitelist
+            .map(e => `  ${e.name} - at most ${e.maxCount} times`)
+            .join("\n")
+      );
     }
 
     let markers = phases[phase];
@@ -304,14 +324,18 @@ add_task(async function() {
   } else {
     const filename = "profile_startup_syncIPC.json";
     let path = Cc["@mozilla.org/process/environment;1"]
-                 .getService(Ci.nsIEnvironment)
-                 .get("MOZ_UPLOAD_DIR");
+      .getService(Ci.nsIEnvironment)
+      .get("MOZ_UPLOAD_DIR");
     let encoder = new TextEncoder();
     let profilePath = OS.Path.join(path, filename);
-    await OS.File.writeAtomic(profilePath,
-                              encoder.encode(JSON.stringify(startupRecorder.data.profile)));
-    ok(false,
-       `Unexpected sync IPC behavior during startup; open the ${filename} ` +
-       "artifact in the Firefox Profiler to see what happened");
+    await OS.File.writeAtomic(
+      profilePath,
+      encoder.encode(JSON.stringify(startupRecorder.data.profile))
+    );
+    ok(
+      false,
+      `Unexpected sync IPC behavior during startup; open the ${filename} ` +
+        "artifact in the Firefox Profiler to see what happened"
+    );
   }
 });

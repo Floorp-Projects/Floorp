@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function makeInputStream(aString) {
-  let stream = Cc["@mozilla.org/io/string-input-stream;1"]
-                 .createInstance(Ci.nsIStringInputStream);
+  let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stream.data = aString;
   return stream; // XPConnect will QI this to nsIInputStream for us.
 }
@@ -19,7 +20,9 @@ add_task(async function test_remoteWebNavigation_postdata() {
 
   await new Promise(resolve => {
     server.registerPathHandler("/test", (request, response) => {
-      let body = obj.CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+      let body = obj.CommonUtils.readBytesFromInputStream(
+        request.bodyInputStream
+      );
       is(body, "success", "request body is correct");
       is(request.method, "POST", "request was a post");
       response.write("Received from POST: " + body);
@@ -27,7 +30,8 @@ add_task(async function test_remoteWebNavigation_postdata() {
     });
 
     let i = server.identity;
-    let path = i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/test";
+    let path =
+      i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/test";
 
     let postdata =
       "Content-Length: 7\r\n" +
@@ -36,13 +40,15 @@ add_task(async function test_remoteWebNavigation_postdata() {
       "success";
 
     openTrustedLinkIn(path, "tab", {
-       allowThirdPartyFixup: null,
-       postData: makeInputStream(postdata),
-     });
+      allowThirdPartyFixup: null,
+      postData: makeInputStream(postdata),
+    });
   });
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await new Promise(resolve => {
-    server.stop(function() { resolve(); });
+    server.stop(function() {
+      resolve();
+    });
   });
 });

@@ -34,35 +34,54 @@ add_task(async function() {
   await ensureFocusedUrlbar();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
-  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
-    "anonid", "moz-input-box").getBoundingClientRect();
+  let textBoxRect = document
+    .getAnonymousElementByAttribute(gURLBar.textbox, "anonid", "moz-input-box")
+    .getBoundingClientRect();
 
-  await withPerfObserver(async function() {
-    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    BrowserOpenTab();
-    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabAnimationEnd");
-    await switchDone;
-  }, {expectedReflows: EXPECTED_REFLOWS,
+  await withPerfObserver(
+    async function() {
+      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+      BrowserOpenTab();
+      await BrowserTestUtils.waitForEvent(
+        gBrowser.selectedTab,
+        "TabAnimationEnd"
+      );
+      await switchDone;
+    },
+    {
+      expectedReflows: EXPECTED_REFLOWS,
       frames: {
-        filter: rects => rects.filter(r => !(
-          // We expect plenty of changed rects within the tab strip.
-          r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
-          r.x1 >= tabStripRect.left && r.x2 <= tabStripRect.right &&
-          // It would make sense for each rect to have a width smaller than
-          // a tab (ie. tabstrip.width / tabcount), but tabs are small enough
-          // that they sometimes get reported in the same rect.
-          // So we accept up to the width of n-1 tabs.
-          r.w <= (gBrowser.tabs.length - 1) * Math.ceil(tabStripRect.width / gBrowser.tabs.length)
-        )),
+        filter: rects =>
+          rects.filter(
+            r =>
+              !// We expect plenty of changed rects within the tab strip.
+              (
+                r.y1 >= tabStripRect.top &&
+                r.y2 <= tabStripRect.bottom &&
+                r.x1 >= tabStripRect.left &&
+                r.x2 <= tabStripRect.right &&
+                // It would make sense for each rect to have a width smaller than
+                // a tab (ie. tabstrip.width / tabcount), but tabs are small enough
+                // that they sometimes get reported in the same rect.
+                // So we accept up to the width of n-1 tabs.
+                r.w <=
+                  (gBrowser.tabs.length - 1) *
+                    Math.ceil(tabStripRect.width / gBrowser.tabs.length)
+              )
+          ),
         exceptions: [
-          {name: "the urlbar placeolder moves up and down by a few pixels",
-           condition: r =>
-             r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
-             r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom,
+          {
+            name: "the urlbar placeolder moves up and down by a few pixels",
+            condition: r =>
+              r.x1 >= textBoxRect.left &&
+              r.x2 <= textBoxRect.right &&
+              r.y1 >= textBoxRect.top &&
+              r.y2 <= textBoxRect.bottom,
           },
         ],
       },
-     });
+    }
+  );
 
   await removeAllButFirstTab();
 });

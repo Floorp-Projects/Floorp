@@ -2,7 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function() {
-  let url = "http://mochi.test:8888/browser/browser/base/content/test/general/discovery.html";
+  let url =
+    "http://mochi.test:8888/browser/browser/base/content/test/general/discovery.html";
   info("Test search discovery");
   await BrowserTestUtils.withNewTab(url, searchDiscovery);
 });
@@ -11,29 +12,54 @@ let searchDiscoveryTests = [
   { text: "rel search discovered" },
   { rel: "SEARCH", text: "rel is case insensitive" },
   { rel: "-search-", pass: false, text: "rel -search- not discovered" },
-  { rel: "foo bar baz search quux", text: "rel may contain additional rels separated by spaces" },
+  {
+    rel: "foo bar baz search quux",
+    text: "rel may contain additional rels separated by spaces",
+  },
   { href: "https://not.mozilla.com", text: "HTTPS ok" },
   { href: "ftp://not.mozilla.com", text: "FTP ok" },
   { href: "data:text/foo,foo", pass: false, text: "data URI not permitted" },
   { href: "javascript:alert(0)", pass: false, text: "JS URI not permitted" },
-  { type: "APPLICATION/OPENSEARCHDESCRIPTION+XML", text: "type is case insensitve" },
-  { type: " application/opensearchdescription+xml ", text: "type may contain extra whitespace" },
-  { type: "application/opensearchdescription+xml; charset=utf-8", text: "type may have optional parameters (RFC2046)" },
-  { type: "aapplication/opensearchdescription+xml", pass: false, text: "type should not be loosely matched" },
-  { rel: "search search search", count: 1, text: "only one engine should be added" },
+  {
+    type: "APPLICATION/OPENSEARCHDESCRIPTION+XML",
+    text: "type is case insensitve",
+  },
+  {
+    type: " application/opensearchdescription+xml ",
+    text: "type may contain extra whitespace",
+  },
+  {
+    type: "application/opensearchdescription+xml; charset=utf-8",
+    text: "type may have optional parameters (RFC2046)",
+  },
+  {
+    type: "aapplication/opensearchdescription+xml",
+    pass: false,
+    text: "type should not be loosely matched",
+  },
+  {
+    rel: "search search search",
+    count: 1,
+    text: "only one engine should be added",
+  },
 ];
 
 async function searchDiscovery() {
   let browser = gBrowser.selectedBrowser;
 
   for (let testCase of searchDiscoveryTests) {
-    if (testCase.pass == undefined)
+    if (testCase.pass == undefined) {
       testCase.pass = true;
+    }
     testCase.title = testCase.title || searchDiscoveryTests.indexOf(testCase);
 
-    let promiseLinkAdded =
-      BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
-                                           false, null, true);
+    let promiseLinkAdded = BrowserTestUtils.waitForContentEvent(
+      gBrowser.selectedBrowser,
+      "DOMLinkAdded",
+      false,
+      null,
+      true
+    );
 
     await ContentTask.spawn(gBrowser.selectedBrowser, testCase, test => {
       let doc = content.document;
@@ -52,9 +78,10 @@ async function searchDiscovery() {
     if (browser.engines) {
       info(`Found ${browser.engines.length} engines`);
       info(`First engine title: ${browser.engines[0].title}`);
-      let hasEngine = testCase.count ?
-        (browser.engines[0].title == testCase.title && browser.engines.length == testCase.count) :
-        (browser.engines[0].title == testCase.title);
+      let hasEngine = testCase.count
+        ? browser.engines[0].title == testCase.title &&
+          browser.engines.length == testCase.count
+        : browser.engines[0].title == testCase.title;
       ok(hasEngine, testCase.text);
       browser.engines = null;
     } else {
@@ -63,9 +90,13 @@ async function searchDiscovery() {
   }
 
   info("Test multiple engines with the same title");
-  let promiseLinkAdded =
-    BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "DOMLinkAdded",
-      false, e => e.target.href == "http://second.mozilla.com/search.xml", true);
+  let promiseLinkAdded = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "DOMLinkAdded",
+    false,
+    e => e.target.href == "http://second.mozilla.com/search.xml",
+    true
+  );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     let doc = content.document;
     let head = doc.getElementById("linkparent");
@@ -85,6 +116,10 @@ async function searchDiscovery() {
 
   ok(browser.engines, "has engines");
   is(browser.engines.length, 1, "only one engine");
-  is(browser.engines[0].uri, "http://first.mozilla.com/search.xml", "first engine wins");
+  is(
+    browser.engines[0].uri,
+    "http://first.mozilla.com/search.xml",
+    "first engine wins"
+  );
   browser.engines = null;
 }

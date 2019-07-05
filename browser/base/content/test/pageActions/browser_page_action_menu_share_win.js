@@ -3,21 +3,24 @@
 
 "use strict";
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-const TEST_URL = getRootDirectory(gTestPath) + "browser_page_action_menu_share_win.html";
+const TEST_URL =
+  getRootDirectory(gTestPath) + "browser_page_action_menu_share_win.html";
 
 // Keep track of site details we are sharing
 let sharedUrl, sharedTitle;
 
-let stub = sinon.stub(BrowserPageActions.shareURL, "_windowsUIUtils").get(() => {
-  return {
-    shareUrl(url, title) {
-      sharedUrl = url;
-      sharedTitle = title;
-    },
-  };
-});
+let stub = sinon
+  .stub(BrowserPageActions.shareURL, "_windowsUIUtils")
+  .get(() => {
+    return {
+      shareUrl(url, title) {
+        sharedUrl = url;
+        sharedTitle = title;
+      },
+    };
+  });
 
 registerCleanupFunction(async function() {
   stub.restore();
@@ -41,6 +44,10 @@ add_task(async function shareURL() {
     await hiddenPromise;
 
     Assert.equal(sharedUrl, TEST_URL, "Shared correct URL");
-    Assert.equal(sharedTitle, "Windows Sharing", "Shared with the correct title");
+    Assert.equal(
+      sharedTitle,
+      "Windows Sharing",
+      "Shared with the correct title"
+    );
   });
 });

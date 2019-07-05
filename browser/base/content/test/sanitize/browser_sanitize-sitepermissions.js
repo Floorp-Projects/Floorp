@@ -12,7 +12,7 @@ function countPermissions() {
 
 add_task(async function test() {
   // sanitize before we start so we have a good baseline.
-  await Sanitizer.sanitize(["siteSettings"], {ignoreTimespan: false});
+  await Sanitizer.sanitize(["siteSettings"], { ignoreTimespan: false });
 
   // Count how many permissions we start with - some are defaults that
   // will not be sanitized.
@@ -23,11 +23,18 @@ add_task(async function test() {
   pm.add(Services.io.newURI("http://example.com"), "testing", pm.ALLOW_ACTION);
 
   // Sanity check
-  ok(pm.enumerator.hasMoreElements(), "Permission manager should have elements, since we just added one");
+  ok(
+    pm.enumerator.hasMoreElements(),
+    "Permission manager should have elements, since we just added one"
+  );
 
   // Clear it
-  await Sanitizer.sanitize(["siteSettings"], {ignoreTimespan: false});
+  await Sanitizer.sanitize(["siteSettings"], { ignoreTimespan: false });
 
   // Make sure it's gone
-  is(numAtStart, countPermissions(), "Permission manager should have the same count it started with");
+  is(
+    numAtStart,
+    countPermissions(),
+    "Permission manager should have the same count it started with"
+  );
 });

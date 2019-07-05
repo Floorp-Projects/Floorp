@@ -1,6 +1,7 @@
 "use strict";
 
-const TEST_ROOT = "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
+const TEST_ROOT =
+  "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
 const TEST_URL = TEST_ROOT + "file_favicon_change_not_in_document.html";
 
 /*
@@ -16,13 +17,21 @@ const TEST_URL = TEST_ROOT + "file_favicon_change_not_in_document.html";
  * event after its href gets updated later.
  */
 add_task(async function() {
-  let extraTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let extraTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   let domLinkAddedFired = 0;
   let domLinkChangedFired = 0;
   const linkAddedHandler = event => domLinkAddedFired++;
   const linkChangedhandler = event => domLinkChangedFired++;
-  BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "DOMLinkAdded", linkAddedHandler);
-  BrowserTestUtils.addContentEventListener(gBrowser.selectedBrowser, "DOMLinkChanged", linkChangedhandler);
+  BrowserTestUtils.addContentEventListener(
+    gBrowser.selectedBrowser,
+    "DOMLinkAdded",
+    linkAddedHandler
+  );
+  BrowserTestUtils.addContentEventListener(
+    gBrowser.selectedBrowser,
+    "DOMLinkChanged",
+    linkChangedhandler
+  );
 
   let expectedFavicon = TEST_ROOT + "file_generic_favicon.ico";
   let faviconPromise = waitForFavicon(extraTab.linkedBrowser, expectedFavicon);
@@ -32,7 +41,11 @@ add_task(async function() {
 
   await faviconPromise;
 
-  is(domLinkAddedFired, 2, "Should fire the correct number of DOMLinkAdded event.");
+  is(
+    domLinkAddedFired,
+    2,
+    "Should fire the correct number of DOMLinkAdded event."
+  );
   is(domLinkChangedFired, 0, "Should not fire any DOMLinkChanged event.");
 
   gBrowser.removeTab(extraTab);

@@ -7,10 +7,14 @@ function test() {
       ok(win.closed, "popup is closed");
 
       // clean up
-      if (!win.closed)
+      if (!win.closed) {
         win.close();
-      if (Services.prefs.prefHasUserValue("browser.tabs.closeWindowWithLastTab"))
+      }
+      if (
+        Services.prefs.prefHasUserValue("browser.tabs.closeWindowWithLastTab")
+      ) {
         Services.prefs.clearUserPref("browser.tabs.closeWindowWithLastTab");
+      }
 
       return;
     }

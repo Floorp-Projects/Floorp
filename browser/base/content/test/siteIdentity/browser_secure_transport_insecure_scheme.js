@@ -10,12 +10,17 @@
 // But first, a quick test that we don't incorrectly treat a
 // blob:https://example.com URI as secure.
 add_task(async function() {
-  let uri = getRootDirectory(gTestPath).replace("chrome://mochitests/content",
-                                                "https://example.com") + "dummy_page.html";
-  await BrowserTestUtils.withNewTab(uri, async (browser) => {
+  let uri =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.com"
+    ) + "dummy_page.html";
+  await BrowserTestUtils.withNewTab(uri, async browser => {
     await ContentTask.spawn(browser, null, async () => {
-      let debug = {hello: "world"};
-      let blob = new Blob([JSON.stringify(debug, null, 2)], {type: "application/json"});
+      let debug = { hello: "world" };
+      let blob = new Blob([JSON.stringify(debug, null, 2)], {
+        type: "application/json",
+      });
       let blobUri = URL.createObjectURL(blob);
       content.document.location = blobUri;
     });
@@ -28,8 +33,9 @@ add_task(async function() {
 // This server pretends to be a HTTP over TLS proxy. It isn't really, but this
 // is sufficient for the purposes of this test.
 function startServer(cert) {
-  let tlsServer = Cc["@mozilla.org/network/tls-server-socket;1"]
-                    .createInstance(Ci.nsITLSServerSocket);
+  let tlsServer = Cc["@mozilla.org/network/tls-server-socket;1"].createInstance(
+    Ci.nsITLSServerSocket
+  );
   tlsServer.init(-1, true, -1);
   tlsServer.serverCert = cert;
 
@@ -37,29 +43,40 @@ function startServer(cert) {
 
   let listener = {
     onSocketAccepted(socket, transport) {
-      let connectionInfo = transport.securityInfo
-                           .QueryInterface(Ci.nsITLSServerConnectionInfo);
+      let connectionInfo = transport.securityInfo.QueryInterface(
+        Ci.nsITLSServerConnectionInfo
+      );
       connectionInfo.setSecurityObserver(listener);
       input = transport.openInputStream(0, 0, 0);
       output = transport.openOutputStream(0, 0, 0);
     },
 
     onHandshakeDone(socket, status) {
-      input.asyncWait({
-        onInputStreamReady(readyInput) {
-          try {
-            let request = NetUtil.readInputStreamToString(readyInput,
-                                                          readyInput.available());
-            ok(request.startsWith("GET ") && request.includes("HTTP/1.1"),
-               "expecting an HTTP/1.1 GET request");
-            let response = "HTTP/1.1 200 OK\r\nContent-Type:text/plain\r\n" +
-                           "Connection:Close\r\nContent-Length:2\r\n\r\nOK";
-            output.write(response, response.length);
-          } catch (e) {
-            info(e);
-          }
+      input.asyncWait(
+        {
+          onInputStreamReady(readyInput) {
+            try {
+              let request = NetUtil.readInputStreamToString(
+                readyInput,
+                readyInput.available()
+              );
+              ok(
+                request.startsWith("GET ") && request.includes("HTTP/1.1"),
+                "expecting an HTTP/1.1 GET request"
+              );
+              let response =
+                "HTTP/1.1 200 OK\r\nContent-Type:text/plain\r\n" +
+                "Connection:Close\r\nContent-Length:2\r\n\r\nOK";
+              output.write(response, response.length);
+            } catch (e) {
+              info(e);
+            }
+          },
         },
-      }, 0, 0, Services.tm.currentThread);
+        0,
+        0,
+        Services.tm.currentThread
+      );
     },
 
     onStopListening() {
@@ -80,10 +97,12 @@ add_task(async function() {
     set: [["network.dns.disableIPv6", true]],
   });
 
-  let certService = Cc["@mozilla.org/security/local-cert-service;1"]
-                      .getService(Ci.nsILocalCertService);
-  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                              .getService(Ci.nsICertOverrideService);
+  let certService = Cc["@mozilla.org/security/local-cert-service;1"].getService(
+    Ci.nsILocalCertService
+  );
+  let certOverrideService = Cc[
+    "@mozilla.org/security/certoverride;1"
+  ].getService(Ci.nsICertOverrideService);
 
   let cert = await new Promise((resolve, reject) => {
     certService.getOrCreateCert("http-over-https-proxy", {
@@ -98,10 +117,16 @@ add_task(async function() {
   });
   // Start the proxy and configure Firefox to trust its certificate.
   let server = startServer(cert);
-  let overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-                     Ci.nsICertOverrideService.ERROR_MISMATCH;
-  certOverrideService.rememberValidityOverride("localhost", server.port, cert,
-                                               overrideBits, true);
+  let overrideBits =
+    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
+    Ci.nsICertOverrideService.ERROR_MISMATCH;
+  certOverrideService.rememberValidityOverride(
+    "localhost",
+    server.port,
+    cert,
+    overrideBits,
+    true
+  );
   // Configure Firefox to use the proxy.
   let systemProxySettings = {
     QueryInterface: ChromeUtils.generateQI([Ci.nsISystemProxySettings]),
@@ -112,10 +137,17 @@ add_task(async function() {
     },
   };
   let oldProxyType = Services.prefs.getIntPref("network.proxy.type");
-  Services.prefs.setIntPref("network.proxy.type", Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM);
-  let { MockRegistrar } = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
-  let mockProxy = MockRegistrar.register("@mozilla.org/system-proxy-settings;1",
-                                         systemProxySettings);
+  Services.prefs.setIntPref(
+    "network.proxy.type",
+    Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM
+  );
+  let { MockRegistrar } = ChromeUtils.import(
+    "resource://testing-common/MockRegistrar.jsm"
+  );
+  let mockProxy = MockRegistrar.register(
+    "@mozilla.org/system-proxy-settings;1",
+    systemProxySettings
+  );
   // Register cleanup to undo the configuration changes we've made.
   registerCleanupFunction(() => {
     certOverrideService.clearValidityOverride("localhost", server.port);
@@ -128,7 +160,7 @@ add_task(async function() {
   // the "proxy" we just started. Even though our connection to the proxy is
   // secure, in a real situation the connection from the proxy to
   // http://example.com won't be secure, so we treat it as not secure.
-  await BrowserTestUtils.withNewTab("http://example.com/", async (browser) => {
+  await BrowserTestUtils.withNewTab("http://example.com/", async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "unknownIdentity", "identity should be 'unknown'");
   });
