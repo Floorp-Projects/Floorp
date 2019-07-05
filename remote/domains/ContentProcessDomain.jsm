@@ -6,10 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["ContentProcessDomain"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/domains/Domain.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "ContextObserver",
-                               "chrome://remote/content/domains/ContextObserver.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ContextObserver",
+  "chrome://remote/content/domains/ContextObserver.jsm"
+);
 
 class ContentProcessDomain extends Domain {
   destructor() {

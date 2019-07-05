@@ -13,12 +13,14 @@
 const puppeteer = require("puppeteer");
 
 console.log("Calling puppeteer.connect");
-puppeteer.connect({ browserURL: "http://localhost:9000"}).then(async browser => {
-  console.log("Connect success!");
+puppeteer
+  .connect({ browserURL: "http://localhost:9000" })
+  .then(async browser => {
+    console.log("Connect success!");
 
-  const page = await browser.newPage();
-  console.log("page", !!page);
-  await page.goto("https://www.mozilla.org/");
+    const page = await browser.newPage();
+    console.log("page", !!page);
+    await page.goto("https://www.mozilla.org/");
 
-  return browser.close();
-});
+    return browser.close();
+  });

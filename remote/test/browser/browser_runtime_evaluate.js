@@ -66,7 +66,7 @@ add_task(async function() {
     // First evaluate the expression via Runtime.evaluate in order to generate the
     // CDP's `RemoteObject` for the given expression. A previous test already
     // asserted the returned value of Runtime.evaluate, so we can trust this.
-    const { result }  = await Runtime.evaluate({ contextId, expression });
+    const { result } = await Runtime.evaluate({ contextId, expression });
 
     // We then pass this RemoteObject as an argument to Runtime.callFunctionOn.
     return Runtime.callFunctionOn({
@@ -76,7 +76,11 @@ add_task(async function() {
     });
   }
 
-  for (const fun of [runtimeEvaluate, callFunctionOn, callFunctionOnArguments]) {
+  for (const fun of [
+    runtimeEvaluate,
+    callFunctionOn,
+    callFunctionOnArguments,
+  ]) {
     info("Test " + fun.name);
     await testPrimitiveTypes(fun);
     await testUnserializable(fun);
@@ -114,8 +118,15 @@ async function testRuntimeEnable({ Runtime }) {
 }
 
 async function testEvaluate({ Runtime }, contextId) {
-  const { result } = await Runtime.evaluate({ contextId, expression: "location.href" });
-  is(result.value, TEST_URI, "Runtime.evaluate works and is against the test page");
+  const { result } = await Runtime.evaluate({
+    contextId,
+    expression: "location.href",
+  });
+  is(
+    result.value,
+    TEST_URI,
+    "Runtime.evaluate works and is against the test page"
+  );
 }
 
 async function testEvaluateInvalidContextId({ Runtime }, contextId) {
@@ -123,23 +134,40 @@ async function testEvaluateInvalidContextId({ Runtime }, contextId) {
     await Runtime.evaluate({ contextId: -1, expression: "" });
     ok(false, "Evaluate shouldn't pass");
   } catch (e) {
-    ok(e.message.includes("Unable to find execution context with id: -1"),
-      "Throws with the expected error message");
+    ok(
+      e.message.includes("Unable to find execution context with id: -1"),
+      "Throws with the expected error message"
+    );
   }
 }
 
 async function testCallFunctionOn({ Runtime }, executionContextId) {
-  const { result } = await Runtime.callFunctionOn({ executionContextId, functionDeclaration: "() => location.href" });
-  is(result.value, TEST_URI, "Runtime.callFunctionOn works and is against the test page");
+  const { result } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => location.href",
+  });
+  is(
+    result.value,
+    TEST_URI,
+    "Runtime.callFunctionOn works and is against the test page"
+  );
 }
 
-async function testCallFunctionOnInvalidContextId({ Runtime }, executionContextId) {
+async function testCallFunctionOnInvalidContextId(
+  { Runtime },
+  executionContextId
+) {
   try {
-    await Runtime.callFunctionOn({ executionContextId: -1, functionDeclaration: "" });
+    await Runtime.callFunctionOn({
+      executionContextId: -1,
+      functionDeclaration: "",
+    });
     ok(false, "callFunctionOn shouldn't pass");
   } catch (e) {
-    ok(e.message.includes("Unable to find execution context with id: -1"),
-      "Throws with the expected error message");
+    ok(
+      e.message.includes("Unable to find execution context with id: -1"),
+      "Throws with the expected error message"
+    );
   }
 }
 
@@ -148,7 +176,7 @@ async function testPrimitiveTypes(testFunction) {
   for (const expression of expressions) {
     const { result } = await testFunction(JSON.stringify(expression));
     is(result.value, expression, `Evaluating primitive '${expression}' works`);
-    is(result.type, typeof(expression), `${expression} type is correct`);
+    is(result.type, typeof expression, `${expression} type is correct`);
   }
 
   // undefined doesn't work with JSON.stringify, so test it independently
@@ -169,7 +197,11 @@ async function testUnserializable(testFunction) {
   const expressions = ["NaN", "-0", "Infinity", "-Infinity"];
   for (const expression of expressions) {
     const { result } = await testFunction(expression);
-    is(result.unserializableValue, expression, `Evaluating unserializable '${expression}' works`);
+    is(
+      result.unserializableValue,
+      expression,
+      `Evaluating unserializable '${expression}' works`
+    );
   }
 }
 
@@ -190,29 +222,48 @@ async function testObjectTypes(testFunction) {
     { expression: "new Date()", type: "object", subtype: "date" },
     { expression: "document", type: "object", subtype: "node" },
     { expression: "document.documentElement", type: "object", subtype: "node" },
-    { expression: "document.createElement('div')", type: "object", subtype: "node" },
+    {
+      expression: "document.createElement('div')",
+      type: "object",
+      subtype: "node",
+    },
   ];
 
   for (const { expression, type, subtype } of expressions) {
     const { result } = await testFunction(expression);
-    is(result.subtype, subtype, `Evaluating '${expression}' has the expected subtype`);
+    is(
+      result.subtype,
+      subtype,
+      `Evaluating '${expression}' has the expected subtype`
+    );
     is(result.type, type, "The type is correct");
     ok(!!result.objectId, "Got an object id");
   }
 }
 
 async function testThrowError(testFunction) {
-  const { exceptionDetails } = await testFunction("throw new Error('foo')", true);
+  const { exceptionDetails } = await testFunction(
+    "throw new Error('foo')",
+    true
+  );
   is(exceptionDetails.text, "foo", "Exception message is passed to the client");
 }
 
 async function testThrowValue(testFunction) {
   const { exceptionDetails } = await testFunction("throw 'foo'", true);
   is(exceptionDetails.exception.type, "string", "Exception type is correct");
-  is(exceptionDetails.exception.value, "foo", "Exception value is passed as a RemoteObject");
+  is(
+    exceptionDetails.exception.value,
+    "foo",
+    "Exception value is passed as a RemoteObject"
+  );
 }
 
 async function testJSError(testFunction) {
   const { exceptionDetails } = await testFunction("doesNotExists()", true);
-  is(exceptionDetails.text, "doesNotExists is not defined", "Exception message is passed to the client");
+  is(
+    exceptionDetails.text,
+    "doesNotExists is not defined",
+    "Exception message is passed to the client"
+  );
 }

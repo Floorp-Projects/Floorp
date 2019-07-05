@@ -9,13 +9,13 @@ const TEST_URI = "data:text/html;charset=utf-8,<input type=text>";
 
 // Map of key codes used in this test.
 const KEYCODES = {
-  "a": 65,
-  "Backspace": 8,
-  "h": 72,
-  "H": 72,
-  "AltLeft": 18,
-  "ArrowLeft": 37,
-  "ArrowRight": 39,
+  a: 65,
+  Backspace: 8,
+  h: 72,
+  H: 72,
+  AltLeft: 18,
+  ArrowLeft: 37,
+  ArrowRight: 39,
 };
 
 // Modifier for move forward shortcut is CTRL+RightArrow on Linux/Windows, ALT+RightArrow
@@ -71,7 +71,6 @@ add_task(async function() {
   info("Send Left");
   await sendArrowKey(Input, "ArrowLeft");
   await checkInputContent("hH’", 2);
-
 
   info("Write 'a'");
   await sendTextKey(Input, "a");
@@ -144,15 +143,25 @@ function dispatchKeyEvent(Input, key, type, modifiers = 0) {
 }
 
 async function checkInputContent(expectedValue, expectedCaret) {
-  const { value, caret } =
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  const { value, caret } = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
+    function() {
       const input = content.document.querySelector("input");
       return { value: input.value, caret: input.selectionStart };
-    });
+    }
+  );
 
-  is(value, expectedValue, `The input value is correct ("${value}"="${expectedValue}")`);
-  is(caret, expectedCaret,
-    `The input caret has the correct index ("${caret}"="${expectedCaret}")`);
+  is(
+    value,
+    expectedValue,
+    `The input value is correct ("${value}"="${expectedValue}")`
+  );
+  is(
+    caret,
+    expectedCaret,
+    `The input caret has the correct index ("${caret}"="${expectedCaret}")`
+  );
 }
 
 async function sendBackspace(Input, expected) {
@@ -182,16 +191,25 @@ async function sendBackspace(Input, expected) {
  *   await waitForInputEvent();
  */
 function addInputEventListener(eventName) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, eventName, async (_eventName) => {
-    const input = content.document.querySelector("input");
-    this.__onInputEvent =
-      new Promise(r => input.addEventListener(_eventName, r, { once: true }));
-  });
+  return ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    eventName,
+    async _eventName => {
+      const input = content.document.querySelector("input");
+      this.__onInputEvent = new Promise(r =>
+        input.addEventListener(_eventName, r, { once: true })
+      );
+    }
+  );
 }
 
 /**
  * See documentation for addInputEventListener.
  */
 function waitForInputEvent() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, () => this.__onInputEvent);
+  return ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    null,
+    () => this.__onInputEvent
+  );
 }
