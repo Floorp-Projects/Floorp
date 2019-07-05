@@ -154,9 +154,9 @@ function download_shared_artifacts_from_tc {
 
   # Download everything we need to run js with xpcshell
   echo "INFO: Downloading all the necessary pieces from the taskcluster index..."
-  TASKID_URL="$index_base/task/gecko.v2.${REPODIR}.latest.${PRODUCT}.linux64-opt"
+  TASKID_URL="$index_base/task/gecko.v2.${REPODIR}.shippable.latest.${PRODUCT}.linux64-opt"
   if [ "${USE_MC}" == "true" ]; then
-    TASKID_URL="$index_base/task/gecko.v2.mozilla-central.latest.${PRODUCT}.linux64-opt"
+    TASKID_URL="$index_base/task/gecko.v2.mozilla-central.shippable.latest.${PRODUCT}.linux64-opt"
   fi
   ${WGET} -O ${TASKID_FILE} "${TASKID_URL}"
   INDEX_TASK_ID="$($JQ -r '.taskId' ${TASKID_FILE})"
