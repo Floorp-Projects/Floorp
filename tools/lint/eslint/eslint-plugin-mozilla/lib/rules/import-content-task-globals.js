@@ -25,10 +25,15 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function(node) {
+    "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function(
+      node
+    ) {
       for (let global in frameScriptEnv.globals) {
-        helpers.addVarToScope(global, context.getScope(),
-                              frameScriptEnv.globals[global]);
+        helpers.addVarToScope(
+          global,
+          context.getScope(),
+          frameScriptEnv.globals[global]
+        );
       }
     },
   };

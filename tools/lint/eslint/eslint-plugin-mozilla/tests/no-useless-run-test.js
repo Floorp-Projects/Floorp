@@ -19,7 +19,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 function invalidCode(code, output) {
   let message =
     "Useless run_test function - only contains run_next_test; whole function can be removed";
-  return {code, output, errors: [{message, type: "FunctionDeclaration"}]};
+  return { code, output, errors: [{ message, type: "FunctionDeclaration" }] };
 }
 
 ruleTester.run("no-useless-run-test", rule, {
@@ -30,16 +30,17 @@ ruleTester.run("no-useless-run-test", rule, {
   ],
   invalid: [
     // Single-line case.
-    invalidCode(
-      "function run_test() { run_next_test(); }",
-      ""),
+    invalidCode("function run_test() { run_next_test(); }", ""),
     // Multiple-line cases
-    invalidCode(`
+    invalidCode(
+      `
 function run_test() {
   run_next_test();
 }`,
-      ``),
-    invalidCode(`
+      ``
+    ),
+    invalidCode(
+      `
 foo();
 function run_test() {
  run_next_test();
@@ -47,8 +48,10 @@ function run_test() {
 `,
       `
 foo();
-`),
-    invalidCode(`
+`
+    ),
+    invalidCode(
+      `
 foo();
 function run_test() {
   run_next_test();
@@ -58,8 +61,10 @@ bar();
       `
 foo();
 bar();
-`),
-    invalidCode(`
+`
+    ),
+    invalidCode(
+      `
 foo();
 
 function run_test() {
@@ -70,8 +75,10 @@ bar();`,
       `
 foo();
 
-bar();`),
-    invalidCode(`
+bar();`
+    ),
+    invalidCode(
+      `
 foo();
 
 function run_test() {
@@ -86,8 +93,10 @@ foo();
 
 // A comment
 bar();
-`),
-    invalidCode(`
+`
+    ),
+    invalidCode(
+      `
 foo();
 
 /**
@@ -109,6 +118,7 @@ foo();
 
 // A comment
 bar();
-`),
+`
+    ),
   ],
 });

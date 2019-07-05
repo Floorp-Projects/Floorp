@@ -18,22 +18,26 @@ module.exports = function(context) {
   //  --------------------------------------------------------------------------
 
   return {
-    "BinaryExpression": function(node) {
-      if (node.left.type != "CallExpression" ||
-          node.left.callee.type != "MemberExpression" ||
-          node.left.callee.property.type != "Identifier" ||
-          node.left.callee.property.name != "indexOf") {
+    BinaryExpression(node) {
+      if (
+        node.left.type != "CallExpression" ||
+        node.left.callee.type != "MemberExpression" ||
+        node.left.callee.property.type != "Identifier" ||
+        node.left.callee.property.name != "indexOf"
+      ) {
         return;
       }
 
-      if ((["!=", "!==", "==", "==="].includes(node.operator) &&
-           node.right.type == "UnaryExpression" &&
-           node.right.operator == "-" &&
-           node.right.argument.type == "Literal" &&
-           node.right.argument.value == 1) ||
-          ([">=", "<"].includes(node.operator) &&
-           node.right.type == "Literal" &&
-           node.right.value == 0)) {
+      if (
+        (["!=", "!==", "==", "==="].includes(node.operator) &&
+          node.right.type == "UnaryExpression" &&
+          node.right.operator == "-" &&
+          node.right.argument.type == "Literal" &&
+          node.right.argument.value == 1) ||
+        ([">=", "<"].includes(node.operator) &&
+          node.right.type == "Literal" &&
+          node.right.value == 0)
+      ) {
         context.report(node, "use .includes instead of .indexOf");
       }
     },

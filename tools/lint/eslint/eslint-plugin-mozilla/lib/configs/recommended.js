@@ -8,89 +8,88 @@
  * https://eslint.org/docs/rules/
  */
 module.exports = {
-  "env": {
-    "browser": true,
-    "es6": true,
+  env: {
+    browser: true,
+    es6: true,
     "mozilla/privileged": true,
   },
 
-  "extends": [
-    "eslint:recommended",
-    "plugin:prettier/recommended",
-  ],
+  extends: ["eslint:recommended", "plugin:prettier/recommended"],
 
-  "globals": {
-    "Cc": false,
+  globals: {
+    Cc: false,
     // Specific to Firefox (Chrome code only).
-    "ChromeUtils": false,
-    "Ci": false,
-    "Components": false,
-    "Cr": false,
-    "Cu": false,
-    "Debugger": false,
-    "InstallTrigger": false,
+    ChromeUtils: false,
+    Ci: false,
+    Components: false,
+    Cr: false,
+    Cu: false,
+    Debugger: false,
+    InstallTrigger: false,
     // Specific to Firefox
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError
-    "InternalError": true,
-    "Intl": false,
-    "SharedArrayBuffer": false,
-    "StopIteration": false,
-    "dump": true,
+    InternalError: true,
+    Intl: false,
+    SharedArrayBuffer: false,
+    StopIteration: false,
+    dump: true,
     // Override the "browser" env definition of "location" to allow writing as it
     // is a writeable property.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1509270#c1 for more information.
-    "location": true,
-    "openDialog": false,
-    "saveStack": false,
-    "sizeToContent": false,
+    location: true,
+    openDialog: false,
+    saveStack: false,
+    sizeToContent: false,
     // Specific to Firefox
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
-    "uneval": false,
+    uneval: false,
   },
 
-  "overrides": [{
-    // Turn off use-services for xml files. XBL bindings are going away, and
-    // working out the valid globals for those is difficult.
-    "files": "**/*.xml",
-    "rules": {
-      "mozilla/use-services": "off",
+  overrides: [
+    {
+      // Turn off use-services for xml files. XBL bindings are going away, and
+      // working out the valid globals for those is difficult.
+      files: "**/*.xml",
+      rules: {
+        "mozilla/use-services": "off",
+      },
     },
-  }, {
-    // We don't have the general browser environment for jsm files, but we do
-    // have our own special environments for them.
-    "env": {
-      "browser": false,
-      "mozilla/jsm": true,
+    {
+      // We don't have the general browser environment for jsm files, but we do
+      // have our own special environments for them.
+      env: {
+        browser: false,
+        "mozilla/jsm": true,
+      },
+      files: "**/*.jsm",
+      rules: {
+        "mozilla/mark-exported-symbols-as-used": "error",
+        // JSM modules are far easier to check for no-unused-vars on a global scope,
+        // than our content files. Hence we turn that on here.
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "all",
+          },
+        ],
+      },
     },
-    "files": "**/*.jsm",
-    "rules": {
-      "mozilla/mark-exported-symbols-as-used": "error",
-      // JSM modules are far easier to check for no-unused-vars on a global scope,
-      // than our content files. Hence we turn that on here.
-      "no-unused-vars": ["error", {
-        "args": "none",
-        "vars": "all",
-      }],
-    },
-  }],
+  ],
 
-  "parserOptions": {
-    "ecmaVersion": 9,
+  parserOptions: {
+    ecmaVersion: 9,
   },
 
   // When adding items to this file please check for effects on sub-directories.
-  "plugins": [
-    "html",
-    "fetch-options",
-    "no-unsanitized",
-  ],
+  plugins: ["html", "fetch-options", "no-unsanitized"],
 
   // When adding items to this file please check for effects on all of toolkit
   // and browser
-  "rules": {
+  rules: {
     // Warn about cyclomatic complexity in functions.
     // XXX Get this down to 20?
-    "complexity": ["error", 34],
+    complexity: ["error", 34],
 
     // Functions must always return something or nothing
     "consistent-return": "error",
@@ -100,7 +99,7 @@ module.exports = {
     "constructor-super": "off",
 
     // Require braces around blocks that start a new line
-    "curly": ["error", "all"],
+    curly: ["error", "all"],
 
     // Encourage the use of dot notation whenever possible.
     "dot-notation": "error",
@@ -164,7 +163,7 @@ module.exports = {
     "no-else-return": "error",
 
     // No empty statements
-    "no-empty": ["error", {"allowEmptyCatch": true}],
+    "no-empty": ["error", { allowEmptyCatch: true }],
 
     // Disallow eval and setInteral/setTimeout with strings
     "no-eval": "error",
@@ -189,7 +188,7 @@ module.exports = {
     // Disallow the use of the __iterator__ property
     "no-iterator": "error",
 
-     // No labels
+    // No labels
     "no-labels": "error",
 
     // Disallow unnecessary nested blocks
@@ -238,10 +237,13 @@ module.exports = {
     "no-unsanitized/property": "error",
 
     // No declaring variables that are never used
-    "no-unused-vars": ["error", {
-      "args": "none",
-      "vars": "local",
-    }],
+    "no-unused-vars": [
+      "error",
+      {
+        args: "none",
+        vars: "local",
+      },
+    ],
 
     // No using variables before defined
     // "no-use-before-define": ["error", "nofunc"],
@@ -264,7 +266,7 @@ module.exports = {
     "no-with": "error",
 
     // Require object-literal shorthand with ES6 method syntax
-    "object-shorthand": ["error", "always", { "avoidQuotes": true }],
+    "object-shorthand": ["error", "always", { avoidQuotes: true }],
 
     // XXX Bug 1487642 - decide if we want to enable this or not.
     // Require generator functions to contain yield
@@ -274,7 +276,7 @@ module.exports = {
   // To avoid bad interactions of the html plugin with the xml preprocessor in
   // eslint-plugin-mozilla, we turn off processing of the html plugin for .xml
   // files.
-  "settings": {
-    "html/xml-extensions": [ ".xhtml" ],
+  settings: {
+    "html/xml-extensions": [".xhtml"],
   },
 };
