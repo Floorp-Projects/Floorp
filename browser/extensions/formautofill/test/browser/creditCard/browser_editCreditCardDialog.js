@@ -3,31 +3,45 @@
 "use strict";
 
 add_task(async function setup() {
-  let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
+  let { formAutofillStorage } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillStorage.jsm"
+  );
   await formAutofillStorage.initialize();
 });
 
 add_task(async function test_cancelEditCreditCardDialog() {
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
     win.document.querySelector("#cancel").click();
   });
 });
 
 add_task(async function test_cancelEditCreditCardDialogWithESC() {
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
     EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
   });
 });
 
 add_task(async function test_saveCreditCard() {
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("0" + TEST_CREDIT_CARD_1["cc-exp-month"].toString(), {}, win);
-    is(win.document.activeElement.selectedOptions[0].text, "04 - April", "Displayed month should match number and name");
+    EventUtils.synthesizeKey(
+      "0" + TEST_CREDIT_CARD_1["cc-exp-month"].toString(),
+      {},
+      win
+    );
+    is(
+      win.document.activeElement.selectedOptions[0].text,
+      "04 - April",
+      "Displayed month should match number and name"
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-exp-year"].toString(), {}, win);
+    EventUtils.synthesizeKey(
+      TEST_CREDIT_CARD_1["cc-exp-year"].toString(),
+      {},
+      win
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -52,13 +66,21 @@ add_task(async function test_saveCreditCard() {
 });
 
 add_task(async function test_saveCreditCardWithMaxYear() {
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-exp-month"].toString(), {}, win);
+    EventUtils.synthesizeKey(
+      TEST_CREDIT_CARD_2["cc-exp-month"].toString(),
+      {},
+      win
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-exp-year"].toString(), {}, win);
+    EventUtils.synthesizeKey(
+      TEST_CREDIT_CARD_2["cc-exp-year"].toString(),
+      {},
+      win
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -92,13 +114,21 @@ add_task(async function test_saveCreditCardWithBillingAddress() {
     billingAddressGUID: billingAddress.guid,
   });
 
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-exp-month"].toString(), {}, win);
+    EventUtils.synthesizeKey(
+      TEST_CREDIT_CARD["cc-exp-month"].toString(),
+      {},
+      win
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-exp-year"].toString(), {}, win);
+    EventUtils.synthesizeKey(
+      TEST_CREDIT_CARD["cc-exp-year"].toString(),
+      {},
+      win
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD["cc-name"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -122,31 +152,36 @@ add_task(async function test_saveCreditCardWithBillingAddress() {
   ok(creditCards[1].billingAddressGUID, "billingAddressGUID is truthy");
   ok(creditCards[1]["cc-number-encrypted"], "cc-number-encrypted exists");
   await removeCreditCards([creditCards[1].guid]);
-  await removeAddresses([
-    addresses[0].guid,
-    addresses[1].guid,
-  ]);
+  await removeAddresses([addresses[0].guid, addresses[1].guid]);
 });
 
 add_task(async function test_editCreditCard() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "only one credit card is in storage");
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_RIGHT", {}, win);
-    EventUtils.synthesizeKey("test", {}, win);
-    win.document.querySelector("#save").click();
-  }, {
-    record: creditCards[0],
-  });
+  await testDialog(
+    EDIT_CREDIT_CARD_DIALOG_URL,
+    win => {
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_RIGHT", {}, win);
+      EventUtils.synthesizeKey("test", {}, win);
+      win.document.querySelector("#save").click();
+    },
+    {
+      record: creditCards[0],
+    }
+  );
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 
   is(creditCards.length, 1, "only one credit card is in storage");
-  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD_1["cc-name"] + "test", "cc name changed");
+  is(
+    creditCards[0]["cc-name"],
+    TEST_CREDIT_CARD_1["cc-name"] + "test",
+    "cc name changed"
+  );
   await removeCreditCards([creditCards[0].guid]);
 
   creditCards = await getCreditCards();
@@ -161,26 +196,40 @@ add_task(async function test_editCreditCardWithMissingBillingAddress() {
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "one credit card in storage");
-  is(creditCards[0].billingAddressGUID, TEST_CREDIT_CARD.billingAddressGUID,
-     "Check saved billingAddressGUID");
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_RIGHT", {}, win);
-    EventUtils.synthesizeKey("test", {}, win);
-    win.document.querySelector("#save").click();
-  }, {
-    record: creditCards[0],
-  });
+  is(
+    creditCards[0].billingAddressGUID,
+    TEST_CREDIT_CARD.billingAddressGUID,
+    "Check saved billingAddressGUID"
+  );
+  await testDialog(
+    EDIT_CREDIT_CARD_DIALOG_URL,
+    win => {
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_RIGHT", {}, win);
+      EventUtils.synthesizeKey("test", {}, win);
+      win.document.querySelector("#save").click();
+    },
+    {
+      record: creditCards[0],
+    }
+  );
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 
   is(creditCards.length, 1, "only one credit card is in storage");
-  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD["cc-name"] + "test", "cc name changed");
-  is(creditCards[0].billingAddressGUID, undefined,
-     "unknown GUID removed upon manual save");
+  is(
+    creditCards[0]["cc-name"],
+    TEST_CREDIT_CARD["cc-name"] + "test",
+    "cc name changed"
+  );
+  is(
+    creditCards[0].billingAddressGUID,
+    undefined,
+    "unknown GUID removed upon manual save"
+  );
   await removeCreditCards([creditCards[0].guid]);
 
   creditCards = await getCreditCards();
@@ -188,8 +237,9 @@ add_task(async function test_editCreditCardWithMissingBillingAddress() {
 });
 
 add_task(async function test_addInvalidCreditCard() {
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
-    const unloadHandler = () => ok(false, "Edit credit card dialog shouldn't be closed");
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
+    const unloadHandler = () =>
+      ok(false, "Edit credit card dialog shouldn't be closed");
     win.addEventListener("unload", unloadHandler);
 
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -199,10 +249,20 @@ add_task(async function test_addInvalidCreditCard() {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("test name", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeMouseAtCenter(win.document.querySelector("#save"), {}, win);
+    EventUtils.synthesizeMouseAtCenter(
+      win.document.querySelector("#save"),
+      {},
+      win
+    );
 
-    is(win.document.querySelector("form").checkValidity(), false, "cc-number is invalid");
-    SimpleTest.requestFlakyTimeout("Ensure the window remains open after save attempt");
+    is(
+      win.document.querySelector("form").checkValidity(),
+      false,
+      "cc-number is invalid"
+    );
+    SimpleTest.requestFlakyTimeout(
+      "Ensure the window remains open after save attempt"
+    );
     setTimeout(() => {
       win.removeEventListener("unload", unloadHandler);
       info("closing");
@@ -223,26 +283,40 @@ add_task(async function test_editCardWithInvalidNetwork() {
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "one credit card in storage");
-  is(creditCards[0]["cc-type"], TEST_CREDIT_CARD["cc-type"],
-     "Check saved cc-type");
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_TAB", {}, win);
-    EventUtils.synthesizeKey("VK_RIGHT", {}, win);
-    EventUtils.synthesizeKey("test", {}, win);
-    win.document.querySelector("#save").click();
-  }, {
-    record: creditCards[0],
-  });
+  is(
+    creditCards[0]["cc-type"],
+    TEST_CREDIT_CARD["cc-type"],
+    "Check saved cc-type"
+  );
+  await testDialog(
+    EDIT_CREDIT_CARD_DIALOG_URL,
+    win => {
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_RIGHT", {}, win);
+      EventUtils.synthesizeKey("test", {}, win);
+      win.document.querySelector("#save").click();
+    },
+    {
+      record: creditCards[0],
+    }
+  );
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 
   is(creditCards.length, 1, "only one credit card is in storage");
-  is(creditCards[0]["cc-name"], TEST_CREDIT_CARD["cc-name"] + "test", "cc name changed");
-  is(creditCards[0]["cc-type"], undefined,
-     "unknown cc-type removed upon manual save");
+  is(
+    creditCards[0]["cc-name"],
+    TEST_CREDIT_CARD["cc-name"] + "test",
+    "cc name changed"
+  );
+  is(
+    creditCards[0]["cc-type"],
+    undefined,
+    "unknown cc-type removed upon manual save"
+  );
   await removeCreditCards([creditCards[0].guid]);
 
   creditCards = await getCreditCards();
@@ -265,30 +339,52 @@ add_task(async function test_editInvalidCreditCardNumber() {
   // Directly use FormAutofillStorage so we can set
   // sourceSync: true, since saveCreditCard uses FormAutofillParent
   // which doesn't expose this option.
-  let {formAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
+  let { formAutofillStorage } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillStorage.jsm"
+  );
   await formAutofillStorage.initialize();
   // Use `sourceSync: true` to bypass field normalization which will
   // fail due to the invalid credit card number.
-  await formAutofillStorage.creditCards.add(TEST_CREDIT_CARD, {sourceSync: true});
+  await formAutofillStorage.creditCards.add(TEST_CREDIT_CARD, {
+    sourceSync: true,
+  });
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "only one credit card is in storage");
-  is(creditCards[0]["cc-number"], "*********", "invalid credit card number stored");
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, (win) => {
-    is(win.document.querySelector("#cc-number").value,
-       INVALID_CREDIT_CARD_NUMBER,
-       "cc-number field should be showing invalid credit card number");
-    is(win.document.querySelector("#cc-number").checkValidity(), false, "cc-number is invalid");
-    win.document.querySelector("#cancel").click();
-  }, {
-    record: creditCards[0],
-    skipDecryption: true,
-  });
+  is(
+    creditCards[0]["cc-number"],
+    "*********",
+    "invalid credit card number stored"
+  );
+  await testDialog(
+    EDIT_CREDIT_CARD_DIALOG_URL,
+    win => {
+      is(
+        win.document.querySelector("#cc-number").value,
+        INVALID_CREDIT_CARD_NUMBER,
+        "cc-number field should be showing invalid credit card number"
+      );
+      is(
+        win.document.querySelector("#cc-number").checkValidity(),
+        false,
+        "cc-number is invalid"
+      );
+      win.document.querySelector("#cancel").click();
+    },
+    {
+      record: creditCards[0],
+      skipDecryption: true,
+    }
+  );
   ok(true, "Edit credit card dialog is closed");
   creditCards = await getCreditCards();
 
   is(creditCards.length, 1, "only one credit card is in storage");
-  is(creditCards[0]["cc-number"], "*********", "invalid cc number still in record");
+  is(
+    creditCards[0]["cc-number"],
+    "*********",
+    "invalid cc number still in record"
+  );
   await removeCreditCards([creditCards[0].guid]);
   await removeAddresses([addresses[0].guid]);
 

@@ -12,13 +12,36 @@ const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
-const MANAGE_ADDRESSES_KEYWORDS = ["manageAddressesTitle", "addNewAddressTitle"];
-const EDIT_ADDRESS_KEYWORDS = [
-  "givenName", "additionalName", "familyName", "organization2", "streetAddress",
-  "state", "province", "city", "country", "zip", "postalCode", "email", "tel",
+const MANAGE_ADDRESSES_KEYWORDS = [
+  "manageAddressesTitle",
+  "addNewAddressTitle",
 ];
-const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle"];
-const EDIT_CREDITCARD_KEYWORDS = ["cardNumber", "nameOnCard", "cardExpiresMonth", "cardExpiresYear", "cardNetwork"];
+const EDIT_ADDRESS_KEYWORDS = [
+  "givenName",
+  "additionalName",
+  "familyName",
+  "organization2",
+  "streetAddress",
+  "state",
+  "province",
+  "city",
+  "country",
+  "zip",
+  "postalCode",
+  "email",
+  "tel",
+];
+const MANAGE_CREDITCARDS_KEYWORDS = [
+  "manageCreditCardsTitle",
+  "addNewCreditCardTitle",
+];
+const EDIT_CREDITCARD_KEYWORDS = [
+  "cardNumber",
+  "nameOnCard",
+  "cardExpiresMonth",
+  "cardExpiresYear",
+  "cardNetwork",
+];
 const FIELD_STATES = {
   NORMAL: "NORMAL",
   AUTO_FILLED: "AUTO_FILLED",
@@ -33,11 +56,18 @@ const SECTION_TYPES = {
 // attacks that fill the user's hard drive(s).
 const MAX_FIELD_VALUE_LENGTH = 200;
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {FormAutofill} = ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
-ChromeUtils.defineModuleGetter(this, "CreditCard",
-  "resource://gre/modules/CreditCard.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FormAutofill } = ChromeUtils.import(
+  "resource://formautofill/FormAutofill.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "CreditCard",
+  "resource://gre/modules/CreditCard.jsm"
+);
 
 let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
@@ -63,7 +93,9 @@ let AddressDataLoader = {
 
     try {
       sandbox = FormAutofillUtils.loadDataFromScript(path + ADDRESS_REFERENCES);
-      extSandbox = FormAutofillUtils.loadDataFromScript(path + ADDRESS_REFERENCES_EXT);
+      extSandbox = FormAutofillUtils.loadDataFromScript(
+        path + ADDRESS_REFERENCES_EXT
+      );
     } catch (e) {
       // Will return only address references if extension loading failed or empty sandbox if
       // address references loading failed.
@@ -94,7 +126,13 @@ let AddressDataLoader = {
       return null;
     }
 
-    const properties = ["languages", "sub_keys", "sub_isoids", "sub_names", "sub_lnames"];
+    const properties = [
+      "languages",
+      "sub_keys",
+      "sub_isoids",
+      "sub_names",
+      "sub_lnames",
+    ];
     for (let key of properties) {
       if (!data[key]) {
         continue;
@@ -135,8 +173,10 @@ let AddressDataLoader = {
     // If level1 is set, load addressReferences under country folder with specific
     // country/level 1 for level 2 information.
     if (!this._dataLoaded.level1.has(country)) {
-      Object.assign(this._addressData,
-                    this._loadScripts(`${ADDRESS_METADATA_PATH}${country}/`).addressData);
+      Object.assign(
+        this._addressData,
+        this._loadScripts(`${ADDRESS_METADATA_PATH}${country}/`).addressData
+      );
       this._dataLoaded.level1.add(country);
     }
     return this._parse(this._addressData[`data/${country}/${level1}`]);
@@ -160,14 +200,18 @@ let AddressDataLoader = {
     //      in Bug 1421886
     if (countryData.languages) {
       let list = countryData.languages.filter(key => key !== countryData.lang);
-      locales = list.map(key => this._parse(this._addressData[`${defaultLocale.id}--${key}`]));
+      locales = list.map(key =>
+        this._parse(this._addressData[`${defaultLocale.id}--${key}`])
+      );
     }
-    return {defaultLocale, locales};
+    return { defaultLocale, locales };
   },
 };
 
 this.FormAutofillUtils = {
-  get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
+  get AUTOFILL_FIELDS_THRESHOLD() {
+    return 3;
+  },
 
   ADDRESSES_COLLECTION_NAME,
   CREDITCARDS_COLLECTION_NAME,
@@ -180,11 +224,11 @@ this.FormAutofillUtils = {
   SECTION_TYPES,
 
   _fieldNameInfo: {
-    "name": "name",
+    name: "name",
     "given-name": "name",
     "additional-name": "name",
     "family-name": "name",
-    "organization": "organization",
+    organization: "organization",
     "street-address": "address",
     "address-line1": "address",
     "address-line2": "address",
@@ -192,9 +236,9 @@ this.FormAutofillUtils = {
     "address-level1": "address",
     "address-level2": "address",
     "postal-code": "address",
-    "country": "address",
+    country: "address",
     "country-name": "address",
-    "tel": "tel",
+    tel: "tel",
     "tel-country-code": "tel",
     "tel-national": "tel",
     "tel-area-code": "tel",
@@ -202,7 +246,7 @@ this.FormAutofillUtils = {
     "tel-local-prefix": "tel",
     "tel-local-suffix": "tel",
     "tel-extension": "tel",
-    "email": "email",
+    email: "email",
     "cc-name": "creditCard",
     "cc-given-name": "creditCard",
     "cc-additional-name": "creditCard",
@@ -218,7 +262,9 @@ this.FormAutofillUtils = {
   _reAlternativeCountryNames: {},
 
   isAddressField(fieldName) {
-    return !!this._fieldNameInfo[fieldName] && !this.isCreditCardField(fieldName);
+    return (
+      !!this._fieldNameInfo[fieldName] && !this.isCreditCardField(fieldName)
+    );
   },
 
   isCreditCardField(fieldName) {
@@ -273,18 +319,18 @@ this.FormAutofillUtils = {
     //       ProfileAutoCompleteResult.jsm and reuse it here.
     let fieldOrder = [
       "name",
-      "-moz-street-address-one-line",  // Street address
-      "address-level3",  // Townland / Neighborhood / Village
-      "address-level2",  // City/Town
-      "organization",    // Company or organization name
-      "address-level1",  // Province/State (Standardized code if possible)
-      "country-name",    // Country name
-      "postal-code",     // Postal code
-      "tel",             // Phone number
-      "email",           // Email address
+      "-moz-street-address-one-line", // Street address
+      "address-level3", // Townland / Neighborhood / Village
+      "address-level2", // City/Town
+      "organization", // Company or organization name
+      "address-level1", // Province/State (Standardized code if possible)
+      "country-name", // Country name
+      "postal-code", // Postal code
+      "tel", // Phone number
+      "email", // Email address
     ];
 
-    address = {...address};
+    address = { ...address };
     let parts = [];
     if (addressFields) {
       let requiredFields = addressFields.trim().split(/\s+/);
@@ -320,9 +366,7 @@ this.FormAutofillUtils = {
     if (!Array.isArray(array)) {
       return [];
     }
-    return array
-      .map(s => s ? s.trim() : "")
-      .filter(s => s);
+    return array.map(s => (s ? s.trim() : "")).filter(s => s);
   },
 
   /**
@@ -345,8 +389,12 @@ this.FormAutofillUtils = {
    * @returns {boolean} True if the addresses are equal, false otherwise
    */
   compareStreetAddress(a, b, collators, delimiter = "\n") {
-    let oneLineA = this._toStreetAddressParts(a, delimiter).map(p => p.replace(/\s/g, "")).join("");
-    let oneLineB = this._toStreetAddressParts(b, delimiter).map(p => p.replace(/\s/g, "")).join("");
+    let oneLineA = this._toStreetAddressParts(a, delimiter)
+      .map(p => p.replace(/\s/g, ""))
+      .join("");
+    let oneLineB = this._toStreetAddressParts(b, delimiter)
+      .map(p => p.replace(/\s/g, ""))
+      .join("");
     return this.strCompare(oneLineA, oneLineB, collators);
   },
 
@@ -365,7 +413,11 @@ this.FormAutofillUtils = {
       } else if (address["tel-local"]) {
         address.tel = telCountryCode + telAreaCode + address["tel-local"];
       } else if (address["tel-local-prefix"] && address["tel-local-suffix"]) {
-        address.tel = telCountryCode + telAreaCode + address["tel-local-prefix"] + address["tel-local-suffix"];
+        address.tel =
+          telCountryCode +
+          telAreaCode +
+          address["tel-local-prefix"] +
+          address["tel-local-suffix"];
       }
     }
 
@@ -413,7 +465,10 @@ this.FormAutofillUtils = {
    *          locales. We need to return a default country metadata for layout format
    *          and collator, but for sub-region metadata we'll just return null if not found.
    */
-  getCountryAddressRawData(country = FormAutofill.DEFAULT_REGION, level1 = null) {
+  getCountryAddressRawData(
+    country = FormAutofill.DEFAULT_REGION,
+    level1 = null
+  ) {
     let metadata = AddressDataLoader.getData(country, level1);
     if (!metadata) {
       if (level1) {
@@ -481,7 +536,9 @@ this.FormAutofillUtils = {
         sensitivity: "base",
         usage: "search",
       };
-      this._collators[country] = languages.map(lang => new Intl.Collator(lang, options));
+      this._collators[country] = languages.map(
+        lang => new Intl.Collator(lang, options)
+      );
     }
     return this._collators[country];
   },
@@ -532,7 +589,7 @@ this.FormAutofillUtils = {
         }
         return parsed;
       }
-      return parsed.concat({fieldId});
+      return parsed.concat({ fieldId });
     }, []);
   },
 
@@ -549,10 +606,13 @@ this.FormAutofillUtils = {
    */
   buildRegionMapIfAvailable(subKeys, subIsoids, subNames, subLnames) {
     // Not all regions have sub_keys. e.g. DE
-    if (!subKeys || !subKeys.length ||
-        (!subNames && !subLnames) ||
-        (subNames && subKeys.length != subNames.length ||
-         subLnames && subKeys.length != subLnames.length)) {
+    if (
+      !subKeys ||
+      !subKeys.length ||
+      (!subNames && !subLnames) ||
+      ((subNames && subKeys.length != subNames.length) ||
+        (subLnames && subKeys.length != subLnames.length))
+    ) {
       return null;
     }
 
@@ -596,7 +656,9 @@ this.FormAutofillUtils = {
    * @returns {string} The matching country code.
    */
   identifyCountryCode(countryName, countrySpecified) {
-    let countries = countrySpecified ? [countrySpecified] : [...FormAutofill.countries.keys()];
+    let countries = countrySpecified
+      ? [countrySpecified]
+      : [...FormAutofill.countries.keys()];
 
     for (let country of countries) {
       let collators = this.getSearchCollators(country);
@@ -610,20 +672,30 @@ this.FormAutofillUtils = {
           name: FormAutofill.countries.get(country),
         };
       }
-      let alternativeCountryNames = metadata.alternative_names || [metadata.name];
+      let alternativeCountryNames = metadata.alternative_names || [
+        metadata.name,
+      ];
       let reAlternativeCountryNames = this._reAlternativeCountryNames[country];
       if (!reAlternativeCountryNames) {
-        reAlternativeCountryNames = this._reAlternativeCountryNames[country] = [];
+        reAlternativeCountryNames = this._reAlternativeCountryNames[
+          country
+        ] = [];
       }
 
       for (let i = 0; i < alternativeCountryNames.length; i++) {
         let name = alternativeCountryNames[i];
         let reName = reAlternativeCountryNames[i];
         if (!reName) {
-          reName = reAlternativeCountryNames[i] = new RegExp("\\b" + this.escapeRegExp(name) + "\\b", "i");
+          reName = reAlternativeCountryNames[i] = new RegExp(
+            "\\b" + this.escapeRegExp(name) + "\\b",
+            "i"
+          );
         }
 
-        if (this.strCompare(name, countryName, collators) || reName.test(countryName)) {
+        if (
+          this.strCompare(name, countryName, collators) ||
+          reName.test(countryName)
+        ) {
           return country;
         }
       }
@@ -649,11 +721,17 @@ this.FormAutofillUtils = {
    * @returns {string} The matching sub-region abbreviation.
    */
   getAbbreviatedSubregionName(subregionValues, country) {
-    let values = Array.isArray(subregionValues) ? subregionValues : [subregionValues];
+    let values = Array.isArray(subregionValues)
+      ? subregionValues
+      : [subregionValues];
 
     let collators = this.getSearchCollators(country);
     for (let metadata of this.getCountryAddressDataWithLocales(country)) {
-      let {sub_keys: subKeys, sub_names: subNames, sub_lnames: subLnames} = metadata;
+      let {
+        sub_keys: subKeys,
+        sub_names: subNames,
+        sub_lnames: subLnames,
+      } = metadata;
       if (!subKeys) {
         // Not all regions have sub_keys. e.g. DE
         continue;
@@ -663,18 +741,27 @@ this.FormAutofillUtils = {
 
       let speculatedSubIndexes = [];
       for (const val of values) {
-        let identifiedValue = this.identifyValue(subKeys, subNames, val, collators);
+        let identifiedValue = this.identifyValue(
+          subKeys,
+          subNames,
+          val,
+          collators
+        );
         if (identifiedValue) {
           return identifiedValue;
         }
 
         // Predict the possible state by partial-matching if no exact match.
         [subKeys, subNames].forEach(sub => {
-          speculatedSubIndexes.push(sub.findIndex(token => {
-            let pattern = new RegExp("\\b" + this.escapeRegExp(token) + "\\b");
+          speculatedSubIndexes.push(
+            sub.findIndex(token => {
+              let pattern = new RegExp(
+                "\\b" + this.escapeRegExp(token) + "\\b"
+              );
 
-            return pattern.test(val);
-          }));
+              return pattern.test(val);
+            })
+          );
         });
       }
       let subKey = subKeys[speculatedSubIndexes.find(i => !!~i)];
@@ -705,16 +792,21 @@ this.FormAutofillUtils = {
     let collators = this.getSearchCollators(address.country);
 
     for (let option of selectEl.options) {
-      if (this.strCompare(value, option.value, collators) ||
-          this.strCompare(value, option.text, collators)) {
+      if (
+        this.strCompare(value, option.value, collators) ||
+        this.strCompare(value, option.text, collators)
+      ) {
         return option;
       }
     }
 
     switch (fieldName) {
       case "address-level1": {
-        let {country} = address;
-        let identifiedValue = this.getAbbreviatedSubregionName([value], country);
+        let { country } = address;
+        let identifiedValue = this.getAbbreviatedSubregionName(
+          [value],
+          country
+        );
         // No point going any further if we cannot identify value from address level 1
         if (!identifiedValue) {
           return null;
@@ -730,11 +822,28 @@ this.FormAutofillUtils = {
 
           // Go through options one by one to find a match.
           // Also check if any option contain the address-level1 key.
-          let pattern = new RegExp("\\b" + this.escapeRegExp(identifiedValue) + "\\b", "i");
+          let pattern = new RegExp(
+            "\\b" + this.escapeRegExp(identifiedValue) + "\\b",
+            "i"
+          );
           for (let option of selectEl.options) {
-            let optionValue = this.identifyValue(keys, names, option.value, collators);
-            let optionText = this.identifyValue(keys, names, option.text, collators);
-            if (identifiedValue === optionValue || identifiedValue === optionText || pattern.test(option.value)) {
+            let optionValue = this.identifyValue(
+              keys,
+              names,
+              option.value,
+              collators
+            );
+            let optionText = this.identifyValue(
+              keys,
+              names,
+              option.text,
+              collators
+            );
+            if (
+              identifiedValue === optionValue ||
+              identifiedValue === optionText ||
+              pattern.test(option.value)
+            ) {
               return option;
             }
           }
@@ -744,7 +853,10 @@ this.FormAutofillUtils = {
       case "country": {
         if (this.getCountryAddressData(value).alternative_names) {
           for (let option of selectEl.options) {
-            if (this.identifyCountryCode(option.text, value) || this.identifyCountryCode(option.value, value)) {
+            if (
+              this.identifyCountryCode(option.text, value) ||
+              this.identifyCountryCode(option.value, value)
+            ) {
               return option;
             }
           }
@@ -757,9 +869,13 @@ this.FormAutofillUtils = {
   },
 
   findCreditCardSelectOption(selectEl, creditCard, fieldName) {
-    let oneDigitMonth = creditCard["cc-exp-month"] ? creditCard["cc-exp-month"].toString() : null;
+    let oneDigitMonth = creditCard["cc-exp-month"]
+      ? creditCard["cc-exp-month"].toString()
+      : null;
     let twoDigitsMonth = oneDigitMonth ? oneDigitMonth.padStart(2, "0") : null;
-    let fourDigitsYear = creditCard["cc-exp-year"] ? creditCard["cc-exp-year"].toString() : null;
+    let fourDigitsYear = creditCard["cc-exp-year"]
+      ? creditCard["cc-exp-year"].toString()
+      : null;
     let twoDigitsYear = fourDigitsYear ? fourDigitsYear.substr(2, 2) : null;
     let options = Array.from(selectEl.options);
 
@@ -769,10 +885,12 @@ this.FormAutofillUtils = {
           return null;
         }
         for (let option of options) {
-          if ([option.text, option.label, option.value].some(s => {
-            let result = /[1-9]\d*/.exec(s);
-            return result && result[0] == oneDigitMonth;
-          })) {
+          if (
+            [option.text, option.label, option.value].some(s => {
+              let result = /[1-9]\d*/.exec(s);
+              return result && result[0] == oneDigitMonth;
+            })
+          ) {
             return option;
           }
         }
@@ -783,9 +901,11 @@ this.FormAutofillUtils = {
           return null;
         }
         for (let option of options) {
-          if ([option.text, option.label, option.value].some(
-            s => s == twoDigitsYear || s == fourDigitsYear
-          )) {
+          if (
+            [option.text, option.label, option.value].some(
+              s => s == twoDigitsYear || s == fourDigitsYear
+            )
+          ) {
             return option;
           }
         }
@@ -796,25 +916,27 @@ this.FormAutofillUtils = {
           return null;
         }
         let patterns = [
-          oneDigitMonth + "/" + twoDigitsYear,    // 8/22
-          oneDigitMonth + "/" + fourDigitsYear,   // 8/2022
-          twoDigitsMonth + "/" + twoDigitsYear,   // 08/22
-          twoDigitsMonth + "/" + fourDigitsYear,  // 08/2022
-          oneDigitMonth + "-" + twoDigitsYear,    // 8-22
-          oneDigitMonth + "-" + fourDigitsYear,   // 8-2022
-          twoDigitsMonth + "-" + twoDigitsYear,   // 08-22
-          twoDigitsMonth + "-" + fourDigitsYear,  // 08-2022
-          twoDigitsYear + "-" + twoDigitsMonth,   // 22-08
-          fourDigitsYear + "-" + twoDigitsMonth,  // 2022-08
-          fourDigitsYear + "/" + oneDigitMonth,   // 2022/8
-          twoDigitsMonth + twoDigitsYear,         // 0822
-          twoDigitsYear + twoDigitsMonth,         // 2208
+          oneDigitMonth + "/" + twoDigitsYear, // 8/22
+          oneDigitMonth + "/" + fourDigitsYear, // 8/2022
+          twoDigitsMonth + "/" + twoDigitsYear, // 08/22
+          twoDigitsMonth + "/" + fourDigitsYear, // 08/2022
+          oneDigitMonth + "-" + twoDigitsYear, // 8-22
+          oneDigitMonth + "-" + fourDigitsYear, // 8-2022
+          twoDigitsMonth + "-" + twoDigitsYear, // 08-22
+          twoDigitsMonth + "-" + fourDigitsYear, // 08-2022
+          twoDigitsYear + "-" + twoDigitsMonth, // 22-08
+          fourDigitsYear + "-" + twoDigitsMonth, // 2022-08
+          fourDigitsYear + "/" + oneDigitMonth, // 2022/8
+          twoDigitsMonth + twoDigitsYear, // 0822
+          twoDigitsYear + twoDigitsMonth, // 2208
         ];
 
         for (let option of options) {
-          if ([option.text, option.label, option.value].some(
-            str => patterns.some(pattern => str.includes(pattern))
-          )) {
+          if (
+            [option.text, option.label, option.value].some(str =>
+              patterns.some(pattern => str.includes(pattern))
+            )
+          ) {
             return option;
           }
         }
@@ -823,9 +945,11 @@ this.FormAutofillUtils = {
       case "cc-type": {
         let network = creditCard["cc-type"] || "";
         for (let option of options) {
-          if ([option.text, option.label, option.value].some(
-            s => s.trim().toLowerCase() == network
-          )) {
+          if (
+            [option.text, option.label, option.value].some(
+              s => s.trim().toLowerCase() == network
+            )
+          ) {
             return option;
           }
         }
@@ -850,7 +974,9 @@ this.FormAutofillUtils = {
       return resultKey;
     }
 
-    let index = names.findIndex(name => this.strCompare(value, name, collators));
+    let index = names.findIndex(name =>
+      this.strCompare(value, name, collators)
+    );
     if (index !== -1) {
       return keys[index];
     }
@@ -914,7 +1040,12 @@ this.FormAutofillUtils = {
       addressLevel3Label: dataset.sublocality_name_type || "suburb",
       addressLevel2Label: dataset.locality_name_type || "city",
       addressLevel1Label: dataset.state_name_type || "province",
-      addressLevel1Options: this.buildRegionMapIfAvailable(dataset.sub_keys, dataset.sub_isoids, dataset.sub_names, dataset.sub_lnames),
+      addressLevel1Options: this.buildRegionMapIfAvailable(
+        dataset.sub_keys,
+        dataset.sub_isoids,
+        dataset.sub_names,
+        dataset.sub_lnames
+      ),
       countryRequiredFields: this.parseRequireString(dataset.require || "AC"),
       fieldsOrder: this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C"),
       postalCodeLabel: dataset.zip_name_type || "postalCode",
@@ -930,14 +1061,17 @@ this.FormAutofillUtils = {
   localizeAttributeForElement(element, attributeName) {
     switch (attributeName) {
       case "data-localization": {
-        element.textContent =
-          this.stringBundle.GetStringFromName(element.getAttribute(attributeName));
+        element.textContent = this.stringBundle.GetStringFromName(
+          element.getAttribute(attributeName)
+        );
         element.removeAttribute(attributeName);
         break;
       }
       case "data-localization-region": {
         let regionCode = element.getAttribute(attributeName);
-        element.textContent = Services.intl.getRegionDisplayNames(undefined, [regionCode]);
+        element.textContent = Services.intl.getRegionDisplayNames(undefined, [
+          regionCode,
+        ]);
         element.removeAttribute(attributeName);
         return;
       }
@@ -967,9 +1101,13 @@ this.log = null;
 FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
-  return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
+  return Services.strings.createBundle(
+    "chrome://formautofill/locale/formautofill.properties"
+  );
 });
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function() {
-  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  return Services.strings.createBundle(
+    "chrome://branding/locale/brand.properties"
+  );
 });

@@ -15,10 +15,13 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PdfStreamConverter",
-  "resource://pdf.js/PdfStreamConverter.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "PdfStreamConverter",
+  "resource://pdf.js/PdfStreamConverter.jsm"
+);
 
 // Register/unregister a constructor as a factory.
 function StreamConverterFactory() {

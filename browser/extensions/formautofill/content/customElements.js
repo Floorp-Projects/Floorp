@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-  * License, v. 2.0. If a copy of the MPL was not distributed with this
-  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
@@ -10,7 +10,9 @@
 
 // Wrap in a block to prevent leaking to window scope.
 (() => {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
 
   class MozAutocompleteProfileListitemBase extends MozElements.MozRichlistitem {
     constructor() {
@@ -28,8 +30,8 @@
     get _stringBundle() {
       if (!this.__stringBundle) {
         this.__stringBundle = Services.strings.createBundle(
-        "chrome://formautofill/locale/formautofill.properties"
-      );
+          "chrome://formautofill/locale/formautofill.properties"
+        );
       }
       return this.__stringBundle;
     }
@@ -50,11 +52,11 @@
     _adjustAutofillItemLayout() {
       let outerBoxRect = this.parentNode.getBoundingClientRect();
 
-    // Make item fit in popup as XUL box could not constrain
-    // item's width
+      // Make item fit in popup as XUL box could not constrain
+      // item's width
       this._itemBox.style.width = outerBoxRect.width + "px";
-    // Use two-lines layout when width is smaller than 150px or
-    // 185px if an image precedes the label.
+      // Use two-lines layout when width is smaller than 150px or
+      // 185px if an image precedes the label.
       let oneLineMinRequiredWidth = this.getAttribute("ac-image") ? 185 : 150;
 
       if (outerBoxRect.width <= oneLineMinRequiredWidth) {
@@ -73,7 +75,8 @@
 
       this.textContent = "";
 
-      this.appendChild(MozXULElement.parseXULToFragment(`
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box">
           <div class="profile-label-col profile-item-col">
             <span class="profile-label-affix"></span>
@@ -83,7 +86,8 @@
             <span class="profile-comment"></span>
           </div>
         </div>
-      `));
+      `)
+      );
 
       this._itemBox = this.querySelector(".autofill-item-box");
       this._labelAffix = this.querySelector(".profile-label-affix");
@@ -107,8 +111,9 @@
         this.removeAttribute("selected");
       }
 
-      let {AutoCompletePopup} =
-        ChromeUtils.import("resource://gre/modules/AutoCompletePopup.jsm");
+      let { AutoCompletePopup } = ChromeUtils.import(
+        "resource://gre/modules/AutoCompletePopup.jsm"
+      );
       AutoCompletePopup.sendMessageToBrowser("FormAutofill:PreviewProfile");
 
       return val;
@@ -121,9 +126,14 @@
     _adjustAcItem() {
       this._adjustAutofillItemLayout();
       this.setAttribute("formautofillattached", "true");
-      this._itemBox.style.setProperty("--primary-icon", `url(${this.getAttribute("ac-image")})`);
+      this._itemBox.style.setProperty(
+        "--primary-icon",
+        `url(${this.getAttribute("ac-image")})`
+      );
 
-      let {primaryAffix, primary, secondary} = JSON.parse(this.getAttribute("ac-value"));
+      let { primaryAffix, primary, secondary } = JSON.parse(
+        this.getAttribute("ac-value")
+      );
 
       this._labelAffix.textContent = primaryAffix;
       this._label.textContent = primary;
@@ -134,14 +144,14 @@
   customElements.define(
     "autocomplete-profile-listitem",
     MozElements.MozAutocompleteProfileListitem,
-    {extends: "richlistitem"}
+    { extends: "richlistitem" }
   );
 
   class MozAutocompleteProfileListitemFooter extends MozAutocompleteProfileListitemBase {
     constructor() {
       super();
 
-      this.addEventListener("click", (event) => {
+      this.addEventListener("click", event => {
         if (event.button != 0) {
           return;
         }
@@ -160,12 +170,14 @@
       }
 
       this.textContent = "";
-      this.appendChild(MozXULElement.parseXULToFragment(`
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
           <div class="autofill-footer-row autofill-warning"></div>
           <div class="autofill-footer-row autofill-button"></div>
         </div>
-      `));
+      `)
+      );
 
       this._itemBox = this.querySelector(".autofill-footer");
       this._optionButton = this.querySelector(".autofill-button");
@@ -185,28 +197,49 @@
        * @param {string[]} data.categories
        *        The categories of all the fields contained in the selected address.
        */
-      this._updateWarningNote = ({data} = {}) => {
-        let categories = (data && data.categories) ? data.categories : this._allFieldCategories;
+      this._updateWarningNote = ({ data } = {}) => {
+        let categories =
+          data && data.categories ? data.categories : this._allFieldCategories;
         // If the length of categories is 1, that means all the fillable fields are in the same
         // category. We will change the way to inform user according to this flag. When the value
         // is true, we show "Also autofills ...", otherwise, show "Autofills ..." only.
         let hasExtraCategories = categories.length > 1;
         // Show the categories in certain order to conform with the spec.
-        let orderedCategoryList = [{id: "address", l10nId: "category.address"},
-          {id: "name", l10nId: "category.name"},
-          {id: "organization", l10nId: "category.organization2"},
-          {id: "tel", l10nId: "category.tel"},
-          {id: "email", l10nId: "category.email"},
+        let orderedCategoryList = [
+          { id: "address", l10nId: "category.address" },
+          { id: "name", l10nId: "category.name" },
+          { id: "organization", l10nId: "category.organization2" },
+          { id: "tel", l10nId: "category.tel" },
+          { id: "email", l10nId: "category.email" },
         ];
-        let showCategories = hasExtraCategories ?
-            orderedCategoryList.filter(category => categories.includes(category.id) && category.id != this._focusedCategory) :
-            [orderedCategoryList.find(category => category.id == this._focusedCategory)];
+        let showCategories = hasExtraCategories
+          ? orderedCategoryList.filter(
+              category =>
+                categories.includes(category.id) &&
+                category.id != this._focusedCategory
+            )
+          : [
+              orderedCategoryList.find(
+                category => category.id == this._focusedCategory
+              ),
+            ];
 
-        let separator = this._stringBundle.GetStringFromName("fieldNameSeparator");
-        let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
-        let categoriesText = showCategories.map(category => this._stringBundle.GetStringFromName(category.l10nId)).join(separator);
+        let separator = this._stringBundle.GetStringFromName(
+          "fieldNameSeparator"
+        );
+        let warningTextTmplKey = hasExtraCategories
+          ? "phishingWarningMessage"
+          : "phishingWarningMessage2";
+        let categoriesText = showCategories
+          .map(category =>
+            this._stringBundle.GetStringFromName(category.l10nId)
+          )
+          .join(separator);
 
-        this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey, [categoriesText]);
+        this._warningTextBox.textContent = this._stringBundle.formatStringFromName(
+          warningTextTmplKey,
+          [categoriesText]
+        );
         this.parentNode.parentNode.adjustHeight();
       };
 
@@ -217,7 +250,8 @@
       /* global messageManager */
       if (this.showWarningText) {
         messageManager.removeMessageListener(
-          "FormAutofill:UpdateWarningMessage", this._updateWarningNote
+          "FormAutofill:UpdateWarningMessage",
+          this._updateWarningNote
         );
       }
       this._itemBox.removeAttribute("no-warning");
@@ -228,12 +262,19 @@
       this._adjustAutofillItemLayout();
       this.setAttribute("formautofillattached", "true");
 
-      let {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
+      let { AppConstants } = ChromeUtils.import(
+        "resource://gre/modules/AppConstants.jsm",
+        {}
+      );
       // TODO: The "Short" suffix is pointless now as normal version string is no longer needed,
       // we should consider removing the suffix if possible when the next time locale change.
-      let buttonTextBundleKey = AppConstants.platform == "macosx" ?
-      "autocompleteFooterOptionOSXShort" : "autocompleteFooterOptionShort";
-      let buttonText = this._stringBundle.GetStringFromName(buttonTextBundleKey);
+      let buttonTextBundleKey =
+        AppConstants.platform == "macosx"
+          ? "autocompleteFooterOptionOSXShort"
+          : "autocompleteFooterOptionShort";
+      let buttonText = this._stringBundle.GetStringFromName(
+        buttonTextBundleKey
+      );
       this._optionButton.textContent = buttonText;
 
       let value = JSON.parse(this.getAttribute("ac-value"));
@@ -243,7 +284,10 @@
       this.showWarningText = this._allFieldCategories && this._focusedCategory;
 
       if (this.showWarningText) {
-        messageManager.addMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningNote);
+        messageManager.addMessageListener(
+          "FormAutofill:UpdateWarningMessage",
+          this._updateWarningNote
+        );
         this._updateWarningNote();
       } else {
         this._itemBox.setAttribute("no-warning", "true");
@@ -254,7 +298,7 @@
   customElements.define(
     "autocomplete-profile-listitem-footer",
     MozAutocompleteProfileListitemFooter,
-    {extends: "richlistitem"}
+    { extends: "richlistitem" }
   );
 
   class MozAutocompleteCreditcardInsecureField extends MozAutocompleteProfileListitemBase {
@@ -263,9 +307,11 @@
         return;
       }
       this.textContent = "";
-      this.appendChild(MozXULElement.parseXULToFragment(`
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-insecure-item"></div>
-      `));
+      `)
+      );
 
       this._itemBox = this.querySelector(".autofill-insecure-item");
 
@@ -273,7 +319,7 @@
     }
 
     set selected(val) {
-    // Make this item unselectable since we see this item as a pure message.
+      // Make this item unselectable since we see this item as a pure message.
       return false;
     }
 
@@ -293,20 +339,21 @@
   customElements.define(
     "autocomplete-creditcard-insecure-field",
     MozAutocompleteCreditcardInsecureField,
-    {extends: "richlistitem"}
+    { extends: "richlistitem" }
   );
 
   class MozAutocompleteProfileListitemClearButton extends MozAutocompleteProfileListitemBase {
     constructor() {
       super();
 
-      this.addEventListener("click", (event) => {
+      this.addEventListener("click", event => {
         if (event.button != 0) {
           return;
         }
 
-        let {AutoCompletePopup} =
-        ChromeUtils.import("resource://gre/modules/AutoCompletePopup.jsm");
+        let { AutoCompletePopup } = ChromeUtils.import(
+          "resource://gre/modules/AutoCompletePopup.jsm"
+        );
         AutoCompletePopup.sendMessageToBrowser("FormAutofill:ClearForm");
       });
     }
@@ -317,11 +364,13 @@
       }
 
       this.textContent = "";
-      this.appendChild(MozXULElement.parseXULToFragment(`
+      this.appendChild(
+        MozXULElement.parseXULToFragment(`
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
           <div class="autofill-footer-row autofill-button"></div>
         </div>
-      `));
+      `)
+      );
 
       this._itemBox = this.querySelector(".autofill-item-box");
       this._clearBtn = this.querySelector(".autofill-button");
@@ -333,8 +382,9 @@
       this._adjustAutofillItemLayout();
       this.setAttribute("formautofillattached", "true");
 
-      let clearFormBtnLabel =
-      this._stringBundle.GetStringFromName("clearFormBtnLabel2");
+      let clearFormBtnLabel = this._stringBundle.GetStringFromName(
+        "clearFormBtnLabel2"
+      );
       this._clearBtn.textContent = clearFormBtnLabel;
     }
   }
@@ -342,6 +392,6 @@
   customElements.define(
     "autocomplete-profile-listitem-clear-button",
     MozAutocompleteProfileListitemClearButton,
-    {extends: "richlistitem"}
+    { extends: "richlistitem" }
   );
 })();
