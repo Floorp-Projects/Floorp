@@ -15,8 +15,15 @@
  */
 function test_download_windowRef(aTab, aDownload) {
   ok(aDownload.source.windowRef, "Download source had a window reference");
-  ok(aDownload.source.windowRef instanceof Ci.xpcIJSWeakReference, "Download window reference is a weak ref");
-  is(aDownload.source.windowRef.get(), aTab.linkedBrowser.contentWindow, "Download window exists during test");
+  ok(
+    aDownload.source.windowRef instanceof Ci.xpcIJSWeakReference,
+    "Download window reference is a weak ref"
+  );
+  is(
+    aDownload.source.windowRef.get(),
+    aTab.linkedBrowser.contentWindow,
+    "Download window exists during test"
+  );
 }
 
 /**
@@ -24,8 +31,16 @@ function test_download_windowRef(aTab, aDownload) {
  */
 function test_download_state_complete(aTab, aDownload, aPrivate, aCanceled) {
   ok(aDownload.source, "Download has a source");
-  is(aDownload.source.url, aTab.linkedBrowser.contentWindow.location, "Download source has correct url");
-  is(aDownload.source.isPrivate, aPrivate, "Download source has correct private state");
+  is(
+    aDownload.source.url,
+    aTab.linkedBrowser.contentWindow.location,
+    "Download source has correct url"
+  );
+  is(
+    aDownload.source.isPrivate,
+    aPrivate,
+    "Download source has correct private state"
+  );
   ok(aDownload.stopped, "Download is stopped");
   is(aCanceled, aDownload.canceled, "Download has correct canceled state");
   is(!aCanceled, aDownload.succeeded, "Download has correct succeeded state");
@@ -33,9 +48,12 @@ function test_download_state_complete(aTab, aDownload, aPrivate, aCanceled) {
 }
 
 async function test_createDownload_common(aPrivate, aType) {
-  let win = await BrowserTestUtils.openNewBrowserWindow({ private: aPrivate});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: aPrivate });
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, getRootDirectory(gTestPath) + "testFile.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    getRootDirectory(gTestPath) + "testFile.html"
+  );
   let download = await Downloads.createDownload({
     source: tab.linkedBrowser.contentWindow,
     target: { path: getTempFile(TEST_TARGET_FILE_NAME_PDF).path },
@@ -47,11 +65,13 @@ async function test_createDownload_common(aPrivate, aType) {
 
   await test_download_state_complete(tab, download, aPrivate, false);
   if (aType == "pdf") {
-    let signature = await OS.File.read(download.target.path,
-                                       { bytes: 4, encoding: "us-ascii" });
+    let signature = await OS.File.read(download.target.path, {
+      bytes: 4,
+      encoding: "us-ascii",
+    });
     is(signature, "%PDF", "File exists and signature matches");
   } else {
-    ok((await OS.File.exists(download.target.path)), "File exists");
+    ok(await OS.File.exists(download.target.path), "File exists");
   }
 
   win.gBrowser.removeTab(tab);
@@ -74,7 +94,10 @@ add_task(async function test_createDownload_copy_not_private() {
 });
 
 add_task(async function test_cancel_pdf_download() {
-  let tab = BrowserTestUtils.addTab(gBrowser, getRootDirectory(gTestPath) + "testFile.html");
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    getRootDirectory(gTestPath) + "testFile.html"
+  );
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   let download = await Downloads.createDownload({

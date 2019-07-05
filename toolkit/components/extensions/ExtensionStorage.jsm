@@ -7,21 +7,31 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionStorage"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
-                               "resource://gre/modules/ExtensionUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionUtils",
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "JSONFile",
+  "resource://gre/modules/JSONFile.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 const global = this;
 
 function isStructuredCloneHolder(value) {
-  return (value && typeof value === "object" &&
-          Cu.getClassName(value, true) === "StructuredCloneHolder");
+  return (
+    value &&
+    typeof value === "object" &&
+    Cu.getClassName(value, true) === "StructuredCloneHolder"
+  );
 }
 
 class SerializeableMap extends Map {
@@ -53,7 +63,9 @@ class SerializeableMap extends Map {
 
         result[key] = value;
       } catch (e) {
-        Cu.reportError(new Error(`Failed to serialize browser.storage key "${key}": ${e}`));
+        Cu.reportError(
+          new Error(`Failed to serialize browser.storage key "${key}": ${e}`)
+        );
       }
     }
     return result;
@@ -101,7 +113,7 @@ var ExtensionStorage = {
       from: OS.Constants.Path.profileDir,
     });
 
-    let jsonFile = new JSONFile({path: this.getStorageFile(extensionId)});
+    let jsonFile = new JSONFile({ path: this.getStorageFile(extensionId) });
     await jsonFile.load();
 
     jsonFile.data = this._serializableMap(jsonFile.data);
@@ -159,11 +171,12 @@ var ExtensionStorage = {
   sanitize(value, context) {
     let json = context.jsonStringify(value === undefined ? null : value);
     if (json == undefined) {
-      throw new ExtensionUtils.ExtensionError("DataCloneError: The object could not be cloned.");
+      throw new ExtensionUtils.ExtensionError(
+        "DataCloneError: The object could not be cloned."
+      );
     }
     return JSON.parse(json);
   },
-
 
   /**
    * Returns the path to the storage directory within the profile for
@@ -208,7 +221,10 @@ var ExtensionStorage = {
     let changes = {};
     for (let prop in items) {
       let item = items[prop];
-      changes[prop] = {oldValue: serialize(jsonFile.data.get(prop)), newValue: serialize(item)};
+      changes[prop] = {
+        oldValue: serialize(jsonFile.data.get(prop)),
+        newValue: serialize(item),
+      };
       jsonFile.data.set(prop, item);
     }
 
@@ -236,7 +252,7 @@ var ExtensionStorage = {
 
     for (let prop of [].concat(items)) {
       if (jsonFile.data.has(prop)) {
-        changes[prop] = {oldValue: serialize(jsonFile.data.get(prop))};
+        changes[prop] = { oldValue: serialize(jsonFile.data.get(prop)) };
         jsonFile.data.delete(prop);
         changed = true;
       }
@@ -261,7 +277,7 @@ var ExtensionStorage = {
    *         used when the extension data is being cleared on uninstall.
    * @returns {Promise<void>}
    */
-  async clear(extensionId, {shouldNotifyListeners = true} = {}) {
+  async clear(extensionId, { shouldNotifyListeners = true } = {}) {
     let jsonFile = await this.getFile(extensionId);
 
     let changed = false;
@@ -269,7 +285,7 @@ var ExtensionStorage = {
 
     for (let [prop, oldValue] of jsonFile.data.entries()) {
       if (shouldNotifyListeners) {
-        changes[prop] = {oldValue: serialize(oldValue)};
+        changes[prop] = { oldValue: serialize(oldValue) };
       }
 
       jsonFile.data.delete(prop);
@@ -313,7 +329,7 @@ var ExtensionStorage = {
     let result = {};
     if (keys === null) {
       Object.assign(result, data.toJSON());
-    } else if (typeof(keys) == "object" && !Array.isArray(keys)) {
+    } else if (typeof keys == "object" && !Array.isArray(keys)) {
       for (let prop in keys) {
         if (data.has(prop)) {
           result[prop] = serialize(data.get(prop));
@@ -366,7 +382,9 @@ var ExtensionStorage = {
       Services.obs.removeObserver(this, "xpcom-shutdown");
     } else if (topic == "extension-invalidate-storage-cache") {
       for (let promise of this.jsonFilePromises.values()) {
-        promise.then(jsonFile => { jsonFile.finalize(); });
+        promise.then(jsonFile => {
+          jsonFile.finalize();
+        });
       }
       this.jsonFilePromises.clear();
     }
@@ -417,8 +435,11 @@ var ExtensionStorage = {
   deserializeForContext(context, items) {
     let result = new context.cloneScope.Object();
     for (let [key, value] of Object.entries(items)) {
-      if (value && typeof value === "object" &&
-          Cu.getClassName(value, true) === "StructuredCloneHolder") {
+      if (
+        value &&
+        typeof value === "object" &&
+        Cu.getClassName(value, true) === "StructuredCloneHolder"
+      ) {
         value = value.deserialize(context.cloneScope, true);
       } else {
         value = Cu.cloneInto(value, context.cloneScope);
@@ -429,8 +450,8 @@ var ExtensionStorage = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(
-  ExtensionStorage, "extensionDir",
-  () => OS.Path.join(OS.Constants.Path.profileDir, "browser-extension-data"));
+XPCOMUtils.defineLazyGetter(ExtensionStorage, "extensionDir", () =>
+  OS.Path.join(OS.Constants.Path.profileDir, "browser-extension-data")
+);
 
 ExtensionStorage.init();

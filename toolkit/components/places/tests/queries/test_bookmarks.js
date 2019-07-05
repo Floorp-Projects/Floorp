@@ -6,20 +6,21 @@ add_task(async function test_eraseEverything() {
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [
-      { title: "remove-folder",
+      {
+        title: "remove-folder",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         children: [
           { url: "http://mozilla.org/", title: "title 1" },
           { url: "http://mozilla.org/", title: "title 2" },
-          { title: "sub-folder",
-            type: PlacesUtils.bookmarks.TYPE_FOLDER },
+          { title: "sub-folder", type: PlacesUtils.bookmarks.TYPE_FOLDER },
           { type: PlacesUtils.bookmarks.TYPE_SEPARATOR },
         ],
       },
     ],
   });
 
-  let unfiled = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
+  let unfiled = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
+    .root;
   Assert.equal(unfiled.childCount, 1, "There should be 1 folder");
   let folder = unfiled.getChild(0);
   // Test dateAdded and lastModified properties.
@@ -77,7 +78,8 @@ add_task(async function test_long_title() {
     url: "http://mozilla.org/",
     title,
   });
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
+    .root;
   root.containerOpen = true;
   Assert.equal(root.childCount, 1);
   let node = root.getChild(0);

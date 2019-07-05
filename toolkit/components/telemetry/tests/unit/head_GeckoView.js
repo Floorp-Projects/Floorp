@@ -9,8 +9,9 @@ ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 const Telemetry = Services.telemetry;
-const TelemetryGeckoView = Cc["@mozilla.org/telemetry/geckoview-testing;1"]
-                             .createInstance(Ci.nsITelemetryGeckoViewTesting);
+const TelemetryGeckoView = Cc[
+  "@mozilla.org/telemetry/geckoview-testing;1"
+].createInstance(Ci.nsITelemetryGeckoViewTesting);
 
 /**
  * Run a file in the content process.
@@ -37,7 +38,10 @@ async function run_in_child(aFileName) {
 function waitGeckoViewLoadComplete() {
   return new Promise(resolve => {
     Services.obs.addObserver(function observe() {
-      Services.obs.removeObserver(observe, "internal-telemetry-geckoview-load-complete");
+      Services.obs.removeObserver(
+        observe,
+        "internal-telemetry-geckoview-load-complete"
+      );
       resolve();
     }, "internal-telemetry-geckoview-load-complete");
   });
@@ -50,14 +54,17 @@ function waitGeckoViewLoadComplete() {
  * @param aProcessName - The name of the process to look in.
  * @param aKeyed - Whether or not to look in keyed snapshots.
  */
-async function waitForHistogramSnapshotData(aHistogramName, aProcessName, aKeyed) {
+async function waitForHistogramSnapshotData(
+  aHistogramName,
+  aProcessName,
+  aKeyed
+) {
   await ContentTaskUtils.waitForCondition(() => {
     const data = aKeyed
       ? Telemetry.getSnapshotForKeyedHistograms("main", false)
       : Telemetry.getSnapshotForHistograms("main", false);
 
-    return (aProcessName in data)
-           && (aHistogramName in data[aProcessName]);
+    return aProcessName in data && aHistogramName in data[aProcessName];
   });
 }
 
@@ -74,11 +81,13 @@ async function waitForScalarSnapshotData(aScalarName, aProcessName, aKeyed) {
       ? Telemetry.getSnapshotForKeyedScalars("main", false)
       : Telemetry.getSnapshotForScalars("main", false);
 
-    return (aProcessName in data)
-           && (aScalarName in data[aProcessName]);
+    return aProcessName in data && aScalarName in data[aProcessName];
   });
 }
 
 if (runningInParent) {
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.OverridePreRelease,
+    true
+  );
 }

@@ -15,14 +15,21 @@ add_task(async function test_remove_many() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   info("Adding a witness page");
-  let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
+  let WITNESS_URI = NetUtil.newURI(
+    "http://mozilla.com/test_browserhistory/test_remove/" + Math.random()
+  );
   await PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI), "Witness page added");
 
   info("Generating samples");
   let pages = [];
   for (let i = 0; i < SIZE; ++i) {
-    let uri = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove?sample=" + i + "&salt=" + Math.random());
+    let uri = NetUtil.newURI(
+      "http://mozilla.com/test_browserhistory/test_remove?sample=" +
+        i +
+        "&salt=" +
+        Math.random()
+    );
     let title = "Visit " + i + ", " + Math.random();
     let hasBookmark = i % 3 == 0;
     let page = {
@@ -89,23 +96,38 @@ add_task(async function test_remove_many() {
     onFrecencyChanged(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
-      Assert.ok(origin.hasBookmark, "Observing onFrecencyChanged on a page with a bookmark");
+      Assert.ok(
+        origin.hasBookmark,
+        "Observing onFrecencyChanged on a page with a bookmark"
+      );
       origin.onFrecencyChangedCalled = true;
     },
     onManyFrecenciesChanged() {
-      Assert.ok(false, "Observing onManyFrecenciesChanges, this is most likely correct but not covered by this test");
+      Assert.ok(
+        false,
+        "Observing onManyFrecenciesChanges, this is most likely correct but not covered by this test"
+      );
     },
     onDeleteURI(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
-      Assert.ok(!origin.hasBookmark, "Observing onDeleteURI on a page without a bookmark");
-      Assert.ok(!origin.onDeleteURICalled, "Observing onDeleteURI for the first time");
+      Assert.ok(
+        !origin.hasBookmark,
+        "Observing onDeleteURI on a page without a bookmark"
+      );
+      Assert.ok(
+        !origin.onDeleteURICalled,
+        "Observing onDeleteURI for the first time"
+      );
       origin.onDeleteURICalled = true;
     },
     onDeleteVisits(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
-      Assert.ok(!origin.onDeleteVisitsCalled, "Observing onDeleteVisits for the first time");
+      Assert.ok(
+        !origin.onDeleteVisitsCalled,
+        "Observing onDeleteVisits for the first time"
+      );
       origin.onDeleteVisitsCalled = true;
     },
   };
@@ -131,15 +153,40 @@ add_task(async function test_remove_many() {
   // By now the observers should have been called.
   for (let i = 0; i < pages.length; ++i) {
     let page = pages[i];
-    Assert.ok(page.onResultCalled, `We have reached the page #${i} from the callback`);
-    Assert.ok(visits_in_database(page.uri) == 0, "History entry has disappeared");
-    Assert.equal(page_in_database(page.uri) != 0, page.hasBookmark, "Page is present only if it also has bookmarks");
-    Assert.equal(page.onFrecencyChangedCalled, page.onDeleteVisitsCalled, "onDeleteVisits was called iff onFrecencyChanged was called");
-    Assert.ok(page.onFrecencyChangedCalled ^ page.onDeleteURICalled, "Either onFrecencyChanged or onDeleteURI was called");
+    Assert.ok(
+      page.onResultCalled,
+      `We have reached the page #${i} from the callback`
+    );
+    Assert.ok(
+      visits_in_database(page.uri) == 0,
+      "History entry has disappeared"
+    );
+    Assert.equal(
+      page_in_database(page.uri) != 0,
+      page.hasBookmark,
+      "Page is present only if it also has bookmarks"
+    );
+    Assert.equal(
+      page.onFrecencyChangedCalled,
+      page.onDeleteVisitsCalled,
+      "onDeleteVisits was called iff onFrecencyChanged was called"
+    );
+    Assert.ok(
+      page.onFrecencyChangedCalled ^ page.onDeleteURICalled,
+      "Either onFrecencyChanged or onDeleteURI was called"
+    );
   }
 
-  Assert.notEqual(visits_in_database(WITNESS_URI), 0, "Witness URI still has visits");
-  Assert.notEqual(page_in_database(WITNESS_URI), 0, "Witness URI is still here");
+  Assert.notEqual(
+    visits_in_database(WITNESS_URI),
+    0,
+    "Witness URI still has visits"
+  );
+  Assert.notEqual(
+    page_in_database(WITNESS_URI),
+    0,
+    "Witness URI is still here"
+  );
 });
 
 add_task(async function cleanup() {

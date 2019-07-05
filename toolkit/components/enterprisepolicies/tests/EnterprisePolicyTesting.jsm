@@ -4,21 +4,29 @@
 
 "use strict";
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const {Assert} = ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileTestUtils",
+  "resource://testing-common/FileTestUtils.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["EnterprisePolicyTesting", "PoliciesPrefTracker"];
 
 var EnterprisePolicyTesting = {
   // |json| must be an object representing the desired policy configuration, OR a
   // path to the JSON file containing the policy configuration.
-  setupPolicyEngineWithJson: async function setupPolicyEngineWithJson(json, customSchema) {
+  setupPolicyEngineWithJson: async function setupPolicyEngineWithJson(
+    json,
+    customSchema
+  ) {
     let filePath;
-    if (typeof(json) == "object") {
+    if (typeof json == "object") {
       filePath = FileTestUtils.getTempFile("policies.json").path;
 
       // This file gets automatically deleted by FileTestUtils
@@ -34,7 +42,10 @@ var EnterprisePolicyTesting = {
 
     let promise = new Promise(resolve => {
       Services.obs.addObserver(function observer() {
-        Services.obs.removeObserver(observer, "EnterprisePolicies:AllPoliciesApplied");
+        Services.obs.removeObserver(
+          observer,
+          "EnterprisePolicies:AllPoliciesApplied"
+        );
         resolve();
       }, "EnterprisePolicies:AllPoliciesApplied");
     });
@@ -43,7 +54,10 @@ var EnterprisePolicyTesting = {
     Cu.unload("resource:///modules/policies/schema.jsm");
 
     if (customSchema) {
-      let schemaModule = ChromeUtils.import("resource:///modules/policies/schema.jsm", null);
+      let schemaModule = ChromeUtils.import(
+        "resource:///modules/policies/schema.jsm",
+        null
+      );
       schemaModule.schema = customSchema;
     }
 
@@ -53,10 +67,18 @@ var EnterprisePolicyTesting = {
 
   checkPolicyPref(prefName, expectedValue, expectedLockedness) {
     if (expectedLockedness !== undefined) {
-      Assert.equal(Preferences.locked(prefName), expectedLockedness, `Pref ${prefName} is correctly locked/unlocked`);
+      Assert.equal(
+        Preferences.locked(prefName),
+        expectedLockedness,
+        `Pref ${prefName} is correctly locked/unlocked`
+      );
     }
 
-    Assert.equal(Preferences.get(prefName), expectedValue, `Pref ${prefName} has the correct value`);
+    Assert.equal(
+      Preferences.get(prefName),
+      expectedValue,
+      `Pref ${prefName} has the correct value`
+    );
   },
 
   resetRunOnceState: function resetRunOnceState() {
@@ -66,8 +88,9 @@ var EnterprisePolicyTesting = {
     ];
     for (let base of runOnceBaseKeys) {
       for (let key of Services.prefs.getChildList(base)) {
-        if (Services.prefs.prefHasUserValue(key))
+        if (Services.prefs.prefHasUserValue(key)) {
           Services.prefs.clearUserPref(key);
+        }
       }
     }
   },
@@ -85,7 +108,10 @@ var PoliciesPrefTracker = {
   _originalValues: new Map(),
 
   start() {
-    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
+    let PoliciesBackstage = ChromeUtils.import(
+      "resource:///modules/policies/Policies.jsm",
+      null
+    );
     this._originalFunc = PoliciesBackstage.setDefaultPref;
     PoliciesBackstage.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
   },
@@ -93,7 +119,10 @@ var PoliciesPrefTracker = {
   stop() {
     this.restoreDefaultValues();
 
-    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", null);
+    let PoliciesBackstage = ChromeUtils.import(
+      "resource:///modules/policies/Policies.jsm",
+      null
+    );
     PoliciesBackstage.setDefaultPref = this._originalFunc;
     this._originalFunc = null;
   },
@@ -102,7 +131,7 @@ var PoliciesPrefTracker = {
     // If this pref is seen multiple times, the very first
     // value seen is the one that is actually the default.
     if (!this._originalValues.has(prefName)) {
-      let defaults = new Preferences({defaultBranch: true});
+      let defaults = new Preferences({ defaultBranch: true });
       let stored = {};
 
       if (defaults.has(prefName)) {
@@ -111,8 +140,10 @@ var PoliciesPrefTracker = {
         stored.originalDefaultValue = undefined;
       }
 
-      if (Preferences.isSet(prefName) &&
-          Preferences.get(prefName) == prefValue) {
+      if (
+        Preferences.isSet(prefName) &&
+        Preferences.get(prefName) == prefValue
+      ) {
         // If a user value exists, and we're changing the default
         // value to be th same as the user value, that will cause
         // the user value to be dropped. In that case, let's also
@@ -129,7 +160,7 @@ var PoliciesPrefTracker = {
   },
 
   restoreDefaultValues() {
-    let defaults = new Preferences({defaultBranch: true});
+    let defaults = new Preferences({ defaultBranch: true });
 
     for (let [prefName, stored] of this._originalValues) {
       // If a pref was used through setDefaultPref instead

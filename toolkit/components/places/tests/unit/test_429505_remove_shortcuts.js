@@ -27,7 +27,11 @@ add_task(async function test_query_with_remove_shortcut() {
     url: `place:parent=${folder.guid}`,
   });
 
-  var root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid, false, true).root;
+  var root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.toolbarGuid,
+    false,
+    true
+  ).root;
 
   var oldCount = root.childCount;
 

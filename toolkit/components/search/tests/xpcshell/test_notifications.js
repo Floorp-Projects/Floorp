@@ -32,25 +32,27 @@ function create_search_observer(resolve) {
     info("Observer: " + data + " for " + engine.name);
 
     switch (data) {
-    case "engine-added":
-      let retrievedEngine = Services.search.getEngineByName("Test search engine");
-      Assert.equal(engine, retrievedEngine);
-      Services.search.defaultEngine = engine;
-      executeSoon(function() {
-        Services.search.removeEngine(engine);
-      });
-      break;
-    case "engine-removed":
-      let engineNameOutput = " for Test search engine";
-      expectedLog = expectedLog.map(logLine => logLine + engineNameOutput);
-      info("expectedLog:\n" + expectedLog.join("\n"));
-      info("gTestLog:\n" + gTestLog.join("\n"));
-      for (let i = 0; i < expectedLog.length; i++) {
-        Assert.equal(gTestLog[i], expectedLog[i]);
-      }
-      Assert.equal(gTestLog.length, expectedLog.length);
-      resolve();
-      break;
+      case "engine-added":
+        let retrievedEngine = Services.search.getEngineByName(
+          "Test search engine"
+        );
+        Assert.equal(engine, retrievedEngine);
+        Services.search.defaultEngine = engine;
+        executeSoon(function() {
+          Services.search.removeEngine(engine);
+        });
+        break;
+      case "engine-removed":
+        let engineNameOutput = " for Test search engine";
+        expectedLog = expectedLog.map(logLine => logLine + engineNameOutput);
+        info("expectedLog:\n" + expectedLog.join("\n"));
+        info("gTestLog:\n" + gTestLog.join("\n"));
+        for (let i = 0; i < expectedLog.length; i++) {
+          Assert.equal(gTestLog[i], expectedLog[i]);
+        }
+        Assert.equal(gTestLog.length, expectedLog.length);
+        resolve();
+        break;
     }
   };
 }
@@ -64,7 +66,10 @@ add_task(async function test_notifications() {
     useHttpServer();
 
     registerCleanupFunction(function cleanup() {
-      Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
+      Services.obs.removeObserver(
+        search_observer,
+        "browser-search-engine-modified"
+      );
     });
 
     let search_observer = create_search_observer(resolve);

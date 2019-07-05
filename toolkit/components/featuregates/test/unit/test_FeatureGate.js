@@ -5,7 +5,10 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://featuregates/FeatureGate.jsm", this);
-ChromeUtils.import("resource://featuregates/FeatureGateImplementation.jsm", this);
+ChromeUtils.import(
+  "resource://featuregates/FeatureGateImplementation.jsm",
+  this
+);
 ChromeUtils.import("resource://testing-common/httpd.js", this);
 
 const kDefinitionDefaults = {
@@ -34,7 +37,9 @@ class DefinitionServer {
     }
 
     this.server.start();
-    registerCleanupFunction(() => new Promise(resolve => this.server.stop(resolve)));
+    registerCleanupFunction(
+      () => new Promise(resolve => this.server.stop(resolve))
+    );
   }
 
   // for nsIHttpRequestHandler
@@ -44,15 +49,15 @@ class DefinitionServer {
   }
 
   get definitionsUrl() {
-    const {primaryScheme, primaryHost, primaryPort} = this.server.identity;
+    const { primaryScheme, primaryHost, primaryPort } = this.server.identity;
     return `${primaryScheme}://${primaryHost}:${primaryPort}/definitions.json`;
   }
 
   addDefinition(overrides = {}) {
     const definition = definitionFactory(overrides);
     // convert targeted values, used by fromId
-    definition.isPublic = {default: definition.isPublic};
-    definition.defaultValue = {default: definition.defaultValue};
+    definition.isPublic = { default: definition.isPublic };
+    definition.defaultValue = { default: definition.defaultValue };
     this.definitions[definition.id] = definition;
     return definition;
   }
@@ -63,20 +68,47 @@ class DefinitionServer {
 // The getters and setters should read correctly from the definition
 add_task(async function testReadFromDefinition() {
   const server = new DefinitionServer();
-  const definition = server.addDefinition({id: "test-feature"});
-  const feature = await FeatureGate.fromId("test-feature", server.definitionsUrl);
+  const definition = server.addDefinition({ id: "test-feature" });
+  const feature = await FeatureGate.fromId(
+    "test-feature",
+    server.definitionsUrl
+  );
 
   // simple fields
   equal(feature.id, definition.id, "id should be read from definition");
-  equal(feature.title, definition.title, "title should be read from definition");
-  equal(feature.description, definition.description, "description should be read from definition");
-  equal(feature.restartRequired, definition.restartRequired, "restartRequired should be read from definition");
+  equal(
+    feature.title,
+    definition.title,
+    "title should be read from definition"
+  );
+  equal(
+    feature.description,
+    definition.description,
+    "description should be read from definition"
+  );
+  equal(
+    feature.restartRequired,
+    definition.restartRequired,
+    "restartRequired should be read from definition"
+  );
   equal(feature.type, definition.type, "type should be read from definition");
-  equal(feature.preference, definition.preference, "preference should be read from definition");
+  equal(
+    feature.preference,
+    definition.preference,
+    "preference should be read from definition"
+  );
 
   // targeted fields
-  equal(feature.defaultValue, definition.defaultValue.default, "defaultValue should be processed as a targeted value");
-  equal(feature.isPublic, definition.isPublic.default, "isPublic should be processed as a targeted value");
+  equal(
+    feature.defaultValue,
+    definition.defaultValue.default,
+    "defaultValue should be processed as a targeted value"
+  );
+  equal(
+    feature.isPublic,
+    definition.isPublic.default,
+    "isPublic should be processed as a targeted value"
+  );
 
   // cleanup
   Services.prefs.getDefaultBranch("").deleteBranch("test.feature");
@@ -84,43 +116,66 @@ add_task(async function testReadFromDefinition() {
 
 // Targeted values should return the correct value
 add_task(async function testTargetedValues() {
-  const backstage = ChromeUtils.import("resource://featuregates/FeatureGate.jsm", null);
-  const targetingFacts = new Map(Object.entries({true1: true, true2: true, false1: false, false2: false}));
+  const backstage = ChromeUtils.import(
+    "resource://featuregates/FeatureGate.jsm",
+    null
+  );
+  const targetingFacts = new Map(
+    Object.entries({ true1: true, true2: true, false1: false, false2: false })
+  );
 
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo"}, targetingFacts),
+    backstage.evaluateTargetedValue({ default: "foo" }, targetingFacts),
     "foo",
-    "A lone default value should be returned",
+    "A lone default value should be returned"
   );
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo", true1: "bar"}, targetingFacts),
+    backstage.evaluateTargetedValue(
+      { default: "foo", true1: "bar" },
+      targetingFacts
+    ),
     "bar",
-    "A true target should override the default",
+    "A true target should override the default"
   );
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo", false1: "bar"}, targetingFacts),
+    backstage.evaluateTargetedValue(
+      { default: "foo", false1: "bar" },
+      targetingFacts
+    ),
     "foo",
-    "A false target should not overrides the default",
+    "A false target should not overrides the default"
   );
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo", "true1,true2": "bar"}, targetingFacts),
+    backstage.evaluateTargetedValue(
+      { default: "foo", "true1,true2": "bar" },
+      targetingFacts
+    ),
     "bar",
-    "A compound target of two true targets should override the default",
+    "A compound target of two true targets should override the default"
   );
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo", "true1,false1": "bar"}, targetingFacts),
+    backstage.evaluateTargetedValue(
+      { default: "foo", "true1,false1": "bar" },
+      targetingFacts
+    ),
     "foo",
-    "A compound target of a true target and a false target should not override the default",
+    "A compound target of a true target and a false target should not override the default"
   );
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo", "false1,false2": "bar"}, targetingFacts),
+    backstage.evaluateTargetedValue(
+      { default: "foo", "false1,false2": "bar" },
+      targetingFacts
+    ),
     "foo",
-    "A compound target of two false targets should not override the default",
+    "A compound target of two false targets should not override the default"
   );
   Assert.equal(
-    backstage.evaluateTargetedValue({default: "foo", false1: "bar", true1: "baz"}, targetingFacts),
+    backstage.evaluateTargetedValue(
+      { default: "foo", false1: "bar", true1: "baz" },
+      targetingFacts
+    ),
     "baz",
-    "A true target should override the default when a false target is also present",
+    "A true target should override the default when a false target is also present"
   );
 });
 
@@ -129,37 +184,37 @@ add_task(async function testGetValue() {
   equal(
     Services.prefs.getPrefType("test.feature.1"),
     Services.prefs.PREF_INVALID,
-    "Before creating the feature gate, the preference should not exist",
+    "Before creating the feature gate, the preference should not exist"
   );
 
   const server = new DefinitionServer([
-    {id: "test-feature-1", defaultValue: false, preference: "test.feature.1"},
-    {id: "test-feature-2", defaultValue: true, preference: "test.feature.2"},
+    { id: "test-feature-1", defaultValue: false, preference: "test.feature.1" },
+    { id: "test-feature-2", defaultValue: true, preference: "test.feature.2" },
   ]);
 
   equal(
     await FeatureGate.getValue("test-feature-1", server.definitionsUrl),
     false,
-    "getValue() starts by returning the default value",
+    "getValue() starts by returning the default value"
   );
   equal(
     await FeatureGate.getValue("test-feature-2", server.definitionsUrl),
     true,
-    "getValue() starts by returning the default value",
+    "getValue() starts by returning the default value"
   );
 
   Services.prefs.setBoolPref("test.feature.1", true);
   equal(
     await FeatureGate.getValue("test-feature-1", server.definitionsUrl),
     true,
-    "getValue() return the new value",
+    "getValue() return the new value"
   );
 
   Services.prefs.setBoolPref("test.feature.1", false);
   equal(
     await FeatureGate.getValue("test-feature-1", server.definitionsUrl),
     false,
-    "getValue() should return the second value",
+    "getValue() should return the second value"
   );
 
   // cleanup
@@ -169,85 +224,126 @@ add_task(async function testGetValue() {
 // getValue should work
 add_task(async function testGetValue() {
   const server = new DefinitionServer([
-    {id: "test-feature-1", defaultValue: false, preference: "test.feature.1"},
-    {id: "test-feature-2", defaultValue: true, preference: "test.feature.2"},
+    { id: "test-feature-1", defaultValue: false, preference: "test.feature.1" },
+    { id: "test-feature-2", defaultValue: true, preference: "test.feature.2" },
   ]);
 
   equal(
     Services.prefs.getPrefType("test.feature.1"),
     Services.prefs.PREF_INVALID,
-    "Before creating the feature gate, the first preference should not exist",
+    "Before creating the feature gate, the first preference should not exist"
   );
   equal(
     Services.prefs.getPrefType("test.feature.2"),
     Services.prefs.PREF_INVALID,
-    "Before creating the feature gate, the second preference should not exist",
+    "Before creating the feature gate, the second preference should not exist"
   );
 
   equal(
     await FeatureGate.isEnabled("test-feature-1", server.definitionsUrl),
     false,
-    "isEnabled() starts by returning the default value",
+    "isEnabled() starts by returning the default value"
   );
   equal(
     await FeatureGate.isEnabled("test-feature-2", server.definitionsUrl),
     true,
-    "isEnabled() starts by returning the default value",
+    "isEnabled() starts by returning the default value"
   );
 
   Services.prefs.setBoolPref("test.feature.1", true);
   equal(
     await FeatureGate.isEnabled("test-feature-1", server.definitionsUrl),
     true,
-    "isEnabled() return the new value",
+    "isEnabled() return the new value"
   );
 
   Services.prefs.setBoolPref("test.feature.1", false);
   equal(
     await FeatureGate.isEnabled("test-feature-1", server.definitionsUrl),
     false,
-    "isEnabled() should return the second value",
+    "isEnabled() should return the second value"
   );
 
   // cleanup
   Services.prefs.getDefaultBranch("").deleteBranch("test.feature.");
 });
 
-
 // adding and removing event observers should work
 add_task(async function testGetValue() {
   const preference = "test.pref";
-  const server = new DefinitionServer([{id: "test-feature", defaultValue: false, preference}]);
+  const server = new DefinitionServer([
+    { id: "test-feature", defaultValue: false, preference },
+  ]);
   const observer = {
     onChange: sinon.stub(),
     onEnable: sinon.stub(),
     onDisable: sinon.stub(),
   };
 
-  let rv = await FeatureGate.addObserver("test-feature", observer, server.definitionsUrl);
+  let rv = await FeatureGate.addObserver(
+    "test-feature",
+    observer,
+    server.definitionsUrl
+  );
   equal(rv, false, "addObserver returns the current value");
 
   Assert.deepEqual(observer.onChange.args, [], "onChange should not be called");
   Assert.deepEqual(observer.onEnable.args, [], "onEnable should not be called");
-  Assert.deepEqual(observer.onDisable.args, [], "onDisable should not be called");
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [],
+    "onDisable should not be called"
+  );
 
   Services.prefs.setBoolPref(preference, true);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true]], "onChange should be called with the new value");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true]],
+    "onChange should be called with the new value"
+  );
   Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should be called");
-  Assert.deepEqual(observer.onDisable.args, [], "onDisable should not be called");
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [],
+    "onDisable should not be called"
+  );
 
   Services.prefs.setBoolPref(preference, false);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true], [false]], "onChange should be called again with the new value");
-  Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should not be called a second time");
-  Assert.deepEqual(observer.onDisable.args, [[]], "onDisable should be called for the first time");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true], [false]],
+    "onChange should be called again with the new value"
+  );
+  Assert.deepEqual(
+    observer.onEnable.args,
+    [[]],
+    "onEnable should not be called a second time"
+  );
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [[]],
+    "onDisable should be called for the first time"
+  );
 
   Services.prefs.setBoolPref(preference, false);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true], [false]], "onChange should not be called if the value did not change");
-  Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should not be called again if the value did not change");
-  Assert.deepEqual(observer.onDisable.args, [[]], "onDisable should not be called if the value did not change");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true], [false]],
+    "onChange should not be called if the value did not change"
+  );
+  Assert.deepEqual(
+    observer.onEnable.args,
+    [[]],
+    "onEnable should not be called again if the value did not change"
+  );
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [[]],
+    "onDisable should not be called if the value did not change"
+  );
 
   // remove the listener and make sure the observer isn't called again
   FeatureGate.removeObserver("test-feature", observer);
@@ -255,9 +351,21 @@ add_task(async function testGetValue() {
 
   Services.prefs.setBoolPref(preference, true);
   await Promise.resolve(); // Allow events to be called async
-  Assert.deepEqual(observer.onChange.args, [[true], [false]], "onChange should not be called after observer was removed");
-  Assert.deepEqual(observer.onEnable.args, [[]], "onEnable should not be called after observer was removed");
-  Assert.deepEqual(observer.onDisable.args, [[]], "onDisable should not be called after observer was removed");
+  Assert.deepEqual(
+    observer.onChange.args,
+    [[true], [false]],
+    "onChange should not be called after observer was removed"
+  );
+  Assert.deepEqual(
+    observer.onEnable.args,
+    [[]],
+    "onEnable should not be called after observer was removed"
+  );
+  Assert.deepEqual(
+    observer.onDisable.args,
+    [[]],
+    "onDisable should not be called after observer was removed"
+  );
 
   // cleanup
   Services.prefs.getDefaultBranch("").deleteBranch(preference);

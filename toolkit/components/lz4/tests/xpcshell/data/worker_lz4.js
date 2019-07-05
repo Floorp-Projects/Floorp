@@ -3,7 +3,6 @@
 importScripts("resource://gre/modules/workers/require.js");
 importScripts("resource://gre/modules/osfile.jsm");
 
-
 function info(x) {
   // self.postMessage({kind: "do_print", args: [x]});
   dump("TEST-INFO: " + x + "\n");
@@ -11,7 +10,7 @@ function info(x) {
 
 const Assert = {
   ok(x) {
-    self.postMessage({kind: "assert_ok", args: [!!x]});
+    self.postMessage({ kind: "assert_ok", args: [!!x] });
     if (x) {
       dump("TEST-PASS: " + x + "\n");
     } else {
@@ -21,7 +20,7 @@ const Assert = {
 
   equal(a, b) {
     let result = a == b;
-    self.postMessage({kind: "assert_ok", args: [result]});
+    self.postMessage({ kind: "assert_ok", args: [result] });
     if (!result) {
       throw new Error("Assert.equal failed " + a + " != " + b);
     }
@@ -29,14 +28,14 @@ const Assert = {
 };
 
 function do_test_complete() {
-  self.postMessage({kind: "do_test_complete", args: []});
+  self.postMessage({ kind: "do_test_complete", args: [] });
 }
 
 self.onmessage = function() {
   try {
     run_test();
   } catch (ex) {
-    let {message, moduleStack, moduleName, lineNumber} = ex;
+    let { message, moduleStack, moduleName, lineNumber } = ex;
     let error = new Error(message, moduleName, lineNumber);
     error.stack = moduleStack;
     dump("Uncaught error: " + error + "\n");
@@ -70,7 +69,7 @@ function test_reference_file() {
   let path = OS.Path.join("data", "compression.lz");
   let data = OS.File.read(path);
   let decompressed = Lz4.decompressFileContent(data);
-  let text = (new TextDecoder()).decode(decompressed);
+  let text = new TextDecoder().decode(decompressed);
   Assert.equal(text, "Hello, lz4");
 }
 
@@ -88,9 +87,13 @@ function run_rawcompression(name, array) {
 
   let decompressedArray = new Uint8Array(length);
   let decompressedBytes = new ctypes.size_t();
-  let success = Internals.decompress(compressedArray, compressedBytes,
-                                     decompressedArray, length,
-                                     decompressedBytes.address());
+  let success = Internals.decompress(
+    compressedArray,
+    compressedBytes,
+    decompressedArray,
+    length,
+    decompressedBytes.address()
+  );
   info("Raw decompression success? " + success);
   info("Raw decompression size: " + decompressedBytes.value);
   Assert.ok(compare_arrays(array, decompressedArray));
@@ -99,10 +102,17 @@ function run_rawcompression(name, array) {
 function run_filecompression(name, array) {
   info("File compression test " + name);
   let compressed = Lz4.compressFileContent(array);
-  info("Compressed " + array.byteLength + " bytes into " + compressed.byteLength);
+  info(
+    "Compressed " + array.byteLength + " bytes into " + compressed.byteLength
+  );
 
   let decompressed = Lz4.decompressFileContent(compressed);
-  info("Decompressed " + compressed.byteLength + " bytes into " + decompressed.byteLength);
+  info(
+    "Decompressed " +
+      compressed.byteLength +
+      " bytes into " +
+      decompressed.byteLength
+  );
   Assert.ok(compare_arrays(array, decompressed));
 }
 
@@ -113,9 +123,13 @@ function run_faileddecompression(name, array) {
   let length = 1 << 14;
   let decompressedArray = new Uint8Array(length);
   let decompressedBytes = new ctypes.size_t();
-  Internals.decompress(array, array.byteLength,
-    decompressedArray, length,
-    decompressedBytes.address());
+  Internals.decompress(
+    array,
+    array.byteLength,
+    decompressedArray,
+    length,
+    decompressedBytes.address()
+  );
 
   // File decompression should fail with an acceptable exception
   let exn = null;

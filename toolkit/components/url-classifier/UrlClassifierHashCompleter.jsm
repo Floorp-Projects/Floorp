@@ -12,17 +12,25 @@ const PARTIAL_LENGTH = 4;
 const MIN_WAIT_DURATION_MAX_VALUE = 24 * 60 * 60 * 1000;
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gDbService",
-                                   "@mozilla.org/url-classifier/dbservice;1",
-                                   "nsIUrlClassifierDBService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gDbService",
+  "@mozilla.org/url-classifier/dbservice;1",
+  "nsIUrlClassifierDBService"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "gUrlUtil",
-                                   "@mozilla.org/url-classifier/utils;1",
-                                   "nsIUrlClassifierUtils");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gUrlUtil",
+  "@mozilla.org/url-classifier/utils;1",
+  "nsIUrlClassifierUtils"
+);
 
 let loggingEnabled = false;
 
@@ -43,106 +51,106 @@ function log(...stuff) {
 function httpStatusToBucket(httpStatus) {
   var statusBucket;
   switch (httpStatus) {
-  case 100:
-  case 101:
-    // Unexpected 1xx return code
-    statusBucket = 0;
-    break;
-  case 200:
-    // OK - Data is available in the HTTP response body.
-    statusBucket = 1;
-    break;
-  case 201:
-  case 202:
-  case 203:
-  case 205:
-  case 206:
-    // Unexpected 2xx return code
-    statusBucket = 2;
-    break;
-  case 204:
-    // No Content - There are no full-length hashes with the requested prefix.
-    statusBucket = 3;
-    break;
-  case 300:
-  case 301:
-  case 302:
-  case 303:
-  case 304:
-  case 305:
-  case 307:
-  case 308:
-    // Unexpected 3xx return code
-    statusBucket = 4;
-    break;
-  case 400:
-    // Bad Request - The HTTP request was not correctly formed.
-    // The client did not provide all required CGI parameters.
-    statusBucket = 5;
-    break;
-  case 401:
-  case 402:
-  case 405:
-  case 406:
-  case 407:
-  case 409:
-  case 410:
-  case 411:
-  case 412:
-  case 414:
-  case 415:
-  case 416:
-  case 417:
-  case 421:
-  case 426:
-  case 428:
-  case 429:
-  case 431:
-  case 451:
-    // Unexpected 4xx return code
-    statusBucket = 6;
-    break;
-  case 403:
-    // Forbidden - The client id is invalid.
-    statusBucket = 7;
-    break;
-  case 404:
-    // Not Found
-    statusBucket = 8;
-    break;
-  case 408:
-    // Request Timeout
-    statusBucket = 9;
-    break;
-  case 413:
-    // Request Entity Too Large - Bug 1150334
-    statusBucket = 10;
-    break;
-  case 500:
-  case 501:
-  case 510:
-    // Unexpected 5xx return code
-    statusBucket = 11;
-    break;
-  case 502:
-  case 504:
-  case 511:
-    // Local network errors, we'll ignore these.
-    statusBucket = 12;
-    break;
-  case 503:
-    // Service Unavailable - The server cannot handle the request.
-    // Clients MUST follow the backoff behavior specified in the
-    // Request Frequency section.
-    statusBucket = 13;
-    break;
-  case 505:
-    // HTTP Version Not Supported - The server CANNOT handle the requested
-    // protocol major version.
-    statusBucket = 14;
-    break;
-  default:
-    statusBucket = 15;
+    case 100:
+    case 101:
+      // Unexpected 1xx return code
+      statusBucket = 0;
+      break;
+    case 200:
+      // OK - Data is available in the HTTP response body.
+      statusBucket = 1;
+      break;
+    case 201:
+    case 202:
+    case 203:
+    case 205:
+    case 206:
+      // Unexpected 2xx return code
+      statusBucket = 2;
+      break;
+    case 204:
+      // No Content - There are no full-length hashes with the requested prefix.
+      statusBucket = 3;
+      break;
+    case 300:
+    case 301:
+    case 302:
+    case 303:
+    case 304:
+    case 305:
+    case 307:
+    case 308:
+      // Unexpected 3xx return code
+      statusBucket = 4;
+      break;
+    case 400:
+      // Bad Request - The HTTP request was not correctly formed.
+      // The client did not provide all required CGI parameters.
+      statusBucket = 5;
+      break;
+    case 401:
+    case 402:
+    case 405:
+    case 406:
+    case 407:
+    case 409:
+    case 410:
+    case 411:
+    case 412:
+    case 414:
+    case 415:
+    case 416:
+    case 417:
+    case 421:
+    case 426:
+    case 428:
+    case 429:
+    case 431:
+    case 451:
+      // Unexpected 4xx return code
+      statusBucket = 6;
+      break;
+    case 403:
+      // Forbidden - The client id is invalid.
+      statusBucket = 7;
+      break;
+    case 404:
+      // Not Found
+      statusBucket = 8;
+      break;
+    case 408:
+      // Request Timeout
+      statusBucket = 9;
+      break;
+    case 413:
+      // Request Entity Too Large - Bug 1150334
+      statusBucket = 10;
+      break;
+    case 500:
+    case 501:
+    case 510:
+      // Unexpected 5xx return code
+      statusBucket = 11;
+      break;
+    case 502:
+    case 504:
+    case 511:
+      // Local network errors, we'll ignore these.
+      statusBucket = 12;
+      break;
+    case 503:
+      // Service Unavailable - The server cannot handle the request.
+      // Clients MUST follow the backoff behavior specified in the
+      // Request Frequency section.
+      statusBucket = 13;
+      break;
+    case 505:
+      // HTTP Version Not Supported - The server CANNOT handle the requested
+      // protocol major version.
+      statusBucket = 14;
+      break;
+    default:
+      statusBucket = 15;
   }
   return statusBucket;
 }
@@ -189,12 +197,23 @@ function HashCompleter() {
 
 HashCompleter.prototype = {
   classID: Components.ID("{9111de73-9322-4bfc-8b65-2b727f3e6ec8}"),
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUrlClassifierHashCompleter, Ci.nsIRunnable, Ci.nsIObserver, Ci.nsISupportsWeakReference, Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIUrlClassifierHashCompleter,
+    Ci.nsIRunnable,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+    Ci.nsITimerCallback,
+  ]),
 
   // This is mainly how the HashCompleter interacts with other components.
   // Even though it only takes one partial hash and callback, subsequent
   // calls are made into the same HTTP request by using a thread dispatch.
-  complete: function HC_complete(aPartialHash, aGethashUrl, aTableName, aCallback) {
+  complete: function HC_complete(
+    aPartialHash,
+    aGethashUrl,
+    aTableName,
+    aCallback
+  ) {
     if (!aGethashUrl) {
       throw Cr.NS_ERROR_NOT_INITIALIZED;
     }
@@ -202,7 +221,12 @@ HashCompleter.prototype = {
     // Check ongoing requests before creating a new HashCompleteRequest
     for (let r of this._ongoingRequests) {
       if (r.find(aPartialHash, aGethashUrl, aTableName)) {
-        log("Merge gethash request in " + aTableName + " for prefix : " + btoa(aPartialHash));
+        log(
+          "Merge gethash request in " +
+            aTableName +
+            " for prefix : " +
+            btoa(aPartialHash)
+        );
         r.add(aPartialHash, aCallback, aTableName);
         return;
       }
@@ -215,23 +239,30 @@ HashCompleter.prototype = {
       this._currentRequest.add(aPartialHash, aCallback, aTableName);
     } else {
       if (!this._pendingRequests[aGethashUrl]) {
-        this._pendingRequests[aGethashUrl] =
-          new HashCompleterRequest(this, aGethashUrl);
+        this._pendingRequests[aGethashUrl] = new HashCompleterRequest(
+          this,
+          aGethashUrl
+        );
       }
-      this._pendingRequests[aGethashUrl].add(aPartialHash, aCallback, aTableName);
+      this._pendingRequests[aGethashUrl].add(
+        aPartialHash,
+        aCallback,
+        aTableName
+      );
     }
 
     if (!this._backoffs[aGethashUrl]) {
       // Initialize request backoffs separately, since requests are deleted
       // after they are dispatched.
-      var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
-                  .getService().wrappedJSObject;
+      var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].getService()
+        .wrappedJSObject;
 
       // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
       this._backoffs[aGethashUrl] = new jslib.RequestBackoffV4(
         10 /* keep track of max requests */,
         0 /* don't throttle on successful requests per time period */,
-        gUrlUtil.getProvider(aTableName) /* used by testcase */);
+        gUrlUtil.getProvider(aTableName) /* used by testcase */
+      );
     }
 
     if (!this._nextGethashTimeMs[aGethashUrl]) {
@@ -261,7 +292,7 @@ HashCompleter.prototype = {
 
     // If we don't have an in-flight request, make one
     let pendingUrls = Object.keys(this._pendingRequests);
-    if (!this._currentRequest && (pendingUrls.length > 0)) {
+    if (!this._currentRequest && pendingUrls.length > 0) {
       let nextUrl = pendingUrls[0];
       this._currentRequest = this._pendingRequests[nextUrl];
       delete this._pendingRequests[nextUrl];
@@ -290,8 +321,10 @@ HashCompleter.prototype = {
 
   // Returns true if we can make a request from the given url, false otherwise.
   canMakeRequest(aGethashUrl) {
-    return this._backoffs[aGethashUrl].canMakeRequest() &&
-           Date.now() >= this._nextGethashTimeMs[aGethashUrl];
+    return (
+      this._backoffs[aGethashUrl].canMakeRequest() &&
+      Date.now() >= this._nextGethashTimeMs[aGethashUrl]
+    );
   },
 
   // Notifies the RequestBackoff of a new request so we can throttle based on
@@ -303,15 +336,15 @@ HashCompleter.prototype = {
 
   observe: function HC_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-    case "quit-application":
-      this._shuttingDown = true;
-      Services.obs.removeObserver(this, "quit-application");
-      break;
-    case "nsPref:changed":
-      if (aData == PREF_DEBUG_ENABLED) {
-        loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
-      }
-      break;
+      case "quit-application":
+        this._shuttingDown = true;
+        Services.obs.removeObserver(this, "quit-application");
+        break;
+      case "nsPref:changed":
+        if (aData == PREF_DEBUG_ENABLED) {
+          loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
+        }
+        break;
     }
   },
 };
@@ -338,7 +371,11 @@ function HashCompleterRequest(aCompleter, aGethashUrl) {
   this.telemetryClockStart = 0;
 }
 HashCompleterRequest.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver, Ci.nsIStreamListener, Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIRequestObserver,
+    Ci.nsIStreamListener,
+    Ci.nsIObserver,
+  ]),
 
   // This is called by the HashCompleter to add a hash and callback to the
   // HashCompleterRequest. It must be called before calling |begin|.
@@ -356,8 +393,10 @@ HashCompleterRequest.prototype = {
         // Decide if this request is v4 by the first added partial hash.
         this.isV4 = isTableNameV4;
       } else if (this.isV4 !== isTableNameV4) {
-        log('ERROR: Cannot mix "proto" tables with other types within ' +
-            "the same gethash URL.");
+        log(
+          'ERROR: Cannot mix "proto" tables with other types within ' +
+            "the same gethash URL."
+        );
       }
       if (!this.tableNames.has(aTableName)) {
         this.tableNames.set(aTableName);
@@ -375,8 +414,7 @@ HashCompleterRequest.prototype = {
   },
 
   find: function HCR_find(aPartialHash, aGetHashUrl, aTableName) {
-    if (this.gethashUrl != aGetHashUrl ||
-        !this.tableNames.has(aTableName)) {
+    if (this.gethashUrl != aGetHashUrl || !this.tableNames.has(aTableName)) {
       return false;
     }
 
@@ -428,8 +466,9 @@ HashCompleterRequest.prototype = {
         // point, finishRequest must be called.
         this._completer.noteRequest(this.gethashUrl);
       } catch (err) {
-        this._completer._ongoingRequests =
-          this._completer._ongoingRequests.filter(v => v != this);
+        this._completer._ongoingRequests = this._completer._ongoingRequests.filter(
+          v => v != this
+        );
         this.notifyFailure(err);
         throw err;
       }
@@ -444,8 +483,9 @@ HashCompleterRequest.prototype = {
     // channel.
     if (this._channel && this._channel.isPending()) {
       log("cancelling request to " + this.gethashUrl + " (timeout)\n");
-      Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2").
-        add(this.telemetryProvider, 1);
+      Services.telemetry
+        .getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2")
+        .add(this.telemetryProvider, 1);
       this._channel.cancel(Cr.NS_BINDING_ABORTED);
     }
   },
@@ -454,9 +494,10 @@ HashCompleterRequest.prototype = {
   // Enforce bypassing URL Classifier check because if the request is
   // blocked, it means SafeBrowsing is malfunction.
   openChannel: function HCR_openChannel() {
-    let loadFlags = Ci.nsIChannel.INHIBIT_CACHING |
-                    Ci.nsIChannel.LOAD_BYPASS_CACHE |
-                    Ci.nsIChannel.LOAD_BYPASS_URL_CLASSIFIER;
+    let loadFlags =
+      Ci.nsIChannel.INHIBIT_CACHING |
+      Ci.nsIChannel.LOAD_BYPASS_CACHE |
+      Ci.nsIChannel.LOAD_BYPASS_URL_CLASSIFIER;
 
     this.request = {
       url: this.gethashUrl,
@@ -478,7 +519,8 @@ HashCompleterRequest.prototype = {
     channel.loadInfo.originAttributes = {
       // The firstPartyDomain value should sync with NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN
       // defined in nsNetUtil.h.
-      firstPartyDomain: "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla",
+      firstPartyDomain:
+        "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla",
     };
 
     // Disable keepalive.
@@ -498,8 +540,7 @@ HashCompleterRequest.prototype = {
     // don't get a gethash response.
     this.timer_ = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     // Ask the timer to use nsITimerCallback (.notify()) when ready
-    let timeout = Services.prefs.getIntPref(
-      "urlclassifier.gethash.timeout_ms");
+    let timeout = Services.prefs.getIntPref("urlclassifier.gethash.timeout_ms");
     this.timer_.initWithCallback(this, timeout, this.timer_.TYPE_ONE_SHOT);
     channel.asyncOpen(this);
     this.telemetryClockStart = Date.now();
@@ -524,13 +565,20 @@ HashCompleterRequest.prototype = {
     this._requests.forEach(r => prefixSet.add(btoa(r.partialHash)));
     let prefixArray = Array.from(prefixSet).sort();
 
-    log("Build v4 gethash request with " + JSON.stringify(tableNameArray) + ", "
-                                         + JSON.stringify(stateArray) + ", "
-                                         + JSON.stringify(prefixArray));
+    log(
+      "Build v4 gethash request with " +
+        JSON.stringify(tableNameArray) +
+        ", " +
+        JSON.stringify(stateArray) +
+        ", " +
+        JSON.stringify(prefixArray)
+    );
 
-    return gUrlUtil.makeFindFullHashRequestV4(tableNameArray,
-                                              stateArray,
-                                              prefixArray);
+    return gUrlUtil.makeFindFullHashRequestV4(
+      tableNameArray,
+      stateArray,
+      prefixArray
+    );
   },
 
   // Returns a string for the request body based on the contents of
@@ -551,17 +599,29 @@ HashCompleterRequest.prototype = {
     prefixes.sort();
 
     let body;
-    body = PARTIAL_LENGTH + ":" + (PARTIAL_LENGTH * prefixes.length) +
-           "\n" + prefixes.join("");
+    body =
+      PARTIAL_LENGTH +
+      ":" +
+      PARTIAL_LENGTH * prefixes.length +
+      "\n" +
+      prefixes.join("");
 
-    log("Requesting completions for " + prefixes.length + " " + PARTIAL_LENGTH + "-byte prefixes: " + body);
+    log(
+      "Requesting completions for " +
+        prefixes.length +
+        " " +
+        PARTIAL_LENGTH +
+        "-byte prefixes: " +
+        body
+    );
     return body;
   },
 
   // Sets the request body of this._channel.
   addRequestBody: function HCR_addRequestBody(aBody) {
-    let inputStream = Cc["@mozilla.org/io/string-input-stream;1"].
-                      createInstance(Ci.nsIStringInputStream);
+    let inputStream = Cc[
+      "@mozilla.org/io/string-input-stream;1"
+    ].createInstance(Ci.nsIStringInputStream);
 
     inputStream.setData(aBody, aBody.length);
 
@@ -596,11 +656,18 @@ HashCompleterRequest.prototype = {
     let callback = {
       // onCompleteHashFound will be called for each fullhash found in
       // FullHashResponse.
-      onCompleteHashFound: (aCompleteHash,
-                            aTableNames,
-                            aPerHashCacheDuration) => {
-        log("V4 fullhash response complete hash found callback: " +
-            aTableNames + ", CacheDuration(" + aPerHashCacheDuration + ")");
+      onCompleteHashFound: (
+        aCompleteHash,
+        aTableNames,
+        aPerHashCacheDuration
+      ) => {
+        log(
+          "V4 fullhash response complete hash found callback: " +
+            aTableNames +
+            ", CacheDuration(" +
+            aPerHashCacheDuration +
+            ")"
+        );
 
         // Filter table names which we didn't requested.
         let filteredTables = aTableNames.split(",").filter(name => {
@@ -624,17 +691,24 @@ HashCompleterRequest.prototype = {
       // onResponseParsed will be called no matter if there is match in
       // FullHashResponse, the callback is mainly used to pass negative cache
       // duration and minimum wait duration.
-      onResponseParsed: (aMinWaitDuration,
-                        aNegCacheDuration) => {
-        log("V4 fullhash response parsed callback: " +
-            "MinWaitDuration(" + aMinWaitDuration + "), " +
-            "NegativeCacheDuration(" + aNegCacheDuration + ")");
+      onResponseParsed: (aMinWaitDuration, aNegCacheDuration) => {
+        log(
+          "V4 fullhash response parsed callback: " +
+            "MinWaitDuration(" +
+            aMinWaitDuration +
+            "), " +
+            "NegativeCacheDuration(" +
+            aNegCacheDuration +
+            ")"
+        );
 
         let minWaitDuration = aMinWaitDuration;
 
         if (aMinWaitDuration > MIN_WAIT_DURATION_MAX_VALUE) {
-          log("WARNING: Minimum wait duration too large, clamping it down " +
-              "to a reasonable value.");
+          log(
+            "WARNING: Minimum wait duration too large, clamping it down " +
+              "to a reasonable value."
+          );
           minWaitDuration = MIN_WAIT_DURATION_MAX_VALUE;
         } else if (aMinWaitDuration < 0) {
           log("WARNING: Minimum wait duration is negative, reset it to 0");
@@ -677,14 +751,16 @@ HashCompleterRequest.prototype = {
     let dataLength = parseInt(entries[2]);
 
     log("Response includes add chunks for " + list + ": " + addChunk);
-    if (dataLength % COMPLETE_LENGTH != 0 ||
-        dataLength == 0 ||
-        dataLength > body.length - (newlineIndex + 1)) {
+    if (
+      dataLength % COMPLETE_LENGTH != 0 ||
+      dataLength == 0 ||
+      dataLength > body.length - (newlineIndex + 1)
+    ) {
       throw errorWithStack();
     }
 
     let data = body.substr(newlineIndex + 1, dataLength);
-    for (let i = 0; i < (dataLength / COMPLETE_LENGTH); i++) {
+    for (let i = 0; i < dataLength / COMPLETE_LENGTH; i++) {
       this.handleItem({
         completeHash: data.substr(i * COMPLETE_LENGTH, COMPLETE_LENGTH),
         tableName: list,
@@ -700,8 +776,15 @@ HashCompleterRequest.prototype = {
   handleItem: function HCR_handleItem(aData) {
     let provider = gUrlUtil.getProvider(aData.tableName);
     if (provider != this.provider) {
-      log("Ignoring table " + aData.tableName + " since it belongs to " + provider +
-          " while the response came from " + this.provider + ".");
+      log(
+        "Ignoring table " +
+          aData.tableName +
+          " since it belongs to " +
+          provider +
+          " while the response came from " +
+          this.provider +
+          "."
+      );
       return;
     }
 
@@ -719,8 +802,8 @@ HashCompleterRequest.prototype = {
   // code.
   notifySuccess: function HCR_notifySuccess() {
     // V2 completion handler
-    let completionV2 = (req) => {
-      req.response.matches.forEach((m) => {
+    let completionV2 = req => {
+      req.response.matches.forEach(m => {
         req.callback.completionV2(m.completeHash, m.tableName, m.chunkId);
       });
 
@@ -728,22 +811,31 @@ HashCompleterRequest.prototype = {
     };
 
     // V4 completion handler
-    let completionV4 = (req) => {
-      let matches = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    let completionV4 = req => {
+      let matches = Cc["@mozilla.org/array;1"].createInstance(
+        Ci.nsIMutableArray
+      );
 
       req.response.matches.forEach(m => {
         matches.appendElement(
-          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration));
+          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration)
+        );
       });
 
-      req.callback.completionV4(req.partialHash, req.tableName,
-                                req.response.negCacheDuration, matches);
+      req.callback.completionV4(
+        req.partialHash,
+        req.tableName,
+        req.response.negCacheDuration,
+        matches
+      );
 
       req.callback.completionFinished(Cr.NS_OK);
     };
 
     let completion = this.isV4 ? completionV4 : completionV2;
-    this._requests.forEach((req) => { completion(req); });
+    this._requests.forEach(req => {
+      completion(req);
+    });
   },
 
   notifyFailure: function HCR_notifyFailure(aStatus) {
@@ -754,10 +846,15 @@ HashCompleterRequest.prototype = {
     }
   },
 
-  onDataAvailable: function HCR_onDataAvailable(aRequest,
-                                                aInputStream, aOffset, aCount) {
-    let sis = Cc["@mozilla.org/scriptableinputstream;1"].
-              createInstance(Ci.nsIScriptableInputStream);
+  onDataAvailable: function HCR_onDataAvailable(
+    aRequest,
+    aInputStream,
+    aOffset,
+    aCount
+  ) {
+    let sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
     sis.init(aInputStream);
     this._response += sis.readBytes(aCount);
   },
@@ -769,8 +866,9 @@ HashCompleterRequest.prototype = {
 
     if (this.telemetryClockStart > 0) {
       let msecs = Date.now() - this.telemetryClockStart;
-      Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_SERVER_RESPONSE_TIME").
-        add(this.telemetryProvider, msecs);
+      Services.telemetry
+        .getKeyedHistogramById("URLCLASSIFIER_COMPLETE_SERVER_RESPONSE_TIME")
+        .add(this.telemetryProvider, msecs);
     }
   },
 
@@ -800,18 +898,33 @@ HashCompleterRequest.prototype = {
       }
     }
     let success = Components.isSuccessCode(aStatusCode);
-    log("Received a " + httpStatus + " status code from the " + this.provider +
-        " gethash server (success=" + success + "): " + btoa(this._response));
+    log(
+      "Received a " +
+        httpStatus +
+        " status code from the " +
+        this.provider +
+        " gethash server (success=" +
+        success +
+        "): " +
+        btoa(this._response)
+    );
 
-    Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS2").
-      add(this.telemetryProvider, httpStatusToBucket(httpStatus));
+    Services.telemetry
+      .getKeyedHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS2")
+      .add(this.telemetryProvider, httpStatusToBucket(httpStatus));
     if (httpStatus == 400) {
-      dump("Safe Browsing server returned a 400 during completion: request= " +
-           this.request.url + ",payload= " + this.request.body + "\n");
+      dump(
+        "Safe Browsing server returned a 400 during completion: request= " +
+          this.request.url +
+          ",payload= " +
+          this.request.body +
+          "\n"
+      );
     }
 
-    Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2").
-      add(this.telemetryProvider, 0);
+    Services.telemetry
+      .getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2")
+      .add(this.telemetryProvider, 0);
 
     // Notify the RequestBackoff once a response is received.
     this._completer.finishRequest(this, httpStatus);

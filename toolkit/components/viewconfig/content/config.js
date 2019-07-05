@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const nsIPrefLocalizedString = Ci.nsIPrefLocalizedString;
 const nsISupportsString = Ci.nsISupportsString;
@@ -14,7 +14,9 @@ const nsIClipboardHelper = Ci.nsIClipboardHelper;
 const nsClipboardHelper_CONTRACTID = "@mozilla.org/widget/clipboardhelper;1";
 
 const gPrefBranch = Services.prefs;
-const gClipboardHelper = Cc[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
+const gClipboardHelper = Cc[nsClipboardHelper_CONTRACTID].getService(
+  nsIClipboardHelper
+);
 
 var gLockProps = ["default", "user", "locked"];
 // we get these from a string bundle
@@ -36,10 +38,13 @@ var gFilter = null;
 let gCategoriesRecordedOnce = new Set();
 
 var view = {
-  get rowCount() { return gPrefView.length; },
+  get rowCount() {
+    return gPrefView.length;
+  },
   getCellText(index, col) {
-    if (!(index in gPrefView))
+    if (!(index in gPrefView)) {
       return "";
+    }
 
     var value = gPrefView[index][col.id];
 
@@ -52,27 +57,52 @@ var view = {
         return value;
     }
   },
-  getRowProperties(index) { return ""; },
+  getRowProperties(index) {
+    return "";
+  },
   getCellProperties(index, col) {
-    if (index in gPrefView)
+    if (index in gPrefView) {
       return gLockProps[gPrefView[index].lockCol];
+    }
 
     return "";
   },
-  getColumnProperties(col) { return ""; },
+  getColumnProperties(col) {
+    return "";
+  },
   treebox: null,
   selection: null,
-  isContainer(index) { return false; },
-  isContainerOpen(index) { return false; },
-  isContainerEmpty(index) { return false; },
-  isSorted() { return true; },
-  canDrop(index, orientation) { return false; },
+  isContainer(index) {
+    return false;
+  },
+  isContainerOpen(index) {
+    return false;
+  },
+  isContainerEmpty(index) {
+    return false;
+  },
+  isSorted() {
+    return true;
+  },
+  canDrop(index, orientation) {
+    return false;
+  },
   drop(row, orientation) {},
-  setTree(out) { this.treebox = out; },
-  getParentIndex(rowIndex) { return -1; },
-  hasNextSibling(rowIndex, afterIndex) { return false; },
-  getLevel(index) { return 1; },
-  getImageSrc(row, col) { return ""; },
+  setTree(out) {
+    this.treebox = out;
+  },
+  getParentIndex(rowIndex) {
+    return -1;
+  },
+  hasNextSibling(rowIndex, afterIndex) {
+    return false;
+  },
+  getLevel(index) {
+    return 1;
+  },
+  getImageSrc(row, col) {
+    return "";
+  },
   toggleOpenState(index) {},
   cycleHeader(col) {
     var index = this.selection.currentIndex;
@@ -80,25 +110,33 @@ var view = {
     if (col.id == gSortedColumn) {
       gSortDirection = -gSortDirection;
       gPrefArray.reverse();
-      if (gPrefView != gPrefArray)
+      if (gPrefView != gPrefArray) {
         gPrefView.reverse();
-      if (index >= 0)
+      }
+      if (index >= 0) {
         index = gPrefView.length - index - 1;
+      }
     } else {
       var pref = null;
-      if (index >= 0)
+      if (index >= 0) {
         pref = gPrefView[index];
+      }
 
       var old = document.getElementById(gSortedColumn);
       old.removeAttribute("sortDirection");
-      gPrefArray.sort(gSortFunction = gSortFunctions[col.id]);
-      if (gPrefView != gPrefArray)
+      gPrefArray.sort((gSortFunction = gSortFunctions[col.id]));
+      if (gPrefView != gPrefArray) {
         gPrefView.sort(gSortFunction);
+      }
       gSortedColumn = col.id;
-      if (pref)
+      if (pref) {
         index = getViewIndexOfPref(pref);
+      }
     }
-    col.element.setAttribute("sortDirection", gSortDirection > 0 ? "ascending" : "descending");
+    col.element.setAttribute(
+      "sortDirection",
+      gSortDirection > 0 ? "ascending" : "descending"
+    );
     this.treebox.invalidate();
     if (index >= 0) {
       this.selection.select(index);
@@ -107,28 +145,35 @@ var view = {
   },
   selectionChanged() {},
   cycleCell(row, col) {},
-  isEditable(row, col) { return false; },
+  isEditable(row, col) {
+    return false;
+  },
   setCellValue(row, col, value) {},
   setCellText(row, col, value) {},
   performAction(action) {},
   performActionOnRow(action, row) {},
   performActionOnCell(action, row, col) {},
-  isSeparator(index) { return false; },
+  isSeparator(index) {
+    return false;
+  },
 };
 
 // find the index in gPrefView of a pref object
 // or -1 if it does not exist in the filtered view
 function getViewIndexOfPref(pref) {
-  var low = -1, high = gPrefView.length;
+  var low = -1,
+    high = gPrefView.length;
   var index = (low + high) >> 1;
   while (index > low) {
     var mid = gPrefView[index];
-    if (mid == pref)
+    if (mid == pref) {
       return index;
-    if (gSortFunction(mid, pref) < 0)
+    }
+    if (gSortFunction(mid, pref) < 0) {
       low = index;
-    else
+    } else {
       high = index;
+    }
     index = (low + high) >> 1;
   }
   return -1;
@@ -136,13 +181,15 @@ function getViewIndexOfPref(pref) {
 
 // find the index in gPrefView where a pref object belongs
 function getNearestViewIndexOfPref(pref) {
-  var low = -1, high = gPrefView.length;
+  var low = -1,
+    high = gPrefView.length;
   var index = (low + high) >> 1;
   while (index > low) {
-    if (gSortFunction(gPrefView[index], pref) < 0)
+    if (gSortFunction(gPrefView[index], pref) < 0) {
       low = index;
-    else
+    } else {
       high = index;
+    }
     index = (low + high) >> 1;
   }
   return high;
@@ -150,39 +197,44 @@ function getNearestViewIndexOfPref(pref) {
 
 // find the index in gPrefArray of a pref object
 function getIndexOfPref(pref) {
-  var low = -1, high = gPrefArray.length;
+  var low = -1,
+    high = gPrefArray.length;
   var index = (low + high) >> 1;
   while (index > low) {
     var mid = gPrefArray[index];
-    if (mid == pref)
+    if (mid == pref) {
       return index;
-    if (gSortFunction(mid, pref) < 0)
+    }
+    if (gSortFunction(mid, pref) < 0) {
       low = index;
-    else
+    } else {
       high = index;
+    }
     index = (low + high) >> 1;
   }
   return index;
 }
 
 function getNearestIndexOfPref(pref) {
-  var low = -1, high = gPrefArray.length;
+  var low = -1,
+    high = gPrefArray.length;
   var index = (low + high) >> 1;
   while (index > low) {
-    if (gSortFunction(gPrefArray[index], pref) < 0)
+    if (gSortFunction(gPrefArray[index], pref) < 0) {
       low = index;
-    else
+    } else {
       high = index;
+    }
     index = (low + high) >> 1;
   }
   return high;
 }
 
-var gPrefListener =
-{
+var gPrefListener = {
   observe(subject, topic, prefName) {
-    if (topic != "nsPref:changed")
+    if (topic != "nsPref:changed") {
       return;
+    }
 
     var arrayIndex = gPrefArray.length;
     var viewIndex = arrayIndex;
@@ -234,8 +286,9 @@ var gPrefListener =
         return;
       }
 
-      if (addedRow)
+      if (addedRow) {
         view.treebox.rowCountChanged(newIndex, 1);
+      }
 
       // Invalidate the changed range in the view
       var low = Math.min(viewIndex, newIndex);
@@ -245,12 +298,13 @@ var gPrefListener =
       if (selectedIndex == viewIndex) {
         selectedIndex = newIndex;
       } else if (selectedIndex >= low && selectedIndex <= high) {
-        selectedIndex += (newIndex > viewIndex) ? -1 : 1;
+        selectedIndex += newIndex > viewIndex ? -1 : 1;
       }
       if (selectedIndex >= 0) {
         view.selection.select(selectedIndex);
-        if (selectedIndex == newIndex)
+        if (selectedIndex == newIndex) {
           view.treebox.ensureRowIsVisible(selectedIndex);
+        }
       }
     }
   },
@@ -260,8 +314,7 @@ function prefObject(prefName, prefIndex) {
   this.prefCol = prefName;
 }
 
-prefObject.prototype =
-{
+prefObject.prototype = {
   lockCol: PREF_IS_DEFAULT_VALUE,
   typeCol: nsIPrefBranch.PREF_STRING,
   valueCol: "",
@@ -273,10 +326,11 @@ function fetchPref(prefName, prefIndex) {
   gPrefHash[prefName] = pref;
   gPrefArray[prefIndex] = pref;
 
-  if (gPrefBranch.prefIsLocked(prefName))
+  if (gPrefBranch.prefIsLocked(prefName)) {
     pref.lockCol = PREF_IS_LOCKED;
-  else if (gPrefBranch.prefHasUserValue(prefName))
+  } else if (gPrefBranch.prefHasUserValue(prefName)) {
     pref.lockCol = PREF_IS_MODIFIED;
+  }
 
   try {
     switch (gPrefBranch.getPrefType(prefName)) {
@@ -294,9 +348,15 @@ function fetchPref(prefName, prefIndex) {
       case gPrefBranch.PREF_STRING:
         pref.valueCol = gPrefBranch.getStringPref(prefName);
         // Try in case it's a localized string (will throw an exception if not)
-        if (pref.lockCol == PREF_IS_DEFAULT_VALUE &&
-            /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.valueCol))
-          pref.valueCol = gPrefBranch.getComplexValue(prefName, nsIPrefLocalizedString).data;
+        if (
+          pref.lockCol == PREF_IS_DEFAULT_VALUE &&
+          /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.valueCol)
+        ) {
+          pref.valueCol = gPrefBranch.getComplexValue(
+            prefName,
+            nsIPrefLocalizedString
+          ).data;
+        }
         break;
     }
   } catch (e) {
@@ -307,14 +367,21 @@ function fetchPref(prefName, prefIndex) {
 
 async function onConfigLoad() {
   // Load strings
-  let [lockDefault, lockModified, lockLocked, typeString, typeInt, typeBool] =
-    await document.l10n.formatValues([
-      {id: "config-default"},
-      {id: "config-modified"},
-      {id: "config-locked"},
-      {id: "config-property-string"},
-      {id: "config-property-int"},
-      {id: "config-property-bool"}]);
+  let [
+    lockDefault,
+    lockModified,
+    lockLocked,
+    typeString,
+    typeInt,
+    typeBool,
+  ] = await document.l10n.formatValues([
+    { id: "config-default" },
+    { id: "config-modified" },
+    { id: "config-locked" },
+    { id: "config-property-string" },
+    { id: "config-property-int" },
+    { id: "config-property-bool" },
+  ]);
 
   gLockStrs[PREF_IS_DEFAULT_VALUE] = lockDefault;
   gLockStrs[PREF_IS_MODIFIED] = lockModified;
@@ -325,10 +392,11 @@ async function onConfigLoad() {
 
   var showWarning = gPrefBranch.getBoolPref("general.warnOnAboutConfig");
 
-  if (showWarning)
+  if (showWarning) {
     document.getElementById("warningButton").focus();
-  else
+  } else {
     ShowPrefs();
+  }
 }
 
 // Unhide the warning message
@@ -336,16 +404,25 @@ function ShowPrefs() {
   recordTelemetryOnce("Show");
   gPrefBranch.getChildList("").forEach(fetchPref);
 
-  var descending = document.getElementsByAttribute("sortDirection", "descending");
+  var descending = document.getElementsByAttribute(
+    "sortDirection",
+    "descending"
+  );
   if (descending.item(0)) {
     gSortedColumn = descending[0].id;
     gSortDirection = -1;
   } else {
-    var ascending = document.getElementsByAttribute("sortDirection", "ascending");
-    if (ascending.item(0))
+    var ascending = document.getElementsByAttribute(
+      "sortDirection",
+      "ascending"
+    );
+    if (ascending.item(0)) {
       gSortedColumn = ascending[0].id;
-    else
-      document.getElementById(gSortedColumn).setAttribute("sortDirection", "ascending");
+    } else {
+      document
+        .getElementById(gSortedColumn)
+        .setAttribute("sortDirection", "ascending");
+    }
   }
   gSortFunction = gSortFunctions[gSortedColumn];
   gPrefArray.sort(gSortFunction);
@@ -358,26 +435,31 @@ function ShowPrefs() {
 
   document.getElementById("configDeck").setAttribute("selectedIndex", 1);
   document.getElementById("configTreeKeyset").removeAttribute("disabled");
-  if (!document.getElementById("showWarningNextTime").checked)
+  if (!document.getElementById("showWarningNextTime").checked) {
     gPrefBranch.setBoolPref("general.warnOnAboutConfig", false);
+  }
 
   // Process about:config?filter=<string>
   var textbox = document.getElementById("textbox");
   // About URIs don't support query params, so do this manually
   var loc = document.location.href;
   var matches = /[?&]filter\=([^&]+)/i.exec(loc);
-  if (matches)
+  if (matches) {
     textbox.value = decodeURIComponent(matches[1]);
+  }
 
   // Even if we did not set the filter string via the URL query,
   // textbox might have been set via some other mechanism
-  if (textbox.value)
+  if (textbox.value) {
     FilterPrefs();
+  }
   textbox.focus();
 }
 
 function onConfigUnload() {
-  if (document.getElementById("configDeck").getAttribute("selectedIndex") == 1) {
+  if (
+    document.getElementById("configDeck").getAttribute("selectedIndex") == 1
+  ) {
     gPrefBranch.removeObserver("", gPrefListener);
     var configTree = document.getElementById("configTree");
     configTree.view = null;
@@ -386,7 +468,9 @@ function onConfigUnload() {
 }
 
 function FilterPrefs() {
-  if (document.getElementById("configDeck").getAttribute("selectedIndex") != 1) {
+  if (
+    document.getElementById("configDeck").getAttribute("selectedIndex") != 1
+  ) {
     return;
   }
 
@@ -402,21 +486,30 @@ function FilterPrefs() {
     }
   } else if (substring) {
     recordTelemetryOnce("Search");
-    gFilter = RegExp(substring.replace(/([^* \w])/g, "\\$1")
-                              .replace(/^\*+/, "").replace(/\*+/g, ".*"), "i");
+    gFilter = RegExp(
+      substring
+        .replace(/([^* \w])/g, "\\$1")
+        .replace(/^\*+/, "")
+        .replace(/\*+/g, ".*"),
+      "i"
+    );
   } else {
     gFilter = null;
   }
 
-  var prefCol = (view.selection && view.selection.currentIndex < 0) ?
-                null : gPrefView[view.selection.currentIndex].prefCol;
+  var prefCol =
+    view.selection && view.selection.currentIndex < 0
+      ? null
+      : gPrefView[view.selection.currentIndex].prefCol;
   var oldlen = gPrefView.length;
   gPrefView = gPrefArray;
   if (gFilter) {
     gPrefView = [];
-    for (var i = 0; i < gPrefArray.length; ++i)
-      if (gFilter.test(gPrefArray[i].prefCol + ";" + gPrefArray[i].valueCol))
+    for (var i = 0; i < gPrefArray.length; ++i) {
+      if (gFilter.test(gPrefArray[i].prefCol + ";" + gPrefArray[i].valueCol)) {
         gPrefView.push(gPrefArray[i]);
+      }
+    }
   }
   view.treebox.invalidate();
   view.treebox.rowCountChanged(oldlen, gPrefView.length - oldlen);
@@ -424,35 +517,40 @@ function FilterPrefs() {
 }
 
 function prefColSortFunction(x, y) {
-  if (x.prefCol > y.prefCol)
+  if (x.prefCol > y.prefCol) {
     return gSortDirection;
-  if (x.prefCol < y.prefCol)
+  }
+  if (x.prefCol < y.prefCol) {
     return -gSortDirection;
+  }
   return 0;
 }
 
 function lockColSortFunction(x, y) {
-  if (x.lockCol != y.lockCol)
+  if (x.lockCol != y.lockCol) {
     return gSortDirection * (y.lockCol - x.lockCol);
+  }
   return prefColSortFunction(x, y);
 }
 
 function typeColSortFunction(x, y) {
-  if (x.typeCol != y.typeCol)
+  if (x.typeCol != y.typeCol) {
     return gSortDirection * (y.typeCol - x.typeCol);
+  }
   return prefColSortFunction(x, y);
 }
 
 function valueColSortFunction(x, y) {
-  if (x.valueCol > y.valueCol)
+  if (x.valueCol > y.valueCol) {
     return gSortDirection;
-  if (x.valueCol < y.valueCol)
+  }
+  if (x.valueCol < y.valueCol) {
     return -gSortDirection;
+  }
   return prefColSortFunction(x, y);
 }
 
-const gSortFunctions =
-{
+const gSortFunctions = {
   prefCol: prefColSortFunction,
   lockCol: lockColSortFunction,
   typeCol: typeColSortFunction,
@@ -476,8 +574,7 @@ const configController = {
   doCommand: function doCommand(command) {
     copyPref();
   },
-  onEvent: function onEvent(event) {
-  },
+  onEvent: function onEvent(event) {},
 };
 
 function updateContextMenu() {
@@ -538,8 +635,9 @@ function copyValue() {
 
 function ModifySelected() {
   recordTelemetryOnce("ModifyValue");
-  if (view.selection.currentIndex >= 0)
+  if (view.selection.currentIndex >= 0) {
     ModifyPref(gPrefView[view.selection.currentIndex]);
+  }
 }
 
 function ResetSelected() {
@@ -554,27 +652,32 @@ async function NewPref(type) {
   var dummy = { value: 0 };
 
   let [newTitle, newPrompt] = await document.l10n.formatValues([
-    {id: "config-new-title", args: {type: gTypeStrs[type]} },
-    {id: "config-new-prompt"}]);
+    { id: "config-new-title", args: { type: gTypeStrs[type] } },
+    { id: "config-new-prompt" },
+  ]);
 
-  if (Services.prompt.prompt(window,
-                             newTitle,
-                             newPrompt,
-                             result,
-                             null,
-                             dummy)) {
+  if (
+    Services.prompt.prompt(window, newTitle, newPrompt, result, null, dummy)
+  ) {
     result.value = result.value.trim();
     if (!result.value) {
       return;
     }
 
     var pref;
-    if (result.value in gPrefHash)
+    if (result.value in gPrefHash) {
       pref = gPrefHash[result.value];
-    else
-      pref = { prefCol: result.value, lockCol: PREF_IS_DEFAULT_VALUE, typeCol: type, valueCol: "" };
-    if (ModifyPref(pref))
+    } else {
+      pref = {
+        prefCol: result.value,
+        lockCol: PREF_IS_DEFAULT_VALUE,
+        typeCol: type,
+        valueCol: "",
+      };
+    }
+    if (ModifyPref(pref)) {
       setTimeout(gotoPref, 0, result.value);
+    }
   }
 }
 
@@ -591,29 +694,46 @@ function gotoPref(pref) {
 }
 
 async function ModifyPref(entry) {
-  if (entry.lockCol == PREF_IS_LOCKED)
+  if (entry.lockCol == PREF_IS_LOCKED) {
     return false;
+  }
 
-  let [title] = await document.l10n.formatValues([{id: "config-modify-title", args: { type: gTypeStrs[entry.typeCol] }}]);
+  let [title] = await document.l10n.formatValues([
+    { id: "config-modify-title", args: { type: gTypeStrs[entry.typeCol] } },
+  ]);
 
   if (entry.typeCol == nsIPrefBranch.PREF_BOOL) {
     var check = { value: entry.valueCol == "false" };
-    if (!entry.valueCol && !Services.prompt.select(window, title, entry.prefCol, [false, true], check))
+    if (
+      !entry.valueCol &&
+      !Services.prompt.select(
+        window,
+        title,
+        entry.prefCol,
+        [false, true],
+        check
+      )
+    ) {
       return false;
+    }
     gPrefBranch.setBoolPref(entry.prefCol, check.value);
   } else {
     var result = { value: entry.valueCol };
     var dummy = { value: 0 };
-    if (!Services.prompt.prompt(window, title, entry.prefCol, result, null, dummy))
+    if (
+      !Services.prompt.prompt(window, title, entry.prefCol, result, null, dummy)
+    ) {
       return false;
+    }
     if (entry.typeCol == nsIPrefBranch.PREF_INT) {
       // | 0 converts to integer or 0; - 0 to float or NaN.
       // Thus, this check should catch all cases.
       var val = result.value | 0;
       if (val != result.value - 0) {
         const [err_title, err_text] = await document.l10n.formatValues([
-          {id: "config-nan-title"},
-          {id: "config-nan-text"}]);
+          { id: "config-nan-title" },
+          { id: "config-nan-text" },
+        ]);
 
         Services.prompt.alert(window, err_title, err_text);
         return false;
@@ -632,7 +752,9 @@ function recordTelemetryOnce(categoryLabel) {
   if (!gCategoriesRecordedOnce.has(categoryLabel)) {
     // Don't raise an exception if Telemetry is not available.
     try {
-      Services.telemetry.getHistogramById("ABOUT_CONFIG_FEATURES_USAGE").add(categoryLabel);
+      Services.telemetry
+        .getHistogramById("ABOUT_CONFIG_FEATURES_USAGE")
+        .add(categoryLabel);
     } catch (ex) {}
     gCategoriesRecordedOnce.add(categoryLabel);
   }

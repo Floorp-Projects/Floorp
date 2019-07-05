@@ -13,11 +13,19 @@ add_task(async function test_execute() {
     let site = "http://www.test-" + i + ".com/";
     let testURI = uri(site);
     let testImageURI = uri(site + "blank.gif");
-    let when = now + (i * TOTAL_SITES * 1000);
+    let when = now + i * TOTAL_SITES * 1000;
     await PlacesTestUtils.addVisits([
       { uri: testURI, visitDate: when, transition: TRANSITION_TYPED },
-      { uri: testImageURI, visitDate: when + 1000, transition: TRANSITION_EMBED },
-      { uri: testImageURI, visitDate: when + 2000, transition: TRANSITION_FRAMED_LINK },
+      {
+        uri: testImageURI,
+        visitDate: when + 1000,
+        transition: TRANSITION_EMBED,
+      },
+      {
+        uri: testImageURI,
+        visitDate: when + 2000,
+        transition: TRANSITION_FRAMED_LINK,
+      },
       { uri: testURI, visitDate: when + 3000, transition: TRANSITION_LINK },
     ]);
   }
@@ -38,8 +46,10 @@ add_task(async function test_execute() {
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.resultType = options.RESULTS_AS_VISIT;
   options.includeHidden = true;
-  let root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  let root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   let cc = root.childCount;
   // Embed visits are not added to the database, thus they won't appear.
@@ -69,8 +79,10 @@ add_task(async function test_execute() {
   options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.resultType = options.RESULTS_AS_VISIT;
-  root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   cc = root.childCount;
   // 2 * TOTAL_SITES because we count the TYPED and LINK, but not EMBED or FRAMED
@@ -98,8 +110,10 @@ add_task(async function test_execute() {
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.maxResults = 10;
   options.resultType = options.RESULTS_AS_URI;
-  root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   cc = root.childCount;
   Assert.equal(cc, options.maxResults);
@@ -121,8 +135,10 @@ add_task(async function test_execute() {
   options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.resultType = options.RESULTS_AS_URI;
-  root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
-                                              options).root;
+  root = PlacesUtils.history.executeQuery(
+    PlacesUtils.history.getNewQuery(),
+    options
+  ).root;
   root.containerOpen = true;
   cc = root.childCount;
   Assert.equal(cc, TOTAL_SITES);

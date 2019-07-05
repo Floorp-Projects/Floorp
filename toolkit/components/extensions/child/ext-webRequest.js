@@ -8,7 +8,9 @@ this.webRequest = class extends ExtensionAPI {
 
     context.callOnClose({
       close() {
-        for (let filter of ChromeUtils.nondeterministicGetWeakSetKeys(filters)) {
+        for (let filter of ChromeUtils.nondeterministicGetWeakSetKeys(
+          filters
+        )) {
           try {
             filter.disconnect();
           } catch (e) {
@@ -24,7 +26,9 @@ this.webRequest = class extends ExtensionAPI {
           requestId = parseInt(requestId, 10);
 
           let streamFilter = context.cloneScope.StreamFilter.create(
-            requestId, context.extension.id);
+            requestId,
+            context.extension.id
+          );
 
           filters.add(streamFilter);
           return streamFilter;

@@ -14,18 +14,27 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["CloudStorage"];
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 const CLOUD_SERVICES_PREF = "cloud.services.";
 const CLOUD_PROVIDERS_URI = "resource://cloudstorage/providers.json";
@@ -103,8 +112,8 @@ const CLOUD_PROVIDERS_URI = "resource://cloudstorage/providers.json";
 
 var CloudStorage = {
   /**
-    * Init method to initialize providers metadata
-    */
+   * Init method to initialize providers metadata
+   */
   async init() {
     let isInitialized = null;
     try {
@@ -149,8 +158,10 @@ var CloudStorage = {
    *        to save downloaded file with cloud provider
    */
   savePromptResponse(key, remember, selected = false) {
-    Services.prefs.setIntPref(CLOUD_SERVICES_PREF + "lastprompt",
-                              Math.floor(Date.now() / 1000));
+    Services.prefs.setIntPref(
+      CLOUD_SERVICES_PREF + "lastprompt",
+      Math.floor(Date.now() / 1000)
+    );
     if (remember) {
       if (selected) {
         CloudStorageInternal.setCloudStoragePref(key);
@@ -256,23 +267,32 @@ var CloudStorageInternal = {
    * in pref 'browser.download.dir'.
    */
   async resetFolderListPref() {
-    let folderListValue = Services.prefs.getIntPref("browser.download.folderList", 0);
+    let folderListValue = Services.prefs.getIntPref(
+      "browser.download.folderList",
+      0
+    );
     if (folderListValue !== 3) {
       return;
     }
 
     let downloadDirPath = null;
     try {
-      let file = Services.prefs.getComplexValue("browser.download.dir",
-                                                Ci.nsIFile);
+      let file = Services.prefs.getComplexValue(
+        "browser.download.dir",
+        Ci.nsIFile
+      );
       downloadDirPath = file.path;
     } catch (e) {}
 
-    if (!downloadDirPath ||
-        (downloadDirPath === await Downloads.getSystemDownloadsDirectory())) {
+    if (
+      !downloadDirPath ||
+      downloadDirPath === (await Downloads.getSystemDownloadsDirectory())
+    ) {
       // if downloadDirPath is the Downloads folder path or unspecified
       folderListValue = 1;
-    } else if (downloadDirPath === Services.dirsvc.get("Desk", Ci.nsIFile).path) {
+    } else if (
+      downloadDirPath === Services.dirsvc.get("Desk", Ci.nsIFile).path
+    ) {
       // if downloadDirPath is the Desktop path
       folderListValue = 0;
     } else {
@@ -293,7 +313,7 @@ var CloudStorageInternal = {
     // only if a consumer add-on using API sets pref 'cloud.services.api.enabled' to true
     // If API is not enabled, check and reset cloud storage value in folderList pref.
     if (!this.isAPIEnabled) {
-      this.resetFolderListPref().catch((err) => {
+      this.resetFolderListPref().catch(err => {
         Cu.reportError("CloudStorage: Failed to reset folderList pref " + err);
       });
       return false;
@@ -329,11 +349,17 @@ var CloudStorageInternal = {
     // specific directory path
 
     Object.getOwnPropertyNames(providers).forEach(key => {
-      if (providers[key].relativeDiscoveryPath.hasOwnProperty(AppConstants.platform)) {
-        providers[key].discoveryPath =
-          this._concatPath(providers[key].relativeDiscoveryPath[AppConstants.platform]);
-        providers[key].downloadPath =
-          this._concatPath(providers[key].relativeDownloadPath);
+      if (
+        providers[key].relativeDiscoveryPath.hasOwnProperty(
+          AppConstants.platform
+        )
+      ) {
+        providers[key].discoveryPath = this._concatPath(
+          providers[key].relativeDiscoveryPath[AppConstants.platform]
+        );
+        providers[key].downloadPath = this._concatPath(
+          providers[key].relativeDownloadPath
+        );
       } else {
         // delete key not supported on AppConstants.platform
         delete providers[key];
@@ -388,9 +414,9 @@ var CloudStorageInternal = {
   initDownloadPathIfProvidersExist() {
     let providerKeys = Object.keys(this.providersMetaData);
     let promises = providerKeys.map(key => {
-      return key === "Dropbox" ?
-             this._initDropbox(key) :
-             Promise.resolve(false);
+      return key === "Dropbox"
+        ? this._initDropbox(key)
+        : Promise.resolve(false);
     });
     return Promise.all(promises);
   },
@@ -407,7 +433,11 @@ var CloudStorageInternal = {
    */
   async _initDropbox(key) {
     // Check if Dropbox provider exist on desktop before continuing
-    if (!await this._checkIfAssetExists(this.providersMetaData[key].discoveryPath)) {
+    if (
+      !(await this._checkIfAssetExists(
+        this.providersMetaData[key].discoveryPath
+      ))
+    ) {
       return false;
     }
 
@@ -473,7 +503,9 @@ var CloudStorageInternal = {
     if (!this.providersMetaData) {
       let isInitialized = await this.promiseInit;
       if (!isInitialized && !this.providersMetaData) {
-        Cu.reportError("CloudStorage: Failed to initialize and retrieve download folder ");
+        Cu.reportError(
+          "CloudStorage: Failed to initialize and retrieve download folder "
+        );
         return null;
       }
     }
@@ -488,8 +520,10 @@ var CloudStorageInternal = {
       return null;
     }
 
-    let downloadDirPath = OS.Path.join(provider.downloadPath,
-                                       provider.typeSpecificData[dataType]);
+    let downloadDirPath = OS.Path.join(
+      provider.downloadPath,
+      provider.typeSpecificData[dataType]
+    );
     if (!(await this._isUsableDirectory(downloadDirPath))) {
       return null;
     }
@@ -556,7 +590,7 @@ var CloudStorageInternal = {
     // Pick first storage provider from providers
     let provider = providers.entries().next().value;
     if (provider) {
-      return {key: provider[0], value: provider[1]};
+      return { key: provider[0], value: provider[1] };
     }
     return null;
   },
@@ -587,7 +621,9 @@ var CloudStorageInternal = {
     let providers = Object.entries(this.providersMetaData || {});
 
     // Array of promises with boolean value exist for respective storage.
-    let promises = providers.map(([, provider]) => this._checkIfAssetExists(provider.discoveryPath));
+    let promises = providers.map(([, provider]) =>
+      this._checkIfAssetExists(provider.discoveryPath)
+    );
     let results = await Promise.all(promises);
 
     // Filter providers array to remove provider with discoveryPath asset exist resolved value false
@@ -614,7 +650,10 @@ var CloudStorageInternal = {
       if (key) {
         keys.push(key);
       }
-      Services.prefs.setCharPref(CLOUD_SERVICES_PREF + "rejected.key", keys.join(","));
+      Services.prefs.setCharPref(
+        CLOUD_SERVICES_PREF + "rejected.key",
+        keys.join(",")
+      );
     }
   },
 
@@ -640,8 +679,9 @@ var CloudStorageInternal = {
    */
   getPreferredProviderMetaData() {
     // Use preferred provider key to retrieve metadata from ProvidersMetaData
-    return this.providersMetaData.hasOwnProperty(this.preferredProviderKey) ?
-      this.providersMetaData[this.preferredProviderKey] : null;
+    return this.providersMetaData.hasOwnProperty(this.preferredProviderKey)
+      ? this.providersMetaData[this.preferredProviderKey]
+      : null;
   },
 
   /**
@@ -655,7 +695,11 @@ var CloudStorageInternal = {
   async getProviderIfInUse() {
     // Check if consumer add-on is present and user has set preferred provider key
     // and a valid download path exist on user desktop
-    if (this.isAPIEnabled && this.preferredProviderKey && await this.getDownloadFolder()) {
+    if (
+      this.isAPIEnabled &&
+      this.preferredProviderKey &&
+      (await this.getDownloadFolder())
+    ) {
       let provider = this.getPreferredProviderMetaData();
       return provider.displayName || null;
     }
@@ -666,32 +710,53 @@ var CloudStorageInternal = {
 /**
  * Provider key retrieved from service pref cloud.services.storage.key
  */
-XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "preferredProviderKey",
-  CLOUD_SERVICES_PREF + "storage.key", "");
+XPCOMUtils.defineLazyPreferenceGetter(
+  CloudStorageInternal,
+  "preferredProviderKey",
+  CLOUD_SERVICES_PREF + "storage.key",
+  ""
+);
 
 /**
  * Provider keys rejected by user for default download
  */
-XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "cloudStorageRejectedKeys",
-  CLOUD_SERVICES_PREF + "rejected.key", "");
+XPCOMUtils.defineLazyPreferenceGetter(
+  CloudStorageInternal,
+  "cloudStorageRejectedKeys",
+  CLOUD_SERVICES_PREF + "rejected.key",
+  ""
+);
 
 /**
  * Lastprompt time in seconds, by default set to 0
  */
-XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "lastPromptTime",
-  CLOUD_SERVICES_PREF + "lastprompt", 0 /* 0 second */);
+XPCOMUtils.defineLazyPreferenceGetter(
+  CloudStorageInternal,
+  "lastPromptTime",
+  CLOUD_SERVICES_PREF + "lastprompt",
+  0 /* 0 second */
+);
 
 /**
  * show prompt interval in days, by default set to 0
  */
-XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "promptInterval",
-  CLOUD_SERVICES_PREF + "interval.prompt", 0 /* 0 days */);
+XPCOMUtils.defineLazyPreferenceGetter(
+  CloudStorageInternal,
+  "promptInterval",
+  CLOUD_SERVICES_PREF + "interval.prompt",
+  0 /* 0 days */
+);
 
 /**
  * generic pref that shows if cloud storage API is in use, by default set to false.
  * Re-run CloudStorage init evertytime pref is set.
  */
-XPCOMUtils.defineLazyPreferenceGetter(CloudStorageInternal, "isAPIEnabled",
-  CLOUD_SERVICES_PREF + "api.enabled", false, () => CloudStorage.init());
+XPCOMUtils.defineLazyPreferenceGetter(
+  CloudStorageInternal,
+  "isAPIEnabled",
+  CLOUD_SERVICES_PREF + "api.enabled",
+  false,
+  () => CloudStorage.init()
+);
 
 CloudStorageInternal.promiseInit = CloudStorage.init();

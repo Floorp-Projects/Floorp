@@ -2,7 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-let {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+let { Management } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm",
+  null
+);
 function getNextContext() {
   return new Promise(resolve => {
     Management.on("proxy-context-load", function listener(type, context) {
@@ -36,8 +39,10 @@ add_task(async function test_storage_api_without_permissions() {
   // Force API initialization.
   void context.apiObj;
 
-  ok(!("storage" in context.apiObj),
-     "The storage API should not be initialized");
+  ok(
+    !("storage" in context.apiObj),
+    "The storage API should not be initialized"
+  );
 
   await extension.unload();
 });
@@ -61,8 +66,11 @@ add_task(async function test_storage_api_with_permissions() {
   // Force API initialization.
   void context.apiObj;
 
-  equal(typeof context.apiObj.storage, "object",
-        "The storage API should be initialized");
+  equal(
+    typeof context.apiObj.storage,
+    "object",
+    "The storage API should be initialized"
+  );
 
   await extension.unload();
 });

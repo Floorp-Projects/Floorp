@@ -16,8 +16,11 @@ const global = this;
 
 Cu.importGlobalProperties(["atob", "btoa"]);
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const KINTO_PROD_SERVER_URL = "https://webextensions.settings.services.mozilla.com/v1";
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const KINTO_PROD_SERVER_URL =
+  "https://webextensions.settings.services.mozilla.com/v1";
 const KINTO_DEFAULT_SERVER_URL = KINTO_PROD_SERVER_URL;
 
 const STORAGE_SYNC_ENABLED_PREF = "webextensions.storage.sync.enabled";
@@ -38,10 +41,14 @@ const SCALAR_STORAGE_CONSUMED = "storage.sync.api.usage.storage_consumed";
 // Default is 5sec, which seems a bit aggressive on the open internet
 const KINTO_REQUEST_TIMEOUT = 30000;
 
-const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BulkKeyBundle: "resource://services-sync/keys.js",
@@ -57,19 +64,26 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Utils: "resource://services-sync/util.js",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
-                                      STORAGE_SYNC_ENABLED_PREF, true);
-XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
-                                      STORAGE_SYNC_SERVER_URL_PREF,
-                                      KINTO_DEFAULT_SERVER_URL);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "prefPermitsStorageSync",
+  STORAGE_SYNC_ENABLED_PREF,
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "prefStorageSyncServerURL",
+  STORAGE_SYNC_SERVER_URL_PREF,
+  KINTO_DEFAULT_SERVER_URL
+);
 XPCOMUtils.defineLazyGetter(this, "WeaveCrypto", function() {
-  let {WeaveCrypto} = ChromeUtils.import("resource://services-crypto/WeaveCrypto.js");
+  let { WeaveCrypto } = ChromeUtils.import(
+    "resource://services-crypto/WeaveCrypto.js"
+  );
   return new WeaveCrypto();
 });
 
-const {
-  DefaultMap,
-} = ExtensionUtils;
+const { DefaultMap } = ExtensionUtils;
 
 // Map of Extensions to Set<Contexts> to track contexts that are still
 // "live" and use storage.sync.
@@ -86,7 +100,9 @@ if (AppConstants.platform != "android") {
 
 class ServerKeyringDeleted extends Error {
   constructor() {
-    super("server keyring appears to have disappeared; we were called to decrypt null");
+    super(
+      "server keyring appears to have disappeared; we were called to decrypt null"
+    );
   }
 }
 
@@ -100,7 +116,9 @@ class ServerKeyringDeleted extends Error {
  */
 function throwIfNoFxA(fxAccounts, action) {
   if (!fxAccounts) {
-    throw new Error(`${action} is impossible because FXAccounts is not available; are you on Android?`);
+    throw new Error(
+      `${action} is impossible because FXAccounts is not available; are you on Android?`
+    );
   }
 }
 
@@ -162,16 +180,20 @@ class EncryptionRemoteTransformer {
     }
 
     let IV = WeaveCrypto.generateRandomIV();
-    let ciphertext = await WeaveCrypto.encrypt(JSON.stringify(record),
-                                               keyBundle.encryptionKeyB64, IV);
+    let ciphertext = await WeaveCrypto.encrypt(
+      JSON.stringify(record),
+      keyBundle.encryptionKeyB64,
+      IV
+    );
     let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
-    const encryptedResult = {ciphertext, IV, hmac, id};
+    const encryptedResult = { ciphertext, IV, hmac, id };
 
     // Copy over the _status field, so that we handle concurrency
     // headers (If-Match, If-None-Match) correctly.
     // DON'T copy over "deleted" status, because then we'd leak
     // plaintext deletes.
-    encryptedResult._status = record._status == "deleted" ? "updated" : record._status;
+    encryptedResult._status =
+      record._status == "deleted" ? "updated" : record._status;
     if (record.hasOwnProperty("last_modified")) {
       encryptedResult.last_modified = record.last_modified;
     }
@@ -189,18 +211,28 @@ class EncryptionRemoteTransformer {
     }
     const keyBundle = await this.getKeys();
     // Authenticate the encrypted blob with the expected HMAC
-    let computedHMAC = ciphertextHMAC(keyBundle, record.id, record.IV, record.ciphertext);
+    let computedHMAC = ciphertextHMAC(
+      keyBundle,
+      record.id,
+      record.IV,
+      record.ciphertext
+    );
 
     if (computedHMAC != record.hmac) {
       Utils.throwHMACMismatch(record.hmac, computedHMAC);
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-    let cleartext = await WeaveCrypto.decrypt(record.ciphertext,
-                                              keyBundle.encryptionKeyB64, record.IV);
+    let cleartext = await WeaveCrypto.decrypt(
+      record.ciphertext,
+      keyBundle.encryptionKeyB64,
+      record.IV
+    );
     let jsonResult = JSON.parse(cleartext);
     if (!jsonResult || typeof jsonResult !== "object") {
-      throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
+      throw new Error(
+        "Decryption failed: result is <" + jsonResult + ">, not an object."
+      );
     }
 
     if (record.hasOwnProperty("last_modified")) {
@@ -288,7 +320,10 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
         if (record.kbHash != currentKBHash) {
           // Some other client encoded this with a kB that we don't
           // have access to.
-          KeyRingEncryptionRemoteTransformer.throwOutdatedKB(currentKBHash, record.kbHash);
+          KeyRingEncryptionRemoteTransformer.throwOutdatedKB(
+            currentKBHash,
+            record.kbHash
+          );
         }
       }
       throw e;
@@ -297,13 +332,19 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
 
   // Generator and discriminator for KB-is-outdated exceptions.
   static throwOutdatedKB(shouldBe, is) {
-    throw new Error(`kB hash on record is outdated: should be ${shouldBe}, is ${is}`);
+    throw new Error(
+      `kB hash on record is outdated: should be ${shouldBe}, is ${is}`
+    );
   }
 
   static isOutdatedKB(exc) {
     const kbMessage = "kB hash on record is outdated: ";
-    return exc && exc.message && exc.message.indexOf &&
-      (exc.message.indexOf(kbMessage) == 0);
+    return (
+      exc &&
+      exc.message &&
+      exc.message.indexOf &&
+      exc.message.indexOf(kbMessage) == 0
+    );
   }
 }
 global.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
@@ -325,23 +366,24 @@ async function storageSyncInit() {
   // Memoize the result to share the connection.
   if (storageSyncInit.promise === undefined) {
     const path = "storage-sync.sqlite";
-    storageSyncInit.promise = FirefoxAdapter.openConnection({path})
-    .then(connection => {
-      return {
-        connection,
-        kinto: new Kinto({
-          adapter: FirefoxAdapter,
-          adapterOptions: {sqliteHandle: connection},
-          timeout: KINTO_REQUEST_TIMEOUT,
-          retry: 0,
-        }),
-      };
-    }).catch(e => {
-      // Ensure one failure doesn't break us forever.
-      Cu.reportError(e);
-      storageSyncInit.promise = undefined;
-      throw e;
-    });
+    storageSyncInit.promise = FirefoxAdapter.openConnection({ path })
+      .then(connection => {
+        return {
+          connection,
+          kinto: new Kinto({
+            adapter: FirefoxAdapter,
+            adapterOptions: { sqliteHandle: connection },
+            timeout: KINTO_REQUEST_TIMEOUT,
+            retry: 0,
+          }),
+        };
+      })
+      .catch(e => {
+        // Ensure one failure doesn't break us forever.
+        Cu.reportError(e);
+        storageSyncInit.promise = undefined;
+        throw e;
+      });
   }
   return storageSyncInit.promise;
 }
@@ -357,7 +399,14 @@ async function storageSyncInit() {
 // all keys with "key-".
 function keyToId(key) {
   function escapeChar(match) {
-    return "_" + match.codePointAt(0).toString(16).toUpperCase() + "_";
+    return (
+      "_" +
+      match
+        .codePointAt(0)
+        .toString(16)
+        .toUpperCase() +
+      "_"
+    );
   }
   return "key-" + key.replace(/[^a-zA-Z0-9]/g, escapeChar);
 }
@@ -420,10 +469,12 @@ class CryptoCollection {
 
   async getCollection() {
     throwIfNoFxA(this._fxaService, "tried to access cryptoCollection");
-    const {kinto} = await storageSyncInit();
+    const { kinto } = await storageSyncInit();
     return kinto.collection(STORAGE_SYNC_CRYPTO_COLLECTION_NAME, {
       idSchema: cryptoCollectionIdSchema,
-      remoteTransformers: [new KeyRingEncryptionRemoteTransformer(this._fxaService)],
+      remoteTransformers: [
+        new KeyRingEncryptionRemoteTransformer(this._fxaService),
+      ],
     });
   }
 
@@ -434,7 +485,11 @@ class CryptoCollection {
    * @returns {string} A base64-encoded string of the salt
    */
   getNewSalt() {
-    return btoa(CryptoUtils.generateRandomBytesLegacy(STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES));
+    return btoa(
+      CryptoUtils.generateRandomBytesLegacy(
+        STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES
+      )
+    );
   }
 
   /**
@@ -457,16 +512,20 @@ class CryptoCollection {
    */
   async getKeyRingRecord() {
     const collection = await this.getCollection();
-    const cryptoKeyRecord = await collection.getAny(STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID);
+    const cryptoKeyRecord = await collection.getAny(
+      STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID
+    );
 
     let data = cryptoKeyRecord.data;
     if (!data) {
       // This is a new keyring. Invent an ID for this record. If this
       // changes, it means a client replaced the keyring, so we need to
       // reupload everything.
-      const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+      const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(
+        Ci.nsIUUIDGenerator
+      );
       const uuid = uuidgen.generateUUID().toString();
-      data = {uuid, id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID};
+      data = { uuid, id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID };
     }
     return data;
   }
@@ -510,8 +569,10 @@ class CryptoCollection {
    * @returns {Promise<bytestring>} A collection ID suitable for use to sync to.
    */
   extensionIdToCollectionId(extensionId) {
-    return this.hashWithExtensionSalt(CommonUtils.encodeUTF8(extensionId), extensionId)
-      .then(hash => `ext-${hash}`);
+    return this.hashWithExtensionSalt(
+      CommonUtils.encodeUTF8(extensionId),
+      extensionId
+    ).then(hash => `ext-${hash}`);
   }
 
   /**
@@ -534,11 +595,14 @@ class CryptoCollection {
     if (!saltBase64) {
       // This should never happen; salts should be populated before
       // we need them by ensureCanSync.
-      throw new Error(`no salt available for ${extensionId}; how did this happen?`);
+      throw new Error(
+        `no salt available for ${extensionId}; how did this happen?`
+      );
     }
 
-    const hasher = Cc["@mozilla.org/security/hash;1"]
-          .createInstance(Ci.nsICryptoHash);
+    const hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
     hasher.init(hasher.SHA256);
 
     const salt = atob(saltBase64);
@@ -556,7 +620,10 @@ class CryptoCollection {
     const cryptoKeyRecord = await this.getKeyRingRecord();
     const collectionKeys = new CollectionKeyManager();
     if (cryptoKeyRecord.keys) {
-      collectionKeys.setContents(cryptoKeyRecord.keys, cryptoKeyRecord.last_modified);
+      collectionKeys.setContents(
+        cryptoKeyRecord.keys,
+        cryptoKeyRecord.last_modified
+      );
     } else {
       // We never actually use the default key, so it's OK if we
       // generate one multiple times.
@@ -569,9 +636,10 @@ class CryptoCollection {
 
   async updateKBHash(kbHash) {
     const coll = await this.getCollection();
-    await coll.update({id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
-                       kbHash: kbHash},
-                      {patch: true});
+    await coll.update(
+      { id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID, kbHash: kbHash },
+      { patch: true }
+    );
   }
 
   async upsert(record) {
@@ -614,7 +682,7 @@ this.CryptoCollection = CryptoCollection;
  * with a hashed ID, using the salt for this collection.
  *
  * @param {string} extensionId The extension ID for which to find a key.
-   */
+ */
 let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTransformer {
   constructor(cryptoCollection, extensionId) {
     super();
@@ -628,7 +696,11 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
     if (!collectionKeys.hasKeysFor([this.extensionId])) {
       // This should never happen. Keys should be created (and
       // synced) at the beginning of the sync cycle.
-      throw new Error(`tried to encrypt records for ${this.extensionId}, but key is not present`);
+      throw new Error(
+        `tried to encrypt records for ${
+          this.extensionId
+        }, but key is not present`
+      );
     }
     return collectionKeys.keyForCollection(this.extensionId);
   }
@@ -641,7 +713,8 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
     // Like extensionIdToCollectionId, the rules about Kinto record
     // IDs preclude equals signs or strings starting with a
     // non-alphanumeric, so prefix all IDs with a constant "id-".
-    return this.cryptoCollection.hashWithExtensionSalt(id, this.extensionId)
+    return this.cryptoCollection
+      .hashWithExtensionSalt(id, this.extensionId)
       .then(hash => `id-${hash}`);
   }
 };
@@ -680,8 +753,13 @@ function cleanUpForContext(extension, context) {
  */
 const openCollection = async function(cryptoCollection, extension, context) {
   let collectionId = extension.id;
-  const {kinto} = await storageSyncInit();
-  const remoteTransformers = [new CollectionKeyEncryptionRemoteTransformer(cryptoCollection, extension.id)];
+  const { kinto } = await storageSyncInit();
+  const remoteTransformers = [
+    new CollectionKeyEncryptionRemoteTransformer(
+      cryptoCollection,
+      extension.id
+    ),
+  ];
   const coll = kinto.collection(collectionId, {
     idSchema: storageSyncIdSchema,
     remoteTransformers,
@@ -724,9 +802,17 @@ class ExtensionStorageSync {
     const collection = await this.cryptoCollection.getCollection();
     const storage = await collection.db.calculateStorage();
     this._telemetry.scalarSet(SCALAR_EXTENSIONS_USING, storage.length);
-    for (let {collectionName, size, numRecords} of storage) {
-      this._telemetry.keyedScalarSet(SCALAR_ITEMS_STORED, collectionName, numRecords);
-      this._telemetry.keyedScalarSet(SCALAR_STORAGE_CONSUMED, collectionName, size);
+    for (let { collectionName, size, numRecords } of storage) {
+      this._telemetry.keyedScalarSet(
+        SCALAR_ITEMS_STORED,
+        collectionName,
+        numRecords
+      );
+      this._telemetry.keyedScalarSet(
+        SCALAR_STORAGE_CONSUMED,
+        collectionName,
+        size
+      );
     }
   }
 
@@ -738,7 +824,9 @@ class ExtensionStorageSync {
       log.info("User was not signed into FxA; cannot sync");
       throw new Error("Not signed in to FxA");
     }
-    const collectionId = await this.cryptoCollection.extensionIdToCollectionId(extension.id);
+    const collectionId = await this.cryptoCollection.extensionIdToCollectionId(
+      extension.id
+    );
     let syncResults;
     try {
       syncResults = await this._syncCollection(collection, {
@@ -804,13 +892,19 @@ class ExtensionStorageSync {
    */
   _syncCollection(collection, options) {
     // FIXME: this should support syncing to self-hosted
-    return this._requestWithToken(`Syncing ${collection.name}`, function(token) {
-      const allOptions = Object.assign({}, {
-        remote: prefStorageSyncServerURL,
-        headers: {
-          Authorization: "Bearer " + token,
+    return this._requestWithToken(`Syncing ${collection.name}`, function(
+      token
+    ) {
+      const allOptions = Object.assign(
+        {},
+        {
+          remote: prefStorageSyncServerURL,
+          headers: {
+            Authorization: "Bearer " + token,
+          },
         },
-      }, options);
+        options
+      );
 
       return collection.sync(allOptions);
     });
@@ -820,7 +914,10 @@ class ExtensionStorageSync {
   // If the response indicates that the token might have expired,
   // retry the request.
   async _requestWithToken(description, f) {
-    throwIfNoFxA(this._fxaService, "making remote requests from chrome.storage.sync");
+    throwIfNoFxA(
+      this._fxaService,
+      "making remote requests from chrome.storage.sync"
+    );
     const fxaToken = await this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
     try {
       return await f(fxaToken);
@@ -828,8 +925,10 @@ class ExtensionStorageSync {
       if (e && e.response && e.response.status == 401) {
         // Our token might have expired. Refresh and retry.
         log.info("Token might have expired");
-        await this._fxaService.removeCachedOAuthToken({token: fxaToken});
-        const newToken = await this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
+        await this._fxaService.removeCachedOAuthToken({ token: fxaToken });
+        const newToken = await this._fxaService.getOAuthToken(
+          FXA_OAUTH_OPTIONS
+        );
 
         // If this fails too, let it go.
         return f(newToken);
@@ -848,7 +947,7 @@ class ExtensionStorageSync {
   _deleteBucket() {
     log.error("Deleting default bucket and everything in it");
     return this._requestWithToken("Clearing server", function(token) {
-      const headers = {Authorization: "Bearer " + token};
+      const headers = { Authorization: "Bearer " + token };
       const kintoHttp = new KintoHttpClient(prefStorageSyncServerURL, {
         headers: headers,
         timeout: KINTO_REQUEST_TIMEOUT,
@@ -905,7 +1004,10 @@ class ExtensionStorageSync {
   async ensureCanSync(extIds) {
     const keysRecord = await this.cryptoCollection.getKeyRingRecord();
     const collectionKeys = await this.cryptoCollection.getKeyRing();
-    if (collectionKeys.hasKeysFor(extIds) && this.hasSaltsFor(keysRecord, extIds)) {
+    if (
+      collectionKeys.hasKeysFor(extIds) &&
+      this.hasSaltsFor(keysRecord, extIds)
+    ) {
       return collectionKeys;
     }
 
@@ -938,7 +1040,7 @@ class ExtensionStorageSync {
    * Update the kB in the crypto record.
    */
   async updateKeyRingKB() {
-    throwIfNoFxA(this._fxaService, "use of chrome.storage.sync \"keyring\"");
+    throwIfNoFxA(this._fxaService, 'use of chrome.storage.sync "keyring"');
     const signedInUser = await this._fxaService.getSignedInUser();
     if (!signedInUser) {
       // Although this function is meant to be called on login,
@@ -977,7 +1079,7 @@ class ExtensionStorageSync {
   }
 
   async _syncKeyRing(cryptoKeyRecord) {
-    throwIfNoFxA(this._fxaService, "syncing chrome.storage.sync \"keyring\"");
+    throwIfNoFxA(this._fxaService, 'syncing chrome.storage.sync "keyring"');
     try {
       // Try to sync using server_wins.
       //
@@ -1013,13 +1115,21 @@ class ExtensionStorageSync {
         if (resolutionIds > 1) {
           // This should never happen -- there is only ever one record
           // in this collection.
-          log.error(`Too many resolutions for sync-storage-crypto collection: ${JSON.stringify(resolutionIds)}`);
+          log.error(
+            `Too many resolutions for sync-storage-crypto collection: ${JSON.stringify(
+              resolutionIds
+            )}`
+          );
         }
         const keyResolution = result.resolved[0];
         if (keyResolution.id != STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID) {
           // This should never happen -- there should only ever be the
           // keyring in this collection.
-          log.error(`Strange conflict in sync-storage-crypto collection: ${JSON.stringify(resolutionIds)}`);
+          log.error(
+            `Strange conflict in sync-storage-crypto collection: ${JSON.stringify(
+              resolutionIds
+            )}`
+          );
         }
 
         // Due to a bug in the server-side code (see
@@ -1044,7 +1154,11 @@ class ExtensionStorageSync {
         }
 
         if (keyResolution.accepted.uuid != cryptoKeyRecord.uuid) {
-          log.info(`Detected a new UUID (${keyResolution.accepted.uuid}, was ${cryptoKeyRecord.uuid}). Resetting sync status for everything.`);
+          log.info(
+            `Detected a new UUID (${keyResolution.accepted.uuid}, was ${
+              cryptoKeyRecord.uuid
+            }). Resetting sync status for everything.`
+          );
           await this.cryptoCollection.resetSyncStatus();
 
           // Server version is now correct. Return that result.
@@ -1054,16 +1168,20 @@ class ExtensionStorageSync {
       // No conflicts, or conflict was just someone else adding keys.
       return result;
     } catch (e) {
-      if (KeyRingEncryptionRemoteTransformer.isOutdatedKB(e) ||
-          e instanceof ServerKeyringDeleted ||
-          // This is another way that ServerKeyringDeleted can
-          // manifest; see bug 1350088 for more details.
-          e.message.includes("Server has been flushed.")) {
+      if (
+        KeyRingEncryptionRemoteTransformer.isOutdatedKB(e) ||
+        e instanceof ServerKeyringDeleted ||
+        // This is another way that ServerKeyringDeleted can
+        // manifest; see bug 1350088 for more details.
+        e.message.includes("Server has been flushed.")
+      ) {
         // Check if our token is still valid, or if we got locked out
         // between starting the sync and talking to Kinto.
         const isSessionValid = await this._fxaService.sessionStatus();
         if (isSessionValid) {
-          log.error("Couldn't decipher old keyring; deleting the default bucket and resetting sync status");
+          log.error(
+            "Couldn't decipher old keyring; deleting the default bucket and resetting sync status"
+          );
           await this._deleteBucket();
           await this.cryptoCollection.resetSyncStatus();
 
@@ -1104,7 +1222,9 @@ class ExtensionStorageSync {
    */
   getCollection(extension, context) {
     if (prefPermitsStorageSync !== true) {
-      return Promise.reject({message: `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`});
+      return Promise.reject({
+        message: `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`,
+      });
     }
     this.registerInUse(extension, context);
     return openCollection(this.cryptoCollection, extension, context);
@@ -1114,29 +1234,34 @@ class ExtensionStorageSync {
     const coll = await this.getCollection(extension, context);
     const keys = Object.keys(items);
     const ids = keys.map(keyToId);
-    const histogramSize = this._telemetry.getKeyedHistogramById(HISTOGRAM_SET_OPS_SIZE);
-    const changes = await coll.execute(txn => {
-      let changes = {};
-      for (let [i, key] of keys.entries()) {
-        const id = ids[i];
-        let item = items[key];
-        histogramSize.add(extension.id, JSON.stringify(item).length);
-        let {oldRecord} = txn.upsert({
-          id,
-          key,
-          data: item,
-        });
-        changes[key] = {
-          newValue: item,
-        };
-        if (oldRecord && oldRecord.data) {
-          // Extract the "data" field from the old record, which
-          // represents the value part of the key-value store
-          changes[key].oldValue = oldRecord.data;
+    const histogramSize = this._telemetry.getKeyedHistogramById(
+      HISTOGRAM_SET_OPS_SIZE
+    );
+    const changes = await coll.execute(
+      txn => {
+        let changes = {};
+        for (let [i, key] of keys.entries()) {
+          const id = ids[i];
+          let item = items[key];
+          histogramSize.add(extension.id, JSON.stringify(item).length);
+          let { oldRecord } = txn.upsert({
+            id,
+            key,
+            data: item,
+          });
+          changes[key] = {
+            newValue: item,
+          };
+          if (oldRecord && oldRecord.data) {
+            // Extract the "data" field from the old record, which
+            // represents the value part of the key-value store
+            changes[key].oldValue = oldRecord.data;
+          }
         }
-      }
-      return changes;
-    }, {preloadIds: ids});
+        return changes;
+      },
+      { preloadIds: ids }
+    );
     this.notifyListeners(extension, changes);
   }
 
@@ -1145,22 +1270,27 @@ class ExtensionStorageSync {
     keys = [].concat(keys);
     const ids = keys.map(keyToId);
     let changes = {};
-    await coll.execute(txn => {
-      for (let [i, key] of keys.entries()) {
-        const id = ids[i];
-        const res = txn.deleteAny(id);
-        if (res.deleted) {
-          changes[key] = {
-            oldValue: res.data.data,
-          };
+    await coll.execute(
+      txn => {
+        for (let [i, key] of keys.entries()) {
+          const id = ids[i];
+          const res = txn.deleteAny(id);
+          if (res.deleted) {
+            changes[key] = {
+              oldValue: res.data.data,
+            };
+          }
         }
-      }
-      return changes;
-    }, {preloadIds: ids});
+        return changes;
+      },
+      { preloadIds: ids }
+    );
     if (Object.keys(changes).length > 0) {
       this.notifyListeners(extension, changes);
     }
-    const histogram = this._telemetry.getKeyedHistogramById(HISTOGRAM_REMOVE_OPS);
+    const histogram = this._telemetry.getKeyedHistogramById(
+      HISTOGRAM_REMOVE_OPS
+    );
     histogram.add(extension.id, keys.length);
   }
 
@@ -1196,7 +1326,9 @@ class ExtensionStorageSync {
 
   async get(extension, spec, context) {
     const coll = await this.getCollection(extension, context);
-    const histogramSize = this._telemetry.getKeyedHistogramById(HISTOGRAM_GET_OPS_SIZE);
+    const histogramSize = this._telemetry.getKeyedHistogramById(
+      HISTOGRAM_GET_OPS_SIZE
+    );
     let keys, records;
     if (spec === null) {
       records = {};
@@ -1256,4 +1388,7 @@ class ExtensionStorageSync {
   }
 }
 this.ExtensionStorageSync = ExtensionStorageSync;
-extensionStorageSync = new ExtensionStorageSync(_fxaService, Services.telemetry);
+extensionStorageSync = new ExtensionStorageSync(
+  _fxaService,
+  Services.telemetry
+);

@@ -7,8 +7,10 @@
 add_task(async function() {
   await createCorruptDb("favicons.sqlite");
 
-  Assert.equal(PlacesUtils.history.databaseStatus,
-               PlacesUtils.history.DATABASE_STATUS_CREATE);
+  Assert.equal(
+    PlacesUtils.history.databaseStatus,
+    PlacesUtils.history.DATABASE_STATUS_CREATE
+  );
   let db = await PlacesUtils.promiseDBConnection();
   await db.execute("SELECT * FROM moz_icons"); // Should not fail.
 });

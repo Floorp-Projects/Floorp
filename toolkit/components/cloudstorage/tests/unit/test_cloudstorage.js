@@ -1,19 +1,27 @@
 "use strict";
 
 // Globals
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "CloudStorage",
-                               "resource://gre/modules/CloudStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "CloudStorage",
+  "resource://gre/modules/CloudStorage.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 const CLOUD_SERVICES_PREF = "cloud.services.";
 const DROPBOX_DOWNLOAD_FOLDER = "Dropbox";
 const GOOGLE_DRIVE_DOWNLOAD_FOLDER = "Google Drive";
-const DROPBOX_CONFIG_FOLDER = (AppConstants.platform === "win") ? "Dropbox" :
-                                                                  ".dropbox";
+const DROPBOX_CONFIG_FOLDER =
+  AppConstants.platform === "win" ? "Dropbox" : ".dropbox";
 const DROPBOX_KEY = "Dropbox";
 const GDRIVE_KEY = "GDrive";
 
@@ -63,7 +71,9 @@ function registerFakePath(key, file) {
 function mock_dropbox() {
   let discoveryFolder = null;
   if (AppConstants.platform === "win") {
-    discoveryFolder = FileUtils.getFile("LocalAppData", [DROPBOX_CONFIG_FOLDER]);
+    discoveryFolder = FileUtils.getFile("LocalAppData", [
+      DROPBOX_CONFIG_FOLDER,
+    ]);
   } else {
     discoveryFolder = FileUtils.getFile("Home", [DROPBOX_CONFIG_FOLDER]);
   }
@@ -77,7 +87,10 @@ function mock_dropbox() {
   Assert.ok(exist, "file exists on desktop");
 
   // Mock Dropbox Download folder in Home directory
-  let downloadFolder = FileUtils.getFile("Home", [DROPBOX_DOWNLOAD_FOLDER, "Downloads"]);
+  let downloadFolder = FileUtils.getFile("Home", [
+    DROPBOX_DOWNLOAD_FOLDER,
+    "Downloads",
+  ]);
   if (!downloadFolder.exists()) {
     downloadFolder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
@@ -99,16 +112,27 @@ function mock_gdrive() {
   if (AppConstants.platform === "win") {
     discoveryFolder = FileUtils.getFile("LocalAppData", ["Google", "Drive"]);
   } else {
-    discoveryFolder = FileUtils.getFile("Home", ["Library", "Application Support", "Google", "Drive"]);
+    discoveryFolder = FileUtils.getFile("Home", [
+      "Library",
+      "Application Support",
+      "Google",
+      "Drive",
+    ]);
   }
   if (!discoveryFolder.exists()) {
-    discoveryFolder.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    discoveryFolder.createUnique(
+      Ci.nsIFile.DIRECTORY_TYPE,
+      FileUtils.PERMS_DIRECTORY
+    );
   }
   let exist = discoveryFolder.exists();
   Assert.ok(exist, "file exists on desktop");
 
   // Mock Google Drive Download folder in Home directory
-  let downloadFolder = FileUtils.getFile("Home", [GOOGLE_DRIVE_DOWNLOAD_FOLDER, "Downloads"]);
+  let downloadFolder = FileUtils.getFile("Home", [
+    GOOGLE_DRIVE_DOWNLOAD_FOLDER,
+    "Downloads",
+  ]);
   if (!downloadFolder.exists()) {
     downloadFolder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
@@ -155,12 +179,21 @@ async function checkScan(expectedKey) {
     Assert.ok(!scanProvider, "No provider in scan results");
   } else {
     Assert.ok(metadata.size, "Number of storage providers");
-    Assert.equal(scanProvider.key, expectedKey, "Scanned provider key returned");
+    Assert.equal(
+      scanProvider.key,
+      expectedKey,
+      "Scanned provider key returned"
+    );
   }
   return metadata;
 }
 
-async function checkSavedPromptResponse(aKey, metadata, remember, selected = false) {
+async function checkSavedPromptResponse(
+  aKey,
+  metadata,
+  remember,
+  selected = false
+) {
   CloudStorage.savePromptResponse(aKey, remember, selected);
 
   if (remember && selected) {
@@ -170,17 +203,27 @@ async function checkSavedPromptResponse(aKey, metadata, remember, selected = fal
 
     // Check preferred provider key, should be set to dropbox
     let prefProvider = CloudStorage.getPreferredProvider();
-    Assert.equal(prefProvider, aKey, "Saved Response preferred provider key returned");
+    Assert.equal(
+      prefProvider,
+      aKey,
+      "Saved Response preferred provider key returned"
+    );
     // Check browser.download.folderlist pref should be set to 3
-    Assert.equal(Services.prefs.getIntPref("browser.download.folderList"), 3,
-                 "Default download location set to 3");
+    Assert.equal(
+      Services.prefs.getIntPref("browser.download.folderList"),
+      3,
+      "Default download location set to 3"
+    );
 
     // Preferred download folder should be set to provider downloadPath from metadata
     let path = await CloudStorage.getDownloadFolder();
     let nsIDownloadFolder = new FileUtils.File(path);
     Assert.ok(nsIDownloadFolder, "Download folder retrieved");
-    Assert.equal(nsIDownloadFolder.parent.path, metadata.get(aKey).downloadPath,
-                 "Default download Folder Path");
+    Assert.equal(
+      nsIDownloadFolder.parent.path,
+      metadata.get(aKey).downloadPath,
+      "Default download Folder Path"
+    );
   } else if (remember && !selected) {
     // Save prompt response with option to always remember the setting
     // and provider with aKey rejected as cloud storage provider
@@ -189,17 +232,22 @@ async function checkSavedPromptResponse(aKey, metadata, remember, selected = fal
 
     let scanResult = await promisePromptInfo();
     if (scanResult) {
-      Assert.notEqual(scanResult.key, DROPBOX_KEY, "Scanned provider key returned is not Dropbox");
+      Assert.notEqual(
+        scanResult.key,
+        DROPBOX_KEY,
+        "Scanned provider key returned is not Dropbox"
+      );
     } else {
       Assert.ok(!scanResult, "No provider in scan results");
     }
   }
 }
 
-
-
 add_task(async function test_checkInit() {
-  let {CloudStorageInternal} = ChromeUtils.import("resource://gre/modules/CloudStorage.jsm", null);
+  let { CloudStorageInternal } = ChromeUtils.import(
+    "resource://gre/modules/CloudStorage.jsm",
+    null
+  );
   let isInitialized = await CloudStorageInternal.promiseInit;
   Assert.ok(isInitialized, "Providers Metadata successfully initialized");
 });
@@ -227,7 +275,6 @@ add_task(async function test_dropboxStorageProvider() {
   nsIDropboxFile.remove(false);
   cleanupPrefs();
 });
-
 
 /**
  * Check scan and save prompt response flow if only gdrive exists on desktop.

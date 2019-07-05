@@ -1,7 +1,8 @@
 // newPset: returns an empty nsIUrlClassifierPrefixSet.
 function newPset() {
-  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
-            .createInstance(Ci.nsIUrlClassifierPrefixSet);
+  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"].createInstance(
+    Ci.nsIUrlClassifierPrefixSet
+  );
   pset.init("all");
   return pset;
 }
@@ -14,26 +15,29 @@ function arrContains(arr, target) {
   let i = 0;
 
   while (end > start) {
-    i = start + (end - start >> 1);
+    i = start + ((end - start) >> 1);
     let value = arr[i];
 
-    if (value < target)
+    if (value < target) {
       start = i + 1;
-    else if (value > target)
+    } else if (value > target) {
       end = i - 1;
-    else
+    } else {
       break;
+    }
   }
-  if (start == end)
+  if (start == end) {
     i = start;
+  }
 
-  return (!(i < 0 || i >= arr.length) && arr[i] == target);
+  return !(i < 0 || i >= arr.length) && arr[i] == target;
 }
 
 // checkContents: Check whether the PrefixSet pset contains
 // the prefixes in the passed array.
 function checkContents(pset, prefixes) {
-  var outcount = {}, outset = {};
+  var outcount = {},
+    outset = {};
   outset = pset.getPrefixes(outcount);
   let inset = prefixes;
   Assert.equal(inset.length, outset.length);
@@ -55,8 +59,9 @@ function wrappedProbe(pset, prefix) {
 function doRandomLookups(pset, prefixes, N) {
   for (let i = 0; i < N; i++) {
     let randInt = prefixes[0];
-    while (arrContains(prefixes, randInt))
+    while (arrContains(prefixes, randInt)) {
       randInt = Math.floor(Math.random() * Math.pow(2, 32));
+    }
 
     Assert.ok(!wrappedProbe(pset, randInt));
   }
@@ -77,8 +82,9 @@ function doExpectedLookups(pset, prefixes, N) {
 // testBasicPset: A very basic test of the prefix set to make sure that it
 // exists and to give a basic example of its use.
 function testBasicPset() {
-  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
-               .createInstance(Ci.nsIUrlClassifierPrefixSet);
+  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"].createInstance(
+    Ci.nsIUrlClassifierPrefixSet
+  );
   let prefixes = [2, 50, 100, 2000, 78000, 1593203];
   pset.setPrefixes(prefixes, prefixes.length);
 
@@ -88,13 +94,13 @@ function testBasicPset() {
   Assert.ok(!wrappedProbe(pset, 999));
   Assert.ok(!wrappedProbe(pset, 0));
 
-
   checkContents(pset, prefixes);
 }
 
 function testDuplicates() {
-  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
-               .createInstance(Ci.nsIUrlClassifierPrefixSet);
+  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"].createInstance(
+    Ci.nsIUrlClassifierPrefixSet
+  );
   let prefixes = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 5, 6, 6, 7, 7, 9, 9, 9];
   pset.setPrefixes(prefixes, prefixes.length);
 
@@ -104,7 +110,6 @@ function testDuplicates() {
   Assert.ok(wrappedProbe(pset, 9));
   Assert.ok(!wrappedProbe(pset, 4));
   Assert.ok(!wrappedProbe(pset, 8));
-
 
   checkContents(pset, prefixes);
 }
@@ -116,7 +121,6 @@ function testSimplePset() {
 
   doRandomLookups(pset, prefixes, 100);
   doExpectedLookups(pset, prefixes, 1);
-
 
   checkContents(pset, prefixes);
 }
@@ -136,13 +140,13 @@ function testReSetPrefixes() {
     Assert.ok(!wrappedProbe(pset, prefixes[i]));
   }
 
-
   checkContents(pset, secondPrefixes);
 }
 
 function testTinySet() {
-  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
-               .createInstance(Ci.nsIUrlClassifierPrefixSet);
+  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"].createInstance(
+    Ci.nsIUrlClassifierPrefixSet
+  );
   let prefixes = [1];
   pset.setPrefixes(prefixes, prefixes.length);
 
@@ -156,11 +160,13 @@ function testTinySet() {
   checkContents(pset, prefixes);
 }
 
-var tests = [testBasicPset,
-             testSimplePset,
-             testReSetPrefixes,
-             testDuplicates,
-             testTinySet];
+var tests = [
+  testBasicPset,
+  testSimplePset,
+  testReSetPrefixes,
+  testDuplicates,
+  testTinySet,
+];
 
 function run_test() {
   // None of the tests use |executeSoon| or any sort of callbacks, so we can

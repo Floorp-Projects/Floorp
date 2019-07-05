@@ -4,8 +4,14 @@
 
 "use strict";
 
-const {BaseAction} = ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
-ChromeUtils.defineModuleGetter(this, "ActionSchemas", "resource://normandy/actions/schemas/index.js");
+const { BaseAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseAction.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ActionSchemas",
+  "resource://normandy/actions/schemas/index.js"
+);
 
 var EXPORTED_SYMBOLS = ["ConsoleLogAction"];
 

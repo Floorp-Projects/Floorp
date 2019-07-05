@@ -1,4 +1,4 @@
-if (typeof(classifierHelper) == "undefined") {
+if (typeof classifierHelper == "undefined") {
   var classifierHelper = {};
 }
 
@@ -70,9 +70,17 @@ classifierHelper.addUrlToDB = function(updateData) {
       classifierHelper._updatesToCleanup.push(update);
       testUpdate +=
         "n:1000\n" +
-        "i:" + LISTNAME + "\n" +
+        "i:" +
+        LISTNAME +
+        "\n" +
         "ad:1\n" +
-        "a:" + update.addChunk + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+        "a:" +
+        update.addChunk +
+        ":" +
+        HASHLEN +
+        ":" +
+        CHUNKLEN +
+        "\n" +
         CHUNKDATA;
     }
 
@@ -88,9 +96,7 @@ classifierHelper.resetDatabase = function() {
       var testUpdate = "";
       for (var update of classifierHelper._updatesToCleanup) {
         testUpdate +=
-          "n:1000\n" +
-          "i:" + update.db + "\n" +
-          "ad:" + update.addChunk + "\n";
+          "n:1000\n" + "i:" + update.db + "\n" + "ad:" + update.addChunk + "\n";
       }
 
       classifierHelper._update(testUpdate, resolve, reject);
@@ -117,9 +123,11 @@ classifierHelper.reloadDatabase = function() {
 
 classifierHelper._update = function(testUpdate, onsuccess, onerror) {
   // Queue the task if there is still an on-going update
-  classifierHelper._updates.push({"data": testUpdate,
-                                  "onsuccess": onsuccess,
-                                  "onerror": onerror});
+  classifierHelper._updates.push({
+    data: testUpdate,
+    onsuccess,
+    onerror,
+  });
   if (classifierHelper._updates.length != 1) {
     return;
   }

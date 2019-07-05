@@ -13,7 +13,11 @@ function backgroundScript() {
     if (port.name == "check-results") {
       browser.runtime.onConnect.removeListener(countReceivedPorts);
 
-      browser.test.assertEq(expected_received_ports_number, received_ports_number, "invalid connect should not create a port");
+      browser.test.assertEq(
+        expected_received_ports_number,
+        received_ports_number,
+        "invalid connect should not create a port"
+      );
 
       browser.test.notifyPass("runtime.connect invalid params");
     }
@@ -31,27 +35,39 @@ function senderScript() {
 
   const invalid_connect_params = [
     // too many params
-    ["fake-extensions-id", {name: "fake-conn-name"}, "unexpected third params"],
+    [
+      "fake-extensions-id",
+      { name: "fake-conn-name" },
+      "unexpected third params",
+    ],
     // invalid params format
     [{}, {}],
     ["fake-extensions-id", "invalid-connect-info-format"],
   ];
-  const expected_detected_invalid_connect_params = invalid_connect_params.length;
+  const expected_detected_invalid_connect_params =
+    invalid_connect_params.length;
 
   function assertInvalidConnectParamsException(params) {
     try {
       browser.runtime.connect(...params);
     } catch (e) {
       detected_invalid_connect_params++;
-      browser.test.assertTrue(e.toString().includes("Incorrect argument types for runtime.connect."), "exception message is correct");
+      browser.test.assertTrue(
+        e.toString().includes("Incorrect argument types for runtime.connect."),
+        "exception message is correct"
+      );
     }
   }
   for (let params of invalid_connect_params) {
     assertInvalidConnectParamsException(params);
   }
-  browser.test.assertEq(expected_detected_invalid_connect_params, detected_invalid_connect_params, "all invalid runtime.connect params detected");
+  browser.test.assertEq(
+    expected_detected_invalid_connect_params,
+    detected_invalid_connect_params,
+    "all invalid runtime.connect params detected"
+  );
 
-  browser.runtime.connect(browser.runtime.id, {name: "check-results"});
+  browser.runtime.connect(browser.runtime.id, { name: "check-results" });
 }
 
 let extensionData = {

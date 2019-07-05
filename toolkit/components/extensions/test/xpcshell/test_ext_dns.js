@@ -6,22 +6,25 @@ Services.prefs.setBoolPref("network.dns.disableIPv6", true);
 
 function getExtension(background = undefined) {
   let manifest = {
-    "permissions": [
-      "dns",
-    ],
+    permissions: ["dns"],
   };
   return ExtensionTestUtils.loadExtension({
     manifest,
     background() {
       browser.test.onMessage.addListener(async (msg, data) => {
         browser.test.log(`=== dns resolve test ${JSON.stringify(data)}`);
-        browser.dns.resolve(data.hostname, data.flags).then(result => {
-          browser.test.log(`=== dns resolve result ${JSON.stringify(result)}`);
-          browser.test.sendMessage("resolved", result);
-        }).catch(e => {
-          browser.test.log(`=== dns resolve error ${e.message}`);
-          browser.test.sendMessage("resolved", {message: e.message});
-        });
+        browser.dns
+          .resolve(data.hostname, data.flags)
+          .then(result => {
+            browser.test.log(
+              `=== dns resolve result ${JSON.stringify(result)}`
+            );
+            browser.test.sendMessage("resolved", result);
+          })
+          .catch(e => {
+            browser.test.log(`=== dns resolve error ${e.message}`);
+            browser.test.sendMessage("resolved", { message: e.message });
+          });
       });
       browser.test.sendMessage("ready");
     },
@@ -85,16 +88,29 @@ add_task(async function test_dns_resolve() {
     extension.sendMessage("resolve", test.request);
     let result = await extension.awaitMessage("resolved");
     if (test.expect.error) {
-      ok(test.expect.error.test(result.message), `expected error ${result.message}`);
+      ok(
+        test.expect.error.test(result.message),
+        `expected error ${result.message}`
+      );
     } else {
-      equal(result.canonicalName, test.expect.canonicalName, "canonicalName match");
+      equal(
+        result.canonicalName,
+        test.expect.canonicalName,
+        "canonicalName match"
+      );
       // It seems there are platform differences happening that make this
       // testing difficult. We're going to rely on other existing dns tests to validate
       // the dns service itself works and only validate that we're getting generally
       // expected results in the webext api.
-      ok(result.addresses.length >= test.expect.addresses.length, "expected number of addresses returned");
+      ok(
+        result.addresses.length >= test.expect.addresses.length,
+        "expected number of addresses returned"
+      );
       if (test.expect.addresses.length > 0 && result.addresses.length > 0) {
-        ok(result.addresses.includes(test.expect.addresses[0]), "got expected ip address");
+        ok(
+          result.addresses.includes(test.expect.addresses[0]),
+          "got expected ip address"
+        );
       }
     }
   }

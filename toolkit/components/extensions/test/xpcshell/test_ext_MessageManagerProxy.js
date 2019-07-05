@@ -2,8 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {MessageManagerProxy} = ChromeUtils.import("resource://gre/modules/MessageManagerProxy.jsm");
-const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const { MessageManagerProxy } = ChromeUtils.import(
+  "resource://gre/modules/MessageManagerProxy.jsm"
+);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 class TestMessageManagerProxy extends MessageManagerProxy {
   constructor(contentPage, identifier) {
@@ -17,14 +21,19 @@ class TestMessageManagerProxy extends MessageManagerProxy {
   async setupPingPongListeners() {
     await this.contentPage.loadFrameScript(`() => {
       this.addMessageListener("test:MessageManagerProxy:Ping", ({data}) => {
-        this.sendAsyncMessage("test:MessageManagerProxy:Pong", "${this.identifier}:" + data);
+        this.sendAsyncMessage("test:MessageManagerProxy:Pong", "${
+          this.identifier
+        }:" + data);
       });
     }`);
 
     // Register the listener here instead of during testPingPong, to make sure
     // that the listener is correctly registered during the whole test.
     this.addMessageListener("test:MessageManagerProxy:Pong", event => {
-      ok(this.deferred, `[${this.identifier}] expected to be waiting for ping-pong`);
+      ok(
+        this.deferred,
+        `[${this.identifier}] expected to be waiting for ping-pong`
+      );
       this.deferred.resolve(event.data);
       this.deferred = null;
     });

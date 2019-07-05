@@ -10,9 +10,9 @@
 add_task(async function testXPIMissingBackGroundScript() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "background": {
-        "scripts": ["missing.js"],
-        "persistent": false,
+      background: {
+        scripts: ["missing.js"],
+        persistent: false,
       },
     },
   });

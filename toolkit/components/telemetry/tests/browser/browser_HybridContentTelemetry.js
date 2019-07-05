@@ -4,19 +4,30 @@
 
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
-const { TelemetryUtils } = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { ObjectUtils } = ChromeUtils.import(
+  "resource://gre/modules/ObjectUtils.jsm"
+);
 
 const HC_PERMISSION = "hc_telemetry";
 
-async function waitForProcessesEvents(aProcesses,
-                                      aAdditionalCondition = data => true) {
+async function waitForProcessesEvents(
+  aProcesses,
+  aAdditionalCondition = data => true
+) {
   await ContentTaskUtils.waitForCondition(() => {
-    const events =
-      Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS);
-    return aProcesses.every(p => Object.keys(events).includes(p))
-           && aAdditionalCondition(events);
+    const events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    );
+    return (
+      aProcesses.every(p => Object.keys(events).includes(p)) &&
+      aAdditionalCondition(events)
+    );
   });
 }
 
@@ -45,8 +56,10 @@ async function waitForEvent(aProcess, aEventData) {
  * filter them).
  */
 function removeTrailingInvalidEntry(aEvent) {
-  while (aEvent[aEvent.length - 1] === undefined ||
-         aEvent[aEvent.length - 1] === null) {
+  while (
+    aEvent[aEvent.length - 1] === undefined ||
+    aEvent[aEvent.length - 1] === null
+  ) {
     aEvent.pop();
   }
   return aEvent;
@@ -65,7 +78,9 @@ add_task(async function test_setup() {
   // And take care of the already initialized one as well.
   let canRecordExtended = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  registerCleanupFunction(() => Services.telemetry.canRecordExtended = canRecordExtended);
+  registerCleanupFunction(
+    () => (Services.telemetry.canRecordExtended = canRecordExtended)
+  );
 });
 
 add_task(async function test_untrusted_http_origin() {
@@ -89,17 +104,22 @@ add_task(async function test_untrusted_http_origin() {
   // use this event to know when we can stop waiting for the hybrid content data.
   const TEST_CONTENT_EVENT = ["telemetry.test", "main_and_content", "object1"];
   Services.telemetry.setEventRecordingEnabled("telemetry.test", true);
-  await ContentTask.spawn(newTab.linkedBrowser, [TEST_CONTENT_EVENT],
-                          ([testContentEvent]) => {
-    // Call the hybrid content telemetry API.
-    let contentWin = Cu.waiveXrays(content);
-    contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
-    // Record from the usual telemetry API a "canary" event.
-    Services.telemetry.recordEvent(...testContentEvent);
-  });
+  await ContentTask.spawn(
+    newTab.linkedBrowser,
+    [TEST_CONTENT_EVENT],
+    ([testContentEvent]) => {
+      // Call the hybrid content telemetry API.
+      let contentWin = Cu.waiveXrays(content);
+      contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
+      // Record from the usual telemetry API a "canary" event.
+      Services.telemetry.recordEvent(...testContentEvent);
+    }
+  );
 
   // Let's support both e10s/non-e10s testing.
-  const processName = Services.appinfo.browserTabsRemoteAutostart ? "content" : "parent";
+  const processName = Services.appinfo.browserTabsRemoteAutostart
+    ? "content"
+    : "parent";
   await waitForEvent(processName, TEST_CONTENT_EVENT);
 
   // This is needed otherwise the test will fail due to missing test passes.
@@ -131,17 +151,22 @@ add_task(async function test_secure_non_whitelisted_origin() {
   // use this event to know when we can stop waiting for the hybrid content data.
   const TEST_CONTENT_EVENT = ["telemetry.test", "main_and_content", "object1"];
   Services.telemetry.setEventRecordingEnabled("telemetry.test", true);
-  await ContentTask.spawn(newTab.linkedBrowser, [TEST_CONTENT_EVENT],
-                          ([testContentEvent]) => {
-    // Call the hybrid content telemetry API.
-    let contentWin = Cu.waiveXrays(content);
-    contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
-    // Record from the usual telemetry API a "canary" event.
-    Services.telemetry.recordEvent(...testContentEvent);
-  });
+  await ContentTask.spawn(
+    newTab.linkedBrowser,
+    [TEST_CONTENT_EVENT],
+    ([testContentEvent]) => {
+      // Call the hybrid content telemetry API.
+      let contentWin = Cu.waiveXrays(content);
+      contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
+      // Record from the usual telemetry API a "canary" event.
+      Services.telemetry.recordEvent(...testContentEvent);
+    }
+  );
 
   // Let's support both e10s/non-e10s testing.
-  const processName = Services.appinfo.browserTabsRemoteAutostart ? "content" : "parent";
+  const processName = Services.appinfo.browserTabsRemoteAutostart
+    ? "content"
+    : "parent";
   await waitForEvent(processName, TEST_CONTENT_EVENT);
 
   // This is needed otherwise the test will fail due to missing test passes.
@@ -179,17 +204,22 @@ add_task(async function test_trusted_disabled_hybrid_telemetry() {
   // use this event to know when we can stop waiting for the hybrid content data.
   const TEST_CONTENT_EVENT = ["telemetry.test", "main_and_content", "object1"];
   Services.telemetry.setEventRecordingEnabled("telemetry.test", true);
-  await ContentTask.spawn(newTab.linkedBrowser, [TEST_CONTENT_EVENT],
-                          ([testContentEvent]) => {
-    // Call the hybrid content telemetry API.
-    let contentWin = Cu.waiveXrays(content);
-    contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
-    // Record from the usual telemetry API a "canary" event.
-    Services.telemetry.recordEvent(...testContentEvent);
-  });
+  await ContentTask.spawn(
+    newTab.linkedBrowser,
+    [TEST_CONTENT_EVENT],
+    ([testContentEvent]) => {
+      // Call the hybrid content telemetry API.
+      let contentWin = Cu.waiveXrays(content);
+      contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
+      // Record from the usual telemetry API a "canary" event.
+      Services.telemetry.recordEvent(...testContentEvent);
+    }
+  );
 
   // Let's support both e10s/non-e10s testing.
-  const processName = Services.appinfo.browserTabsRemoteAutostart ? "content" : "parent";
+  const processName = Services.appinfo.browserTabsRemoteAutostart
+    ? "content"
+    : "parent";
   await waitForEvent(processName, TEST_CONTENT_EVENT);
 
   // This is needed otherwise the test will fail due to missing test passes.
@@ -228,30 +258,41 @@ add_task(async function test_hybrid_content_with_iframe() {
   // to use HCT to the the missing privileges.
   const testHost = "https://example.org";
   let iframeUrl = url.replace("chrome://mochitests/content", testHost);
-  await ContentTask.spawn(newTab.linkedBrowser,
-                          [iframeUrl, TEST_CONTENT_EVENT],
-                          async function([iframeUrl, testContentEvent]) {
-    let doc = content.document;
-    let iframe = doc.createElement("iframe");
-    let promiseIframeLoaded = ContentTaskUtils.waitForEvent(iframe, "load", false);
-    iframe.src = iframeUrl;
-    doc.body.insertBefore(iframe, doc.body.firstChild);
-    await promiseIframeLoaded;
+  await ContentTask.spawn(
+    newTab.linkedBrowser,
+    [iframeUrl, TEST_CONTENT_EVENT],
+    async function([iframeUrl, testContentEvent]) {
+      let doc = content.document;
+      let iframe = doc.createElement("iframe");
+      let promiseIframeLoaded = ContentTaskUtils.waitForEvent(
+        iframe,
+        "load",
+        false
+      );
+      iframe.src = iframeUrl;
+      doc.body.insertBefore(iframe, doc.body.firstChild);
+      await promiseIframeLoaded;
 
-    // Call the hybrid content telemetry API.
-    let contentWin = Cu.waiveXrays(iframe.contentWindow);
-    contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
+      // Call the hybrid content telemetry API.
+      let contentWin = Cu.waiveXrays(iframe.contentWindow);
+      contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
 
-    // Record from the usual telemetry API a "canary" event.
-    Services.telemetry.recordEvent(...testContentEvent);
-  });
+      // Record from the usual telemetry API a "canary" event.
+      Services.telemetry.recordEvent(...testContentEvent);
+    }
+  );
 
   // Let's support both e10s/non-e10s testing.
-  const processName = Services.appinfo.browserTabsRemoteAutostart ? "content" : "parent";
+  const processName = Services.appinfo.browserTabsRemoteAutostart
+    ? "content"
+    : "parent";
   await waitForEvent(processName, TEST_CONTENT_EVENT);
 
   // This is needed otherwise the test will fail due to missing test passes.
-  ok(true, "There were no unintended hybrid content API usages from the iframe.");
+  ok(
+    true,
+    "There were no unintended hybrid content API usages from the iframe."
+  );
 
   // Cleanup permissions and remove the tab.
   BrowserTestUtils.removeTab(newTab);
@@ -265,7 +306,13 @@ add_task(async function test_hybrid_content_recording() {
   const TEST_EVENT_CATEGORY = "telemetry.test.hct";
   const RECORDED_TEST_EVENTS = [
     [TEST_EVENT_CATEGORY, "test1", "object1"],
-    [TEST_EVENT_CATEGORY, "test2", "object1", null, {"key1": "foo", "key2": "bar"}],
+    [
+      TEST_EVENT_CATEGORY,
+      "test2",
+      "object1",
+      null,
+      { key1: "foo", key2: "bar" },
+    ],
     [TEST_EVENT_CATEGORY, "test2", "object1", "some value"],
     [TEST_EVENT_CATEGORY, "test1", "object1", null, null],
     [TEST_EVENT_CATEGORY, "test1", "object1", "", null],
@@ -284,51 +331,69 @@ add_task(async function test_hybrid_content_recording() {
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   // Register some events and record them in Telemetry.
-  await ContentTask.spawn(newTab.linkedBrowser,
-                          [TEST_EVENT_CATEGORY, RECORDED_TEST_EVENTS, NON_RECORDED_TEST_EVENTS],
-                          ([eventCategory, recordedTestEvents, nonRecordedTestEvents]) => {
-    let contentWin = Cu.waiveXrays(content);
+  await ContentTask.spawn(
+    newTab.linkedBrowser,
+    [TEST_EVENT_CATEGORY, RECORDED_TEST_EVENTS, NON_RECORDED_TEST_EVENTS],
+    ([eventCategory, recordedTestEvents, nonRecordedTestEvents]) => {
+      let contentWin = Cu.waiveXrays(content);
 
-    // If we tried to call contentWin.Mozilla.ContentTelemetry.* functions
-    // and pass non-string parameters, |waiveXrays| would complain and not
-    // let us access them. To work around this, we generate test functions
-    // in the test HTML file and unwrap the passed JSON blob there.
-    contentWin.testRegisterEvents(eventCategory, JSON.stringify({
-      // Event with only required fields.
-      "test1": {
-        methods: ["test1"],
-        objects: ["object1"],
-      },
-      // Event with extra_keys.
-      "test2": {
-        methods: ["test2", "test2b"],
-        objects: ["object1"],
-        extra_keys: ["key1", "key2"],
-      },
-    }));
+      // If we tried to call contentWin.Mozilla.ContentTelemetry.* functions
+      // and pass non-string parameters, |waiveXrays| would complain and not
+      // let us access them. To work around this, we generate test functions
+      // in the test HTML file and unwrap the passed JSON blob there.
+      contentWin.testRegisterEvents(
+        eventCategory,
+        JSON.stringify({
+          // Event with only required fields.
+          test1: {
+            methods: ["test1"],
+            objects: ["object1"],
+          },
+          // Event with extra_keys.
+          test2: {
+            methods: ["test2", "test2b"],
+            objects: ["object1"],
+            extra_keys: ["key1", "key2"],
+          },
+        })
+      );
 
-    // Record some valid events.
-    recordedTestEvents.forEach(e => contentWin.testRecordEvents(JSON.stringify(e)));
+      // Record some valid events.
+      recordedTestEvents.forEach(e =>
+        contentWin.testRecordEvents(JSON.stringify(e))
+      );
 
-    // Test recording an unknown event. The Telemetry API itself is supposed to throw,
-    // but we catch that in hybrid content telemetry and log an error message.
-    nonRecordedTestEvents.forEach(e => contentWin.testRecordEvents(JSON.stringify(e)));
-  });
+      // Test recording an unknown event. The Telemetry API itself is supposed to throw,
+      // but we catch that in hybrid content telemetry and log an error message.
+      nonRecordedTestEvents.forEach(e =>
+        contentWin.testRecordEvents(JSON.stringify(e))
+      );
+    }
+  );
 
   // Wait for the data to be in the snapshot, then get the Telemetry data.
   await waitForProcessesEvents(["dynamic"]);
-  let snapshot =
-      Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS);
+  let snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+  );
 
   // Check that the dynamically register events made it to the snapshot.
-  ok("dynamic" in snapshot,
-     "The snapshot must contain the 'dynamic' process section");
+  ok(
+    "dynamic" in snapshot,
+    "The snapshot must contain the 'dynamic' process section"
+  );
   let dynamicEvents = snapshot.dynamic.map(e => e.slice(1));
-  is(dynamicEvents.length, RECORDED_TEST_EVENTS.length, "Should match expected event count.");
+  is(
+    dynamicEvents.length,
+    RECORDED_TEST_EVENTS.length,
+    "Should match expected event count."
+  );
   for (let i = 0; i < RECORDED_TEST_EVENTS.length; ++i) {
-    SimpleTest.isDeeply(dynamicEvents[i],
-                        removeTrailingInvalidEntry(RECORDED_TEST_EVENTS[i]),
-                        "Should have recorded the expected event.");
+    SimpleTest.isDeeply(
+      dynamicEvents[i],
+      removeTrailingInvalidEntry(RECORDED_TEST_EVENTS[i]),
+      "Should have recorded the expected event."
+    );
   }
 
   // Cleanup permissions and remove the tab.
@@ -339,7 +404,9 @@ add_task(async function test_hybrid_content_recording() {
 add_task(async function test_can_upload() {
   const testHost = "https://example.org";
 
-  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]],
+  });
 
   // Give the test host enough privileges to use the API and open the test page.
   let testHttpsUri = Services.io.newURI(testHost);
@@ -356,16 +423,24 @@ add_task(async function test_can_upload() {
 
     // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
     let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
-    ok(canUpload, "CanUpload must report 'true' if the preference has that value.");
+    ok(
+      canUpload,
+      "CanUpload must report 'true' if the preference has that value."
+    );
   });
 
   // Flip the pref and check again.
-  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, false]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[TelemetryUtils.Preferences.FhrUploadEnabled, false]],
+  });
   await ContentTask.spawn(newTab.linkedBrowser, {}, async function() {
     let contentWin = Cu.waiveXrays(content);
     await contentWin.Mozilla.ContentTelemetry.initPromise();
     let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
-    ok(!canUpload, "CanUpload must report 'false' if the preference has that value.");
+    ok(
+      !canUpload,
+      "CanUpload must report 'false' if the preference has that value."
+    );
   });
 
   // Cleanup permissions and remove the tab.
@@ -379,11 +454,16 @@ add_task(async function test_hct_for_discopane() {
   let discoHttpsUri = Services.io.newURI(discoHost);
   let permission = Services.perms.testPermission(discoHttpsUri, HC_PERMISSION);
 
-  ok(permission == Services.perms.ALLOW_ACTION, "Disco Pane needs Hybrid Content Permission for Telemetry data upload");
+  ok(
+    permission == Services.perms.ALLOW_ACTION,
+    "Disco Pane needs Hybrid Content Permission for Telemetry data upload"
+  );
 });
 
 add_task(async function test_init_rejects() {
-  await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]]});
+  await SpecialPowers.pushPrefEnv({
+    set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]],
+  });
 
   // Give the test host no privilege: init() will throw.
   const testHostNoPrivilege = "https://example.org";
@@ -395,36 +475,59 @@ add_task(async function test_init_rejects() {
   // the content task, as we want to spawn another tab that loads an URI with HCT
   // privileges in order to make sure that init works ok there. We want both pages
   // to load in parallel.
-  let page1Promise = ContentTask.spawn(newTab.linkedBrowser, {}, async function() {
-    let contentWin = Cu.waiveXrays(content);
+  let page1Promise = ContentTask.spawn(
+    newTab.linkedBrowser,
+    {},
+    async function() {
+      let contentWin = Cu.waiveXrays(content);
 
-    await Assert.rejects(contentWin.Mozilla.ContentTelemetry.initPromise(),
-                         /Origin not trusted/,
-                         "The init promise must reject if the page has no HCT permission.");
+      await Assert.rejects(
+        contentWin.Mozilla.ContentTelemetry.initPromise(),
+        /Origin not trusted/,
+        "The init promise must reject if the page has no HCT permission."
+      );
 
-    // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
-    let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
-    ok(!canUpload, "CanUpload must report 'false' if init failed.");
-  });
+      // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
+      let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
+      ok(!canUpload, "CanUpload must report 'false' if init failed.");
+    }
+  );
 
   // Give the test host HCT privileges and test that init doesn't throw.
   const testHostPrivileges = "https://example.com";
   let testUrlPrivileges = Services.io.newURI(testHostPrivileges);
-  Services.perms.add(testUrlPrivileges, HC_PERMISSION, Services.perms.ALLOW_ACTION);
+  Services.perms.add(
+    testUrlPrivileges,
+    HC_PERMISSION,
+    Services.perms.ALLOW_ACTION
+  );
   let urlWithPrivs = getRootDirectory(gTestPath) + "hybrid_content.html";
-  urlWithPrivs = urlWithPrivs.replace("chrome://mochitests/content", testHostPrivileges);
-  let otherTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, urlWithPrivs);
+  urlWithPrivs = urlWithPrivs.replace(
+    "chrome://mochitests/content",
+    testHostPrivileges
+  );
+  let otherTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    urlWithPrivs
+  );
 
   // Check that CanUpload reports the correct value.
-  let page2Promise = ContentTask.spawn(otherTab.linkedBrowser, {}, async function() {
-    let contentWin = Cu.waiveXrays(content);
+  let page2Promise = ContentTask.spawn(
+    otherTab.linkedBrowser,
+    {},
+    async function() {
+      let contentWin = Cu.waiveXrays(content);
 
-    await contentWin.Mozilla.ContentTelemetry.initPromise();
+      await contentWin.Mozilla.ContentTelemetry.initPromise();
 
-    // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
-    let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
-    ok(canUpload, "CanUpload must report the expected value if init succeeded.");
-  });
+      // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
+      let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
+      ok(
+        canUpload,
+        "CanUpload must report the expected value if init succeeded."
+      );
+    }
+  );
 
   await Promise.all([page1Promise, page2Promise]);
 

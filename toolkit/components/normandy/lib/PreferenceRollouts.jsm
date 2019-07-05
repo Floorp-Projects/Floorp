@@ -4,12 +4,34 @@
 
 "use strict";
 
-const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "IndexedDB", "resource://gre/modules/IndexedDB.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "PrefUtils", "resource://normandy/lib/PrefUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryEvents", "resource://normandy/lib/TelemetryEvents.jsm");
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "IndexedDB",
+  "resource://gre/modules/IndexedDB.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrefUtils",
+  "resource://normandy/lib/PrefUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryEvents",
+  "resource://normandy/lib/TelemetryEvents.jsm"
+);
 
 const log = LogManager.getLogger("recipe-runner");
 
@@ -28,25 +50,25 @@ const log = LogManager.getLogger("recipe-runner");
  *   An array of preferences specifications involved in the rollout.
  */
 
- /**
-  * PreferenceSpec describe how a preference should change during a rollout.
-  * @typedef {object} PreferenceSpec
-  * @property {string} preferenceName
-  *   The preference to modify.
-  * @property {string} preferenceType
-  *   Type of the preference being set.
-  * @property {string|integer|boolean} value
-  *   The value to change the preference to.
-  * @property {string|integer|boolean} previousValue
-  *   The value the preference would have on the default branch if this rollout
-  *   were not active.
-  */
+/**
+ * PreferenceSpec describe how a preference should change during a rollout.
+ * @typedef {object} PreferenceSpec
+ * @property {string} preferenceName
+ *   The preference to modify.
+ * @property {string} preferenceType
+ *   Type of the preference being set.
+ * @property {string|integer|boolean} value
+ *   The value to change the preference to.
+ * @property {string|integer|boolean} previousValue
+ *   The value the preference would have on the default branch if this rollout
+ *   were not active.
+ */
 
 var EXPORTED_SYMBOLS = ["PreferenceRollouts"];
 const STARTUP_PREFS_BRANCH = "app.normandy.startupRolloutPrefs.";
 const DB_NAME = "normandy-preference-rollout";
 const STORE_NAME = "preference-rollouts";
-const DB_OPTIONS = {version: 1};
+const DB_OPTIONS = { version: 1 };
 
 /**
  * Create a new connection to the database.
@@ -125,7 +147,12 @@ var PreferenceRollouts = {
         rollout.state = this.STATE_GRADUATED;
         changed = true;
         log.debug(`Graduating rollout: ${rollout.slug}`);
-        TelemetryEvents.sendEvent("graduate", "preference_rollout", rollout.slug, {});
+        TelemetryEvents.sendEvent(
+          "graduate",
+          "preference_rollout",
+          rollout.slug,
+          {}
+        );
       }
 
       if (changed) {
@@ -137,7 +164,9 @@ var PreferenceRollouts = {
 
   async init() {
     for (const rollout of await this.getAllActive()) {
-      TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {type: "normandy-prefrollout"});
+      TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
+        type: "normandy-prefrollout",
+      });
     }
   },
 
@@ -180,8 +209,10 @@ var PreferenceRollouts = {
    * @throws If a matching rollout does not exist.
    */
   async update(rollout) {
-    if (!await this.has(rollout.slug)) {
-      throw new Error(`Tried to update ${rollout.slug}, but it doesn't already exist.`);
+    if (!(await this.has(rollout.slug))) {
+      throw new Error(
+        `Tried to update ${rollout.slug}, but it doesn't already exist.`
+      );
     }
     const db = await getDatabase();
     return getStore(db, "readwrite").put(rollout);
@@ -231,7 +262,11 @@ var PreferenceRollouts = {
 
     for (const rollout of await this.getAllActive()) {
       for (const prefSpec of rollout.preferences) {
-        PrefUtils.setPref("user", STARTUP_PREFS_BRANCH + prefSpec.preferenceName, prefSpec.value);
+        PrefUtils.setPref(
+          "user",
+          STARTUP_PREFS_BRANCH + prefSpec.preferenceName,
+          prefSpec.value
+        );
       }
     }
   },

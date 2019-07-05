@@ -1,6 +1,9 @@
 "use strict";
 
-ChromeUtils.import("resource://normandy/lib/CleanupManager.jsm", this); /* global CleanupManagerClass */
+ChromeUtils.import(
+  "resource://normandy/lib/CleanupManager.jsm",
+  this
+); /* global CleanupManagerClass */
 
 add_task(async function testCleanupManager() {
   const spy1 = sinon.spy();

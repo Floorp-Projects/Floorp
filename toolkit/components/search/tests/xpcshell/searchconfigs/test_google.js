@@ -3,7 +3,9 @@
 
 "use strict";
 
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const test = new SearchConfigTest({
   identifier: "google",
@@ -11,39 +13,45 @@ const test = new SearchConfigTest({
   default: {
     // Included everywhere apart from the exclusions below. These are basically
     // just excluding what Yandex and Baidu include.
-    excluded: [{
-      regions: [
-        "ru", "tr", "by", "kz",
-      ],
-      locales: {
-        matches: ["ru", "tr", "be", "kk"],
-        // We don't currently enforce this.
-        // startsWith: ["en"],
+    excluded: [
+      {
+        regions: ["ru", "tr", "by", "kz"],
+        locales: {
+          matches: ["ru", "tr", "be", "kk"],
+          // We don't currently enforce this.
+          // startsWith: ["en"],
+        },
       },
-    }, {
-      regions: ["cn"],
-      locales: {
-        matches: ["zh-CN"],
+      {
+        regions: ["cn"],
+        locales: {
+          matches: ["zh-CN"],
+        },
       },
-    }],
+    ],
   },
   available: {
     excluded: [
       // Should be available everywhere.
     ],
   },
-  details: [{
-    included: [{regions: ["us"]}],
-    domain: "google.com",
-    codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr") ?
-      "client=firefox-b-1-e" : "client=firefox-b-1-d",
-  }, {
-    excluded: [{regions: ["us"]}],
-    included: [],
-    domain: "google.com",
-    codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr") ?
-      "client=firefox-b-e" : "client=firefox-b-d",
-  }],
+  details: [
+    {
+      included: [{ regions: ["us"] }],
+      domain: "google.com",
+      codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+        ? "client=firefox-b-1-e"
+        : "client=firefox-b-1-d",
+    },
+    {
+      excluded: [{ regions: ["us"] }],
+      included: [],
+      domain: "google.com",
+      codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+        ? "client=firefox-b-e"
+        : "client=firefox-b-d",
+    },
+  ],
 });
 
 add_task(async function setup() {

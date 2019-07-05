@@ -2,17 +2,21 @@
 
 /* eslint no-unused-vars: ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
 
-XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gProxyService",
+  "@mozilla.org/network/protocol-proxy-service;1",
+  "nsIProtocolProxyService"
+);
 
-const TRANSPARENT_PROXY_RESOLVES_HOST = Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
+const TRANSPARENT_PROXY_RESOLVES_HOST =
+  Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
 
 let extension;
 add_task(async function setup() {
   let extensionData = {
     manifest: {
-      "permissions": ["proxy"],
+      permissions: ["proxy"],
     },
     background() {
       browser.proxy.onProxyError.addListener(error => {
@@ -20,9 +24,11 @@ add_task(async function setup() {
       });
       browser.test.onMessage.addListener((message, data) => {
         if (message === "set-proxy") {
-          browser.runtime.sendMessage(data, {toProxyScript: true}).then(response => {
-            browser.test.sendMessage("proxy-set", response);
-          });
+          browser.runtime
+            .sendMessage(data, { toProxyScript: true })
+            .then(response => {
+              browser.test.sendMessage("proxy-set", response);
+            });
         }
       });
       browser.proxy.register("proxy.js").then(() => {
@@ -50,13 +56,13 @@ add_task(async function setup() {
 });
 
 async function setupProxyScript(proxy) {
-  extension.sendMessage("set-proxy", {proxy});
+  extension.sendMessage("set-proxy", { proxy });
   let proxyInfoSent = await extension.awaitMessage("proxy-set");
   deepEqual(proxyInfoSent, proxy, "got back proxy data from proxy script");
 }
 
 async function testProxyResolution(test) {
-  let {uri, proxy, expected} = test;
+  let { uri, proxy, expected } = test;
   let errorMsg;
   if (expected.error) {
     errorMsg = extension.awaitMessage("proxy-error-received");
@@ -81,17 +87,45 @@ async function testProxyResolution(test) {
   } else if (proxy == null) {
     equal(proxyInfo, expectedProxyInfo, "proxy is direct");
   } else {
-    for (let proxyUsed = proxyInfo; proxyUsed; proxyUsed = proxyUsed.failoverProxy) {
-      let {type, host, port, username, password, proxyDNS, failoverTimeout} = expectedProxyInfo;
+    for (
+      let proxyUsed = proxyInfo;
+      proxyUsed;
+      proxyUsed = proxyUsed.failoverProxy
+    ) {
+      let {
+        type,
+        host,
+        port,
+        username,
+        password,
+        proxyDNS,
+        failoverTimeout,
+      } = expectedProxyInfo;
       equal(proxyUsed.host, host, `Expected proxy host to be ${host}`);
       equal(proxyUsed.port, port, `Expected proxy port to be ${port}`);
       equal(proxyUsed.type, type, `Expected proxy type to be ${type}`);
       // May be null or undefined depending on use of newProxyInfoWithAuth or newProxyInfo
-      equal(proxyUsed.username || "", username || "", `Expected proxy username to be ${username}`);
-      equal(proxyUsed.password || "", password || "", `Expected proxy password to be ${password}`);
-      equal(proxyUsed.flags, proxyDNS == undefined ? 0 : proxyDNS, `Expected proxyDNS to be ${proxyDNS}`);
+      equal(
+        proxyUsed.username || "",
+        username || "",
+        `Expected proxy username to be ${username}`
+      );
+      equal(
+        proxyUsed.password || "",
+        password || "",
+        `Expected proxy password to be ${password}`
+      );
+      equal(
+        proxyUsed.flags,
+        proxyDNS == undefined ? 0 : proxyDNS,
+        `Expected proxyDNS to be ${proxyDNS}`
+      );
       // Default timeout is 10
-      equal(proxyUsed.failoverTimeout, failoverTimeout || 10, `Expected failoverTimeout to be ${failoverTimeout}`);
+      equal(
+        proxyUsed.failoverTimeout,
+        failoverTimeout || 10,
+        `Expected failoverTimeout to be ${failoverTimeout}`
+      );
       expectedProxyInfo = expectedProxyInfo.failoverProxy;
     }
   }
@@ -114,79 +148,125 @@ add_task(async function test_pac_results() {
     {
       proxy: "INVALID",
       expected: {
-        error: "ProxyInfoData: Unrecognized proxy type: \"invalid\"",
+        error: 'ProxyInfoData: Unrecognized proxy type: "invalid"',
       },
     },
     {
       proxy: "SOCKS",
       expected: {
-        error: "ProxyInfoData: Invalid host or port from proxy rule: \"SOCKS\"",
+        error: 'ProxyInfoData: Invalid host or port from proxy rule: "SOCKS"',
       },
     },
     {
       proxy: "PROXY 1.2.3.4:8080 EXTRA",
       expected: {
-        error: "ProxyInfoData: Invalid arguments passed for proxy rule: \"PROXY 1.2.3.4:8080 EXTRA\"",
+        error:
+          'ProxyInfoData: Invalid arguments passed for proxy rule: "PROXY 1.2.3.4:8080 EXTRA"',
       },
     },
     {
       proxy: "PROXY :",
       expected: {
-        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY :\"",
+        error: 'ProxyInfoData: Invalid host or port from proxy rule: "PROXY :"',
       },
     },
     {
       proxy: "PROXY :8080",
       expected: {
-        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY :8080\"",
+        error:
+          'ProxyInfoData: Invalid host or port from proxy rule: "PROXY :8080"',
       },
     },
     {
       proxy: "PROXY ::",
       expected: {
-        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY ::\"",
+        error:
+          'ProxyInfoData: Invalid host or port from proxy rule: "PROXY ::"',
       },
     },
     {
       proxy: "PROXY 1.2.3.4:",
       expected: {
-        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY 1.2.3.4:\"",
+        error:
+          'ProxyInfoData: Invalid host or port from proxy rule: "PROXY 1.2.3.4:"',
       },
     },
     {
       proxy: "DIRECT 1.2.3.4:8080",
       expected: {
-        error: "ProxyInfoData: Invalid argument for proxy type: \"direct\"",
+        error: 'ProxyInfoData: Invalid argument for proxy type: "direct"',
       },
     },
     {
-      proxy: ["SOCKS foo.bar:1080", {type: "http", host: "foo.bar", port: 3128}],
+      proxy: [
+        "SOCKS foo.bar:1080",
+        { type: "http", host: "foo.bar", port: 3128 },
+      ],
       expected: {
-        error: "ProxyInfoData: Invalid proxy server type: \"undefined\"",
+        error: 'ProxyInfoData: Invalid proxy server type: "undefined"',
       },
     },
     {
-      proxy: {type: "socks", host: "foo.bar", port: 1080, username: "mungosantamaria", password: "pass123"},
+      proxy: {
+        type: "socks",
+        host: "foo.bar",
+        port: 1080,
+        username: "mungosantamaria",
+        password: "pass123",
+      },
       expected: {
         error: "ProxyInfoData: proxyData must be a string or array of objects",
       },
     },
     {
-      proxy: [{type: "pptp", host: "foo.bar", port: 1080, username: "mungosantamaria", password: "pass123", proxyDNS: true, failoverTimeout: 3},
-              {type: "http", host: "192.168.1.1", port: 1128, username: "mungosantamaria", password: "word321"}],
+      proxy: [
+        {
+          type: "pptp",
+          host: "foo.bar",
+          port: 1080,
+          username: "mungosantamaria",
+          password: "pass123",
+          proxyDNS: true,
+          failoverTimeout: 3,
+        },
+        {
+          type: "http",
+          host: "192.168.1.1",
+          port: 1128,
+          username: "mungosantamaria",
+          password: "word321",
+        },
+      ],
       expected: {
-        error: "ProxyInfoData: Invalid proxy server type: \"pptp\"",
+        error: 'ProxyInfoData: Invalid proxy server type: "pptp"',
       },
     },
     {
-      proxy: [{type: "http", host: "foo.bar", port: 65536, username: "mungosantamaria", password: "pass123", proxyDNS: true, failoverTimeout: 3},
-              {type: "http", host: "192.168.1.1", port: 3128, username: "mungosantamaria", password: "word321"}],
+      proxy: [
+        {
+          type: "http",
+          host: "foo.bar",
+          port: 65536,
+          username: "mungosantamaria",
+          password: "pass123",
+          proxyDNS: true,
+          failoverTimeout: 3,
+        },
+        {
+          type: "http",
+          host: "192.168.1.1",
+          port: 3128,
+          username: "mungosantamaria",
+          password: "word321",
+        },
+      ],
       expected: {
-        error: "ProxyInfoData: Proxy server port 65536 outside range 1 to 65535",
+        error:
+          "ProxyInfoData: Proxy server port 65536 outside range 1 to 65535",
       },
     },
     {
-      proxy: [{type: "direct"}],
+      proxy: [{ type: "direct" }],
       expected: {
         proxyInfo: null,
       },
@@ -246,7 +326,7 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: [{type: "http", host: "foo.bar", port: 3128}],
+      proxy: [{ type: "http", host: "foo.bar", port: 3128 }],
       expected: {
         proxyInfo: {
           host: "foo.bar",
@@ -276,7 +356,7 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: [{type: "https", host: "foo.bar", port: 3128}],
+      proxy: [{ type: "https", host: "foo.bar", port: 3128 }],
       expected: {
         proxyInfo: {
           host: "foo.bar",
@@ -286,7 +366,17 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: [{type: "socks", host: "foo.bar", port: 1080, username: "mungo", password: "santamaria123", proxyDNS: true, failoverTimeout: 5}],
+      proxy: [
+        {
+          type: "socks",
+          host: "foo.bar",
+          port: 1080,
+          username: "mungo",
+          password: "santamaria123",
+          proxyDNS: true,
+          failoverTimeout: 5,
+        },
+      ],
       expected: {
         proxyInfo: {
           type: "socks",
@@ -301,9 +391,27 @@ add_task(async function test_pac_results() {
       },
     },
     {
-      proxy: [{type: "socks", host: "foo.bar", port: 1080, username: "johnsmith", password: "pass123", proxyDNS: true, failoverTimeout: 3},
-              {type: "http", host: "192.168.1.1", port: 3128}, {type: "https", host: "192.168.1.2", port: 1121, failoverTimeout: 1},
-              {type: "socks", host: "192.168.1.3", port: 1999, proxyDNS: true, username: "mungosantamaria", password: "foobar"}],
+      proxy: [
+        {
+          type: "socks",
+          host: "foo.bar",
+          port: 1080,
+          username: "johnsmith",
+          password: "pass123",
+          proxyDNS: true,
+          failoverTimeout: 3,
+        },
+        { type: "http", host: "192.168.1.1", port: 3128 },
+        { type: "https", host: "192.168.1.2", port: 1121, failoverTimeout: 1 },
+        {
+          type: "socks",
+          host: "192.168.1.3",
+          port: 1999,
+          proxyDNS: true,
+          username: "mungosantamaria",
+          password: "foobar",
+        },
+      ],
       expected: {
         proxyInfo: {
           type: "socks",

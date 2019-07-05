@@ -1,11 +1,14 @@
-var {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Test optional duration reporting that can be used for telemetry.
  */
 add_task(async function duration() {
-  const availableDurations = ["outSerializationDuration", "outExecutionDuration"];
+  const availableDurations = [
+    "outSerializationDuration",
+    "outExecutionDuration",
+  ];
   Services.prefs.setBoolPref("toolkit.osfile.log", true);
   // Options structure passed to a OS.File copy method.
   let copyOptions = {
@@ -27,7 +30,12 @@ add_task(async function duration() {
     }
   }
 
-  function testOptionIncrements(options, name, backupDuration, durations = availableDurations) {
+  function testOptionIncrements(
+    options,
+    name,
+    backupDuration,
+    durations = availableDurations
+  ) {
     for (let duration of durations) {
       info(`Checking ${duration} increment for operation: ${name}`);
       info(`${name}: Gathered method duration time: ${options[duration]} ms`);
@@ -43,8 +51,10 @@ add_task(async function duration() {
   await OS.File.remove(copyFile);
 
   // Trying an operation where options are cloned.
-  let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
-    "osfile async test read writeAtomic.tmp");
+  let pathDest = OS.Path.join(
+    OS.Constants.Path.tmpDir,
+    "osfile async test read writeAtomic.tmp"
+  );
   let tmpPath = pathDest + ".tmp";
   let readOptions = {
     // We do not check for |outSerializationDuration| since |Scheduler.post|
@@ -62,10 +72,16 @@ add_task(async function duration() {
   };
   // Note that |contents| cannot be reused after this call since it is detached.
   await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
-  testOptions(writeAtomicOptions, "OS.File.writeAtomic", ["outExecutionDuration"]);
+  testOptions(writeAtomicOptions, "OS.File.writeAtomic", [
+    "outExecutionDuration",
+  ]);
   await OS.File.remove(pathDest);
 
-  info(`Ensuring that we can use ${availableDurations.join(", ")} to accumulate durations`);
+  info(
+    `Ensuring that we can use ${availableDurations.join(
+      ", "
+    )} to accumulate durations`
+  );
 
   let ARBITRARY_BASE_DURATION = 5;
   copyOptions = {
@@ -97,7 +113,12 @@ add_task(async function duration() {
   backupDuration = Object.assign({}, writeAtomicOptions);
   contents = await OS.File.read(pathSource, undefined, readOptions);
   await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
-  testOptionIncrements(writeAtomicOptions, "writeAtomicOptions", backupDuration, ["outExecutionDuration"]);
+  testOptionIncrements(
+    writeAtomicOptions,
+    "writeAtomicOptions",
+    backupDuration,
+    ["outExecutionDuration"]
+  );
   OS.File.remove(pathDest);
 
   // Testing an operation that doesn't take arguments at all

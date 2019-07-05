@@ -16,8 +16,10 @@ function run_test() {
  * Test removing non watched path
  */
 add_task(async function test_remove_not_watched() {
-  let nonExistingDir =
-    OS.Path.join(OS.Constants.Path.profileDir, "absolutelyNotExisting");
+  let nonExistingDir = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "absolutelyNotExisting"
+  );
 
   // Instantiate the native watcher.
   let watcher = makeWatcher();
@@ -31,9 +33,13 @@ add_task(async function test_remove_not_watched() {
     function(xpcomError, osError) {
       // When removing a resource which wasn't being watched, it should silently
       // ignore the request.
-      do_throw("Unexpected exception: "
-               + xpcomError + " (XPCOM) "
-               + osError + " (OS Error)");
+      do_throw(
+        "Unexpected exception: " +
+          xpcomError +
+          " (XPCOM) " +
+          osError +
+          " (OS Error)"
+      );
     }
   );
 });

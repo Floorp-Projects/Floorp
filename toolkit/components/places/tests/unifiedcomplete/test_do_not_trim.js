@@ -61,7 +61,6 @@ add_task(async function test_not_autofill_ws_4() {
   await cleanup();
 });
 
-
 add_task(async function test_not_autofill_ws_5() {
   info("Do not autofill whitespaced entry 5");
   await PlacesTestUtils.addVisits({

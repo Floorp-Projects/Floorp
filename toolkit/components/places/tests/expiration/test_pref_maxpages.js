@@ -15,20 +15,22 @@
  */
 
 var tests = [
-
-  { desc: "Set max_pages to a negative value, with 1 page.",
+  {
+    desc: "Set max_pages to a negative value, with 1 page.",
     maxPages: -1,
     addPages: 1,
     expectedNotifications: 0, // Will ignore and won't expire anything.
   },
 
-  { desc: "Set max_pages to 0.",
+  {
+    desc: "Set max_pages to 0.",
     maxPages: 0,
     addPages: 1,
     expectedNotifications: 1,
   },
 
-  { desc: "Set max_pages to 0, with 2 pages.",
+  {
+    desc: "Set max_pages to 0, with 2 pages.",
     maxPages: 0,
     addPages: 2,
     expectedNotifications: 2, // Will expire everything.
@@ -38,19 +40,22 @@ var tests = [
   // that we will expire if we are over the limit, but we don't ensure that we
   // will expire exactly up to the limit.  Thus in this case we expire
   // everything.
-  { desc: "Set max_pages to 1 with 2 pages.",
+  {
+    desc: "Set max_pages to 1 with 2 pages.",
     maxPages: 1,
     addPages: 2,
     expectedNotifications: 2, // Will expire everything (in this case).
   },
 
-  { desc: "Set max_pages to 10, with 9 pages.",
+  {
+    desc: "Set max_pages to 10, with 9 pages.",
     maxPages: 10,
     addPages: 9,
     expectedNotifications: 0, // We are at the limit, won't expire anything.
   },
 
-  { desc: "Set max_pages to 10 with 10 pages.",
+  {
+    desc: "Set max_pages to 10 with 10 pages.",
     maxPages: 10,
     addPages: 10,
     expectedNotifications: 0, // We are below the limit, won't expire anything.
@@ -97,8 +102,10 @@ add_task(async function test_pref_maxpages() {
 
     PlacesUtils.history.removeObserver(historyObserver, false);
 
-    Assert.equal(currentTest.receivedNotifications,
-                 currentTest.expectedNotifications);
+    Assert.equal(
+      currentTest.receivedNotifications,
+      currentTest.expectedNotifications
+    );
 
     // Clean up.
     await PlacesUtils.history.clear();

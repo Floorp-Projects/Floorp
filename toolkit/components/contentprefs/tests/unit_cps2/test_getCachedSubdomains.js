@@ -48,53 +48,75 @@ add_task(async function subdomains() {
 });
 
 add_task(async function populateViaGet() {
-  await new Promise(resolve => cps.getByDomainAndName("a.com", "foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.getByDomainAndName("a.com", "foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
 
-  await new Promise(resolve => cps.getGlobal("foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.getGlobal("foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
   await reset();
 });
 
 add_task(async function populateViaGetSubdomains() {
-  await new Promise(resolve => cps.getBySubdomainAndName("a.com", "foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.getBySubdomainAndName("a.com", "foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   await reset();
 });
 
 add_task(async function populateViaRemove() {
-  await new Promise(resolve => cps.removeByDomainAndName("a.com", "foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeByDomainAndName("a.com", "foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
 
-  await new Promise(resolve => cps.removeBySubdomainAndName("b.com", "foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeBySubdomainAndName("b.com", "foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
 
-  await new Promise(resolve => cps.removeGlobal("foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeGlobal("foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
 
   await set("a.com", "foo", 1);
-  await new Promise(resolve => cps.removeByDomainAndName("a.com", "foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeByDomainAndName("a.com", "foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
 
   await set("a.com", "foo", 2);
   await set("b.a.com", "foo", 3);
-  await new Promise(resolve => cps.removeBySubdomainAndName("a.com", "foo", null, makeCallback(resolve)));
-  getCachedSubdomainsOK(["a.com", "foo"],
-                        [["a.com", undefined], ["b.a.com", undefined]]);
+  await new Promise(resolve =>
+    cps.removeBySubdomainAndName("a.com", "foo", null, makeCallback(resolve))
+  );
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [["a.com", undefined], ["b.a.com", undefined]]
+  );
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
   getCachedSubdomainsOK(["b.a.com", "foo"], [["b.a.com", undefined]]);
 
   await setGlobal("foo", 4);
-  await new Promise(resolve => cps.removeGlobal("foo", null, makeCallback(resolve)));
-  getCachedSubdomainsOK(["a.com", "foo"],
-                        [["a.com", undefined], ["b.a.com", undefined]]);
+  await new Promise(resolve =>
+    cps.removeGlobal("foo", null, makeCallback(resolve))
+  );
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [["a.com", undefined], ["b.a.com", undefined]]
+  );
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);
   getCachedSubdomainsOK(["b.a.com", "foo"], [["b.a.com", undefined]]);
@@ -106,23 +128,37 @@ add_task(async function populateViaRemoveByDomain() {
   await set("a.com", "bar", 2);
   await set("b.a.com", "foo", 3);
   await set("b.a.com", "bar", 4);
-  await new Promise(resolve => cps.removeByDomain("a.com", null, makeCallback(resolve)));
-  getCachedSubdomainsOK(["a.com", "foo"],
-                        [["a.com", undefined], ["b.a.com", 3]]);
-  getCachedSubdomainsOK(["a.com", "bar"],
-                        [["a.com", undefined], ["b.a.com", 4]]);
+  await new Promise(resolve =>
+    cps.removeByDomain("a.com", null, makeCallback(resolve))
+  );
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [["a.com", undefined], ["b.a.com", 3]]
+  );
+  getCachedSubdomainsOK(
+    ["a.com", "bar"],
+    [["a.com", undefined], ["b.a.com", 4]]
+  );
 
   await set("a.com", "foo", 5);
   await set("a.com", "bar", 6);
-  await new Promise(resolve => cps.removeBySubdomain("a.com", null, makeCallback(resolve)));
-  getCachedSubdomainsOK(["a.com", "foo"],
-                        [["a.com", undefined], ["b.a.com", undefined]]);
-  getCachedSubdomainsOK(["a.com", "bar"],
-                        [["a.com", undefined], ["b.a.com", undefined]]);
+  await new Promise(resolve =>
+    cps.removeBySubdomain("a.com", null, makeCallback(resolve))
+  );
+  getCachedSubdomainsOK(
+    ["a.com", "foo"],
+    [["a.com", undefined], ["b.a.com", undefined]]
+  );
+  getCachedSubdomainsOK(
+    ["a.com", "bar"],
+    [["a.com", undefined], ["b.a.com", undefined]]
+  );
 
   await setGlobal("foo", 7);
   await setGlobal("bar", 8);
-  await new Promise(resolve => cps.removeAllGlobals(null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeAllGlobals(null, makeCallback(resolve))
+  );
   getCachedGlobalOK(["foo"], true, undefined);
   getCachedGlobalOK(["bar"], true, undefined);
   await reset();
@@ -133,7 +169,9 @@ add_task(async function populateViaRemoveAllDomains() {
   await set("a.com", "bar", 2);
   await set("b.com", "foo", 3);
   await set("b.com", "bar", 4);
-  await new Promise(resolve => cps.removeAllDomains(null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeAllDomains(null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["a.com", "bar"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["b.com", "foo"], [["b.com", undefined]]);
@@ -146,13 +184,17 @@ add_task(async function populateViaRemoveByName() {
   await set("a.com", "bar", 2);
   await setGlobal("foo", 3);
   await setGlobal("bar", 4);
-  await new Promise(resolve => cps.removeByName("foo", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeByName("foo", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
   getCachedGlobalOK(["foo"], true, undefined);
   getCachedGlobalOK(["bar"], true, 4);
 
-  await new Promise(resolve => cps.removeByName("bar", null, makeCallback(resolve)));
+  await new Promise(resolve =>
+    cps.removeByName("bar", null, makeCallback(resolve))
+  );
   getCachedSubdomainsOK(["a.com", "foo"], [["a.com", undefined]]);
   getCachedSubdomainsOK(["a.com", "bar"], [["a.com", undefined]]);
   getCachedGlobalOK(["foo"], true, undefined);

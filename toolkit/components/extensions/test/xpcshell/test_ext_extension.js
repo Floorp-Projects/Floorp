@@ -45,7 +45,11 @@ add_task(async function test_is_denied_incognito_access() {
 
 add_task(async function test_in_incognito_context_false() {
   function background() {
-    browser.test.assertEq(false, browser.extension.inIncognitoContext, "inIncognitoContext returned false");
+    browser.test.assertEq(
+      false,
+      browser.extension.inIncognitoContext,
+      "inIncognitoContext returned false"
+    );
     browser.test.notifyPass("inIncognitoContext");
   }
 

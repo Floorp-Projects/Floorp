@@ -9,11 +9,19 @@
 /* global assert */
 /* eslint-env mozilla/frame-script */
 
-var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-var {LoginHelper} = ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
-var {LoginManagerParent} = ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm");
-const {LoginTestUtils} = ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+var { LoginHelper } = ChromeUtils.import(
+  "resource://gre/modules/LoginHelper.jsm"
+);
+var { LoginManagerParent } = ChromeUtils.import(
+  "resource://gre/modules/LoginManagerParent.jsm"
+);
+const { LoginTestUtils } = ChromeUtils.import(
+  "resource://testing-common/LoginTestUtils.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Init with a common login
@@ -38,16 +46,28 @@ function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
 
   if (testDependsOnDeprecatedLogin) {
     // Add a login that's used in multiple tests
-    var login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                createInstance(Ci.nsILoginInfo);
-    login.init("http://mochi.test:8888", "http://mochi.test:8888", null,
-               "testuser", "testpass", "uname", "pword");
+    var login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+      Ci.nsILoginInfo
+    );
+    login.init(
+      "http://mochi.test:8888",
+      "http://mochi.test:8888",
+      null,
+      "testuser",
+      "testpass",
+      "uname",
+      "pword"
+    );
     pwmgr.addLogin(login);
   }
 
   // Last sanity check
   logins = pwmgr.getAllLogins();
-  assert.equal(logins.length, testDependsOnDeprecatedLogin ? 1 : 0, "Checking for successful init login");
+  assert.equal(
+    logins.length,
+    testDependsOnDeprecatedLogin ? 1 : 0,
+    "Checking for successful init login"
+  );
   disabledHosts = pwmgr.getAllDisabledHosts();
   assert.equal(disabledHosts.length, 0, "Checking for no disabled hosts");
 
@@ -109,13 +129,15 @@ addMessageListener("cleanup", () => {
   Services.obs.removeObserver(onPrompt, "passwordmgr-prompt-save");
 });
 
-
 // Begin message listeners
 
-addMessageListener("setupParent", ({selfFilling = false, testDependsOnDeprecatedLogin = false} = {}) => {
-  commonInit(selfFilling, testDependsOnDeprecatedLogin);
-  sendAsyncMessage("doneSetup");
-});
+addMessageListener(
+  "setupParent",
+  ({ selfFilling = false, testDependsOnDeprecatedLogin = false } = {}) => {
+    commonInit(selfFilling, testDependsOnDeprecatedLogin);
+    sendAsyncMessage("doneSetup");
+  }
+);
 
 addMessageListener("loadRecipes", async function(recipes) {
   var recipeParent = await LoginManagerParent.recipeParentPromise;
@@ -130,19 +152,28 @@ addMessageListener("resetRecipes", async function() {
 });
 
 addMessageListener("getTelemetryEvents", options => {
-  options = Object.assign({
-    filterProps: {},
-    clear: false,
-  }, options);
-  let snapshots = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, options.clear);
-  let events = (options.process in snapshots) ? snapshots[options.process] : [];
+  options = Object.assign(
+    {
+      filterProps: {},
+      clear: false,
+    },
+    options
+  );
+  let snapshots = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    options.clear
+  );
+  let events = options.process in snapshots ? snapshots[options.process] : [];
 
   // event is array of values like: [22476,"pwmgr","autocomplete_field","generatedpassword"]
   let keys = ["id", "category", "method", "object", "value"];
   events = events.filter(entry => {
     for (let idx = 0; idx < keys.length; idx++) {
       let key = keys[idx];
-      if ((key in options.filterProps) && options.filterProps[key] !== entry[idx]) {
+      if (
+        key in options.filterProps &&
+        options.filterProps[key] !== entry[idx]
+      ) {
         return false;
       }
     }
@@ -150,7 +181,6 @@ addMessageListener("getTelemetryEvents", options => {
   });
   sendAsyncMessage("getTelemetryEvents", events);
 });
-
 
 addMessageListener("proxyLoginManager", msg => {
   // Recreate nsILoginInfo objects from vanilla JS objects.
@@ -165,7 +195,11 @@ addMessageListener("proxyLoginManager", msg => {
   let rv = Services.logins[msg.methodName](...recreatedArgs);
   if (rv instanceof Ci.nsILoginInfo) {
     rv = LoginHelper.loginToVanillaObject(rv);
-  } else if (Array.isArray(rv) && rv.length > 0 && rv[0] instanceof Ci.nsILoginInfo) {
+  } else if (
+    Array.isArray(rv) &&
+    rv.length > 0 &&
+    rv[0] instanceof Ci.nsILoginInfo
+  ) {
     rv = rv.map(login => LoginHelper.loginToVanillaObject(login));
   }
   return rv;
@@ -190,5 +224,8 @@ function onFormSubmit(message) {
 
 Services.mm.addMessageListener("PasswordManager:onFormSubmit", onFormSubmit);
 addMessageListener("cleanup", () => {
-  Services.mm.removeMessageListener("PasswordManager:onFormSubmit", onFormSubmit);
+  Services.mm.removeMessageListener(
+    "PasswordManager:onFormSubmit",
+    onFormSubmit
+  );
 });

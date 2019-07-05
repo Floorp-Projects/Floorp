@@ -29,7 +29,7 @@ add_task(async function() {
   Assert.equal(await store1.getItem("number"), 42);
 
   // Check complex types work
-  const complex = {a: 1, b: [2, 3], c: {d: 4}};
+  const complex = { a: 1, b: [2, 3], c: { d: 4 } };
   await store1.setItem("complex", complex);
   Assert.deepEqual(await store1.getItem("complex"), complex);
 

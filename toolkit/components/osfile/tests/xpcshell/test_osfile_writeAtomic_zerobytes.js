@@ -6,7 +6,10 @@ var SHARED_PATH;
 
 add_task(async function init() {
   do_get_profile();
-  SHARED_PATH = OS.Path.join(OS.Constants.Path.profileDir, "test_osfile_write_zerobytes.tmp");
+  SHARED_PATH = OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "test_osfile_write_zerobytes.tmp"
+  );
 });
 
 add_test_pair(async function test_osfile_writeAtomic_zerobytes() {

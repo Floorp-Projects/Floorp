@@ -5,8 +5,10 @@ function fileURL(filename) {
 }
 
 function httpURL(filename, host = "https://example.com/") {
-  let root = getRootDirectory(gTestPath)
-    .replace("chrome://mochitests/content/", host);
+  let root = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    host
+  );
   return root + filename;
 }
 

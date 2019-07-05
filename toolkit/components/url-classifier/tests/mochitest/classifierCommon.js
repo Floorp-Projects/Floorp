@@ -3,26 +3,30 @@
 
 /* eslint-env mozilla/frame-script */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                .getService(Ci.nsIUrlClassifierDBService);
-var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
-                    getService(Ci.nsIUrlListManager);
+var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
+  Ci.nsIUrlClassifierDBService
+);
+var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].getService(
+  Ci.nsIUrlListManager
+);
 
 var timer;
 function setTimeout(callback, delay) {
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback({ notify: callback },
-                           delay,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
+  timer.initWithCallback(
+    { notify: callback },
+    delay,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
 }
 
 function doUpdate(update) {
   let listener = {
     QueryInterface: ChromeUtils.generateQI(["nsIUrlClassifierUpdateObserver"]),
-    updateUrlRequested(url) { },
-    streamFinished(status) { },
+    updateUrlRequested(url) {},
+    streamFinished(status) {},
     updateError(errorCode) {
       sendAsyncMessage("updateError", errorCode);
     },
@@ -32,7 +36,11 @@ function doUpdate(update) {
   };
 
   try {
-    dbService.beginUpdate(listener, "test-malware-simple,test-unwanted-simple", "");
+    dbService.beginUpdate(
+      listener,
+      "test-malware-simple,test-unwanted-simple",
+      ""
+    );
     dbService.beginStream("", "");
     dbService.updateStream(update);
     dbService.finishStream();
@@ -40,7 +48,9 @@ function doUpdate(update) {
   } catch (e) {
     // beginUpdate may fail if there's an existing update in progress
     // retry until success or testcase timeout.
-    setTimeout(() => { doUpdate(update); }, 1000);
+    setTimeout(() => {
+      doUpdate(update);
+    }, 1000);
   }
 }
 
@@ -49,7 +59,9 @@ function doReload() {
     dbService.reloadDatabase();
     sendAsyncMessage("reloadSuccess");
   } catch (e) {
-    setTimeout(() => { doReload(); }, 1000);
+    setTimeout(() => {
+      doReload();
+    }, 1000);
   }
 }
 
@@ -61,7 +73,9 @@ function waitForInit() {
   if (listmanager.isRegistered()) {
     sendAsyncMessage("safeBrowsingInited");
   } else {
-    setTimeout(() => { waitForInit(); }, 1000);
+    setTimeout(() => {
+      waitForInit();
+    }, 1000);
   }
 }
 

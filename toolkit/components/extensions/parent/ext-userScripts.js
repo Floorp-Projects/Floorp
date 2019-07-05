@@ -2,11 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-var {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+var { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
-var {
-  ExtensionError,
-} = ExtensionUtils;
+var { ExtensionError } = ExtensionUtils;
 
 /**
  * Represents (in the main browser process) a user script.
@@ -63,12 +63,12 @@ this.userScripts = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    const {extension} = context;
+    const { extension } = context;
 
     // Set of the scriptIds registered from this context.
     const registeredScriptIds = new Set();
 
-    const unregisterContentScripts = (scriptIds) => {
+    const unregisterContentScripts = scriptIds => {
       if (scriptIds.length === 0) {
         return Promise.resolve();
       }
@@ -96,15 +96,19 @@ this.userScripts = class extends ExtensionAPI {
 
     return {
       userScripts: {
-        register: async (details) => {
+        register: async details => {
           for (let origin of details.matches) {
-            if (!extension.whiteListedHosts.subsumes(new MatchPattern(origin))) {
-              throw new ExtensionError(`Permission denied to register a user script for ${origin}`);
+            if (
+              !extension.whiteListedHosts.subsumes(new MatchPattern(origin))
+            ) {
+              throw new ExtensionError(
+                `Permission denied to register a user script for ${origin}`
+              );
             }
           }
 
           const userScript = new UserScriptParent(details);
-          const {scriptId} = userScript;
+          const { scriptId } = userScript;
 
           this.userScriptsMap.set(scriptId, userScript);
 
@@ -126,7 +130,7 @@ this.userScripts = class extends ExtensionAPI {
         // doesn't have access to the internally used scriptId, on the contrary
         // the extension code will call script.unregister on the script API object
         // that is resolved from the register API method returned promise.
-        unregister: async (scriptId) => {
+        unregister: async scriptId => {
           const userScript = this.userScriptsMap.get(scriptId);
           if (!userScript) {
             throw new Error(`No such user script ID: ${scriptId}`);

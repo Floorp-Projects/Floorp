@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {LogManager} = ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["EventEmitter"];
 
@@ -15,23 +17,24 @@ var EventEmitter = function() {
   return {
     emit(eventName, event) {
       // Fire events async
-      Promise.resolve()
-        .then(() => {
-          if (!(eventName in listeners)) {
-            log.debug(`EventEmitter: Event fired with no listeners: ${eventName}`);
-            return;
+      Promise.resolve().then(() => {
+        if (!(eventName in listeners)) {
+          log.debug(
+            `EventEmitter: Event fired with no listeners: ${eventName}`
+          );
+          return;
+        }
+        // Clone callbacks array to avoid problems with mutation while iterating
+        const callbacks = Array.from(listeners[eventName]);
+        for (const cb of callbacks) {
+          // Clone event so it can't by modified by the handler
+          let eventToPass = event;
+          if (typeof event === "object") {
+            eventToPass = Object.assign({}, event);
           }
-          // Clone callbacks array to avoid problems with mutation while iterating
-          const callbacks = Array.from(listeners[eventName]);
-          for (const cb of callbacks) {
-            // Clone event so it can't by modified by the handler
-            let eventToPass = event;
-            if (typeof event === "object") {
-              eventToPass = Object.assign({}, event);
-            }
-            cb(eventToPass);
-          }
-        });
+          cb(eventToPass);
+        }
+      });
     },
 
     on(eventName, callback) {

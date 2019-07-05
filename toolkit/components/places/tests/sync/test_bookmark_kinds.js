@@ -50,43 +50,57 @@ add_task(async function test_queries() {
   });
 
   info("Make remote changes");
-  await storeRecords(buf, shuffle([{
-    id: "toolbar",
-    parentid: "places",
-    type: "folder",
-    children: ["queryEEEEEEE", "queryFFFFFFF", "queryGGGGGGG", "queryHHHHHHH"],
-  }, {
-    // Legacy tag query.
-    id: "queryEEEEEEE",
-    parentid: "toolbar",
-    type: "query",
-    title: "E",
-    bmkUri: "place:type=7&folder=999",
-    folderName: "taggy",
-  }, {
-    // New tag query.
-    id: "queryFFFFFFF",
-    parentid: "toolbar",
-    type: "query",
-    title: "F",
-    bmkUri: "place:tag=a-tag",
-    folderName: "a-tag",
-  }, {
-    // Legacy tag query referencing the same tag as the new query.
-    id: "queryGGGGGGG",
-    parentid: "toolbar",
-    type: "query",
-    title: "G",
-    bmkUri: "place:type=7&folder=111&something=else",
-    folderName: "a-tag",
-  }, {
-    // Legacy folder lookup query.
-    id: "queryHHHHHHH",
-    parentid: "toolbar",
-    type: "query",
-    title: "H",
-    bmkUri: "place:folder=1",
-  }]));
+  await storeRecords(
+    buf,
+    shuffle([
+      {
+        id: "toolbar",
+        parentid: "places",
+        type: "folder",
+        children: [
+          "queryEEEEEEE",
+          "queryFFFFFFF",
+          "queryGGGGGGG",
+          "queryHHHHHHH",
+        ],
+      },
+      {
+        // Legacy tag query.
+        id: "queryEEEEEEE",
+        parentid: "toolbar",
+        type: "query",
+        title: "E",
+        bmkUri: "place:type=7&folder=999",
+        folderName: "taggy",
+      },
+      {
+        // New tag query.
+        id: "queryFFFFFFF",
+        parentid: "toolbar",
+        type: "query",
+        title: "F",
+        bmkUri: "place:tag=a-tag",
+        folderName: "a-tag",
+      },
+      {
+        // Legacy tag query referencing the same tag as the new query.
+        id: "queryGGGGGGG",
+        parentid: "toolbar",
+        type: "query",
+        title: "G",
+        bmkUri: "place:type=7&folder=111&something=else",
+        folderName: "a-tag",
+      },
+      {
+        // Legacy folder lookup query.
+        id: "queryHHHHHHH",
+        parentid: "toolbar",
+        type: "query",
+        title: "H",
+        bmkUri: "place:folder=1",
+      },
+    ])
+  );
 
   info("Create records to upload");
   let changes = await buf.apply();
@@ -95,37 +109,46 @@ add_task(async function test_queries() {
   Assert.strictEqual(changes.queryCCCCCCC.cleartext.folderName, undefined);
   Assert.strictEqual(changes.queryDDDDDDD.cleartext.folderName, tag.title);
 
-  await assertLocalTree(PlacesUtils.bookmarks.toolbarGuid, {
-    guid: PlacesUtils.bookmarks.toolbarGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 1,
-    title: BookmarksToolbarTitle,
-    children: [{
-      guid: "queryEEEEEEE",
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      index: 0,
-      title: "E",
-      url: "place:tag=taggy",
-    }, {
-      guid: "queryFFFFFFF",
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+  await assertLocalTree(
+    PlacesUtils.bookmarks.toolbarGuid,
+    {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "F",
-      url: "place:tag=a-tag",
-    }, {
-      guid: "queryGGGGGGG",
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      index: 2,
-      title: "G",
-      url: "place:tag=a-tag",
-    }, {
-      guid: "queryHHHHHHH",
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      index: 3,
-      title: "H",
-      url: "place:folder=1&excludeItems=1",
-    }],
-  }, "Should rewrite legacy remote queries");
+      title: BookmarksToolbarTitle,
+      children: [
+        {
+          guid: "queryEEEEEEE",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 0,
+          title: "E",
+          url: "place:tag=taggy",
+        },
+        {
+          guid: "queryFFFFFFF",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 1,
+          title: "F",
+          url: "place:tag=a-tag",
+        },
+        {
+          guid: "queryGGGGGGG",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 2,
+          title: "G",
+          url: "place:tag=a-tag",
+        },
+        {
+          guid: "queryHHHHHHH",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 3,
+          title: "H",
+          url: "place:folder=1&excludeItems=1",
+        },
+      ],
+    },
+    "Should rewrite legacy remote queries"
+  );
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -139,65 +162,91 @@ add_task(async function test_mismatched_folder_types() {
   info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
-    children: [{
-      guid: "l1nZZXfB8nC7",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      title: "Innerst i Sneglehode",
-    }, {
-      guid: "livemarkBBBB",
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      title: "B",
-    }],
+    children: [
+      {
+        guid: "l1nZZXfB8nC7",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        title: "Innerst i Sneglehode",
+      },
+      {
+        guid: "livemarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        title: "B",
+      },
+    ],
   });
   // Livemarks have been removed in bug 1477671, but Sync still checks the anno
   // to distinguish them from folders.
-  await setItemAnnotation("livemarkBBBB", PlacesUtils.LMANNO_FEEDURI,
-    "http://example.com/b");
+  await setItemAnnotation(
+    "livemarkBBBB",
+    PlacesUtils.LMANNO_FEEDURI,
+    "http://example.com/b"
+  );
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
-  await storeRecords(buf, [{
-    id: "toolbar",
-    parentid: "places",
-    type: "folder",
-    children: ["l1nZZXfB8nC7", "livemarkBBBB"],
-  }, {
-    "id": "l1nZZXfB8nC7",
-    "type": "livemark",
-    "siteUri": "http://sneglehode.wordpress.com/",
-    "feedUri": "http://sneglehode.wordpress.com/feed/",
-    "parentName": "Bookmarks Toolbar",
-    "title": "Innerst i Sneglehode",
-    "description": null,
-    "children":
-      ["HCRq40Rnxhrd", "YeyWCV1RVsYw", "GCceVZMhvMbP", "sYi2hevdArlF",
-       "vjbZlPlSyGY8", "UtjUhVyrpeG6", "rVq8WMG2wfZI", "Lx0tcy43ZKhZ",
-       "oT74WwV8_j4P", "IztsItWVSo3-"],
-    "parentid": "toolbar",
-  }, {
-    id: "livemarkBBBB",
-    parentid: "toolbar",
-    type: "folder",
-    title: "B",
-    children: [],
-  }]);
+  await storeRecords(buf, [
+    {
+      id: "toolbar",
+      parentid: "places",
+      type: "folder",
+      children: ["l1nZZXfB8nC7", "livemarkBBBB"],
+    },
+    {
+      id: "l1nZZXfB8nC7",
+      type: "livemark",
+      siteUri: "http://sneglehode.wordpress.com/",
+      feedUri: "http://sneglehode.wordpress.com/feed/",
+      parentName: "Bookmarks Toolbar",
+      title: "Innerst i Sneglehode",
+      description: null,
+      children: [
+        "HCRq40Rnxhrd",
+        "YeyWCV1RVsYw",
+        "GCceVZMhvMbP",
+        "sYi2hevdArlF",
+        "vjbZlPlSyGY8",
+        "UtjUhVyrpeG6",
+        "rVq8WMG2wfZI",
+        "Lx0tcy43ZKhZ",
+        "oT74WwV8_j4P",
+        "IztsItWVSo3-",
+      ],
+      parentid: "toolbar",
+    },
+    {
+      id: "livemarkBBBB",
+      parentid: "toolbar",
+      type: "folder",
+      title: "B",
+      children: [],
+    },
+  ]);
 
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
-  deepEqual(idsToUpload, {
-    updated: ["toolbar"],
-    deleted: ["l1nZZXfB8nC7", "livemarkBBBB"],
-  }, "Should delete livemarks remotely");
+  deepEqual(
+    idsToUpload,
+    {
+      updated: ["toolbar"],
+      deleted: ["l1nZZXfB8nC7", "livemarkBBBB"],
+    },
+    "Should delete livemarks remotely"
+  );
 
-  await assertLocalTree(PlacesUtils.bookmarks.toolbarGuid, {
-    guid: PlacesUtils.bookmarks.toolbarGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    index: 1,
-    title: BookmarksToolbarTitle,
-  }, "Should delete livemarks locally");
+  await assertLocalTree(
+    PlacesUtils.bookmarks.toolbarGuid,
+    {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+    },
+    "Should delete livemarks locally"
+  );
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -222,7 +271,6 @@ add_task(async function test_different_but_compatible_bookmark_types() {
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
           title: "a query",
           url: "place:foo",
-
         },
       ],
     });
@@ -234,25 +282,32 @@ add_task(async function test_different_but_compatible_bookmark_types() {
     Assert.equal(changes.bookmarkBBBB.cleartext.type, "query");
 
     // Now pretend that same records are already on the server.
-    await storeRecords(buf, [{
-      id: "menu",
-      parentid: "places",
-      type: "folder",
-      children: ["bookmarkAAAA", "bookmarkBBBB"],
-    }, {
-      id: "bookmarkAAAA",
-      parentid: "menu",
-      type: "bookmark",
-      title: "not yet a query",
-      bmkUri: "about:blank",
-    }, {
-      id: "bookmarkBBBB",
-      parentid: "menu",
-      type: "query",
-      title: "a query",
-      bmkUri: "place:foo",
-
-    }], { needsMerge: false });
+    await storeRecords(
+      buf,
+      [
+        {
+          id: "menu",
+          parentid: "places",
+          type: "folder",
+          children: ["bookmarkAAAA", "bookmarkBBBB"],
+        },
+        {
+          id: "bookmarkAAAA",
+          parentid: "menu",
+          type: "bookmark",
+          title: "not yet a query",
+          bmkUri: "about:blank",
+        },
+        {
+          id: "bookmarkBBBB",
+          parentid: "menu",
+          type: "query",
+          title: "a query",
+          bmkUri: "place:foo",
+        },
+      ],
+      { needsMerge: false }
+    );
     await PlacesTestUtils.markBookmarksAsSynced();
 
     // change the url of bookmarkA to be a "real" query and of bookmarkB to
@@ -297,20 +352,30 @@ add_task(async function test_incompatible_types() {
 
     // Now pretend that same records are already on the server with incompatible
     // types.
-    await storeRecords(buf, [{
-      id: "menu",
-      parentid: "places",
-      type: "folder",
-      children: ["AAAAAAAAAAAA"],
-    }, {
-      id: "AAAAAAAAAAAA",
-      parentid: "menu",
-      type: "folder",
-      title: "conflicting folder",
-    }], { needsMerge: true });
+    await storeRecords(
+      buf,
+      [
+        {
+          id: "menu",
+          parentid: "places",
+          type: "folder",
+          children: ["AAAAAAAAAAAA"],
+        },
+        {
+          id: "AAAAAAAAAAAA",
+          parentid: "menu",
+          type: "folder",
+          title: "conflicting folder",
+        },
+      ],
+      { needsMerge: true }
+    );
     await PlacesTestUtils.markBookmarksAsSynced();
 
-    await Assert.rejects(buf.apply(), /Can't merge local kind Bookmark and remote kind Folder/);
+    await Assert.rejects(
+      buf.apply(),
+      /Can't merge local kind Bookmark and remote kind Folder/
+    );
   } finally {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesSyncUtils.bookmarks.reset();

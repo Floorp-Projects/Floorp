@@ -2,8 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const {
   createAppInfo,
@@ -25,7 +29,10 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 // Ensure that the background page is automatically started after using
 // promiseStartupManager.
-Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
 function background() {
   let onInstalledDetails = null;
@@ -41,7 +48,7 @@ function background() {
 
   browser.test.onMessage.addListener(message => {
     if (message === "get-on-installed-details") {
-      onInstalledDetails = onInstalledDetails || {fired: false};
+      onInstalledDetails = onInstalledDetails || { fired: false };
       browser.test.sendMessage("on-installed-details", onInstalledDetails);
     } else if (message === "did-on-startup-fire") {
       browser.test.sendMessage("on-startup-fired", onStartupFired);
@@ -56,22 +63,51 @@ function background() {
   });
 }
 
-async function expectEvents(extension, {onStartupFired, onInstalledFired, onInstalledReason, onInstalledTemporary, onInstalledPrevious}) {
+async function expectEvents(
+  extension,
+  {
+    onStartupFired,
+    onInstalledFired,
+    onInstalledReason,
+    onInstalledTemporary,
+    onInstalledPrevious,
+  }
+) {
   extension.sendMessage("get-on-installed-details");
   let details = await extension.awaitMessage("on-installed-details");
   if (onInstalledFired) {
-    equal(details.reason, onInstalledReason, "runtime.onInstalled fired with the correct reason");
-    equal(details.temporary, onInstalledTemporary, "runtime.onInstalled fired with the correct temporary flag");
+    equal(
+      details.reason,
+      onInstalledReason,
+      "runtime.onInstalled fired with the correct reason"
+    );
+    equal(
+      details.temporary,
+      onInstalledTemporary,
+      "runtime.onInstalled fired with the correct temporary flag"
+    );
     if (onInstalledPrevious) {
-      equal(details.previousVersion, onInstalledPrevious, "runtime.onInstalled after update with correct previousVersion");
+      equal(
+        details.previousVersion,
+        onInstalledPrevious,
+        "runtime.onInstalled after update with correct previousVersion"
+      );
     }
   } else {
-    equal(details.fired, onInstalledFired, "runtime.onInstalled should not have fired");
+    equal(
+      details.fired,
+      onInstalledFired,
+      "runtime.onInstalled should not have fired"
+    );
   }
 
   extension.sendMessage("did-on-startup-fire");
   let fired = await extension.awaitMessage("on-startup-fired");
-  equal(fired, onStartupFired, `Expected runtime.onStartup to ${onStartupFired ? "" : "not "} fire`);
+  equal(
+    fired,
+    onStartupFired,
+    `Expected runtime.onStartup to ${onStartupFired ? "" : "not "} fire`
+  );
 }
 
 add_task(async function test_should_fire_on_addon_update() {
@@ -79,7 +115,8 @@ add_task(async function test_should_fire_on_addon_update() {
 
   await promiseStartupManager();
 
-  const EXTENSION_ID = "test_runtime_on_installed_addon_update@tests.mozilla.org";
+  const EXTENSION_ID =
+    "test_runtime_on_installed_addon_update@tests.mozilla.org";
 
   const PREF_EM_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
 
@@ -92,11 +129,11 @@ add_task(async function test_should_fire_on_addon_update() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
-          "update_url": `http://localhost:${port}/test_update.json`,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+          update_url: `http://localhost:${port}/test_update.json`,
         },
       },
     },
@@ -130,7 +167,10 @@ add_task(async function test_should_fire_on_addon_update() {
     background,
   });
 
-  testServer.registerFile("/addons/test_runtime_on_installed-2.0.xpi", webExtensionFile);
+  testServer.registerFile(
+    "/addons/test_runtime_on_installed-2.0.xpi",
+    webExtensionFile
+  );
 
   await extension.startup();
 
@@ -153,7 +193,11 @@ add_task(async function test_should_fire_on_addon_update() {
   await extension.awaitMessage("reloading");
 
   let [updated_addon] = await promiseInstalled;
-  equal(updated_addon.version, "2.0", "The updated addon has the correct version");
+  equal(
+    updated_addon.version,
+    "2.0",
+    "The updated addon has the correct version"
+  );
 
   await extension.awaitStartup();
 
@@ -171,17 +215,18 @@ add_task(async function test_should_fire_on_addon_update() {
 });
 
 add_task(async function test_should_fire_on_browser_update() {
-  const EXTENSION_ID = "test_runtime_on_installed_browser_update@tests.mozilla.org";
+  const EXTENSION_ID =
+    "test_runtime_on_installed_browser_update@tests.mozilla.org";
 
   await promiseStartupManager("1");
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
     },
@@ -250,10 +295,10 @@ add_task(async function test_should_not_fire_on_reload() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
     },
@@ -290,10 +335,10 @@ add_task(async function test_should_not_fire_on_restart() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
     },
@@ -324,17 +369,18 @@ add_task(async function test_should_not_fire_on_restart() {
 });
 
 add_task(async function test_temporary_installation() {
-  const EXTENSION_ID = "test_runtime_on_installed_addon_temporary@tests.mozilla.org";
+  const EXTENSION_ID =
+    "test_runtime_on_installed_addon_temporary@tests.mozilla.org";
 
   await promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
-      "version": "1.0",
-      "applications": {
-        "gecko": {
-          "id": EXTENSION_ID,
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
         },
       },
     },

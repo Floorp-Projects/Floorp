@@ -10,35 +10,38 @@
  * Expiring a full page should fire an onDeleteURI notification.
  */
 
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+  Ci.nsINavHistoryService
+);
 
 var tests = [
-
-  { desc: "Add 1 bookmarked page.",
+  {
+    desc: "Add 1 bookmarked page.",
     addPages: 1,
     addBookmarks: 1,
     expectedNotifications: 0, // No expirable pages.
   },
 
-  { desc: "Add 2 pages, 1 bookmarked.",
+  {
+    desc: "Add 2 pages, 1 bookmarked.",
     addPages: 2,
     addBookmarks: 1,
     expectedNotifications: 1, // Only one expirable page.
   },
 
-  { desc: "Add 10 pages, none bookmarked.",
+  {
+    desc: "Add 10 pages, none bookmarked.",
     addPages: 10,
     addBookmarks: 0,
     expectedNotifications: 10, // Will expire everything.
   },
 
-  { desc: "Add 10 pages, all bookmarked.",
+  {
+    desc: "Add 10 pages, all bookmarked.",
     addPages: 10,
     addBookmarks: 10,
     expectedNotifications: 0, // No expirable pages.
   },
-
 ];
 
 add_task(async function test_notifications_onDeleteURI() {
@@ -95,8 +98,10 @@ add_task(async function test_notifications_onDeleteURI() {
 
     hs.removeObserver(historyObserver, false);
 
-    Assert.equal(currentTest.receivedNotifications,
-                 currentTest.expectedNotifications);
+    Assert.equal(
+      currentTest.receivedNotifications,
+      currentTest.expectedNotifications
+    );
 
     // Clean up.
     await PlacesUtils.bookmarks.eraseEverything();

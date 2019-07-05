@@ -41,51 +41,58 @@ add_test(function test_corruptFormHistoryDB_lazyCorruptInit2() {
   run_next_test();
 });
 
-
 add_test(function test_corruptFormHistoryDB_emptyInit() {
-  do_log_info("test that FormHistory initializes an empty DB in place of corrupt DB.");
+  do_log_info(
+    "test that FormHistory initializes an empty DB in place of corrupt DB."
+  );
 
-  FormHistory.count({}, {
-    handleResult(aNumEntries) {
-      Assert.ok(aNumEntries == 0);
-      FormHistory.count({ fieldname: "name-A", value: "value-A" }, {
-        handleResult(aNumEntries2) {
-          Assert.ok(aNumEntries2 == 0);
-          run_next_test();
-        },
-        handleError(aError2) {
-          do_throw("DB initialized after reading a corrupt DB file found an entry.");
-        },
-      });
-    },
-    handleError(aError) {
-      do_throw("DB initialized after reading a corrupt DB file is not empty.");
-    },
-  });
+  FormHistory.count(
+    {},
+    {
+      handleResult(aNumEntries) {
+        Assert.ok(aNumEntries == 0);
+        FormHistory.count(
+          { fieldname: "name-A", value: "value-A" },
+          {
+            handleResult(aNumEntries2) {
+              Assert.ok(aNumEntries2 == 0);
+              run_next_test();
+            },
+            handleError(aError2) {
+              do_throw(
+                "DB initialized after reading a corrupt DB file found an entry."
+              );
+            },
+          }
+        );
+      },
+      handleError(aError) {
+        do_throw(
+          "DB initialized after reading a corrupt DB file is not empty."
+        );
+      },
+    }
+  );
 });
 
 add_test(function test_corruptFormHistoryDB_addEntry() {
   do_log_info("test adding an entry to the empty DB.");
 
-  updateEntry("add", "name-A", "value-A",
-              function() {
-                countEntries("name-A", "value-A",
-                             function(count) {
-                               Assert.ok(count == 1);
-                               run_next_test();
-                             });
-              });
+  updateEntry("add", "name-A", "value-A", function() {
+    countEntries("name-A", "value-A", function(count) {
+      Assert.ok(count == 1);
+      run_next_test();
+    });
+  });
 });
 
 add_test(function test_corruptFormHistoryDB_removeEntry() {
   do_log_info("test removing an entry to the empty DB.");
 
-  updateEntry("remove", "name-A", "value-A",
-              function() {
-                countEntries("name-A", "value-A",
-                             function(count) {
-                               Assert.ok(count == 0);
-                               run_next_test();
-                             });
-              });
+  updateEntry("remove", "name-A", "value-A", function() {
+    countEntries("name-A", "value-A", function(count) {
+      Assert.ok(count == 0);
+      run_next_test();
+    });
+  });
 });

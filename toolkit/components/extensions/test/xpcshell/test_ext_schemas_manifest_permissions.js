@@ -1,7 +1,9 @@
 "use strict";
 
-const {ExtensionCommon} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-const {ExtensionAPI} = ExtensionCommon;
+const { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+const { ExtensionAPI } = ExtensionCommon;
 
 add_task(async function() {
   const schema = [
@@ -9,7 +11,7 @@ add_task(async function() {
       namespace: "manifest",
       types: [
         {
-          "$extend": "WebExtensionManifest",
+          $extend: "WebExtensionManifest",
           properties: {
             a_manifest_property: {
               type: "object",
@@ -20,7 +22,7 @@ add_task(async function() {
                   type: "any",
                 },
               },
-              additionalProperties: {"$ref": "UnrecognizedProperty"},
+              additionalProperties: { $ref: "UnrecognizedProperty" },
             },
           },
         },
@@ -65,8 +67,13 @@ add_task(async function() {
     },
   };
 
-  Services.catMan.addCategoryEntry("webextension-modules", "test-manifest-permission",
-                                   `data:,${JSON.stringify(modules)}`, false, false);
+  Services.catMan.addCategoryEntry(
+    "webextension-modules",
+    "test-manifest-permission",
+    `data:,${JSON.stringify(modules)}`,
+    false,
+    false
+  );
 
   async function testExtension(extensionDef, assertFn) {
     let extension = ExtensionTestUtils.loadExtension(extensionDef);
@@ -76,51 +83,92 @@ add_task(async function() {
     await extension.unload();
   }
 
-  await testExtension({
-    manifest: {
-      a_manifest_property: {},
-    },
-    background() {
-      // Test hasPermission method implemented in ExtensionChild.jsm.
-      browser.test.assertTrue("testManifestPermission" in browser, "The API namespace is defined as expected");
-      browser.test.assertEq(
-        undefined, browser.testManifestPermission && browser.testManifestPermission.testMethod,
-        "The property with nested manifest property permission should not be available ");
-      browser.test.notifyPass("test-extension-manifest-without-nested-prop");
-    },
-  }, async (extension) => {
-    await extension.awaitFinish("test-extension-manifest-without-nested-prop");
-
-    // Test hasPermission method implemented in Extension.jsm.
-    equal(extension.extension.hasPermission("manifest:a_manifest_property"), true,
-          "Got the expected Extension's hasPermission result on existing property");
-    equal(extension.extension.hasPermission("manifest:a_manifest_property.nested"), false,
-          "Got the expected Extension's hasPermission result on existing subproperty");
-  });
-
-  await testExtension({
-    manifest: {
-      a_manifest_property: {
-        nested: {},
+  await testExtension(
+    {
+      manifest: {
+        a_manifest_property: {},
+      },
+      background() {
+        // Test hasPermission method implemented in ExtensionChild.jsm.
+        browser.test.assertTrue(
+          "testManifestPermission" in browser,
+          "The API namespace is defined as expected"
+        );
+        browser.test.assertEq(
+          undefined,
+          browser.testManifestPermission &&
+            browser.testManifestPermission.testMethod,
+          "The property with nested manifest property permission should not be available "
+        );
+        browser.test.notifyPass("test-extension-manifest-without-nested-prop");
       },
     },
-    background() {
-      // Test hasPermission method implemented in ExtensionChild.jsm.
-      browser.test.assertTrue("testManifestPermission" in browser, "The API namespace is defined as expected");
-      browser.test.assertEq(
-        "function", browser.testManifestPermission && typeof browser.testManifestPermission.testMethod,
-        "The property with nested manifest property permission should be available ");
-      browser.test.notifyPass("test-extension-manifest-with-nested-prop");
-    },
-  }, async (extension) => {
-    await extension.awaitFinish("test-extension-manifest-with-nested-prop");
+    async extension => {
+      await extension.awaitFinish(
+        "test-extension-manifest-without-nested-prop"
+      );
 
-    // Test hasPermission method implemented in Extension.jsm.
-    equal(extension.extension.hasPermission("manifest:a_manifest_property"), true,
-          "Got the expected Extension's hasPermission result on existing property");
-    equal(extension.extension.hasPermission("manifest:a_manifest_property.nested"), true,
-          "Got the expected Extension's hasPermission result on existing subproperty");
-    equal(extension.extension.hasPermission("manifest:a_manifest_property.unexisting"), false,
-          "Got the expected Extension's hasPermission result on non existing subproperty");
-  });
+      // Test hasPermission method implemented in Extension.jsm.
+      equal(
+        extension.extension.hasPermission("manifest:a_manifest_property"),
+        true,
+        "Got the expected Extension's hasPermission result on existing property"
+      );
+      equal(
+        extension.extension.hasPermission(
+          "manifest:a_manifest_property.nested"
+        ),
+        false,
+        "Got the expected Extension's hasPermission result on existing subproperty"
+      );
+    }
+  );
+
+  await testExtension(
+    {
+      manifest: {
+        a_manifest_property: {
+          nested: {},
+        },
+      },
+      background() {
+        // Test hasPermission method implemented in ExtensionChild.jsm.
+        browser.test.assertTrue(
+          "testManifestPermission" in browser,
+          "The API namespace is defined as expected"
+        );
+        browser.test.assertEq(
+          "function",
+          browser.testManifestPermission &&
+            typeof browser.testManifestPermission.testMethod,
+          "The property with nested manifest property permission should be available "
+        );
+        browser.test.notifyPass("test-extension-manifest-with-nested-prop");
+      },
+    },
+    async extension => {
+      await extension.awaitFinish("test-extension-manifest-with-nested-prop");
+
+      // Test hasPermission method implemented in Extension.jsm.
+      equal(
+        extension.extension.hasPermission("manifest:a_manifest_property"),
+        true,
+        "Got the expected Extension's hasPermission result on existing property"
+      );
+      equal(
+        extension.extension.hasPermission(
+          "manifest:a_manifest_property.nested"
+        ),
+        true,
+        "Got the expected Extension's hasPermission result on existing subproperty"
+      );
+      equal(
+        extension.extension.hasPermission(
+          "manifest:a_manifest_property.unexisting"
+        ),
+        false,
+        "Got the expected Extension's hasPermission result on non existing subproperty"
+      );
+    }
+  );
 });

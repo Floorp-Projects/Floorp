@@ -1,6 +1,8 @@
 "use strict";
 
-const server = createHttpServer({hosts: ["xpcshell.test", "example.com", "example.org"]});
+const server = createHttpServer({
+  hosts: ["xpcshell.test", "example.com", "example.org"],
+});
 server.registerDirectory("/data/", do_get_file("data"));
 
 server.registerPathHandler("/example.txt", (request, response) => {
@@ -12,7 +14,7 @@ server.registerPathHandler("/return_headers.sjs", (request, response) => {
   response.setHeader("Content-Type", "text/plain", false);
 
   let headers = {};
-  for (let {data: header} of request.headers) {
+  for (let { data: header } of request.headers) {
     headers[header.toLowerCase()] = request.getHeader(header);
   }
 
@@ -24,7 +26,7 @@ server.registerPathHandler("/return_headers.sjs", (request, response) => {
 add_task(async function test_simple() {
   async function runTests(cx) {
     function xhr(XMLHttpRequest) {
-      return (url) => {
+      return url => {
         return new Promise((resolve, reject) => {
           let req = new XMLHttpRequest();
           req.open("GET", url);
@@ -46,9 +48,15 @@ add_task(async function test_simple() {
 
       /* eslint-disable no-else-return */
       if (shouldFail) {
-        return fetch("http://example.org/example.txt").then(failListener, passListener);
+        return fetch("http://example.org/example.txt").then(
+          failListener,
+          passListener
+        );
       } else {
-        return fetch("http://example.com/example.txt").then(passListener, failListener);
+        return fetch("http://example.com/example.txt").then(
+          passListener,
+          failListener
+        );
       }
       /* eslint-enable no-else-return */
     }
@@ -77,10 +85,12 @@ add_task(async function test_simple() {
     background: `(${background})(${runTests})`,
     manifest: {
       permissions: ["http://example.com/"],
-      content_scripts: [{
-        "matches": ["http://xpcshell.test/data/file_permission_xhr.html"],
-        "js": ["content.js"],
-      }],
+      content_scripts: [
+        {
+          matches: ["http://xpcshell.test/data/file_permission_xhr.html"],
+          js: ["content.js"],
+        },
+      ],
     },
     files: {
       "content.js": `(${async runTestsFn => {
@@ -89,7 +99,7 @@ add_task(async function test_simple() {
         window.wrappedJSObject.privilegedFetch = fetch;
         window.wrappedJSObject.privilegedXHR = XMLHttpRequest;
 
-        window.addEventListener("message", function rcv({data}) {
+        window.addEventListener("message", function rcv({ data }) {
           switch (data.msg) {
             case "test":
               break;
@@ -113,7 +123,8 @@ add_task(async function test_simple() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://xpcshell.test/data/file_permission_xhr.html");
+    "http://xpcshell.test/data/file_permission_xhr.html"
+  );
   await extension.awaitMessage("content-script-finished");
   await contentPage.close();
 
@@ -129,28 +140,34 @@ add_task(async function test_page_xhr() {
   async function contentScript() {
     const content = this.content;
 
-    const {
-      webpageFetchResult, webpageXhrResult,
-    } = await new Promise(resolve => {
-      const listenPageMessage = (event) => {
-        if (!event.data || event.data.type !== "testPageGlobals") {
-          return;
-        }
+    const { webpageFetchResult, webpageXhrResult } = await new Promise(
+      resolve => {
+        const listenPageMessage = event => {
+          if (!event.data || event.data.type !== "testPageGlobals") {
+            return;
+          }
 
-        window.removeEventListener("message", listenPageMessage);
+          window.removeEventListener("message", listenPageMessage);
 
-        browser.test.assertEq(true, !!content.XMLHttpRequest,
-                              "The content script should have access to content.XMLHTTPRequest");
-        browser.test.assertEq(true, !!content.fetch,
-                              "The content script should have access to window.pageFetch");
+          browser.test.assertEq(
+            true,
+            !!content.XMLHttpRequest,
+            "The content script should have access to content.XMLHTTPRequest"
+          );
+          browser.test.assertEq(
+            true,
+            !!content.fetch,
+            "The content script should have access to window.pageFetch"
+          );
 
-        resolve(event.data);
-      };
+          resolve(event.data);
+        };
 
-      window.addEventListener("message", listenPageMessage);
+        window.addEventListener("message", listenPageMessage);
 
-      window.postMessage({}, "*");
-    });
+        window.postMessage({}, "*");
+      }
+    );
 
     const url = new URL("/return_headers.sjs", location).href;
 
@@ -158,32 +175,47 @@ add_task(async function test_page_xhr() {
       new Promise((resolve, reject) => {
         const req = new content.XMLHttpRequest();
         req.open("GET", url);
-        req.addEventListener("load", () => resolve(JSON.parse(req.responseText)));
+        req.addEventListener("load", () =>
+          resolve(JSON.parse(req.responseText))
+        );
         req.addEventListener("error", reject);
         req.send();
       }),
       content.fetch(url).then(res => res.json()),
-    ]).then(async ([xhrResult, fetchResult]) => {
-      browser.test.assertEq(webpageFetchResult.referer, fetchResult.referer,
-                            "window.pageFetch referrer is the same of a webpage fetch request");
-      browser.test.assertEq(webpageFetchResult.origin, fetchResult.origin,
-                            "window.pageFetch origin is the same of a webpage fetch request");
+    ])
+      .then(async ([xhrResult, fetchResult]) => {
+        browser.test.assertEq(
+          webpageFetchResult.referer,
+          fetchResult.referer,
+          "window.pageFetch referrer is the same of a webpage fetch request"
+        );
+        browser.test.assertEq(
+          webpageFetchResult.origin,
+          fetchResult.origin,
+          "window.pageFetch origin is the same of a webpage fetch request"
+        );
 
-      browser.test.assertEq(webpageXhrResult.referer, xhrResult.referer,
-                            "content.XMLHttpRequest referrer is the same of a webpage fetch request");
-    }).catch(error => {
-      browser.test.fail(`Unexpected error: ${error}`);
-    });
+        browser.test.assertEq(
+          webpageXhrResult.referer,
+          xhrResult.referer,
+          "content.XMLHttpRequest referrer is the same of a webpage fetch request"
+        );
+      })
+      .catch(error => {
+        browser.test.fail(`Unexpected error: ${error}`);
+      });
 
     browser.test.notifyPass("content-script-page-xhr");
   }
 
   let extensionData = {
     manifest: {
-      content_scripts: [{
-        "matches": ["http://xpcshell.test/*"],
-        "js": ["content.js"],
-      }],
+      content_scripts: [
+        {
+          matches: ["http://xpcshell.test/*"],
+          js: ["content.js"],
+        },
+      ],
     },
     files: {
       "content.js": `(${contentScript})()`,
@@ -194,7 +226,8 @@ add_task(async function test_page_xhr() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://xpcshell.test/data/file_page_xhr.html");
+    "http://xpcshell.test/data/file_page_xhr.html"
+  );
   await extension.awaitFinish("content-script-page-xhr");
   await contentPage.close();
 

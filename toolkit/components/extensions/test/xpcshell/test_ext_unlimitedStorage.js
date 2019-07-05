@@ -21,10 +21,15 @@ const STORAGE_SITE_PERMISSIONS = [
 function checkSitePermissions(principal, expectedPermAction, assertMessage) {
   for (const permName of STORAGE_SITE_PERMISSIONS) {
     const actualPermAction = Services.perms.testPermissionFromPrincipal(
-      principal, permName);
+      principal,
+      permName
+    );
 
-    equal(actualPermAction, expectedPermAction,
-          `The extension "${permName}" SitePermission ${assertMessage} as expected`);
+    equal(
+      actualPermAction,
+      expectedPermAction,
+      `The extension "${permName}" SitePermission ${assertMessage} as expected`
+    );
   }
 }
 
@@ -35,7 +40,7 @@ add_task(async function test_unlimitedStorage_restored_on_app_startup() {
     manifest: {
       permissions: ["unlimitedStorage"],
       applications: {
-        gecko: {id},
+        gecko: { id },
       },
     },
 
@@ -48,12 +53,19 @@ add_task(async function test_unlimitedStorage_restored_on_app_startup() {
   const policy = WebExtensionPolicy.getByID(extension.id);
   const principal = policy.extension.principal;
 
-  checkSitePermissions(principal, Services.perms.ALLOW_ACTION, "has been allowed");
+  checkSitePermissions(
+    principal,
+    Services.perms.ALLOW_ACTION,
+    "has been allowed"
+  );
 
   // Remove site permissions as it would happen if Firefox is shutting down
   // with the "clear site permissions" setting.
 
-  Services.perms.removeFromPrincipal(principal, "WebExtensions-unlimitedStorage");
+  Services.perms.removeFromPrincipal(
+    principal,
+    "WebExtensions-unlimitedStorage"
+  );
   Services.perms.removeFromPrincipal(principal, "indexedDB");
   Services.perms.removeFromPrincipal(principal, "persistent-storage");
 
@@ -64,7 +76,11 @@ add_task(async function test_unlimitedStorage_restored_on_app_startup() {
   await onceExtensionStarted;
 
   // The site permissions should have been granted again.
-  checkSitePermissions(principal, Services.perms.ALLOW_ACTION, "has been allowed");
+  checkSitePermissions(
+    principal,
+    Services.perms.ALLOW_ACTION,
+    "has been allowed"
+  );
 
   await extension.unload();
 });
@@ -75,7 +91,7 @@ add_task(async function test_unlimitedStorage_removed_on_update() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["unlimitedStorage"],
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
     useAddonManager: "permanent",
   });
@@ -85,23 +101,33 @@ add_task(async function test_unlimitedStorage_removed_on_update() {
   const policy = WebExtensionPolicy.getByID(extension.id);
   const principal = policy.extension.principal;
 
-  checkSitePermissions(principal, Services.perms.ALLOW_ACTION, "has been allowed");
+  checkSitePermissions(
+    principal,
+    Services.perms.ALLOW_ACTION,
+    "has been allowed"
+  );
 
   // Simulate an update which do not require the unlimitedStorage permission.
   await extension.upgrade({
     manifest: {
-      applications: {gecko: {id}},
+      applications: { gecko: { id } },
     },
   });
 
   const newPolicy = WebExtensionPolicy.getByID(extension.id);
   const newPrincipal = newPolicy.extension.principal;
 
-  equal(principal.URI.spec, newPrincipal.URI.spec,
-        "upgraded extension has the expected principal");
+  equal(
+    principal.URI.spec,
+    newPrincipal.URI.spec,
+    "upgraded extension has the expected principal"
+  );
 
-  checkSitePermissions(principal, Services.perms.UNKNOWN_ACTION, "has been cleared");
+  checkSitePermissions(
+    principal,
+    Services.perms.UNKNOWN_ACTION,
+    "has been cleared"
+  );
 
   await extension.unload();
 });
-

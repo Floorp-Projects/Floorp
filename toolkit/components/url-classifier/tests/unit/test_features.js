@@ -7,8 +7,9 @@
 add_test(async _ => {
   Services.prefs.setBoolPref("browser.safebrowsing.passwords.enabled", true);
 
-  let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                     .getService(Ci.nsIURIClassifier);
+  let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
+    Ci.nsIURIClassifier
+  );
   ok(!!classifier, "We have the URI-Classifier");
 
   var tests = [
@@ -22,10 +23,13 @@ add_test(async _ => {
     let feature;
     try {
       feature = classifier.getFeatureByName(test.name);
-    } catch (e) {
-    }
+    } catch (e) {}
 
-    equal(!!feature, test.expectedResult, "Exceptected result for: " + test.name);
+    equal(
+      !!feature,
+      test.expectedResult,
+      "Exceptected result for: " + test.name
+    );
     if (feature) {
       equal(feature.name, test.name, "Feature name matches");
     }
@@ -36,20 +40,33 @@ add_test(async _ => {
   let feature = classifier.getFeatureByName("tracking-protection");
 
   let results = await new Promise(resolve => {
-    classifier.asyncClassifyLocalWithFeatures(uri, [feature],
+    classifier.asyncClassifyLocalWithFeatures(
+      uri,
+      [feature],
       Ci.nsIUrlClassifierFeature.blacklist,
-      r => { resolve(r); });
+      r => {
+        resolve(r);
+      }
+    );
   });
   equal(results.length, 0, "No tracker");
 
-  Services.prefs.setCharPref("urlclassifier.trackingTable.testEntries", "example.com");
+  Services.prefs.setCharPref(
+    "urlclassifier.trackingTable.testEntries",
+    "example.com"
+  );
 
   feature = classifier.getFeatureByName("tracking-protection");
 
   results = await new Promise(resolve => {
-    classifier.asyncClassifyLocalWithFeatures(uri, [feature],
+    classifier.asyncClassifyLocalWithFeatures(
+      uri,
+      [feature],
       Ci.nsIUrlClassifierFeature.blacklist,
-      r => { resolve(r); });
+      r => {
+        resolve(r);
+      }
+    );
   });
   equal(results.length, 1, "Tracker");
   let result = results[0];

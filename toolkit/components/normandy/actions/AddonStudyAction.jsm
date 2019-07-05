@@ -4,8 +4,12 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {BranchedAddonStudyAction} = ChromeUtils.import("resource://normandy/actions/BranchedAddonStudyAction.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { BranchedAddonStudyAction } = ChromeUtils.import(
+  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
@@ -75,10 +79,10 @@ class AddonStudyAction extends BranchedAddonStudyAction {
     // This will throw if the arguments aren't valid, and BaseAction will catch it.
     transformedArguments = this.validateArguments(
       transformedArguments,
-      ActionSchemas["branched-addon-study"],
+      ActionSchemas["branched-addon-study"]
     );
 
-    const transformedRecipe = {...recipe, arguments: transformedArguments};
+    const transformedRecipe = { ...recipe, arguments: transformedArguments };
     return super._run(transformedRecipe);
   }
 
@@ -89,11 +93,15 @@ class AddonStudyAction extends BranchedAddonStudyAction {
    * the super class.
    */
   async _finalize() {
-    const activeStudies = await AddonStudies.getAllActive({ branched: AddonStudies.FILTER_NOT_BRANCHED });
+    const activeStudies = await AddonStudies.getAllActive({
+      branched: AddonStudies.FILTER_NOT_BRANCHED,
+    });
 
     for (const study of activeStudies) {
       if (!this.seenRecipeIds.has(study.recipeId)) {
-        this.log.debug(`Stopping non-branched add-on study for recipe ${study.recipeId}`);
+        this.log.debug(
+          `Stopping non-branched add-on study for recipe ${study.recipeId}`
+        );
         try {
           await this.unenroll(study.recipeId, "recipe-not-seen");
         } catch (err) {

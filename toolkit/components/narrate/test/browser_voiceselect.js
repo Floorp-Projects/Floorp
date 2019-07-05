@@ -15,29 +15,41 @@ add_task(async function testVoiceselectDropdownAutoclose() {
     await NarrateTestUtils.waitForNarrateToggle(content);
 
     $(NarrateTestUtils.TOGGLE).click();
-    ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
-      "popup is toggled");
+    ok(
+      NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
+      "popup is toggled"
+    );
 
-    ok(!NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
-      "voice options are initially hidden");
+    ok(
+      !NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
+      "voice options are initially hidden"
+    );
 
     $(NarrateTestUtils.VOICE_SELECT).click();
-    ok(NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
-      "voice options are toggled");
+    ok(
+      NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
+      "voice options are toggled"
+    );
 
     $(NarrateTestUtils.TOGGLE).click();
     // A focus will follow a real click.
     $(NarrateTestUtils.TOGGLE).focus();
-    ok(!NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
-      "narrate popup is dismissed");
+    ok(
+      !NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
+      "narrate popup is dismissed"
+    );
 
     $(NarrateTestUtils.TOGGLE).click();
     // A focus will follow a real click.
     $(NarrateTestUtils.TOGGLE).focus();
-    ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
-      "narrate popup is showing again");
-    ok(!NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
-      "voice options are hidden after popup comes back");
+    ok(
+      NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
+      "narrate popup is showing again"
+    );
+    ok(
+      !NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
+      "voice options are hidden after popup comes back"
+    );
   });
 });
 
@@ -50,17 +62,24 @@ add_task(async function testVoiceselectLabelChange() {
     await NarrateTestUtils.waitForNarrateToggle(content);
 
     $(NarrateTestUtils.TOGGLE).click();
-    ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
-      "popup is toggled");
+    ok(
+      NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
+      "popup is toggled"
+    );
 
-    ok(NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake:lenny"),
-      "voice selected");
+    ok(
+      NarrateTestUtils.selectVoice(content, "urn:moz-tts:fake:lenny"),
+      "voice selected"
+    );
 
     let selectedOption = $(NarrateTestUtils.VOICE_SELECTED);
     let selectLabel = $(NarrateTestUtils.VOICE_SELECT_LABEL);
 
-    is(selectedOption.textContent, selectLabel.textContent,
-      "new label matches selected voice");
+    is(
+      selectedOption.textContent,
+      selectLabel.textContent,
+      "new label matches selected voice"
+    );
   });
 });
 
@@ -73,15 +92,19 @@ add_task(async function testVoiceselectKeyboard() {
     await NarrateTestUtils.waitForNarrateToggle(content);
 
     $(NarrateTestUtils.TOGGLE).click();
-    ok(NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
-      "popup is toggled");
+    ok(
+      NarrateTestUtils.isVisible($(NarrateTestUtils.POPUP)),
+      "popup is toggled"
+    );
 
     let eventUtils = NarrateTestUtils.getEventUtils(content);
 
     let firstValue = $(NarrateTestUtils.VOICE_SELECTED).dataset.value;
 
-    ok(!NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
-      "voice options initially are hidden");
+    ok(
+      !NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
+      "voice options initially are hidden"
+    );
 
     $(NarrateTestUtils.VOICE_SELECT).focus();
 
@@ -89,22 +112,28 @@ add_task(async function testVoiceselectKeyboard() {
 
     await ContentTaskUtils.waitForCondition(
       () => $(NarrateTestUtils.VOICE_SELECTED).dataset.value != firstValue,
-      "value changed after pressing ArrowDown key");
+      "value changed after pressing ArrowDown key"
+    );
 
     eventUtils.synthesizeKey("KEY_Enter", {}, content);
 
-    ok(NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
-      "voice options showing after pressing Enter");
+    ok(
+      NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
+      "voice options showing after pressing Enter"
+    );
 
     eventUtils.synthesizeKey("KEY_ArrowUp", {}, content);
 
     eventUtils.synthesizeKey("KEY_Enter", {}, content);
 
-    ok(!NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
-      "voice options hidden after pressing Enter");
+    ok(
+      !NarrateTestUtils.isVisible($(NarrateTestUtils.VOICE_OPTIONS)),
+      "voice options hidden after pressing Enter"
+    );
 
     await ContentTaskUtils.waitForCondition(
       () => $(NarrateTestUtils.VOICE_SELECTED).dataset.value == firstValue,
-      "value changed back to original after pressing Enter");
+      "value changed back to original after pressing Enter"
+    );
   });
 });

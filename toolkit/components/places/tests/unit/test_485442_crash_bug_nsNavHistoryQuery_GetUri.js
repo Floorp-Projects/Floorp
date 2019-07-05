@@ -10,7 +10,10 @@ function run_test() {
   options.resultType = options.RESULT_TYPE_QUERY;
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
-  Assert.equal(PlacesUtils.asQuery(root).query.uri, null,
-               "Should be null and not crash the browser");
+  Assert.equal(
+    PlacesUtils.asQuery(root).query.uri,
+    null,
+    "Should be null and not crash the browser"
+  );
   root.containerOpen = false;
 }

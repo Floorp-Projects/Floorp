@@ -1,22 +1,35 @@
 "use strict";
 
-var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
-var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+var { WebRequest } = ChromeUtils.import(
+  "resource://gre/modules/WebRequest.jsm"
+);
+var { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
-const server = createHttpServer({hosts: ["example.com"]});
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_ancestors_exist() {
   let deferred = PromiseUtils.defer();
   function onBeforeRequest(details) {
     info(`onBeforeRequest ${details.url}`);
-    ok(typeof details.frameAncestors === "object", `ancestors exists [${typeof details.frameAncestors}]`);
+    ok(
+      typeof details.frameAncestors === "object",
+      `ancestors exists [${typeof details.frameAncestors}]`
+    );
     deferred.resolve();
   }
 
-  WebRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: new MatchPatternSet(["http://example.com/*"])}, ["blocking"]);
+  WebRequest.onBeforeRequest.addListener(
+    onBeforeRequest,
+    { urls: new MatchPatternSet(["http://example.com/*"]) },
+    ["blocking"]
+  );
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/data/file_sample.html");
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html"
+  );
   await deferred.promise;
   await contentPage.close();
 
@@ -38,10 +51,14 @@ add_task(async function test_ancestors_null() {
       let xhr = new XMLHttpRequest();
       xhr.mozBackgroundRequest = true;
       xhr.open("GET", url);
-      xhr.onload = () => { resolve(xhr.responseText); };
-      xhr.onerror = () => { reject(xhr.status); };
+      xhr.onload = () => {
+        resolve(xhr.responseText);
+      };
+      xhr.onerror = () => {
+        reject(xhr.status);
+      };
       // use a different contextId to avoid auth cache.
-      xhr.setOriginAttributes({userContextId: 1});
+      xhr.setOriginAttributes({ userContextId: 1 });
       xhr.send();
     });
   }

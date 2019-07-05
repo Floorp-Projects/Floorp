@@ -7,20 +7,28 @@ add_task(async function() {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.contentblocking.allowlist.annotations.enabled", true],
-    ["browser.contentblocking.allowlist.storage.enabled", true],
-    [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
-    ["dom.storage_access.auto_grants", true],
-    ["dom.storage_access.auto_grants.delayed", false],
-    ["dom.storage_access.enabled", true],
-    ["dom.storage_access.prompt.testing", false],
-    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
-    ["privacy.trackingprotection.enabled", false],
-    ["privacy.trackingprotection.pbmode.enabled", false],
-    ["privacy.trackingprotection.annotate_channels", true],
-    ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "tracking.example.com,tracking.example.org"],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.contentblocking.allowlist.annotations.enabled", true],
+      ["browser.contentblocking.allowlist.storage.enabled", true],
+      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
+      ["dom.storage_access.auto_grants", true],
+      ["dom.storage_access.auto_grants.delayed", false],
+      ["dom.storage_access.enabled", true],
+      ["dom.storage_access.prompt.testing", false],
+      [
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      ["privacy.trackingprotection.annotate_channels", true],
+      [
+        "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
+        "tracking.example.com,tracking.example.org",
+      ],
+    ],
+  });
 
   await UrlClassifierTestUtils.addTestTrackers();
 
@@ -69,6 +77,8 @@ add_task(async function() {
 add_task(async function() {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
   });
 });

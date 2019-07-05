@@ -28,26 +28,26 @@ let fooExperimentAPIs = {
 let fooExperimentFiles = {
   "schema.json": JSON.stringify([
     {
-      "namespace": "experiments.foo",
-      "types": [
+      namespace: "experiments.foo",
+      types: [
         {
-          "id": "Meh",
-          "type": "object",
-          "properties": {},
+          id: "Meh",
+          type: "object",
+          properties: {},
         },
       ],
-      "functions": [
+      functions: [
         {
-          "name": "parent",
-          "type": "function",
-          "async": true,
-          "parameters": [],
+          name: "parent",
+          type: "function",
+          async: true,
+          parameters: [],
         },
         {
-          "name": "child",
-          "type": "function",
-          "parameters": [],
-          "returns": {"type": "string"},
+          name: "child",
+          type: "function",
+          parameters: [],
+          returns: { type: "string" },
         },
       ],
     },
@@ -88,41 +88,85 @@ let fooExperimentFiles = {
 };
 
 async function testFooExperiment() {
-  browser.test.assertEq("object", typeof browser.experiments,
-                        "typeof browser.experiments");
+  browser.test.assertEq(
+    "object",
+    typeof browser.experiments,
+    "typeof browser.experiments"
+  );
 
-  browser.test.assertEq("object", typeof browser.experiments.foo,
-                        "typeof browser.experiments.foo");
+  browser.test.assertEq(
+    "object",
+    typeof browser.experiments.foo,
+    "typeof browser.experiments.foo"
+  );
 
-  browser.test.assertEq("function", typeof browser.experiments.foo.child,
-                        "typeof browser.experiments.foo.child");
+  browser.test.assertEq(
+    "function",
+    typeof browser.experiments.foo.child,
+    "typeof browser.experiments.foo.child"
+  );
 
-  browser.test.assertEq("function", typeof browser.experiments.foo.parent,
-                        "typeof browser.experiments.foo.parent");
+  browser.test.assertEq(
+    "function",
+    typeof browser.experiments.foo.parent,
+    "typeof browser.experiments.foo.parent"
+  );
 
-  browser.test.assertEq("child", browser.experiments.foo.child(),
-                        "foo.child()");
+  browser.test.assertEq(
+    "child",
+    browser.experiments.foo.child(),
+    "foo.child()"
+  );
 
-  browser.test.assertEq("parent", await browser.experiments.foo.parent(),
-                        "await foo.parent()");
+  browser.test.assertEq(
+    "parent",
+    await browser.experiments.foo.parent(),
+    "await foo.parent()"
+  );
 }
 
 async function testFooFailExperiment() {
-  browser.test.assertEq("object", typeof browser.experiments,
-                        "typeof browser.experiments");
+  browser.test.assertEq(
+    "object",
+    typeof browser.experiments,
+    "typeof browser.experiments"
+  );
 
-  browser.test.assertEq("undefined", typeof browser.experiments.foo,
-                        "typeof browser.experiments.foo");
+  browser.test.assertEq(
+    "undefined",
+    typeof browser.experiments.foo,
+    "typeof browser.experiments.foo"
+  );
 }
 
 add_task(async function test_bundled_experiments() {
   let testCases = [
-    {isSystem: true, temporarilyInstalled: true, shouldHaveExperiments: true},
-    {isSystem: true, temporarilyInstalled: false, shouldHaveExperiments: true},
-    {isPrivileged: true, temporarilyInstalled: true, shouldHaveExperiments: true},
-    {isPrivileged: true, temporarilyInstalled: false, shouldHaveExperiments: true},
-    {isPrivileged: false, temporarilyInstalled: true, shouldHaveExperiments: AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS},
-    {isPrivileged: false, temporarilyInstalled: false, shouldHaveExperiments: false},
+    { isSystem: true, temporarilyInstalled: true, shouldHaveExperiments: true },
+    {
+      isSystem: true,
+      temporarilyInstalled: false,
+      shouldHaveExperiments: true,
+    },
+    {
+      isPrivileged: true,
+      temporarilyInstalled: true,
+      shouldHaveExperiments: true,
+    },
+    {
+      isPrivileged: true,
+      temporarilyInstalled: false,
+      shouldHaveExperiments: true,
+    },
+    {
+      isPrivileged: false,
+      temporarilyInstalled: true,
+      shouldHaveExperiments: AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS,
+    },
+    {
+      isPrivileged: false,
+      temporarilyInstalled: false,
+      shouldHaveExperiments: false,
+    },
   ];
 
   async function background(shouldHaveExperiments) {
@@ -166,21 +210,35 @@ add_task(async function test_unbundled_experiments() {
   async function background() {
     await testFooExperiment();
 
-    browser.test.assertEq("object", typeof browser.experiments.crunk,
-                          "typeof browser.experiments.crunk");
+    browser.test.assertEq(
+      "object",
+      typeof browser.experiments.crunk,
+      "typeof browser.experiments.crunk"
+    );
 
-    browser.test.assertEq("function", typeof browser.experiments.crunk.child,
-                          "typeof browser.experiments.crunk.child");
+    browser.test.assertEq(
+      "function",
+      typeof browser.experiments.crunk.child,
+      "typeof browser.experiments.crunk.child"
+    );
 
-    browser.test.assertEq("function", typeof browser.experiments.crunk.parent,
-                          "typeof browser.experiments.crunk.parent");
+    browser.test.assertEq(
+      "function",
+      typeof browser.experiments.crunk.parent,
+      "typeof browser.experiments.crunk.parent"
+    );
 
-    browser.test.assertEq("crunk-child", browser.experiments.crunk.child(),
-                          "crunk.child()");
+    browser.test.assertEq(
+      "crunk-child",
+      browser.experiments.crunk.child(),
+      "crunk.child()"
+    );
 
-    browser.test.assertEq("crunk-parent", await browser.experiments.crunk.parent(),
-                          "await crunk.parent()");
-
+    browser.test.assertEq(
+      "crunk-parent",
+      await browser.experiments.crunk.parent(),
+      "await crunk.parent()"
+    );
 
     browser.test.notifyPass("background.experiments.crunk");
   }
@@ -206,7 +264,7 @@ add_task(async function test_unbundled_experiments() {
     isPrivileged: true,
 
     manifest: {
-      applications: {gecko: {id: "crunk@experiments.addons.mozilla.org"}},
+      applications: { gecko: { id: "crunk@experiments.addons.mozilla.org" } },
 
       experiment_apis: {
         crunk: {
@@ -228,26 +286,26 @@ add_task(async function test_unbundled_experiments() {
     files: {
       "schema.json": JSON.stringify([
         {
-          "namespace": "experiments.crunk",
-          "types": [
+          namespace: "experiments.crunk",
+          types: [
             {
-              "id": "Meh",
-              "type": "object",
-              "properties": {},
+              id: "Meh",
+              type: "object",
+              properties: {},
             },
           ],
-          "functions": [
+          functions: [
             {
-              "name": "parent",
-              "type": "function",
-              "async": true,
-              "parameters": [],
+              name: "parent",
+              type: "function",
+              async: true,
+              parameters: [],
             },
             {
-              "name": "child",
-              "type": "function",
-              "parameters": [],
-              "returns": {"type": "string"},
+              name: "child",
+              type: "function",
+              parameters: [],
+              returns: { type: "string" },
             },
           ],
         },

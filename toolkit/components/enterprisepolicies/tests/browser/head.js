@@ -4,19 +4,25 @@
 
 "use strict";
 
-const {
-  EnterprisePolicyTesting,
-  PoliciesPrefTracker,
-} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", null);
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm", null);
+const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm",
+  null
+);
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm",
+  null
+);
 
 PoliciesPrefTracker.start();
 
 async function setupPolicyEngineWithJson(json, customSchema) {
   PoliciesPrefTracker.restoreDefaultValues();
-  if (typeof(json) != "object") {
+  if (typeof json != "object") {
     let filePath = getTestFilePath(json ? json : "non-existing-file.json");
-    return EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath, customSchema);
+    return EnterprisePolicyTesting.setupPolicyEngineWithJson(
+      filePath,
+      customSchema
+    );
   }
   return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
 }

@@ -5,8 +5,13 @@
 /* globals todo_check_eq */
 "use strict";
 
-const {LoginFormFactory} = ChromeUtils.import("resource://gre/modules/LoginFormFactory.jsm");
-const LMCBackstagePass = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm", null);
+const { LoginFormFactory } = ChromeUtils.import(
+  "resource://gre/modules/LoginFormFactory.jsm"
+);
+const LMCBackstagePass = ChromeUtils.import(
+  "resource://gre/modules/LoginManagerContent.jsm",
+  null
+);
 const { LoginManagerContent } = LMCBackstagePass;
 const TESTCASES = [
   {
@@ -38,7 +43,8 @@ const TESTCASES = [
     minPasswordLength: undefined,
   },
   {
-    description: "4 password fields outside of a <form> (1 empty, 3 full) with minPasswordLength=2",
+    description:
+      "4 password fields outside of a <form> (1 empty, 3 full) with minPasswordLength=2",
     document: `<input id="pw1" type=password>
       <input id="pw2" type=password value="pass2">
       <input id="pw3" type=password value="pass3">
@@ -65,14 +71,16 @@ const TESTCASES = [
     minPasswordLength: undefined,
   },
   {
-    description: "2 password fields outside of a <form> with 1 linked via @form",
+    description:
+      "2 password fields outside of a <form> with 1 linked via @form",
     document: `<input id="pw1" type=password><input id="pw2" type=password form='form1'>
       <form id="form1"></form>`,
     returnedFieldIDsByFormLike: [["pw1"], ["pw2"]],
     minPasswordLength: undefined,
   },
   {
-    description: "2 password fields outside of a <form> with 1 linked via @form + minPasswordLength",
+    description:
+      "2 password fields outside of a <form> with 1 linked via @form + minPasswordLength",
     document: `<input id="pw1" type=password><input id="pw2" type=password form="form1">
       <form id="form1"></form>`,
     returnedFieldIDsByFormLike: [[], []],
@@ -111,7 +119,8 @@ const TESTCASES = [
     minPasswordLength: 2,
   },
   {
-    description: "2 password fields outside of a <form> with 1 linked via @form + minPasswordLength with 1 empty",
+    description:
+      "2 password fields outside of a <form> with 1 linked via @form + minPasswordLength with 1 empty",
     document: `<input id="pw1" type=password value=" pass1 "><input id="pw2" type=password form="form1">
       <form id="form1"></form>`,
     returnedFieldIDsByFormLike: [["pw1"], []],
@@ -122,7 +131,8 @@ const TESTCASES = [
     },
   },
   {
-    description: "3 password fields outside of a <form> with 1 linked via @form + minPasswordLength",
+    description:
+      "3 password fields outside of a <form> with 1 linked via @form + minPasswordLength",
     document: `<input id="pw1" type=password value="pass1"><input id="pw2" type=password form="form1" value="pass2"><input id="pw3" type=password value="pass3">
       <form id="form1"><input id="pw4" type=password></form>`,
     returnedFieldIDsByFormLike: [["pw3"], ["pw2"]],
@@ -136,7 +146,8 @@ const TESTCASES = [
     beforeGetFunction(doc) {
       doc.getElementById("pw1").remove();
     },
-    description: "1 password field outside of a <form> which gets removed/disconnected",
+    description:
+      "1 password field outside of a <form> which gets removed/disconnected",
     document: `<input id="pw1" type=password>`,
     returnedFieldIDsByFormLike: [[]],
     minPasswordLength: undefined,
@@ -150,20 +161,26 @@ for (let tc of TESTCASES) {
     let testcase = tc;
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
-      let document = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                     testcase.document);
+      let document = MockDocument.createTestDocument(
+        "http://localhost:8080/test/",
+        testcase.document
+      );
 
       let mapRootElementToFormLike = new Map();
       for (let input of document.querySelectorAll("input")) {
         let formLike = LoginFormFactory.createFromField(input);
-        let existingFormLike = mapRootElementToFormLike.get(formLike.rootElement);
+        let existingFormLike = mapRootElementToFormLike.get(
+          formLike.rootElement
+        );
         if (!existingFormLike) {
           mapRootElementToFormLike.set(formLike.rootElement, formLike);
           continue;
         }
 
         // If the formLike is already present, ensure that the properties are the same.
-        info("Checking if the new FormLike for the same root has the same properties");
+        info(
+          "Checking if the new FormLike for the same root has the same properties"
+        );
         formLikeEqual(formLike, existingFormLike);
       }
 
@@ -171,38 +188,63 @@ for (let tc of TESTCASES) {
         await testcase.beforeGetFunction(document);
       }
 
-      Assert.strictEqual(mapRootElementToFormLike.size, testcase.returnedFieldIDsByFormLike.length,
-                         "Check the correct number of different formLikes were returned");
+      Assert.strictEqual(
+        mapRootElementToFormLike.size,
+        testcase.returnedFieldIDsByFormLike.length,
+        "Check the correct number of different formLikes were returned"
+      );
 
       let formLikeIndex = -1;
       for (let formLikeFromInput of mapRootElementToFormLike.values()) {
         formLikeIndex++;
-        let pwFields = LoginManagerContent._getPasswordFields(formLikeFromInput, {
-          fieldOverrideRecipe: testcase.fieldOverrideRecipe,
-          minPasswordLength: testcase.minPasswordLength,
-        });
+        let pwFields = LoginManagerContent._getPasswordFields(
+          formLikeFromInput,
+          {
+            fieldOverrideRecipe: testcase.fieldOverrideRecipe,
+            minPasswordLength: testcase.minPasswordLength,
+          }
+        );
 
-        if (ChromeUtils.getClassName(formLikeFromInput.rootElement) === "HTMLFormElement") {
-          let formLikeFromForm = LoginFormFactory.createFromForm(formLikeFromInput.rootElement);
-          info("Checking that the FormLike created for the <form> matches" +
-               " the one from a password field");
+        if (
+          ChromeUtils.getClassName(formLikeFromInput.rootElement) ===
+          "HTMLFormElement"
+        ) {
+          let formLikeFromForm = LoginFormFactory.createFromForm(
+            formLikeFromInput.rootElement
+          );
+          info(
+            "Checking that the FormLike created for the <form> matches" +
+              " the one from a password field"
+          );
           formLikeEqual(formLikeFromInput, formLikeFromForm);
         }
 
-
         if (testcase.returnedFieldIDsByFormLike[formLikeIndex].length === 0) {
-          Assert.strictEqual(pwFields, null,
-                             "If no password fields were found null should be returned");
+          Assert.strictEqual(
+            pwFields,
+            null,
+            "If no password fields were found null should be returned"
+          );
         } else {
-          Assert.strictEqual(pwFields.length,
-                             testcase.returnedFieldIDsByFormLike[formLikeIndex].length,
-                             "Check the # of password fields for formLike #" + formLikeIndex);
+          Assert.strictEqual(
+            pwFields.length,
+            testcase.returnedFieldIDsByFormLike[formLikeIndex].length,
+            "Check the # of password fields for formLike #" + formLikeIndex
+          );
         }
 
-        for (let i = 0; i < testcase.returnedFieldIDsByFormLike[formLikeIndex].length; i++) {
-          let expectedID = testcase.returnedFieldIDsByFormLike[formLikeIndex][i];
-          Assert.strictEqual(pwFields[i].element.id, expectedID,
-                             "Check password field " + i + " ID");
+        for (
+          let i = 0;
+          i < testcase.returnedFieldIDsByFormLike[formLikeIndex].length;
+          i++
+        ) {
+          let expectedID =
+            testcase.returnedFieldIDsByFormLike[formLikeIndex][i];
+          Assert.strictEqual(
+            pwFields[i].element.id,
+            expectedID,
+            "Check password field " + i + " ID"
+          );
         }
       }
     });
@@ -211,7 +253,8 @@ for (let tc of TESTCASES) {
 
 const EMOJI_TESTCASES = [
   {
-    description: "Single characters composed of 2 code units should ideally fail minPasswordLength of 2",
+    description:
+      "Single characters composed of 2 code units should ideally fail minPasswordLength of 2",
     document: `<form>
                <input id="pw" type=password value="💩">
                </form>`,
@@ -219,7 +262,8 @@ const EMOJI_TESTCASES = [
     minPasswordLength: 2,
   },
   {
-    description: "Single characters composed of multiple code units should ideally fail minPasswordLength of 2",
+    description:
+      "Single characters composed of multiple code units should ideally fail minPasswordLength of 2",
     document: `<form>
                <input id="pw" type=password value="👪">
                </form>`,
@@ -236,8 +280,10 @@ for (let tc of EMOJI_TESTCASES) {
     let testcase = tc;
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
-      let document = MockDocument.createTestDocument("http://localhost:8080/test/",
-                                                     testcase.document);
+      let document = MockDocument.createTestDocument(
+        "http://localhost:8080/test/",
+        testcase.document
+      );
       let input = document.querySelector("input[type='password']");
       Assert.ok(input, "Found the password field");
       let formLike = LoginFormFactory.createFromField(input);
@@ -246,7 +292,8 @@ for (let tc of EMOJI_TESTCASES) {
       });
       info("Got password fields: " + pwFields.length);
       todo_check_eq(
-        pwFields.length, 0,
+        pwFields.length,
+        0,
         "Check a single-character (emoji) password is excluded from the password fields collection"
       );
     });
