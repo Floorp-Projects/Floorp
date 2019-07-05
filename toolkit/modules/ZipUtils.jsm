@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "ZipUtils" ];
+var EXPORTED_SYMBOLS = ["ZipUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 // The maximum amount of file data to buffer at a time during file extraction
-const EXTRACTION_BUFFER               = 1024 * 512;
-
+const EXTRACTION_BUFFER = 1024 * 512;
 
 /**
  * Asynchronously writes data from an nsIInputStream to an OS.File instance.
@@ -32,15 +32,17 @@ const EXTRACTION_BUFFER               = 1024 * 512;
 function saveStreamAsync(aPath, aStream, aFile) {
   return new Promise((resolve, reject) => {
     // Read the input stream on a background thread
-    let sts = Cc["@mozilla.org/network/stream-transport-service;1"].
-              getService(Ci.nsIStreamTransportService);
+    let sts = Cc["@mozilla.org/network/stream-transport-service;1"].getService(
+      Ci.nsIStreamTransportService
+    );
     let transport = sts.createInputTransport(aStream, true);
-    let input = transport.openInputStream(0, 0, 0)
-                         .QueryInterface(Ci.nsIAsyncInputStream);
-    let source = Cc["@mozilla.org/binaryinputstream;1"].
-                 createInstance(Ci.nsIBinaryInputStream);
+    let input = transport
+      .openInputStream(0, 0, 0)
+      .QueryInterface(Ci.nsIAsyncInputStream);
+    let source = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+      Ci.nsIBinaryInputStream
+    );
     source.setInputStream(input);
-
 
     function readFailed(error) {
       try {
@@ -49,12 +51,15 @@ function saveStreamAsync(aPath, aStream, aFile) {
         Cu.reportError("Failed to close JAR stream for " + aPath);
       }
 
-      aFile.close().then(function() {
-        reject(error);
-      }, function(e) {
-        Cu.reportError("Failed to close file for " + aPath);
-        reject(error);
-      });
+      aFile.close().then(
+        function() {
+          reject(error);
+        },
+        function(e) {
+          Cu.reportError("Failed to close file for " + aPath);
+          reject(error);
+        }
+      );
     }
 
     function readData() {
@@ -67,10 +72,11 @@ function saveStreamAsync(aPath, aStream, aFile) {
           input.asyncWait(readData, 0, 0, Services.tm.currentThread);
         }, readFailed);
       } catch (e) {
-        if (e.result == Cr.NS_BASE_STREAM_CLOSED)
+        if (e.result == Cr.NS_BASE_STREAM_CLOSED) {
           resolve(aFile.close());
-        else
+        } else {
           readFailed(e);
+        }
       }
     }
 
@@ -78,9 +84,7 @@ function saveStreamAsync(aPath, aStream, aFile) {
   });
 }
 
-
 var ZipUtils = {
-
   /**
    * Asynchronously extracts files from a ZIP file into a directory.
    * Returns a promise that will be resolved when the extraction is complete.
@@ -91,8 +95,9 @@ var ZipUtils = {
    *         The nsIFile to extract to.
    */
   extractFilesAsync: function ZipUtils_extractFilesAsync(aZipFile, aDir) {
-    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                    createInstance(Ci.nsIZipReader);
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+      Ci.nsIZipReader
+    );
 
     try {
       zipReader.open(aZipFile);
@@ -115,17 +120,26 @@ var ZipUtils = {
           try {
             await OS.File.makeDir(path);
           } catch (e) {
-            dump("extractFilesAsync: failed to create directory " + path + "\n");
+            dump(
+              "extractFilesAsync: failed to create directory " + path + "\n"
+            );
             throw e;
           }
         } else {
-          let options = { unixMode: zipentry.permissions | FileUtils.PERMS_FILE };
+          let options = {
+            unixMode: zipentry.permissions | FileUtils.PERMS_FILE,
+          };
           try {
             let file = await OS.File.open(path, { truncate: true }, options);
-            if (zipentry.realSize == 0)
+            if (zipentry.realSize == 0) {
               await file.close();
-            else
-              await saveStreamAsync(path, zipReader.getInputStream(entryName), file);
+            } else {
+              await saveStreamAsync(
+                path,
+                zipReader.getInputStream(entryName),
+                file
+              );
+            }
           } catch (e) {
             dump("extractFilesAsync: failed to extract file " + path + "\n");
             throw e;
@@ -134,7 +148,7 @@ var ZipUtils = {
       }
 
       zipReader.close();
-    })().catch((e) => {
+    })().catch(e => {
       zipReader.close();
       throw e;
     });
@@ -157,8 +171,9 @@ var ZipUtils = {
       return target;
     }
 
-    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                    createInstance(Ci.nsIZipReader);
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
+      Ci.nsIZipReader
+    );
     zipReader.open(aZipFile);
 
     try {
@@ -167,29 +182,40 @@ var ZipUtils = {
         let target = getTargetFile(aDir, entryName);
         if (!target.exists()) {
           try {
-            target.create(Ci.nsIFile.DIRECTORY_TYPE,
-                          FileUtils.PERMS_DIRECTORY);
+            target.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
           } catch (e) {
-            dump("extractFiles: failed to create target directory for extraction file = " + target.path + "\n");
+            dump(
+              "extractFiles: failed to create target directory for extraction file = " +
+                target.path +
+                "\n"
+            );
           }
         }
       }
 
       for (let entryName of zipReader.findEntries(null)) {
         let target = getTargetFile(aDir, entryName);
-        if (target.exists())
+        if (target.exists()) {
           continue;
+        }
 
         zipReader.extract(entryName, target);
         try {
           target.permissions |= FileUtils.PERMS_FILE;
         } catch (e) {
-          dump("Failed to set permissions " + FileUtils.PERMS_FILE.toString(8) + " on " + target.path + " " + e + "\n");
+          dump(
+            "Failed to set permissions " +
+              FileUtils.PERMS_FILE.toString(8) +
+              " on " +
+              target.path +
+              " " +
+              e +
+              "\n"
+          );
         }
       }
     } finally {
       zipReader.close();
     }
   },
-
 };

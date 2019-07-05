@@ -4,24 +4,27 @@
 
 var EXPORTED_SYMBOLS = ["Preferences"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // The minimum and maximum integers that can be set as preferences.
 // The range of valid values is narrower than the range of valid JS values
 // because the native preferences code treats integers as NSPR PRInt32s,
 // which are 32-bit signed integers on all platforms.
-const MAX_INT = 0x7FFFFFFF; // Math.pow(2, 31) - 1
+const MAX_INT = 0x7fffffff; // Math.pow(2, 31) - 1
 const MIN_INT = -0x80000000;
 
 function Preferences(args) {
   this._cachedPrefBranch = null;
   if (isObject(args)) {
-    if (args.branch)
+    if (args.branch) {
       this._branchStr = args.branch;
-    if (args.defaultBranch)
+    }
+    if (args.defaultBranch) {
       this._defaultBranch = args.defaultBranch;
-    if (args.privacyContext)
+    }
+    if (args.privacyContext) {
       this._privacyContext = args.privacyContext;
+    }
   } else if (args) {
     this._branchStr = args;
   }
@@ -42,8 +45,9 @@ function Preferences(args) {
  * @returns the value of the pref, if any; otherwise the default value
  */
 Preferences.get = function(prefName, defaultValue, valueType = null) {
-  if (Array.isArray(prefName))
+  if (Array.isArray(prefName)) {
     return prefName.map(v => this.get(v, defaultValue));
+  }
 
   return this._get(prefName, defaultValue, valueType);
 };
@@ -70,9 +74,11 @@ Preferences._get = function(prefName, defaultValue, valueType) {
 
     default:
       // This should never happen.
-      throw new Error(`Error getting pref ${prefName}; its value's type is ` +
-                      `${this._prefBranch.getPrefType(prefName)}, which I don't ` +
-                      `know how to handle.`);
+      throw new Error(
+        `Error getting pref ${prefName}; its value's type is ` +
+          `${this._prefBranch.getPrefType(prefName)}, which I don't ` +
+          `know how to handle.`
+      );
   }
 };
 
@@ -100,8 +106,9 @@ Preferences._get = function(prefName, defaultValue, valueType) {
  */
 Preferences.set = function(prefName, prefValue) {
   if (isObject(prefName)) {
-    for (let [name, value] of Object.entries(prefName))
+    for (let [name, value] of Object.entries(prefName)) {
       this.set(name, value);
+    }
     return;
   }
 
@@ -110,8 +117,9 @@ Preferences.set = function(prefName, prefValue) {
 
 Preferences._set = function(prefName, prefValue) {
   let prefType;
-  if (typeof prefValue != "undefined" && prefValue != null)
+  if (typeof prefValue != "undefined" && prefValue != null) {
     prefType = prefValue.constructor.name;
+  }
 
   switch (prefType) {
     case "String":
@@ -123,19 +131,29 @@ Preferences._set = function(prefName, prefValue) {
       // will never be what the consumer wanted to store, but we only warn
       // if the number is non-integer, since the consumer might not mind
       // the loss of precision.
-      if (prefValue > MAX_INT || prefValue < MIN_INT)
+      if (prefValue > MAX_INT || prefValue < MIN_INT) {
         throw new Error(
-              `you cannot set the ${prefName} pref to the number ` +
-              `${prefValue}, as number pref values must be in the signed ` +
-              `32-bit integer range -(2^31-1) to 2^31-1.  To store numbers ` +
-              `outside that range, store them as strings.`);
+          `you cannot set the ${prefName} pref to the number ` +
+            `${prefValue}, as number pref values must be in the signed ` +
+            `32-bit integer range -(2^31-1) to 2^31-1.  To store numbers ` +
+            `outside that range, store them as strings.`
+        );
+      }
       this._prefBranch.setIntPref(prefName, prefValue);
-      if (prefValue % 1 != 0)
-        Cu.reportError("Warning: setting the " + prefName + " pref to the " +
-                       "non-integer number " + prefValue + " converted it " +
-                       "to the integer number " + this.get(prefName) +
-                       "; to retain fractional precision, store non-integer " +
-                       "numbers as strings.");
+      if (prefValue % 1 != 0) {
+        Cu.reportError(
+          "Warning: setting the " +
+            prefName +
+            " pref to the " +
+            "non-integer number " +
+            prefValue +
+            " converted it " +
+            "to the integer number " +
+            this.get(prefName) +
+            "; to retain fractional precision, store non-integer " +
+            "numbers as strings."
+        );
+      }
       break;
 
     case "Boolean":
@@ -143,8 +161,10 @@ Preferences._set = function(prefName, prefValue) {
       break;
 
     default:
-      throw new Error(`can't set pref ${prefName} to value '${prefValue}'; ` +
-                      `it isn't a String, Number, or Boolean`);
+      throw new Error(
+        `can't set pref ${prefName} to value '${prefValue}'; ` +
+          `it isn't a String, Number, or Boolean`
+      );
   }
 };
 
@@ -163,10 +183,13 @@ Preferences._set = function(prefName, prefValue) {
  *          or not the prefs have values
  */
 Preferences.has = function(prefName) {
-  if (Array.isArray(prefName))
+  if (Array.isArray(prefName)) {
     return prefName.map(this.has, this);
+  }
 
-  return (this._prefBranch.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID);
+  return (
+    this._prefBranch.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID
+  );
 };
 
 /**
@@ -184,10 +207,11 @@ Preferences.has = function(prefName) {
  *          whether or not the prefs have user-set values
  */
 Preferences.isSet = function(prefName) {
-  if (Array.isArray(prefName))
+  if (Array.isArray(prefName)) {
     return prefName.map(this.isSet, this);
+  }
 
-  return (this.has(prefName) && this._prefBranch.prefHasUserValue(prefName));
+  return this.has(prefName) && this._prefBranch.prefHasUserValue(prefName);
 };
 
 /**
@@ -195,7 +219,9 @@ Preferences.isSet = function(prefName) {
  * which is equivalent.
  * @deprecated
  */
-Preferences.modified = function(prefName) { return this.isSet(prefName); };
+Preferences.modified = function(prefName) {
+  return this.isSet(prefName);
+};
 
 Preferences.reset = function(prefName) {
   if (Array.isArray(prefName)) {
@@ -213,8 +239,9 @@ Preferences.reset = function(prefName) {
  *          the pref to lock, or an array of prefs to lock
  */
 Preferences.lock = function(prefName) {
-  if (Array.isArray(prefName))
+  if (Array.isArray(prefName)) {
     prefName.map(this.lock, this);
+  }
 
   this._prefBranch.lockPref(prefName);
 };
@@ -226,8 +253,9 @@ Preferences.lock = function(prefName) {
  *          the pref to lock, or an array of prefs to lock
  */
 Preferences.unlock = function(prefName) {
-  if (Array.isArray(prefName))
+  if (Array.isArray(prefName)) {
     prefName.map(this.unlock, this);
+  }
 
   this._prefBranch.unlockPref(prefName);
 };
@@ -244,8 +272,9 @@ Preferences.unlock = function(prefName) {
  *          whether or not the prefs have user-set values
  */
 Preferences.locked = function(prefName) {
-  if (Array.isArray(prefName))
+  if (Array.isArray(prefName)) {
     return prefName.map(this.locked, this);
+  }
 
   return this._prefBranch.prefIsLocked(prefName);
 };
@@ -307,15 +336,20 @@ Preferences.ignore = function(prefName, callback, thisObject) {
   // make it.  We could index by fullBranch, but we can't index by callback
   // or thisObject, as far as I know, since the keys to JavaScript hashes
   // (a.k.a. objects) can apparently only be primitive values.
-  let [observer] = observers.filter(v => v.prefName == fullPrefName &&
-                                         v.callback == callback &&
-                                         v.thisObject == thisObject);
+  let [observer] = observers.filter(
+    v =>
+      v.prefName == fullPrefName &&
+      v.callback == callback &&
+      v.thisObject == thisObject
+  );
 
   if (observer) {
     Preferences._prefBranch.removeObserver(fullPrefName, observer);
     observers.splice(observers.indexOf(observer), 1);
   } else {
-    Cu.reportError(`Attempt to stop observing a preference "${prefName}" that's not being observed`);
+    Cu.reportError(
+      `Attempt to stop observing a preference "${prefName}" that's not being observed`
+    );
   }
 };
 
@@ -325,10 +359,11 @@ Preferences.resetBranch = function(prefBranch = "") {
   } catch (ex) {
     // The current implementation of nsIPrefBranch in Mozilla
     // doesn't implement resetBranch, so we do it ourselves.
-    if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED)
+    if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
       this.reset(this._prefBranch.getChildList(prefBranch));
-    else
+    } else {
       throw ex;
+    }
   }
 };
 
@@ -350,14 +385,13 @@ Preferences._cachedPrefBranch = null;
  * The preferences branch object for this instance.
  * @private
  */
-Object.defineProperty(Preferences, "_prefBranch",
-{
+Object.defineProperty(Preferences, "_prefBranch", {
   get: function _prefBranch() {
     if (!this._cachedPrefBranch) {
       let prefSvc = Services.prefs;
-      this._cachedPrefBranch = this._defaultBranch ?
-                               prefSvc.getDefaultBranch(this._branchStr) :
-                               prefSvc.getBranch(this._branchStr);
+      this._cachedPrefBranch = this._defaultBranch
+        ? prefSvc.getDefaultBranch(this._branchStr)
+        : prefSvc.getBranch(this._branchStr);
     }
     return this._cachedPrefBranch;
   },
@@ -391,23 +425,29 @@ function PrefObserver(prefName, callback, thisObject) {
 }
 
 PrefObserver.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   observe(subject, topic, data) {
     // The pref service only observes whole branches, but we only observe
     // individual preferences, so we check here that the pref that changed
     // is the exact one we're observing (and not some sub-pref on the branch).
-    if (data != this.prefName)
+    if (data != this.prefName) {
       return;
+    }
 
     if (typeof this.callback == "function") {
       let prefValue = Preferences.get(this.prefName);
 
-      if (this.thisObject)
+      if (this.thisObject) {
         this.callback.call(this.thisObject, prefValue);
-      else
+      } else {
         this.callback(prefValue);
-    } else { // typeof this.callback == "object" (nsIObserver)
+      }
+    } else {
+      // typeof this.callback == "object" (nsIObserver)
       this.callback.observe(subject, topic, data);
     }
   },
@@ -417,6 +457,10 @@ function isObject(val) {
   // We can't check for |val.constructor == Object| here, since the value
   // might be from a different context whose Object constructor is not the same
   // as ours, so instead we match based on the name of the constructor.
-  return (typeof val != "undefined" && val != null && typeof val == "object" &&
-          val.constructor.name == "Object");
+  return (
+    typeof val != "undefined" &&
+    val != null &&
+    typeof val == "object" &&
+    val.constructor.name == "Object"
+  );
 }

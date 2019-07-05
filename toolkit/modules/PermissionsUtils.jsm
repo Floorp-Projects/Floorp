@@ -4,8 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["PermissionsUtils"];
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gImportedPrefBranches = new Set();
 
@@ -15,15 +14,20 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
   for (let pref of list) {
     let origins = Services.prefs.getCharPref(pref, "");
 
-    if (!origins)
+    if (!origins) {
       continue;
+    }
 
     origins = origins.split(",");
 
     for (let origin of origins) {
       let principals = [];
       try {
-        principals = [ Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin) ];
+        principals = [
+          Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+            origin
+          ),
+        ];
       } catch (e) {
         // This preference used to contain a list of hosts. For back-compat
         // reasons, we convert these hosts into http:// and https:// permissions
@@ -34,7 +38,10 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
 
           principals = [
             Services.scriptSecurityManager.createCodebasePrincipal(httpURI, {}),
-            Services.scriptSecurityManager.createCodebasePrincipal(httpsURI, {}),
+            Services.scriptSecurityManager.createCodebasePrincipal(
+              httpsURI,
+              {}
+            ),
           ];
         } catch (e2) {}
       }
@@ -49,7 +56,6 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
     Services.prefs.setCharPref(pref, "");
   }
 }
-
 
 var PermissionsUtils = {
   /**
@@ -76,17 +82,25 @@ var PermissionsUtils = {
    *                    Manager.
    */
   importFromPrefs(aPrefBranch, aPermission) {
-    if (!aPrefBranch.endsWith("."))
+    if (!aPrefBranch.endsWith(".")) {
       aPrefBranch += ".";
+    }
 
     // Ensure we only import this pref branch once.
-    if (gImportedPrefBranches.has(aPrefBranch))
-     return;
+    if (gImportedPrefBranches.has(aPrefBranch)) {
+      return;
+    }
 
-    importPrefBranch(aPrefBranch + "whitelist.add", aPermission,
-                     Services.perms.ALLOW_ACTION);
-    importPrefBranch(aPrefBranch + "blacklist.add", aPermission,
-                     Services.perms.DENY_ACTION);
+    importPrefBranch(
+      aPrefBranch + "whitelist.add",
+      aPermission,
+      Services.perms.ALLOW_ACTION
+    );
+    importPrefBranch(
+      aPrefBranch + "blacklist.add",
+      aPermission,
+      Services.perms.DENY_ACTION
+    );
 
     gImportedPrefBranches.add(aPrefBranch);
   },

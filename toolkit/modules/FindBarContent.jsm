@@ -6,10 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["FindBarContent"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
 /* Please keep in sync with toolkit/content/widgets/findbar.xml */
 const FIND_NORMAL = 0;
@@ -34,8 +39,10 @@ class FindBarContent {
 
   startQuickFind(event, autostart = false) {
     let mode = FIND_TYPEAHEAD;
-    if (event.charCode == "'".charAt(0) ||
-        autostart && FindBarContent.typeAheadLinksOnly) {
+    if (
+      event.charCode == "'".charAt(0) ||
+      (autostart && FindBarContent.typeAheadLinksOnly)
+    ) {
       mode = FIND_LINKS;
     }
 
@@ -71,7 +78,11 @@ class FindBarContent {
   onKeypress(event) {
     if (this.inPassThrough) {
       this.passKeyToParent(event);
-    } else if (this.findMode != FIND_NORMAL && this.inQuickFind && event.charCode) {
+    } else if (
+      this.findMode != FIND_NORMAL &&
+      this.inQuickFind &&
+      event.charCode
+    ) {
       this.passKeyToParent(event);
     }
   }
@@ -82,8 +93,15 @@ class FindBarContent {
     // to the findbar in the parent in _dispatchKeypressEvent in findbar.xml .
     // If you make changes here, verify that that method can still do its job.
     const kRequiredProps = [
-      "type", "bubbles", "cancelable", "ctrlKey", "altKey", "shiftKey",
-      "metaKey", "keyCode", "charCode",
+      "type",
+      "bubbles",
+      "cancelable",
+      "ctrlKey",
+      "altKey",
+      "shiftKey",
+      "metaKey",
+      "keyCode",
+      "charCode",
     ];
     let fakeEvent = {};
     for (let prop of kRequiredProps) {
@@ -93,10 +111,14 @@ class FindBarContent {
   }
 
   onMouseup(event) {
-    if (this.findMode != FIND_NORMAL)
+    if (this.findMode != FIND_NORMAL) {
       this.mm.sendAsyncMessage("Findbar:Mouseup");
+    }
   }
 }
 
-XPCOMUtils.defineLazyPreferenceGetter(FindBarContent, "typeAheadLinksOnly",
-  "accessibility.typeaheadfind.linksonly");
+XPCOMUtils.defineLazyPreferenceGetter(
+  FindBarContent,
+  "typeAheadLinksOnly",
+  "accessibility.typeaheadfind.linksonly"
+);

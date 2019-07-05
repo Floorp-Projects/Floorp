@@ -6,11 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["FinderParent"];
 
-ChromeUtils.defineModuleGetter(this, "GetClipboardSearchString",
-                               "resource://gre/modules/Finder.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "GetClipboardSearchString",
+  "resource://gre/modules/Finder.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "Rect",
-                               "resource://gre/modules/Geometry.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Rect",
+  "resource://gre/modules/Geometry.jsm"
+);
 
 function FinderParent(browser) {
   this._listeners = new Set();
@@ -26,8 +32,14 @@ FinderParent.prototype = {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Finder:Result", this);
       this._messageManager.removeMessageListener("Finder:MatchesResult", this);
-      this._messageManager.removeMessageListener("Finder:CurrentSelectionResult", this);
-      this._messageManager.removeMessageListener("Finder:HighlightFinished", this);
+      this._messageManager.removeMessageListener(
+        "Finder:CurrentSelectionResult",
+        this
+      );
+      this._messageManager.removeMessageListener(
+        "Finder:HighlightFinished",
+        this
+      );
     } else {
       aBrowser.messageManager.sendAsyncMessage("Finder:Initialize");
     }
@@ -36,7 +48,10 @@ FinderParent.prototype = {
     this._messageManager = this._browser.messageManager;
     this._messageManager.addMessageListener("Finder:Result", this);
     this._messageManager.addMessageListener("Finder:MatchesResult", this);
-    this._messageManager.addMessageListener("Finder:CurrentSelectionResult", this);
+    this._messageManager.addMessageListener(
+      "Finder:CurrentSelectionResult",
+      this
+    );
     this._messageManager.addMessageListener("Finder:HighlightFinished", this);
 
     // Ideally listeners would have removed themselves but that doesn't happen
@@ -64,19 +79,19 @@ FinderParent.prototype = {
           aMessage.data.rect = Rect.fromRect(aMessage.data.rect);
         }
         callback = "onFindResult";
-        params = [ aMessage.data ];
+        params = [aMessage.data];
         break;
       case "Finder:MatchesResult":
         callback = "onMatchesCountResult";
-        params = [ aMessage.data ];
+        params = [aMessage.data];
         break;
       case "Finder:CurrentSelectionResult":
         callback = "onCurrentSelection";
-        params = [ aMessage.data.selection, aMessage.data.initial ];
+        params = [aMessage.data.selection, aMessage.data.initial];
         break;
       case "Finder:HighlightFinished":
         callback = "onHighlightFinished";
-        params = [ aMessage.data ];
+        params = [aMessage.data];
         break;
     }
 
@@ -86,7 +101,9 @@ FinderParent.prototype = {
         l[callback].apply(l, params);
       } catch (e) {
         if (!l[callback]) {
-          Cu.reportError(`Missing ${callback} callback on RemoteFinderListener`);
+          Cu.reportError(
+            `Missing ${callback} callback on RemoteFinderListener`
+          );
         } else {
           Cu.reportError(e);
         }
@@ -103,42 +120,53 @@ FinderParent.prototype = {
   },
 
   setSearchStringToSelection() {
-    this._browser.messageManager.sendAsyncMessage("Finder:SetSearchStringToSelection", {});
+    this._browser.messageManager.sendAsyncMessage(
+      "Finder:SetSearchStringToSelection",
+      {}
+    );
   },
 
   set caseSensitive(aSensitive) {
-    this._browser.messageManager.sendAsyncMessage("Finder:CaseSensitive",
-                                                  { caseSensitive: aSensitive });
+    this._browser.messageManager.sendAsyncMessage("Finder:CaseSensitive", {
+      caseSensitive: aSensitive,
+    });
   },
 
   set entireWord(aEntireWord) {
-    this._browser.messageManager.sendAsyncMessage("Finder:EntireWord",
-                                                  { entireWord: aEntireWord });
+    this._browser.messageManager.sendAsyncMessage("Finder:EntireWord", {
+      entireWord: aEntireWord,
+    });
   },
 
   getInitialSelection() {
-    this._browser.messageManager.sendAsyncMessage("Finder:GetInitialSelection", {});
+    this._browser.messageManager.sendAsyncMessage(
+      "Finder:GetInitialSelection",
+      {}
+    );
   },
 
   fastFind(aSearchString, aLinksOnly, aDrawOutline) {
-    this._browser.messageManager.sendAsyncMessage("Finder:FastFind",
-                                                  { searchString: aSearchString,
-                                                    linksOnly: aLinksOnly,
-                                                    drawOutline: aDrawOutline });
+    this._browser.messageManager.sendAsyncMessage("Finder:FastFind", {
+      searchString: aSearchString,
+      linksOnly: aLinksOnly,
+      drawOutline: aDrawOutline,
+    });
   },
 
   findAgain(aFindBackwards, aLinksOnly, aDrawOutline) {
-    this._browser.messageManager.sendAsyncMessage("Finder:FindAgain",
-                                                  { findBackwards: aFindBackwards,
-                                                    linksOnly: aLinksOnly,
-                                                    drawOutline: aDrawOutline });
+    this._browser.messageManager.sendAsyncMessage("Finder:FindAgain", {
+      findBackwards: aFindBackwards,
+      linksOnly: aLinksOnly,
+      drawOutline: aDrawOutline,
+    });
   },
 
   highlight(aHighlight, aWord, aLinksOnly) {
-    this._browser.messageManager.sendAsyncMessage("Finder:Highlight",
-                                                  { highlight: aHighlight,
-                                                    linksOnly: aLinksOnly,
-                                                    word: aWord });
+    this._browser.messageManager.sendAsyncMessage("Finder:Highlight", {
+      highlight: aHighlight,
+      linksOnly: aLinksOnly,
+      word: aWord,
+    });
   },
 
   enableSelection() {
@@ -153,9 +181,9 @@ FinderParent.prototype = {
     // Allow Finder listeners to cancel focusing the content.
     for (let l of this._listeners) {
       try {
-        if ("shouldFocusContent" in l &&
-            !l.shouldFocusContent())
+        if ("shouldFocusContent" in l && !l.shouldFocusContent()) {
           return;
+        }
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -174,9 +202,12 @@ FinderParent.prototype = {
   },
 
   onModalHighlightChange(aUseModalHighlight) {
-    this._browser.messageManager.sendAsyncMessage("Finder:ModalHighlightChange", {
-      useModalHighlight: aUseModalHighlight,
-    });
+    this._browser.messageManager.sendAsyncMessage(
+      "Finder:ModalHighlightChange",
+      {
+        useModalHighlight: aUseModalHighlight,
+      }
+    );
   },
 
   onHighlightAllChange(aHighlightAll) {
@@ -186,17 +217,19 @@ FinderParent.prototype = {
   },
 
   keyPress(aEvent) {
-    this._browser.messageManager.sendAsyncMessage("Finder:KeyPress",
-                                                  { keyCode: aEvent.keyCode,
-                                                    ctrlKey: aEvent.ctrlKey,
-                                                    metaKey: aEvent.metaKey,
-                                                    altKey: aEvent.altKey,
-                                                    shiftKey: aEvent.shiftKey });
+    this._browser.messageManager.sendAsyncMessage("Finder:KeyPress", {
+      keyCode: aEvent.keyCode,
+      ctrlKey: aEvent.ctrlKey,
+      metaKey: aEvent.metaKey,
+      altKey: aEvent.altKey,
+      shiftKey: aEvent.shiftKey,
+    });
   },
 
   requestMatchesCount(aSearchString, aLinksOnly) {
-    this._browser.messageManager.sendAsyncMessage("Finder:MatchesCount",
-                                                  { searchString: aSearchString,
-                                                    linksOnly: aLinksOnly });
+    this._browser.messageManager.sendAsyncMessage("Finder:MatchesCount", {
+      searchString: aSearchString,
+      linksOnly: aLinksOnly,
+    });
   },
 };
