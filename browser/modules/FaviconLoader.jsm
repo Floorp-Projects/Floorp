@@ -6,25 +6,42 @@
 
 const EXPORTED_SYMBOLS = ["FaviconLoader"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 
-ChromeUtils.defineModuleGetter(this, "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm");
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 const STREAM_SEGMENT_SIZE = 4096;
 const PR_UINT32_MAX = 0xffffffff;
 
-const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
-                                                 "nsIBinaryInputStream", "setInputStream");
-const StorageStream = Components.Constructor("@mozilla.org/storagestream;1",
-                                             "nsIStorageStream", "init");
-const BufferedOutputStream = Components.Constructor("@mozilla.org/network/buffered-output-stream;1",
-                                                    "nsIBufferedOutputStream", "init");
+const BinaryInputStream = Components.Constructor(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+const StorageStream = Components.Constructor(
+  "@mozilla.org/storagestream;1",
+  "nsIStorageStream",
+  "init"
+);
+const BufferedOutputStream = Components.Constructor(
+  "@mozilla.org/network/buffered-output-stream;1",
+  "nsIBufferedOutputStream",
+  "init"
+);
 
 const SIZES_TELEMETRY_ENUM = {
   NO_SIZES: 0,
@@ -38,12 +55,7 @@ const FAVICON_RICH_ICON_MIN_WIDTH = 96;
 const PREFERRED_WIDTH = 16;
 
 // URL schemes that we don't want to load and convert to data URLs.
-const LOCAL_FAVICON_SCHEMES = [
-  "chrome",
-  "about",
-  "resource",
-  "data",
-];
+const LOCAL_FAVICON_SCHEMES = ["chrome", "about", "resource", "data"];
 
 const MAX_FAVICON_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 const MAX_ICON_SIZE = 2048;
@@ -75,14 +87,19 @@ function promiseImage(stream, type) {
   return new Promise((resolve, reject) => {
     let imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
 
-    imgTools.decodeImageAsync(stream, type, (image, result) => {
-      if (!Components.isSuccessCode(result)) {
-        reject();
-        return;
-      }
+    imgTools.decodeImageAsync(
+      stream,
+      type,
+      (image, result) => {
+        if (!Components.isSuccessCode(result)) {
+          reject();
+          return;
+        }
 
-      resolve(image);
-    }, Services.tm.currentThread);
+        resolve(image);
+      },
+      Services.tm.currentThread
+    );
   });
 }
 
@@ -95,17 +112,20 @@ class FaviconLoad {
       iconInfo.node,
       iconInfo.node.nodePrincipal,
       iconInfo.node.nodePrincipal,
-      (Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-       Ci.nsILoadInfo.SEC_ALLOW_CHROME |
-       Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT),
-      Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON);
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+        Ci.nsILoadInfo.SEC_ALLOW_CHROME |
+        Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT,
+      Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+    );
 
-    this.channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND |
-                              Ci.nsIRequest.VALIDATE_NEVER |
-                              Ci.nsIRequest.LOAD_FROM_CACHE;
+    this.channel.loadFlags |=
+      Ci.nsIRequest.LOAD_BACKGROUND |
+      Ci.nsIRequest.VALIDATE_NEVER |
+      Ci.nsIRequest.LOAD_FROM_CACHE;
     // Sometimes node is a document and sometimes it is an element. This is
     // the easiest single way to get to the load group in both those cases.
-    this.channel.loadGroup = iconInfo.node.ownerGlobal.document.documentLoadGroup;
+    this.channel.loadGroup =
+      iconInfo.node.ownerGlobal.document.documentLoadGroup;
     this.channel.notificationCallbacks = this;
 
     if (this.channel instanceof Ci.nsIHttpChannel) {
@@ -121,9 +141,13 @@ class FaviconLoad {
       this.channel.blockAuthPrompt = true;
     }
 
-    if (Services.prefs.getBoolPref("network.http.tailing.enabled", true) &&
-        this.channel instanceof Ci.nsIClassOfService) {
-      this.channel.addClassFlags(Ci.nsIClassOfService.Tail | Ci.nsIClassOfService.Throttleable);
+    if (
+      Services.prefs.getBoolPref("network.http.tailing.enabled", true) &&
+      this.channel instanceof Ci.nsIClassOfService
+    ) {
+      this.channel.addClassFlags(
+        Ci.nsIClassOfService.Tail | Ci.nsIClassOfService.Throttleable
+      );
     }
   }
 
@@ -141,7 +165,10 @@ class FaviconLoad {
     this.dataBuffer = new StorageStream(STREAM_SEGMENT_SIZE, PR_UINT32_MAX);
 
     // storage streams do not implement writeFrom so wrap it with a buffered stream.
-    this.stream = new BufferedOutputStream(this.dataBuffer.getOutputStream(0), STREAM_SEGMENT_SIZE * 2);
+    this.stream = new BufferedOutputStream(
+      this.dataBuffer.getOutputStream(0),
+      STREAM_SEGMENT_SIZE * 2
+    );
 
     try {
       this.channel.asyncOpen(this);
@@ -160,8 +187,7 @@ class FaviconLoad {
     this.channel.cancel(Cr.NS_BINDING_ABORTED);
   }
 
-  onStartRequest(request) {
-  }
+  onStartRequest(request) {}
 
   onDataAvailable(request, inputStream, offset, count) {
     this.stream.writeFrom(inputStream, count);
@@ -187,16 +213,33 @@ class FaviconLoad {
 
     if (!Components.isSuccessCode(statusCode)) {
       if (statusCode == Cr.NS_BINDING_ABORTED) {
-        this._deferred.reject(Components.Exception(`Favicon load from ${this.icon.iconUri.spec} was cancelled.`, statusCode));
+        this._deferred.reject(
+          Components.Exception(
+            `Favicon load from ${this.icon.iconUri.spec} was cancelled.`,
+            statusCode
+          )
+        );
       } else {
-        this._deferred.reject(Components.Exception(`Favicon at "${this.icon.iconUri.spec}" failed to load.`, statusCode));
+        this._deferred.reject(
+          Components.Exception(
+            `Favicon at "${this.icon.iconUri.spec}" failed to load.`,
+            statusCode
+          )
+        );
       }
       return;
     }
 
     if (this.channel instanceof Ci.nsIHttpChannel) {
       if (!this.channel.requestSucceeded) {
-        this._deferred.reject(Components.Exception(`Favicon at "${this.icon.iconUri.spec}" failed to load: ${this.channel.responseStatusText}.`, Cr.NS_ERROR_FAILURE));
+        this._deferred.reject(
+          Components.Exception(
+            `Favicon at "${this.icon.iconUri.spec}" failed to load: ${
+              this.channel.responseStatusText
+            }.`,
+            Cr.NS_ERROR_FAILURE
+          )
+        );
         return;
       }
     }
@@ -209,7 +252,10 @@ class FaviconLoad {
     // any async operations before this!).
     if (this.channel instanceof Ci.nsICacheInfoChannel) {
       try {
-        expiration = Math.min(this.channel.cacheTokenExpirationTime * 1000, expiration);
+        expiration = Math.min(
+          this.channel.cacheTokenExpirationTime * 1000,
+          expiration
+        );
       } catch (e) {
         // Ignore failures to get the expiration time.
       }
@@ -225,12 +271,22 @@ class FaviconLoad {
 
       if (type != "image/svg+xml") {
         let octets = await promiseBlobAsOctets(blob);
-        let sniffer = Cc["@mozilla.org/image/loader;1"].
-                      createInstance(Ci.nsIContentSniffer);
-        type = sniffer.getMIMETypeFromContent(this.channel, octets, octets.length);
+        let sniffer = Cc["@mozilla.org/image/loader;1"].createInstance(
+          Ci.nsIContentSniffer
+        );
+        type = sniffer.getMIMETypeFromContent(
+          this.channel,
+          octets,
+          octets.length
+        );
 
         if (!type) {
-          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" did not match a known mimetype.`, Cr.NS_ERROR_FAILURE);
+          throw Components.Exception(
+            `Favicon at "${
+              this.icon.iconUri.spec
+            }" did not match a known mimetype.`,
+            Cr.NS_ERROR_FAILURE
+          );
         }
 
         blob = blob.slice(0, blob.size, type);
@@ -239,11 +295,17 @@ class FaviconLoad {
         try {
           image = await promiseImage(this.dataBuffer.newInputStream(0), type);
         } catch (e) {
-          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" could not be decoded.`, Cr.NS_ERROR_FAILURE);
+          throw Components.Exception(
+            `Favicon at "${this.icon.iconUri.spec}" could not be decoded.`,
+            Cr.NS_ERROR_FAILURE
+          );
         }
 
         if (image.width > MAX_ICON_SIZE || image.height > MAX_ICON_SIZE) {
-          throw Components.Exception(`Favicon at "${this.icon.iconUri.spec}" is too large.`, Cr.NS_ERROR_FAILURE);
+          throw Components.Exception(
+            `Favicon at "${this.icon.iconUri.spec}" is too large.`,
+            Cr.NS_ERROR_FAILURE
+          );
         }
       }
 
@@ -301,9 +363,14 @@ function extractIconSize(aSizes) {
 
   // Telemetry probes for measuring the sizes attribute
   // usage and available dimensions.
-  Services.telemetry.getHistogramById("LINK_ICON_SIZES_ATTR_USAGE").add(sizesType);
-  if (width > 0)
-    Services.telemetry.getHistogramById("LINK_ICON_SIZES_ATTR_DIMENSION").add(width);
+  Services.telemetry
+    .getHistogramById("LINK_ICON_SIZES_ATTR_USAGE")
+    .add(sizesType);
+  if (width > 0) {
+    Services.telemetry
+      .getHistogramById("LINK_ICON_SIZES_ATTR_DIMENSION")
+      .add(width);
+  }
 
   return width;
 }
@@ -318,7 +385,10 @@ function getLinkIconURI(aLink) {
   let targetDoc = aLink.ownerDocument;
   let uri = Services.io.newURI(aLink.href, targetDoc.characterSet);
   try {
-    uri = uri.mutate().setUserPass("").finalize();
+    uri = uri
+      .mutate()
+      .setUserPass("")
+      .finalize();
   } catch (e) {
     // some URIs are immutable
   }
@@ -378,16 +448,24 @@ function selectIcons(iconInfos, preferredWidth) {
       // ico files. When multiple icons are in the same set, the latest wins.
       if (guessType(icon) == TYPE_SVG) {
         preferredIcon = icon;
-      } else if (icon.width == preferredWidth && guessType(preferredIcon) != TYPE_SVG) {
+      } else if (
+        icon.width == preferredWidth &&
+        guessType(preferredIcon) != TYPE_SVG
+      ) {
         preferredIcon = icon;
-      } else if (guessType(icon) == TYPE_ICO && (!preferredIcon || guessType(preferredIcon) == TYPE_ICO)) {
+      } else if (
+        guessType(icon) == TYPE_ICO &&
+        (!preferredIcon || guessType(preferredIcon) == TYPE_ICO)
+      ) {
         preferredIcon = icon;
       }
 
       // Check for an icon larger yet closest to preferredWidth, that can be
       // downscaled efficiently.
-      if (icon.width >= preferredWidth &&
-          (!bestSizedIcon || bestSizedIcon.width >= icon.width)) {
+      if (
+        icon.width >= preferredWidth &&
+        (!bestSizedIcon || bestSizedIcon.width >= icon.width)
+      ) {
         bestSizedIcon = icon;
       }
     }
@@ -440,8 +518,13 @@ class IconLoader {
       // it for us.
       try {
         Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-          iconInfo.node.nodePrincipal, iconInfo.iconUri, Services.scriptSecurityManager.ALLOW_CHROME);
-      } catch (ex) { return; }
+          iconInfo.node.nodePrincipal,
+          iconInfo.iconUri,
+          Services.scriptSecurityManager.ALLOW_CHROME
+        );
+      } catch (ex) {
+        return;
+      }
       this.mm.sendAsyncMessage("Link:SetIcon", {
         pageURL: iconInfo.pageUri.spec,
         originalURL: iconInfo.iconUri.spec,
@@ -504,7 +587,10 @@ class FaviconLoader {
     this.richIconLoader = new IconLoader(mm);
     this.tabIconLoader = new IconLoader(mm);
 
-    this.iconTask = new DeferredTask(() => this.loadIcons(), FAVICON_PARSING_TIMEOUT);
+    this.iconTask = new DeferredTask(
+      () => this.loadIcons(),
+      FAVICON_PARSING_TIMEOUT
+    );
   }
 
   loadIcons() {
@@ -516,7 +602,8 @@ class FaviconLoader {
       return;
     }
 
-    let preferredWidth = PREFERRED_WIDTH * Math.ceil(this.mm.content.devicePixelRatio);
+    let preferredWidth =
+      PREFERRED_WIDTH * Math.ceil(this.mm.content.devicePixelRatio);
     let { richIcon, tabIcon } = selectIcons(this.iconInfos, preferredWidth);
     this.iconInfos = [];
 
@@ -544,7 +631,10 @@ class FaviconLoader {
     // 403651 for discussion.
     this.iconInfos.push({
       pageUri,
-      iconUri: pageUri.mutate().setPathQueryRef("/favicon.ico").finalize(),
+      iconUri: pageUri
+        .mutate()
+        .setPathQueryRef("/favicon.ico")
+        .finalize(),
       width: -1,
       isRichIcon: false,
       type: TYPE_ICO,
@@ -572,8 +662,9 @@ class FaviconLoader {
 
 function makeFaviconFromLink(aLink, aIsRichIcon) {
   let iconUri = getLinkIconURI(aLink);
-  if (!iconUri)
+  if (!iconUri) {
     return null;
+  }
 
   // Extract the size type and width.
   let width = extractIconSize(aLink.sizes);

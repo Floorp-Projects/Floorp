@@ -28,7 +28,7 @@ var EXPORTED_SYMBOLS = ["EveryWindow"];
  * If the window is closing, a second argument is passed with value `true`.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var initialized = false;
 var callbacks = new Map();
@@ -36,7 +36,9 @@ var callbacks = new Map();
 function callForEveryWindow(callback) {
   let windowList = Services.wm.getEnumerator("navigator:browser");
   for (let win of windowList) {
-    win.delayedStartupPromise.then(() => { callback(win); });
+    win.delayedStartupPromise.then(() => {
+      callback(win);
+    });
   }
 }
 
@@ -58,7 +60,7 @@ this.EveryWindow = {
     }
 
     if (!initialized) {
-      let addUnloadListener = (win) => {
+      let addUnloadListener = win => {
         function observer(subject, topic, data) {
           if (topic == "domwindowclosed" && subject === win) {
             Services.ww.unregisterNotification(observer);
@@ -83,7 +85,7 @@ this.EveryWindow = {
     }
 
     callForEveryWindow(init);
-    callbacks.set(id, {id, init, uninit});
+    callbacks.set(id, { id, init, uninit });
 
     return true;
   },
