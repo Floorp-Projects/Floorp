@@ -18,7 +18,11 @@ this.tabs = class extends ExtensionAPI {
           if (connectInfo && connectInfo.frameId !== null) {
             recipient.frameId = connectInfo.frameId;
           }
-          return context.messenger.connect(context.messageManager, name, recipient);
+          return context.messenger.connect(
+            context.messageManager,
+            name,
+            recipient
+          );
         },
 
         sendMessage: function(tabId, message, options, responseCallback) {
@@ -29,7 +33,12 @@ this.tabs = class extends ExtensionAPI {
           if (options && options.frameId !== null) {
             recipient.frameId = options.frameId;
           }
-          return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
+          return context.messenger.sendMessage(
+            context.messageManager,
+            message,
+            recipient,
+            responseCallback
+          );
         },
       },
     };

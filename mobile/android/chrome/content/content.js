@@ -3,22 +3,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "AboutReader", "resource://gre/modules/AboutReader.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
-ChromeUtils.defineModuleGetter(this, "Readerable", "resource://gre/modules/Readerable.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginManagerContent", "resource://gre/modules/LoginManagerContent.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutReader",
+  "resource://gre/modules/AboutReader.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Readerable",
+  "resource://gre/modules/Readerable.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginManagerContent",
+  "resource://gre/modules/LoginManagerContent.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
-  return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
+  return Services.strings.createBundle(
+    "chrome://pipnss/locale/pipnss.properties"
+  );
 });
 XPCOMUtils.defineLazyGetter(this, "gNSSErrorsBundle", function() {
-  return Services.strings.createBundle("chrome://pipnss/locale/nsserrors.properties");
+  return Services.strings.createBundle(
+    "chrome://pipnss/locale/nsserrors.properties"
+  );
 });
 
-var dump = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "Content");
+var dump = ChromeUtils.import(
+  "resource://gre/modules/AndroidLog.jsm",
+  {}
+).AndroidLog.d.bind(null, "Content");
 
 var global = this;
 
@@ -42,15 +67,18 @@ var AboutBlockedSiteListener = {
 
     let provider = "";
     if (docShell.failedChannel) {
-      let classifiedChannel = docShell.failedChannel.
-                              QueryInterface(Ci.nsIClassifiedChannel);
+      let classifiedChannel = docShell.failedChannel.QueryInterface(
+        Ci.nsIClassifiedChannel
+      );
       if (classifiedChannel) {
         provider = classifiedChannel.matchedProvider;
       }
     }
 
     let advisoryUrl = Services.prefs.getCharPref(
-      "browser.safebrowsing.provider." + provider + ".advisoryURL", "");
+      "browser.safebrowsing.provider." + provider + ".advisoryURL",
+      ""
+    );
     if (!advisoryUrl) {
       let el = content.document.getElementById("advisoryDesc");
       el.remove();
@@ -58,7 +86,9 @@ var AboutBlockedSiteListener = {
     }
 
     let advisoryLinkText = Services.prefs.getCharPref(
-      "browser.safebrowsing.provider." + provider + ".advisoryName", "");
+      "browser.safebrowsing.provider." + provider + ".advisoryName",
+      ""
+    );
     if (!advisoryLinkText) {
       let el = content.document.getElementById("advisoryDesc");
       el.remove();
@@ -77,27 +107,29 @@ AboutBlockedSiteListener.init();
  * Certificate error handling should be unified to remove this duplicated code.
  */
 
-const SEC_ERROR_BASE          = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
+const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 
-const SEC_ERROR_EXPIRED_CERTIFICATE                = SEC_ERROR_BASE + 11;
-const SEC_ERROR_UNKNOWN_ISSUER                     = SEC_ERROR_BASE + 13;
-const SEC_ERROR_UNTRUSTED_ISSUER                   = SEC_ERROR_BASE + 20;
-const SEC_ERROR_UNTRUSTED_CERT                     = SEC_ERROR_BASE + 21;
-const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE         = SEC_ERROR_BASE + 30;
-const SEC_ERROR_CA_CERT_INVALID                    = SEC_ERROR_BASE + 36;
-const SEC_ERROR_OCSP_FUTURE_RESPONSE               = SEC_ERROR_BASE + 131;
-const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
-const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
-const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
-const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
-const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED = MOZILLA_PKIX_ERROR_BASE + 13;
-
+const SEC_ERROR_EXPIRED_CERTIFICATE = SEC_ERROR_BASE + 11;
+const SEC_ERROR_UNKNOWN_ISSUER = SEC_ERROR_BASE + 13;
+const SEC_ERROR_UNTRUSTED_ISSUER = SEC_ERROR_BASE + 20;
+const SEC_ERROR_UNTRUSTED_CERT = SEC_ERROR_BASE + 21;
+const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE = SEC_ERROR_BASE + 30;
+const SEC_ERROR_CA_CERT_INVALID = SEC_ERROR_BASE + 36;
+const SEC_ERROR_OCSP_FUTURE_RESPONSE = SEC_ERROR_BASE + 131;
+const SEC_ERROR_OCSP_OLD_RESPONSE = SEC_ERROR_BASE + 132;
+const SEC_ERROR_REUSED_ISSUER_AND_SERIAL = SEC_ERROR_BASE + 138;
+const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED = SEC_ERROR_BASE + 176;
+const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE =
+  MOZILLA_PKIX_ERROR_BASE + 5;
+const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE =
+  MOZILLA_PKIX_ERROR_BASE + 6;
+const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED =
+  MOZILLA_PKIX_ERROR_BASE + 13;
 
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
-const SSL_ERROR_SSL_DISABLED  = SSL_ERROR_BASE + 20;
-const SSL_ERROR_SSL2_DISABLED  = SSL_ERROR_BASE + 14;
+const SSL_ERROR_SSL_DISABLED = SSL_ERROR_BASE + 20;
+const SSL_ERROR_SSL2_DISABLED = SSL_ERROR_BASE + 14;
 
 var AboutNetErrorListener = {
   init(chromeGlobal) {
@@ -140,12 +172,15 @@ var AboutNetErrorListener = {
       // Note that this is different from before where we used PR_ErrorToString.
       msg2 = nss_error_id_str;
     }
-    let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2",
-                                                 [hostString, msg2]);
+    let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2", [
+      hostString,
+      msg2,
+    ]);
 
     if (nss_error_id_str) {
-      msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
-                                                [nss_error_id_str]);
+      msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3", [
+        nss_error_id_str,
+      ]);
     }
     return msg;
   },
@@ -159,12 +194,14 @@ var AboutNetErrorListener = {
       return;
     }
 
-    let {securityInfo} = docShell.failedChannel;
+    let { securityInfo } = docShell.failedChannel;
     // We don't have a securityInfo when this is for example a DNS error.
     if (securityInfo) {
       securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-      let msg = this._getErrorMessageFromCode(securityInfo,
-                                              aEvent.originalTarget.ownerGlobal);
+      let msg = this._getErrorMessageFromCode(
+        securityInfo,
+        aEvent.originalTarget.ownerGlobal
+      );
       let id = content.document.getElementById("errorShortDescText");
       id.textContent = msg;
     }
@@ -182,41 +219,60 @@ var AboutCertErrorListener = {
   },
 
   _setTechDetailsMsgPart1(hostString, securityInfo, technicalInfo, doc) {
-    let msg = gPipNSSBundle.formatStringFromName("certErrorIntro",
-                                                 [hostString]);
+    let msg = gPipNSSBundle.formatStringFromName("certErrorIntro", [
+      hostString,
+    ]);
     msg += "\n\n";
 
     if (securityInfo.isUntrusted && !securityInfo.serverCert.isSelfSigned) {
       switch (securityInfo.errorCode) {
         case SEC_ERROR_UNKNOWN_ISSUER:
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer2") + "\n";
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer3") + "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") +
+            "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer2") +
+            "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer3") +
+            "\n";
           break;
         case SEC_ERROR_CA_CERT_INVALID:
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_CaInvalid") + "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_CaInvalid") + "\n";
           break;
         case SEC_ERROR_UNTRUSTED_ISSUER:
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_Issuer") + "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_Issuer") + "\n";
           break;
         case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_SignatureAlgorithmDisabled") + "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName(
+              "certErrorTrust_SignatureAlgorithmDisabled"
+            ) + "\n";
           break;
         case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_ExpiredIssuer") + "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_ExpiredIssuer") +
+            "\n";
           break;
         // This error code currently only exists for the Symantec distrust, we may need to adjust
         // it to fit other distrusts later.
         case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
-          msg += gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [hostString]) + "\n";
+          msg +=
+            gPipNSSBundle.formatStringFromName("certErrorTrust_Symantec", [
+              hostString,
+            ]) + "\n";
           break;
         case SEC_ERROR_UNTRUSTED_CERT:
         default:
-          msg += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
+          msg +=
+            gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
       }
     }
     if (securityInfo.isUntrusted && securityInfo.serverCert.isSelfSigned) {
-      msg += gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
+      msg +=
+        gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
     }
 
     technicalInfo.appendChild(doc.createTextNode(msg));
@@ -246,16 +302,24 @@ var AboutCertErrorListener = {
     // In case of future distrusts of that scale we might need to add
     // additional parameters that allow us to identify the affected party
     // without replicating the complex logic from certverifier code.
-    if (securityInfo.errorCode == MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED) {
+    if (
+      securityInfo.errorCode ==
+      MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED
+    ) {
       let introContent = doc.getElementById("introContent");
       let description = doc.createElement("p");
       description.textContent = gPipNSSBundle.formatStringFromName(
-        "certErrorSymantecDistrustDescription", [hostString]);
+        "certErrorSymantecDistrustDescription",
+        [hostString]
+      );
       introContent.append(description);
 
       // The regular "what should I do" message does not make sense in this case.
-      doc.getElementById("whatShouldIDoContentText").textContent =
-        gPipNSSBundle.GetStringFromName("certErrorSymantecDistrustAdministrator");
+      doc.getElementById(
+        "whatShouldIDoContentText"
+      ).textContent = gPipNSSBundle.GetStringFromName(
+        "certErrorSymantecDistrustAdministrator"
+      );
     }
 
     this._setTechDetailsMsgPart1(hostString, securityInfo, technicalInfo, doc);
@@ -267,7 +331,9 @@ var AboutCertErrorListener = {
       let msgPrefix = "";
       if (numSubjectAltNames != 0) {
         if (numSubjectAltNames == 1) {
-          msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
+          msgPrefix = gPipNSSBundle.GetStringFromName(
+            "certErrorMismatchSinglePrefix"
+          );
 
           // Let's check if we want to make this a link.
           let okHost = subjectAltNamesList;
@@ -316,58 +382,82 @@ var AboutCertErrorListener = {
             referrerlink.title = subjectAltNamesList;
             referrerlink.id = "cert_domain_link";
             referrerlink.href = href;
-            let fragment = BrowserUtils.getLocalizedFragment(doc, msgPrefix,
-                                                             referrerlink);
+            let fragment = BrowserUtils.getLocalizedFragment(
+              doc,
+              msgPrefix,
+              referrerlink
+            );
             technicalInfo.appendChild(fragment);
           } else {
-            let fragment = BrowserUtils.getLocalizedFragment(doc,
-                                                             msgPrefix,
-                                                             subjectAltNamesList);
+            let fragment = BrowserUtils.getLocalizedFragment(
+              doc,
+              msgPrefix,
+              subjectAltNamesList
+            );
             technicalInfo.appendChild(fragment);
           }
           technicalInfo.append("\n");
         } else {
-          let msg = gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
+          let msg =
+            gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
           for (let i = 0; i < numSubjectAltNames; i++) {
             msg += subjectAltNames[i];
-            if (i != (numSubjectAltNames - 1)) {
+            if (i != numSubjectAltNames - 1) {
               msg += ", ";
             }
           }
           technicalInfo.append(msg + "\n");
         }
       } else {
-        let msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
-                                                    [hostString]);
+        let msg = gPipNSSBundle.formatStringFromName("certErrorMismatch", [
+          hostString,
+        ]);
         technicalInfo.append(msg + "\n");
       }
     }
 
     if (securityInfo.isNotValidAtThisTime) {
       let nowTime = new Date().getTime() * 1000;
-      let dateOptions = { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
-      let now = new Services.intl.DateTimeFormat(undefined, dateOptions).format(new Date());
+      let dateOptions = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+      };
+      let now = new Services.intl.DateTimeFormat(undefined, dateOptions).format(
+        new Date()
+      );
       let msg = "";
       if (validity.notBefore) {
         if (nowTime > validity.notAfter) {
-          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                   [validity.notAfterLocalTime, now]) + "\n";
+          msg +=
+            gPipNSSBundle.formatStringFromName("certErrorExpiredNow", [
+              validity.notAfterLocalTime,
+              now,
+            ]) + "\n";
         } else {
-          msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow",
-                                                   [validity.notBeforeLocalTime, now]) + "\n";
+          msg +=
+            gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow", [
+              validity.notBeforeLocalTime,
+              now,
+            ]) + "\n";
         }
       } else {
         // If something goes wrong, we assume the cert expired.
-        msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow",
-                                                 ["", now]) + "\n";
+        msg +=
+          gPipNSSBundle.formatStringFromName("certErrorExpiredNow", ["", now]) +
+          "\n";
       }
       technicalInfo.append(msg);
     }
     technicalInfo.append("\n");
 
     // Add link to certificate and error message.
-    let errorCodeMsg = gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
-                                                          [securityInfo.errorCodeString]);
+    let errorCodeMsg = gPipNSSBundle.formatStringFromName(
+      "certErrorCodePrefix3",
+      [securityInfo.errorCodeString]
+    );
     technicalInfo.append(errorCodeMsg);
   },
 
@@ -381,9 +471,11 @@ var AboutCertErrorListener = {
     }
 
     let ownerDoc = aEvent.originalTarget.ownerGlobal;
-    let securityInfo = docShell.failedChannel && docShell.failedChannel.securityInfo;
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
-                .QueryInterface(Ci.nsISerializable);
+    let securityInfo =
+      docShell.failedChannel && docShell.failedChannel.securityInfo;
+    securityInfo
+      .QueryInterface(Ci.nsITransportSecurityInfo)
+      .QueryInterface(Ci.nsISerializable);
     this._setTechDetails(securityInfo, ownerDoc.location.href);
   },
 };
@@ -391,7 +483,6 @@ AboutCertErrorListener.init();
 
 // This is copied from desktop's tab-content.js. See bug 1153485 about sharing this code somehow.
 var AboutReaderListener = {
-
   _articlePromise: null,
 
   _isLeavingReaderableReaderMode: false,
@@ -410,7 +501,9 @@ var AboutReaderListener = {
       case "Reader:ToggleReaderMode":
         let url = content.document.location.href;
         if (!this.isAboutReader) {
-          this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
+          this._articlePromise = ReaderMode.parseDocument(
+            content.document
+          ).catch(Cu.reportError);
           ReaderMode.enterReaderMode(docShell, content);
         } else {
           this._isLeavingReaderableReaderMode = this.isReaderableAboutReader;
@@ -429,14 +522,17 @@ var AboutReaderListener = {
   },
 
   get isReaderableAboutReader() {
-    return this.isAboutReader &&
-      !content.document.documentElement.dataset.isError;
+    return (
+      this.isAboutReader && !content.document.documentElement.dataset.isError
+    );
   },
 
   get isErrorPage() {
-    return content.document.documentURI.startsWith("about:neterror") ||
-        content.document.documentURI.startsWith("about:certerror") ||
-        content.document.documentURI.startsWith("about:blocked");
+    return (
+      content.document.documentURI.startsWith("about:neterror") ||
+      content.document.documentURI.startsWith("about:certerror") ||
+      content.document.documentURI.startsWith("about:blocked")
+    );
   },
 
   handleEvent: function(aEvent) {
@@ -464,7 +560,9 @@ var AboutReaderListener = {
         // this._isLeavingReaderableReaderMode is used here to keep the Reader Mode icon
         // visible in the location bar when transitioning from reader-mode page
         // back to the source page.
-        sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: this._isLeavingReaderableReaderMode });
+        sendAsyncMessage("Reader:UpdateReaderButton", {
+          isArticle: this._isLeavingReaderableReaderMode,
+        });
         if (this._isLeavingReaderableReaderMode) {
           this._isLeavingReaderableReaderMode = false;
         }
@@ -485,13 +583,15 @@ var AboutReaderListener = {
   updateReaderButton: function(forceNonArticle) {
     // Do not show Reader View icon on error pages (bug 1320900)
     if (this.isErrorPage) {
-        sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
-    } else if (!Readerable.isEnabledForParseOnLoad || this.isAboutReader ||
-        !(content.document instanceof content.HTMLDocument) ||
-        content.document.mozSyntheticDocument) {
-
+      sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
+    } else if (
+      !Readerable.isEnabledForParseOnLoad ||
+      this.isAboutReader ||
+      !(content.document instanceof content.HTMLDocument) ||
+      content.document.mozSyntheticDocument
+    ) {
     } else {
-        this.scheduleReadabilityCheckPostPaint(forceNonArticle);
+      this.scheduleReadabilityCheckPostPaint(forceNonArticle);
     }
   },
 
@@ -508,7 +608,10 @@ var AboutReaderListener = {
       // if forceNonArticle was true or false last time.
       this.cancelPotentialPendingReadabilityCheck();
     }
-    this._pendingReadabilityCheck = this.onPaintWhenWaitedFor.bind(this, forceNonArticle);
+    this._pendingReadabilityCheck = this.onPaintWhenWaitedFor.bind(
+      this,
+      forceNonArticle
+    );
     addEventListener("MozAfterPaint", this._pendingReadabilityCheck);
   },
 

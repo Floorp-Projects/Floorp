@@ -3,14 +3,20 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Snackbars",
+  "resource://gre/modules/Snackbars.jsm"
+);
 
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
 
   get _pk11DB() {
     delete this._pk11DB;
-    return this._pk11DB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+    return (this._pk11DB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
+      Ci.nsIPK11TokenDB
+    ));
   },
 
   get enabled() {
@@ -47,7 +53,10 @@ var MasterPassword = {
     } catch (e) {
       dump("MasterPassword.removePassword: " + e + "\n");
     }
-    Snackbars.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Snackbars.LENGTH_LONG);
+    Snackbars.show(
+      Strings.browser.GetStringFromName("masterPassword.incorrect"),
+      Snackbars.LENGTH_LONG
+    );
     return false;
   },
 };

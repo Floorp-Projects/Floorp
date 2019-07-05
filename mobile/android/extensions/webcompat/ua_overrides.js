@@ -19,11 +19,15 @@ for (const override of [
     bug: "1287966",
     config: {
       matches: ["*://webcompat-addon-testcases.schub.io/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1480710 - m.imgur.com - Build UA override
      * WebCompat issue #13154 - https://webcompat.com/issues/13154
@@ -38,11 +42,15 @@ for (const override of [
     bug: "1480710",
     config: {
       matches: ["*://m.imgur.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 945963 - tieba.baidu.com serves simplified mobile content to Firefox Android
      * WebCompat issue #18455 - https://webcompat.com/issues/18455
@@ -57,11 +65,12 @@ for (const override of [
     bug: "945963",
     config: {
       matches: ["*://tieba.baidu.com/*", "*://tiebac.baidu.com/*"],
-      uaTransformer: (originalUA) => {
+      uaTransformer: originalUA => {
         return originalUA + " AppleWebKit/537.36 (KHTML, like Gecko)";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1177298 - Write UA overrides for top Japanese Sites
      * (Imported from ua-update.json.in)
@@ -75,11 +84,12 @@ for (const override of [
     bug: "1177298",
     config: {
       matches: ["*://*.lohaco.jp/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1177298 - Write UA overrides for top Japanese Sites
      * (Imported from ua-update.json.in)
@@ -93,11 +103,12 @@ for (const override of [
     bug: "1177298",
     config: {
       matches: ["*://*.nhk.or.jp/*"],
-      uaTransformer: (originalUA) => {
+      uaTransformer: originalUA => {
         return originalUA + " AppleWebKit";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1338260 - Add UA override for directTV
      * (Imported from ua-update.json.in)
@@ -111,11 +122,12 @@ for (const override of [
     bug: "1338260",
     config: {
       matches: ["*://*.directv.com/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1385206 - Create UA override for rakuten.co.jp on Firefox Android
      * (Imported from ua-update.json.in)
@@ -128,11 +140,12 @@ for (const override of [
     bug: "1385206",
     config: {
       matches: ["*://*.rakuten.co.jp/*"],
-      uaTransformer: (originalUA) => {
+      uaTransformer: originalUA => {
         return originalUA.replace(/Firefox.+$/, "");
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 969844 - mobile.de sends desktop site to Firefox on Android
      *
@@ -144,11 +157,12 @@ for (const override of [
     bug: "969844",
     config: {
       matches: ["*://*.mobile.de/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1509831 - cc.com - Add UA override for CC.com
      * WebCompat issue #329 - https://webcompat.com/issues/329
@@ -163,11 +177,12 @@ for (const override of [
     bug: "1509831",
     config: {
       matches: ["*://*.cc.com/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1508516 - cineflix.com.br - Add UA override for cineflix.com.br/m/
      * WebCompat issue #21553 - https://webcompat.com/issues/21553
@@ -182,11 +197,15 @@ for (const override of [
     bug: "1508516",
     config: {
       matches: ["*://*.cineflix.com.br/m/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1509852 - redbull.com - Add UA override for redbull.com
      * WebCompat issue #21439 - https://webcompat.com/issues/21439
@@ -201,11 +220,15 @@ for (const override of [
     bug: "1509852",
     config: {
       matches: ["*://*.redbull.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1509873 - zmags.com - Add UA override for secure.viewer.zmags.com
      * WebCompat issue #21576 - https://webcompat.com/issues/21576
@@ -221,8 +244,11 @@ for (const override of [
     bug: "1509873",
     config: {
       matches: ["*://*.viewer.zmags.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+        );
       },
     },
   },
@@ -245,19 +271,19 @@ function enableOverride(override) {
     return;
   }
 
-  const {matches, uaTransformer} = override.config;
-  const listener = (details) => {
+  const { matches, uaTransformer } = override.config;
+  const listener = details => {
     for (var header of details.requestHeaders) {
       if (header.name.toLowerCase() === "user-agent") {
         header.value = uaTransformer(header.value);
       }
     }
-    return {requestHeaders: details.requestHeaders};
+    return { requestHeaders: details.requestHeaders };
   };
 
   browser.webRequest.onBeforeSendHeaders.addListener(
     listener,
-    {urls: matches},
+    { urls: matches },
     ["blocking", "requestHeaders"]
   );
 
@@ -277,7 +303,9 @@ async function registerUAOverrides() {
     }
   }
   UAOverridesEnabled = true;
-  portsToAboutCompatTabs.broadcast({overridesChanged: filterOverrides(UAOverrides)});
+  portsToAboutCompatTabs.broadcast({
+    overridesChanged: filterOverrides(UAOverrides),
+  });
 }
 
 function unregisterUAOverrides() {
@@ -285,7 +313,7 @@ function unregisterUAOverrides() {
     disableOverride(override);
   }
   UAOverridesEnabled = false;
-  portsToAboutCompatTabs.broadcast({overridesChanged: false});
+  portsToAboutCompatTabs.broadcast({ overridesChanged: false });
 }
 
 function disableOverride(override) {
@@ -293,7 +321,9 @@ function disableOverride(override) {
     return;
   }
 
-  browser.webRequest.onBeforeSendHeaders.removeListener(ActiveListeners.get(override));
+  browser.webRequest.onBeforeSendHeaders.removeListener(
+    ActiveListeners.get(override)
+  );
   override.active = false;
   ActiveListeners.delete(override);
 }
@@ -310,5 +340,8 @@ function checkOverridePref() {
     }
   });
 }
-browser.aboutConfigPrefs.onPrefChange.addListener(checkOverridePref, OVERRIDE_PREF);
+browser.aboutConfigPrefs.onPrefChange.addListener(
+  checkOverridePref,
+  OVERRIDE_PREF
+);
 checkOverridePref();

@@ -5,17 +5,28 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Prompt",
-                               "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Prompt",
+  "resource://gre/modules/Prompt.jsm"
+);
 
-ChromeUtils.defineModuleGetter(this, "UITelemetry",
-                               "resource://gre/modules/UITelemetry.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "UITelemetry",
+  "resource://gre/modules/UITelemetry.jsm"
+);
 
-const kPRESENTATIONDEVICEPROMPT_CONTRACTID = "@mozilla.org/presentation-device/prompt;1";
-const kPRESENTATIONDEVICEPROMPT_CID        = Components.ID("{388bd149-c919-4a43-b646-d7ec57877689}");
+const kPRESENTATIONDEVICEPROMPT_CONTRACTID =
+  "@mozilla.org/presentation-device/prompt;1";
+const kPRESENTATIONDEVICEPROMPT_CID = Components.ID(
+  "{388bd149-c919-4a43-b646-d7ec57877689}"
+);
 
 function debug(aMsg) {
   // dump("-*- PresentationDevicePrompt: " + aMsg + "\n");
@@ -32,14 +43,16 @@ PresentationDevicePrompt.prototype = {
   classDescription: "Fennec Presentation Device Prompt",
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevicePrompt]),
 
-  _devices: [],   // Store all available presentation devices
+  _devices: [], // Store all available presentation devices
   _request: null, // Store the request from presentation api
 
   _getString: function(aName) {
     debug("_getString");
 
     if (!this.bundle) {
-      this.bundle = Services.strings.createBundle("chrome://browser/locale/devicePrompt.properties");
+      this.bundle = Services.strings.createBundle(
+        "chrome://browser/locale/devicePrompt.properties"
+      );
     }
     return this.bundle.GetStringFromName(aName);
   },
@@ -47,9 +60,12 @@ PresentationDevicePrompt.prototype = {
   _loadDevices: function(requestURLs) {
     debug("_loadDevices");
 
-    let deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
-                          .getService(Ci.nsIPresentationDeviceManager);
-    let devices = deviceManager.getAvailableDevices(requestURLs).QueryInterface(Ci.nsIArray);
+    let deviceManager = Cc[
+      "@mozilla.org/presentation-device/manager;1"
+    ].getService(Ci.nsIPresentationDeviceManager);
+    let devices = deviceManager
+      .getAvailableDevices(requestURLs)
+      .QueryInterface(Ci.nsIArray);
 
     // Re-load the available devices
     this._devices = [];
@@ -96,10 +112,12 @@ PresentationDevicePrompt.prototype = {
       return;
     }
 
-    if (aIndex < 0) { // Cancel request if no selected device,
+    if (aIndex < 0) {
+      // Cancel request if no selected device,
       this._request.cancel(Cr.NS_ERROR_DOM_NOT_ALLOWED_ERR);
       return;
-    } else if (!this._devices.length) { // or there is no available devices
+    } else if (!this._devices.length) {
+      // or there is no available devices
       this._request.cancel(Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
       return;
     }
@@ -114,17 +132,19 @@ PresentationDevicePrompt.prototype = {
     // Load available presentation devices into this._devices
     this._loadDevices(aRequest.requestURLs);
 
-    if (!this._devices.length) { // Cancel request if no available device
+    if (!this._devices.length) {
+      // Cancel request if no available device
       aRequest.cancel(Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
       return;
     }
 
     this._request = aRequest;
 
-    let prompt = this._getPrompt(this._getString("deviceMenu.title"),
-                                 this._getPromptMenu(this._devices),
-                                 aRequest.chromeEventHandler &&
-                                   aRequest.chromeEventHandler.ownerGlobal);
+    let prompt = this._getPrompt(
+      this._getString("deviceMenu.title"),
+      this._getPromptMenu(this._devices),
+      aRequest.chromeEventHandler && aRequest.chromeEventHandler.ownerGlobal
+    );
 
     this._showPrompt(prompt, this._selectDevice.bind(this));
 
