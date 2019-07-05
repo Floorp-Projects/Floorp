@@ -2,8 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { AppConstants } =
-  ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 // Note: widget/tests/test_bug1123480.xul checks whether nsTransferable behaves
 // as expected with regards to private browsing mode and the clipboard cache,
@@ -45,8 +46,9 @@ function getClipboardCacheFDCount() {
     // handles, so if FILE_FLAG_DELETE_ON_CLOSE does the thing it promises, the
     // file is actually removed when the handle is closed.
 
-    let {FileUtils} =
-      ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+    let { FileUtils } = ChromeUtils.import(
+      "resource://gre/modules/FileUtils.jsm"
+    );
     // Path from nsAnonymousTemporaryFile.cpp, GetTempDir.
     dir = FileUtils.getFile("TmpD", ["mozilla-temp-files"]);
   } else {
@@ -71,18 +73,18 @@ function getClipboardCacheFDCount() {
 }
 
 async function testCopyPaste(isPrivate) {
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: isPrivate});
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: isPrivate });
   let tab = await BrowserTestUtils.openNewForegroundTab(win);
   let browser = tab.linkedBrowser;
 
   // Sanitize environment
-  await ContentTask.spawn(browser, SHORT_STRING_NO_CACHE, async (shortStr) => {
+  await ContentTask.spawn(browser, SHORT_STRING_NO_CACHE, async shortStr => {
     await content.navigator.clipboard.writeText(shortStr);
   });
 
   let initialFdCount = getClipboardCacheFDCount();
 
-  await ContentTask.spawn(browser, Ipsum, async (largeString) => {
+  await ContentTask.spawn(browser, Ipsum, async largeString => {
     await content.navigator.clipboard.writeText(largeString);
   });
 
@@ -94,13 +96,17 @@ async function testCopyPaste(isPrivate) {
   }
 
   let readStr = await ContentTask.spawn(browser, null, async () => {
-    let {document} = content;
+    let { document } = content;
     document.body.contentEditable = true;
     document.body.focus();
     let pastePromise = new Promise(resolve => {
-      document.addEventListener("paste", e => {
-        resolve(e.clipboardData.getData("text/plain"));
-      }, {once: true});
+      document.addEventListener(
+        "paste",
+        e => {
+          resolve(e.clipboardData.getData("text/plain"));
+        },
+        { once: true }
+      );
     });
     document.execCommand("paste");
     return pastePromise;
@@ -117,7 +123,7 @@ async function testCopyPaste(isPrivate) {
   }
 
   // Cleanup.
-  await ContentTask.spawn(browser, SHORT_STRING_NO_CACHE, async (shortStr) => {
+  await ContentTask.spawn(browser, SHORT_STRING_NO_CACHE, async shortStr => {
     await content.navigator.clipboard.writeText(shortStr);
   });
   is(getClipboardCacheFDCount(), initialFdCount, "Drop clipboard cache if any");

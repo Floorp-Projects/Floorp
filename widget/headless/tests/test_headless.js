@@ -1,8 +1,8 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const server = new HttpServer();
 server.registerDirectory("/", do_get_cwd());
@@ -11,7 +11,9 @@ const ROOT = `http://localhost:${server.identity.primaryPort}`;
 const BASE = `${ROOT}/`;
 const HEADLESS_URL = `${BASE}/headless.html`;
 const HEADLESS_BUTTON_URL = `${BASE}/headless_button.html`;
-registerCleanupFunction(() => { server.stop(() => {}); });
+registerCleanupFunction(() => {
+  server.stop(() => {});
+});
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.
@@ -24,8 +26,9 @@ function loadContentWindow(windowlessBrowser, uri) {
     };
     windowlessBrowser.loadURI(uri, loadURIOptions);
     let docShell = windowlessBrowser.docShell;
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebProgress);
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
     let progressListener = {
       onLocationChange(progress, request, location, flags) {
         // Ignore inner-frame events
@@ -39,16 +42,24 @@ function loadContentWindow(windowlessBrowser, uri) {
         let contentWindow = docShell.domWindow;
         webProgress.removeProgressListener(progressListener);
         progressListeners.delete(progressListener);
-        contentWindow.addEventListener("load", (event) => {
-          resolve(contentWindow);
-        }, { once: true });
+        contentWindow.addEventListener(
+          "load",
+          event => {
+            resolve(contentWindow);
+          },
+          { once: true }
+        );
       },
-      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
-                                             "nsISupportsWeakReference"]),
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIWebProgressListener",
+        "nsISupportsWeakReference",
+      ]),
     };
     progressListeners.set(progressListener, progressListener);
-    webProgress.addProgressListener(progressListener,
-                                    Ci.nsIWebProgress.NOTIFY_LOCATION);
+    webProgress.addProgressListener(
+      progressListener,
+      Ci.nsIWebProgress.NOTIFY_LOCATION
+    );
   });
 }
 
@@ -63,22 +74,24 @@ add_task(async function test_snapshot() {
   equal(contentWindow.innerHeight, contentHeight);
 
   // Snapshot the test page.
-  let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");
+  let canvas = contentWindow.document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "html:canvas"
+  );
   let context = canvas.getContext("2d");
   let width = contentWindow.innerWidth;
   let height = contentWindow.innerHeight;
   canvas.width = width;
   canvas.height = height;
-  context.drawWindow(
-    contentWindow,
-    0,
-    0,
-    width,
-    height,
-    "rgb(255, 255, 255)"
-  );
+  context.drawWindow(contentWindow, 0, 0, width, height, "rgb(255, 255, 255)");
   let imageData = context.getImageData(0, 0, width, height).data;
-  ok(imageData[0] === 0 && imageData[1] === 255 && imageData[2] === 0 && imageData[3] === 255, "Page is green.");
+  ok(
+    imageData[0] === 0 &&
+      imageData[1] === 255 &&
+      imageData[2] === 0 &&
+      imageData[3] === 255,
+    "Page is green."
+  );
 
   // Search for a blue pixel (a quick and dirty check to see if the blue text is
   // on the page)
@@ -106,7 +119,10 @@ add_task(async function test_snapshot_widget_layers() {
   equal(contentWindow.innerHeight, contentHeight);
 
   // Snapshot the test page.
-  let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");
+  let canvas = contentWindow.document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "html:canvas"
+  );
   let context = canvas.getContext("2d");
   let width = contentWindow.innerWidth;
   let height = contentWindow.innerHeight;
@@ -119,7 +135,9 @@ add_task(async function test_snapshot_widget_layers() {
     width,
     height,
     "rgb(255, 255, 255)",
-    context.DRAWWINDOW_DRAW_CARET | context.DRAWWINDOW_DRAW_VIEW | context.DRAWWINDOW_USE_WIDGET_LAYERS
+    context.DRAWWINDOW_DRAW_CARET |
+      context.DRAWWINDOW_DRAW_VIEW |
+      context.DRAWWINDOW_USE_WIDGET_LAYERS
   );
   ok(true, "Snapshot with widget layers didn't crash.");
 
@@ -132,17 +150,31 @@ add_task(async function test_keydown() {
   // nsIWindowlessBrowser inherits from nsIWebNavigation.
   let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_URL);
 
-  let keydown = new Promise((resolve) => {
-    contentWindow.addEventListener("keydown", () => {
-      resolve();
-    }, { once: true });
+  let keydown = new Promise(resolve => {
+    contentWindow.addEventListener(
+      "keydown",
+      () => {
+        resolve();
+      },
+      { once: true }
+    );
   });
 
-  let tip = Cc["@mozilla.org/text-input-processor;1"]
-            .createInstance(Ci.nsITextInputProcessor);
+  let tip = Cc["@mozilla.org/text-input-processor;1"].createInstance(
+    Ci.nsITextInputProcessor
+  );
   let begun = tip.beginInputTransactionForTests(contentWindow);
-  ok(begun, "nsITextInputProcessor.beginInputTransactionForTests() should succeed");
-  tip.keydown(new contentWindow.KeyboardEvent("", {key: "a", code: "KeyA", keyCode: contentWindow.KeyboardEvent.DOM_VK_A}));
+  ok(
+    begun,
+    "nsITextInputProcessor.beginInputTransactionForTests() should succeed"
+  );
+  tip.keydown(
+    new contentWindow.KeyboardEvent("", {
+      key: "a",
+      code: "KeyA",
+      keyCode: contentWindow.KeyboardEvent.DOM_VK_A,
+    })
+  );
 
   await keydown;
   ok(true, "Send keydown didn't crash");
@@ -155,7 +187,10 @@ add_task(async function test_keydown() {
 add_task(async function test_mouse_drag() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
   // nsIWindowlessBrowser inherits from nsIWebNavigation.
-  let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_BUTTON_URL);
+  let contentWindow = await loadContentWindow(
+    windowlessBrowser,
+    HEADLESS_BUTTON_URL
+  );
   contentWindow.resizeTo(400, 400);
 
   let target = contentWindow.document.getElementById("btn");
@@ -168,7 +203,9 @@ add_task(async function test_mouse_drag() {
   utils.sendMouseEvent("mousemove", left, top, 0, 1, 0, false, 0, 0);
   // Wait for a turn of the event loop since the synthetic mouse event
   // that creates the drag service is processed during the refresh driver.
-  await new Promise((r) => { executeSoon(r); });
+  await new Promise(r => {
+    executeSoon(r);
+  });
   utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
 
   ok(true, "Send mouse event didn't crash");
