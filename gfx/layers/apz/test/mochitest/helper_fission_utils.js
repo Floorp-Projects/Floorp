@@ -28,12 +28,16 @@ function promiseOneEvent(eventType, filter) {
         try {
           success = filter(e);
         } catch (ex) {
-          dump(`ERROR: Filter passed to promiseOneEvent threw exception: ${ex}\n`);
+          dump(
+            `ERROR: Filter passed to promiseOneEvent threw exception: ${ex}\n`
+          );
           reject();
           return;
         }
       } else {
-        dump("ERROR: Filter passed to promiseOneEvent was neither null nor a function\n");
+        dump(
+          "ERROR: Filter passed to promiseOneEvent was neither null nor a function\n"
+        );
         reject();
         return;
       }
@@ -54,14 +58,18 @@ function promiseOneEvent(eventType, filter) {
 function loadOOPIFrame(iframeElementId, iframePage) {
   return async function() {
     if (window.location.href.startsWith("https://example.com/")) {
-      dump(`WARNING: Calling loadOOPIFrame from ${window.location.href} so the iframe may not be OOP\n`);
+      dump(
+        `WARNING: Calling loadOOPIFrame from ${
+          window.location.href
+        } so the iframe may not be OOP\n`
+      );
       ok(false, "Current origin is not example.com:443");
     }
 
-    let url = "https://example.com/browser/gfx/layers/apz/test/mochitest/" + iframePage;
+    let url =
+      "https://example.com/browser/gfx/layers/apz/test/mochitest/" + iframePage;
     let loadPromise = promiseOneEvent("OOPIF:Load", function(e) {
-      return (typeof e.data.content) == "string" &&
-        e.data.content == url;
+      return typeof e.data.content == "string" && e.data.content == url;
     });
     let elem = document.getElementById(iframeElementId);
     elem.src = url;
