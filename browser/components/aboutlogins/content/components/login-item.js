@@ -29,30 +29,19 @@ export default class LoginItem extends HTMLElement {
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginItemTemplate.content.cloneNode(true));
 
-    for (let selector of [
-      ".copy-password-button",
-      ".copy-username-button",
-      ".delete-button",
-      ".edit-button",
-      ".open-site-button",
-      ".reveal-password-checkbox",
-      ".save-changes-button",
-      ".cancel-button",
-    ]) {
-      let button = this.shadowRoot.querySelector(selector);
-      button.addEventListener("click", this);
-    }
-
+    this._cancelButton = this.shadowRoot.querySelector(".cancel-button");
     this._confirmDeleteDialog = document.querySelector("confirm-delete-dialog");
     this._copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
     this._copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._form = this.shadowRoot.querySelector("form");
+    this._openSiteButton = this.shadowRoot.querySelector(".open-site-button");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector("input[name='username']");
     this._passwordInput = this.shadowRoot.querySelector("input[name='password']");
     this._revealCheckbox = this.shadowRoot.querySelector(".reveal-password-checkbox");
+    this._saveChangesButton = this.shadowRoot.querySelector(".save-changes-button");
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
@@ -61,6 +50,16 @@ export default class LoginItem extends HTMLElement {
     this.render();
 
     this._originInput.addEventListener("blur", this);
+    this._cancelButton.addEventListener("click", this);
+    this._copyPasswordButton.addEventListener("click", this);
+    this._copyUsernameButton.addEventListener("click", this);
+    this._deleteButton.addEventListener("click", this);
+    this._editButton.addEventListener("click", this);
+    this._openSiteButton.addEventListener("click", this);
+    this._originInput.addEventListener("click", this);
+    this._saveChangesButton.addEventListener("click", this);
+    window.addEventListener("AboutLoginsCreateLogin", this);
+    window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
   }
 
@@ -78,6 +77,14 @@ export default class LoginItem extends HTMLElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "AboutLoginsCreateLogin": {
+        this.setLogin({});
+        break;
+      }
+      case "AboutLoginsInitialLoginSelected": {
+        this.setLogin(event.detail, {skipFocusChange: true});
+        break;
+      }
       case "AboutLoginsLoginSelected": {
         this.setLogin(event.detail);
         break;
@@ -106,17 +113,15 @@ export default class LoginItem extends HTMLElement {
         // Prevent form submit behavior on the following buttons.
         event.preventDefault();
         if (classList.contains("cancel-button")) {
-          if (this._login.guid) {
+          let wasExistingLogin = !!this._login.guid;
+          if (wasExistingLogin) {
             this.setLogin(this._login);
           } else {
-            // TODO, should select the first login if it exists
-            // or show the no-logins view otherwise
-            this._toggleEditing();
-            this.render();
+            window.dispatchEvent(new CustomEvent("AboutLoginsClearSelection"));
           }
 
           recordTelemetryEvent({
-            object: this._login.guid ? "existing_login" : "new_login",
+            object: wasExistingLogin ? "existing_login" : "new_login",
             method: "cancel",
           });
           return;
@@ -147,7 +152,8 @@ export default class LoginItem extends HTMLElement {
           recordTelemetryEvent({object: "existing_login", method: "edit"});
           return;
         }
-        if (classList.contains("open-site-button")) {
+        if (classList.contains("open-site-button") ||
+            (classList.contains("origin-input") && !this.dataset.editing)) {
           document.dispatchEvent(new CustomEvent("AboutLoginsOpenSite", {
             bubbles: true,
             detail: this._login,
@@ -201,8 +207,11 @@ export default class LoginItem extends HTMLElement {
   /**
    * @param {login} login The login that should be displayed. The login object is
    *                      a plain JS object representation of nsILoginInfo/nsILoginMetaInfo.
+   * @param {boolean} skipFocusChange Optional, if present and set to true, the Edit button of the
+   *                                  login will not get focus automatically. This is used to prevent
+   *                                  stealing focus from the search filter upon page load.
    */
-  setLogin(login) {
+  setLogin(login, {skipFocusChange} = {}) {
     this._login = login;
 
     this._form.reset();
@@ -216,7 +225,9 @@ export default class LoginItem extends HTMLElement {
 
     this._revealCheckbox.checked = false;
 
-    this._editButton.focus();
+    if (!skipFocusChange) {
+      this._editButton.focus();
+    }
     this.render();
   }
 

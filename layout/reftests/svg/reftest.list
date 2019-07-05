@@ -36,7 +36,7 @@ skip-if(Android) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # == blend-color.svg blend-color-ref.svg
 skip-if(Android) == blend-darken.svg blend-darken-ref.svg
 skip-if(Android) == blend-difference.svg blend-difference-ref.svg
-skip-if(Android) fuzzy-if(skiaContent,0-1,0-1600) == blend-exclusion.svg blend-exclusion-ref.svg
+skip-if(Android) fuzzy-if(skiaContent,0-1,0-1600) fuzzy-if(geckoview&&webrender,0-4,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
 # == blend-hard-light.svg blend-hard-light-ref.svg
 # == blend-hue.svg blend-hue-ref.svg
 skip-if(Android) == blend-layer-blend.svg blend-layer-blend-ref.svg
@@ -336,7 +336,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-10000) ==
 
 fuzzy-if(Android,0-8,0-200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy(0-16,0-193) fuzzy-if(skiaContent,0-7,0-193) fuzzy-if(webrender,54-54,124-124) == outline.html outline-ref.html # Bug 1392106, Bug 1503525
+fuzzy(0-16,0-193) fuzzy-if(skiaContent,0-7,0-193) fuzzy-if(webrender,54-54,124-435) == outline.html outline-ref.html # Bug 1392106, Bug 1503525
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -351,7 +351,7 @@ fuzzy(0-16,0-193) fuzzy-if(skiaContent,0-7,0-193) fuzzy-if(webrender,54-54,124-1
 == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-5) == paint-order-01.svg paint-order-01-ref.svg
 == paint-order-02.svg paint-order-02-ref.svg
-fuzzy-if(webrender,72-72,96-143) == paint-order-03.svg paint-order-03-ref.svg
+fuzzy-if(webrender,72-73,96-1804) == paint-order-03.svg paint-order-03-ref.svg
 
 #fuzzy(0-23,0-60) fails-if(d2d) == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
@@ -375,7 +375,7 @@ fuzzy-if(skiaContent,0-1,0-5) == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 fuzzy-if(skiaContent,0-3,0-5) == pattern-scale-01c.svg pattern-scale-01-ref.svg
 fuzzy-if(webrender,0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
-fuzzy-if(skiaContent||webrender,0-72,0-871) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
+fuzzy-if(skiaContent||webrender,0-72,0-1245) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg
@@ -390,7 +390,7 @@ fuzzy-if(skiaContent||webrender,0-72,0-871) == pattern-transformed-01.svg patter
 
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
-fuzzy-if(cocoaWidget,0-4,0-15982) fuzzy-if(winWidget,0-4,0-92) fuzzy-if(skiaContent,0-4,0-60) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
+fuzzy-if(cocoaWidget,0-4,0-15982) fuzzy-if(winWidget,0-4,0-92) fuzzy-if(skiaContent,0-4,0-60) fuzzy-if(geckoview&&webrender,0-4,0-159) == radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == radialGradient-basic-04.svg pass.svg
 == radialGradient-fr-01.svg pass.svg
 fuzzy(0-1,0-3235) fuzzy-if(winWidget,0-1,0-7030) == radialGradient-fr-02.svg radialGradient-fr-02-ref.svg
@@ -574,13 +574,13 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == overflow-visible-image.html overflow-visible-image-ref.html
 
 # Shadow DOM id tracking.
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR

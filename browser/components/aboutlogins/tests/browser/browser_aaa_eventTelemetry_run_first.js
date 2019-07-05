@@ -18,6 +18,10 @@ add_task(async function setup() {
                                                        (_, data) => data == "addLogin");
   TEST_LOGIN1 = Services.logins.addLogin(TEST_LOGIN1);
   await storageChangedPromised;
+  storageChangedPromised = TestUtils.topicObserved("passwordmgr-storage-changed",
+                                                   (_, data) => data == "addLogin");
+  TEST_LOGIN2 = Services.logins.addLogin(TEST_LOGIN2);
+  await storageChangedPromised;
   await BrowserTestUtils.openNewForegroundTab({gBrowser, url: "about:logins"});
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -35,7 +39,7 @@ add_task(async function test_telemetry_events() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginList = content.document.querySelector("login-list");
-    let loginListItem = loginList.shadowRoot.querySelector("login-list-item[data-guid]");
+    let loginListItem = loginList.shadowRoot.querySelector("login-list-item:nth-child(2)");
     loginListItem.click();
   });
   await waitForTelemetryEventCount(1);
