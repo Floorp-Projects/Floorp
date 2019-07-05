@@ -44,7 +44,6 @@ module.exports = {
   ],
   "overrides": [{
       "files": [
-        "accessible/**",
         "browser/**",
         "build/**",
         "caps/**",

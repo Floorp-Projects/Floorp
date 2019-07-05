@@ -13,15 +13,19 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
   let [docX, docY] = getBounds(accDoc);
 
   // Get the unscaled bounds of the accessible
-  let [x, y, width, height] = type == "text" ?
-    getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE) : getBounds(acc);
+  let [x, y, width, height] =
+    type == "text"
+      ? getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE)
+      : getBounds(acc);
 
   await ContentTask.spawn(browser, scale, _scale => {
     setResolution(content.document, _scale);
   });
 
-  let [scaledX, scaledY, scaledWidth, scaledHeight] = type == "text" ?
-    getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE) : getBounds(acc);
+  let [scaledX, scaledY, scaledWidth, scaledHeight] =
+    type == "text"
+      ? getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE)
+      : getBounds(acc);
 
   let name = prettyName(acc);
   isWithin(scaledWidth, width * scale, 2, "Wrong scaled width of " + name);
@@ -48,7 +52,8 @@ async function runTests(browser, accDoc) {
 /**
  * Test accessible boundaries when page is zoomed
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
 <p id='p1' style='font-family: monospace;'>Tilimilitryamdiya</p>
 <p id="p2">para 2</p>
 <button id="b1">Hello</button>

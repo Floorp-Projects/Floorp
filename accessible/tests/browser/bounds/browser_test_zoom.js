@@ -16,8 +16,12 @@ async function getContentBoundsForDOMElm(browser, id) {
 }
 
 async function testContentBounds(browser, acc) {
-  let [expectedX, expectedY, expectedWidth, expectedHeight] =
-    await getContentBoundsForDOMElm(browser, getAccessibleDOMNodeID(acc));
+  let [
+    expectedX,
+    expectedY,
+    expectedWidth,
+    expectedHeight,
+  ] = await getContentBoundsForDOMElm(browser, getAccessibleDOMNodeID(acc));
 
   let contentDPR = await getContentDPR(browser);
   let [x, y, width, height] = getBounds(acc, contentDPR);
@@ -58,7 +62,8 @@ async function runTests(browser, accDoc) {
 /**
  * Test accessible boundaries when page is zoomed
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
 <p id="p1">para 1</p><p id="p2">para 2</p>
 <map name="atoz_map" id="map">
   <area id="area1" href="http://mozilla.org"

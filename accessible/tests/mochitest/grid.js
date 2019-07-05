@@ -31,8 +31,9 @@ function grid(aTableIdentifier) {
     var colIdx = aCell.cellIndex;
 
     var rowIdx = aCell.parentNode.rowIndex;
-    if (this.table.tHead)
+    if (this.table.tHead) {
       rowIdx -= 1;
+    }
 
     var colsCount = this.getColsCount();
     return rowIdx * colsCount + colIdx;
@@ -44,8 +45,9 @@ function grid(aTableIdentifier) {
     for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       for (var colIdx = 0; colIdx < colsCount; colIdx++) {
         var cell = this.table.rows[rowIdx].cells[colIdx];
-        if (cell.hasAttribute("tabindex"))
+        if (cell.hasAttribute("tabindex")) {
           return cell;
+        }
       }
     }
     return null;
@@ -57,15 +59,17 @@ function grid(aTableIdentifier) {
   };
 
   this.handleEvent = function handleEvent(aEvent) {
-    if (aEvent instanceof KeyboardEvent)
+    if (aEvent instanceof KeyboardEvent) {
       this.handleKeyEvent(aEvent);
-    else
+    } else {
       this.handleClickEvent(aEvent);
+    }
   };
 
   this.handleKeyEvent = function handleKeyEvent(aEvent) {
-    if (aEvent.target.localName != "td")
+    if (aEvent.target.localName != "td") {
       return;
+    }
 
     var cell = aEvent.target;
     switch (aEvent.keyCode) {
@@ -117,8 +121,9 @@ function grid(aTableIdentifier) {
   };
 
   this.handleClickEvent = function handleClickEvent(aEvent) {
-    if (aEvent.target.localName != "td")
+    if (aEvent.target.localName != "td") {
       return;
+    }
 
     var curCell = this.getCurrentCell();
     var cell = aEvent.target;

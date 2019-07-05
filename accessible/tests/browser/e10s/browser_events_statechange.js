@@ -6,14 +6,19 @@
 
 /* import-globals-from ../../mochitest/role.js */
 /* import-globals-from ../../mochitest/states.js */
-loadScripts({ name: "role.js", dir: MOCHITESTS_DIR },
-            { name: "states.js", dir: MOCHITESTS_DIR });
+loadScripts(
+  { name: "role.js", dir: MOCHITESTS_DIR },
+  { name: "states.js", dir: MOCHITESTS_DIR }
+);
 
 function checkStateChangeEvent(event, state, isExtraState, isEnabled) {
   let scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
   is(scEvent.state, state, "Correct state of the statechange event.");
-  is(scEvent.isExtraState, isExtraState,
-    "Correct extra state bit of the statechange event.");
+  is(
+    scEvent.isExtraState,
+    isExtraState,
+    "Correct extra state bit of the statechange event."
+  );
   is(scEvent.isEnabled, isEnabled, "Correct state of statechange event state");
 }
 
@@ -34,28 +39,32 @@ let iframeSrc = `data:text/html,
  *   - isExtraState
  *   - isEnabled
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <iframe id="iframe" src="${iframeSrc}"></iframe>
-  <input id="checkbox" type="checkbox" />`, async function(browser) {
-  // Test state change
-  let onStateChange = waitForEvent(EVENT_STATE_CHANGE, "checkbox");
-  // Set checked for a checkbox.
-  await ContentTask.spawn(browser, {}, () => {
-    content.document.getElementById("checkbox").checked = true;
-  });
-  let event = await onStateChange;
+  <input id="checkbox" type="checkbox" />`,
+  async function(browser) {
+    // Test state change
+    let onStateChange = waitForEvent(EVENT_STATE_CHANGE, "checkbox");
+    // Set checked for a checkbox.
+    await ContentTask.spawn(browser, {}, () => {
+      content.document.getElementById("checkbox").checked = true;
+    });
+    let event = await onStateChange;
 
-  checkStateChangeEvent(event, STATE_CHECKED, false, true);
-  testStates(event.accessible, STATE_CHECKED, 0);
+    checkStateChangeEvent(event, STATE_CHECKED, false, true);
+    testStates(event.accessible, STATE_CHECKED, 0);
 
-  // Test extra state
-  onStateChange = waitForEvent(EVENT_STATE_CHANGE, "iframe");
-  // Set design mode on.
-  await ContentTask.spawn(browser, {}, () => {
-    content.document.getElementById("iframe").contentDocument.designMode = "on";
-  });
-  event = await onStateChange;
+    // Test extra state
+    onStateChange = waitForEvent(EVENT_STATE_CHANGE, "iframe");
+    // Set design mode on.
+    await ContentTask.spawn(browser, {}, () => {
+      content.document.getElementById("iframe").contentDocument.designMode =
+        "on";
+    });
+    event = await onStateChange;
 
-  checkStateChangeEvent(event, EXT_STATE_EDITABLE, true, true);
-  testStates(event.accessible, 0, EXT_STATE_EDITABLE);
-});
+    checkStateChangeEvent(event, EXT_STATE_EDITABLE, true, true);
+    testStates(event.accessible, 0, EXT_STATE_EDITABLE);
+  }
+);

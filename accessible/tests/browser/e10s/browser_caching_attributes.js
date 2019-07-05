@@ -17,9 +17,9 @@ const defaultAttributes = {
   "margin-left": "0px",
   "text-align": "start",
   "text-indent": "0px",
-  "id": "textbox",
-  "tag": "input",
-  "display": "inline-block"
+  id: "textbox",
+  tag: "input",
+  display: "inline-block",
 };
 
 /**
@@ -35,64 +35,81 @@ const defaultAttributes = {
  *   waitFor     {?Number}        an optional event to wait for
  * }
  */
-const attributesTests = [{
-  desc: "Initiall accessible attributes",
-  expected: defaultAttributes,
-  unexpected: {
-    "line-number": "1",
-    "explicit-name": "true",
-    "container-live": "polite",
-    "live": "polite"
-  }
-}, {
-  desc: "@line-number attribute is present when textbox is focused",
-  async action(browser) {
-    await invokeFocus(browser, "textbox");
+const attributesTests = [
+  {
+    desc: "Initiall accessible attributes",
+    expected: defaultAttributes,
+    unexpected: {
+      "line-number": "1",
+      "explicit-name": "true",
+      "container-live": "polite",
+      live: "polite",
+    },
   },
-  waitFor: EVENT_FOCUS,
-  expected: Object.assign({}, defaultAttributes, { "line-number": "1" }),
-  unexpected: {
-    "explicit-name": "true",
-    "container-live": "polite",
-    "live": "polite"
-  }
-}, {
-  desc: "@aria-live sets container-live and live attributes",
-  attrs: [{
-    attr: "aria-live",
-    value: "polite"
-  }],
-  expected: Object.assign({}, defaultAttributes, {
-    "line-number": "1",
-    "container-live": "polite",
-    "live": "polite"
-  }),
-  unexpected: {
-    "explicit-name": "true"
-  }
-}, {
-  desc: "@title attribute sets explicit-name attribute to true",
-  attrs: [{
-    attr: "title",
-    value: "textbox"
-  }],
-  expected: Object.assign({}, defaultAttributes, {
-    "line-number": "1",
-    "explicit-name": "true",
-    "container-live": "polite",
-    "live": "polite"
-  }),
-  unexpected: {}
-}];
+  {
+    desc: "@line-number attribute is present when textbox is focused",
+    async action(browser) {
+      await invokeFocus(browser, "textbox");
+    },
+    waitFor: EVENT_FOCUS,
+    expected: Object.assign({}, defaultAttributes, { "line-number": "1" }),
+    unexpected: {
+      "explicit-name": "true",
+      "container-live": "polite",
+      live: "polite",
+    },
+  },
+  {
+    desc: "@aria-live sets container-live and live attributes",
+    attrs: [
+      {
+        attr: "aria-live",
+        value: "polite",
+      },
+    ],
+    expected: Object.assign({}, defaultAttributes, {
+      "line-number": "1",
+      "container-live": "polite",
+      live: "polite",
+    }),
+    unexpected: {
+      "explicit-name": "true",
+    },
+  },
+  {
+    desc: "@title attribute sets explicit-name attribute to true",
+    attrs: [
+      {
+        attr: "title",
+        value: "textbox",
+      },
+    ],
+    expected: Object.assign({}, defaultAttributes, {
+      "line-number": "1",
+      "explicit-name": "true",
+      "container-live": "polite",
+      live: "polite",
+    }),
+    unexpected: {},
+  },
+];
 
 /**
  * Test caching of accessible object attributes
  */
-addAccessibleTask(`
+addAccessibleTask(
+  `
   <input id="textbox" value="hello">`,
   async function(browser, accDoc) {
     let textbox = findAccessibleChildByID(accDoc, "textbox");
-    for (let { desc, action, attrs, expected, waitFor, unexpected } of attributesTests) {
+    for (let {
+      desc,
+      action,
+      attrs,
+      expected,
+      waitFor,
+      unexpected,
+    } of attributesTests) {
       info(desc);
       let onUpdate;
 

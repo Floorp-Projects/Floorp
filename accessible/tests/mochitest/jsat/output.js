@@ -1,7 +1,12 @@
 const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
 
-const {PivotContext} = ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
+const { PivotContext } = ChromeUtils.import(
+  "resource://gre/modules/accessibility/Utils.jsm"
+);
+ChromeUtils.import(
+  "resource://gre/modules/accessibility/OutputGenerator.jsm",
+  this
+);
 
 /**
  * Test context output generation.
@@ -16,10 +21,17 @@ ChromeUtils.import("resource://gre/modules/accessibility/OutputGenerator.jsm", t
  * Note: if |aOldAccOrElmOrID| is not provided, the |aAccOrElmOrID| must be
  * scoped to the "root" element in markup.
  */
-function testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aGenerator) {
+function testContextOutput(
+  expected,
+  aAccOrElmOrID,
+  aOldAccOrElmOrID,
+  aGenerator
+) {
   var accessible = getAccessible(aAccOrElmOrID);
-  var oldAccessible = aOldAccOrElmOrID !== null ?
-    getAccessible(aOldAccOrElmOrID || "root") : null;
+  var oldAccessible =
+    aOldAccOrElmOrID !== null
+      ? getAccessible(aOldAccOrElmOrID || "root")
+      : null;
   var context = new PivotContext(accessible, oldAccessible);
   var output = aGenerator.genForContext(context);
 
@@ -32,15 +44,23 @@ function testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aGenerator
     if (expected[i] === null) {
       masked_output.push(null);
     } else {
-      masked_output[i] = typeof output[i] === "string" ? output[i].trim() :
-        output[i];
+      masked_output[i] =
+        typeof output[i] === "string" ? output[i].trim() : output[i];
     }
   }
 
-  isDeeply(masked_output, expected,
-           "Context output is correct for " + aAccOrElmOrID +
-           " (output: " + JSON.stringify(output) + ") ==" +
-           " (expected: " + JSON.stringify(expected) + ")");
+  isDeeply(
+    masked_output,
+    expected,
+    "Context output is correct for " +
+      aAccOrElmOrID +
+      " (output: " +
+      JSON.stringify(output) +
+      ") ==" +
+      " (expected: " +
+      JSON.stringify(expected) +
+      ")"
+  );
 }
 
 /**
@@ -70,8 +90,10 @@ function testObjectOutput(aAccOrElmOrID, aGenerator) {
   var nameIndex = output.indexOf(accessible.name);
 
   if (nameIndex > -1) {
-    ok(output.indexOf(accessible.name) === expectedNameIndex,
-      "Object output is correct for " + aAccOrElmOrID);
+    ok(
+      output.indexOf(accessible.name) === expectedNameIndex,
+      "Object output is correct for " + aAccOrElmOrID
+    );
   }
 }
 
@@ -85,8 +107,12 @@ function testObjectOutput(aAccOrElmOrID, aGenerator) {
  * @param aOutputKind      the type of output
  */
 function testOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID) {
-  testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID,
-    UtteranceGenerator);
+  testContextOutput(
+    expected,
+    aAccOrElmOrID,
+    aOldAccOrElmOrID,
+    UtteranceGenerator
+  );
   // Just need to test object output for individual
   // accOrElmOrID.
   if (aOldAccOrElmOrID) {
@@ -97,13 +123,23 @@ function testOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID) {
 
 function testHints(expected, aAccOrElmOrID, aOldAccOrElmOrID) {
   var accessible = getAccessible(aAccOrElmOrID);
-  var oldAccessible = aOldAccOrElmOrID !== null ?
-  getAccessible(aOldAccOrElmOrID || "root") : null;
+  var oldAccessible =
+    aOldAccOrElmOrID !== null
+      ? getAccessible(aOldAccOrElmOrID || "root")
+      : null;
   var context = new PivotContext(accessible, oldAccessible);
   var hints = context.interactionHints;
 
-  isDeeply(hints, expected,
-           "Context hitns are correct for " + aAccOrElmOrID +
-           " (hints: " + JSON.stringify(hints) + ") ==" +
-           " (expected: " + JSON.stringify(expected) + ")");
+  isDeeply(
+    hints,
+    expected,
+    "Context hitns are correct for " +
+      aAccOrElmOrID +
+      " (hints: " +
+      JSON.stringify(hints) +
+      ") ==" +
+      " (expected: " +
+      JSON.stringify(expected) +
+      ")"
+  );
 }

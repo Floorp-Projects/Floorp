@@ -11,7 +11,8 @@ add_task(async function() {
 
   (function() {
     let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
-      Ci.nsIAccessibilityService);
+      Ci.nsIAccessibilityService
+    );
     ok(accService, "Service initialized");
   })();
 
