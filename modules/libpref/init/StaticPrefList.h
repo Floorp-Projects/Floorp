@@ -3364,18 +3364,12 @@ VARCACHE_PREF(
   bool, false
 )
 
-#ifdef MOZ_ENABLE_WEBRENDER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   Once,
   "gfx.webrender.enabled",
    gfx_webrender_enabled_do_not_use_directly,
-  bool, PREF_VALUE
+  bool, false
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
