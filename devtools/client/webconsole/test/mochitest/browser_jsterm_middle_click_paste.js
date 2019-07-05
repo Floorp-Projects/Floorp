@@ -23,7 +23,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   info("Set clipboard content");
   const clipboardContent = "test clipboard content";
@@ -32,13 +32,17 @@ async function performTests() {
   info("Middle-click on the console input");
   const node = jsterm.node || jsterm.inputNode;
 
-  EventUtils.synthesizeMouse(node, 30, 10, {button: 1}, hud.iframeWindow);
-  is(getInputValue(hud), clipboardContent,
-    "clipboard content was pasted in the console input");
+  EventUtils.synthesizeMouse(node, 30, 10, { button: 1 }, hud.iframeWindow);
+  is(
+    getInputValue(hud),
+    clipboardContent,
+    "clipboard content was pasted in the console input"
+  );
 }
 
 function setClipboardText(text) {
-  const helper = SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
-    .getService(SpecialPowers.Ci.nsIClipboardHelper);
+  const helper = SpecialPowers.Cc[
+    "@mozilla.org/widget/clipboardhelper;1"
+  ].getService(SpecialPowers.Ci.nsIClipboardHelper);
   helper.copyString(text);
 }

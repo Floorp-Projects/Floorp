@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
   const rule = getRuleViewRuleEditor(view, 1).rule;
@@ -41,15 +41,20 @@ add_task(async function() {
 });
 
 async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
-  const field = fieldType === "name" ? prop.editor.nameSpan
-                                   : prop.editor.valueSpan;
+  const field =
+    fieldType === "name" ? prop.editor.nameSpan : prop.editor.valueSpan;
 
   const editor = await focusEditableField(view, field);
 
-  ok(!prop.editor.element.classList.contains("ruleview-overridden"),
-    "property is not overridden.");
-  is(prop.editor.enable.style.visibility, "hidden",
-    "property enable checkbox is hidden.");
+  ok(
+    !prop.editor.element.classList.contains("ruleview-overridden"),
+    "property is not overridden."
+  );
+  is(
+    prop.editor.enable.style.visibility,
+    "hidden",
+    "property enable checkbox is hidden."
+  );
 
   let newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -69,12 +74,19 @@ async function testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
   await onChangeDone;
 
   ok(!prop.enabled, "property is disabled.");
-  ok(prop.editor.element.classList.contains("ruleview-overridden"),
-    "property is overridden.");
-  is(prop.editor.enable.style.visibility, "visible",
-    "property enable checkbox is visible.");
-  ok(!prop.editor.enable.getAttribute("checked"),
-    "property enable checkbox is not checked.");
+  ok(
+    prop.editor.element.classList.contains("ruleview-overridden"),
+    "property is overridden."
+  );
+  is(
+    prop.editor.enable.style.visibility,
+    "visible",
+    "property enable checkbox is visible."
+  );
+  ok(
+    !prop.editor.enable.getAttribute("checked"),
+    "property enable checkbox is not checked."
+  );
 
   newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,

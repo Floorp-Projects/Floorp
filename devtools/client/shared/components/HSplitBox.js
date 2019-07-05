@@ -82,7 +82,10 @@ class HSplitBox extends Component {
 
   componentWillUnmount() {
     document.defaultView.top.removeEventListener("mouseup", this._onMouseUp);
-    document.defaultView.top.removeEventListener("mousemove", this._onMouseMove);
+    document.defaultView.top.removeEventListener(
+      "mousemove",
+      this._onMouseMove
+    );
   }
 
   _onMouseDown(event) {
@@ -112,8 +115,8 @@ class HSplitBox extends Component {
     const { left, right } = rect;
     const width = right - left;
     const direction = this.refs.box.ownerDocument.dir;
-    const relative = direction == "rtl" ? right - event.clientX
-                                        : event.clientX - left;
+    const relative =
+      direction == "rtl" ? right - event.clientX : event.clientX - left;
     this.props.onResize(relative / width);
 
     event.preventDefault();
@@ -122,8 +125,10 @@ class HSplitBox extends Component {
   render() {
     /* eslint-disable no-shadow */
     const { start, end, startWidth, minStartWidth, minEndWidth } = this.props;
-    assert(startWidth => 0 && startWidth <= 1,
-           "0 <= this.props.startWidth <= 1");
+    assert(
+      startWidth => 0 && startWidth <= 1,
+      "0 <= this.props.startWidth <= 1"
+    );
     /* eslint-enable */
     return dom.div(
       {

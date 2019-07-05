@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
@@ -20,10 +23,7 @@ const COOKIES_EMPTY_TEXT = L10N.getStr("cookiesEmptyText");
 const COOKIES_FILTER_TEXT = L10N.getStr("cookiesFilterText");
 const REQUEST_COOKIES = L10N.getStr("requestCookies");
 const RESPONSE_COOKIES = L10N.getStr("responseCookies");
-const SECTION_NAMES = [
-  RESPONSE_COOKIES,
-  REQUEST_COOKIES,
-];
+const SECTION_NAMES = [RESPONSE_COOKIES, REQUEST_COOKIES];
 
 /*
  * Cookies panel component
@@ -90,30 +90,31 @@ class CookiesPanel extends Component {
     responseCookies = responseCookies.cookies || responseCookies;
 
     if (!requestCookies.length && !responseCookies.length) {
-      return div({ className: "empty-notice" },
-        COOKIES_EMPTY_TEXT
-      );
+      return div({ className: "empty-notice" }, COOKIES_EMPTY_TEXT);
     }
 
     const object = {};
 
     if (responseCookies.length) {
-      object[RESPONSE_COOKIES] = sortObjectKeys(this.getProperties(responseCookies));
+      object[RESPONSE_COOKIES] = sortObjectKeys(
+        this.getProperties(responseCookies)
+      );
     }
 
     if (requestCookies.length) {
-      object[REQUEST_COOKIES] = sortObjectKeys(this.getProperties(requestCookies));
+      object[REQUEST_COOKIES] = sortObjectKeys(
+        this.getProperties(requestCookies)
+      );
     }
 
-    return (
-      div({ className: "panel-container" },
-        PropertiesView({
-          object,
-          filterPlaceHolder: COOKIES_FILTER_TEXT,
-          sectionNames: SECTION_NAMES,
-          openLink,
-        })
-      )
+    return div(
+      { className: "panel-container" },
+      PropertiesView({
+        object,
+        filterPlaceHolder: COOKIES_FILTER_TEXT,
+        sectionNames: SECTION_NAMES,
+        openLink,
+      })
     );
   }
 }

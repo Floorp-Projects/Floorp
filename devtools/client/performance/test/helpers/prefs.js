@@ -7,21 +7,27 @@ const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 
 // Prefs to revert to default once tests finish. Keep these in sync with
 // all the preferences defined in devtools/client/preferences/devtools-client.js.
-exports.MEMORY_SAMPLE_PROB_PREF = "devtools.performance.memory.sample-probability";
+exports.MEMORY_SAMPLE_PROB_PREF =
+  "devtools.performance.memory.sample-probability";
 exports.MEMORY_MAX_LOG_LEN_PREF = "devtools.performance.memory.max-log-length";
 exports.PROFILER_BUFFER_SIZE_PREF = "devtools.performance.profiler.buffer-size";
-exports.PROFILER_SAMPLE_RATE_PREF = "devtools.performance.profiler.sample-frequency-hz";
+exports.PROFILER_SAMPLE_RATE_PREF =
+  "devtools.performance.profiler.sample-frequency-hz";
 
 exports.UI_EXPERIMENTAL_PREF = "devtools.performance.ui.experimental";
 exports.UI_INVERT_CALL_TREE_PREF = "devtools.performance.ui.invert-call-tree";
 exports.UI_INVERT_FLAME_PREF = "devtools.performance.ui.invert-flame-graph";
-exports.UI_FLATTEN_RECURSION_PREF = "devtools.performance.ui.flatten-tree-recursion";
-exports.UI_SHOW_PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
+exports.UI_FLATTEN_RECURSION_PREF =
+  "devtools.performance.ui.flatten-tree-recursion";
+exports.UI_SHOW_PLATFORM_DATA_PREF =
+  "devtools.performance.ui.show-platform-data";
 exports.UI_SHOW_IDLE_BLOCKS_PREF = "devtools.performance.ui.show-idle-blocks";
 exports.UI_ENABLE_FRAMERATE_PREF = "devtools.performance.ui.enable-framerate";
 exports.UI_ENABLE_MEMORY_PREF = "devtools.performance.ui.enable-memory";
-exports.UI_ENABLE_ALLOCATIONS_PREF = "devtools.performance.ui.enable-allocations";
-exports.UI_ENABLE_MEMORY_FLAME_CHART = "devtools.performance.ui.enable-memory-flame";
+exports.UI_ENABLE_ALLOCATIONS_PREF =
+  "devtools.performance.ui.enable-allocations";
+exports.UI_ENABLE_MEMORY_FLAME_CHART =
+  "devtools.performance.ui.enable-memory-flame";
 
 exports.DEFAULT_PREF_VALUES = [
   "devtools.debugger.log",

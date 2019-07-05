@@ -33,7 +33,8 @@ var tabs = [
     title: "Tab 3",
     desc: "No toolbox",
     startToolbox: false,
-  }];
+  },
+];
 
 async function initTab(tabX, startToolbox) {
   tabX.tab = await addTab(TEST_URI);
@@ -56,19 +57,27 @@ async function checkCacheEnabled(tabX, expected) {
 
   await reloadTab(tabX);
 
-  const oldGuid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    const doc = content.document;
-    const h1 = doc.querySelector("h1");
-    return h1.textContent;
-  });
+  const oldGuid = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    {},
+    function() {
+      const doc = content.document;
+      const h1 = doc.querySelector("h1");
+      return h1.textContent;
+    }
+  );
 
   await reloadTab(tabX);
 
-  const guid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    const doc = content.document;
-    const h1 = doc.querySelector("h1");
-    return h1.textContent;
-  });
+  const guid = await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    {},
+    function() {
+      const doc = content.document;
+      const h1 = doc.querySelector("h1");
+      return h1.textContent;
+    }
+  );
 
   if (expected) {
     is(guid, oldGuid, tabX.title + " cache is enabled");
@@ -97,9 +106,11 @@ async function setDisableCacheCheckboxChecked(tabX, state) {
 function reloadTab(tabX) {
   const browser = gBrowser.selectedBrowser;
 
-  const reloadTabPromise = BrowserTestUtils.browserLoaded(browser).then(function() {
-    info("Reloaded tab " + tabX.title);
-  });
+  const reloadTabPromise = BrowserTestUtils.browserLoaded(browser).then(
+    function() {
+      info("Reloaded tab " + tabX.title);
+    }
+  );
 
   info("Reloading tab " + tabX.title);
   const mm = loadFrameScriptUtils();

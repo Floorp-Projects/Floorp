@@ -36,23 +36,39 @@ add_task(async function() {
   equal(ctx.strokeStyle, "hsl(204,60%,35%)", "The strokeStyle is set");
   equal(ctx.lineWidth, 1, "The lineWidth is set");
   deepEqual(fillRectValues, [10.5, 20.5, 49, 69], "Draws a filled rectangle");
-  deepEqual(strokeRectValues, [10.5, 20.5, 49, 69], "Draws a stroked rectangle");
+  deepEqual(
+    strokeRectValues,
+    [10.5, 20.5, 49, 69],
+    "Draws a stroked rectangle"
+  );
 
   dragZoom.zoom = 0.5;
 
   drawBox(ctx, node, borderWidth, dragZoom, padding);
   ok(true, JSON.stringify([ctx, fillRectValues, strokeRectValues]));
-  deepEqual(fillRectValues, [15.5, 30.5, 74, 104],
-    "Draws a zoomed filled rectangle");
-  deepEqual(strokeRectValues, [15.5, 30.5, 74, 104],
-    "Draws a zoomed stroked rectangle");
+  deepEqual(
+    fillRectValues,
+    [15.5, 30.5, 74, 104],
+    "Draws a zoomed filled rectangle"
+  );
+  deepEqual(
+    strokeRectValues,
+    [15.5, 30.5, 74, 104],
+    "Draws a zoomed stroked rectangle"
+  );
 
   dragZoom.offsetX = 110;
   dragZoom.offsetY = 130;
 
   drawBox(ctx, node, borderWidth, dragZoom, padding);
-  deepEqual(fillRectValues, [-94.5, -99.5, 74, 104],
-    "Draws a zoomed and offset filled rectangle");
-  deepEqual(strokeRectValues, [-94.5, -99.5, 74, 104],
-    "Draws a zoomed and offset stroked rectangle");
+  deepEqual(
+    fillRectValues,
+    [-94.5, -99.5, 74, 104],
+    "Draws a zoomed and offset filled rectangle"
+  );
+  deepEqual(
+    strokeRectValues,
+    [-94.5, -99.5, 74, 104],
+    "Draws a zoomed and offset stroked rectangle"
+  );
 });

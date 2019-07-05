@@ -17,17 +17,18 @@ const TEST_URI = `
 
 add_task(async function() {
   const TESTS = [
-    {name: "hex", result: "#0f0"},
-    {name: "rgb", result: "rgb(0, 255, 0)"},
+    { name: "hex", result: "#0f0" },
+    { name: "rgb", result: "rgb(0, 255, 0)" },
   ];
 
-  for (const {name, result} of TESTS) {
+  for (const { name, result } of TESTS) {
     info("starting test for " + name);
     Services.prefs.setCharPref("devtools.defaultColorUnit", name);
 
-    const tab = await addTab("data:text/html;charset=utf-8," +
-                           encodeURIComponent(TEST_URI));
-    const {inspector, view} = await openRuleView();
+    const tab = await addTab(
+      "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
+    );
+    const { inspector, view } = await openRuleView();
 
     await selectNode("#testid", inspector);
     await basicTest(view, name, result);
@@ -40,8 +41,11 @@ add_task(async function() {
 
 async function basicTest(view, name, result) {
   const cPicker = view.tooltips.getTooltip("colorPicker");
-  const swatch = getRuleViewProperty(view, "#testid", "color").valueSpan
-      .querySelector(".ruleview-colorswatch");
+  const swatch = getRuleViewProperty(
+    view,
+    "#testid",
+    "color"
+  ).valueSpan.querySelector(".ruleview-colorswatch");
   const onColorPickerReady = cPicker.once("ready");
   swatch.click();
   await onColorPickerReady;
@@ -60,6 +64,9 @@ async function basicTest(view, name, result) {
   await onHidden;
   await onRuleViewChanged;
 
-  is(getRuleViewPropertyValue(view, "#testid", "color"), result,
-     "changing the color used the " + name + " unit");
+  is(
+    getRuleViewPropertyValue(view, "#testid", "color"),
+    result,
+    "changing the color used the " + name + " unit"
+  );
 }

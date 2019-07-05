@@ -7,25 +7,34 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const MENUS_L10N = new LocalizationHelper("devtools/client/locales/menus.properties");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const MENUS_L10N = new LocalizationHelper(
+  "devtools/client/locales/menus.properties"
+);
 
 function l10n(key) {
   return MENUS_L10N.getStr(key);
 }
 
 const ChromeUtils = require("ChromeUtils");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 });
 
 function RecordNewTab() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-  gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
+  gBrowser.selectedTab = gBrowser.addWebTab("about:blank", {
+    recordExecution: "*",
+  });
   Services.telemetry.scalarAdd("devtools.webreplay.new_recording", 1);
 }
 
@@ -33,7 +42,8 @@ function ReloadAndRecordTab() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   const url = gBrowser.currentURI.spec;
   gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
-    recordExecution: "*", newFrameloader: true,
+    recordExecution: "*",
+    newFrameloader: true,
     remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
   });
   gBrowser.loadURI(url, {
@@ -61,8 +71,12 @@ function SaveRecording() {
   const window = gBrowser.ownerGlobal;
   fp.init(window, null, Ci.nsIFilePicker.modeSave);
   fp.open(rv => {
-    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-      const remoteTab = gBrowser.selectedTab.linkedBrowser.frameLoader.remoteTab;
+    if (
+      rv == Ci.nsIFilePicker.returnOK ||
+      rv == Ci.nsIFilePicker.returnReplace
+    ) {
+      const remoteTab =
+        gBrowser.selectedTab.linkedBrowser.frameLoader.remoteTab;
       if (!remoteTab || !remoteTab.saveRecording(fp.file.path)) {
         window.alert("Current tab is not recording");
       }
@@ -77,8 +91,13 @@ function ReplayNewTab() {
   const window = gBrowser.ownerGlobal;
   fp.init(window, null, Ci.nsIFilePicker.modeOpen);
   fp.open(rv => {
-    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-      gBrowser.selectedTab = gBrowser.addWebTab(null, { replayExecution: fp.file.path });
+    if (
+      rv == Ci.nsIFilePicker.returnOK ||
+      rv == Ci.nsIFilePicker.returnReplace
+    ) {
+      gBrowser.selectedTab = gBrowser.addWebTab(null, {
+        replayExecution: fp.file.path,
+      });
     }
   });
   Services.telemetry.scalarAdd("devtools.webreplay.load_recording", 1);

@@ -8,40 +8,53 @@
 // shows the highlighter over those nodes
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const {toolbox, inspector, testActor} = await openInspectorForURL(
-    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
+  const { toolbox, inspector, testActor } = await openInspectorForURL(
+    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
+  );
   info("Selecting the test node");
   await selectNode("span", inspector);
   const bcButtons = inspector.breadcrumbs.container;
 
   let onNodeHighlighted = toolbox.highlighter.once("node-highlight");
   let button = bcButtons.childNodes[1];
-  EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"},
-    button.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    { type: "mousemove" },
+    button.ownerDocument.defaultView
+  );
   await onNodeHighlighted;
 
   let isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
-  ok((await testActor.assertHighlightedNode("body")),
-     "The highlighter highlights the right node");
+  ok(
+    await testActor.assertHighlightedNode("body"),
+    "The highlighter highlights the right node"
+  );
 
   const onNodeUnhighlighted = toolbox.highlighter.once("node-unhighlight");
   // move outside of the breadcrumb trail to trigger unhighlight
-  EventUtils.synthesizeMouseAtCenter(inspector.addNodeButton,
-    {type: "mousemove"},
-    inspector.addNodeButton.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    inspector.addNodeButton,
+    { type: "mousemove" },
+    inspector.addNodeButton.ownerDocument.defaultView
+  );
   await onNodeUnhighlighted;
 
   onNodeHighlighted = toolbox.highlighter.once("node-highlight");
   button = bcButtons.childNodes[2];
-  EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"},
-    button.ownerDocument.defaultView);
+  EventUtils.synthesizeMouseAtCenter(
+    button,
+    { type: "mousemove" },
+    button.ownerDocument.defaultView
+  );
   await onNodeHighlighted;
 
   isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
-  ok((await testActor.assertHighlightedNode("span")),
-     "The highlighter highlights the right node");
+  ok(
+    await testActor.assertHighlightedNode("span"),
+    "The highlighter highlights the right node"
+  );
 });

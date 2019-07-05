@@ -7,7 +7,9 @@
 
 add_task(async function() {
   Services.scriptloader.loadSubScript(
-    CHROME_URL_ROOT + "summary-graph_end-delay-sign_head.js", this);
+    CHROME_URL_ROOT + "summary-graph_end-delay-sign_head.js",
+    this
+  );
   await pushPref("intl.uidirection", 1);
   await testSummaryGraphEndDelaySign();
 });

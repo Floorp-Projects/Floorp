@@ -36,16 +36,15 @@ class FlexItemSizingProperties extends PureComponent {
       return dom.span({ className: "value" }, "0");
     }
 
-    value = (Math.round(value * 100) / 100);
+    value = Math.round(value * 100) / 100;
     if (prependPlusSign && value > 0) {
       value = "+" + value;
     }
 
-    return (
-      dom.span({ className: "value" },
-        value,
-        dom.span({ className: "unit" }, "px")
-      )
+    return dom.span(
+      { className: "value" },
+      value,
+      dom.span({ className: "unit" }, "px")
     );
   }
 
@@ -75,10 +74,9 @@ class FlexItemSizingProperties extends PureComponent {
    *         The React component representing these sentences
    */
   renderReasons(sentences) {
-    return (
-      dom.ul({ className: "reasons" },
-        sentences.map(sentence => dom.li({}, sentence))
-      )
+    return dom.ul(
+      { className: "reasons" },
+      sentences.map(sentence => dom.li({}, sentence))
     );
   }
 
@@ -102,24 +100,21 @@ class FlexItemSizingProperties extends PureComponent {
     }
 
     const className = "section base";
-    return (
-      dom.li({ className: className + (property ? "" : " no-property") },
-        dom.span({ className: "name" },
-          title,
-          property
-        ),
-        this.renderSize(mainBaseSize)
-      )
+    return dom.li(
+      { className: className + (property ? "" : " no-property") },
+      dom.span({ className: "name" }, title, property),
+      this.renderSize(mainBaseSize)
     );
   }
 
   /* eslint-disable complexity */
-  renderFlexibilitySection(flexItemSizing, mainFinalSize, properties, computedStyle) {
-    const {
-      mainDeltaSize,
-      mainBaseSize,
-      lineGrowthState,
-    } = flexItemSizing;
+  renderFlexibilitySection(
+    flexItemSizing,
+    mainFinalSize,
+    properties,
+    computedStyle
+  ) {
+    const { mainDeltaSize, mainBaseSize, lineGrowthState } = flexItemSizing;
 
     // Don't display anything if all interesting sizes are 0.
     if (!mainFinalSize && !mainBaseSize && !mainDeltaSize) {
@@ -147,10 +142,20 @@ class FlexItemSizingProperties extends PureComponent {
     if (computedFlexShrink && lineGrowthState === "shrinking") {
       reasons.push(getStr("flexbox.itemSizing.setToShrink"));
     }
-    if (!computedFlexGrow && !grew && !shrank && lineGrowthState === "growing") {
+    if (
+      !computedFlexGrow &&
+      !grew &&
+      !shrank &&
+      lineGrowthState === "growing"
+    ) {
       reasons.push(getStr("flexbox.itemSizing.notSetToGrow"));
     }
-    if (!computedFlexShrink && !grew && !shrank && lineGrowthState === "shrinking") {
+    if (
+      !computedFlexShrink &&
+      !grew &&
+      !shrank &&
+      lineGrowthState === "shrinking"
+    ) {
       reasons.push(getStr("flexbox.itemSizing.notSetToShrink"));
     }
 
@@ -164,7 +169,11 @@ class FlexItemSizingProperties extends PureComponent {
       property = this.renderCssProperty("flex-shrink", definedFlexShrink);
     } else if (shrank && computedFlexShrink) {
       // Or also because it's default value is 1 anyway.
-      property = this.renderCssProperty("flex-shrink", computedFlexShrink, true);
+      property = this.renderCssProperty(
+        "flex-shrink",
+        computedFlexShrink,
+        true
+      );
     }
 
     // Don't display the section at all if there's nothing useful to show users.
@@ -173,15 +182,15 @@ class FlexItemSizingProperties extends PureComponent {
     }
 
     const className = "section flexibility";
-    return (
-      dom.li({ className: className + (property ? "" : " no-property") },
-        dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.flexibilitySectionHeader"),
-          property
-        ),
-        this.renderSize(mainDeltaSize, true),
-        this.renderReasons(reasons)
-      )
+    return dom.li(
+      { className: className + (property ? "" : " no-property") },
+      dom.span(
+        { className: "name" },
+        getStr("flexbox.itemSizing.flexibilitySectionHeader"),
+        property
+      ),
+      this.renderSize(mainDeltaSize, true),
+      this.renderReasons(reasons)
     );
   }
   /* eslint-enable complexity */
@@ -205,17 +214,17 @@ class FlexItemSizingProperties extends PureComponent {
       reasons.push(getStr("flexbox.itemSizing.clampedToMin"));
     }
 
-    return (
-      dom.li({ className: "section min" },
-        dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.minSizeSectionHeader"),
-          minDimensionValue.length ?
-           this.renderCssProperty(`min-${dimension}`, minDimensionValue) :
-           null
-        ),
-        this.renderSize(mainMinSize),
-        this.renderReasons(reasons)
-      )
+    return dom.li(
+      { className: "section min" },
+      dom.span(
+        { className: "name" },
+        getStr("flexbox.itemSizing.minSizeSectionHeader"),
+        minDimensionValue.length
+          ? this.renderCssProperty(`min-${dimension}`, minDimensionValue)
+          : null
+      ),
+      this.renderSize(mainMinSize),
+      this.renderReasons(reasons)
     );
   }
 
@@ -236,40 +245,34 @@ class FlexItemSizingProperties extends PureComponent {
       reasons.push(getStr("flexbox.itemSizing.clampedToMax"));
     }
 
-    return (
-      dom.li({ className: "section max" },
-        dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.maxSizeSectionHeader"),
-          maxDimensionValue.length ?
-            this.renderCssProperty(`max-${dimension}`, maxDimensionValue) :
-            null
-        ),
-        this.renderSize(mainMaxSize),
-        this.renderReasons(reasons)
-      )
+    return dom.li(
+      { className: "section max" },
+      dom.span(
+        { className: "name" },
+        getStr("flexbox.itemSizing.maxSizeSectionHeader"),
+        maxDimensionValue.length
+          ? this.renderCssProperty(`max-${dimension}`, maxDimensionValue)
+          : null
+      ),
+      this.renderSize(mainMaxSize),
+      this.renderReasons(reasons)
     );
   }
 
   renderFinalSizeSection(mainFinalSize) {
-    return (
-      dom.li({ className: "section final no-property" },
-        dom.span({ className: "name" },
-          getStr("flexbox.itemSizing.finalSizeSectionHeader")
-        ),
-        this.renderSize(mainFinalSize)
-      )
+    return dom.li(
+      { className: "section final no-property" },
+      dom.span(
+        { className: "name" },
+        getStr("flexbox.itemSizing.finalSizeSectionHeader")
+      ),
+      this.renderSize(mainFinalSize)
     );
   }
 
   render() {
-    const {
-      flexItem,
-    } = this.props;
-    const {
-      computedStyle,
-      flexItemSizing,
-      properties,
-    } = flexItem;
+    const { flexItem } = this.props;
+    const { computedStyle, flexItemSizing, properties } = flexItem;
     const {
       mainAxisDirection,
       mainBaseSize,
@@ -277,25 +280,30 @@ class FlexItemSizingProperties extends PureComponent {
       mainMaxSize,
       mainMinSize,
     } = flexItemSizing;
-    const dimension = mainAxisDirection.startsWith("horizontal") ? "width" : "height";
+    const dimension = mainAxisDirection.startsWith("horizontal")
+      ? "width"
+      : "height";
 
     // Calculate the final size. This is base + delta, then clamped by min or max.
     let mainFinalSize = mainBaseSize + mainDeltaSize;
     mainFinalSize = Math.max(mainFinalSize, mainMinSize);
     mainFinalSize =
-      mainMaxSize === null ?
-        mainFinalSize :
-        Math.min(mainFinalSize, mainMaxSize);
+      mainMaxSize === null
+        ? mainFinalSize
+        : Math.min(mainFinalSize, mainMaxSize);
 
-    return (
-      dom.ul({ className: "flex-item-sizing" },
-        this.renderBaseSizeSection(flexItemSizing, properties, dimension),
-        this.renderFlexibilitySection(flexItemSizing, mainFinalSize, properties,
-          computedStyle),
-        this.renderMinimumSizeSection(flexItemSizing, properties, dimension),
-        this.renderMaximumSizeSection(flexItemSizing, properties, dimension),
-        this.renderFinalSizeSection(mainFinalSize)
-      )
+    return dom.ul(
+      { className: "flex-item-sizing" },
+      this.renderBaseSizeSection(flexItemSizing, properties, dimension),
+      this.renderFlexibilitySection(
+        flexItemSizing,
+        mainFinalSize,
+        properties,
+        computedStyle
+      ),
+      this.renderMinimumSizeSection(flexItemSizing, properties, dimension),
+      this.renderMaximumSizeSection(flexItemSizing, properties, dimension),
+      this.renderFinalSizeSection(mainFinalSize)
     );
   }
 }

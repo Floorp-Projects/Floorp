@@ -31,10 +31,10 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   for (const data of TEST_DATA) {
-    const {node, expected} = data;
+    const { node, expected } = data;
     await selectNode(node, inspector);
     await addNewRuleAndDismissEditor(inspector, view, expected, 1);
   }

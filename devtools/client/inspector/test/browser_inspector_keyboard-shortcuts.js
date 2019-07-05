@@ -6,7 +6,8 @@
 // Tests that the keybindings for highlighting different elements work as
 // intended.
 
-const TEST_URI = "data:text/html;charset=utf-8," +
+const TEST_URI =
+  "data:text/html;charset=utf-8," +
   "<html><head><title>Test for the highlighter keybindings</title></head>" +
   "<body><p><strong>Greetings, earthlings!</strong>" +
   " I come in peace.</p></body></html>";
@@ -27,8 +28,11 @@ add_task(async function() {
   await selectNode("strong", inspector);
 
   const nodeFront = await getNodeFront("strong", inspector);
-  is(inspector.selection.nodeFront, nodeFront,
-     "<strong> should be selected initially");
+  is(
+    inspector.selection.nodeFront,
+    nodeFront,
+    "<strong> should be selected initially"
+  );
 
   info("Focusing the currently active breadcrumb button");
   const bc = inspector.breadcrumbs;
@@ -42,7 +46,10 @@ add_task(async function() {
     await updated;
 
     const selectedNodeFront = await getNodeFront(selectedNode, inspector);
-    is(inspector.selection.nodeFront, selectedNodeFront,
-      selectedNode + " is selected.");
+    is(
+      inspector.selection.nodeFront,
+      selectedNodeFront,
+      selectedNode + " is selected."
+    );
   }
 });

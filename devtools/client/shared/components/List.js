@@ -11,12 +11,23 @@ const {
   cloneElement,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { ul, li, div } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  ul,
+  li,
+  div,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { scrollIntoView } = require("devtools/client/shared/scroll");
-const { preventDefaultAndStopPropagation } = require("devtools/client/shared/events");
+const {
+  preventDefaultAndStopPropagation,
+} = require("devtools/client/shared/events");
 
-loader.lazyRequireGetter(this, "focusableSelector", "devtools/client/shared/focus", true);
+loader.lazyRequireGetter(
+  this,
+  "focusableSelector",
+  "devtools/client/shared/focus",
+  true
+);
 
 class ListItemClass extends Component {
   static get propTypes() {
@@ -54,7 +65,9 @@ class ListItemClass extends Component {
    * Get a list of all elements that are focusable with a keyboard inside the list item.
    */
   getFocusableElements() {
-    return Array.from(this.contentRef.current.querySelectorAll(focusableSelector));
+    return Array.from(
+      this.contentRef.current.querySelectorAll(focusableSelector)
+    );
   }
 
   /**
@@ -129,18 +142,22 @@ class ListItemClass extends Component {
     const { active, item, current, onClick } = this.props;
     const { className, component, componentProps } = item;
 
-    return (
-      li({
-        className: `${className}${current ? " current" : ""}${active ? " active" : ""}`,
+    return li(
+      {
+        className: `${className}${current ? " current" : ""}${
+          active ? " active" : ""
+        }`,
         id: item.key,
         onClick,
         onKeyDownCapture: active && this._onKeyDown,
       },
-        div({
+      div(
+        {
           className: "list-item-content",
           role: "presentation",
           ref: this.contentRef,
-        }, cloneElement(component, componentProps || {}))
+        },
+        cloneElement(component, componentProps || {})
       )
     );
   }
@@ -152,12 +169,14 @@ class List extends Component {
   static get propTypes() {
     return {
       // A list of all items to be rendered using a List component.
-      items: PropTypes.arrayOf(PropTypes.shape({
-        component: PropTypes.object,
-        componentProps: PropTypes.object,
-        className: PropTypes.string,
-        key: PropTypes.string.isRequired,
-      })).isRequired,
+      items: PropTypes.arrayOf(
+        PropTypes.shape({
+          component: PropTypes.object,
+          componentProps: PropTypes.object,
+          className: PropTypes.string,
+          key: PropTypes.string.isRequired,
+        })
+      ).isRequired,
 
       // Note: the two properties below are mutually exclusive. Only one of the
       // label properties is necessary.
@@ -189,9 +208,11 @@ class List extends Component {
   shouldComponentUpdate(nextProps, nextState) {
     const { active, current, mouseDown } = this.state;
 
-    return current !== nextState.current ||
-           active !== nextState.active ||
-           mouseDown === nextState.mouseDown;
+    return (
+      current !== nextState.current ||
+      active !== nextState.active ||
+      mouseDown === nextState.mouseDown
+    );
   }
 
   _preventArrowKeyScrolling(e) {
@@ -258,12 +279,12 @@ class List extends Component {
     const { length } = this.props.items;
     switch (e.key) {
       case "ArrowUp":
-        (current > 0) && this._setCurrentItem(current - 1, { alignTo: "top" });
+        current > 0 && this._setCurrentItem(current - 1, { alignTo: "top" });
         break;
 
       case "ArrowDown":
-        (current < length - 1) && this._setCurrentItem(
-          current + 1, { alignTo: "bottom" });
+        current < length - 1 &&
+          this._setCurrentItem(current + 1, { alignTo: "bottom" });
         break;
 
       case "Home":
@@ -303,8 +324,8 @@ class List extends Component {
     const { active, current } = this.state;
     const { items } = this.props;
 
-    return (
-      ul({
+    return ul(
+      {
         ref: this.listRef,
         className: "list",
         tabIndex: 0,
@@ -337,23 +358,23 @@ class List extends Component {
         },
         "aria-label": this.props.label,
         "aria-labelledby": this.props.labelledBy,
-        "aria-activedescendant": (current != null) ? items[current].key : null,
+        "aria-activedescendant": current != null ? items[current].key : null,
       },
-        items.map((item, index) => {
-          return ListItem({
-            item,
-            current: index === current,
-            active: index === active,
-            // We make a key unique depending on whether the list item is in active or
-            // inactive state to make sure that it is actually replaced and the tabbable
-            // state is reset.
-            key: `${item.key}-${index === active ? "active" : "inactive"}`,
-            // Since the user just clicked the item, there's no need to check if it should
-            // be scrolled into view.
-            onClick: () => this._setCurrentItem(index, { preventAutoScroll: true }),
-          });
-        })
-      )
+      items.map((item, index) => {
+        return ListItem({
+          item,
+          current: index === current,
+          active: index === active,
+          // We make a key unique depending on whether the list item is in active or
+          // inactive state to make sure that it is actually replaced and the tabbable
+          // state is reset.
+          key: `${item.key}-${index === active ? "active" : "inactive"}`,
+          // Since the user just clicked the item, there's no need to check if it should
+          // be scrolled into view.
+          onClick: () =>
+            this._setCurrentItem(index, { preventAutoScroll: true }),
+        });
+      })
     );
   }
 }

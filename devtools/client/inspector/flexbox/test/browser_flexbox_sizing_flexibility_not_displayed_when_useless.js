@@ -14,19 +14,36 @@ add_task(async function() {
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc, store } = flexboxInspector;
 
-  info("Select an item with flex:0 and wait for the sizing info to be rendered");
+  info(
+    "Select an item with flex:0 and wait for the sizing info to be rendered"
+  );
   let onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
   await selectNode("#did-not-grow-or-shrink div", inspector);
   await onUpdate;
 
-  let flexSections = doc.querySelectorAll(".flex-item-sizing .section.flexibility");
-  is(flexSections.length, 0, "The flexibility section was not found in the DOM");
+  let flexSections = doc.querySelectorAll(
+    ".flex-item-sizing .section.flexibility"
+  );
+  is(
+    flexSections.length,
+    0,
+    "The flexibility section was not found in the DOM"
+  );
 
-  info("Select a more complex item which also doesn't flex and wait for the sizing info");
+  info(
+    "Select a more complex item which also doesn't flex and wait for the sizing info"
+  );
   onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
-  await selectNode("#just-enough-space-for-clamped-items div:last-child", inspector);
+  await selectNode(
+    "#just-enough-space-for-clamped-items div:last-child",
+    inspector
+  );
   await onUpdate;
 
   flexSections = doc.querySelectorAll(".flex-item-sizing .section.flexibility");
-  is(flexSections.length, 0, "The flexibility section was not found in the DOM");
+  is(
+    flexSections.length,
+    0,
+    "The flexibility section was not found in the DOM"
+  );
 });

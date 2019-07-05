@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
@@ -21,10 +24,7 @@ const {
   fetchNetworkUpdatePacket,
   writeHeaderText,
 } = require("../utils/request-utils");
-const {
-  HeadersProvider,
-  HeaderList,
-} = require("../utils/headers-provider");
+const { HeadersProvider, HeaderList } = require("../utils/headers-provider");
 
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
@@ -40,7 +40,9 @@ loader.lazyGetter(this, "MODE", function() {
   return require("devtools/client/shared/components/reps/reps").MODE;
 });
 loader.lazyGetter(this, "TreeRow", function() {
-  return createFactory(require("devtools/client/shared/components/tree/TreeRow"));
+  return createFactory(
+    require("devtools/client/shared/components/tree/TreeRow")
+  );
 });
 
 const { button, div, input, label, span, textarea, tr, td } = dom;
@@ -58,7 +60,9 @@ const SUMMARY_URL = L10N.getStr("netmonitor.summary.url");
 const SUMMARY_STATUS = L10N.getStr("netmonitor.summary.status");
 const SUMMARY_VERSION = L10N.getStr("netmonitor.summary.version");
 const SUMMARY_STATUS_LEARN_MORE = L10N.getStr("netmonitor.summary.learnMore");
-const SUMMARY_REFERRER_POLICY = L10N.getStr("netmonitor.summary.referrerPolicy");
+const SUMMARY_REFERRER_POLICY = L10N.getStr(
+  "netmonitor.summary.referrerPolicy"
+);
 
 /**
  * Headers panel component
@@ -120,15 +124,21 @@ class HeadersPanel extends Component {
     let propertiesResult;
 
     if (headers && headers.headers.length) {
-      const headerKey = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
+      const headerKey = `${title} (${getFormattedSize(
+        headers.headersSize,
+        3
+      )})`;
 
       propertiesResult = {
         [headerKey]: new HeaderList(headers.headers),
       };
 
-      if ((title === RESPONSE_HEADERS && this.state.rawResponseHeadersOpened) ||
-          (title === REQUEST_HEADERS && this.state.rawRequestHeadersOpened) ||
-          (title === REQUEST_HEADERS_FROM_UPLOAD && this.state.rawUploadHeadersOpened)) {
+      if (
+        (title === RESPONSE_HEADERS && this.state.rawResponseHeadersOpened) ||
+        (title === REQUEST_HEADERS && this.state.rawRequestHeadersOpened) ||
+        (title === REQUEST_HEADERS_FROM_UPLOAD &&
+          this.state.rawUploadHeadersOpened)
+      ) {
         propertiesResult = {
           [headerKey]: { RAW_HEADERS_ID: headers.rawHeaders },
         };
@@ -173,16 +183,24 @@ class HeadersPanel extends Component {
    * Renders the top part of the headers detail panel - Summary.
    */
   renderSummary(summaryLabel, value) {
-    return (
-      div({ key: summaryLabel, className: "tabpanel-summary-container headers-summary" },
-        div({ className: "tabpanel-summary-labelvalue"},
-          span({ className: "tabpanel-summary-label headers-summary-label"},
+    return div(
+      {
+        key: summaryLabel,
+        className: "tabpanel-summary-container headers-summary",
+      },
+      div(
+        { className: "tabpanel-summary-labelvalue" },
+        span(
+          { className: "tabpanel-summary-label headers-summary-label" },
           summaryLabel
-          ),
-          span({ className: "tabpanel-summary-value textbox-input devtools-monospace"},
-            value
-          ),
         ),
+        span(
+          {
+            className:
+              "tabpanel-summary-value textbox-input devtools-monospace",
+          },
+          value
+        )
       )
     );
   }
@@ -192,10 +210,7 @@ class HeadersPanel extends Component {
    * for rendering <textarea> element with raw headers data.
    */
   renderRow(props) {
-    const {
-      level,
-      path,
-    } = props.member;
+    const { level, path } = props.member;
 
     const {
       request: {
@@ -233,22 +248,22 @@ class HeadersPanel extends Component {
         rows = value.match(/\n/g).length + 1;
       }
 
-      return (
-        tr({
+      return tr(
+        {
           key: path,
           role: "treeitem",
           className: "raw-headers-container",
         },
-          td({
+        td(
+          {
             colSpan: 2,
           },
-            textarea({
-              className: "raw-headers",
-              rows: rows,
-              value: value,
-              readOnly: true,
-            })
-          )
+          textarea({
+            className: "raw-headers",
+            rows: rows,
+            value: value,
+            readOnly: true,
+          })
         )
       );
     }
@@ -261,14 +276,12 @@ class HeadersPanel extends Component {
    * headers data.
    */
   renderInput(onChange, checked) {
-    return (
-     input({
-       checked,
-       className: "devtools-checkbox-toggle",
-       onChange,
-       type: "checkbox",
-     })
-    );
+    return input({
+      checked,
+      className: "devtools-checkbox-toggle",
+      onChange,
+      type: "checkbox",
+    });
   }
 
   renderToggleRawHeadersBtn(path) {
@@ -278,32 +291,31 @@ class HeadersPanel extends Component {
     switch (rawHeaderType) {
       case "REQUEST":
         // Render toggle button for REQUEST header
-        inputElement =
-        this.renderInput(
-          this.toggleRawRequestHeaders, this.state.rawRequestHeadersOpened);
+        inputElement = this.renderInput(
+          this.toggleRawRequestHeaders,
+          this.state.rawRequestHeadersOpened
+        );
         break;
       case "RESPONSE":
         // Render toggle button for RESPONSE header
         inputElement = this.renderInput(
-          this.toggleRawResponseHeaders, this.state.rawResponseHeadersOpened);
+          this.toggleRawResponseHeaders,
+          this.state.rawResponseHeadersOpened
+        );
         break;
       case "UPLOAD":
         // Render toggle button for UPLOAD header
-        inputElement =
-        this.renderInput(
-          this.toggleRawUploadHeaders, this.state.rawUploadHeadersOpened);
+        inputElement = this.renderInput(
+          this.toggleRawUploadHeaders,
+          this.state.rawUploadHeadersOpened
+        );
         break;
     }
 
-    return (
-      label({ className: "raw-headers-toggle" },
-        span({ className: "headers-summary-label"},
-          RAW_HEADERS
-        ),
-        div({ className: "raw-headers-toggle-input" },
-          inputElement
-        )
-      )
+    return label(
+      { className: "raw-headers-toggle" },
+      span({ className: "headers-summary-label" }, RAW_HEADERS),
+      div({ className: "raw-headers-toggle-input" }, inputElement)
     );
   }
 
@@ -328,20 +340,23 @@ class HeadersPanel extends Component {
 
     const headerDocURL = getHeadersURL(member.name);
 
-    return (
-      div({ className: "treeValueCellDivider" },
-        Rep(Object.assign(props, {
+    return div(
+      { className: "treeValueCellDivider" },
+      Rep(
+        Object.assign(props, {
           // FIXME: A workaround for the issue in StringRep
           // Force StringRep to crop the text everytime
           member: Object.assign({}, member, { open: false }),
           mode: MODE.TINY,
           cropLimit: 60,
           noGrip: true,
-        })),
-        headerDocURL ? MDNLink({
-          url: headerDocURL,
-        }) : null
-      )
+        })
+      ),
+      headerDocURL
+        ? MDNLink({
+            url: headerDocURL,
+          })
+        : null
     );
   }
 
@@ -368,30 +383,36 @@ class HeadersPanel extends Component {
     } = this.props;
     const item = { fromCache, fromServiceWorker, status, statusText };
 
-    if ((!requestHeaders || !requestHeaders.headers.length) &&
-        (!uploadHeaders || !uploadHeaders.headers.length) &&
-        (!responseHeaders || !responseHeaders.headers.length)) {
-      return div({ className: "empty-notice" },
-        HEADERS_EMPTY_TEXT
-      );
+    if (
+      (!requestHeaders || !requestHeaders.headers.length) &&
+      (!uploadHeaders || !uploadHeaders.headers.length) &&
+      (!responseHeaders || !responseHeaders.headers.length)
+    ) {
+      return div({ className: "empty-notice" }, HEADERS_EMPTY_TEXT);
     }
 
-    const object = Object.assign({},
+    const object = Object.assign(
+      {},
       this.getProperties(responseHeaders, RESPONSE_HEADERS),
       this.getProperties(requestHeaders, REQUEST_HEADERS),
-      this.getProperties(uploadHeaders, REQUEST_HEADERS_FROM_UPLOAD),
+      this.getProperties(uploadHeaders, REQUEST_HEADERS_FROM_UPLOAD)
     );
 
     // not showing #hash in url
-    const summaryUrl = urlDetails.url ?
-      this.renderSummary(SUMMARY_URL, urlDetails.url.split("#")[0]) : null;
+    const summaryUrl = urlDetails.url
+      ? this.renderSummary(SUMMARY_URL, urlDetails.url.split("#")[0])
+      : null;
 
-    const summaryMethod = method ?
-      this.renderSummary(SUMMARY_METHOD, method) : null;
+    const summaryMethod = method
+      ? this.renderSummary(SUMMARY_METHOD, method)
+      : null;
 
-    const summaryAddress = remoteAddress ?
-      this.renderSummary(SUMMARY_ADDRESS,
-        getFormattedIPAndPort(remoteAddress, remotePort)) : null;
+    const summaryAddress = remoteAddress
+      ? this.renderSummary(
+          SUMMARY_ADDRESS,
+          getFormattedIPAndPort(remoteAddress, remotePort)
+        )
+      : null;
 
     let summaryStatus;
 
@@ -399,27 +420,34 @@ class HeadersPanel extends Component {
       const statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
       const inputWidth = statusText.length + 1;
 
-      summaryStatus = (
-        div({ key: "headers-summary",
-              className: "tabpanel-summary-container headers-summary" },
-          div({
+      summaryStatus = div(
+        {
+          key: "headers-summary",
+          className: "tabpanel-summary-container headers-summary",
+        },
+        div(
+          {
             className: "tabpanel-summary-label headers-summary-label",
-          }, SUMMARY_STATUS),
-          StatusCode({ item }),
-          input({
-            className: "tabpanel-summary-value textbox-input devtools-monospace"
-              + " status-text",
-            readOnly: true,
-            value: `${statusText}`,
-            size: `${inputWidth}`,
-          }),
-          statusCodeDocURL ? MDNLink({
-            url: statusCodeDocURL,
-            title: SUMMARY_STATUS_LEARN_MORE,
-          }) : span({
-            className: "headers-summary learn-more-link",
-          }),
-        )
+          },
+          SUMMARY_STATUS
+        ),
+        StatusCode({ item }),
+        input({
+          className:
+            "tabpanel-summary-value textbox-input devtools-monospace" +
+            " status-text",
+          readOnly: true,
+          value: `${statusText}`,
+          size: `${inputWidth}`,
+        }),
+        statusCodeDocURL
+          ? MDNLink({
+              url: statusCodeDocURL,
+              title: SUMMARY_STATUS_LEARN_MORE,
+            })
+          : span({
+              className: "headers-summary learn-more-link",
+            })
       );
     }
 
@@ -428,28 +456,33 @@ class HeadersPanel extends Component {
     if (isThirdPartyTrackingResource) {
       const trackingProtectionDocURL = getTrackingProtectionURL();
 
-      trackingProtectionStatus = (
-        div({ key: "tracking-protection",
-              className: "tabpanel-summary-container tracking-protection" },
-          div({
-            className: "tracking-resource",
-          }),
-          L10N.getStr("netmonitor.trackingResource.tooltip"),
-          trackingProtectionDocURL ? MDNLink({
-            url: trackingProtectionDocURL,
-            title: SUMMARY_STATUS_LEARN_MORE,
-          }) : span({
-            className: "headers-summary learn-more-link",
-          }),
-        )
+      trackingProtectionStatus = div(
+        {
+          key: "tracking-protection",
+          className: "tabpanel-summary-container tracking-protection",
+        },
+        div({
+          className: "tracking-resource",
+        }),
+        L10N.getStr("netmonitor.trackingResource.tooltip"),
+        trackingProtectionDocURL
+          ? MDNLink({
+              url: trackingProtectionDocURL,
+              title: SUMMARY_STATUS_LEARN_MORE,
+            })
+          : span({
+              className: "headers-summary learn-more-link",
+            })
       );
     }
 
-    const summaryVersion = httpVersion ?
-      this.renderSummary(SUMMARY_VERSION, httpVersion) : null;
+    const summaryVersion = httpVersion
+      ? this.renderSummary(SUMMARY_VERSION, httpVersion)
+      : null;
 
-    const summaryReferrerPolicy = referrerPolicy ?
-      this.renderSummary(SUMMARY_REFERRER_POLICY, referrerPolicy) : null;
+    const summaryReferrerPolicy = referrerPolicy
+      ? this.renderSummary(SUMMARY_REFERRER_POLICY, referrerPolicy)
+      : null;
 
     const summaryItems = [
       summaryUrl,
@@ -461,33 +494,36 @@ class HeadersPanel extends Component {
       summaryReferrerPolicy,
     ].filter(summaryItem => summaryItem !== null);
 
-    const summaryEditAndResendBtn = (
-      div({
-        className: "summary-edit-and-resend" },
-        summaryItems.pop(),
-        button({
+    const summaryEditAndResendBtn = div(
+      {
+        className: "summary-edit-and-resend",
+      },
+      summaryItems.pop(),
+      button(
+        {
           className: "edit-and-resend-button devtools-button",
           onClick: cloneSelectedRequest,
-        }, EDIT_AND_RESEND)
+        },
+        EDIT_AND_RESEND
       )
     );
 
-    return (
-      div({ className: "panel-container" },
-        div({ className: "headers-overview" },
-          summaryItems,
-          summaryEditAndResendBtn,
-        ),
-        PropertiesView({
-          object,
-          provider: HeadersProvider,
-          filterPlaceHolder: HEADERS_FILTER_TEXT,
-          sectionNames: Object.keys(object),
-          renderRow: this.renderRow,
-          renderValue: this.renderValue,
-          openLink,
-        }),
-      )
+    return div(
+      { className: "panel-container" },
+      div(
+        { className: "headers-overview" },
+        summaryItems,
+        summaryEditAndResendBtn
+      ),
+      PropertiesView({
+        object,
+        provider: HeadersProvider,
+        filterPlaceHolder: HEADERS_FILTER_TEXT,
+        sectionNames: Object.keys(object),
+        renderRow: this.renderRow,
+        renderValue: this.renderValue,
+        openLink,
+      })
     );
   }
 }

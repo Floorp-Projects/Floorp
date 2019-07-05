@@ -7,13 +7,22 @@
  * has the correct 'root', 'parent', 'level' etc. accessors on child nodes.
  */
 
-const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
-const { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
-const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
+const {
+  ThreadNode,
+} = require("devtools/client/performance/modules/logic/tree-model");
+const {
+  CallView,
+} = require("devtools/client/performance/modules/widgets/tree-view");
+const {
+  synthesizeProfile,
+} = require("devtools/client/performance/test/helpers/synth-utils");
 
 add_task(function() {
   const profile = synthesizeProfile();
-  const threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
+  const threadNode = new ThreadNode(profile.threads[0], {
+    startTime: 0,
+    endTime: 20,
+  });
 
   // Don't display the synthesized (root) and the real (root) node twice.
   threadNode.calls = threadNode.calls[0].calls;
@@ -27,14 +36,17 @@ add_task(function() {
   const B = A.getChild();
   const D = B.getChild();
 
-  is(D.root, treeRoot,
-    "The .A.B.D node has the correct root.");
-  is(D.parent, B,
-    "The .A.B.D node has the correct parent.");
-  is(D.level, 3,
-    "The .A.B.D node has the correct level.");
-  is(D.target.className, "call-tree-item",
-    "The .A.B.D node has the correct target node.");
-  is(D.container.id, "call-tree-container",
-    "The .A.B.D node has the correct container node.");
+  is(D.root, treeRoot, "The .A.B.D node has the correct root.");
+  is(D.parent, B, "The .A.B.D node has the correct parent.");
+  is(D.level, 3, "The .A.B.D node has the correct level.");
+  is(
+    D.target.className,
+    "call-tree-item",
+    "The .A.B.D node has the correct target node."
+  );
+  is(
+    D.container.id,
+    "call-tree-container",
+    "The .A.B.D node has the correct container node."
+  );
 });

@@ -19,9 +19,13 @@ const TEST_URI = `
 add_task(async function() {
   await pushPref("devtools.inspector.activeSidebar", "computedview");
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#matches", inspector);
-  is(isPropertyVisible("color", view), true, "span #matches color property is visible");
+  is(
+    isPropertyVisible("color", view),
+    true,
+    "span #matches color property is visible"
+  );
 });
 
 function isPropertyVisible(name, view) {

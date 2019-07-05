@@ -70,17 +70,19 @@ class ShapesInContextEditor {
     }
 
     const textProp = this.rule.textProps[this.textPropIndex];
-    return (textProp && textProp.name === this.textPropName) ? textProp : null;
+    return textProp && textProp.name === this.textPropName ? textProp : null;
   }
 
   /**
-  * Called when the element style changes from the Rule view.
-  * If the TextProperty we're acting on isn't enabled anymore or overridden,
-  * turn off the shapes highlighter.
-  */
+   * Called when the element style changes from the Rule view.
+   * If the TextProperty we're acting on isn't enabled anymore or overridden,
+   * turn off the shapes highlighter.
+   */
   async onRuleViewChanged() {
-    if (this.textProperty &&
-      (!this.textProperty.enabled || this.textProperty.overridden)) {
+    if (
+      this.textProperty &&
+      (!this.textProperty.enabled || this.textProperty.overridden)
+    ) {
       await this.hide();
     }
   }
@@ -95,7 +97,7 @@ class ShapesInContextEditor {
    */
   async toggle(node, options, prop) {
     // Same target node, same mode -> hide and exit OR switch to toggle transform mode.
-    if ((node == this.highlighterTargetNode) && (this.mode === options.mode)) {
+    if (node == this.highlighterTargetNode && this.mode === options.mode) {
       if (!options.transformMode) {
         await this.hide();
         return;
@@ -106,7 +108,7 @@ class ShapesInContextEditor {
 
     // Same target node, dfferent modes -> toggle between shape-outside and clip-path.
     // Hide highlighter for previous property, but continue and show for other property.
-    if ((node == this.highlighterTargetNode) && (this.mode !== options.mode)) {
+    if (node == this.highlighterTargetNode && this.mode !== options.mode) {
       await this.hide();
     }
 
@@ -202,9 +204,9 @@ class ShapesInContextEditor {
   }
 
   /**
-  * Clean up when node selection changes because Rule view and TextPropertyEditor
-  * instances are not automatically destroyed when selection changes.
-  */
+   * Clean up when node selection changes because Rule view and TextPropertyEditor
+   * instances are not automatically destroyed when selection changes.
+   */
   async onNodeFrontChanged() {
     try {
       await this.hide();
@@ -214,31 +216,31 @@ class ShapesInContextEditor {
   }
 
   /**
-  * Handler for "shape-change" event from the shapes highlighter.
-  *
-  * @param  {Object} data
-  *         Data associated with the "shape-change" event.
-  *         Contains:
-  *         - {String} value: the new shape value.
-  *         - {String} type: the event type ("shape-change").
-  */
+   * Handler for "shape-change" event from the shapes highlighter.
+   *
+   * @param  {Object} data
+   *         Data associated with the "shape-change" event.
+   *         Contains:
+   *         - {String} value: the new shape value.
+   *         - {String} type: the event type ("shape-change").
+   */
   onShapeChange(data) {
     this.preview(data.value);
     this.commit(data.value);
   }
 
   /**
-  * Handler for "shape-hover-on" and "shape-hover-off" events from the shapes highlighter.
-  * Called when the mouse moves over or off of a coordinate point inside the shapes
-  * highlighter. Marks/unmarks the corresponding coordinate node in the shape value
-  * from the Rule view.
-  *
-  * @param  {Object} data
-  *         Data associated with the "shape-hover" event.
-  *         Contains:
-  *         - {String|null} point: coordinate to highlight or null if nothing to highlight
-  *         - {String} type: the event type ("shape-hover-on" or "shape-hover-on").
-  */
+   * Handler for "shape-hover-on" and "shape-hover-off" events from the shapes highlighter.
+   * Called when the mouse moves over or off of a coordinate point inside the shapes
+   * highlighter. Marks/unmarks the corresponding coordinate node in the shape value
+   * from the Rule view.
+   *
+   * @param  {Object} data
+   *         Data associated with the "shape-hover" event.
+   *         Contains:
+   *         - {String|null} point: coordinate to highlight or null if nothing to highlight
+   *         - {String} type: the event type ("shape-hover-on" or "shape-hover-on").
+   */
   onShapeHover(data) {
     const shapeValueEl = this.swatch && this.swatch.nextSibling;
     if (!shapeValueEl) {
@@ -247,7 +249,9 @@ class ShapesInContextEditor {
 
     const pointSelector = ".ruleview-shape-point";
     // First, unmark all highlighted coordinate nodes from Rule view
-    for (const node of shapeValueEl.querySelectorAll(`${pointSelector}.active`)) {
+    for (const node of shapeValueEl.querySelectorAll(
+      `${pointSelector}.active`
+    )) {
       node.classList.remove("active");
     }
 
@@ -256,18 +260,20 @@ class ShapesInContextEditor {
       return;
     }
 
-    const point = (data.point.includes(",")) ? data.point.split(",")[0] : data.point;
+    const point = data.point.includes(",")
+      ? data.point.split(",")[0]
+      : data.point;
 
     /**
-    * Build selector for coordinate nodes in shape value that must be highlighted.
-    * Coordinate values for inset() use class names instead of data attributes because
-    * a single node may represent multiple coordinates in shorthand notation.
-    * Example: inset(50px); The node wrapping 50px represents all four inset coordinates.
-    */
+     * Build selector for coordinate nodes in shape value that must be highlighted.
+     * Coordinate values for inset() use class names instead of data attributes because
+     * a single node may represent multiple coordinates in shorthand notation.
+     * Example: inset(50px); The node wrapping 50px represents all four inset coordinates.
+     */
     const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
-    const selector = INSET_POINT_TYPES.includes(point) ?
-                  `${pointSelector}.${point}` :
-                  `${pointSelector}[data-point='${point}']`;
+    const selector = INSET_POINT_TYPES.includes(point)
+      ? `${pointSelector}.${point}`
+      : `${pointSelector}[data-point='${point}']`;
 
     for (const node of shapeValueEl.querySelectorAll(selector)) {
       node.classList.add("active");
@@ -275,11 +281,11 @@ class ShapesInContextEditor {
   }
 
   /**
-  * Handler for "property-value-updated" event triggered by the Rule view.
-  * Called after the shape value has been written to the element's style and the Rule
-  * view updated. Emits an event on HighlightersOverlay that is expected by
-  * tests in order to check if the shape value has been correctly applied.
-  */
+   * Handler for "property-value-updated" event triggered by the Rule view.
+   * Called after the shape value has been written to the element's style and the Rule
+   * view updated. Emits an event on HighlightersOverlay that is expected by
+   * tests in order to check if the shape value has been correctly applied.
+   */
   async onShapeValueUpdated() {
     if (this.textProperty) {
       // When TextPropertyEditor updates, it replaces the previous swatch DOM node.
@@ -292,11 +298,11 @@ class ShapesInContextEditor {
   }
 
   /**
-  * Preview a shape value on the element without committing the changes to the Rule view.
-  *
-  * @param {String} value
-  *        The shape value to set the current property to
-  */
+   * Preview a shape value on the element without committing the changes to the Rule view.
+   *
+   * @param {String} value
+   *        The shape value to set the current property to
+   */
   preview(value) {
     if (!this.textProperty) {
       return;
@@ -309,13 +315,13 @@ class ShapesInContextEditor {
   }
 
   /**
-  * Commit a shape value change which triggers an expensive operation that rebuilds
-  * part of the DOM of the TextPropertyEditor. Called in a debounced manner; see
-  * constructor.
-  *
-  * @param {String} value
-  *        The shape value for the current property
-  */
+   * Commit a shape value change which triggers an expensive operation that rebuilds
+   * part of the DOM of the TextPropertyEditor. Called in a debounced manner; see
+   * constructor.
+   *
+   * @param {String} value
+   *        The shape value for the current property
+   */
   commit(value) {
     if (!this.textProperty) {
       return;

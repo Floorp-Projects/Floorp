@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 1519314";
+const TEST_URI =
+  "data:text/html;charset=utf-8,Web Console test for bug 1519314";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.features.editor", true);
@@ -48,11 +49,18 @@ async function performEditorEnabledTests() {
 
   simulateConsoleInput();
 
-  is(getInputValue(hud), `${first_expression}\n${second_expression}`,
-  "text input after pressing the return key is present");
+  is(
+    getInputValue(hud),
+    `${first_expression}\n${second_expression}`,
+    "text input after pressing the return key is present"
+  );
 
-  const {visibleMessages} = hud.ui.wrapper.getStore().getState().messages;
-  is(visibleMessages.length, 0, "input expressions should not have been executed");
+  const { visibleMessages } = hud.ui.wrapper.getStore().getState().messages;
+  is(
+    visibleMessages.length,
+    0,
+    "input expressions should not have been executed"
+  );
 
   let onMessage = waitForMessage(hud, "11", ".result");
   EventUtils.synthesizeKey("KEY_Enter", {

@@ -4,14 +4,26 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
-const dbgL10n = new LocalizationHelper("devtools/client/locales/debugger.properties");
-const Frames = createFactory(require("devtools/client/debugger/src/components/SecondaryPanes/Frames/index").Frames);
-const { annotateFrames } = require("devtools/client/debugger/src/utils/pause/frames/annotateFrames");
+const l10n = new LocalizationHelper(
+  "devtools/client/locales/components.properties"
+);
+const dbgL10n = new LocalizationHelper(
+  "devtools/client/locales/debugger.properties"
+);
+const Frames = createFactory(
+  require("devtools/client/debugger/src/components/SecondaryPanes/Frames/index")
+    .Frames
+);
+const {
+  annotateFrames,
+} = require("devtools/client/debugger/src/utils/pause/frames/annotateFrames");
 
 class SmartTrace extends Component {
   static get propTypes() {
@@ -56,21 +68,36 @@ class SmartTrace extends Component {
   componentWillMount() {
     if (this.props.sourceMapService) {
       this.sourceMapServiceUnsubscriptions = [];
-      const subscriptions = this.props.stacktrace.map((frame, index) =>
-        new Promise(resolve => {
-          const { lineNumber, columnNumber, filename } = frame;
-          const source = filename.split(" -> ").pop();
-          const subscribeCallback = (isSourceMapped, url, line, column) => {
-            this.onSourceMapServiceChange(isSourceMapped, url, line, column, index);
-            resolve();
-          };
-          const unsubscribe = this.props.sourceMapService.subscribe(
-            source, lineNumber, columnNumber, subscribeCallback);
-          this.sourceMapServiceUnsubscriptions.push(unsubscribe);
-        }));
+      const subscriptions = this.props.stacktrace.map(
+        (frame, index) =>
+          new Promise(resolve => {
+            const { lineNumber, columnNumber, filename } = frame;
+            const source = filename.split(" -> ").pop();
+            const subscribeCallback = (isSourceMapped, url, line, column) => {
+              this.onSourceMapServiceChange(
+                isSourceMapped,
+                url,
+                line,
+                column,
+                index
+              );
+              resolve();
+            };
+            const unsubscribe = this.props.sourceMapService.subscribe(
+              source,
+              lineNumber,
+              columnNumber,
+              subscribeCallback
+            );
+            this.sourceMapServiceUnsubscriptions.push(unsubscribe);
+          })
+      );
 
       const delay = new Promise(res => {
-        this.initialRenderDelayTimeoutId = setTimeout(res, this.props.initialRenderDelay);
+        this.initialRenderDelayTimeoutId = setTimeout(
+          res,
+          this.props.initialRenderDelay
+        );
       });
 
       const sourceMapInit = Promise.all(subscriptions);
@@ -81,7 +108,7 @@ class SmartTrace extends Component {
         if (this.initialRenderDelayTimeoutId) {
           clearTimeout(this.initialRenderDelayTimeoutId);
         }
-        this.setState(state => ({...state, ready: true}));
+        this.setState(state => ({ ...state, ready: true }));
       });
     }
   }
@@ -129,26 +156,41 @@ class SmartTrace extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error("Error while rendering stacktrace:", error, info, "props:", this.props);
+    console.error(
+      "Error while rendering stacktrace:",
+      error,
+      info,
+      "props:",
+      this.props
+    );
     this.setState({ hasError: true });
   }
 
-  onSourceMapServiceChange(isSourceMapped, filename, lineNumber, columnNumber, index) {
+  onSourceMapServiceChange(
+    isSourceMapped,
+    filename,
+    lineNumber,
+    columnNumber,
+    index
+  ) {
     if (isSourceMapped) {
       if (this.onFrameLocationChangedTimeoutId) {
         clearTimeout(this.onFrameLocationChangedTimeoutId);
       }
 
       this.setState(state => {
-        const stacktrace = ((state && state.stacktrace) || this.props.stacktrace);
+        const stacktrace = (state && state.stacktrace) || this.props.stacktrace;
         const frame = stacktrace[index];
 
-        const newStacktrace = stacktrace.slice(0, index).concat({
-          ...frame,
-          filename,
-          lineNumber,
-          columnNumber,
-        }).concat(stacktrace.slice(index + 1));
+        const newStacktrace = stacktrace
+          .slice(0, index)
+          .concat({
+            ...frame,
+            filename,
+            lineNumber,
+            columnNumber,
+          })
+          .concat(stacktrace.slice(index + 1));
 
         return {
           isSourceMapped: true,
@@ -170,10 +212,10 @@ class SmartTrace extends Component {
   }
 
   render() {
-    if (this.state.hasError || (
-      Number.isFinite(this.props.initialRenderDelay) &&
-      !this.state.ready
-    )) {
+    if (
+      this.state.hasError ||
+      (Number.isFinite(this.props.initialRenderDelay) && !this.state.ready)
+    ) {
       return null;
     }
 
@@ -187,23 +229,25 @@ class SmartTrace extends Component {
       ? this.state.stacktrace
       : this.props.stacktrace;
 
-    const frames = annotateFrames(stacktrace.map((f, i) => ({
-      ...f,
-      id: "fake-frame-id-" + i,
-      location: {
+    const frames = annotateFrames(
+      stacktrace.map((f, i) => ({
         ...f,
-        line: f.lineNumber,
-        column: f.columnNumber,
-      },
-      displayName: f.functionName,
-      source: {
-        url: f.filename && f.filename.split(" -> ").pop(),
-      },
-    })));
+        id: "fake-frame-id-" + i,
+        location: {
+          ...f,
+          line: f.lineNumber,
+          column: f.columnNumber,
+        },
+        displayName: f.functionName,
+        source: {
+          url: f.filename && f.filename.split(" -> ").pop(),
+        },
+      }))
+    );
 
     return Frames({
       frames,
-      selectFrame: (cx, {location}) => {
+      selectFrame: (cx, { location }) => {
         const viewSource = /^Scratchpad\/\d+$/.test(location.filename)
           ? onViewSourceInScratchpad
           : onViewSourceInDebugger || onViewSource;

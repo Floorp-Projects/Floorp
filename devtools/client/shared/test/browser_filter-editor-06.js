@@ -5,8 +5,12 @@
 
 // Tests the Filter Editor Widget's add button
 
-const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
-const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
+const {
+  CSSFilterEditorWidget,
+} = require("devtools/client/shared/widgets/FilterWidget");
+const {
+  getClientCssProperties,
+} = require("devtools/shared/fronts/css-properties");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/client/locales/filterwidget.properties";
@@ -15,7 +19,7 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(async function() {
-  const [,, doc] = await createHost("bottom", TEST_URI);
+  const [, , doc] = await createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
@@ -59,13 +63,19 @@ add_task(async function() {
     add.click();
 
     if (filter.unit) {
-      is(widget.getValueAt(index), `0${filter.unit}`,
-         `Should add ${filter.unit} to ${filter.type} filters`);
+      is(
+        widget.getValueAt(index),
+        `0${filter.unit}`,
+        `Should add ${filter.unit} to ${filter.type} filters`
+      );
     } else if (filter.placeholder) {
       const i = index + 1;
       const input = widget.el.querySelector(`.filter:nth-child(${i}) input`);
-      is(input.placeholder, filter.placeholder,
-         "Should set the appropriate placeholder for string-type filters");
+      is(
+        input.placeholder,
+        filter.placeholder,
+        "Should set the appropriate placeholder for string-type filters"
+      );
     }
   }
 });

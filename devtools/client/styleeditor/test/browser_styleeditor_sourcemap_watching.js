@@ -16,19 +16,21 @@ const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
 
 const CSS_TEXT = "* { color: blue }";
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 add_task(async function() {
   await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      [TRANSITIONS_PREF, false],
-    ]}, resolve);
+    SpecialPowers.pushPrefEnv({ set: [[TRANSITIONS_PREF, false]] }, resolve);
   });
 
   // copy all our files over so we don't screw them up for other tests
   const HTMLFile = await copy(TESTCASE_URI_HTML, ["sourcemaps.html"]);
-  const CSSFile = await copy(TESTCASE_URI_CSS,
-    ["sourcemap-css", "sourcemaps.css"]);
+  const CSSFile = await copy(TESTCASE_URI_CSS, [
+    "sourcemap-css",
+    "sourcemaps.css",
+  ]);
   await copy(TESTCASE_URI_SCSS, ["sourcemap-sass", "sourcemaps.scss"]);
   await copy(TESTCASE_URI_MAP, ["sourcemap-css", "sourcemaps.css.map"]);
   await copy(TESTCASE_URI_REG_CSS, ["simple.css"]);
@@ -50,7 +52,10 @@ add_task(async function() {
 
   await editor.getSourceEditor();
 
-  let color = await getComputedStyleProperty({selector: "div", name: "color"});
+  let color = await getComputedStyleProperty({
+    selector: "div",
+    name: "color",
+  });
   is(color, "rgb(255, 0, 102)", "div is red before saving file");
 
   // let styleApplied = defer();
@@ -70,7 +75,7 @@ add_task(async function() {
 
   await styleApplied;
 
-  color = await getComputedStyleProperty({selector: "div", name: "color"});
+  color = await getComputedStyleProperty({ selector: "div", name: "color" });
   is(color, "rgb(0, 0, 255)", "div is blue after saving file");
 
   // Ensure that the editor didn't revert.  Bug 1346662.
@@ -108,7 +113,8 @@ function getLinkFor(editor) {
 }
 
 function getStylesheetNameFor(editor) {
-  return editor.summary.querySelector(".stylesheet-name > label")
+  return editor.summary
+    .querySelector(".stylesheet-name > label")
     .getAttribute("value");
 }
 
@@ -118,8 +124,9 @@ function copy(srcChromeURL, destFilePath) {
 }
 
 function read(srcChromeURL) {
-  const scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
-    .getService(Ci.nsIScriptableInputStream);
+  const scriptableStream = Cc[
+    "@mozilla.org/scriptableinputstream;1"
+  ].getService(Ci.nsIScriptableInputStream);
 
   const channel = NetUtil.newChannel({
     uri: srcChromeURL,
@@ -140,8 +147,9 @@ function read(srcChromeURL) {
 
 function write(data, file) {
   return new Promise(resolve => {
-    const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    const converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
 
     converter.charset = "UTF-8";
 

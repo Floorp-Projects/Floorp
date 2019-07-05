@@ -6,8 +6,9 @@
 "use strict";
 
 // Check expanding/collapsing maps and sets in the console.
-const TEST_URI = "data:text/html;charset=utf8,<h1>Object Inspector on Maps & Sets</h1>";
-const {ELLIPSIS} = require("devtools/shared/l10n");
+const TEST_URI =
+  "data:text/html;charset=utf8,<h1>Object Inspector on Maps & Sets</h1>";
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -17,27 +18,22 @@ add_task(async function() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     content.wrappedJSObject.console.log(
       "oi-entries-test",
-      new Map(
-        Array.from({length: 20}).map((el, i) => [Symbol(i),  i])
-      ),
-      new Map(
-        Array.from({length: 331}).map((el, i) => [Symbol(i),  i])
-      ),
-      new Set(Array.from({length: 20}).map((el, i) => i)),
-      new Set(Array.from({length: 222}).map((el, i) => i)),
+      new Map(Array.from({ length: 20 }).map((el, i) => [Symbol(i), i])),
+      new Map(Array.from({ length: 331 }).map((el, i) => [Symbol(i), i])),
+      new Set(Array.from({ length: 20 }).map((el, i) => i)),
+      new Set(Array.from({ length: 222 }).map((el, i) => i))
     );
   });
 
   const node = await waitFor(() => findMessage(hud, "oi-entries-test"));
   const objectInspectors = [...node.querySelectorAll(".tree")];
-  is(objectInspectors.length, 4, "There is the expected number of object inspectors");
+  is(
+    objectInspectors.length,
+    4,
+    "There is the expected number of object inspectors"
+  );
 
-  const [
-    mapOi,
-    largeMapOi,
-    setOi,
-    largeSetOi,
-  ] = objectInspectors;
+  const [mapOi, largeMapOi, setOi, largeSetOi] = objectInspectors;
 
   await testMap(mapOi);
   await testLargeMap(largeMapOi);
@@ -54,8 +50,10 @@ async function testMap(oi) {
   oi.querySelector(".arrow").click();
   await onMapOiMutation;
 
-  ok(oi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the node has the expected class after clicking on it");
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
 
   let oiNodes = oi.querySelectorAll(".node");
   // There are 4 nodes: the root, size, entries and the proto.
@@ -63,7 +61,11 @@ async function testMap(oi) {
 
   info("Expanding the <entries> leaf of the map");
   const entriesNode = oiNodes[2];
-  is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
   onMapOiMutation = waitForNodeMutation(oi, {
     childList: true,
   });
@@ -85,8 +87,10 @@ async function testLargeMap(oi) {
   oi.querySelector(".arrow").click();
   await onMapOiMutation;
 
-  ok(oi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the node has the expected class after clicking on it");
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
 
   let oiNodes = oi.querySelectorAll(".node");
   // There are 4 nodes: the root, size, entries and the proto.
@@ -94,7 +98,11 @@ async function testLargeMap(oi) {
 
   info("Expanding the <entries> leaf of the map");
   const entriesNode = oiNodes[2];
-  is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
   onMapOiMutation = waitForNodeMutation(oi, {
     childList: true,
   });
@@ -120,8 +128,10 @@ async function testSet(oi) {
   oi.querySelector(".arrow").click();
   await onSetOiMutation;
 
-  ok(oi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the node has the expected class after clicking on it");
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
 
   let oiNodes = oi.querySelectorAll(".node");
   // There are 4 nodes: the root, size, entries and the proto.
@@ -129,7 +139,11 @@ async function testSet(oi) {
 
   info("Expanding the <entries> leaf of the Set");
   const entriesNode = oiNodes[2];
-  is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
   onSetOiMutation = waitForNodeMutation(oi, {
     childList: true,
   });
@@ -151,8 +165,10 @@ async function testLargeSet(oi) {
   oi.querySelector(".arrow").click();
   await onSetOiMutation;
 
-  ok(oi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the node has the expected class after clicking on it");
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
 
   let oiNodes = oi.querySelectorAll(".node");
   // There are 4 nodes: the root, size, entries and the proto.
@@ -160,7 +176,11 @@ async function testLargeSet(oi) {
 
   info("Expanding the <entries> leaf of the Set");
   const entriesNode = oiNodes[2];
-  is(entriesNode.textContent, "<entries>", "There is the expected <entries> node");
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
   onSetOiMutation = waitForNodeMutation(oi, {
     childList: true,
   });

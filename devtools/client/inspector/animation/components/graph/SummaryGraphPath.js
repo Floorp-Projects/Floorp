@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
@@ -110,15 +113,22 @@ class SummaryGraphPath extends Component {
    * @return {Array} list of keyframes which has only easing and offset.
    */
   getOffsetAndEasingOnlyKeyframes(animatedPropertyMap) {
-    return [...animatedPropertyMap.values()].filter((keyframes1, i, self) => {
-      return i !== self.findIndex((keyframes2, j) => {
-        return this.isOffsetAndEasingKeyframesEqual(keyframes1, keyframes2) ? j : -1;
+    return [...animatedPropertyMap.values()]
+      .filter((keyframes1, i, self) => {
+        return (
+          i !==
+          self.findIndex((keyframes2, j) => {
+            return this.isOffsetAndEasingKeyframesEqual(keyframes1, keyframes2)
+              ? j
+              : -1;
+          })
+        );
+      })
+      .map(keyframes => {
+        return keyframes.map(keyframe => {
+          return { easing: keyframe.easing, offset: keyframe.offset };
+        });
       });
-    }).map(keyframes => {
-      return keyframes.map(keyframe => {
-        return { easing: keyframe.easing, offset: keyframe.offset };
-      });
-    });
   }
 
   /**
@@ -137,8 +147,10 @@ class SummaryGraphPath extends Component {
       const keyframe1 = keyframes1[i];
       const keyframe2 = keyframes2[i];
 
-      if (keyframe1.offset !== keyframe2.offset ||
-          keyframe1.easing !== keyframe2.easing) {
+      if (
+        keyframe1.offset !== keyframe2.offset ||
+        keyframe1.easing !== keyframe2.easing
+      ) {
         return false;
       }
     }
@@ -167,18 +179,18 @@ class SummaryGraphPath extends Component {
       return;
     }
 
-    const keyframesList = this.getOffsetAndEasingOnlyKeyframes(animatedPropertyMap);
+    const keyframesList = this.getOffsetAndEasingOnlyKeyframes(
+      animatedPropertyMap
+    );
     const totalDuration =
       timeScale.getDuration() * Math.abs(animation.state.playbackRate);
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;
 
-    this.setState(
-      {
-        durationPerPixel,
-        isStateUpdating: false,
-        keyframesList,
-      }
-    );
+    this.setState({
+      durationPerPixel,
+      isStateUpdating: false,
+      keyframesList,
+    });
 
     emitEventForTest("animation-summary-graph-rendered");
   }
@@ -204,70 +216,63 @@ class SummaryGraphPath extends Component {
     const offset = createdTime * absPlaybackRate;
     const startTime = timeScale.minStartTime * absPlaybackRate;
     const totalDuration = timeScale.getDuration() * absPlaybackRate;
-    const opacity = Math.max(1 / keyframesList.length, MIN_KEYFRAMES_EASING_OPACITY);
+    const opacity = Math.max(
+      1 / keyframesList.length,
+      MIN_KEYFRAMES_EASING_OPACITY
+    );
 
     return dom.svg(
       {
         className: "animation-summary-graph-path",
         preserveAspectRatio: "none",
-        viewBox: `${ startTime } -${ DEFAULT_GRAPH_HEIGHT } `
-                 + `${ totalDuration } ${ DEFAULT_GRAPH_HEIGHT }`,
+        viewBox:
+          `${startTime} -${DEFAULT_GRAPH_HEIGHT} ` +
+          `${totalDuration} ${DEFAULT_GRAPH_HEIGHT}`,
       },
       keyframesList.map(keyframes =>
-        ComputedTimingPath(
-          {
-            animation,
-            durationPerPixel,
-            keyframes,
-            offset,
-            opacity,
-            simulateAnimation,
-            totalDuration,
-          }
-        )
+        ComputedTimingPath({
+          animation,
+          durationPerPixel,
+          keyframes,
+          offset,
+          opacity,
+          simulateAnimation,
+          totalDuration,
+        })
       ),
-      animation.state.easing !== "linear" ?
-        EffectTimingPath(
-          {
+      animation.state.easing !== "linear"
+        ? EffectTimingPath({
             animation,
             durationPerPixel,
             offset,
             simulateAnimation,
             totalDuration,
-          }
-        )
-      :
-      null,
-      animation.state.delay < 0 ?
-        keyframesList.map(keyframes => {
-          return NegativeDelayPath(
-            {
+          })
+        : null,
+      animation.state.delay < 0
+        ? keyframesList.map(keyframes => {
+            return NegativeDelayPath({
               animation,
               durationPerPixel,
               keyframes,
               offset,
               simulateAnimation,
               totalDuration,
-            }
-          );
-        })
-      :
-      null,
-      animation.state.iterationCount && animation.state.endDelay < 0 ?
-        keyframesList.map(keyframes => {
-          return NegativeEndDelayPath(
-            {
+            });
+          })
+        : null,
+      animation.state.iterationCount && animation.state.endDelay < 0
+        ? keyframesList.map(keyframes => {
+            return NegativeEndDelayPath({
               animation,
               durationPerPixel,
               keyframes,
               offset,
               simulateAnimation,
               totalDuration,
-            }
-          );
-        })
-      :
-      null
+            });
+          })
+        : null
     );
   }
 }

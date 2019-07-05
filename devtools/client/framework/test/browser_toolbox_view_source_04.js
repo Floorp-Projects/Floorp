@@ -23,8 +23,11 @@ async function viewSource() {
 
   await toolbox.viewSourceInScratchpad(scratchpadURL, 2);
 
-  is(scratchpad.editor.getCursor().line, 2,
-    "The correct line is highlighted in scratchpad's editor.");
+  is(
+    scratchpad.editor.getCursor().line,
+    2,
+    "The correct line is highlighted in scratchpad's editor."
+  );
 
   win.close();
   await closeToolboxAndTab(toolbox);
@@ -32,7 +35,7 @@ async function viewSource() {
 }
 
 function test() {
-  viewSource().then(finish, (aError) => {
+  viewSource().then(finish, aError => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();
   });

@@ -5,11 +5,35 @@
 "use strict";
 
 var Services = require("Services");
-loader.lazyRequireGetter(this, "Utils", "devtools/client/webconsole/utils", true);
-loader.lazyRequireGetter(this, "WebConsoleUI", "devtools/client/webconsole/webconsole-ui", true);
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
-loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(
+  this,
+  "Utils",
+  "devtools/client/webconsole/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WebConsoleUI",
+  "devtools/client/webconsole/webconsole-ui",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "gDevTools",
+  "devtools/client/framework/devtools",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "viewSource",
+  "devtools/client/shared/view-source"
+);
+loader.lazyRequireGetter(
+  this,
+  "openDocLink",
+  "devtools/client/shared/link",
+  true
+);
 
 var gHudId = 0;
 const isMacOS = Services.appinfo.OS === "Darwin";
@@ -25,18 +49,24 @@ const isMacOS = Services.appinfo.OS === "Darwin";
  */
 class WebConsole {
   /*
-  * @constructor
-  * @param object target
-  *        The target that the web console will connect to.
-  * @param nsIDOMWindow iframeWindow
-  *        The window where the web console UI is already loaded.
-  * @param nsIDOMWindow chromeWindow
-  *        The window of the web console owner.
-  * @param object hudService
-  *        The parent HUD Service
-  * @param bool isBrowserConsole
-  */
-  constructor(target, iframeWindow, chromeWindow, hudService, isBrowserConsole = false) {
+   * @constructor
+   * @param object target
+   *        The target that the web console will connect to.
+   * @param nsIDOMWindow iframeWindow
+   *        The window where the web console UI is already loaded.
+   * @param nsIDOMWindow chromeWindow
+   *        The window of the web console owner.
+   * @param object hudService
+   *        The parent HUD Service
+   * @param bool isBrowserConsole
+   */
+  constructor(
+    target,
+    iframeWindow,
+    chromeWindow,
+    hudService,
+    isBrowserConsole = false
+  ) {
     this.iframeWindow = iframeWindow;
     this.chromeWindow = chromeWindow;
     this.hudId = "hud_" + ++gHudId;
@@ -168,7 +198,10 @@ class WebConsole {
    *        The line number which should be highlighted.
    */
   viewSource(sourceURL, sourceLine) {
-    this.gViewSourceUtils.viewSource({ URL: sourceURL, lineNumber: sourceLine || 0 });
+    this.gViewSourceUtils.viewSource({
+      URL: sourceURL,
+      lineNumber: sourceLine || 0,
+    });
   }
 
   /**
@@ -212,9 +245,11 @@ class WebConsole {
       this.viewSource(sourceURL, sourceLine, sourceColumn);
       return;
     }
-    toolbox.viewSourceInDebugger(sourceURL, sourceLine, sourceColumn).then(() => {
-      this.ui.emit("source-in-debugger-opened");
-    });
+    toolbox
+      .viewSourceInDebugger(sourceURL, sourceLine, sourceColumn)
+      .then(() => {
+        this.ui.emit("source-in-debugger-opened");
+      });
   }
 
   /**
@@ -297,7 +332,12 @@ class WebConsole {
       const shouldMapBindings = false;
       const shouldMapAwait = true;
       const res = this.parserService.mapExpression(
-        expression, null, null, shouldMapBindings, shouldMapAwait);
+        expression,
+        null,
+        null,
+        shouldMapBindings,
+        shouldMapAwait
+      );
       return res;
     }
 
@@ -309,13 +349,15 @@ class WebConsole {
       return this._parserService;
     }
 
-    const { ParserDispatcher } =
-      require("devtools/client/debugger/src/workers/parser/index");
+    const {
+      ParserDispatcher,
+    } = require("devtools/client/debugger/src/workers/parser/index");
 
     this._parserService = new ParserDispatcher();
     this._parserService.start(
       "resource://devtools/client/debugger/dist/parser-worker.js",
-      this.chromeUtilsWindow);
+      this.chromeUtilsWindow
+    );
     return this._parserService;
   }
 

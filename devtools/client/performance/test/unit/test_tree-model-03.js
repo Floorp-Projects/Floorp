@@ -8,7 +8,9 @@
  */
 
 add_task(function test() {
-  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const {
+    ThreadNode,
+  } = require("devtools/client/performance/modules/logic/tree-model");
 
   // Create a root node from a given samples array, filtering by time.
   //
@@ -22,70 +24,100 @@ add_task(function test() {
 
   // Test the root node.
 
-  equal(thread.duration, endTime - startTime,
-    "The correct duration was calculated for the ThreadNode.");
+  equal(
+    thread.duration,
+    endTime - startTime,
+    "The correct duration was calculated for the ThreadNode."
+  );
 
-  equal(root.calls.length, 1,
-    "The correct number of child calls were calculated for the root node.");
-  ok(getFrameNodePath(root, "A"),
-    "The root node's only child call is correct.");
+  equal(
+    root.calls.length,
+    1,
+    "The correct number of child calls were calculated for the root node."
+  );
+  ok(
+    getFrameNodePath(root, "A"),
+    "The root node's only child call is correct."
+  );
 
   // Test all the descendant nodes.
 
-  equal(getFrameNodePath(root, "A").calls.length, 2,
-    "The correct number of child calls were calculated for the 'A' node.");
-  ok(getFrameNodePath(root, "A > B"),
-    "The 'A' node has a 'B' child call.");
-  ok(getFrameNodePath(root, "A > E"),
-    "The 'A' node has a 'E' child call.");
+  equal(
+    getFrameNodePath(root, "A").calls.length,
+    2,
+    "The correct number of child calls were calculated for the 'A' node."
+  );
+  ok(getFrameNodePath(root, "A > B"), "The 'A' node has a 'B' child call.");
+  ok(getFrameNodePath(root, "A > E"), "The 'A' node has a 'E' child call.");
 
-  equal(getFrameNodePath(root, "A > B").calls.length, 1,
-    "The correct number of child calls were calculated for the 'A > B' node.");
-  ok(getFrameNodePath(root, "A > B > D"),
-    "The 'A > B' node's only child call is correct.");
+  equal(
+    getFrameNodePath(root, "A > B").calls.length,
+    1,
+    "The correct number of child calls were calculated for the 'A > B' node."
+  );
+  ok(
+    getFrameNodePath(root, "A > B > D"),
+    "The 'A > B' node's only child call is correct."
+  );
 
-  equal(getFrameNodePath(root, "A > E").calls.length, 1,
-    "The correct number of child calls were calculated for the 'A > E' node.");
-  ok(getFrameNodePath(root, "A > E > F"),
-    "The 'A > E' node's only child call is correct.");
+  equal(
+    getFrameNodePath(root, "A > E").calls.length,
+    1,
+    "The correct number of child calls were calculated for the 'A > E' node."
+  );
+  ok(
+    getFrameNodePath(root, "A > E > F"),
+    "The 'A > E' node's only child call is correct."
+  );
 
-  equal(getFrameNodePath(root, "A > B > D").calls.length, 0,
-    "The correct number of child calls were calculated for the 'A > B > D' node.");
-  equal(getFrameNodePath(root, "A > E > F").calls.length, 0,
-    "The correct number of child calls were calculated for the 'A > E > F' node.");
+  equal(
+    getFrameNodePath(root, "A > B > D").calls.length,
+    0,
+    "The correct number of child calls were calculated for the 'A > B > D' node."
+  );
+  equal(
+    getFrameNodePath(root, "A > E > F").calls.length,
+    0,
+    "The correct number of child calls were calculated for the 'A > E > F' node."
+  );
 });
 
-var gThread = synthesizeProfileForTest([{
-  time: 5,
-  frames: [
-    { location: "(root)" },
-    { location: "A" },
-    { location: "B" },
-    { location: "C" },
-  ],
-}, {
-  time: 5 + 6,
-  frames: [
-    { location: "(root)" },
-    { location: "A" },
-    { location: "B" },
-    { location: "D" },
-  ],
-}, {
-  time: 5 + 6 + 7,
-  frames: [
-    { location: "(root)" },
-    { location: "A" },
-    { location: "E" },
-    { location: "F" },
-  ],
-}, {
-  time: 5 + 6 + 7 + 8,
-  frames: [
-    { location: "(root)" },
-    { location: "A" },
-    { location: "B" },
-    { location: "C" },
-    { location: "D" },
-  ],
-}]);
+var gThread = synthesizeProfileForTest([
+  {
+    time: 5,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "C" },
+    ],
+  },
+  {
+    time: 5 + 6,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "D" },
+    ],
+  },
+  {
+    time: 5 + 6 + 7,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "E" },
+      { location: "F" },
+    ],
+  },
+  {
+    time: 5 + 6 + 7 + 8,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "C" },
+      { location: "D" },
+    ],
+  },
+]);

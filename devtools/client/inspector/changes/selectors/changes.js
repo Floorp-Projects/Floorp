@@ -5,7 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-loader.lazyRequireGetter(this, "getTabPrefs", "devtools/shared/indentation", true);
+loader.lazyRequireGetter(
+  this,
+  "getTabPrefs",
+  "devtools/shared/indentation",
+  true
+);
 
 const { getSourceForDisplay } = require("../utils/changes-utils");
 
@@ -30,7 +35,10 @@ const { getSourceForDisplay } = require("../utils/changes-utils");
  */
 function getChangesTree(state, filter = {}) {
   // Use or assign defaults of sourceId and ruleId arrays by which to filter the tree.
-  const { sourceIds: sourceIdsFilter = [], ruleIds: rulesIdsFilter = [] } = filter;
+  const {
+    sourceIds: sourceIdsFilter = [],
+    ruleIds: rulesIdsFilter = [],
+  } = filter;
   /**
    * Recursively replace a rule's array of child rule ids with the referenced child rules.
    * Mark visited rules so as not to handle them (and their children) again.
@@ -53,7 +61,8 @@ function getChangesTree(state, filter = {}) {
     return {
       ...rule,
       children: rule.children.map(childRuleId =>
-          expandRuleChildren(childRuleId, rules[childRuleId], rules, visitedRules)),
+        expandRuleChildren(childRuleId, rules[childRuleId], rules, visitedRules)
+      ),
     };
   }
 
@@ -92,7 +101,12 @@ function getChangesTree(state, filter = {}) {
             // Expand the rule's array of child rule ids with the referenced child rules.
             // Skip exposing null values which mean the rule was previously visited
             // as part of an ancestor descendant tree.
-            const expandedRule = expandRuleChildren(ruleId, rule, rules, visitedRules);
+            const expandedRule = expandRuleChildren(
+              ruleId,
+              rule,
+              rules,
+              visitedRules
+            );
             if (expandedRule !== null) {
               rulesObj[ruleId] = expandedRule;
             }
@@ -122,38 +136,40 @@ function getChangesTree(state, filter = {}) {
  *         CSS stylesheet text.
  */
 
- // For stylesheet sources, the stylesheet filename and full path are used:
- //
- // /* styles.css | https://example.com/styles.css */
- //
- // .selector {
- //  /* property: oldvalue; */
- //  property: value;
- // }
+// For stylesheet sources, the stylesheet filename and full path are used:
+//
+// /* styles.css | https://example.com/styles.css */
+//
+// .selector {
+//  /* property: oldvalue; */
+//  property: value;
+// }
 
- // For inline stylesheet sources, the stylesheet index and host document URL are used:
- //
- // /* Inline #1 | https://example.com */
- //
- // .selector {
- //  /* property: oldvalue; */
- //  property: value;
- // }
+// For inline stylesheet sources, the stylesheet index and host document URL are used:
+//
+// /* Inline #1 | https://example.com */
+//
+// .selector {
+//  /* property: oldvalue; */
+//  property: value;
+// }
 
- // For element style attribute sources, the unique selector generated for the element
- // and the host document URL are used:
- //
- // /* Element (div) | https://example.com */
- //
- // div:nth-child(1) {
- //  /* property: oldvalue; */
- //  property: value;
- // }
+// For element style attribute sources, the unique selector generated for the element
+// and the host document URL are used:
+//
+// /* Element (div) | https://example.com */
+//
+// div:nth-child(1) {
+//  /* property: oldvalue; */
+//  property: value;
+// }
 function getChangesStylesheet(state, filter) {
   const changeTree = getChangesTree(state, filter);
   // Get user prefs about indentation style.
   const { indentUnit, indentWithTabs } = getTabPrefs();
-  const indentChar = indentWithTabs ? "\t".repeat(indentUnit) : " ".repeat(indentUnit);
+  const indentChar = indentWithTabs
+    ? "\t".repeat(indentUnit)
+    : " ".repeat(indentUnit);
 
   /**
    * If the rule has just one item in its array of selector versions, return it as-is.
@@ -178,8 +194,9 @@ function getChangesStylesheet(state, filter) {
         selectorText = `${indent}${selectors[0]}`;
         break;
       default:
-        selectorText = `${indent}/* ${selectors[0]} { */\n` +
-                       `${indent}${selectors[selectors.length - 1]}`;
+        selectorText =
+          `${indent}/* ${selectors[0]} { */\n` +
+          `${indent}${selectors[selectors.length - 1]}`;
     }
 
     return selectorText;
@@ -222,19 +239,22 @@ function getChangesStylesheet(state, filter) {
   }
 
   // Iterate through all sources in the change tree and build a CSS stylesheet string.
-  return Object.entries(changeTree).reduce((stylesheetText, [sourceId, source]) => {
-    const { href, rules } = source;
-    // Write code comment with source origin
-    stylesheetText += `\n/* ${getSourceForDisplay(source)} | ${href} */\n`;
-    // Write CSS rules
-    stylesheetText += Object.entries(rules).reduce((str, [ruleId, rule]) => {
-      // Add a new like only after top-level rules (level == 0)
-      str += writeRule(ruleId, rule, 0) + "\n";
-      return str;
-    }, "");
+  return Object.entries(changeTree).reduce(
+    (stylesheetText, [sourceId, source]) => {
+      const { href, rules } = source;
+      // Write code comment with source origin
+      stylesheetText += `\n/* ${getSourceForDisplay(source)} | ${href} */\n`;
+      // Write CSS rules
+      stylesheetText += Object.entries(rules).reduce((str, [ruleId, rule]) => {
+        // Add a new like only after top-level rules (level == 0)
+        str += writeRule(ruleId, rule, 0) + "\n";
+        return str;
+      }, "");
 
-    return stylesheetText;
-  }, "");
+      return stylesheetText;
+    },
+    ""
+  );
 }
 
 module.exports = {

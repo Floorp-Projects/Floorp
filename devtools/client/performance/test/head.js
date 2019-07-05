@@ -5,16 +5,21 @@
 
 "use strict";
 
-const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require, loader } = ChromeUtils.import(
+  "resource://devtools/shared/Loader.jsm"
+);
 
 try {
   Services.scriptloader.loadSubScript(
-    "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
+    "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js",
+    this
+  );
 } catch (e) {
-  ok(false,
+  ok(
+    false,
     "MISSING DEPENDENCY ON telemetry-test-helpers.js\n" +
-    "Please add the following line in browser.ini:\n" +
-    "  !/devtools/client/shared/test/telemetry-test-helpers.js\n"
+      "Please add the following line in browser.ini:\n" +
+      "  !/devtools/client/shared/test/telemetry-test-helpers.js\n"
   );
   throw e;
 }
@@ -70,12 +75,17 @@ const key = (id, win = window) => {
   const PrefUtils = require("devtools/client/performance/test/helpers/prefs");
 
   // Make sure all the prefs are reverted to their defaults once tests finish.
-  const stopObservingPrefs = PrefUtils.whenUnknownPrefChanged("devtools.performance",
+  const stopObservingPrefs = PrefUtils.whenUnknownPrefChanged(
+    "devtools.performance",
     pref => {
-      ok(false, `Unknown pref changed: ${pref}. Please add it to test/helpers/prefs.js ` +
-        "to make sure it's reverted to its default value when the tests finishes, " +
-        "and avoid interfering with future tests.\n");
-    });
+      ok(
+        false,
+        `Unknown pref changed: ${pref}. Please add it to test/helpers/prefs.js ` +
+          "to make sure it's reverted to its default value when the tests finishes, " +
+          "and avoid interfering with future tests.\n"
+      );
+    }
+  );
 
   // By default, enable memory flame graphs for tests for now.
   // TODO: remove when we have flame charts via bug 1148663.

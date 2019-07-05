@@ -31,24 +31,33 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedLabel } of TEST_DATA) {
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
 
-    info(`Checking animation name element existance for ${ targetClass }`);
+    info(`Checking animation name element existance for ${targetClass}`);
     const animationNameEl = animationItemEl.querySelector(".animation-name");
 
     if (expectedLabel) {
-      ok(animationNameEl,
-        "The animation name element should be in animation item element");
-      is(animationNameEl.textContent, expectedLabel,
-        `The animation name should be ${ expectedLabel }`);
+      ok(
+        animationNameEl,
+        "The animation name element should be in animation item element"
+      );
+      is(
+        animationNameEl.textContent,
+        expectedLabel,
+        `The animation name should be ${expectedLabel}`
+      );
     } else {
-      ok(!animationNameEl,
-        "The animation name element should not be in animation item element");
+      ok(
+        !animationNameEl,
+        "The animation name element should not be in animation item element"
+      );
     }
   }
 });

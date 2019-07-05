@@ -19,14 +19,14 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#matches", inspector);
   await testAddTextInFilter(inspector, view);
   await testClearSearchFilter(inspector, view);
 });
 
 async function testAddTextInFilter(inspector, computedView) {
-  info("Setting filter text to \"background-color\"");
+  info('Setting filter text to "background-color"');
 
   const win = computedView.styleWindow;
   const propertyViews = computedView.propertyViews;
@@ -38,10 +38,13 @@ async function testAddTextInFilter(inspector, computedView) {
 
   info("Check that the correct properties are visible");
 
-  propertyViews.forEach((propView) => {
+  propertyViews.forEach(propView => {
     const name = propView.name;
-    is(propView.visible, name.indexOf("background-color") > -1,
-      "span " + name + " property visibility check");
+    is(
+      propView.visible,
+      name.indexOf("background-color") > -1,
+      "span " + name + " property visibility check"
+    );
   });
 }
 
@@ -60,8 +63,11 @@ async function testClearSearchFilter(inspector, computedView) {
   info("Check that the correct properties are visible");
 
   ok(!searchField.value, "Search filter is cleared");
-  propertyViews.forEach((propView) => {
-    is(propView.visible, propView.hasMatchedSelectors,
-      "span " + propView.name + " property visibility check");
+  propertyViews.forEach(propView => {
+    is(
+      propView.visible,
+      propView.hasMatchedSelectors,
+      "span " + propView.name + " property visibility check"
+    );
   });
 }

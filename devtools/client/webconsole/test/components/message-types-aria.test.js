@@ -8,14 +8,22 @@ const { render } = require("enzyme");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
 // Components under test.
-const ConsoleApiCall = createFactory(require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall"));
-const ConsoleCmd = createFactory(require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand"));
-const EvaluationResult = createFactory(require("devtools/client/webconsole/components/Output/message-types/EvaluationResult"));
+const ConsoleApiCall = createFactory(
+  require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")
+);
+const ConsoleCmd = createFactory(
+  require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand")
+);
+const EvaluationResult = createFactory(
+  require("devtools/client/webconsole/components/Output/message-types/EvaluationResult")
+);
 
 const { ConsoleCommand } = require("devtools/client/webconsole/types");
 
 // Test fakes.
-const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const {
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
 describe("message types component ARIA:", () => {
@@ -30,7 +38,7 @@ describe("message types component ARIA:", () => {
   describe("EvaluationResult", () => {
     it("sets aria-live to polite", () => {
       const message = stubPreparedMessages.get("asdf()");
-      const wrapper = render(EvaluationResult({message, serviceContainer}));
+      const wrapper = render(EvaluationResult({ message, serviceContainer }));
       expect(wrapper.attr("aria-live")).toBe("polite");
     });
   });
@@ -40,7 +48,7 @@ describe("message types component ARIA:", () => {
       const message = new ConsoleCommand({
         messageText: `"simple"`,
       });
-      const wrapper = render(ConsoleCmd({message, serviceContainer}));
+      const wrapper = render(ConsoleCmd({ message, serviceContainer }));
       expect(wrapper.attr("aria-live")).toBe("off");
     });
   });

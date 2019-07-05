@@ -6,7 +6,7 @@
 
 async function test() {
   waitForExplicitFinish();
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   ok(ed.isClean(), "default isClean");
   ok(!ed.canUndo(), "default canUndo");
   ok(!ed.canRedo(), "default canRedo");

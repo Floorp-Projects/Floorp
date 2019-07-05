@@ -36,18 +36,29 @@ function checkTelemetryEvents(expectedEvents, expectedSessionId) {
   }
 
   for (const expectedEvent of expectedEvents) {
-    const sameMethodEvents = evts.filter(e => e.method === expectedEvent.method);
-    ok(sameMethodEvents.length > 0, "Found event for method: " + expectedEvent.method);
+    const sameMethodEvents = evts.filter(
+      e => e.method === expectedEvent.method
+    );
+    ok(
+      sameMethodEvents.length > 0,
+      "Found event for method: " + expectedEvent.method
+    );
 
-    const sameExtrasEvents =
-      sameMethodEvents.filter(e => _eventHasExpectedExtras(e, expectedEvent));
-    ok(sameExtrasEvents.length === 1,
-      "Found exactly one event matching the expected extras");
+    const sameExtrasEvents = sameMethodEvents.filter(e =>
+      _eventHasExpectedExtras(e, expectedEvent)
+    );
+    ok(
+      sameExtrasEvents.length === 1,
+      "Found exactly one event matching the expected extras"
+    );
     if (sameExtrasEvents.length === 0) {
       info(JSON.stringify(sameMethodEvents));
     }
-    is(sameExtrasEvents[0].extras.session_id, expectedSessionId,
-      "Select page event has the expected session");
+    is(
+      sameExtrasEvents[0].extras.session_id,
+      expectedSessionId,
+      "Select page event has the expected session"
+    );
   }
 
   return evts;
@@ -59,7 +70,9 @@ function checkTelemetryEvents(expectedEvents, expectedSessionId) {
  * Note that calling this will "clear" all the events.
  */
 function getOpenEventSessionId() {
-  const openEvents = readAboutDebuggingEvents().filter(e => e.method === "open_adbg");
+  const openEvents = readAboutDebuggingEvents().filter(
+    e => e.method === "open_adbg"
+  );
   ok(!!openEvents[0], "Found an about:debugging open event");
   return openEvents[0].extras.session_id;
 }

@@ -7,8 +7,12 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept([".delay-positive", ".delay-negative",
-                                      ".enddelay-positive", ".enddelay-negative"]);
+  await removeAnimatedElementsExcept([
+    ".delay-positive",
+    ".delay-negative",
+    ".enddelay-positive",
+    ".enddelay-negative",
+  ]);
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Get initial coordinates result as test data");
@@ -42,8 +46,15 @@ add_task(async function() {
       endDelayWidth = computedStyle.width;
     }
 
-    const coordinates = { svgViewBoxX, svgViewBoxWidth,
-                          pathX, delayX, delayWidth, endDelayX, endDelayWidth };
+    const coordinates = {
+      svgViewBoxX,
+      svgViewBoxWidth,
+      pathX,
+      delayX,
+      delayWidth,
+      endDelayX,
+      endDelayWidth,
+    };
     initialCoordinatesResult.push(coordinates);
   }
 
@@ -54,8 +65,11 @@ add_task(async function() {
 
   info("Check the layout");
   const itemEls = panel.querySelectorAll(".animation-item");
-  is(itemEls.length, initialCoordinatesResult.length,
-    "Count of animation item should be same to initial items");
+  is(
+    itemEls.length,
+    initialCoordinatesResult.length,
+    "Count of animation item should be same to initial items"
+  );
 
   info("Check the coordinates");
   checkExpectedCoordinates(itemEls, initialCoordinatesResult);
@@ -66,23 +80,38 @@ function checkExpectedCoordinates(itemEls, initialCoordinatesResult) {
     const expectedCoordinates = initialCoordinatesResult[i];
     const itemEl = itemEls[i];
     const svgEl = itemEl.querySelector("svg");
-    is(svgEl.viewBox.baseVal.x, expectedCoordinates.svgViewBoxX,
-      "X of viewBox of svg should be same");
-    is(svgEl.viewBox.baseVal.width, expectedCoordinates.svgViewBoxWidth,
-      "Width of viewBox of svg should be same");
+    is(
+      svgEl.viewBox.baseVal.x,
+      expectedCoordinates.svgViewBoxX,
+      "X of viewBox of svg should be same"
+    );
+    is(
+      svgEl.viewBox.baseVal.width,
+      expectedCoordinates.svgViewBoxWidth,
+      "Width of viewBox of svg should be same"
+    );
 
     const pathEl = svgEl.querySelector(".animation-computed-timing-path");
-    is(pathEl.transform.baseVal[0].matrix.e, expectedCoordinates.pathX,
-      "X of tansform of path element should be same");
+    is(
+      pathEl.transform.baseVal[0].matrix.e,
+      expectedCoordinates.pathX,
+      "X of tansform of path element should be same"
+    );
 
     const delayEl = itemEl.querySelector(".animation-delay-sign");
 
     if (delayEl) {
       const computedStyle = delayEl.ownerGlobal.getComputedStyle(delayEl);
-      is(computedStyle.left, expectedCoordinates.delayX,
-        "X of delay sign should be same");
-      is(computedStyle.width, expectedCoordinates.delayWidth,
-        "Width of delay sign should be same");
+      is(
+        computedStyle.left,
+        expectedCoordinates.delayX,
+        "X of delay sign should be same"
+      );
+      is(
+        computedStyle.width,
+        expectedCoordinates.delayWidth,
+        "Width of delay sign should be same"
+      );
     } else {
       ok(!expectedCoordinates.delayX, "X of delay sign should exist");
       ok(!expectedCoordinates.delayWidth, "Width of delay sign should exist");
@@ -92,13 +121,22 @@ function checkExpectedCoordinates(itemEls, initialCoordinatesResult) {
 
     if (endDelayEl) {
       const computedStyle = endDelayEl.ownerGlobal.getComputedStyle(endDelayEl);
-      is(computedStyle.left, expectedCoordinates.endDelayX,
-        "X of endDelay sign should be same");
-      is(computedStyle.width, expectedCoordinates.endDelayWidth,
-        "Width of endDelay sign should be same");
+      is(
+        computedStyle.left,
+        expectedCoordinates.endDelayX,
+        "X of endDelay sign should be same"
+      );
+      is(
+        computedStyle.width,
+        expectedCoordinates.endDelayWidth,
+        "Width of endDelay sign should be same"
+      );
     } else {
       ok(!expectedCoordinates.endDelayX, "X of endDelay sign should exist");
-      ok(!expectedCoordinates.endDelayWidth, "Width of endDelay sign should exist");
+      ok(
+        !expectedCoordinates.endDelayWidth,
+        "Width of endDelay sign should exist"
+      );
     }
   }
 }

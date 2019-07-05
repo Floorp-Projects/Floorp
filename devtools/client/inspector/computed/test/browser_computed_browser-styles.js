@@ -17,14 +17,20 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {inspector, view} = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#matches", inspector);
 
   info("Checking the default styles");
-  is(isPropertyVisible("color", view), true,
-    "span #matches color property is visible");
-  is(isPropertyVisible("background-color", view), false,
-    "span #matches background-color property is hidden");
+  is(
+    isPropertyVisible("color", view),
+    true,
+    "span #matches color property is visible"
+  );
+  is(
+    isPropertyVisible("background-color", view),
+    false,
+    "span #matches background-color property is hidden"
+  );
 
   info("Toggling the browser styles");
   const doc = view.styleDocument;
@@ -34,10 +40,12 @@ add_task(async function() {
   await onRefreshed;
 
   info("Checking the browser styles");
-  is(isPropertyVisible("color", view), true,
-    "span color property is visible");
-  is(isPropertyVisible("background-color", view), true,
-    "span background-color property is visible");
+  is(isPropertyVisible("color", view), true, "span color property is visible");
+  is(
+    isPropertyVisible("background-color", view),
+    true,
+    "span background-color property is visible"
+  );
 });
 
 function isPropertyVisible(name, view) {

@@ -12,18 +12,26 @@ add_task(async function() {
   await pushPref("devtools.inspector.three-pane-enabled", false);
 
   info("Open the inspector in a bottom toolbox host");
-  const { inspector, toolbox } = await openInspectorForURL("about:blank", "bottom");
+  const { inspector, toolbox } = await openInspectorForURL(
+    "about:blank",
+    "bottom"
+  );
 
   const button = inspector.panelDoc.querySelector(".sidebar-toggle");
   ok(button, "The toggle button exists in the DOM");
   ok(button.getAttribute("title"), "The title tooltip has initial state");
-  ok(button.classList.contains("pane-collapsed"), "The button is in collapsed state");
+  ok(
+    button.classList.contains("pane-collapsed"),
+    "The button is in collapsed state"
+  );
   ok(!!button.getClientRects().length, "The button is visible");
 
   info("Switch the host to the right");
   await toolbox.switchHost("right");
 
   ok(!!button.getClientRects().length, "The button is still visible");
-  ok(button.classList.contains("pane-collapsed"),
-    "The button is still in collapsed state");
+  ok(
+    button.classList.contains("pane-collapsed"),
+    "The button is still in collapsed state"
+  );
 });

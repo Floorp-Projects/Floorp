@@ -27,13 +27,19 @@ add_task(async function() {
   await waitFor(() => findMessage(hud, TEST_MESSAGE));
 
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, Tools.webConsole.url,
-     "The Browser Console is open and has focus");
+  is(
+    currWindow.document.documentURI,
+    Tools.webConsole.url,
+    "The Browser Console is open and has focus"
+  );
   mainWindow.focus();
   await HUDService.openBrowserConsoleOrFocus();
   currWindow = Services.wm.getMostRecentWindow(null);
-  is(currWindow.document.documentURI, Tools.webConsole.url,
-     "The Browser Console is open and has focus");
+  is(
+    currWindow.document.documentURI,
+    Tools.webConsole.url,
+    "The Browser Console is open and has focus"
+  );
   await HUDService.toggleBrowserConsole();
   hud = HUDService.getBrowserConsole();
   ok(!hud, "Browser Console has been closed");

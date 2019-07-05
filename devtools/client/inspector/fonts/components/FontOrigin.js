@@ -8,7 +8,11 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+loader.lazyRequireGetter(
+  this,
+  "clipboardHelper",
+  "devtools/shared/platform/clipboard"
+);
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
@@ -52,13 +56,11 @@ class FontOrigin extends PureComponent {
         },
         url
       ),
-      dom.button(
-        {
-          className: "copy-icon",
-          onClick: this.onCopyURL,
-          title: getStr("fontinspector.copyURL"),
-        }
-      )
+      dom.button({
+        className: "copy-icon",
+        onClick: this.onCopyURL,
+        title: getStr("fontinspector.copyURL"),
+      })
     );
   }
 }

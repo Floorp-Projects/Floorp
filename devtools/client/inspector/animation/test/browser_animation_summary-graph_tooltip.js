@@ -176,17 +176,23 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${t.targetClass}`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedResult } of TEST_DATA) {
-    const animationItemEl =
-      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
-    const summaryGraphEl = animationItemEl.querySelector(".animation-summary-graph");
+    const animationItemEl = findAnimationItemElementsByTargetSelector(
+      panel,
+      `.${targetClass}`
+    );
+    const summaryGraphEl = animationItemEl.querySelector(
+      ".animation-summary-graph"
+    );
 
-    info(`Checking tooltip for ${ targetClass }`);
-    ok(summaryGraphEl.hasAttribute("title"),
-      "Summary graph should have 'title' attribute");
+    info(`Checking tooltip for ${targetClass}`);
+    ok(
+      summaryGraphEl.hasAttribute("title"),
+      "Summary graph should have 'title' attribute"
+    );
 
     const tooltip = summaryGraphEl.getAttribute("title");
     const {
@@ -202,71 +208,87 @@ add_task(async function() {
       nameAndType,
     } = expectedResult;
 
-    ok(tooltip.startsWith(nameAndType), "Tooltip should start with name and type");
+    ok(
+      tooltip.startsWith(nameAndType),
+      "Tooltip should start with name and type"
+    );
 
     if (animationTimingFunction) {
-      const expected = `Animation timing function: ${ animationTimingFunction }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Animation timing function: ${animationTimingFunction}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
-      ok(!tooltip.includes("Animation timing function:"),
-        "Tooltip should not include animation timing function");
+      ok(
+        !tooltip.includes("Animation timing function:"),
+        "Tooltip should not include animation timing function"
+      );
     }
 
     if (delay) {
-      const expected = `Delay: ${ delay }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Delay: ${delay}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
       ok(!tooltip.includes("Delay:"), "Tooltip should not include delay");
     }
 
     if (direction) {
-      const expected = `Direction: ${ direction }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Direction: ${direction}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
       ok(!tooltip.includes("Direction:"), "Tooltip should not include delay");
     }
 
     if (duration) {
-      const expected = `Duration: ${ duration }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Duration: ${duration}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
       ok(!tooltip.includes("Duration:"), "Tooltip should not include delay");
     }
 
     if (easing) {
-      const expected = `Overall easing: ${ easing }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Overall easing: ${easing}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
-      ok(!tooltip.includes("Overall easing:"), "Tooltip should not include easing");
+      ok(
+        !tooltip.includes("Overall easing:"),
+        "Tooltip should not include easing"
+      );
     }
 
     if (endDelay) {
-      const expected = `End delay: ${ endDelay }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `End delay: ${endDelay}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
-      ok(!tooltip.includes("End delay:"), "Tooltip should not include endDelay");
+      ok(
+        !tooltip.includes("End delay:"),
+        "Tooltip should not include endDelay"
+      );
     }
 
     if (fill) {
-      const expected = `Fill: ${ fill }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Fill: ${fill}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
       ok(!tooltip.includes("Fill:"), "Tooltip should not include fill");
     }
 
     if (iterations) {
-      const expected = `Repeats: ${ iterations }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Repeats: ${iterations}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
-      ok(!tooltip.includes("Repeats:"), "Tooltip should not include iterations");
+      ok(
+        !tooltip.includes("Repeats:"),
+        "Tooltip should not include iterations"
+      );
     }
 
     if (iterationStart) {
-      const expected = `Iteration start: ${ iterationStart }`;
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
+      const expected = `Iteration start: ${iterationStart}`;
+      ok(tooltip.includes(expected), `Tooltip should include '${expected}'`);
     } else {
-      ok(!tooltip.includes("Iteration start:"),
-        "Tooltip should not include iterationStart");
+      ok(
+        !tooltip.includes("Iteration start:"),
+        "Tooltip should not include iterationStart"
+      );
     }
   }
 });

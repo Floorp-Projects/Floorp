@@ -14,17 +14,13 @@ add_task(async function() {
   info("Starting test... ");
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
-  const REQUESTS = [
-    [ "hls-m3u8", /^#EXTM3U/ ],
-    [ "mpeg-dash", /^<\?xml/ ],
-  ];
+  const REQUESTS = [["hls-m3u8", /^#EXTM3U/], ["mpeg-dash", /^<\?xml/]];
 
   let wait = waitForNetworkEvents(monitor, REQUESTS.length);
   for (const [fmt] of REQUESTS) {
@@ -43,7 +39,7 @@ add_task(async function() {
     await waitUntil(() => requestsListStatus.title);
   }
 
-  REQUESTS.forEach(([ fmt ], i) => {
+  REQUESTS.forEach(([fmt], i) => {
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
@@ -53,13 +49,16 @@ add_task(async function() {
       {
         status: 200,
         statusText: "OK",
-      });
+      }
+    );
   });
 
   wait = waitForDOM(document, "#response-panel");
   store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector("#response-tab")
+  );
   await wait;
 
   store.dispatch(Actions.selectRequest(null));
@@ -74,8 +73,10 @@ add_task(async function() {
 
   return teardown(monitor);
 
-  function testEditorContent([ fmt, textRe ]) {
-    ok(getCodeMirrorValue(monitor).match(textRe),
-      "The text shown in the source editor for " + fmt + " is correct.");
+  function testEditorContent([fmt, textRe]) {
+    ok(
+      getCodeMirrorValue(monitor).match(textRe),
+      "The text shown in the source editor for " + fmt + " is correct."
+    );
   }
 });

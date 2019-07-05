@@ -8,28 +8,34 @@
 // right dimension label
 
 const TEST_NODES = [
-  {selector: "img.local", size: "192" + " \u00D7 " + "192"},
-  {selector: "img.data", size: "64" + " \u00D7 " + "64"},
-  {selector: "img.remote", size: "22" + " \u00D7 " + "23"},
-  {selector: ".canvas", size: "600" + " \u00D7 " + "600"},
+  { selector: "img.local", size: "192" + " \u00D7 " + "192" },
+  { selector: "img.data", size: "64" + " \u00D7 " + "64" },
+  { selector: "img.remote", size: "22" + " \u00D7 " + "23" },
+  { selector: ".canvas", size: "600" + " \u00D7 " + "600" },
 ];
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_markup_image_and_canvas_2.html");
-  const {inspector} = await openInspector();
+  const { inspector } = await openInspector();
 
   info("Selecting the first <img> tag");
   await selectNode("img", inspector);
 
   for (const testNode of TEST_NODES) {
     const target = await getImageTooltipTarget(testNode, inspector);
-    await assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
+    await assertTooltipShownOnHover(
+      inspector.markup.imagePreviewTooltip,
+      target
+    );
     checkImageTooltip(testNode, inspector);
-    await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
+    await assertTooltipHiddenOnMouseOut(
+      inspector.markup.imagePreviewTooltip,
+      target
+    );
   }
 });
 
-async function getImageTooltipTarget({selector}, inspector) {
+async function getImageTooltipTarget({ selector }, inspector) {
   const nodeFront = await getNodeFront(selector, inspector);
   const isImg = nodeFront.tagName.toLowerCase() === "img";
 
@@ -42,14 +48,17 @@ async function getImageTooltipTarget({selector}, inspector) {
   return target;
 }
 
-function checkImageTooltip({selector, size}, {markup}) {
+function checkImageTooltip({ selector, size }, { markup }) {
   const panel = markup.imagePreviewTooltip.panel;
   const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip for [" + selector + "] contains an image");
 
   const label = panel.querySelector(".devtools-tooltip-caption");
-  is(label.textContent, size,
-     "Tooltip label for [" + selector + "] displays the right image size");
+  is(
+    label.textContent,
+    size,
+    "Tooltip label for [" + selector + "] displays the right image size"
+  );
 
   markup.imagePreviewTooltip.hide();
 }

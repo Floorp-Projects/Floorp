@@ -56,9 +56,11 @@ async function runTests(aTab) {
     });
 
     toolbox.destroy().then(function() {
-      is(collectedEvents.join(":"),
+      is(
+        collectedEvents.join(":"),
         "toolbox-destroy:destroy:gDevTools-testTool-destroy:toolbox-testTool-destroy",
-        "Found the right amount of collected events.");
+        "Found the right amount of collected events."
+      );
 
       gDevTools.unregisterTool(toolDefinition.id);
       gBrowser.removeCurrentTab();

@@ -18,7 +18,8 @@ function makeURIData(script) {
 const TestData = [
   {
     jsmsg: "JSMSG_READ_ONLY",
-    script: "'use strict'; (Object.freeze({name: 'Elsa', score: 157})).score = 0;",
+    script:
+      "'use strict'; (Object.freeze({name: 'Elsa', score: 157})).score = 0;",
     isException: true,
     expected: 'TypeError: "score" is read-only',
   },
@@ -52,7 +53,9 @@ async function testScriptError(hud, testData) {
   ok(true, msg);
 
   // grab the most current error doc URL.
-  const urlObj = new URL(ErrorDocs.GetURL({ errorMessageName: testData.jsmsg }));
+  const urlObj = new URL(
+    ErrorDocs.GetURL({ errorMessageName: testData.jsmsg })
+  );
 
   // strip all params from the URL.
   const url = `${urlObj.origin}${urlObj.pathname}`;

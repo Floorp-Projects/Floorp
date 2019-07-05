@@ -18,7 +18,7 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {inspector, view} = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   await testCopyToClipboard(inspector, view);
   await testManualEdit(inspector, view);
@@ -30,17 +30,22 @@ async function testCopyToClipboard(inspector, view) {
 
   await selectNode("div", inspector);
 
-  const element = getRuleViewProperty(view, "div", "color").valueSpan
-    .querySelector(".ruleview-colorswatch");
+  const element = getRuleViewProperty(
+    view,
+    "div",
+    "color"
+  ).valueSpan.querySelector(".ruleview-colorswatch");
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, element);
-  const menuitemCopyColor = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyColor"));
+  const menuitemCopyColor = allMenuItems.find(
+    item =>
+      item.label ===
+      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyColor")
+  );
 
   ok(menuitemCopyColor.visible, "Copy color is visible");
 
-  await waitForClipboardPromise(() => menuitemCopyColor.click(),
-    "#123ABC");
+  await waitForClipboardPromise(() => menuitemCopyColor.click(), "#123ABC");
 
   EventUtils.synthesizeKey("KEY_Escape");
 }
@@ -49,7 +54,7 @@ async function testManualEdit(inspector, view) {
   info("Testing manually edited colors");
   await selectNode("div", inspector);
 
-  const {valueSpan} = getRuleViewProperty(view, "div", "color");
+  const { valueSpan } = getRuleViewProperty(view, "div", "color");
 
   const newColor = "#C9184E";
   const editor = await focusEditableField(view, valueSpan);
@@ -61,8 +66,8 @@ async function testManualEdit(inspector, view) {
   await onBlur;
   await wait(1);
 
-  const colorValueElement = getRuleViewProperty(view, "div", "color")
-    .valueSpan.firstChild;
+  const colorValueElement = getRuleViewProperty(view, "div", "color").valueSpan
+    .firstChild;
   is(colorValueElement.dataset.color, newColor, "data-color was updated");
 
   view.styleDocument.popupNode = colorValueElement;
@@ -76,8 +81,11 @@ async function testColorPickerEdit(inspector, view) {
   info("Testing colors edited via color picker");
   await selectNode("div", inspector);
 
-  const swatchElement = getRuleViewProperty(view, "div", "color").valueSpan
-    .querySelector(".ruleview-colorswatch");
+  const swatchElement = getRuleViewProperty(
+    view,
+    "div",
+    "color"
+  ).valueSpan.querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
   const picker = view.tooltips.getTooltip("colorPicker");
@@ -89,8 +97,11 @@ async function testColorPickerEdit(inspector, view) {
   const rgbaColorText = "rgba(83, 183, 89, 1)";
   await simulateColorPickerChange(view, picker, rgbaColor);
 
-  is(swatchElement.parentNode.dataset.color, rgbaColorText,
-    "data-color was updated");
+  is(
+    swatchElement.parentNode.dataset.color,
+    rgbaColorText,
+    "data-color was updated"
+  );
   view.styleDocument.popupNode = swatchElement;
 
   const contextMenu = view.contextMenu;

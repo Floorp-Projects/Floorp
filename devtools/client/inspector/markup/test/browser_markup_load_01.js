@@ -24,17 +24,20 @@ server.registerPathHandler("/slow.gif", function(metadata, response) {
 });
 
 // Test page load events.
-const TEST_URL = "data:text/html," +
+const TEST_URL =
+  "data:text/html," +
   "<!DOCTYPE html>" +
   "<head><meta charset='utf-8' /></head>" +
   "<body>" +
   "<p>Slow script</p>" +
-  "<img src='http://localhost:" + server.identity.primaryPort + "/slow.gif' />" +
+  "<img src='http://localhost:" +
+  server.identity.primaryPort +
+  "/slow.gif' />" +
   "</body>" +
   "</html>";
 
 add_task(async function() {
-  const {inspector, testActor, tab} = await openInspectorForURL(TEST_URL);
+  const { inspector, testActor, tab } = await openInspectorForURL(TEST_URL);
 
   const domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   const pageLoaded = waitForLinkedBrowserEvent(tab, "load");
@@ -64,10 +67,14 @@ add_task(async function() {
 });
 
 async function chooseWithInspectElementContextMenu(selector, tab) {
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {
-    type: "contextmenu",
-    button: 2,
-  }, tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    tab.linkedBrowser
+  );
 
   await EventUtils.sendString("Q");
 }

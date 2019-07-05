@@ -6,11 +6,13 @@
 
 "use strict";
 
+const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 const {
-  prepareMessage,
-} = require("devtools/client/webconsole/utils/messages");
-const { IdGenerator } = require("devtools/client/webconsole/utils/id-generator");
-const { batchActions } = require("devtools/client/shared/redux/middleware/debounce");
+  IdGenerator,
+} = require("devtools/client/webconsole/utils/id-generator");
+const {
+  batchActions,
+} = require("devtools/client/shared/redux/middleware/debounce");
 
 const {
   MESSAGES_ADD,
@@ -117,21 +119,25 @@ function messageGetMatchingElements(id, cssSelectors) {
 }
 
 function messageGetTableData(id, client, dataType) {
-  return ({dispatch}) => {
+  return ({ dispatch }) => {
     let fetchObjectActorData;
     if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
-      fetchObjectActorData = (cb) => client.enumEntries(cb);
+      fetchObjectActorData = cb => client.enumEntries(cb);
     } else {
-      fetchObjectActorData = (cb) => client.enumProperties({
-        ignoreNonIndexedProperties: dataType === "Array",
-      }, cb);
+      fetchObjectActorData = cb =>
+        client.enumProperties(
+          {
+            ignoreNonIndexedProperties: dataType === "Array",
+          },
+          cb
+        );
     }
 
     fetchObjectActorData(enumResponse => {
-      const {iterator} = enumResponse;
+      const { iterator } = enumResponse;
       // eslint-disable-next-line mozilla/use-returnValue
       iterator.slice(0, iterator.count, sliceResponse => {
-        const {ownProperties} = sliceResponse;
+        const { ownProperties } = sliceResponse;
         dispatch(messageUpdatePayload(id, ownProperties));
       });
     });

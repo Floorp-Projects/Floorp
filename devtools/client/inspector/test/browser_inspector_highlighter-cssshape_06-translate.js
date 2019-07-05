@@ -13,7 +13,7 @@ const SHAPE_SELECTORS = ["#polygon-transform", "#circle", "#ellipse", "#inset"];
 add_task(async function() {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  const {testActor, inspector} = env;
+  const { testActor, inspector } = env;
   const view = selectRuleView(inspector);
   const highlighters = view.highlighters;
   const config = { inspector, view, highlighters, testActor, helper };
@@ -39,40 +39,47 @@ async function testTranslate(config) {
   const property = "clip-path";
 
   for (const selector of SHAPE_SELECTORS) {
-    await setup({selector, property, options, ...config});
+    await setup({ selector, property, options, ...config });
     const { mouse } = helper;
 
-    const { center, width, height } = await getBoundingBoxInPx({selector, ...config});
+    const { center, width, height } = await getBoundingBoxInPx({
+      selector,
+      ...config,
+    });
     const [x, y] = center;
     const dx = width / 10;
     const dy = height / 10;
     let onShapeChangeApplied;
 
     info(`Translating ${selector}`);
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(x, y, selector);
     await mouse.move(x + dx, y + dy, selector);
     await mouse.up(x + dx, y + dy, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    let newBB = await getBoundingBoxInPx({selector, ...config});
+    let newBB = await getBoundingBoxInPx({ selector, ...config });
     isnot(newBB.center[0], x, `${selector} translated on y axis`);
     isnot(newBB.center[1], y, `${selector} translated on x axis`);
 
     info(`Translating ${selector} back`);
-    onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+    onShapeChangeApplied = highlighters.once(
+      "shapes-highlighter-changes-applied"
+    );
     await mouse.down(x + dx, y + dy, selector);
     await mouse.move(x, y, selector);
     await mouse.up(x, y, selector);
     await testActor.reflow();
     await onShapeChangeApplied;
 
-    newBB = await getBoundingBoxInPx({selector, ...config});
+    newBB = await getBoundingBoxInPx({ selector, ...config });
     is(newBB.center[0], x, `${selector} translated back on x axis`);
     is(newBB.center[1], y, `${selector} translated back on y axis`);
 
-    await teardown({selector, property, ...config});
+    await teardown({ selector, property, ...config });
   }
 }
 
@@ -86,10 +93,18 @@ async function getBoundingBoxInPx(config) {
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers
   const path = await testActor.getHighlighterNodeAttribute(
-    "shapes-bounding-box", "d", highlighters.highlighters[HIGHLIGHTER_TYPE]);
-  const coords = path.replace(/[MLZ]/g, "").split(" ").map((n, i) => {
-    return i % 2 === 0 ? paddingLeft + width * n / 100 : paddingTop + height * n / 100;
-  });
+    "shapes-bounding-box",
+    "d",
+    highlighters.highlighters[HIGHLIGHTER_TYPE]
+  );
+  const coords = path
+    .replace(/[MLZ]/g, "")
+    .split(" ")
+    .map((n, i) => {
+      return i % 2 === 0
+        ? paddingLeft + (width * n) / 100
+        : paddingTop + (height * n) / 100;
+    });
 
   const nw = [coords[0], coords[1]];
   const ne = [coords[2], coords[3]];

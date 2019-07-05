@@ -96,7 +96,7 @@ function sendCustomRequest(connector, requestId = null) {
       data.body = request.requestPostData.postData.text;
     }
 
-    connector.sendHTTPRequest(data, (response) => {
+    connector.sendHTTPRequest(data, response => {
       return dispatch({
         type: SEND_CUSTOM_REQUEST,
         id: response.eventActor.actor,

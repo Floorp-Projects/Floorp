@@ -5,7 +5,10 @@
 "use strict";
 
 // React
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { L10N } = require("../utils/l10n");
@@ -19,10 +22,10 @@ const {
 loader.lazyGetter(this, "Badge", () => createFactory(require("./Badge")));
 
 /**
-* Component for rendering a badge for text alternative accessibliity check
-* failures association with a given accessibility object in the accessibility
-* tree.
-*/
+ * Component for rendering a badge for text alternative accessibliity check
+ * failures association with a given accessibility object in the accessibility
+ * tree.
+ */
 class TextLabelBadge extends Component {
   static get propTypes() {
     return {

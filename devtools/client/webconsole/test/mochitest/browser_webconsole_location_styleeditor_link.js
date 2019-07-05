@@ -5,9 +5,10 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-location-styleeditor-link.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/" +
+  "test-location-styleeditor-link.html";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.filter.css", true);
@@ -29,16 +30,23 @@ add_task(async function() {
 async function testViewSource(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
   const messageNode = await waitFor(() => findMessage(hud, text));
-  const frameLinkNode = messageNode.querySelector(".message-location .frame-link");
+  const frameLinkNode = messageNode.querySelector(
+    ".message-location .frame-link"
+  );
   ok(frameLinkNode, "The message does have a location link");
 
   const onStyleEditorSelected = toolbox.once("styleeditor-selected");
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    messageNode.querySelector(".frame-link-filename"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    messageNode.querySelector(".frame-link-filename")
+  );
 
   const panel = await onStyleEditorSelected;
-  ok(true, "The style editor is selected when clicking on the location element");
+  ok(
+    true,
+    "The style editor is selected when clicking on the location element"
+  );
 
   await onStyleEditorReady(panel);
 
@@ -87,10 +95,11 @@ async function checkCursorPosition(styleEditorUI, editor, line, column) {
   line = position.line;
   column = position.column;
 
-  is(editor.sourceEditor.getCursor().line, line,
-     "correct line is selected");
-  is(editor.sourceEditor.getCursor().ch, column,
-     "correct column is selected");
-  is(styleEditorUI.selectedStyleSheetIndex, editor.styleSheet.styleSheetIndex,
-     "correct stylesheet is selected in the editor");
+  is(editor.sourceEditor.getCursor().line, line, "correct line is selected");
+  is(editor.sourceEditor.getCursor().ch, column, "correct column is selected");
+  is(
+    styleEditorUI.selectedStyleSheetIndex,
+    editor.styleSheet.styleSheetIndex,
+    "correct stylesheet is selected in the editor"
+  );
 }

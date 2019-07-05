@@ -13,7 +13,8 @@ const timingMarkers = require("./timing-markers");
 const ui = require("./ui");
 const webSockets = require("./web-sockets");
 
-Object.assign(exports,
+Object.assign(
+  exports,
   batching,
   filters,
   requests,
@@ -21,5 +22,5 @@ Object.assign(exports,
   sort,
   timingMarkers,
   ui,
-  webSockets,
+  webSockets
 );

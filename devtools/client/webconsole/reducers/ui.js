@@ -21,35 +21,39 @@ const {
   EDITOR_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
-const {
-  PANELS,
-} = require("devtools/client/netmonitor/src/constants");
+const { PANELS } = require("devtools/client/netmonitor/src/constants");
 
-const UiState = (overrides) => Object.freeze(Object.assign({
-  initialized: false,
-  networkMessageActiveTabId: PANELS.HEADERS,
-  persistLogs: false,
-  showContentMessages: false,
-  sidebarVisible: false,
-  timestampsVisible: true,
-  gripInSidebar: null,
-  closeButtonVisible: false,
-  reverseSearchInputVisible: false,
-  reverseSearchInitialValue: "",
-  editor: false,
-  filterBarDisplayMode: FILTERBAR_DISPLAY_MODES.WIDE,
-}, overrides));
+const UiState = overrides =>
+  Object.freeze(
+    Object.assign(
+      {
+        initialized: false,
+        networkMessageActiveTabId: PANELS.HEADERS,
+        persistLogs: false,
+        showContentMessages: false,
+        sidebarVisible: false,
+        timestampsVisible: true,
+        gripInSidebar: null,
+        closeButtonVisible: false,
+        reverseSearchInputVisible: false,
+        reverseSearchInitialValue: "",
+        editor: false,
+        filterBarDisplayMode: FILTERBAR_DISPLAY_MODES.WIDE,
+      },
+      overrides
+    )
+  );
 
 function ui(state = UiState(), action) {
   switch (action.type) {
     case PERSIST_TOGGLE:
-      return {...state, persistLogs: !state.persistLogs};
+      return { ...state, persistLogs: !state.persistLogs };
     case SHOW_CONTENT_MESSAGES_TOGGLE:
-      return {...state, showContentMessages: !state.showContentMessages};
+      return { ...state, showContentMessages: !state.showContentMessages };
     case TIMESTAMPS_TOGGLE:
-      return {...state, timestampsVisible: action.visible};
+      return { ...state, timestampsVisible: action.visible };
     case SELECT_NETWORK_MESSAGE_TAB:
-      return {...state, networkMessageActiveTabId: action.id};
+      return { ...state, networkMessageActiveTabId: action.id };
     case SIDEBAR_CLOSE:
       return {
         ...state,
@@ -57,16 +61,16 @@ function ui(state = UiState(), action) {
         gripInSidebar: null,
       };
     case INITIALIZE:
-      return {...state, initialized: true};
+      return { ...state, initialized: true };
     case MESSAGES_CLEAR:
-      return {...state, sidebarVisible: false, gripInSidebar: null};
+      return { ...state, sidebarVisible: false, gripInSidebar: null };
     case SHOW_OBJECT_IN_SIDEBAR:
       if (action.grip === state.gripInSidebar) {
         return state;
       }
-      return {...state, sidebarVisible: true, gripInSidebar: action.grip};
+      return { ...state, sidebarVisible: true, gripInSidebar: action.grip };
     case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
-      return {...state, closeButtonVisible: action.shouldDisplayButton};
+      return { ...state, closeButtonVisible: action.shouldDisplayButton };
     case REVERSE_SEARCH_INPUT_TOGGLE:
       return {
         ...state,

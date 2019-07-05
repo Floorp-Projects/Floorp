@@ -17,10 +17,6 @@ module.exports = {
     // Map all require("devtools/...") to the real devtools root.
     "^devtools\\/(.*)": `${__dirname}/../../../$1`,
   },
-  setupFiles: [
-    "<rootDir>setup.js",
-  ],
-  snapshotSerializers: [
-    "enzyme-to-json/serializer",
-  ],
+  setupFiles: ["<rootDir>setup.js"],
+  snapshotSerializers: ["enzyme-to-json/serializer"],
 };

@@ -24,7 +24,9 @@ const INITIAL_RULES = {
   isPrintSimulationHidden: false,
   // Whether or not the source links are enabled. This is determined by
   // whether or not the style editor is registered.
-  isSourceLinkEnabled: Services.prefs.getBoolPref("devtools.styleeditor.enabled"),
+  isSourceLinkEnabled: Services.prefs.getBoolPref(
+    "devtools.styleeditor.enabled"
+  ),
   // Array of CSS rules.
   rules: [],
 };
@@ -83,7 +85,8 @@ function getRuleState(rule) {
   return {
     // Array of CSS declarations.
     declarations: rule.declarations.map(declaration =>
-      getDeclarationState(declaration, rule.domRule.actorID)),
+      getDeclarationState(declaration, rule.domRule.actorID)
+    ),
     // An unique CSS rule id.
     id: rule.domRule.actorID,
     // An object containing information about the CSS rule's inheritance.
@@ -106,7 +109,6 @@ function getRuleState(rule) {
 }
 
 const reducers = {
-
   [UPDATE_ADD_RULE_ENABLED](rules, { enabled }) {
     return {
       ...rules,
@@ -162,7 +164,6 @@ const reducers = {
       }),
     };
   },
-
 };
 
 module.exports = function(rules = INITIAL_RULES, action) {

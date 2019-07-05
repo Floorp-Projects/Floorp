@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8," +
+const TEST_URI =
+  "data:text/html;charset=utf8," +
   "<script>console.log({a:1,b:2,c:[3,4,5]});</script>";
 
 add_task(async function() {

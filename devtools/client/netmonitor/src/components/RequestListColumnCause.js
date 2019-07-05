@@ -37,14 +37,20 @@ class RequestListColumnCause extends Component {
       causeHasStack = cause.stacktrace && cause.stacktrace.length > 0;
     }
 
-    return (
-      dom.td({ className: "requests-list-column requests-list-cause", title: causeType },
-        causeHasStack && div({
-          className: "requests-list-cause-stack",
-          onMouseDown: onCauseBadgeMouseDown,
-        }, "JS"),
-        causeType
-      )
+    return dom.td(
+      {
+        className: "requests-list-column requests-list-cause",
+        title: causeType,
+      },
+      causeHasStack &&
+        div(
+          {
+            className: "requests-list-cause-stack",
+            onMouseDown: onCauseBadgeMouseDown,
+          },
+          "JS"
+        ),
+      causeType
     );
   }
 }

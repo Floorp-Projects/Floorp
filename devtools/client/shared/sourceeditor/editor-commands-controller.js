@@ -63,12 +63,12 @@ function createController(ed) {
       const cm = ed.codeMirror;
 
       const map = {
-        "cmd_selectAll": "selectAll",
-        "cmd_find": "find",
-        "cmd_undo": "undo",
-        "cmd_redo": "redo",
-        "cmd_delete": "delCharAfter",
-        "cmd_findAgain": "findNext",
+        cmd_selectAll: "selectAll",
+        cmd_find: "find",
+        cmd_undo: "undo",
+        cmd_redo: "redo",
+        cmd_delete: "delCharAfter",
+        cmd_findAgain: "findNext",
       };
 
       if (map[cmd]) {

@@ -7,7 +7,10 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const { createFactory, Component } = require("devtools/client/shared/vendor/react");
+  const {
+    createFactory,
+    Component,
+  } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -33,23 +36,28 @@ define(function(require, exports, module) {
     render() {
       const data = this.props.data;
 
-      return (
-        div({className: "netInfoHeadersTable"},
-          div({className: "netHeadersGroup"},
-            div({className: "netInfoHeadersGroup"},
-              JSONView.Locale.$STR("jsonViewer.responseHeaders")
-            ),
-            table({cellPadding: 0, cellSpacing: 0},
-              HeaderListFactory({headers: data.response})
-            )
+      return div(
+        { className: "netInfoHeadersTable" },
+        div(
+          { className: "netHeadersGroup" },
+          div(
+            { className: "netInfoHeadersGroup" },
+            JSONView.Locale.$STR("jsonViewer.responseHeaders")
           ),
-          div({className: "netHeadersGroup"},
-            div({className: "netInfoHeadersGroup"},
-              JSONView.Locale.$STR("jsonViewer.requestHeaders")
-            ),
-            table({cellPadding: 0, cellSpacing: 0},
-              HeaderListFactory({headers: data.request})
-            )
+          table(
+            { cellPadding: 0, cellSpacing: 0 },
+            HeaderListFactory({ headers: data.response })
+          )
+        ),
+        div(
+          { className: "netHeadersGroup" },
+          div(
+            { className: "netInfoHeadersGroup" },
+            JSONView.Locale.$STR("jsonViewer.requestHeaders")
+          ),
+          table(
+            { cellPadding: 0, cellSpacing: 0 },
+            HeaderListFactory({ headers: data.request })
           )
         )
       );
@@ -63,10 +71,12 @@ define(function(require, exports, module) {
   class HeaderList extends Component {
     static get propTypes() {
       return {
-        headers: PropTypes.arrayOf(PropTypes.shape({
-          name: PropTypes.string,
-          value: PropTypes.string,
-        })),
+        headers: PropTypes.arrayOf(
+          PropTypes.shape({
+            name: PropTypes.string,
+            value: PropTypes.string,
+          })
+        ),
       };
     }
 
@@ -88,20 +98,18 @@ define(function(require, exports, module) {
       const rows = [];
       headers.forEach(header => {
         rows.push(
-          tr({key: header.name},
-            td({className: "netInfoParamName"},
-              span({title: header.name}, header.name)
+          tr(
+            { key: header.name },
+            td(
+              { className: "netInfoParamName" },
+              span({ title: header.name }, header.name)
             ),
-            td({className: "netInfoParamValue"}, header.value)
+            td({ className: "netInfoParamValue" }, header.value)
           )
         );
       });
 
-      return (
-        tbody({},
-          rows
-        )
-      );
+      return tbody({}, rows);
     }
   }
 

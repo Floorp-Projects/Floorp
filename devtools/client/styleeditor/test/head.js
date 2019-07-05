@@ -8,11 +8,16 @@
 
 /* import-globals-from ../../inspector/shared/test/head.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js", this);
+  "chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js",
+  this
+);
 
-const TEST_BASE = "chrome://mochitests/content/browser/devtools/client/styleeditor/test/";
-const TEST_BASE_HTTP = "http://example.com/browser/devtools/client/styleeditor/test/";
-const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/styleeditor/test/";
+const TEST_BASE =
+  "chrome://mochitests/content/browser/devtools/client/styleeditor/test/";
+const TEST_BASE_HTTP =
+  "http://example.com/browser/devtools/client/styleeditor/test/";
+const TEST_BASE_HTTPS =
+  "https://example.com/browser/devtools/client/styleeditor/test/";
 const TEST_HOST = "mochi.test:8888";
 
 /**
@@ -28,12 +33,16 @@ var addTab = function(url, win) {
     const targetWindow = win || window;
     const targetBrowser = targetWindow.gBrowser;
 
-    const tab = targetBrowser.selectedTab = BrowserTestUtils.addTab(targetBrowser, url);
-    BrowserTestUtils.browserLoaded(targetBrowser.selectedBrowser)
-      .then(function() {
+    const tab = (targetBrowser.selectedTab = BrowserTestUtils.addTab(
+      targetBrowser,
+      url
+    ));
+    BrowserTestUtils.browserLoaded(targetBrowser.selectedBrowser).then(
+      function() {
         info("URL '" + url + "' loading complete");
         resolve(tab);
-      });
+      }
+    );
   });
 };
 
@@ -78,7 +87,7 @@ var openStyleEditor = async function(tab) {
   const ui = panel.UI;
 
   // The stylesheet list appears with an animation. Let this animation finish.
-  const animations = ui._root.getAnimations({subtree: true});
+  const animations = ui._root.getAnimations({ subtree: true });
   await Promise.all(animations.map(a => a.finished));
 
   return { toolbox, panel, ui };
@@ -107,13 +116,15 @@ var openStyleEditorForURL = async function(url, win) {
  *        name of the property.
  */
 var getComputedStyleProperty = async function(args) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, args,
-    function({selector, pseudo, name}) {
-      const element = content.document.querySelector(selector);
-      const style = content.getComputedStyle(element, pseudo);
-      return style.getPropertyValue(name);
-    }
-  );
+  return ContentTask.spawn(gBrowser.selectedBrowser, args, function({
+    selector,
+    pseudo,
+    name,
+  }) {
+    const element = content.document.querySelector(selector);
+    const style = content.getComputedStyle(element, pseudo);
+    return style.getPropertyValue(name);
+  });
 };
 
 /**

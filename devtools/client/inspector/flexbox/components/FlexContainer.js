@@ -13,7 +13,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
+const {
+  translateNodeFrontToGrip,
+} = require("devtools/client/inspector/shared/utils");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
@@ -75,13 +77,13 @@ class FlexContainer extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
     } = this.props;
-    const {
-      nodeFront,
-      properties,
-    } = flexContainer;
+    const { nodeFront, properties } = flexContainer;
 
-    return createElement(Fragment, null,
-      dom.div({ className: "flex-header-container-label" },
+    return createElement(
+      Fragment,
+      null,
+      dom.div(
+        { className: "flex-header-container-label" },
         Rep({
           defaultRep: ElementNode,
           mode: MODE.TINY,
@@ -109,7 +111,8 @@ class FlexContainer extends PureComponent {
           color
         )
       ),
-      dom.div({ className: "flex-header-container-properties" },
+      dom.div(
+        { className: "flex-header-container-properties" },
         dom.div(
           {
             className: "inspector-badge",

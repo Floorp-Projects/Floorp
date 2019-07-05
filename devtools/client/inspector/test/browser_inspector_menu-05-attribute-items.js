@@ -32,10 +32,14 @@ add_task(async function() {
   }
 
   async function testCopyAttributeValue() {
-    info("Testing 'Copy Attribute Value' and waiting for clipboard promise to resolve");
+    info(
+      "Testing 'Copy Attribute Value' and waiting for clipboard promise to resolve"
+    );
     const copyAttributeValue = getMenuItem("node-menu-copy-attribute");
 
-    info("Triggering 'Copy Attribute Value' and waiting for clipboard to copy the value");
+    info(
+      "Triggering 'Copy Attribute Value' and waiting for clipboard to copy the value"
+    );
     inspector.markup.contextMenu.nodeMenuTriggerInfo = {
       type: "attribute",
       name: "data-edit",
@@ -48,10 +52,11 @@ add_task(async function() {
   async function testCopyLongAttributeValue() {
     info("Testing 'Copy Attribute Value' copies very long attribute values");
     const copyAttributeValue = getMenuItem("node-menu-copy-attribute");
-    const longAttribute = "#01234567890123456789012345678901234567890123456789" +
-    "12345678901234567890123456789012345678901234567890123456789012345678901" +
-    "23456789012345678901234567890123456789012345678901234567890123456789012" +
-    "34567890123456789012345678901234567890123456789012345678901234567890123";
+    const longAttribute =
+      "#01234567890123456789012345678901234567890123456789" +
+      "12345678901234567890123456789012345678901234567890123456789012345678901" +
+      "23456789012345678901234567890123456789012345678901234567890123456789012" +
+      "34567890123456789012345678901234567890123456789012345678901234567890123";
 
     inspector.markup.contextMenu.nodeMenuTriggerInfo = {
       type: "attribute",
@@ -59,7 +64,10 @@ add_task(async function() {
       value: longAttribute,
     };
 
-    await waitForClipboardPromise(() => copyAttributeValue.click(), longAttribute);
+    await waitForClipboardPromise(
+      () => copyAttributeValue.click(),
+      longAttribute
+    );
   }
 
   async function testEditAttribute() {
@@ -77,8 +85,9 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_Enter");
     await onMutation;
 
-    const isAttributeChanged =
-      await testActor.hasNode("#attributes[data-edit='edited']");
+    const isAttributeChanged = await testActor.hasNode(
+      "#attributes[data-edit='edited']"
+    );
     ok(isAttributeChanged, "attribute was successfully edited");
   }
 

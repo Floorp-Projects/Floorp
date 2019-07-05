@@ -18,25 +18,25 @@ global.loader = {
   },
   lazyRequireGetter: (obj, property, module, destructure) => {
     Object.defineProperty(obj, property, {
-    get: () => {
-      // Redefine this accessor property as a data property.
-      // Delete it first, to rule out "too much recursion" in case obj is
-      // a proxy whose defineProperty handler might unwittingly trigger this
-      // getter again.
-      delete obj[property];
-      const value = destructure
-        ? require(module)[property]
-        : require(module || property);
-      Object.defineProperty(obj, property, {
-        value,
-        writable: true,
-        configurable: true,
-        enumerable: true,
-      });
-      return value;
-    },
-    configurable: true,
-    enumerable: true,
+      get: () => {
+        // Redefine this accessor property as a data property.
+        // Delete it first, to rule out "too much recursion" in case obj is
+        // a proxy whose defineProperty handler might unwittingly trigger this
+        // getter again.
+        delete obj[property];
+        const value = destructure
+          ? require(module)[property]
+          : require(module || property);
+        Object.defineProperty(obj, property, {
+          value,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
+        return value;
+      },
+      configurable: true,
+      enumerable: true,
     });
   },
   lazyImporter: () => {},

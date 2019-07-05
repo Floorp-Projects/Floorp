@@ -7,7 +7,7 @@
 // See Bug 1481443.
 
 add_task(async function() {
-  const {ed, win} = await setup();
+  const { ed, win } = await setup();
   const editorDoc = ed.container.contentDocument;
   await promiseWaitForFocus();
   const isMacOS = Services.appinfo.OS === "Darwin";
@@ -23,16 +23,22 @@ add_task(async function() {
 
   // A character is added only on OSX.
   let expectedText = isMacOS ? initialText + "b" : initialText;
-  is(ed.getCursor().ch, expectedText.length,
-    "Cursor is at expected position after Alt-B");
+  is(
+    ed.getCursor().ch,
+    expectedText.length,
+    "Cursor is at expected position after Alt-B"
+  );
   is(ed.getText(), expectedText, "Editor has expected content after Alt-B");
 
   EventUtils.synthesizeKey("f", { altKey: true }, editorDoc.defaultView);
 
   // A character is added only on OSX.
   expectedText = isMacOS ? expectedText + "f" : initialText;
-  is(ed.getCursor().ch, expectedText.length,
-    "Cursor is at expected position after Alt-F");
+  is(
+    ed.getCursor().ch,
+    expectedText.length,
+    "Cursor is at expected position after Alt-F"
+  );
   is(ed.getText(), expectedText, "Editor has expected content after Alt-F");
 
   ed.destroy();

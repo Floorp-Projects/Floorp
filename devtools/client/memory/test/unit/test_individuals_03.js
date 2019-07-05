@@ -42,16 +42,21 @@ add_task(async function() {
 
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   dispatch(takeSnapshotAndCensus(front, heapWorker));
-  await waitUntilCensusState(store, s => s.census,
-                             [censusState.SAVED, censusState.SAVED]);
+  await waitUntilCensusState(store, s => s.census, [
+    censusState.SAVED,
+    censusState.SAVED,
+  ]);
 
   dispatch(changeView(viewState.DIFFING));
-  dispatch(selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[0]));
-  dispatch(selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[1]));
+  dispatch(
+    selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[0])
+  );
+  dispatch(
+    selectSnapshotForDiffingAndRefresh(heapWorker, getState().snapshots[1])
+  );
 
   await waitUntilState(store, state => {
-    return state.diffing &&
-           state.diffing.state === diffingState.TOOK_DIFF;
+    return state.diffing && state.diffing.state === diffingState.TOOK_DIFF;
   });
   ok(getState().diffing.census);
 
@@ -69,34 +74,40 @@ add_task(async function() {
   const breakdown = getState().censusDisplay.breakdown;
   ok(breakdown, "Should have a breakdown");
 
-  dispatch(fetchIndividuals(heapWorker, snapshotId, breakdown,
-                            reportLeafIndex));
+  dispatch(
+    fetchIndividuals(heapWorker, snapshotId, breakdown, reportLeafIndex)
+  );
 
   for (const state of EXPECTED_INDIVIDUAL_STATES) {
     await waitUntilState(store, s => {
-      return s.view.state === viewState.INDIVIDUALS &&
-             s.individuals &&
-             s.individuals.state === state;
+      return (
+        s.view.state === viewState.INDIVIDUALS &&
+        s.individuals &&
+        s.individuals.state === state
+      );
     });
     ok(true, `Reached state = ${state}`);
   }
 
   ok(getState().individuals, "Should have individuals state");
   ok(getState().individuals.nodes, "Should have individuals nodes");
-  ok(getState().individuals.nodes.length > 0,
-     "Should have a positive number of nodes");
+  ok(
+    getState().individuals.nodes.length > 0,
+    "Should have a positive number of nodes"
+  );
 
   // Pop the view back to the diffing.
 
   dispatch(popViewAndRefresh(heapWorker));
 
   await waitUntilState(store, state => {
-    return state.diffing &&
-      state.diffing.state === diffingState.TOOK_DIFF;
+    return state.diffing && state.diffing.state === diffingState.TOOK_DIFF;
   });
 
-  ok(getState().diffing.census.report,
-     "We have our census diff again after popping back to the last view");
+  ok(
+    getState().diffing.census.report,
+    "We have our census diff again after popping back to the last view"
+  );
 
   heapWorker.destroy();
   await front.detach();

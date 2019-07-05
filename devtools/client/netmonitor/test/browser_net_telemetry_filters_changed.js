@@ -16,9 +16,9 @@ add_task(async function() {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -35,28 +35,38 @@ add_task(async function() {
   await wait;
 
   info("Click on the 'HTML' filter");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-html-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-html-button")
+  );
 
-  checkTelemetryEvent({
-    trigger: "html",
-    active: "html",
-    inactive: "all,css,js,xhr,fonts,images,media,ws,other",
-  }, {
-    method: "filters_changed",
-  });
+  checkTelemetryEvent(
+    {
+      trigger: "html",
+      active: "html",
+      inactive: "all,css,js,xhr,fonts,images,media,ws,other",
+    },
+    {
+      method: "filters_changed",
+    }
+  );
 
   info("Click on the 'CSS' filter");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".requests-list-filter-css-button"));
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".requests-list-filter-css-button")
+  );
 
-  checkTelemetryEvent({
-    trigger: "css",
-    active: "html,css",
-    inactive: "all,js,xhr,fonts,images,media,ws,other",
-  }, {
-    method: "filters_changed",
-  });
+  checkTelemetryEvent(
+    {
+      trigger: "css",
+      active: "html,css",
+      inactive: "all,js,xhr,fonts,images,media,ws,other",
+    },
+    {
+      method: "filters_changed",
+    }
+  );
 
   info("Filter the output using the text filter input");
   setFreetextFilter(monitor, "nomatch");
@@ -64,13 +74,16 @@ add_task(async function() {
   // Wait till the text filter is applied.
   await waitUntil(() => getDisplayedRequests(store.getState()).length == 0);
 
-  checkTelemetryEvent({
-    trigger: "text",
-    active: "html,css",
-    inactive: "all,js,xhr,fonts,images,media,ws,other",
-  }, {
-    method: "filters_changed",
-  });
+  checkTelemetryEvent(
+    {
+      trigger: "text",
+      active: "html,css",
+      inactive: "all,js,xhr,fonts,images,media,ws,other",
+    },
+    {
+      method: "filters_changed",
+    }
+  );
 
   return teardown(monitor);
 });

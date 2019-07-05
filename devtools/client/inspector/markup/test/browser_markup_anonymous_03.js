@@ -10,7 +10,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   const shadowHostFront = await getNodeFront("#shadow", inspector.markup);
   is(shadowHostFront.numChildren, 3, "Children of the shadow host are correct");

@@ -45,9 +45,11 @@ define(function(require, exports, module) {
      * the value or expanded state changes.
      */
     shouldComponentUpdate(nextProps, nextState) {
-      return (this.props.value != nextProps.value) ||
-        (this.state !== nextState) ||
-        (this.props.member.open != nextProps.member.open);
+      return (
+        this.props.value != nextProps.value ||
+        this.state !== nextState ||
+        this.props.member.open != nextProps.member.open
+      );
     }
 
     getCellClass(object, id) {
@@ -70,9 +72,11 @@ define(function(require, exports, module) {
     }
 
     updateInputEnabled(evt) {
-      this.setState(Object.assign({}, this.state, {
-        inputEnabled: evt.target.nodeName.toLowerCase() !== "input",
-      }));
+      this.setState(
+        Object.assign({}, this.state, {
+          inputEnabled: evt.target.nodeName.toLowerCase() !== "input",
+        })
+      );
     }
 
     render() {
@@ -113,31 +117,29 @@ define(function(require, exports, module) {
           "aria-labelledby": id,
         });
       } else {
-        cellElement = span({
-          onClick: (type !== "object") ? this.updateInputEnabled : null,
-          "aria-labelledby": id,
-        },
+        cellElement = span(
+          {
+            onClick: type !== "object" ? this.updateInputEnabled : null,
+            "aria-labelledby": id,
+          },
           renderValue(props)
         );
       }
 
       // Render me!
-      return (
-        td({
+      return td(
+        {
           className: classNames.join(" "),
           role: "presentation",
         },
-          cellElement
-        )
+        cellElement
       );
     }
   }
 
   // Default value rendering.
   const defaultRenderValue = props => {
-    return (
-      props.object + ""
-    );
+    return props.object + "";
   };
 
   // Exports from this module

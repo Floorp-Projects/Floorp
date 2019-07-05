@@ -101,8 +101,10 @@ exports.ACCESSIBLE_EVENTS = [
 ];
 
 // Telemetry name constants.
-exports.A11Y_SERVICE_DURATION = "DEVTOOLS_ACCESSIBILITY_SERVICE_TIME_ACTIVE_SECONDS";
-exports.A11Y_SERVICE_ENABLED_COUNT = "devtools.accessibility.service_enabled_count";
+exports.A11Y_SERVICE_DURATION =
+  "DEVTOOLS_ACCESSIBILITY_SERVICE_TIME_ACTIVE_SECONDS";
+exports.A11Y_SERVICE_ENABLED_COUNT =
+  "devtools.accessibility.service_enabled_count";
 
 // URL constants
 exports.A11Y_LEARN_MORE_LINK =
@@ -127,20 +129,24 @@ const A11Y_TEXT_LABEL_LINK_IDS = {
     "Use_<legend>_element_to_label_<fieldset>_elements",
   [FORM_NO_NAME]: "Form_elements_must_be_labeled",
   [FORM_NO_VISIBLE_NAME]: "Form_elements_should_have_a_visible_text_label",
-  [FORM_OPTGROUP_NO_NAME_FROM_LABEL]: "Use_label_attribute_to_label_<optgroup>_elements",
+  [FORM_OPTGROUP_NO_NAME_FROM_LABEL]:
+    "Use_label_attribute_to_label_<optgroup>_elements",
   [FRAME_NO_NAME]: "<frame>_elements_must_be_labeled",
   [HEADING_NO_NAME]: "Headings_must_be_labeled",
   [HEADING_NO_CONTENT]: "Headings_should_have_visible_text_content",
-  [IFRAME_NO_NAME_FROM_TITLE]: "Use_title_attribute_to_describe_<iframe>_content",
+  [IFRAME_NO_NAME_FROM_TITLE]:
+    "Use_title_attribute_to_describe_<iframe>_content",
   [IMAGE_NO_NAME]: "Content_with_images_must_be_labeled",
   [INTERACTIVE_NO_NAME]: "Interactive_elements_must_be_labeled",
   [MATHML_GLYPH_NO_NAME]: "Use_alt_attribute_to_label_<mglyph>_elements",
-  [TOOLBAR_NO_NAME]: "Toolbars_must_be_labeled_when_there_is_more_than_one_toolbar",
+  [TOOLBAR_NO_NAME]:
+    "Toolbars_must_be_labeled_when_there_is_more_than_one_toolbar",
 };
 
 const A11Y_TEXT_LABEL_LINKS = {};
 for (const key in A11Y_TEXT_LABEL_LINK_IDS) {
-  A11Y_TEXT_LABEL_LINKS[key] =
-    `${A11Y_TEXT_LABEL_LINK_BASE}#${A11Y_TEXT_LABEL_LINK_IDS[key]}`;
+  A11Y_TEXT_LABEL_LINKS[key] = `${A11Y_TEXT_LABEL_LINK_BASE}#${
+    A11Y_TEXT_LABEL_LINK_IDS[key]
+  }`;
 }
 exports.A11Y_TEXT_LABEL_LINKS = A11Y_TEXT_LABEL_LINKS;

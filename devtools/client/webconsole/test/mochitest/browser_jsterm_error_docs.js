@@ -16,27 +16,36 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const {jsterm} = hud;
+  const { jsterm } = hud;
 
   // Check that errors with entries in errordocs.js display links next to their messages.
   const ErrorDocs = require("devtools/server/actors/errordocs");
 
   const ErrorDocStatements = {
-    "JSMSG_BAD_RADIX": "(42).toString(0);",
-    "JSMSG_BAD_ARRAY_LENGTH": "([]).length = -1",
-    "JSMSG_NEGATIVE_REPETITION_COUNT": "'abc'.repeat(-1);",
-    "JSMSG_PRECISION_RANGE": "77.1234.toExponential(-1);",
+    JSMSG_BAD_RADIX: "(42).toString(0);",
+    JSMSG_BAD_ARRAY_LENGTH: "([]).length = -1",
+    JSMSG_NEGATIVE_REPETITION_COUNT: "'abc'.repeat(-1);",
+    JSMSG_PRECISION_RANGE: "77.1234.toExponential(-1);",
   };
 
-  for (const [errorMessageName, expression] of Object.entries(ErrorDocStatements)) {
+  for (const [errorMessageName, expression] of Object.entries(
+    ErrorDocStatements
+  )) {
     const title = ErrorDocs.GetURL({ errorMessageName }).split("?")[0];
 
     hud.ui.clearOutput();
     const onMessage = waitForMessage(hud, "RangeError:");
     jsterm.execute(expression);
-    const {node} = await onMessage;
+    const { node } = await onMessage;
     const learnMoreLink = node.querySelector(".learn-more-link");
-    ok(learnMoreLink, `There is a [Learn More] link for "${errorMessageName}" error`);
-    is(learnMoreLink.title, title, `The link has the expected "${title}" title`);
+    ok(
+      learnMoreLink,
+      `There is a [Learn More] link for "${errorMessageName}" error`
+    );
+    is(
+      learnMoreLink.title,
+      title,
+      `The link has the expected "${title}" title`
+    );
   }
 }

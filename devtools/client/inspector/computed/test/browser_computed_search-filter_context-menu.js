@@ -12,7 +12,7 @@ const TEST_URI = "<h1>test filter context menu</h1>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {toolbox, inspector, view} = await openComputedView();
+  const { toolbox, inspector, view } = await openComputedView();
   await selectNode("h1", inspector);
 
   const searchField = view.searchField;
@@ -30,8 +30,10 @@ add_task(async function() {
   await onContextMenuOpen;
 
   let searchContextMenu = toolbox.getTextBoxContextMenu();
-  ok(searchContextMenu,
-    "The search filter context menu is loaded in the computed view");
+  ok(
+    searchContextMenu,
+    "The search filter context menu is loaded in the computed view"
+  );
 
   let cmdUndo = searchContextMenu.querySelector("#editmenu-undo");
   let cmdDelete = searchContextMenu.querySelector("#editmenu-delete");

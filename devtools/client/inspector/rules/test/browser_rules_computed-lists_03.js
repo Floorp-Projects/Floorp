@@ -27,9 +27,17 @@ add_task(async function() {
   await selectNode("#testid", inspector);
   const rule = getRuleViewRuleEditor(view, 1).rule;
 
-  is(rule.textProps[0].name, "--primary-color", "The first property is the variable");
+  is(
+    rule.textProps[0].name,
+    "--primary-color",
+    "The first property is the variable"
+  );
   is(rule.textProps[1].name, "background", "The second property is background");
 
   info("Check that the expander is hidden for the background property");
-  is(rule.textProps[1].editor.expander.style.display, "none", "Expander is hidden");
+  is(
+    rule.textProps[1].editor.expander.style.display,
+    "none",
+    "Expander is hidden"
+  );
 });

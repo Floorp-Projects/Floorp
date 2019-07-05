@@ -7,6 +7,6 @@ self.onfetch = function(event) {
   return null;
 };
 
-self.onactivate =  function(event) {
+self.onactivate = function(event) {
   event.waitUntil(self.clients.claim());
 };

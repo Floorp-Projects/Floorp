@@ -30,21 +30,27 @@ add_task(async function() {
   info("Wait until the USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(DEVICE_NAME, document));
   const sidebarItem = findSidebarItemByText(DEVICE_NAME, document);
-  ok(sidebarItem.textContent.includes(RUNTIME_NAME),
-    "Sidebar item shows the runtime name");
+  ok(
+    sidebarItem.textContent.includes(RUNTIME_NAME),
+    "Sidebar item shows the runtime name"
+  );
 
   mocks.removeUSBRuntime(RUNTIME_ID);
   mocks.emitUSBUpdate();
   await waitUntilUsbDeviceIsUnplugged(DEVICE_NAME, document);
 
   const unpluggedItem = findSidebarItemByText(DEVICE_NAME, document);
-  ok(unpluggedItem.querySelector(".qa-runtime-item-unplugged"),
-    "Sidebar item is shown as `Unplugged…`");
+  ok(
+    unpluggedItem.querySelector(".qa-runtime-item-unplugged"),
+    "Sidebar item is shown as `Unplugged…`"
+  );
 
   info("Reload about:debugging");
   document = await reloadAboutDebugging(tab);
 
-  info("Add another mocked USB runtime, to make sure the sidebar items are rendered.");
+  info(
+    "Add another mocked USB runtime, to make sure the sidebar items are rendered."
+  );
   mocks.createUSBRuntime(RUNTIME_ID_2, {
     deviceId: DEVICE_ID_2,
     deviceName: DEVICE_NAME_2,
@@ -54,8 +60,10 @@ add_task(async function() {
 
   info("Wait until the other USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(DEVICE_NAME_2, document));
-  ok(!findSidebarItemByText(DEVICE_NAME, document),
-    "Unplugged device is no longer displayed after reloading aboutdebugging");
+  ok(
+    !findSidebarItemByText(DEVICE_NAME, document),
+    "Unplugged device is no longer displayed after reloading aboutdebugging"
+  );
 
   await removeTab(tab);
 });

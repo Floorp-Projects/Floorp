@@ -3,11 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { getAllFilters } = require("devtools/client/webconsole/selectors/filters");
-const { getFilteredMessagesCount } = require("devtools/client/webconsole/selectors/messages");
+const {
+  getAllFilters,
+} = require("devtools/client/webconsole/selectors/filters");
+const {
+  getFilteredMessagesCount,
+} = require("devtools/client/webconsole/selectors/messages");
 const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
 const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
@@ -19,9 +26,15 @@ const {
 
 const FilterButton = require("devtools/client/webconsole/components/FilterBar/FilterButton");
 const FilterCheckbox = require("devtools/client/webconsole/components/FilterBar/FilterCheckbox");
-const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
+const SearchBox = createFactory(
+  require("devtools/client/shared/components/SearchBox")
+);
 
-loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(
+  this,
+  "PropTypes",
+  "devtools/client/shared/vendor/react-prop-types"
+);
 
 class FilterBar extends Component {
   static get propTypes() {
@@ -35,8 +48,8 @@ class FilterBar extends Component {
       filteredMessagesCount: PropTypes.object.isRequired,
       closeButtonVisible: PropTypes.bool,
       closeSplitConsole: PropTypes.func,
-      displayMode:
-        PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)]).isRequired,
+      displayMode: PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)])
+        .isRequired,
     };
   }
 
@@ -64,8 +77,9 @@ class FilterBar extends Component {
     this.filterInputMinWidth = 150;
     try {
       const filterInput = this.wrapperNode.querySelector(".devtools-searchbox");
-      this.filterInputMinWidth =
-        Number(window.getComputedStyle(filterInput)["min-width"].replace("px", ""));
+      this.filterInputMinWidth = Number(
+        window.getComputedStyle(filterInput)["min-width"].replace("px", "")
+      );
     } catch (e) {
       // If the min-width of the filter input isn't set, or is set in a different unit
       // than px.
@@ -100,7 +114,7 @@ class FilterBar extends Component {
 
     if (
       JSON.stringify(nextProps.filteredMessagesCount) !==
-        JSON.stringify(filteredMessagesCount)
+      JSON.stringify(filteredMessagesCount)
     ) {
       return true;
     }
@@ -129,31 +143,38 @@ class FilterBar extends Component {
    * the filter buttons are rendered inline.
    */
   maybeUpdateLayout() {
-    const {
-      dispatch,
-      displayMode,
-    } = this.props;
+    const { dispatch, displayMode } = this.props;
 
     const filterInput = this.wrapperNode.querySelector(".devtools-searchbox");
-    const {width: filterInputWidth} = filterInput.getBoundingClientRect();
+    const { width: filterInputWidth } = filterInput.getBoundingClientRect();
 
     if (displayMode === FILTERBAR_DISPLAY_MODES.WIDE) {
       if (filterInputWidth <= this.filterInputMinWidth) {
-        dispatch(actions.filterBarDisplayModeSet(FILTERBAR_DISPLAY_MODES.NARROW));
+        dispatch(
+          actions.filterBarDisplayModeSet(FILTERBAR_DISPLAY_MODES.NARROW)
+        );
       }
 
       return;
     }
 
     if (displayMode === FILTERBAR_DISPLAY_MODES.NARROW) {
-      const filterButtonsToolbar =
-        this.wrapperNode.querySelector(".webconsole-filterbar-secondary");
+      const filterButtonsToolbar = this.wrapperNode.querySelector(
+        ".webconsole-filterbar-secondary"
+      );
 
       const buttonMargin = 5;
-      const filterButtonsToolbarWidth = Array.from(filterButtonsToolbar.children).reduce(
-        (width, el) => width + el.getBoundingClientRect().width + buttonMargin, 0);
+      const filterButtonsToolbarWidth = Array.from(
+        filterButtonsToolbar.children
+      ).reduce(
+        (width, el) => width + el.getBoundingClientRect().width + buttonMargin,
+        0
+      );
 
-      if (filterInputWidth - this.filterInputMinWidth > filterButtonsToolbarWidth) {
+      if (
+        filterInputWidth - this.filterInputMinWidth >
+        filterButtonsToolbarWidth
+      ) {
         dispatch(actions.filterBarDisplayModeSet(FILTERBAR_DISPLAY_MODES.WIDE));
       }
     }
@@ -176,11 +197,7 @@ class FilterBar extends Component {
   }
 
   renderFiltersConfigBar() {
-    const {
-      dispatch,
-      filter,
-      filteredMessagesCount,
-    } = this.props;
+    const { dispatch, filter, filteredMessagesCount } = this.props;
 
     const getLabel = (baseLabel, filterKey) => {
       const count = filteredMessagesCount[filterKey];
@@ -190,10 +207,11 @@ class FilterBar extends Component {
       return `${baseLabel} (${count})`;
     };
 
-    return dom.div({
-      className: "devtools-toolbar webconsole-filterbar-secondary",
-      key: "config-bar",
-    },
+    return dom.div(
+      {
+        className: "devtools-toolbar webconsole-filterbar-secondary",
+        key: "config-bar",
+      },
       FilterButton({
         active: filter[FILTERS.ERROR],
         label: getLabel(
@@ -214,19 +232,28 @@ class FilterBar extends Component {
       }),
       FilterButton({
         active: filter[FILTERS.LOG],
-        label: getLabel(l10n.getStr("webconsole.logsFilterButton.label"), FILTERS.LOG),
+        label: getLabel(
+          l10n.getStr("webconsole.logsFilterButton.label"),
+          FILTERS.LOG
+        ),
         filterKey: FILTERS.LOG,
         dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.INFO],
-        label: getLabel(l10n.getStr("webconsole.infoFilterButton.label"), FILTERS.INFO),
+        label: getLabel(
+          l10n.getStr("webconsole.infoFilterButton.label"),
+          FILTERS.INFO
+        ),
         filterKey: FILTERS.INFO,
         dispatch,
       }),
       FilterButton({
         active: filter[FILTERS.DEBUG],
-        label: getLabel(l10n.getStr("webconsole.debugFilterButton.label"), FILTERS.DEBUG),
+        label: getLabel(
+          l10n.getStr("webconsole.debugFilterButton.label"),
+          FILTERS.DEBUG
+        ),
         filterKey: FILTERS.DEBUG,
         dispatch,
       }),
@@ -250,7 +277,7 @@ class FilterBar extends Component {
         label: l10n.getStr("webconsole.requestsFilterButton.label"),
         filterKey: FILTERS.NET,
         dispatch,
-      }),
+      })
     );
   }
 
@@ -272,20 +299,27 @@ class FilterBar extends Component {
     let searchBoxSummaryTooltip;
     if (filteredMessagesCount.text > 0) {
       searchBoxSummary = l10n.getStr("webconsole.filteredMessagesByText.label");
-      searchBoxSummary = PluralForm.get(filteredMessagesCount.text, searchBoxSummary)
-        .replace("#1", filteredMessagesCount.text);
+      searchBoxSummary = PluralForm.get(
+        filteredMessagesCount.text,
+        searchBoxSummary
+      ).replace("#1", filteredMessagesCount.text);
 
-      searchBoxSummaryTooltip = l10n.getStr("webconsole.filteredMessagesByText.tooltip");
-      searchBoxSummaryTooltip =
-        PluralForm.get(filteredMessagesCount.text, searchBoxSummaryTooltip)
-          .replace("#1", filteredMessagesCount.text);
+      searchBoxSummaryTooltip = l10n.getStr(
+        "webconsole.filteredMessagesByText.tooltip"
+      );
+      searchBoxSummaryTooltip = PluralForm.get(
+        filteredMessagesCount.text,
+        searchBoxSummaryTooltip
+      ).replace("#1", filteredMessagesCount.text);
     }
 
     const children = [
-      dom.div({
-        className: "devtools-toolbar devtools-input-toolbar webconsole-filterbar-primary",
-        key: "primary-bar",
-      },
+      dom.div(
+        {
+          className:
+            "devtools-toolbar devtools-input-toolbar webconsole-filterbar-primary",
+          key: "primary-bar",
+        },
         dom.button({
           className: "devtools-button devtools-clear-icon",
           title: l10n.getStr("webconsole.clearButton.tooltip"),
@@ -302,58 +336,67 @@ class FilterBar extends Component {
           summary: searchBoxSummary,
           summaryTooltip: searchBoxSummaryTooltip,
         }),
-        isWide && dom.div({
-          className: "devtools-separator",
-        }),
+        isWide &&
+          dom.div({
+            className: "devtools-separator",
+          }),
         isWide && this.renderFiltersConfigBar(),
-        !hidePersistLogsCheckbox && dom.div({
-          className: "devtools-separator",
-        }),
-        !hidePersistLogsCheckbox && FilterCheckbox({
-          label: l10n.getStr("webconsole.enablePersistentLogs.label"),
-          title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
-          onChange: this.onChangePersistToggle,
-          checked: persistLogs,
-        }),
-        !hideShowContentMessagesCheckbox && FilterCheckbox({
-          label: l10n.getStr("browserconsole.contentMessagesCheckbox.label"),
-          title: l10n.getStr("browserconsole.contentMessagesCheckbox.tooltip"),
-          onChange: this.onChangeShowContent,
-          checked: showContentMessages,
-        }),
+        !hidePersistLogsCheckbox &&
+          dom.div({
+            className: "devtools-separator",
+          }),
+        !hidePersistLogsCheckbox &&
+          FilterCheckbox({
+            label: l10n.getStr("webconsole.enablePersistentLogs.label"),
+            title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
+            onChange: this.onChangePersistToggle,
+            checked: persistLogs,
+          }),
+        !hideShowContentMessagesCheckbox &&
+          FilterCheckbox({
+            label: l10n.getStr("browserconsole.contentMessagesCheckbox.label"),
+            title: l10n.getStr(
+              "browserconsole.contentMessagesCheckbox.tooltip"
+            ),
+            onChange: this.onChangeShowContent,
+            checked: showContentMessages,
+          })
       ),
     ];
 
     if (this.props.closeButtonVisible) {
-      children.push(dom.div(
-        {
-          className: "devtools-toolbar split-console-close-button-wrapper",
-          key: "wrapper",
-        },
-        dom.button({
-          id: "split-console-close-button",
-          key: "split-console-close-button",
-          className: "devtools-button",
-          title: l10n.getStr("webconsole.closeSplitConsoleButton.tooltip"),
-          onClick: () => {
-            closeSplitConsole();
+      children.push(
+        dom.div(
+          {
+            className: "devtools-toolbar split-console-close-button-wrapper",
+            key: "wrapper",
           },
-        })
-      ));
+          dom.button({
+            id: "split-console-close-button",
+            key: "split-console-close-button",
+            className: "devtools-button",
+            title: l10n.getStr("webconsole.closeSplitConsoleButton.tooltip"),
+            onClick: () => {
+              closeSplitConsole();
+            },
+          })
+        )
+      );
     }
 
     if (isNarrow) {
       children.push(this.renderFiltersConfigBar());
     }
 
-    return (
-      dom.div({
+    return dom.div(
+      {
         className: `webconsole-filteringbar-wrapper ${displayMode}`,
         "aria-live": "off",
         ref: node => {
           this.wrapperNode = node;
         },
-      }, children)
+      },
+      children
     );
   }
 }

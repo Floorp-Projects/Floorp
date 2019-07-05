@@ -20,8 +20,9 @@ const X = 32;
 const Y = 20;
 
 add_task(async function() {
-  const helper = await openInspectorForURL(TEST_URL)
-                       .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
+  const helper = await openInspectorForURL(TEST_URL).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
+  );
 
   const { finalize } = helper;
 
@@ -34,7 +35,7 @@ add_task(async function() {
   await finalize();
 });
 
-async function isHiddenByDefault({isElementHidden}) {
+async function isHiddenByDefault({ isElementHidden }) {
   info("Checking the highlighter is hidden by default");
 
   let hidden = await isElementHidden("root");
@@ -47,7 +48,7 @@ async function isHiddenByDefault({isElementHidden}) {
   ok(hidden, "highlighter's label position is hidden by default");
 }
 
-async function areLabelsHiddenByDefaultWhenShows({isElementHidden, show}) {
+async function areLabelsHiddenByDefaultWhenShows({ isElementHidden, show }) {
   info("Checking the highlighter is displayed when asked");
 
   await show();
@@ -62,13 +63,16 @@ async function areLabelsHiddenByDefaultWhenShows({isElementHidden, show}) {
   ok(hidden, "label's position still hidden");
 }
 
-async function areLabelsProperlyDisplayedWhenMouseMoved({isElementHidden,
-  synthesizeMouse, getElementTextContent}) {
+async function areLabelsProperlyDisplayedWhenMouseMoved({
+  isElementHidden,
+  synthesizeMouse,
+  getElementTextContent,
+}) {
   info("Checking labels are properly displayed when mouse moved");
 
   await synthesizeMouse({
     selector: ":root",
-    options: {type: "mousemove"},
+    options: { type: "mousemove" },
     x: X,
     y: Y,
   });

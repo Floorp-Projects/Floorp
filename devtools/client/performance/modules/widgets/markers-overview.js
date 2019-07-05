@@ -10,14 +10,22 @@
  */
 
 const { extend } = require("devtools/shared/extend");
-const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
+const {
+  AbstractCanvasGraph,
+} = require("devtools/client/shared/widgets/Graphs");
 
 const { colorUtils } = require("devtools/shared/css/color");
 const { getColor } = require("devtools/client/shared/theme");
 const ProfilerGlobal = require("devtools/client/performance/modules/global");
-const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
-const { TickUtils } = require("devtools/client/performance/modules/waterfall-ticks");
-const { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
+const {
+  MarkerBlueprintUtils,
+} = require("devtools/client/performance/modules/marker-blueprint-utils");
+const {
+  TickUtils,
+} = require("devtools/client/performance/modules/waterfall-ticks");
+const {
+  TIMELINE_BLUEPRINT,
+} = require("devtools/client/performance/modules/markers");
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
 const OVERVIEW_ROW_HEIGHT = 11; // px
@@ -76,7 +84,10 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
       if (filter.includes(type)) {
         continue;
       }
-      this._paintBatches.set(type, { definition: TIMELINE_BLUEPRINT[type], batch: [] });
+      this._paintBatches.set(type, {
+        definition: TIMELINE_BLUEPRINT[type],
+        batch: [],
+      });
       observedGroups.add(TIMELINE_BLUEPRINT[type].group);
     }
 
@@ -120,8 +131,9 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
         continue;
       }
 
-      const markerType = this._paintBatches.get(marker.name) ||
-                                              this._paintBatches.get("UNKNOWN");
+      const markerType =
+        this._paintBatches.get(marker.name) ||
+        this._paintBatches.get("UNKNOWN");
       markerType.batch.push(marker);
     }
 
@@ -130,7 +142,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
     const groupHeight = this.rowHeight * this._pixelRatio;
     const groupPadding = this.groupPadding * this._pixelRatio;
     const headerHeight = this.headerHeight * this._pixelRatio;
-    const dataScale = this.dataScaleX = canvasWidth / duration;
+    const dataScale = (this.dataScaleX = canvasWidth / duration);
 
     // Draw the header and overview background.
 
@@ -156,7 +168,8 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
 
     const fontSize = OVERVIEW_HEADER_TEXT_FONT_SIZE * this._pixelRatio;
     const fontFamily = OVERVIEW_HEADER_TEXT_FONT_FAMILY;
-    const textPaddingLeft = OVERVIEW_HEADER_TEXT_PADDING_LEFT * this._pixelRatio;
+    const textPaddingLeft =
+      OVERVIEW_HEADER_TEXT_PADDING_LEFT * this._pixelRatio;
     const textPaddingTop = OVERVIEW_HEADER_TEXT_PADDING_TOP * this._pixelRatio;
 
     const tickInterval = TickUtils.findOptimalTickInterval({
@@ -196,7 +209,10 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
 
       for (const { start, end } of batch) {
         const left = start * dataScale;
-        const width = Math.max((end - start) * dataScale, OVERVIEW_MARKER_WIDTH_MIN);
+        const width = Math.max(
+          (end - start) * dataScale,
+          OVERVIEW_MARKER_WIDTH_MIN
+        );
         ctx.rect(left, top, width, height);
       }
 
@@ -220,14 +236,20 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
     this.theme = theme = theme || "light";
     this.backgroundColor = getColor("body-background", theme);
     this.selectionBackgroundColor = colorUtils.setAlpha(
-      getColor("selection-background", theme), 0.25);
+      getColor("selection-background", theme),
+      0.25
+    );
     this.selectionStripesColor = colorUtils.setAlpha("#fff", 0.1);
     this.headerBackgroundColor = getColor("body-background", theme);
     this.headerTextColor = getColor("body-color", theme);
     this.headerTimelineStrokeColor = colorUtils.setAlpha(
-      getColor("text-color-alt", theme), 0.25);
+      getColor("text-color-alt", theme),
+      0.25
+    );
     this.alternatingBackgroundColor = colorUtils.setAlpha(
-      getColor("body-color", theme), 0.05);
+      getColor("body-color", theme),
+      0.05
+    );
   },
 });
 

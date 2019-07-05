@@ -40,31 +40,6 @@ toolkit/components/telemetry/datareporting-prefs.js
 toolkit/components/telemetry/healthreport-prefs.js
 
 # Ignore all devtools directories for now, except the debugger.
-devtools/client/*.js
-devtools/client/aboutdebugging/**
-devtools/client/aboutdebugging-new/**
-devtools/client/accessibility/**
-devtools/client/application/**
-devtools/client/bin/**
-devtools/client/dom/**
-devtools/client/framework/**
-devtools/client/inspector/**
-devtools/client/jsonview/**
-devtools/client/locales/**
-devtools/client/memory/**
-devtools/client/netmonitor/**
-devtools/client/performance/**
-devtools/client/performance-new/**
-devtools/client/preferences/**
-devtools/client/responsive.html/**
-devtools/client/scratchpad/**
-devtools/client/shared/**
-devtools/client/storage/**
-devtools/client/styleeditor/**
-devtools/client/themes/**
-devtools/client/webconsole/**
-devtools/client/webide/**
-devtools/client/webreplay/**
 devtools/docs/**
 devtools/platform/**
 devtools/server/**

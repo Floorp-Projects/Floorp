@@ -5,7 +5,11 @@
 
 // An outcome of an OptimizationAttempt that is considered successful.
 const SUCCESSFUL_OUTCOMES = [
-  "GenericSuccess", "Inlined", "DOM", "Monomorphic", "Polymorphic",
+  "GenericSuccess",
+  "Inlined",
+  "DOM",
+  "Monomorphic",
+  "Polymorphic",
 ];
 
 /**
@@ -137,7 +141,7 @@ const JITOptimizations = function(rawSites, stringTable) {
   const sites = [];
 
   for (const rawSite of rawSites) {
-    const existingSite = sites.find((site) => site.data === rawSite);
+    const existingSite = sites.find(site => site.data === rawSite);
     if (existingSite) {
       existingSite.samples++;
     } else {
@@ -150,14 +154,14 @@ const JITOptimizations = function(rawSites, stringTable) {
     const data = site.data;
     const STRATEGY_SLOT = data.attempts.schema.strategy;
     const OUTCOME_SLOT = data.attempts.schema.outcome;
-    const attempts = data.attempts.data.map((a) => {
+    const attempts = data.attempts.data.map(a => {
       return {
         id: site.id,
         strategy: stringTable[a[STRATEGY_SLOT]],
         outcome: stringTable[a[OUTCOME_SLOT]],
       };
     });
-    const types = data.types.map((t) => {
+    const types = data.types.map(t => {
       const typeset = maybeTypeset(t.typeset, stringTable);
       if (typeset) {
         typeset.forEach(ts => {
@@ -192,7 +196,7 @@ const JITOptimizations = function(rawSites, stringTable) {
  * Make JITOptimizations iterable.
  */
 JITOptimizations.prototype = {
-  [Symbol.iterator]: function* () {
+  [Symbol.iterator]: function*() {
     yield* this.optimizationSites;
   },
 
@@ -234,7 +238,7 @@ function maybeTypeset(typeset, stringTable) {
   if (!typeset) {
     return undefined;
   }
-  return typeset.map((ty) => {
+  return typeset.map(ty => {
     return {
       keyedBy: maybeString(stringTable, ty.keyedBy),
       name: maybeString(stringTable, ty.name),
@@ -246,9 +250,9 @@ function maybeTypeset(typeset, stringTable) {
 
 // Map of optimization implementation names to an enum.
 const IMPLEMENTATION_MAP = {
-  "interpreter": 0,
-  "baseline": 1,
-  "ion": 2,
+  interpreter: 0,
+  baseline: 1,
+  ion: 2,
 };
 const IMPLEMENTATION_NAMES = Object.keys(IMPLEMENTATION_MAP);
 
@@ -289,8 +293,10 @@ function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
 
     // If this sample is in the next bucket, or we're done
     // checking sampleTimes and on the last iteration, finalize previous bucket
-    if (sampleTime >= (currentBucketStartTime + bucketSize) ||
-        i >= sampleTimes.length) {
+    if (
+      sampleTime >= currentBucketStartTime + bucketSize ||
+      i >= sampleTimes.length
+    ) {
       const dataPoint = {};
       dataPoint.values = [];
       dataPoint.delta = currentBucketStartTime;
@@ -322,8 +328,10 @@ function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
     // If this sample observed an optimization in this frame, record it
     if (nextOptSample && nextOptSample.time === sampleTime) {
       // If no implementation defined, it was the "interpreter".
-      implEnum = IMPLEMENTATION_MAP[stringTable[nextOptSample.implementation] ||
-                                    "interpreter"];
+      implEnum =
+        IMPLEMENTATION_MAP[
+          stringTable[nextOptSample.implementation] || "interpreter"
+        ];
       bucket[implEnum] = (bucket[implEnum] || 0) + 1;
       nextOptSample = tierData[++tierDataIndex];
     }

@@ -4,66 +4,81 @@
 
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
-const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
-const {AppProjects} = require("devtools/client/webide/modules/app-projects");
-const {AppManager} = require("devtools/client/webide/modules/app-manager");
-const {getJSON} = require("devtools/client/shared/getjson");
+const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
+const { AppProjects } = require("devtools/client/webide/modules/app-projects");
+const { AppManager } = require("devtools/client/webide/modules/app-manager");
+const { getJSON } = require("devtools/client/shared/getjson");
 
-ChromeUtils.defineModuleGetter(this, "ZipUtils", "resource://gre/modules/ZipUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ZipUtils",
+  "resource://gre/modules/ZipUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
 
 const TEMPLATES_URL = "devtools.webide.templatesURL";
 
 var gTemplateList = null;
 
-window.addEventListener("load", function() {
-  const projectNameNode = document.querySelector("#project-name");
-  projectNameNode.addEventListener("input", canValidate, true);
-  getTemplatesJSON();
-  document.addEventListener("dialogaccept", doOK);
-}, {capture: true, once: true});
+window.addEventListener(
+  "load",
+  function() {
+    const projectNameNode = document.querySelector("#project-name");
+    projectNameNode.addEventListener("input", canValidate, true);
+    getTemplatesJSON();
+    document.addEventListener("dialogaccept", doOK);
+  },
+  { capture: true, once: true }
+);
 
 function getTemplatesJSON() {
-  getJSON(TEMPLATES_URL).then(list => {
-    if (!Array.isArray(list)) {
-      throw new Error("JSON response not an array");
-    }
-    if (list.length == 0) {
-      throw new Error("JSON response is an empty array");
-    }
-    gTemplateList = list;
-    const templatelistNode = document.querySelector("#templatelist");
-    templatelistNode.innerHTML = "";
-    for (const template of list) {
-      const richlistitemNode = document.createXULElement("richlistitem");
-      const imageNode = document.createXULElement("image");
-      imageNode.setAttribute("src", template.icon);
-      const labelNode = document.createXULElement("label");
-      labelNode.setAttribute("value", template.name);
-      const descriptionNode = document.createXULElement("description");
-      descriptionNode.textContent = template.description;
-      const vboxNode = document.createXULElement("vbox");
-      vboxNode.setAttribute("flex", "1");
-      richlistitemNode.appendChild(imageNode);
-      vboxNode.appendChild(labelNode);
-      vboxNode.appendChild(descriptionNode);
-      richlistitemNode.appendChild(vboxNode);
-      templatelistNode.appendChild(richlistitemNode);
-    }
-    templatelistNode.selectedIndex = 0;
+  getJSON(TEMPLATES_URL).then(
+    list => {
+      if (!Array.isArray(list)) {
+        throw new Error("JSON response not an array");
+      }
+      if (list.length == 0) {
+        throw new Error("JSON response is an empty array");
+      }
+      gTemplateList = list;
+      const templatelistNode = document.querySelector("#templatelist");
+      templatelistNode.innerHTML = "";
+      for (const template of list) {
+        const richlistitemNode = document.createXULElement("richlistitem");
+        const imageNode = document.createXULElement("image");
+        imageNode.setAttribute("src", template.icon);
+        const labelNode = document.createXULElement("label");
+        labelNode.setAttribute("value", template.name);
+        const descriptionNode = document.createXULElement("description");
+        descriptionNode.textContent = template.description;
+        const vboxNode = document.createXULElement("vbox");
+        vboxNode.setAttribute("flex", "1");
+        richlistitemNode.appendChild(imageNode);
+        vboxNode.appendChild(labelNode);
+        vboxNode.appendChild(descriptionNode);
+        richlistitemNode.appendChild(vboxNode);
+        templatelistNode.appendChild(richlistitemNode);
+      }
+      templatelistNode.selectedIndex = 0;
 
-    /* Chrome mochitest support */
-    const testOptions = window.arguments[0].testOptions;
-    if (testOptions) {
-      templatelistNode.selectedIndex = testOptions.index;
-      document.querySelector("#project-name").value = testOptions.name;
-      doOK();
+      /* Chrome mochitest support */
+      const testOptions = window.arguments[0].testOptions;
+      if (testOptions) {
+        templatelistNode.selectedIndex = testOptions.index;
+        document.querySelector("#project-name").value = testOptions.name;
+        doOK();
+      }
+    },
+    e => {
+      failAndBail("Can't download app templates: " + e);
     }
-  }, (e) => {
-    failAndBail("Can't download app templates: " + e);
-  });
+  );
 }
 
 function failAndBail(msg) {
@@ -109,8 +124,14 @@ function doOK(event) {
     if (testOptions) {
       resolve(testOptions.folder);
     } else {
-      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(window, "Select directory where to create app directory", Ci.nsIFilePicker.modeGetFolder);
+      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(
+        Ci.nsIFilePicker
+      );
+      fp.init(
+        window,
+        "Select directory where to create app directory",
+        Ci.nsIFilePicker.modeGetFolder
+      );
       fp.open(res => {
         if (res == Ci.nsIFilePicker.returnCancel) {
           console.error("No directory selected");
@@ -122,7 +143,7 @@ function doOK(event) {
     }
   });
 
-  const bail = (e) => {
+  const bail = e => {
     console.error(e);
     window.close();
   };
@@ -149,16 +170,15 @@ function doOK(event) {
     Downloads.fetch(source, target).then(() => {
       ZipUtils.extractFiles(target, folder);
       target.remove(false);
-      AppProjects.addPackaged(folder).then((project) => {
+      AppProjects.addPackaged(folder).then(project => {
         window.arguments[0].location = project.location;
         AppManager.validateAndUpdateProject(project).then(() => {
           if (project.manifest) {
             project.manifest.name = projectName;
             AppManager.writeManifest(project).then(() => {
-              AppManager.validateAndUpdateProject(project).then(
-                () => {
-                  window.close();
-                }, bail);
+              AppManager.validateAndUpdateProject(project).then(() => {
+                window.close();
+              }, bail);
             }, bail);
           } else {
             bail("Manifest not found");

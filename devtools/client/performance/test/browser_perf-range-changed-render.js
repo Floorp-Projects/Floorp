@@ -7,9 +7,17 @@
  */
 
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
-const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
-const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
-const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const {
+  initPerformanceInNewTab,
+  teardownToolboxAndRemoveTab,
+} = require("devtools/client/performance/test/helpers/panel-utils");
+const {
+  startRecording,
+  stopRecording,
+} = require("devtools/client/performance/test/helpers/actions");
+const {
+  once,
+} = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
   const { panel } = await initPerformanceInNewTab({
@@ -40,9 +48,15 @@ add_task(async function() {
   await stopRecording(panel);
 
   let rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
-  OverviewView.emit(EVENTS.UI_OVERVIEW_RANGE_SELECTED, { startTime: 0, endTime: 10 });
+  OverviewView.emit(EVENTS.UI_OVERVIEW_RANGE_SELECTED, {
+    startTime: 0,
+    endTime: 10,
+  });
   await rendered;
-  ok(true, "Waterfall rerenders when a range in the overview graph is selected.");
+  ok(
+    true,
+    "Waterfall rerenders when a range in the overview graph is selected."
+  );
 
   rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
@@ -57,7 +71,10 @@ add_task(async function() {
   rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
   OverviewView.emit(EVENTS.UI_OVERVIEW_RANGE_SELECTED);
   await rendered;
-  ok(true, "Flamegraph rerenders when a range in the overview graph is removed.");
+  ok(
+    true,
+    "Flamegraph rerenders when a range in the overview graph is removed."
+  );
 
   rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   await DetailsView.selectView("js-calltree");
@@ -72,8 +89,10 @@ add_task(async function() {
   // The WaterfallView is rerendered on window resize. Loading the other graphs can
   // trigger a window resize and increase the total number of rerenders.
   // See Bug 1532993#c12.
-  ok((updatedWaterfall === 3) || (updatedWaterfall === 4),
-    "WaterfallView rerendered 3 or 4 times.");
+  ok(
+    updatedWaterfall === 3 || updatedWaterfall === 4,
+    "WaterfallView rerendered 3 or 4 times."
+  );
   is(updatedCallTree, 2, "JsCallTreeView rerendered 2 times.");
   is(updatedFlameGraph, 2, "JsFlameGraphView rerendered 2 times.");
 

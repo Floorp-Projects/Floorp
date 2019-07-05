@@ -24,13 +24,15 @@ add_task(async function() {
   await selectNode("#grid", inspector);
   const gridContainer = await getContainerForSelector("#grid", inspector);
   const gridDisplayBadge = gridContainer.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
+    ".inspector-badge.interactive[data-display]"
+  );
 
   info("Toggling ON the CSS grid highlighter from the grid display badge.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
-  const onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length === 1 &&
-    state.grids[0].highlighted);
+  const onCheckboxChange = waitUntilState(
+    store,
+    state => state.grids.length === 1 && state.grids[0].highlighted
+  );
   gridDisplayBadge.click();
   await onHighlighterShown;
   await onCheckboxChange;

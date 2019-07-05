@@ -19,7 +19,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  let { inspector, view } = await openRuleView();
   await selectNode("#testElement", inspector);
   await testRuleView(view, inspector.selection.nodeFront);
 
@@ -45,8 +45,11 @@ async function testRuleView(ruleView, nodeFront) {
   ok(panel, "XUL panel exists");
 
   // Get the font family property inside the rule view
-  const {valueSpan} = getRuleViewProperty(ruleView, "#testElement",
-    "font-family");
+  const { valueSpan } = getRuleViewProperty(
+    ruleView,
+    "#testElement",
+    "font-family"
+  );
 
   // And verify that the tooltip gets shown on this property
   valueSpan.scrollIntoView(true);
@@ -54,12 +57,17 @@ async function testRuleView(ruleView, nodeFront) {
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
-  ok(images[0].getAttribute("src").startsWith("data:"),
-    "Tooltip contains a data-uri image as expected");
+  ok(
+    images[0].getAttribute("src").startsWith("data:"),
+    "Tooltip contains a data-uri image as expected"
+  );
 
   let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
-  is(images[0].getAttribute("src"), dataURL,
-    "Tooltip contains the correct data-uri image");
+  is(
+    images[0].getAttribute("src"),
+    dataURL,
+    "Tooltip contains the correct data-uri image"
+  );
 
   await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 
@@ -72,12 +80,17 @@ async function testRuleView(ruleView, nodeFront) {
 
   images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
-  ok(images[0].getAttribute("src").startsWith("data:"),
-    "Tooltip contains a data-uri image as expected");
+  ok(
+    images[0].getAttribute("src").startsWith("data:"),
+    "Tooltip contains a data-uri image as expected"
+  );
 
   dataURL = await getFontFamilyDataURL(fontFamilySpan.textContent, nodeFront);
-  is(images[0].getAttribute("src"), dataURL,
-    "Tooltip contains the correct data-uri image");
+  is(
+    images[0].getAttribute("src"),
+    dataURL,
+    "Tooltip contains the correct data-uri image"
+  );
 
   await assertTooltipHiddenOnMouseOut(previewTooltip, fontFamilySpan);
 }
@@ -87,49 +100,68 @@ async function testComputedView(computedView, nodeFront) {
 
   const tooltip = computedView.tooltips.getTooltip("previewTooltip");
   const panel = tooltip.panel;
-  const {valueSpan} = getComputedViewProperty(computedView, "font-family");
+  const { valueSpan } = getComputedViewProperty(computedView, "font-family");
 
   valueSpan.scrollIntoView(true);
-  const previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
+  const previewTooltip = await assertShowPreviewTooltip(
+    computedView,
+    valueSpan
+  );
 
   const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
-  ok(images[0].getAttribute("src").startsWith("data:"),
-    "Tooltip contains a data-uri image as expected");
+  ok(
+    images[0].getAttribute("src").startsWith("data:"),
+    "Tooltip contains a data-uri image as expected"
+  );
 
   const dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
-  is(images[0].getAttribute("src"), dataURL,
-    "Tooltip contains the correct data-uri image");
+  is(
+    images[0].getAttribute("src"),
+    dataURL,
+    "Tooltip contains the correct data-uri image"
+  );
 
   await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
 
 async function testExpandedComputedViewProperty(computedView, nodeFront) {
-  info("Testing font-family tooltips in expanded properties of the " +
-    "computed view");
+  info(
+    "Testing font-family tooltips in expanded properties of the " +
+      "computed view"
+  );
 
   info("Expanding the font-family property to reveal matched selectors");
   const propertyView = getPropertyView(computedView, "font-family");
   propertyView.matchedExpanded = true;
   await propertyView.refreshMatchedSelectors();
 
-  const valueSpan = propertyView.matchedSelectorsContainer
-    .querySelector(".bestmatch .computed-other-property-value");
+  const valueSpan = propertyView.matchedSelectorsContainer.querySelector(
+    ".bestmatch .computed-other-property-value"
+  );
 
   const tooltip = computedView.tooltips.getTooltip("previewTooltip");
   const panel = tooltip.panel;
 
   valueSpan.scrollIntoView(true);
-  const previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
+  const previewTooltip = await assertShowPreviewTooltip(
+    computedView,
+    valueSpan
+  );
 
   const images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
-  ok(images[0].getAttribute("src").startsWith("data:"),
-    "Tooltip contains a data-uri image as expected");
+  ok(
+    images[0].getAttribute("src").startsWith("data:"),
+    "Tooltip contains a data-uri image as expected"
+  );
 
   const dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
-  is(images[0].getAttribute("src"), dataURL,
-    "Tooltip contains the correct data-uri image");
+  is(
+    images[0].getAttribute("src"),
+    dataURL,
+    "Tooltip contains the correct data-uri image"
+  );
 
   await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }

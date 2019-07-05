@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -56,20 +58,20 @@ class DebugTargetList extends PureComponent {
     return targets.length === 0
       ? this.renderEmptyList()
       : dom.ul(
-        {
-          className: "debug-target-list qa-debug-target-list",
-        },
-        targets.map((target, key) =>
-          DebugTargetItem({
-            actionComponent,
-            additionalActionsComponent,
-            detailComponent,
-            dispatch,
-            key,
-            target,
-          })
-        ),
-      );
+          {
+            className: "debug-target-list qa-debug-target-list",
+          },
+          targets.map((target, key) =>
+            DebugTargetItem({
+              actionComponent,
+              additionalActionsComponent,
+              detailComponent,
+              dispatch,
+              key,
+              target,
+            })
+          )
+        );
   }
 }
 

@@ -9,7 +9,7 @@
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_03.html";
 
 add_task(async function() {
-  const {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
 
   const testData = {
     selector: "body",
@@ -26,16 +26,26 @@ async function testPositionAndStyle(test, inspector, testActor) {
   await selectAndHighlightNode(test.selector, inspector);
 
   let style = await testActor.getHighlighterNodeAttribute(
-    "box-model-infobar-container", "style");
+    "box-model-infobar-container",
+    "style"
+  );
 
-  is(style.split(";")[0].trim(), test.style,
-    "Infobar shows on top of the page when page isn't scrolled");
+  is(
+    style.split(";")[0].trim(),
+    test.style,
+    "Infobar shows on top of the page when page isn't scrolled"
+  );
 
   await testActor.scrollWindow(0, 500);
 
   style = await testActor.getHighlighterNodeAttribute(
-    "box-model-infobar-container", "style");
+    "box-model-infobar-container",
+    "style"
+  );
 
-  is(style.split(";")[0].trim(), test.style,
-    "Infobar shows on top of the page even if the page is scrolled");
+  is(
+    style.split(";")[0].trim(),
+    test.style,
+    "Infobar shows on top of the page even if the page is scrolled"
+  );
 }

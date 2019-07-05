@@ -41,19 +41,23 @@ HarImporter.prototype = {
       const startedMillis = Date.parse(entry.startedDateTime);
 
       // Add request
-      this.actions.addRequest(requestId, {
-        startedMillis: startedMillis,
-        method: entry.request.method,
-        url: entry.request.url,
-        isXHR: false,
-        cause: {
-          loadingDocumentUri: "",
-          stackTraceAvailable: false,
-          type: "",
+      this.actions.addRequest(
+        requestId,
+        {
+          startedMillis: startedMillis,
+          method: entry.request.method,
+          url: entry.request.url,
+          isXHR: false,
+          cause: {
+            loadingDocumentUri: "",
+            stackTraceAvailable: false,
+            type: "",
+          },
+          fromCache: false,
+          fromServiceWorker: false,
         },
-        fromCache: false,
-        fromServiceWorker: false,
-      }, false);
+        false
+      );
 
       // Update request
       const data = {
@@ -82,7 +86,7 @@ HarImporter.prototype = {
         },
         totalTime: TIMING_KEYS.reduce((sum, type) => {
           const time = entry.timings[type];
-          return (time != -1) ? (sum + time) : sum;
+          return time != -1 ? sum + time : sum;
         }, 0),
 
         httpVersion: entry.request.httpVersion,
@@ -130,8 +134,8 @@ HarImporter.prototype = {
       let onLoad = pageTimings.onLoad || 0;
 
       // Set 0 as the default value
-      onContentLoad = (onContentLoad != -1) ? onContentLoad : 0;
-      onLoad = (onLoad != -1) ? onLoad : 0;
+      onContentLoad = onContentLoad != -1 ? onContentLoad : 0;
+      onLoad = onLoad != -1 ? onLoad : 0;
 
       // Add timing markers
       if (onContentLoad > 0) {

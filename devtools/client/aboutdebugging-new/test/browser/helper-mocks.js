@@ -9,12 +9,19 @@ const MOCKS_ROOT = CHROME_URL_ROOT + "mocks/";
 /* import-globals-from mocks/helper-adb-mock.js */
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-adb-mock.js", this);
 /* import-globals-from mocks/helper-client-wrapper-mock.js */
-Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-client-wrapper-mock.js", this);
+Services.scriptloader.loadSubScript(
+  MOCKS_ROOT + "helper-client-wrapper-mock.js",
+  this
+);
 /* import-globals-from mocks/helper-runtime-client-factory-mock.js */
-Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-runtime-client-factory-mock.js",
-  this);
+Services.scriptloader.loadSubScript(
+  MOCKS_ROOT + "helper-runtime-client-factory-mock.js",
+  this
+);
 
-const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants");
+const {
+  RUNTIMES,
+} = require("devtools/client/aboutdebugging-new/src/constants");
 
 /**
  * This wrapper around the mocks used in about:debugging tests provides helpers to
@@ -62,7 +69,9 @@ class Mocks {
     // Add a client for THIS_FIREFOX, since about:debugging will start on the This Firefox
     // page.
     this._thisFirefoxClient = createThisFirefoxClientMock();
-    this._clients[RUNTIMES.THIS_FIREFOX][RUNTIMES.THIS_FIREFOX] = this._thisFirefoxClient;
+    this._clients[RUNTIMES.THIS_FIREFOX][
+      RUNTIMES.THIS_FIREFOX
+    ] = this._thisFirefoxClient;
 
     // Enable mocks and remove them after the test.
     this.enableMocks();
@@ -90,8 +99,9 @@ class Mocks {
   }
 
   createNetworkRuntime(host, runtimeInfo) {
-    const { addNetworkLocation } =
-      require("devtools/client/aboutdebugging-new/src/modules/network-locations");
+    const {
+      addNetworkLocation,
+    } = require("devtools/client/aboutdebugging-new/src/modules/network-locations");
     addNetworkLocation(host);
 
     // Add a valid client that can be returned for this particular runtime id.
@@ -109,8 +119,9 @@ class Mocks {
   }
 
   removeNetworkRuntime(host) {
-    const { removeNetworkLocation } =
-      require("devtools/client/aboutdebugging-new/src/modules/network-locations");
+    const {
+      removeNetworkLocation,
+    } = require("devtools/client/aboutdebugging-new/src/modules/network-locations");
     removeNetworkLocation(host);
 
     delete this._clients[RUNTIMES.NETWORK][host];
@@ -198,8 +209,10 @@ class Mocks {
 /* exported Mocks */
 
 const silenceWorkerUpdates = function() {
-  const { removeMockedModule, setMockedModule } =
-    require("devtools/client/shared/browser-loader-mocks");
+  const {
+    removeMockedModule,
+    setMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
 
   const mock = {
     WorkersListener: () => {
@@ -209,8 +222,7 @@ const silenceWorkerUpdates = function() {
       };
     },
   };
-  setMockedModule(mock,
-    "devtools/client/shared/workers-listener");
+  setMockedModule(mock, "devtools/client/shared/workers-listener");
 
   registerCleanupFunction(() => {
     removeMockedModule("devtools/client/shared/workers-listener");

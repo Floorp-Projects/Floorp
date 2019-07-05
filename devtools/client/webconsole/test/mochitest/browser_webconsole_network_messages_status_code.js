@@ -4,14 +4,15 @@
 "use strict";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/";
+const TEST_PATH =
+  "http://example.com/browser/devtools/client/webconsole/" + "test/mochitest/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/HTTP/Status/200" + GA_PARAMS;
+const LEARN_MORE_URI =
+  "https://developer.mozilla.org/docs/Web/HTTP/Status/200" + GA_PARAMS;
 
 pushPref(NET_PREF, true);
 pushPref(XHR_PREF, true);
@@ -22,7 +23,7 @@ add_task(async function task() {
   const currentTab = gBrowser.selectedTab;
   const target = await TargetFactory.forTab(currentTab);
   const toolbox = gDevTools.getToolbox(target);
-  const {ui} = toolbox.getCurrentPanel().hud;
+  const { ui } = toolbox.getCurrentPanel().hud;
   const onNetworkMessageUpdate = ui.once("network-message-updated");
 
   // Fire an XHR POST request.
@@ -55,9 +56,14 @@ add_task(async function task() {
     const onConsoleMenuOpened = [
       rightClickMouseEvent,
       rightClickCtrlOrCmdKeyMouseEvent,
-    ].includes(clickEvent) ? hud.ui.wrapper.once("menu-open") : null;
+    ].includes(clickEvent)
+      ? hud.ui.wrapper.once("menu-open")
+      : null;
 
-    const { link, where } = await simulateLinkClick(statusCodeNode, testCase.clickEvent);
+    const { link, where } = await simulateLinkClick(
+      statusCodeNode,
+      testCase.clickEvent
+    );
     is(link, testCase.link, `Clicking the provided link opens ${link}`);
     is(where, testCase.where, `Link opened in correct tab`);
 

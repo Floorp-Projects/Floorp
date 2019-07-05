@@ -19,7 +19,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
+  const { jsterm } = hud;
 
   const jstermHistory = [
     `Dog = "Snoopy"`,
@@ -43,35 +43,56 @@ async function performTests() {
     jsterm.inputNode.selectionStart = 1;
     jsterm.inputNode.selectionEnd = 3;
   } else {
-    jsterm.editor.setSelection({line: 0, ch: 1}, {line: 0, ch: 3});
+    jsterm.editor.setSelection({ line: 0, ch: 1 }, { line: 0, ch: 3 });
   }
 
   info("Check that the reverse search toolbar as the expected initial state");
   let reverseSearchElement = await openReverseSearch(hud);
-  is(reverseSearchElement.querySelector("input").value, "do",
-    `Reverse search input has expected "do" value`);
+  is(
+    reverseSearchElement.querySelector("input").value,
+    "do",
+    `Reverse search input has expected "do" value`
+  );
   is(isReverseSearchInputFocused(hud), true, "reverse search input is focused");
-  ok(reverseSearchElement, "Reverse search is displayed with a keyboard shortcut");
+  ok(
+    reverseSearchElement,
+    "Reverse search is displayed with a keyboard shortcut"
+  );
   const infoElement = getReverseSearchInfoElement(hud);
-  is(infoElement.textContent, "3 of 3 results", "The reverse info has the expected text");
+  is(
+    infoElement.textContent,
+    "3 of 3 results",
+    "The reverse info has the expected text"
+  );
 
-  const previousButton = reverseSearchElement.querySelector(".search-result-button-prev");
-  const nextButton = reverseSearchElement.querySelector(".search-result-button-next");
+  const previousButton = reverseSearchElement.querySelector(
+    ".search-result-button-prev"
+  );
+  const nextButton = reverseSearchElement.querySelector(
+    ".search-result-button-next"
+  );
   ok(previousButton, "Previous navigation button is displayed");
   ok(nextButton, "Next navigation button is displayed");
 
   is(getInputValue(hud), "document", "JsTerm has the expected input");
-  is(jsterm.autocompletePopup.isOpen, false,
-    "Setting the input value did not trigger the autocompletion");
+  is(
+    jsterm.autocompletePopup.isOpen,
+    false,
+    "Setting the input value did not trigger the autocompletion"
+  );
 
   const onJsTermValueChanged = jsterm.once("set-input-value");
   EventUtils.sendString("g");
   await onJsTermValueChanged;
   is(getInputValue(hud), `Dog = "Snoopy"`, "JsTerm input was updated");
-  is(infoElement.textContent, "1 result", "The reverse info has the expected text");
+  is(
+    infoElement.textContent,
+    "1 result",
+    "The reverse info has the expected text"
+  );
   ok(
     !reverseSearchElement.querySelector(".search-result-button-prev") &&
-    !reverseSearchElement.querySelector(".search-result-button-next"),
+      !reverseSearchElement.querySelector(".search-result-button-next"),
     "The results navigation buttons are not displayed when there's only one result"
   );
 
@@ -79,8 +100,13 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_Escape");
   await waitFor(() => !getReverseSearchElement(hud));
 
-  info("Check that opening the reverse search input is empty after opening it again");
+  info(
+    "Check that opening the reverse search input is empty after opening it again"
+  );
   reverseSearchElement = await openReverseSearch(hud);
-  is(reverseSearchElement.querySelector("input").value, "",
-    "Reverse search input is empty");
+  is(
+    reverseSearchElement.querySelector("input").value,
+    "",
+    "Reverse search input is empty"
+  );
 }

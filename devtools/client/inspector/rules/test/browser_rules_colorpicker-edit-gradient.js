@@ -18,7 +18,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const {view} = await openRuleView();
+  const { view } = await openRuleView();
 
   info("Testing that the colors in gradient properties are parsed correctly");
   testColorParsing(view);
@@ -60,18 +60,24 @@ async function testPickingNewColor(view) {
   const change = {
     selector: "body",
     name: "background-image",
-    value: "linear-gradient(to left, rgb(1, 1, 1) 25%, " +
-           "rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)",
+    value:
+      "linear-gradient(to left, rgb(1, 1, 1) 25%, " +
+      "rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)",
   };
   await simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
 
-  is(swatchEl.style.backgroundColor, "rgb(1, 1, 1)",
-    "The color swatch's background was updated");
+  is(
+    swatchEl.style.backgroundColor,
+    "rgb(1, 1, 1)",
+    "The color swatch's background was updated"
+  );
   is(colorEl.textContent, "#010101", "The color text was updated");
-  is((await getComputedStyleProperty("body", null, "background-image")),
+  is(
+    await getComputedStyleProperty("body", null, "background-image"),
     "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, " +
       "rgb(0, 0, 0) 100%)",
-    "The gradient has been updated correctly");
+    "The gradient has been updated correctly"
+  );
 
   await hideTooltipAndWaitForRuleViewChanged(cPicker, view);
 }

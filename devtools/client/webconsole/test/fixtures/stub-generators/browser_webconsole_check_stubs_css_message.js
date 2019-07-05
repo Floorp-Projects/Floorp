@@ -11,12 +11,17 @@ add_task(async function() {
   const generatedStubs = await generateCssMessageStubs();
 
   const repoStubFilePath = getTestFilePath("../stubs/cssMessage.js");
-  const repoStubFileContent = await OS.File.read(repoStubFilePath, { encoding: "utf-8" });
+  const repoStubFileContent = await OS.File.read(repoStubFilePath, {
+    encoding: "utf-8",
+  });
 
   if (generatedStubs != repoStubFileContent) {
-    ok(false, "The cssMessage stubs file needs to be updated by running " +
-      "`mach test devtools/client/webconsole/test/fixtures/" +
-      "stub-generators/browser_webconsole_update_stubs_css_message.js`");
+    ok(
+      false,
+      "The cssMessage stubs file needs to be updated by running " +
+        "`mach test devtools/client/webconsole/test/fixtures/" +
+        "stub-generators/browser_webconsole_update_stubs_css_message.js`"
+    );
   } else {
     ok(true, "The cssMessage stubs file is up to date");
   }

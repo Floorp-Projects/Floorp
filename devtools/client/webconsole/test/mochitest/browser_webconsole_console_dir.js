@@ -15,14 +15,17 @@ add_task(async function() {
 
   info("console.dir on an array");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    content.wrappedJSObject.console.dir(
-      [1, 2, {a: "a", b: "b"}],
-    );
+    content.wrappedJSObject.console.dir([1, 2, { a: "a", b: "b" }]);
   });
   let dirMessageNode = await waitFor(() =>
-    findConsoleDir(hud.ui.outputNode, 0));
+    findConsoleDir(hud.ui.outputNode, 0)
+  );
   let objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
-  is(objectInspectors.length, 1, "There is the expected number of object inspectors");
+  is(
+    objectInspectors.length,
+    1,
+    "There is the expected number of object inspectors"
+  );
   const [arrayOi] = objectInspectors;
   let arrayOiNodes = arrayOi.querySelectorAll(".node");
   // The tree can be collapsed since the properties are fetched asynchronously.
@@ -35,14 +38,19 @@ add_task(async function() {
   }
 
   // There are 6 nodes: the root, 1, 2, {a: "a", b: "b"}, length and the proto.
-  is(arrayOiNodes.length, 6, "There is the expected number of nodes in the tree");
-  let propertiesNodes = [...arrayOi.querySelectorAll(".object-label")]
-    .map(el => el.textContent);
+  is(
+    arrayOiNodes.length,
+    6,
+    "There is the expected number of nodes in the tree"
+  );
+  let propertiesNodes = [...arrayOi.querySelectorAll(".object-label")].map(
+    el => el.textContent
+  );
   const arrayPropertiesNames = ["0", "1", "2", "length", "<prototype>"];
   is(JSON.stringify(propertiesNodes), JSON.stringify(arrayPropertiesNames));
 
   info("console.dir on a long object");
-  const obj = Array.from({length: 100}).reduce((res, _, i) => {
+  const obj = Array.from({ length: 100 }).reduce((res, _, i) => {
     res["item-" + (i + 1).toString().padStart(3, "0")] = i + 1;
     return res;
   }, {});
@@ -51,7 +59,11 @@ add_task(async function() {
   });
   dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 1));
   objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
-  is(objectInspectors.length, 1, "There is the expected number of object inspectors");
+  is(
+    objectInspectors.length,
+    1,
+    "There is the expected number of object inspectors"
+  );
   const [objectOi] = objectInspectors;
   let objectOiNodes = objectOi.querySelectorAll(".node");
   // The tree can be collapsed since the properties are fetched asynchronously.
@@ -64,11 +76,18 @@ add_task(async function() {
   }
 
   // There are 102 nodes: the root, 100 "item-N" properties, and the proto.
-  is(objectOiNodes.length, 102, "There is the expected number of nodes in the tree");
-  const objectPropertiesNames = Object.getOwnPropertyNames(obj).map(name => `"${name}"`);
+  is(
+    objectOiNodes.length,
+    102,
+    "There is the expected number of nodes in the tree"
+  );
+  const objectPropertiesNames = Object.getOwnPropertyNames(obj).map(
+    name => `"${name}"`
+  );
   objectPropertiesNames.push("<prototype>");
-  propertiesNodes = [...objectOi.querySelectorAll(".object-label")]
-    .map(el => el.textContent);
+  propertiesNodes = [...objectOi.querySelectorAll(".object-label")].map(
+    el => el.textContent
+  );
   is(JSON.stringify(propertiesNodes), JSON.stringify(objectPropertiesNames));
 });
 

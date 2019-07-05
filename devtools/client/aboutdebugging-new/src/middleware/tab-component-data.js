@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  DEBUG_TARGETS,
-  REQUEST_TABS_SUCCESS,
-} = require("../constants");
+const { DEBUG_TARGETS, REQUEST_TABS_SUCCESS } = require("../constants");
 
 /**
  * This middleware converts tabs object that get from DebuggerClient.listTabs() to data
@@ -29,7 +26,9 @@ function toComponentData(tabs) {
     const type = DEBUG_TARGETS.TAB;
     const id = tab.outerWindowID;
     const icon = tab.favicon
-      ? `data:image/png;base64,${ btoa(String.fromCharCode.apply(String, tab.favicon)) }`
+      ? `data:image/png;base64,${btoa(
+          String.fromCharCode.apply(String, tab.favicon)
+        )}`
       : "chrome://devtools/skin/images/globe.svg";
     const name = tab.title || tab.url;
     const url = tab.url;

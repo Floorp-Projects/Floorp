@@ -10,13 +10,13 @@
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(async function() {
-  const {toolbox, inspector} = await openInspectorForURL(TEST_URL);
+  const { toolbox, inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a cssresource attribute");
   await selectNode("link", inspector);
 
   info("Set the popupNode to the node that contains the uri");
-  let {editor} = await getContainerForSelector("link", inspector);
+  let { editor } = await getContainerForSelector("link", inspector);
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("href").querySelector(".link"),
   });
@@ -37,7 +37,7 @@ add_task(async function() {
   await selectNode("script", inspector);
 
   info("Set the popupNode to the node that contains the uri");
-  ({editor} = await getContainerForSelector("script", inspector));
+  ({ editor } = await getContainerForSelector("script", inspector));
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("src").querySelector(".link"),
   });

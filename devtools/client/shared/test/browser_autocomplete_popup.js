@@ -7,7 +7,7 @@ add_task(async function() {
   const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 
   info("Create an autocompletion popup");
-  const [,, doc] = await createHost();
+  const [, , doc] = await createHost();
   const input = doc.createElement("input");
   doc.body.appendChild(input);
 
@@ -19,9 +19,9 @@ add_task(async function() {
   input.focus();
 
   const items = [
-    {label: "item0", value: "value0"},
-    {label: "item1", value: "value1"},
-    {label: "item2", value: "value2"},
+    { label: "item0", value: "value0" },
+    { label: "item1", value: "value1" },
+    { label: "item2", value: "value2" },
   ];
 
   ok(!popup.isOpen, "popup is not open");
@@ -38,8 +38,11 @@ add_task(async function() {
   popup.setItems(items);
 
   is(popup.itemCount, items.length, "items added");
-  is(JSON.stringify(popup.getItems()), JSON.stringify(items),
-    "getItems returns back the same items");
+  is(
+    JSON.stringify(popup.getItems()),
+    JSON.stringify(items),
+    "getItems returns back the same items"
+  );
   is(popup.selectedIndex, 0, "Index of the first item from top is selected.");
   is(popup.selectedItem, items[0], "First item from top is selected");
   checkActiveDescendant(popup, input);
@@ -95,6 +98,9 @@ function checkActiveDescendant(popup, input) {
 
   ok(popupItem, "Active descendant is found in the popup list");
   ok(cloneItem, "Active descendant is found in the list clone");
-  is(stripNS(popupItem.outerHTML), cloneItem.outerHTML,
-    "Cloned item has the same HTML as the original element");
+  is(
+    stripNS(popupItem.outerHTML),
+    cloneItem.outerHTML,
+    "Cloned item has the same HTML as the original element"
+  );
 }

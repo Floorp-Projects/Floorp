@@ -6,18 +6,21 @@
 "use strict";
 requestLongerTimeout(2);
 
-const {PrefObserver} = require("devtools/client/shared/prefs");
+const { PrefObserver } = require("devtools/client/shared/prefs");
 
 const TEST_FILE =
   "browser/devtools/client/webconsole/test/mochitest/test-warning-groups.html";
 const TEST_URI = "http://example.org/" + TEST_FILE;
 
 const TRACKER_URL = "http://tracking.example.com/";
-const BLOCKED_URL = TRACKER_URL +
+const BLOCKED_URL =
+  TRACKER_URL +
   "browser/devtools/client/webconsole/test/mochitest/test-image.png";
 const WARNING_GROUP_PREF = "devtools.webconsole.groupWarningMessages";
 
-const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+const { UrlClassifierTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlClassifierTestUtils.jsm"
+);
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -38,16 +41,28 @@ add_task(async function testContentBlockingMessage() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a few content blocking messages and simple ones");
-  let onContentBlockingWarningMessage = waitForMessage(hud, `${BLOCKED_URL}?1`, ".warn");
+  let onContentBlockingWarningMessage = waitForMessage(
+    hud,
+    `${BLOCKED_URL}?1`,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
   await logString(hud, "simple message 1");
 
-  onContentBlockingWarningMessage = waitForMessage(hud, `${BLOCKED_URL}?2`, ".warn");
+  onContentBlockingWarningMessage = waitForMessage(
+    hud,
+    `${BLOCKED_URL}?2`,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
 
-  onContentBlockingWarningMessage = waitForMessage(hud, `${BLOCKED_URL}?3`, ".warn");
+  onContentBlockingWarningMessage = waitForMessage(
+    hud,
+    `${BLOCKED_URL}?3`,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
   await onContentBlockingWarningMessage;
 
@@ -60,10 +75,14 @@ add_task(async function testContentBlockingMessage() {
 
   info("Enable the warningGroup feature pref and check warnings were grouped");
   await toggleWarningGroupPreference(hud);
-  let warningGroupMessage1 =
-    await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
-  is(warningGroupMessage1.querySelector(".warning-group-badge").textContent, "3",
-    "The badge has the expected text");
+  let warningGroupMessage1 = await waitFor(() =>
+    findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL)
+  );
+  is(
+    warningGroupMessage1.querySelector(".warning-group-badge").textContent,
+    "3",
+    "The badge has the expected text"
+  );
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -74,7 +93,9 @@ add_task(async function testContentBlockingMessage() {
   emitContentBlockedMessage(hud);
   await waitForBadgeNumber(warningGroupMessage1, "4");
 
-  info("Re-enable the warningGroup feature pref and check warnings are displayed");
+  info(
+    "Re-enable the warningGroup feature pref and check warnings are displayed"
+  );
   await toggleWarningGroupPreference(hud);
   await waitFor(() => findMessage(hud, `${BLOCKED_URL}?4`));
 
@@ -89,8 +110,9 @@ add_task(async function testContentBlockingMessage() {
 
   info("Re-disable the warningGroup feature pref");
   await toggleWarningGroupPreference(hud, false);
-  warningGroupMessage1 =
-    await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
+  warningGroupMessage1 = await waitFor(() =>
+    findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL)
+  );
 
   checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
@@ -138,7 +160,9 @@ add_task(async function testContentBlockingMessage() {
     `simple message 2`,
   ]);
 
-  info("Enable the warningGroup feature pref to check that the group is still expanded");
+  info(
+    "Enable the warningGroup feature pref to check that the group is still expanded"
+  );
   await toggleWarningGroupPreference(hud, false);
   await waitFor(() => findMessage(hud, CONTENT_BLOCKING_GROUP_LABEL));
 
@@ -154,11 +178,17 @@ add_task(async function testContentBlockingMessage() {
     `simple message 2`,
   ]);
 
-  info("Add a second warning and check it's placed in the second, closed, group");
-  const onContentBlockingWarningGroupMessage =
-    waitForMessage(hud, CONTENT_BLOCKING_GROUP_LABEL, ".warn");
+  info(
+    "Add a second warning and check it's placed in the second, closed, group"
+  );
+  const onContentBlockingWarningGroupMessage = waitForMessage(
+    hud,
+    CONTENT_BLOCKING_GROUP_LABEL,
+    ".warn"
+  );
   emitContentBlockedMessage(hud);
-  const warningGroupMessage2 = (await onContentBlockingWarningGroupMessage).node;
+  const warningGroupMessage2 = (await onContentBlockingWarningGroupMessage)
+    .node;
   await waitForBadgeNumber(warningGroupMessage2, "2");
 
   checkConsoleOutputForWarningGroup(hud, [
@@ -173,7 +203,9 @@ add_task(async function testContentBlockingMessage() {
     `simple message 2`,
   ]);
 
-  info("Disable the warningGroup pref and check all warning messages are visible");
+  info(
+    "Disable the warningGroup pref and check all warning messages are visible"
+  );
   await toggleWarningGroupPreference(hud, false);
   await waitFor(() => findMessage(hud, `${BLOCKED_URL}?6`));
 
@@ -221,8 +253,11 @@ function logString(hud, str) {
 }
 
 function waitForBadgeNumber(message, expectedNumber) {
-  return waitFor(() =>
-    message.querySelector(".warning-group-badge").textContent == expectedNumber);
+  return waitFor(
+    () =>
+      message.querySelector(".warning-group-badge").textContent ==
+      expectedNumber
+  );
 }
 
 /**
@@ -234,7 +269,10 @@ function waitForBadgeNumber(message, expectedNumber) {
  */
 async function toggleWarningGroupPreference(hud, fromUI = true) {
   if (!fromUI) {
-    await pushPref(WARNING_GROUP_PREF, !Services.prefs.getBoolPref(WARNING_GROUP_PREF));
+    await pushPref(
+      WARNING_GROUP_PREF,
+      !Services.prefs.getBoolPref(WARNING_GROUP_PREF)
+    );
     return;
   }
 

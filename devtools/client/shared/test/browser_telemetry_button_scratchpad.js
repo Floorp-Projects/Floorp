@@ -4,7 +4,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8," +
+const TEST_URI =
+  "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_scratchpad.js</p>";
 
 // Because we need to gather stats for the period of time that a tool has been
@@ -42,26 +43,34 @@ function trackScratchpadWindows() {
     Services.ww.registerNotification(function observer(subject, topic) {
       if (topic == "domwindowopened") {
         const win = subject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function() {
-          if (win.Scratchpad) {
-            win.Scratchpad.addObserver({
-              onReady: function() {
-                win.Scratchpad.removeObserver(this);
-                numScratchpads++;
-                win.close();
+        win.addEventListener(
+          "load",
+          function() {
+            if (win.Scratchpad) {
+              win.Scratchpad.addObserver({
+                onReady: function() {
+                  win.Scratchpad.removeObserver(this);
+                  numScratchpads++;
+                  win.close();
 
-                info("another scratchpad was opened and closed, " +
-                     `count is now ${numScratchpads}`);
+                  info(
+                    "another scratchpad was opened and closed, " +
+                      `count is now ${numScratchpads}`
+                  );
 
-                if (numScratchpads === 4) {
-                  Services.ww.unregisterNotification(observer);
-                  info("4 scratchpads have been opened and closed, checking results");
-                  resolve();
-                }
-              },
-            });
-          }
-        }, {once: true});
+                  if (numScratchpads === 4) {
+                    Services.ww.unregisterNotification(observer);
+                    info(
+                      "4 scratchpads have been opened and closed, checking results"
+                    );
+                    resolve();
+                  }
+                },
+              });
+            }
+          },
+          { once: true }
+        );
       }
     });
   });
@@ -97,5 +106,10 @@ function delayedClicks(node, clicks) {
 function checkResults() {
   // For help generating these tests use generateTelemetryTests("DEVTOOLS_SCRATCHPAD_")
   // here.
-  checkTelemetry("DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT", "", {0: 4, 1: 0}, "array");
+  checkTelemetry(
+    "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT",
+    "",
+    { 0: 4, 1: 0 },
+    "array"
+  );
 }

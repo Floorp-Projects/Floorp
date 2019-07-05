@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 const TEST_DATA = ["html", "head", "body"];
 
 add_task(async function() {
-  const {inspector} = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const selector of TEST_DATA) {
     info("Try to drag/drop node " + selector);
