@@ -21,6 +21,7 @@
 #include "js/GCVariant.h"
 #include "js/HashTable.h"
 #include "js/Promise.h"
+#include "js/Result.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
@@ -1839,14 +1840,12 @@ class DebuggerObject : public NativeObject {
                                     bool& result);
   static MOZ_MUST_USE bool isFrozen(JSContext* cx, HandleDebuggerObject object,
                                     bool& result);
-  static MOZ_MUST_USE bool getProperty(JSContext* cx,
-                                       HandleDebuggerObject object, HandleId id,
-                                       HandleValue receiver,
-                                       MutableHandleValue result);
-  static MOZ_MUST_USE bool setProperty(JSContext* cx,
-                                       HandleDebuggerObject object, HandleId id,
-                                       HandleValue value, HandleValue receiver,
-                                       MutableHandleValue result);
+  static MOZ_MUST_USE JS::Result<Completion> getProperty(
+      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      HandleValue receiver);
+  static MOZ_MUST_USE JS::Result<Completion> setProperty(
+      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      HandleValue value, HandleValue receiver);
   static MOZ_MUST_USE bool getPrototypeOf(JSContext* cx,
                                           HandleDebuggerObject object,
                                           MutableHandleDebuggerObject result);
