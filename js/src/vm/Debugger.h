@@ -1528,7 +1528,7 @@ class DebuggerFrame : public NativeObject {
    *
    * If provided, owner must be the Debugger to which this Debugger.Frame
    * belongs; remove this frame's entry from its generatorFrames map, and clean
-   * up its cross-compartment wrapper table entries. The owner must be passed
+   * up its cross-compartment wrapper table entry. The owner must be passed
    * unless this method is being called from the Debugger.Frame's finalizer. (In
    * that case, the owner is not reliably available, and is not actually
    * necessary.)
