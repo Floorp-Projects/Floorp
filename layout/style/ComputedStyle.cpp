@@ -296,10 +296,10 @@ static nscolor ExtractColor(const ComputedStyle& aStyle,
   return ExtractColor(aStyle, aColor.AsColor());
 }
 
-static nscolor ExtractColor(ComputedStyle& aStyle,
-                            const nsStyleSVGPaint& aPaintServer) {
-  return aPaintServer.Type() == eStyleSVGPaintType_Color
-             ? aPaintServer.GetColor(&aStyle)
+static nscolor ExtractColor(const ComputedStyle& aStyle,
+                            const StyleSVGPaint& aPaintServer) {
+  return aPaintServer.kind.IsColor()
+             ? ExtractColor(aStyle, aPaintServer.kind.AsColor())
              : NS_RGBA(0, 0, 0, 0);
 }
 
