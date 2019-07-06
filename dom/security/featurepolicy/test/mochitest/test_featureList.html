@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test feature policy - list</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe src="empty.html" id="ifr"></iframe>
+<script type="text/javascript">
+
+let supportedFeatures = [
+  "autoplay",
+  "camera",
+  "encrypted-media",
+  "fullscreen",
+  "geolocation",
+  "microphone",
+  "midi",
+  "payment",
+  "display-capture",
+  "document-domain",
+  "speaker",
+  "vr",
+];
+
+function checkFeatures(features) {
+  features.forEach(feature => {
+    ok(supportedFeatures.includes(feature), "Feature: " + feature);
+  });
+}
+
+ok("featurePolicy" in document, "We have document.featurePolicy");
+checkFeatures(document.featurePolicy.features());
+
+let ifr = document.getElementById("ifr");
+ok("featurePolicy" in ifr, "We have HTMLIFrameElement.featurePolicy");
+checkFeatures(ifr.featurePolicy.features());
+
+</script>
+</body>
+</html>
