@@ -129,6 +129,9 @@ static constexpr Register WasmTableCallIndexReg = ABINonArgReg3;
 static constexpr Register OsrFrameReg = edx;
 static constexpr Register PreBarrierReg = edx;
 
+// Not enough registers for a PC register (R0-R2 use 2 registers each).
+static constexpr Register InterpreterPCReg = InvalidReg;
+
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
 static constexpr Register RegExpMatcherStringReg = CallTempReg1;
