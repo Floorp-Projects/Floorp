@@ -1402,7 +1402,8 @@ nsChangeHint nsStylePosition::CalcDifference(
       hint |=
           nsChangeHint_RecomputePosition | nsChangeHint_UpdateParentOverflow;
     } else {
-      hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
+      hint |=
+          nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
     }
   }
   return hint;
@@ -3067,7 +3068,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // reflow anyway.
     if (IsAbsolutelyPositionedStyle() &&
         aOldPosition.NeedsHypotheticalPositionIfAbsPos()) {
-      hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
+      hint |=
+          nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition;
     } else {
       hint |= nsChangeHint_NeutralChange;
     }
