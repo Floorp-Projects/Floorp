@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 
 #include "nsIContent.h"
+#include "nsITouchBarUpdater.h"
 #include "nsIWidget.h"
 #include "mozilla/dom/Document.h"
 #include "nsIAppStartup.h"
@@ -34,6 +35,9 @@ nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
 NSMenu* sApplicationMenu = nil;
 BOOL sApplicationMenuIsFallback = NO;
 BOOL gSomeMenuBarPainted = NO;
+
+// defined in nsCocoaWindow.mm.
+extern BOOL sTouchBarIsInitialized;
 
 // We keep references to the first quit and pref item content nodes we find, which
 // will be from the hidden window. We use these when the document for the current
@@ -520,6 +524,7 @@ void nsMenuBarX::AquifyMenuBar() {
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nullptr);
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nullptr);
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nullptr);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_touch_bar"), nullptr);
   }
 }
 
@@ -624,6 +629,8 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     = Hide App             = <- menu_mac_hide_app
     = Hide Others          = <- menu_mac_hide_others
     = Show All             = <- menu_mac_show_all
+    ========================
+    = Customize Touch Bar… = <- menu_mac_touch_bar
     ========================
     = Quit                 = <- menu_FileQuitItem
     ========================
@@ -740,6 +747,28 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     // Add a separator after the hide/show menus if at least one exists
     if (addHideShowSeparator) [sApplicationMenu addItem:[NSMenuItem separatorItem]];
 
+    BOOL addTouchBarSeparator = NO;
+
+    // Add Touch Bar customization menu item.
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_touch_bar"),
+                                             @selector(menuItemHit:), eCommand_ID_TouchBar,
+                                             nsMenuBarX::sNativeEventTarget);
+
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      // We hide the menu item on Macs that don't have a Touch Bar.
+      if (!sTouchBarIsInitialized) {
+        [itemBeingAdded setHidden:YES];
+      } else {
+        addTouchBarSeparator = YES;
+      }
+      [itemBeingAdded release];
+      itemBeingAdded = nil;
+    }
+
+    // Add a separator after the Touch Bar menu item if it exists
+    if (addTouchBarSeparator) [sApplicationMenu addItem:[NSMenuItem separatorItem]];
+
     // Add quit menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_FileQuitItem"),
                                              @selector(menuItemHit:), eCommand_ID_Quit,
@@ -825,6 +854,12 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 @end
 
+#if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
+@interface NSApplication (TouchBarMenu)
+- (IBAction)toggleTouchBarCustomizationPalette:(id)sender;
+@end
+#endif
+
 //
 // Objective-C class used as action target for menu items
 //
@@ -874,6 +909,9 @@ static BOOL gMenuItemsExecuteCommands = YES;
     return;
   } else if (tag == eCommand_ID_ShowAll) {
     [NSApp unhideAllApplications:sender];
+    return;
+  } else if (tag == eCommand_ID_TouchBar) {
+    [NSApp toggleTouchBarCustomizationPalette:sender];
     return;
   } else if (tag == eCommand_ID_Quit) {
     nsIContent* mostSpecificContent = sQuitItemContent;
