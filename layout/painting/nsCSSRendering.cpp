@@ -716,7 +716,16 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
   const nsStyleImage* image = &aStyleBorder.mBorderImageSource;
 
   // Filter out unsupported image/border types
-  if (!image || image->GetType() != eStyleImageType_Image) {
+  if (!image) {
+    return ImgDrawResult::NOT_SUPPORTED;
+  }
+
+  // All this code bitrotted too much (but is almost right); disabled for now.
+  bool imageTypeSupported = false;
+  // FIXME(1409773): fix this: image->GetType() == eStyleImageType_Image
+  // FIXME(1409774): fix this: image->GetType() == eStyleImageType_Gradient;
+
+  if (!imageTypeSupported) {
     return ImgDrawResult::NOT_SUPPORTED;
   }
 

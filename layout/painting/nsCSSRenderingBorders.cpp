@@ -3577,11 +3577,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
   NS_FOR_CSS_SIDES(i) {
     slice[i] = (float)(mSlice.Side(i)) / appUnitsPerDevPixel;
     widths[i] = (float)(mWidths.Side(i)) / appUnitsPerDevPixel;
-
-    // The outset is already taken into account by the adjustments to mArea
-    // in our constructor. We use mArea as our dest rect so we can just supply
-    // zero outsets to WebRender.
-    outset[i] = 0.0f;
+    outset[i] = (float)(mImageOutset.Side(i)) / appUnitsPerDevPixel;
   }
 
   LayoutDeviceRect destRect =
@@ -3599,19 +3595,6 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
   ImgDrawResult drawResult = ImgDrawResult::SUCCESS;
   switch (mImageRenderer.GetType()) {
     case eStyleImageType_Image: {
-      RefPtr<imgIContainer> img = mImageRenderer.GetImage();
-      if (!img || img->GetType() == imgIContainer::TYPE_VECTOR) {
-        // Vector images will redraw each segment of the border up to 8 times.
-        // We draw using a restricted region derived from the segment's clip and
-        // scale the image accordingly (see ClippedImage::Draw). If we follow
-        // this convention as is for WebRender, we will need to rasterize the
-        // entire vector image scaled up without the restriction region, which
-        // means our main thread CPU and memory footprints will be much higher.
-        // Ideally we would be able to provide a raster image for each segment
-        // of the border. For now we use fallback.
-        return ImgDrawResult::NOT_SUPPORTED;
-      }
-
       uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
       if (aDisplayListBuilder->IsPaintingToWindow()) {
         flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
@@ -3620,13 +3603,11 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
         flags |= imgIContainer::FLAG_SYNC_DECODE;
       }
 
-      LayoutDeviceRect imageRect = LayoutDeviceRect::FromAppUnits(
-          nsRect(nsPoint(), mImageRenderer.GetSize()), appUnitsPerDevPixel);
-
+      RefPtr<imgIContainer> img = mImageRenderer.GetImage();
       Maybe<SVGImageContext> svgContext;
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
-              img, aForFrame, imageRect, aSc, flags, svgContext);
+              img, aForFrame, destRect, aSc, flags, svgContext);
 
       RefPtr<layers::ImageContainer> container;
       drawResult = img->GetImageContainerAtSize(aManager->LayerManager(),
@@ -3646,18 +3627,15 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
         break;
       }
 
-      wr::WrBorderImage params{
+      aBuilder.PushBorderImage(
+          dest, clip, !aItem->BackfaceIsHidden(),
           wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
-          key.value(),
-          mImageSize.width / appUnitsPerDevPixel,
-          mImageSize.height / appUnitsPerDevPixel,
-          mFill,
+          key.value(), (float)(mImageSize.width) / appUnitsPerDevPixel,
+          (float)(mImageSize.height) / appUnitsPerDevPixel,
           wr::ToSideOffsets2D_i32(slice[0], slice[1], slice[2], slice[3]),
           wr::ToSideOffsets2D_f32(outset[0], outset[1], outset[2], outset[3]),
           wr::ToRepeatMode(mRepeatModeHorizontal),
-          wr::ToRepeatMode(mRepeatModeVertical)};
-
-      aBuilder.PushBorderImage(dest, clip, !aItem->BackfaceIsHidden(), params);
+          wr::ToRepeatMode(mRepeatModeVertical));
       break;
     }
     case eStyleImageType_Gradient: {
@@ -3683,7 +3661,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
             dest, clip, !aItem->BackfaceIsHidden(),
             wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
             (float)(mImageSize.width) / appUnitsPerDevPixel,
-            (float)(mImageSize.height) / appUnitsPerDevPixel, mFill,
+            (float)(mImageSize.height) / appUnitsPerDevPixel,
             wr::ToSideOffsets2D_i32(slice[0], slice[1], slice[2], slice[3]),
             wr::ToLayoutPoint(startPoint), wr::ToLayoutPoint(endPoint), stops,
             extendMode,
@@ -3693,8 +3671,8 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
         aBuilder.PushBorderRadialGradient(
             dest, clip, !aItem->BackfaceIsHidden(),
             wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
-            mFill, wr::ToLayoutPoint(lineStart),
-            wr::ToLayoutSize(gradientRadius), stops, extendMode,
+            wr::ToLayoutPoint(lineStart), wr::ToLayoutSize(gradientRadius),
+            stops, extendMode,
             wr::ToSideOffsets2D_f32(outset[0], outset[1], outset[2],
                                     outset[3]));
       }
