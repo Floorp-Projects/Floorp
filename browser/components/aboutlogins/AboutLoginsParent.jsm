@@ -26,11 +26,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "RemoteSettings",
-  "resource://services-settings/remote-settings.js"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
@@ -180,12 +175,9 @@ var AboutLoginsParent = {
         this._subscribers.add(message.target);
 
         let messageManager = message.target.messageManager;
-        const logins = await this.getAllLogins();
-        messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
-        const breachesByLoginGUID = await this.getBreachesForLogins(logins);
         messageManager.sendAsyncMessage(
-          "AboutLogins:UpdateBreaches",
-          breachesByLoginGUID
+          "AboutLogins:AllLogins",
+          await this.getAllLogins()
         );
         break;
       }
@@ -370,25 +362,5 @@ var AboutLoginsParent = {
       }
       throw e;
     }
-  },
-
-  async getBreachesForLogins(logins) {
-    const breaches = await RemoteSettings("fxmonitor-breaches").get();
-    const breachHostMap = new Map();
-    for (const breach of breaches) {
-      breachHostMap.set(breach.Domain, breach);
-    }
-    const breachesByLoginGUID = new Map();
-    for (const login of logins) {
-      const loginURI = Services.io.newURI(login.origin);
-      const breach = breachHostMap.get(loginURI.host) || false;
-      if (
-        breach &&
-        login.timePasswordChanged < new Date(breach.BreachDate).getTime()
-      ) {
-        breachesByLoginGUID.set(login.guid, breach);
-      }
-    }
-    return breachesByLoginGUID;
   },
 };

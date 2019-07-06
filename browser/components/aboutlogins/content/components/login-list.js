@@ -79,12 +79,6 @@ export default class LoginList extends HTMLElement {
         listItem.setAttribute("aria-selected", "true");
         this._list.setAttribute("aria-activedescendant", listItem.id);
       }
-      if (
-        this._breachesByLoginGUID &&
-        this._breachesByLoginGUID.has(login.guid)
-      ) {
-        listItem.classList.add("breached");
-      }
       this._list.append(listItem);
     }
 
@@ -166,14 +160,6 @@ export default class LoginList extends HTMLElement {
         );
       }
     }
-  }
-
-  /**
-   * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs used for displaying breached login indicators.
-   */
-  updateBreaches(breachesByLoginGUID) {
-    this._breachesByLoginGUID = breachesByLoginGUID;
-    this.render();
   }
 
   /**
