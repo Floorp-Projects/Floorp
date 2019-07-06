@@ -148,6 +148,7 @@ XPC_MSG_DEF(NS_ERROR_PROXY_CONNECTION_REFUSED       , "The connection to the pro
 XPC_MSG_DEF(NS_ERROR_PROXY_AUTHENTICATION_FAILED    , "The proxy requires authentication")
 XPC_MSG_DEF(NS_ERROR_PROXY_BAD_GATEWAY              , "The request failed on the proxy")
 XPC_MSG_DEF(NS_ERROR_PROXY_GATEWAY_TIMEOUT          , "The request timed out on the proxy")
+XPC_MSG_DEF(NS_ERROR_TOO_MANY_REQUESTS              , "Sending too many requests to a proxy")
 XPC_MSG_DEF(NS_ERROR_NET_TIMEOUT                    , "The connection has timed out")
 XPC_MSG_DEF(NS_ERROR_OFFLINE                        , "The requested action could not be completed in the offline state")
 XPC_MSG_DEF(NS_ERROR_PORT_ACCESS_NOT_ALLOWED        , "Establishing a connection to an unsafe or otherwise banned port was prohibited")

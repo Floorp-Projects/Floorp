@@ -97,6 +97,9 @@ function connect_handler(request, response) {
       response.setStatusLine(request.httpVersion, 407, "Authenticate");
       // And deliberately no Proxy-Authenticate header
       break;
+    case "429.example.com":
+      response.setStatusLine(request.httpVersion, 429, "Too Many Requests");
+      break;
     case "502.example.com":
       response.setStatusLine(request.httpVersion, 502, "Bad Gateway");
       break;
@@ -112,6 +115,7 @@ add_task(async function setup() {
   http_server = new HttpServer();
   http_server.identity.add("https", "404.example.com", 443);
   http_server.identity.add("https", "407.example.com", 443);
+  http_server.identity.add("https", "429.example.com", 443);
   http_server.identity.add("https", "502.example.com", 443);
   http_server.identity.add("https", "504.example.com", 443);
   http_server.registerPathHandler("CONNECT", connect_handler);
@@ -166,6 +170,17 @@ add_task(async function proxy_host_not_found_failure() {
   const { status, http_code } = await get_response(make_channel(`https://404.example.com/`), CL_EXPECT_FAILURE);
 
   Assert.equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
+  Assert.equal(http_code, undefined);
+});
+
+// 429 Too Many Requests means we sent too many requests.
+add_task(async function proxy_too_many_requests_failure() {
+  const { status, http_code } = await get_response(
+    make_channel(`https://429.example.com/`),
+    CL_EXPECT_FAILURE
+  );
+
+  Assert.equal(status, Cr.NS_ERROR_TOO_MANY_REQUESTS);
   Assert.equal(http_code, undefined);
 });
 
