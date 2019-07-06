@@ -9801,10 +9801,9 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
   return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
 }
 
-static bool DebuggerGenericEval(
+static Result<Completion> DebuggerGenericEval(
     JSContext* cx, const mozilla::Range<const char16_t> chars,
-    HandleObject bindings, const EvalOptions& options, ResumeMode& resumeMode,
-    MutableHandleValue value, MutableHandleSavedFrame exnStack, Debugger* dbg,
+    HandleObject bindings, const EvalOptions& options, Debugger* dbg,
     HandleObject envArg, FrameIter* iter) {
   // Either we're specifying the frame, or a global.
   MOZ_ASSERT_IF(iter, !envArg);
@@ -9817,13 +9816,13 @@ static bool DebuggerGenericEval(
   if (bindings) {
     if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
         !values.growBy(keys.length())) {
-      return false;
+      return cx->alreadyReportedError();
     }
     for (size_t i = 0; i < keys.length(); i++) {
       MutableHandleValue valp = values[i];
       if (!GetProperty(cx, bindings, bindings, keys[i], valp) ||
           !dbg->unwrapDebuggeeValue(cx, valp)) {
-        return false;
+        return cx->alreadyReportedError();
       }
     }
   }
@@ -9839,7 +9838,7 @@ static bool DebuggerGenericEval(
   if (iter) {
     env = GetDebugEnvironmentForFrame(cx, iter->abstractFramePtr(), iter->pc());
     if (!env) {
-      return false;
+      return cx->alreadyReportedError();
     }
   } else {
     env = envArg;
@@ -9850,7 +9849,7 @@ static bool DebuggerGenericEval(
     RootedPlainObject nenv(cx,
                            NewObjectWithGivenProto<PlainObject>(cx, nullptr));
     if (!nenv) {
-      return false;
+      return cx->alreadyReportedError();
     }
     RootedId id(cx);
     for (size_t i = 0; i < keys.length(); i++) {
@@ -9859,18 +9858,18 @@ static bool DebuggerGenericEval(
       MutableHandleValue val = values[i];
       if (!cx->compartment()->wrap(cx, val) ||
           !NativeDefineDataProperty(cx, nenv, id, val, 0)) {
-        return false;
+        return cx->alreadyReportedError();
       }
     }
 
     RootedObjectVector envChain(cx);
     if (!envChain.append(nenv)) {
-      return false;
+      return cx->alreadyReportedError();
     }
 
     RootedObject newEnv(cx);
     if (!CreateObjectsForEnvironmentChain(cx, envChain, env, &newEnv)) {
-      return false;
+      return cx->alreadyReportedError();
     }
 
     env = newEnv;
@@ -9885,31 +9884,29 @@ static bool DebuggerGenericEval(
       cx, env, frame, chars,
       options.filename() ? options.filename() : "debugger eval code",
       options.lineno(), &rval);
-  Debugger::resultToCompletion(cx, ok, rval, &resumeMode, value, exnStack);
+  Rooted<Completion> completion(cx, Completion::fromJSResult(cx, ok, rval));
   ar.reset();
-  return dbg->wrapDebuggeeValue(cx, value);
+  return completion.get();
 }
 
 /* static */
-bool DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
-                         mozilla::Range<const char16_t> chars,
-                         HandleObject bindings, const EvalOptions& options,
-                         ResumeMode& resumeMode, MutableHandleValue value,
-                         MutableHandleSavedFrame exnStack) {
+Result<Completion> DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
+                                       mozilla::Range<const char16_t> chars,
+                                       HandleObject bindings,
+                                       const EvalOptions& options) {
   MOZ_ASSERT(frame->isLive());
 
   Debugger* dbg = frame->owner();
 
   Maybe<FrameIter> maybeIter;
   if (!DebuggerFrame::getFrameIter(cx, frame, maybeIter)) {
-    return false;
+    return cx->alreadyReportedError();
   }
   FrameIter& iter = *maybeIter;
 
   UpdateFrameIterPc(iter);
 
-  return DebuggerGenericEval(cx, chars, bindings, options, resumeMode, value,
-                             exnStack, dbg, nullptr, &iter);
+  return DebuggerGenericEval(cx, chars, bindings, options, dbg, nullptr, &iter);
 }
 
 /* static */
@@ -10503,16 +10500,10 @@ bool DebuggerFrame::evalMethod(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  ResumeMode resumeMode;
-  RootedValue value(cx);
-  RootedSavedFrame exnStack(cx);
-  if (!DebuggerFrame::eval(cx, frame, chars, nullptr, options, resumeMode,
-                           &value, &exnStack)) {
-    return false;
-  }
-
-  return frame->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
-                                            args.rval());
+  Rooted<Completion> comp(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, comp, DebuggerFrame::eval(cx, frame, chars, nullptr, options));
+  return comp.get().buildCompletionValue(cx, frame->owner(), args.rval());
 }
 
 /* static */
@@ -10541,16 +10532,10 @@ bool DebuggerFrame::evalWithBindingsMethod(JSContext* cx, unsigned argc,
     return false;
   }
 
-  ResumeMode resumeMode;
-  RootedValue value(cx);
-  RootedSavedFrame exnStack(cx);
-  if (!DebuggerFrame::eval(cx, frame, chars, bindings, options, resumeMode,
-                           &value, &exnStack)) {
-    return false;
-  }
-
-  return frame->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
-                                            args.rval());
+  Rooted<Completion> comp(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, comp, DebuggerFrame::eval(cx, frame, chars, bindings, options));
+  return comp.get().buildCompletionValue(cx, frame->owner(), args.rval());
 }
 
 /* static */
@@ -11680,16 +11665,11 @@ bool DebuggerObject::executeInGlobalMethod(JSContext* cx, unsigned argc,
     return false;
   }
 
-  ResumeMode resumeMode;
-  RootedValue value(cx);
-  RootedSavedFrame exnStack(cx);
-  if (!DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options,
-                                       resumeMode, &value, &exnStack)) {
-    return false;
-  }
-
-  return object->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
-                                             args.rval());
+  Rooted<Completion> comp(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, comp,
+      DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options));
+  return comp.get().buildCompletionValue(cx, object->owner(), args.rval());
 }
 
 /* static */
@@ -11724,16 +11704,11 @@ bool DebuggerObject::executeInGlobalWithBindingsMethod(JSContext* cx,
     return false;
   }
 
-  ResumeMode resumeMode;
-  RootedValue value(cx);
-  RootedSavedFrame exnStack(cx);
-  if (!DebuggerObject::executeInGlobal(cx, object, chars, bindings, options,
-                                       resumeMode, &value, &exnStack)) {
-    return false;
-  }
-
-  return object->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
-                                             args.rval());
+  Rooted<Completion> comp(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, comp,
+      DebuggerObject::executeInGlobal(cx, object, chars, bindings, options));
+  return comp.get().buildCompletionValue(cx, object->owner(), args.rval());
 }
 
 /* static */
@@ -12693,21 +12668,18 @@ bool DebuggerObject::forceLexicalInitializationByName(
 }
 
 /* static */
-bool DebuggerObject::executeInGlobal(JSContext* cx, HandleDebuggerObject object,
-                                     mozilla::Range<const char16_t> chars,
-                                     HandleObject bindings,
-                                     const EvalOptions& options,
-                                     ResumeMode& resumeMode,
-                                     MutableHandleValue value,
-                                     MutableHandleSavedFrame exnStack) {
+Result<Completion> DebuggerObject::executeInGlobal(
+    JSContext* cx, HandleDebuggerObject object,
+    mozilla::Range<const char16_t> chars, HandleObject bindings,
+    const EvalOptions& options) {
   MOZ_ASSERT(object->isGlobal());
 
   Rooted<GlobalObject*> referent(cx, &object->referent()->as<GlobalObject>());
   Debugger* dbg = object->owner();
 
   RootedObject globalLexical(cx, &referent->lexicalEnvironment());
-  return DebuggerGenericEval(cx, chars, bindings, options, resumeMode, value,
-                             exnStack, dbg, globalLexical, nullptr);
+  return DebuggerGenericEval(cx, chars, bindings, options, dbg, globalLexical,
+                             nullptr);
 }
 
 /* static */
