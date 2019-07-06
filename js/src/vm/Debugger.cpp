@@ -9026,6 +9026,15 @@ DebuggerFrame* DebuggerFrame::create(JSContext* cx, HandleObject proto,
  *
  * Yes, officer, I definitely knew all this in advance and designed it this way
  * the first time.
+ *
+ * Note that it is not necessary to have a second cross-compartment wrapper
+ * table entry to cover the pointer to the generator's script. The wrapper table
+ * entries play two roles: they help the GC put a debugger zone in the same zone
+ * group as its debuggee, and they serve as roots when collecting the debuggee
+ * zone, but not the debugger zone. Since an AbstractGeneratorObject holds a
+ * strong reference to its callee's script (via the callee), and the AGO and the
+ * script are always in the same compartment, it suffices to add a
+ * cross-compartment wrapper table entry for the Debugger.Frame -> AGO edge.
  */
 class DebuggerFrame::GeneratorInfo {
   // An unwrapped cross-compartment reference to the generator object.
@@ -9076,7 +9085,7 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
     return true;
   }
 
-  // There are five relations we must establish:
+  // There are four relations we must establish:
   //
   // 1) The DebuggerFrame must point to the AbstractGeneratorObject.
   //
@@ -9086,10 +9095,7 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
   // 3) The compartment's crossCompartmentWrappers map must map this Debugger
   //    and the AbstractGeneratorObject to the DebuggerFrame.
   //
-  // 4) The compartment's crossCompartmentWrappers map must map this Debugger
-  //    and the generator's JSScript to the DebuggerFrame.
-  //
-  // 5) The generator's script's observer count must be bumped.
+  // 4) The generator's script's observer count must be bumped.
   RootedScript script(cx, genObj->callee().nonLazyScript());
   auto* info = cx->new_<GeneratorInfo>(genObj, script);
   if (!info) {
@@ -9109,17 +9115,14 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
   Rooted<CrossCompartmentKey> generatorKey(
       cx, CrossCompartmentKey::DebuggeeFrameGenerator(owner()->toJSObject(),
                                                       genObj));
-  Rooted<CrossCompartmentKey> scriptKey(
-      cx, CrossCompartmentKey::DebuggeeFrameGeneratorScript(
-              owner()->toJSObject(), script));
-  auto crossCompartmentKeysGuard = MakeScopeExit([&] {
-    compartment()->removeWrapper(generatorKey);
-    compartment()->removeWrapper(scriptKey);
-  });
-  if (!compartment()->putWrapper(cx, generatorKey, ObjectValue(*this)) ||
-      !compartment()->putWrapper(cx, scriptKey, ObjectValue(*this))) {
+  if (!compartment()->putWrapper(cx, generatorKey, ObjectValue(*this))) {
     return false;
   }
+  auto crossCompartmentKeysGuard = MakeScopeExit([&] {
+    WrapperMap::Ptr generatorPtr = compartment()->lookupWrapper(generatorKey);
+    MOZ_ASSERT(generatorPtr);
+    compartment()->removeWrapper(generatorPtr);
+  });
 
   {
     AutoRealm ar(cx, script);
@@ -9144,7 +9147,7 @@ void DebuggerFrame::clearGenerator(FreeOp* fop) {
 
   GeneratorInfo* info = generatorInfo();
 
-  // 5) The generator's script's observer count must be dropped.
+  // 4) The generator's script's observer count must be dropped.
   //
   // For ordinary calls, Debugger.Frame objects drop the script's stepper count
   // when the frame is popped, but for generators, they leave the stepper count
@@ -9175,21 +9178,15 @@ void DebuggerFrame::clearGenerator(
     return;
   }
 
-  // 4) The compartment's crossCompartmentWrappers map must map this Debugger
-  //    and the generator's JSScript to the DebuggerFrame.
-  //
   // 3) The compartment's crossCompartmentWrappers map must map this Debugger
   //    and the AbstractGeneratorObject to the DebuggerFrame.
   //
   GeneratorInfo* info = generatorInfo();
-  HeapPtr<JSScript*>& generatorScript = info->generatorScript();
   CrossCompartmentKey generatorKey(CrossCompartmentKey::DebuggeeFrameGenerator(
       owner->object, &info->unwrappedGenerator()));
-  CrossCompartmentKey scriptKey(
-      CrossCompartmentKey::DebuggeeFrameGeneratorScript(owner->object,
-                                                        generatorScript));
-  compartment()->removeWrapper(generatorKey);
-  compartment()->removeWrapper(scriptKey);
+  auto generatorPtr = compartment()->lookupWrapper(generatorKey);
+  MOZ_ASSERT(generatorPtr);
+  compartment()->removeWrapper(generatorPtr);
 
   // 2) generatorFrames must no longer map the AbstractGeneratorObject to the
   // DebuggerFrame.
