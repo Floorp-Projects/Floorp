@@ -48,6 +48,9 @@ SuggestAutoComplete.prototype = {
 
   /**
    * Callback for handling results from SearchSuggestionController.jsm
+   *
+   * @param {Array} results
+   *   The array of results that have been returned.
    * @private
    */
   onResultsReturned(results) {
@@ -80,9 +83,15 @@ SuggestAutoComplete.prototype = {
 
   /**
    * Notifies the front end of new results.
-   * @param searchString  the user's query string
-   * @param results       an array of results to the search
-   * @param comments      an array of metadata corresponding to the results
+   *
+   * @param {string} searchString
+   *   The user's query string.
+   * @param {array} results
+   *   An array of results to the search.
+   * @param {array} comments
+   *   An array of metadata corresponding to the results.
+   * @param {object} formHistoryResult
+   *   Any previous form history result.
    * @private
    */
   onResultsReady(searchString, results, comments, formHistoryResult) {
@@ -113,15 +122,18 @@ SuggestAutoComplete.prototype = {
    * Initiates the search result gathering process. Part of
    * nsIAutoCompleteSearch implementation.
    *
-   * @param searchString    the user's query string
-   * @param searchParam     unused, "an extra parameter"; even though
-   *                        this parameter and the next are unused, pass
-   *                        them through in case the form history
-   *                        service wants them
-   * @param previousResult  unused, a client-cached store of the previous
-   *                        generated resultset for faster searching.
-   * @param listener        object implementing nsIAutoCompleteObserver which
-   *                        we notify when results are ready.
+   * @param {string} searchString
+   *   The user's query string.
+   * @param {string} searchParam
+   *   unused, "an extra parameter"; even though this parameter and the
+   *   next are unused, pass them through in case the form history
+   *   service wants them
+   * @param {object} previousResult
+   *   unused, a client-cached store of the previous generated resultset
+   *   for faster searching.
+   * @param {object} listener
+   *   object implementing nsIAutoCompleteObserver which we notify when
+   *   results are ready.
    */
   startSearch(searchString, searchParam, previousResult, listener) {
     // Don't reuse a previous form history result when it no longer applies.
@@ -171,6 +183,16 @@ SuggestAutoComplete.prototype = {
 
   /**
    * Actual implementation of search.
+   *
+   * @param {string} searchString
+   *   The user's query string.
+   * @param {string} searchParam
+   *   unused
+   * @param {object} listener
+   *   object implementing nsIAutoCompleteObserver which we notify when
+   *   results are ready.
+   * @param {boolean} privacyMode
+   *   True if the search was made from a private browsing mode context.
    */
   _triggerSearch(searchString, searchParam, listener, privacyMode) {
     this._listener = listener;

@@ -1,0 +1,10 @@
+[
+    {
+        "size": 16839627,
+        "visibility": "public",
+        "digest": "aeac3c3689c0ac7e6993025f51c89750e90a6084680d0c15d63e21b96739484c960ecd3bf34d30949d60aa8edf88862394786fe9499f2d68b46055373723f388",
+        "algorithm": "sha512",
+        "filename": "mitm4-linux-firefox-twitch.zip",
+        "unpack": true
+    }
+]
