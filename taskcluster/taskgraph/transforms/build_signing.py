@@ -8,6 +8,7 @@ Transform the signing task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.signed_artifacts import generate_specifications_of_artifacts_to_sign
 from taskgraph.util.taskcluster import get_artifact_path
 
@@ -50,8 +51,11 @@ def define_upstream_artifacts(config, jobs):
         dep_job = job['primary-dependency']
         build_platform = dep_job.attributes.get('build_platform')
 
+        job['attributes'] = copy_attributes_from_dependent_job(dep_job)
+
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(
-            dep_job,
+            config,
+            job,
             keep_locale_template=False,
             kind=config.kind,
         )

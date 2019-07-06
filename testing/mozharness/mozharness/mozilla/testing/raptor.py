@@ -506,6 +506,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
     def install(self):
         if self.app in self.firefox_android_browsers:
+            self.device.uninstall_app(self.binary_path)
             self.install_apk(self.installer_path)
         else:
             super(Raptor, self).install()

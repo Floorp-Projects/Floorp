@@ -966,6 +966,13 @@ class RaptorAndroid(Raptor):
         proxy_prefs["network.proxy.no_proxies_on"] = self.config['host']
         self.profile.set_preferences(proxy_prefs)
 
+    def log_android_device_temperature(self):
+        # retrieve and log the android device temperature
+        thermal_zone0 = float(self.device.shell_output('cat sys/class/thermal/thermal_zone0/temp'))
+        zone_type = self.device.shell_output('cat sys/class/thermal/thermal_zone0/type')
+        LOG.info("(thermal_zone0) device temperature: %.3f zone type: %s"
+                 % (thermal_zone0 / 1000, zone_type))
+
     def launch_firefox_android_app(self, test_name):
         LOG.info("starting %s" % self.config['app'])
 
@@ -1143,6 +1150,7 @@ class RaptorAndroid(Raptor):
                 self.turn_on_android_app_proxy()
 
             self.copy_profile_to_device()
+            self.log_android_device_temperature()
 
             # now start the browser/app under test
             self.launch_firefox_android_app(test['name'])
@@ -1182,6 +1190,7 @@ class RaptorAndroid(Raptor):
 
         self.clear_app_data()
         self.copy_profile_to_device()
+        self.log_android_device_temperature()
 
         # now start the browser/app under test
         self.launch_firefox_android_app(test['name'])

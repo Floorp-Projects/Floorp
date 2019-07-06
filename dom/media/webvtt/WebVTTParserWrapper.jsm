@@ -43,6 +43,12 @@ WebVTTParserWrapper.prototype =
     };
   },
 
+  cancel: function() {
+    this.parser.oncue = null;
+    this.parser.onregion = null;
+    this.parser.onparsingerror = null;
+  },
+
   convertCueToDOMTree: function(window, cue)
   {
     return WebVTT.convertCueToDOMTree(window, cue.text);

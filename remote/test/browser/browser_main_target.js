@@ -29,7 +29,12 @@ add_task(async function() {
   ok(Target, "The main process target exposes Target domain");
 
   const version = await Browser.getVersion();
-  is(version.product, "Firefox", "Browser.getVersion works");
+
+  const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(
+    Ci.nsIGfxInfo
+  );
+  const expectedProduct = isHeadless ? "Headless Firefox" : "Firefox";
+  is(version.product, expectedProduct, "Browser.getVersion works");
 
   const { webSocketDebuggerUrl } = await CDP.Version();
   is(
