@@ -1314,46 +1314,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                              MutableHandleDebuggerFrame result);
 
   /*
-   * Set |*resumeMode| and |*value| to a (ResumeMode, Value) pair reflecting a
-   * standard SpiderMonkey call state: a boolean success value |ok|, a return
-   * value |rv|, and a context |cx| that may or may not have an exception set.
-   * If an exception was pending on |cx|, it is cleared (and |ok| is asserted
-   * to be false). On exceptional returns, exnStack will be set to any stack
-   * associated with the original throw, if available.
-   */
-  static void resultToCompletion(JSContext* cx, bool ok, const Value& rv,
-                                 ResumeMode* resumeMode,
-                                 MutableHandleValue value,
-                                 MutableHandleSavedFrame exnStack);
-
-  /*
-   * Set |*result| to a JavaScript completion value corresponding to
-   * |resumeMode| and |value|. |value| should be the return value or exception
-   * value, not wrapped as a debuggee value. When throwing an exception,
-   * |exnStack| may be set to the stack when the value was thrown. |cx| must be
-   * in the debugger compartment.
-   */
-  MOZ_MUST_USE bool newCompletionValue(JSContext* cx, ResumeMode resumeMode,
-                                       const Value& value, SavedFrame* exnStack,
-                                       MutableHandleValue result);
-
-  /*
-   * Precondition: we are in the debuggee realm (ar is entered) and ok is true
-   * if the operation in the debuggee realm succeeded, false on error or
-   * exception.
-   *
-   * Postcondition: we are in the debugger realm, having called `ar.reset()`
-   * even if an error occurred.
-   *
-   * On success, a completion value is in vp and ar.context does not have a
-   * pending exception. (This ordinarily returns true even if the ok argument
-   * is false.)
-   */
-  MOZ_MUST_USE bool receiveCompletionValue(mozilla::Maybe<AutoRealm>& ar,
-                                           bool ok, HandleValue val,
-                                           MutableHandleValue vp);
-
-  /*
    * Return the Debugger.Script object for |script|, or create a new one if
    * needed. The context |cx| must be in the debugger realm; |script| must be
    * a script in a debuggee realm.
