@@ -66,11 +66,9 @@ Similarly:
 
 ## Completion Values
 
-When a debuggee stack frame completes its execution, or when some sort
-of debuggee call initiated by the debugger finishes, the `Debugger`
-interface provides a value describing how the code completed; these are
-called *completion values*. A completion value has one of the
-following forms:
+The `Debugger` API often needs to convey the result of running some JS code. For example, suppose you get a `frame.onPop` callback telling you that a method in the debuggee just finished. Did it return successfully? Did it throw? What did it return? The debugger passes the `onPop` handler a *completion value* that tells what happened.
+
+A completion value is one of these:
 
 <code>{ return: <i>value</i> }</code>
 :   The code completed normally, returning <i>value</i>. <i>Value</i> is a
@@ -82,12 +80,51 @@ following forms:
     the value was thrown, and may be missing.
 
 `null`
-:   The code was terminated, as if by the "slow script" dialog box.
+:   The code was terminated, as if by the "slow script" ribbon.
 
-If control reaches the end of a generator frame, the completion value is
-<code>{ throw: <i>stop</i> }</code> where <i>stop</i> is a
-`Debugger.Object` object representing the `StopIteration` object being
-thrown.
+Generators and async functions add a wrinkle: they can suspend themselves (with `yield` or `await`), which removes their frame from the stack. Later, the generator or async frame might be returned to the stack and continue running where it left off. Does it count as "completion" when a generator suspends itself?
+
+The `Debugger` API says yes. `yield` and `await` do trigger the `frame.onPop` handler, passing a completion value that explains why the frame is being suspended. The completion value gets an extra `.yield` or `.await` property, to distinguish this kind of completion from a normal `return`.
+
+<pre>
+{ return: *value*, yield: true }
+</pre>
+
+where *value* is a debuggee value for the iterator result object, like `{ value: 1, done: false }`, for the yield.
+
+When a generator function is called, it first evaluates any default argument
+expressions and destructures its arguments. Then its frame is suspended, and the
+new generator object is returned to the caller. This initial suspension is reported
+to any `onPop` handlers as a completion value of the form:
+
+<pre>
+{ return: *generatorObject*, yield: true, initial: true }
+</pre>
+
+where *generatorObject* is a debuggee value for the generator object being
+returned to the caller.
+
+When an async function awaits a promise, its suspension is reported to any
+`onPop` handlers as a completion value of the form:
+
+<pre>
+{ return: *promise*, await: true }
+</pre>
+
+where *promise* is a debuggee value for the promise being returned to the
+caller.
+
+The first time a call to an async function awaits, returns, or throws, a promise
+of its result is returned to the caller. Subsequent resumptions of the async
+call, if any, are initiated directly from the job queue's event loop, with no
+calling frame on the stack. Thus, if needed, an `onPop` handler can distinguish
+an async call's initial suspension, which returns the promise, from any
+subsequent suspensions by checking the `Debugger.Frame`'s `older` property: if
+that is `null`, the call was resumed directly from the event loop.
+
+Async generators are a combination of async functions and generators that can
+use both `yield` and `await` expressions. Suspensions of async generator frames
+are reported using any combination of the completion values above.
 
 
 ## Resumption Values
