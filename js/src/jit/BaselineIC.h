@@ -1677,7 +1677,6 @@ class ICCall_Fallback : public ICMonitoredFallbackStub {
       : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode) {}
 };
 
-
 // IC for constructing an iterator from an input value.
 class ICGetIterator_Fallback : public ICFallbackStub {
   friend class ICStubSpace;

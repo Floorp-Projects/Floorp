@@ -1443,7 +1443,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
         : Runnable("DeprioritizedLoadRunner"), mInner(aInner) {}
 
     NS_IMETHOD Run() override {
-      if (mInner) {;
+      if (mInner) {
+        ;
         RefPtr<nsIRunnable> inner = std::move(mInner);
         inner->Run();
       }

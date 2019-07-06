@@ -62,8 +62,8 @@ class APZUpdater {
   void UpdateFocusState(LayersId aRootLayerTreeId,
                         WRRootId aOriginatingWrRootId,
                         const FocusTarget& aFocusTarget);
-  void UpdateHitTestingTree(Layer* aRoot,
-                            bool aIsFirstPaint, LayersId aOriginatingLayersId,
+  void UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
+                            LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
   /**
    * This should be called (in the WR-enabled case) when the compositor receives
