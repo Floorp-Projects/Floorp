@@ -92,7 +92,7 @@ bool FeaturePolicyUtils::IsFeatureAllowed(Document* aDocument,
     return true;
   }
 
-  FeaturePolicy* policy = aDocument->Policy();
+  FeaturePolicy* policy = aDocument->FeaturePolicy();
   MOZ_ASSERT(policy);
 
   if (policy->AllowsFeatureInternal(aFeatureName, policy->DefaultOrigin())) {

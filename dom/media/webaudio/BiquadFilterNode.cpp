@@ -13,6 +13,7 @@
 #include "WebAudioUtils.h"
 #include "blink/Biquad.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ErrorResult.h"
 #include "AudioParamTimeline.h"
 
 namespace mozilla {
@@ -299,16 +300,21 @@ void BiquadFilterNode::SetType(BiquadFilterType aType) {
                              static_cast<int32_t>(aType));
 }
 
-void BiquadFilterNode::GetFrequencyResponse(
-    const Float32Array& aFrequencyHz, const Float32Array& aMagResponse,
-    const Float32Array& aPhaseResponse) {
+void BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
+                                            const Float32Array& aMagResponse,
+                                            const Float32Array& aPhaseResponse,
+                                            ErrorResult& aRv) {
   aFrequencyHz.ComputeLengthAndData();
   aMagResponse.ComputeLengthAndData();
   aPhaseResponse.ComputeLengthAndData();
 
-  uint32_t length =
-      std::min(std::min(aFrequencyHz.Length(), aMagResponse.Length()),
-               aPhaseResponse.Length());
+  if (!(aFrequencyHz.Length() == aMagResponse.Length() &&
+        aMagResponse.Length() == aPhaseResponse.Length())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  uint32_t length = aFrequencyHz.Length();
   if (!length) {
     return;
   }

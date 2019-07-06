@@ -293,8 +293,8 @@ bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword,
 bool nsIFormControl::IsSubmittableControl() const {
   uint32_t type = ControlType();
   return type == NS_FORM_OBJECT || type == NS_FORM_TEXTAREA ||
-         type == NS_FORM_SELECT ||
-         type & NS_FORM_BUTTON_ELEMENT || type & NS_FORM_INPUT_ELEMENT;
+         type == NS_FORM_SELECT || type & NS_FORM_BUTTON_ELEMENT ||
+         type & NS_FORM_INPUT_ELEMENT;
 }
 
 bool nsIFormControl::AllowDraggableChildren() const {

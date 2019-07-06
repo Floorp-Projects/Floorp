@@ -541,6 +541,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
 
   RefPtr<mozilla::ThrottledEventQueue> mPostMessageEventQueue;
+
  protected:
   nsPIDOMWindowOuter* GetOpenerWindowOuter();
   // Initializes the mWasOffline member variable

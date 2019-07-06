@@ -631,6 +631,9 @@ class BaselineInterpreter {
   // Offset of the code to start interpreting a bytecode op.
   uint32_t interpretOpOffset_ = 0;
 
+  // Like interpretOpOffset_ but skips the debug trap for the current op.
+  uint32_t interpretOpNoDebugTrapOffset_ = 0;
+
   // The offsets for the toggledJump instructions for profiler instrumentation.
   uint32_t profilerEnterToggleOffset_ = 0;
   uint32_t profilerExitToggleOffset_ = 0;
@@ -654,6 +657,7 @@ class BaselineInterpreter {
   void operator=(const BaselineInterpreter&) = delete;
 
   void init(JitCode* code, uint32_t interpretOpOffset,
+            uint32_t interpretOpNoDebugTrapOffset,
             uint32_t profilerEnterToggleOffset,
             uint32_t profilerExitToggleOffset, uint32_t debuggeeCheckOffset,
             CodeOffsetVector&& debugTrapOffsets,
@@ -663,6 +667,9 @@ class BaselineInterpreter {
 
   TrampolinePtr interpretOpAddr() const {
     return TrampolinePtr(codeRaw() + interpretOpOffset_);
+  }
+  TrampolinePtr interpretOpNoDebugTrapAddr() const {
+    return TrampolinePtr(codeRaw() + interpretOpNoDebugTrapOffset_);
   }
 
   void toggleProfilerInstrumentation(bool enable);
