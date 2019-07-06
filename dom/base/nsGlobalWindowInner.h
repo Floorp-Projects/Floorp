@@ -1444,7 +1444,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
     NS_IMETHOD Run() override {
       if (mInner) {
-        ;
         RefPtr<nsIRunnable> inner = std::move(mInner);
         inner->Run();
       }
