@@ -9,6 +9,9 @@
 # test that zoom works (and really zooms, not just scales)
 == test-zoom.html test-zoom-ref.html
 
+== text-zoom.html text-zoom-ref.html
+!= text-zoom.html text-zoom-notref.html
+
 # make sure we don't fall over if the root is missing
 == no-root.html about:blank
 

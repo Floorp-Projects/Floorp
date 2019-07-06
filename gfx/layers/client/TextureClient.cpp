@@ -237,9 +237,8 @@ class TextureChild final : PTextureChild {
   friend void DeallocateTextureClient(TextureDeallocParams params);
 };
 
-static inline gfx::BackendType
-BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSelector)
-{
+static inline gfx::BackendType BackendTypeForBackendSelector(
+    LayersBackend aLayersBackend, BackendSelector aSelector) {
   switch (aSelector) {
     case BackendSelector::Canvas:
       return gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
@@ -251,44 +250,41 @@ BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSel
   }
 };
 
-static TextureType
-GetTextureType(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
-               LayersBackend aLayersBackend, gfx::BackendType aBackendType,
-               int32_t aMaxTextureSize, TextureAllocationFlags aAllocFlags)
-{
+static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
+                                  gfx::IntSize aSize,
+                                  LayersBackend aLayersBackend,
+                                  gfx::BackendType aBackendType,
+                                  int32_t aMaxTextureSize,
+                                  TextureAllocationFlags aAllocFlags) {
 #ifdef XP_WIN
   if ((aLayersBackend == LayersBackend::LAYERS_D3D11 ||
        aLayersBackend == LayersBackend::LAYERS_WR) &&
-       (aBackendType == gfx::BackendType::DIRECT2D ||
-        aBackendType == gfx::BackendType::DIRECT2D1_1 ||
-        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-         DeviceManagerDx::Get()->GetContentDevice())) &&
-      aSize.width <= aMaxTextureSize &&
-      aSize.height <= aMaxTextureSize &&
+      (aBackendType == gfx::BackendType::DIRECT2D ||
+       aBackendType == gfx::BackendType::DIRECT2D1_1 ||
+       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
+        DeviceManagerDx::Get()->GetContentDevice())) &&
+      aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
   }
 
   if (aLayersBackend != LayersBackend::LAYERS_WR &&
       aFormat == SurfaceFormat::B8G8R8X8 &&
-      aBackendType == gfx::BackendType::CAIRO &&
-      NS_IsMainThread()) {
+      aBackendType == gfx::BackendType::CAIRO && NS_IsMainThread()) {
     return TextureType::DIB;
   }
 #endif
 
 #ifdef MOZ_X11
   gfxSurfaceType type =
-    gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
+      gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
 
   if (aLayersBackend == LayersBackend::LAYERS_BASIC &&
-      aBackendType == gfx::BackendType::CAIRO &&
-      type == gfxSurfaceType::Xlib) {
+      aBackendType == gfx::BackendType::CAIRO && type == gfxSurfaceType::Xlib) {
     return TextureType::X11;
   }
   if (aLayersBackend == LayersBackend::LAYERS_OPENGL &&
-      type == gfxSurfaceType::Xlib &&
-      aFormat != SurfaceFormat::A8 &&
+      type == gfxSurfaceType::Xlib && aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap()) {
     return TextureType::X11;
   }
@@ -309,9 +305,8 @@ GetTextureType(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
   return TextureType::Unknown;
 }
 
-static bool
-ShouldRemoteTextureType(TextureType aTextureType, BackendSelector aSelector)
-{
+static bool ShouldRemoteTextureType(TextureType aTextureType,
+                                    BackendSelector aSelector) {
   if (!XRE_IsContentProcess()) {
     return false;
   }
@@ -329,19 +324,19 @@ ShouldRemoteTextureType(TextureType aTextureType, BackendSelector aSelector)
 }
 
 /* static */
-TextureData*
-TextureData::Create(TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
-                    gfx::IntSize aSize, LayersBackend aLayersBackend,
-                    int32_t aMaxTextureSize, BackendSelector aSelector,
-                    TextureFlags aTextureFlags,
-                    TextureAllocationFlags aAllocFlags)
-{
+TextureData* TextureData::Create(TextureForwarder* aAllocator,
+                                 gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
+                                 LayersBackend aLayersBackend,
+                                 int32_t aMaxTextureSize,
+                                 BackendSelector aSelector,
+                                 TextureFlags aTextureFlags,
+                                 TextureAllocationFlags aAllocFlags) {
   gfx::BackendType moz2DBackend =
-    BackendTypeForBackendSelector(aLayersBackend, aSelector);
+      BackendTypeForBackendSelector(aLayersBackend, aSelector);
 
-  TextureType textureType = GetTextureType(aFormat, aSize, aLayersBackend,
-                                           moz2DBackend, aMaxTextureSize,
-                                           aAllocFlags);
+  TextureType textureType =
+      GetTextureType(aFormat, aSize, aLayersBackend, moz2DBackend,
+                     aMaxTextureSize, aAllocFlags);
 
   if (ShouldRemoteTextureType(textureType, aSelector)) {
     RefPtr<CanvasChild> canvasChild = aAllocator->GetCanvasChild();
@@ -351,7 +346,7 @@ TextureData::Create(TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
     }
   }
 
-  switch(textureType) {
+  switch (textureType) {
 #ifdef XP_WIN
     case TextureType::D3D11:
       return D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
@@ -376,16 +371,14 @@ TextureData::Create(TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
 }
 
 /* static */
-bool
-TextureData::IsRemote(LayersBackend aLayersBackend, BackendSelector aSelector)
-{
+bool TextureData::IsRemote(LayersBackend aLayersBackend,
+                           BackendSelector aSelector) {
   gfx::BackendType moz2DBackend =
-    BackendTypeForBackendSelector(aLayersBackend, aSelector);
+      BackendTypeForBackendSelector(aLayersBackend, aSelector);
 
-  TextureType textureType =
-    GetTextureType(gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1,1),
-                   aLayersBackend, moz2DBackend, INT32_MAX,
-                   TextureAllocationFlags::ALLOC_DEFAULT);
+  TextureType textureType = GetTextureType(
+      gfx::SurfaceFormat::UNKNOWN, gfx::IntSize(1, 1), aLayersBackend,
+      moz2DBackend, INT32_MAX, TextureAllocationFlags::ALLOC_DEFAULT);
 
   return ShouldRemoteTextureType(textureType, aSelector);
 }
@@ -1196,9 +1189,9 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     return nullptr;
   }
 
-  TextureData* data =
-    TextureData::Create(aAllocator, aFormat, aSize, aLayersBackend,
-                        aMaxTextureSize, aSelector, aTextureFlags, aAllocFlags);
+  TextureData* data = TextureData::Create(
+      aAllocator, aFormat, aSize, aLayersBackend, aMaxTextureSize, aSelector,
+      aTextureFlags, aAllocFlags);
 
   if (data) {
     return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);

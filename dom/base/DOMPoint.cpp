@@ -37,6 +37,22 @@ JSObject* DOMPointReadOnly::WrapObject(JSContext* aCx,
   return DOMPointReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+already_AddRefed<DOMPoint> DOMPointReadOnly::MatrixTransform(
+    const DOMMatrixInit& aInit, ErrorResult& aRv) {
+  RefPtr<DOMMatrixReadOnly> matrix =
+      DOMMatrixReadOnly::FromMatrix(mParent, aInit, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  DOMPointInit init;
+  init.mX = this->mX;
+  init.mY = this->mY;
+  init.mZ = this->mZ;
+  init.mW = this->mW;
+  RefPtr<DOMPoint> point = matrix->TransformPoint(init);
+  return point.forget();
+}
+
 // https://drafts.fxtf.org/geometry/#structured-serialization
 bool DOMPointReadOnly::WriteStructuredClone(
     JSContext* aCx, JSStructuredCloneWriter* aWriter) const {

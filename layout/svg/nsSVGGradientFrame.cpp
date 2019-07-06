@@ -221,7 +221,7 @@ static void GetStopInformation(nsIFrame* aStopFrame, float* aOffset,
 
 already_AddRefed<gfxPattern> nsSVGGradientFrame::GetPaintServerPattern(
     nsIFrame* aSource, const DrawTarget* aDrawTarget,
-    const gfxMatrix& aContextMatrix, nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+    const gfxMatrix& aContextMatrix, StyleSVGPaint nsStyleSVG::*aFillOrStroke,
     float aGraphicOpacity, imgDrawingParams& aImgParams,
     const gfxRect* aOverrideBounds) {
   uint16_t gradientUnits = GetGradientUnits();

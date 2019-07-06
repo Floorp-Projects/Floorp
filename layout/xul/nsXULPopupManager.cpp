@@ -2246,10 +2246,8 @@ static nsIContent* FindDefaultInsertionPoint(nsIContent* aParent) {
     }
   }
   bool multiple = false;  // Unused
-  return aParent
-          ->OwnerDoc()
-          ->BindingManager()
-          ->FindNestedSingleInsertionPoint(aParent, &multiple);
+  return aParent->OwnerDoc()->BindingManager()->FindNestedSingleInsertionPoint(
+      aParent, &multiple);
 }
 
 nsContainerFrame* nsXULPopupManager::ImmediateParentFrame(
