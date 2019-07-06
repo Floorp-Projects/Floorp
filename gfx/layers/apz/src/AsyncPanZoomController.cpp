@@ -2587,7 +2587,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
         physicalPanDisplacement.x * scrollUnitWidth,
         physicalPanDisplacement.y * scrollUnitHeight);
     physicalPanDisplacement = ToScreenCoordinates(physicalPanDisplacementPL,
-        aEvent.mLocalPanStartPoint);
+                                                  aEvent.mLocalPanStartPoint);
     logicalPanDisplacement.x *= scrollUnitWidth;
     logicalPanDisplacement.y *= scrollUnitHeight;
   }
@@ -3967,8 +3967,7 @@ void AsyncPanZoomController::RequestContentRepaint(
       NewRunnableMethod<AsyncPanZoomController*>(
           "layers::APZCTreeManager::SendSubtreeTransformsToChromeMainThread",
           GetApzcTreeManager(),
-          &APZCTreeManager::SendSubtreeTransformsToChromeMainThread,
-          this));
+          &APZCTreeManager::SendSubtreeTransformsToChromeMainThread, this));
 }
 
 bool AsyncPanZoomController::UpdateAnimation(

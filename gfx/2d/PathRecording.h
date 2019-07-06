@@ -161,13 +161,9 @@ class PathBuilderRecording final : public PathBuilder {
   /* Point the current subpath is at - or where the next subpath will start
    * if there is no active subpath.
    */
-  Point CurrentPoint() const final {
-    return mPathBuilder->CurrentPoint();
-  }
+  Point CurrentPoint() const final { return mPathBuilder->CurrentPoint(); }
 
-  Point BeginPoint() const final {
-    return mPathBuilder->BeginPoint();
-  }
+  Point BeginPoint() const final { return mPathBuilder->BeginPoint(); }
 
   void SetCurrentPoint(const Point& aPoint) final {
     mPathBuilder->SetCurrentPoint(aPoint);
@@ -193,8 +189,11 @@ class PathRecording final : public Path {
 
   PathRecording(Path* aPath, PathOps&& aOps, FillRule aFillRule,
                 const Point& aCurrentPoint, const Point& aBeginPoint)
-      : mPath(aPath), mPathOps(std::move(aOps)), mFillRule(aFillRule),
-        mCurrentPoint(aCurrentPoint), mBeginPoint(aBeginPoint) {}
+      : mPath(aPath),
+        mPathOps(std::move(aOps)),
+        mFillRule(aFillRule),
+        mCurrentPoint(aCurrentPoint),
+        mBeginPoint(aBeginPoint) {}
 
   ~PathRecording();
 

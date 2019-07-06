@@ -113,7 +113,6 @@ struct MOZ_STACK_CLASS BindContext final {
   }
 
  private:
-
   static bool IsLikelyUndisplayed(const nsINode& aParent) {
     return aParent.IsAnyOfHTMLElements(nsGkAtoms::style, nsGkAtoms::script);
   }
