@@ -193,7 +193,6 @@ class RemoteSettingsClient extends EventEmitter {
     this.localFields = localFields;
     this._lastCheckTimePref = lastCheckTimePref;
     this._verifier = null;
-    this._syncRunning = false;
 
     // This attribute allows signature verification to be disabled, when running tests
     // or when pulling data from a dev server.
@@ -362,14 +361,6 @@ class RemoteSettingsClient extends EventEmitter {
    */
   async maybeSync(expectedTimestamp, options = {}) {
     const { loadDump = true, trigger = "manual" } = options;
-
-    // Make sure we don't run several synchronizations in parallel, mainly
-    // in order to avoid race conditions in "sync" events listeners.
-    if (this._syncRunning) {
-      console.warn(`${this.identifier} sync already running`);
-      return;
-    }
-    this._syncRunning = true;
 
     let importedFromDump = [];
     const startedAt = new Date();
@@ -597,7 +588,6 @@ class RemoteSettingsClient extends EventEmitter {
         duration: durationMilliseconds,
       });
       console.debug(`${this.identifier} sync status is ${reportStatus}`);
-      this._syncRunning = false;
     }
   }
 
