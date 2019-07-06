@@ -709,6 +709,7 @@ bool nsHttpResponseHead::MustValidate() {
     case 407:
     case 412:
     case 416:
+    case 429:
     default:  // revalidate unknown error pages
       LOG(("Must validate since response is an uncacheable error page\n"));
       return true;

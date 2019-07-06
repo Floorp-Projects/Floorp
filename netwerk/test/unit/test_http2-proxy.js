@@ -214,6 +214,21 @@ add_task(async function proxy_host_not_found_failure() {
   Assert.equal(await proxy_session_counter(), 1, "No new session created by 404 after 504");
 });
 
+add_task(async function proxy_too_many_requests_failure() {
+  const { status, http_code } = await get_response(
+    make_channel(`https://429.example.com/`),
+    CL_EXPECT_FAILURE
+  );
+
+  Assert.equal(status, Cr.NS_ERROR_TOO_MANY_REQUESTS);
+  Assert.equal(http_code, undefined);
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 429 after 504"
+  );
+});
+
 // Make sure that the above error codes don't kill the session and we still reach the end server
 add_task(async function proxy_success_still_one_session() {
   const foo = await get_response(make_channel(`https://foo.example.com/random-request-1`));
