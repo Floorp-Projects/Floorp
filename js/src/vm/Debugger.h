@@ -1869,9 +1869,9 @@ class DebuggerObject : public NativeObject {
   static MOZ_MUST_USE bool deleteProperty(JSContext* cx,
                                           HandleDebuggerObject object,
                                           HandleId id, ObjectOpResult& result);
-  static MOZ_MUST_USE bool call(JSContext* cx, HandleDebuggerObject object,
-                                HandleValue thisv, Handle<ValueVector> args,
-                                MutableHandleValue result);
+  static MOZ_MUST_USE mozilla::Maybe<Completion> call(
+      JSContext* cx, HandleDebuggerObject object, HandleValue thisv,
+      Handle<ValueVector> args);
   static MOZ_MUST_USE bool forceLexicalInitializationByName(
       JSContext* cx, HandleDebuggerObject object, HandleId id, bool& result);
   static MOZ_MUST_USE JS::Result<Completion> executeInGlobal(
