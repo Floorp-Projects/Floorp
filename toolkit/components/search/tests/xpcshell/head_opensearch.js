@@ -10,6 +10,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 /**
  * Fake the installation of an add-on in the profile, by creating the
  * directory and registering it with the directory service.
+ *
+ * @param {string} [name]
+ *   The engine name to install.
  */
 function installAddonEngine(name = "engine-addon") {
   const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";

@@ -41,6 +41,10 @@
   list-style-image: url(chrome://global/skin/icons/performance.svg);
 }
 
+#appMenu-whatsnew-button {
+  list-style-image: url(chrome://browser/skin/whatsnew.svg);
+}
+
 #appMenu-help-button {
   list-style-image: url(chrome://global/skin/icons/help.svg);
 }

@@ -514,42 +514,6 @@ var fetchRegionDefault = ss =>
   });
 
 /**
- * Wrapper function for nsIIOService::newURI.
- * @param {string} urlSpec
- *        The URL string from which to create an nsIURI.
- * @returns {nsIURI} an nsIURI object, or null if the creation of the URI failed.
- */
-function makeURI(urlSpec) {
-  try {
-    return Services.io.newURI(urlSpec);
-  } catch (ex) {}
-
-  return null;
-}
-
-/**
- * Wrapper function for nsIIOService::newChannel.
- * @param url
- *        The URL string from which to create an nsIChannel.
- * @returns an nsIChannel object, or null if the url is invalid.
- */
-function makeChannel(url) {
-  try {
-    let uri = typeof url == "string" ? Services.io.newURI(url) : url;
-    return Services.io.newChannelFromURI(
-      uri,
-      null /* loadingNode */,
-      Services.scriptSecurityManager.getSystemPrincipal(),
-      null /* triggeringPrincipal */,
-      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      Ci.nsIContentPolicy.TYPE_OTHER
-    );
-  } catch (ex) {}
-
-  return null;
-}
-
-/**
  * Wrapper for nsIPrefBranch::getComplexValue.
  * @param {string} prefName
  *   The name of the pref to get.
@@ -665,13 +629,13 @@ SearchService.prototype = {
   /**
    * Asynchronous implementation of the initializer.
    *
-   * @param   [optional] skipRegionCheck
-   *          A boolean value indicating whether we should explicitly await the
-   *          the region check process to complete, which may be fetched remotely.
-   *          Pass in `false` if the caller needs to be absolutely certain of the
-   *          correct default engine and/ or ordering of visible engines.
-   * @returns {Promise} A promise, resolved successfully if the initialization
-   * succeeds.
+   * @param {boolean} [skipRegionCheck]
+   *   Indicates whether we should explicitly await the the region check process to
+   *   complete, which may be fetched remotely. Pass in `false` if the caller needs
+   *   to be absolutely certain of the correct default engine and/ or ordering of
+   *   visible engines.
+   * @returns {number}
+   *   A Components.results success code on success, otherwise a failure code.
    */
   async _init(skipRegionCheck) {
     SearchUtils.log("_init start");
@@ -736,6 +700,9 @@ SearchService.prototype = {
    *   The remote settings object associated with the ignore list.
    * @param {boolean} [firstTime]
    *   Internal boolean to indicate if this is the first time check or not.
+   * @returns {array}
+   *   An array of objects in the database, or an empty array if none
+   *   could be obtained.
    */
   async _getRemoteSettings(ignoreListSettings, firstTime = true) {
     try {
@@ -1006,16 +973,13 @@ SearchService.prototype = {
   /**
    * Loads engines asynchronously.
    *
-   * @returns {Promise} A promise, resolved successfully if loading data
-   * succeeds.
+   * @param {object} cache
+   *   An object representing the search engine cache.
+   * @param {boolean} isReload
+   *   Set to true if this load is happening during a reload.
    */
   async _loadEngines(cache, isReload) {
     SearchUtils.log("_loadEngines: start");
-    Services.obs.notifyObservers(
-      null,
-      SearchUtils.TOPIC_SEARCH_SERVICE,
-      "find-jar-engines"
-    );
     let engines = await this._findEngines();
     SearchUtils.log("_loadEngines: loading - " + engines.join(","));
 
@@ -1114,8 +1078,12 @@ SearchService.prototype = {
    * Ensures a built in search WebExtension is installed, installing
    * it if necessary.
    *
-   * @returns {Promise} A promise, resolved successfully once the
-   * extension is installed and registered by the SearchService.
+   * @param {string} id
+   *   The WebExtension ID.
+   * @param {Array<string>} locales
+   *   An array of locales to use for the WebExtension. If more than
+   *   one is specified, different versions of the same engine may
+   *   be installed.
    */
   async ensureBuiltinExtension(id, locales = [DEFAULT_TAG]) {
     SearchUtils.log("ensureBuiltinExtension: " + id);
@@ -1143,7 +1111,9 @@ SearchService.prototype = {
    * Converts array of engines into a Map of extensions + the locales
    * of those extensions to install.
    *
-   * @return {Map} A Map of extension names + locales.
+   * @param {array} engines
+   *   An array of engines
+   * @returns {Map} A Map of extension names + locales.
    */
   _enginesToLocales(engines) {
     let engineLocales = new Map();
@@ -1163,7 +1133,9 @@ SearchService.prototype = {
    * this from a whitelist to a blacklist when more engines
    * are multilocale than not.
    *
-   * @return {Array} The extension name and the locale to use.
+   * @param {string} engineName
+   *   The engine name to parse.
+   * @returns {Array} The extension name and the locale to use.
    */
   _parseEngineName(engineName) {
     let [name, locale] = engineName.split(/-(.+)/);
@@ -1181,8 +1153,6 @@ SearchService.prototype = {
   /**
    * Reloads engines asynchronously, but only when the service has already been
    * initialized.
-   *
-   * @return {Promise} A promise, resolved successfully if loading data succeeds.
    */
   async _maybeReloadEngines() {
     // There's no point in already reloading the list of engines, when the service
@@ -1327,9 +1297,6 @@ SearchService.prototype = {
 
   /**
    * Read the cache file asynchronously.
-   *
-   * @returns {Promise} A promise, resolved successfully if retrieveing data
-   * succeeds.
    */
   async _readCacheFile() {
     let json;
@@ -1499,10 +1466,10 @@ SearchService.prototype = {
   /**
    * Loads engines from a given directory asynchronously.
    *
-   * @param {OS.File} dir the directory.
-   *
-   * @returns {Promise} A promise, resolved successfully if retrieveing data
-   * succeeds.
+   * @param {OS.File}
+   *   dir the directory.
+   * @returns {Array<SearchEngine>}
+   *   An array of search engines that were found.
    */
   async _loadEnginesFromDir(dir) {
     SearchUtils.log(
@@ -1557,8 +1524,8 @@ SearchService.prototype = {
    *   a list of URLs.
    * @param {boolean} [isReload]
    *   is being called from maybeReloadEngines.
-   * @returns {Promise} A promise, resolved successfully if loading data
-   * succeeds.
+   * @returns {Array<SearchEngine>}
+   *   An array of search engines that were loaded.
    */
   async _loadFromChromeURLs(urls, isReload = false) {
     let engines = [];
@@ -1588,23 +1555,21 @@ SearchService.prototype = {
   },
 
   /**
-   * Loads jar engines asynchronously.
+   * Loads the list of engines from list.json
    *
-   * @returns {Promise} A promise, resolved successfully if finding jar engines
-   * succeeds.
+   * @returns {Array<string>}
+   *   Returns an array of engine names.
    */
   async _findEngines() {
-    SearchUtils.log("_findEngines: looking for engines in JARs");
+    SearchUtils.log("_findEngines: looking for engines in list.json");
 
-    let chan = makeChannel(this._listJSONURL);
+    let chan = SearchUtils.makeChannel(this._listJSONURL);
     if (!chan) {
       SearchUtils.log(
         "_findEngines: " + this._listJSONURL + " isn't registered"
       );
       return [];
     }
-
-    let uris = [];
 
     // Read list.json to find the engines we need to load.
     let request = new XMLHttpRequest();
@@ -1621,18 +1586,17 @@ SearchService.prototype = {
       request.send();
     });
 
-    this._parseListJSON(list, uris);
-    return uris;
+    return this._parseListJSON(list);
   },
 
-  _parseListJSON(list, uris) {
+  _parseListJSON(list) {
     let json;
     try {
       json = JSON.parse(list);
     } catch (e) {
       Cu.reportError("parseListJSON: Failed to parse list.json: " + e);
       dump("parseListJSON: Failed to parse list.json: " + e + "\n");
-      return;
+      return [];
     }
 
     let searchRegion = Services.prefs.getCharPref(
@@ -1650,7 +1614,7 @@ SearchService.prototype = {
       if (!("default" in json)) {
         Cu.reportError("parseListJSON: Missing default in list.json");
         dump("parseListJSON: Missing default in list.json\n");
-        return;
+        return [];
       }
       searchSettings = json;
     }
@@ -1762,10 +1726,6 @@ SearchService.prototype = {
       }
     }
 
-    for (let name of engineNames) {
-      uris.push(name);
-    }
-
     // Store this so that it can be used while writing the cache file.
     this._visibleDefaultEngines = engineNames;
 
@@ -1796,6 +1756,7 @@ SearchService.prototype = {
     } else if ("searchOrder" in json.default) {
       this._searchOrder = json.default.searchOrder;
     }
+    return [...engineNames];
   },
 
   _saveSortedEngineList() {
@@ -1946,8 +1907,11 @@ SearchService.prototype = {
 
   /**
    * Get a sorted array of engines.
+   *
    * @param {boolean} withHidden
    *   True if hidden plugins should be included in the result.
+   * @returns {Array<SearchEngine>}
+   *   The sorted array.
    */
   _getSortedEngines(withHidden) {
     if (withHidden) {
@@ -2007,15 +1971,13 @@ SearchService.prototype = {
   async getEngines() {
     await this.init(true);
     SearchUtils.log("getEngines: getting all engines");
-    var engines = this._getSortedEngines(true);
-    return engines;
+    return this._getSortedEngines(true);
   },
 
   async getVisibleEngines() {
     await this.init();
     SearchUtils.log("getVisibleEngines: getting all visible engines");
-    var engines = this._getSortedEngines(false);
-    return engines;
+    return this._getSortedEngines(false);
   },
 
   async getDefaultEngines() {
@@ -2797,6 +2759,15 @@ SearchService.prototype = {
   /**
    * Checks to see if any engine has an EngineURL of type SearchUtils.URL_TYPE.SEARCH
    * for this request-method, template URL, and query params.
+   *
+   * @param {string} method
+   *   The method of the request.
+   * @param {string} template
+   *   The URL template of the request.
+   * @param {object} formData
+   *   Form data associated with the request.
+   * @returns {boolean}
+   *   Returns true if an engine is found.
    */
   hasEngineWithURL(method, template, formData) {
     this._ensureInitialized();
@@ -3136,7 +3107,7 @@ var engineUpdateService = {
     let updateURI =
       updateURL && updateURL._hasRelation("self")
         ? updateURL.getSubmission("", engine).uri
-        : makeURI(engine._updateURL);
+        : SearchUtils.makeURI(engine._updateURL);
     if (updateURI) {
       if (engine._isDefault && !updateURI.schemeIs("https")) {
         this._log("Invalid scheme for default engine update");

@@ -2110,5 +2110,5 @@ skip-if(!asyncPan) == 1544895.html 1544895-ref.html
 == 1548809.html 1548809-ref.html
 != 1552789-1.html 1552789-ref-1.html
 == 1558937-1.html 1558937-1-ref.html
-fuzzy-if(!webrender||!winWidget,254-255,464-1613) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html
+fuzzy-if(!webrender||!winWidget,254-255,464-1613) fuzzy-if(geckoview&&webrender,253-253,1397-1397) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html
 == 1562733-rotated-nastaliq-2.html 1562733-rotated-nastaliq-2-ref.html

@@ -6,6 +6,8 @@
 # exceptions that occur in mach command modules themselves and in the things
 # they call.
 
+from __future__ import absolute_import
+
 
 def throw_deep(message):
     return throw_real(message)

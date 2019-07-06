@@ -89,10 +89,12 @@ var OS_UNSUPPORTED_PARAMS = [
 
 /**
  * Truncates big blobs of (data-)URIs to console-friendly sizes
- * @param str
- *        String to tone down
- * @param len
- *        Maximum length of the string to return. Defaults to the length of a tweet.
+ * @param {string} str
+ *   String to tone down
+ * @param {number} len
+ *   Maximum length of the string to return. Defaults to the length of a tweet.
+ * @returns {string}
+ *   The shortend string.
  */
 function limitURILength(str, len) {
   len = len || 140;
@@ -105,13 +107,14 @@ function limitURILength(str, len) {
 /**
  * Ensures an assertion is met before continuing. Should be used to indicate
  * fatal errors.
- * @param  assertion
- *         An assertion that must be met
- * @param  message
- *         A message to display if the assertion is not met
- * @param  resultCode
- *         The NS_ERROR_* value to throw if the assertion is not met
+ * @param {*} assertion
+ *   An assertion that must be met
+ * @param {string} message
+ *   A message to display if the assertion is not met
+ * @param {number} resultCode
+ *   The NS_ERROR_* value to throw if the assertion is not met
  * @throws resultCode
+ *   If the assertion fails.
  */
 function ENSURE_WARN(assertion, message, resultCode) {
   if (!assertion) {
@@ -299,8 +302,10 @@ function sanitizeName(name) {
  * Retrieve a pref from the search param branch. Returns null if the
  * preference is not found.
  *
- * @param prefName
- *        The name of the pref.
+ * @param {string} prefName
+ *   The name of the pref.
+ * @returns {string|null}
+ *   The value of the preference.
  **/
 function getMozParamPref(prefName) {
   let branch = Services.prefs.getDefaultBranch(
@@ -330,6 +335,7 @@ function QueryParameter(name, value, purpose) {
 
 /**
  * Perform OpenSearch parameter substitution on aParamValue.
+ * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
  *
  * @param {string} paramValue
  *   The OpenSearch search parameters.
@@ -340,8 +346,8 @@ function QueryParameter(name, value, purpose) {
  *   as-is.
  * @param {nsISearchEngine} engine
  *   The engine which owns the string being acted on.
- *
- * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
+ * @returns {string}
+ *   An updated parameter string.
  */
 function ParamSubstitution(paramValue, searchTerms, engine) {
   const PARAM_REGEXP = /\{((?:\w+:)?\w+)(\??)\}/g;
@@ -607,8 +613,10 @@ EngineURL.prototype = {
 
   /**
    * Creates a JavaScript object that represents this URL.
-   * @returns An object suitable for serialization as JSON.
-   **/
+   *
+   * @returns {object}
+   *   An object suitable for serialization as JSON.
+   */
   toJSON() {
     var json = {
       template: this.template,
@@ -813,10 +821,8 @@ SearchEngine.prototype = {
    * Retrieves the data from the engine's file asynchronously.
    * The document element is placed in the engine's data field.
    *
-   * @param file The file to load the search plugin from.
-   *
-   * @returns {Promise} A promise, resolved successfully if initializing from
-   * data succeeds, rejected if it fails.
+   * @param {nsIFile} file
+   *   The file to load the search plugin from.
    */
   async _initFromFile(file) {
     if (!file || !(await OS.File.exists(file.path))) {
@@ -868,10 +874,8 @@ SearchEngine.prototype = {
   /**
    * Retrieves the engine data from a URI asynchronously and initializes it.
    *
-   * @param uri The uri to load the search plugin from.
-   *
-   * @returns {Promise} A promise, resolved successfully if retrieveing data
-   * succeeds.
+   * @param {nsIURI} uri
+   *   The uri to load the search plugin from.
    */
   async _initFromURI(uri) {
     SearchUtils.log('_initFromURI: Loading engine from: "' + uri.spec + '".');
@@ -990,6 +994,9 @@ SearchEngine.prototype = {
     /**
      * Handle an error during the load of an engine by notifying the engine's
      * error callback, if any.
+     *
+     * @param {number} [errorCode]
+     *   The relevant error code.
      */
     function onError(errorCode = Ci.nsISearchService.ERROR_UNKNOWN_FAILURE) {
       // Notify the callback of the failure
@@ -1766,7 +1773,8 @@ SearchEngine.prototype = {
    * * There is no trailing file extension.
    * * There is no [app] prefix.
    *
-   * @return a string identifier, or null.
+   * @returns {string|null}
+   *   Returns a valid if this is a built-in engine, null otherwise.
    */
   get identifier() {
     // No identifier if If the engine isn't app-provided
@@ -2124,7 +2132,8 @@ SearchEngine.prototype = {
   },
 
   /**
-   * Returns URL parsing properties used by _buildParseSubmissionMap.
+   * @returns {object}
+   *   URL parsing properties used by _buildParseSubmissionMap.
    */
   getURLParsingInfo() {
     let responseType =
@@ -2190,6 +2199,9 @@ SearchEngine.prototype = {
    * width, height and url properties. width and height are numeric and
    * represent the icon's dimensions. url is a string with the URL for
    * the icon.
+   *
+   * @returns {Array<object>}
+   *   An array of objects with width/height/url parameters.
    */
   getIcons() {
     let result = [];
@@ -2217,11 +2229,11 @@ SearchEngine.prototype = {
    * Opens a speculative connection to the engine's search URI
    * (and suggest URI, if different) to reduce request latency
    *
-   * @param  options
-   *         An object that must contain the following fields:
-   *         {window} the content window for the window performing the search
-   *         {originAttributes} the originAttributes for performing the search
-   *
+   * @param {object} options
+   * @param {DOMWindow} options.window
+   *   The content window for the window performing the search.
+   * @param {object} options.originAttributes
+   *   The originAttributes for performing the search
    * @throws NS_ERROR_INVALID_ARG if options is omitted or lacks required
    *         elemeents
    */

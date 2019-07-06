@@ -204,7 +204,6 @@ void TraceLoggerThreadState::enableIonLogging() {
   enabledTextIds[TraceLogger_AliasAnalysis] = true;
   enabledTextIds[TraceLogger_GVN] = true;
   enabledTextIds[TraceLogger_LICM] = true;
-  enabledTextIds[TraceLogger_Sincos] = true;
   enabledTextIds[TraceLogger_RangeAnalysis] = true;
   enabledTextIds[TraceLogger_LoopUnrolling] = true;
   enabledTextIds[TraceLogger_FoldLinearArithConstants] = true;
@@ -1143,7 +1142,7 @@ bool TraceLoggerThreadState::init() {
           "ScalarReplacement,\n"
           "                 DominatorTree, PhiAnalysis, MakeLoopsContiguous, "
           "ApplyTypes,\n"
-          "                 EagerSimdUnbox, AliasAnalysis, GVN, LICM, Sincos, "
+          "                 EagerSimdUnbox, AliasAnalysis, GVN, LICM, "
           "RangeAnalysis,\n"
           "                 LoopUnrolling, FoldLinearArithConstants, "
           "EffectiveAddressAnalysis,\n"

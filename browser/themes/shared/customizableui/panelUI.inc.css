@@ -1786,3 +1786,25 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .subviewbutton.download:-moz-any([canShow],[canRetry]) > .action-button@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-even-further);
 }
+
+/* What's New panel */
+#customizationui-widget-multiview #PanelUI-whatsNew {
+  min-width: @menuPanelWidth@;
+  max-width: @menuPanelWidth@;
+}
+
+#PanelUI-whatsNew-content {
+  padding: 0 10px;
+}
+
+#customizationui-widget-multiview #PanelUI-whatsNew-content {
+  height: 586px;
+}
+
+#PanelUI-whatsNew-title {
+  display: none;
+}
+
+#customizationui-widget-multiview #PanelUI-whatsNew-title {
+  display: flex;
+}

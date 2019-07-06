@@ -459,7 +459,6 @@ enum class MIRType : uint8_t {
   MagicUninitializedLexical,  // JS_UNINITIALIZED_LEXICAL magic value.
   // Types above are specialized.
   Value,
-  SinCosDouble,  // Optimizing a sin/cos to sincos.
   ObjectOrNull,
   None,         // Invalid, used as a placeholder.
   Slots,        // A slots vector
@@ -602,8 +601,6 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "MagicUninitializedLexical";
     case MIRType::Value:
       return "Value";
-    case MIRType::SinCosDouble:
-      return "SinCosDouble";
     case MIRType::ObjectOrNull:
       return "ObjectOrNull";
     case MIRType::None:
