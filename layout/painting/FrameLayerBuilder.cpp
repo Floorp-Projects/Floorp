@@ -3797,7 +3797,7 @@ UniquePtr<InactiveLayerData> PaintedLayerData::CreateInactiveLayerData(
   FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
   // Ownership of layerBuilder is passed to tempManager.
   layerBuilder->Init(aState->Builder(), tempManager, this, true,
-                            &aItem->GetClip());
+                     &aItem->GetClip());
 
   tempManager->BeginTransaction();
   if (aState->LayerBuilder()->GetRetainingLayerManager()) {

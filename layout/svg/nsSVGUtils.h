@@ -34,7 +34,6 @@ class nsIContent;
 
 class nsIFrame;
 class nsPresContext;
-class nsStyleSVGPaint;
 class nsSVGDisplayContainerFrame;
 class nsSVGOuterSVGFrame;
 class nsTextFrame;
@@ -475,8 +474,8 @@ class nsSVGUtils {
   }
 
   static nscolor GetFallbackOrPaintColor(
-      mozilla::ComputedStyle* aComputedStyle,
-      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
+      const mozilla::ComputedStyle&,
+      mozilla::StyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
   static void MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
                                  GeneralPattern* aOutPattern,

@@ -113,6 +113,8 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   bool AllowsFeature(const nsAString& aFeatureName,
                      const Optional<nsAString>& aOrigin) const;
 
+  void Features(nsTArray<nsString>& aFeatures);
+
   void AllowedFeatures(nsTArray<nsString>& aAllowedFeatures);
 
   void GetAllowlistForFeature(const nsAString& aFeatureName,
