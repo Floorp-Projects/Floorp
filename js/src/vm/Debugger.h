@@ -1648,13 +1648,10 @@ class DebuggerFrame : public NativeObject {
                                             HandleDebuggerFrame frame,
                                             OnStepHandler* handler);
 
-  static MOZ_MUST_USE bool eval(JSContext* cx, HandleDebuggerFrame frame,
-                                mozilla::Range<const char16_t> chars,
-                                HandleObject bindings,
-                                const EvalOptions& options,
-                                ResumeMode& resumeMode,
-                                MutableHandleValue value,
-                                MutableHandleSavedFrame exnStack);
+  static MOZ_MUST_USE JS::Result<Completion> eval(
+      JSContext* cx, HandleDebuggerFrame frame,
+      mozilla::Range<const char16_t> chars, HandleObject bindings,
+      const EvalOptions& options);
 
   MOZ_MUST_USE bool requireLive(JSContext* cx);
   static MOZ_MUST_USE DebuggerFrame* checkThis(JSContext* cx,
@@ -1877,11 +1874,10 @@ class DebuggerObject : public NativeObject {
                                 MutableHandleValue result);
   static MOZ_MUST_USE bool forceLexicalInitializationByName(
       JSContext* cx, HandleDebuggerObject object, HandleId id, bool& result);
-  static MOZ_MUST_USE bool executeInGlobal(
+  static MOZ_MUST_USE JS::Result<Completion> executeInGlobal(
       JSContext* cx, HandleDebuggerObject object,
       mozilla::Range<const char16_t> chars, HandleObject bindings,
-      const EvalOptions& options, ResumeMode& resumeMode,
-      MutableHandleValue value, MutableHandleSavedFrame exnStack);
+      const EvalOptions& options);
   static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx,
                                              HandleDebuggerObject object,
                                              HandleValue value,
