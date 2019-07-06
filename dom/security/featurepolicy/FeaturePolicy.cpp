@@ -90,7 +90,7 @@ void FeaturePolicy::ResetDeclaredPolicy() { mFeatures.Clear(); }
 
 JSObject* FeaturePolicy::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
-  return Policy_Binding::Wrap(aCx, this, aGivenProto);
+  return FeaturePolicy_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 bool FeaturePolicy::AllowsFeature(const nsAString& aFeatureName,
