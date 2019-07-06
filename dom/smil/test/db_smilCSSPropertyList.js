@@ -28,7 +28,6 @@ var gPropList = {
     "feFlood"
   ),
   // SKIP 'color-profile' property: animatable but not supported by Mozilla
-  // SKIP 'color-rendering' property: animatable but not supported by Mozilla
   cursor: new NonAdditiveAttribute("cursor", "CSS", "rect"),
   direction: new NonAnimatableAttribute("direction", "CSS", "text"),
   display: new NonAdditiveAttribute("display", "CSS", "rect"),
