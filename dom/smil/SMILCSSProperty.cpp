@@ -112,7 +112,6 @@ bool SMILCSSProperty::IsPropertyAnimatable(nsCSSPropertyID aPropID) {
   //   alignment-baseline
   //   baseline-shift
   //   color-profile
-  //   color-rendering
   //   glyph-orientation-horizontal
   //   glyph-orientation-vertical
   //   kerning
