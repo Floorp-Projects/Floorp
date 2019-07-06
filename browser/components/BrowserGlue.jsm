@@ -103,7 +103,6 @@ let LEGACY_ACTORS = {
       },
       messages: [
         "AboutLogins:AllLogins",
-        "AboutLogins:UpdateBreaches",
         "AboutLogins:LoginAdded",
         "AboutLogins:LoginModified",
         "AboutLogins:LoginRemoved",
