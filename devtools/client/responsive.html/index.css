@@ -225,6 +225,10 @@ input:-moz-focusring {
   background-image: url("./images/rotate-viewport.svg");
 }
 
+#rotate-button.viewport-orientation-landscape::before {
+  transform: rotate(90deg) scaleX(-1);
+}
+
 #touch-simulation-button::before {
   background-image: url("./images/touch-events.svg");
 }
