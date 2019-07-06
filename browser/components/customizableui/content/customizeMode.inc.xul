@@ -111,6 +111,14 @@
         hidden="true"/>
 
 <spacer id="customization-footer-spacer"/>
+#ifdef XP_MACOSX
+    <button id="customization-touchbar-button"
+        class="customizationmode-button"
+        hidden="true"
+        oncommand="gCustomizeMode.customizeTouchBar();"
+        data-l10n-id="customize-mode-touchbar-cmd"/>
+    <spacer hidden="true" id="customization-touchbar-spacer"/>
+#endif
 <button id="customization-undo-reset-button"
         class="customizationmode-button"
         hidden="true"

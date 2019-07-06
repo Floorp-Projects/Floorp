@@ -69,6 +69,17 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "gCosmeticAnimationsEnabled",
   "toolkit.cosmeticAnimations.enabled"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gTouchBarUpdater",
+  "@mozilla.org/widget/touchbarupdater;1",
+  "nsITouchBarUpdater"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gCosmeticAnimationsEnabled",
+  "toolkit.cosmeticAnimations.enabled"
+);
 
 let gDebug;
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -387,6 +398,7 @@ CustomizeMode.prototype = {
 
       this._updateResetButton();
       this._updateUndoResetButton();
+      this._updateTouchBarButton();
 
       this._skipSourceNodeCheck =
         Services.prefs.getPrefType(kSkipSourceNodePref) ==
@@ -1596,6 +1608,18 @@ CustomizeMode.prototype = {
     undoResetButton.hidden = !CustomizableUI.canUndoReset;
   },
 
+  _updateTouchBarButton() {
+    if (AppConstants.platform != "macosx") {
+      return;
+    }
+    let touchBarButton = this.$("customization-touchbar-button");
+    let touchBarSpacer = this.$("customization-touchbar-spacer");
+
+    let isTouchBarInitialized = gTouchBarUpdater.isTouchBarInitialized();
+    touchBarButton.hidden = !isTouchBarInitialized;
+    touchBarSpacer.hidden = !isTouchBarInitialized;
+  },
+
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "toolbarvisibilitychange":
@@ -2689,6 +2713,13 @@ CustomizeMode.prototype = {
     Services.prefs.setBoolPref(kDownloadAutoHidePref, checkbox.checked);
     // Ensure we move the button (back) after the user leaves customize mode.
     event.view.gCustomizeMode._moveDownloadsButtonToNavBar = checkbox.checked;
+  },
+
+  customizeTouchBar() {
+    let updater = Cc["@mozilla.org/widget/touchbarupdater;1"].getService(
+      Ci.nsITouchBarUpdater
+    );
+    updater.enterCustomizeMode();
   },
 
   togglePong(enabled) {
