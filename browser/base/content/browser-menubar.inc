@@ -532,6 +532,7 @@
               <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
               <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
               <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
+              <menuitem id="menu_mac_touch_bar" label="&touchBarCmdMac.label;"/>
 #endif
               </menupopup>
             </menu>

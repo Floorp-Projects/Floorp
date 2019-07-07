@@ -1213,6 +1213,12 @@ if (http2_internal) {
       stream.end();
       return;
     }
+    if (target == '429.example.com:443') {
+      // 429 Too Many Requests, a response code that a proxy should return when receiving too many requests
+      stream.respond({ ':status': 429 });
+      stream.end();
+      return;
+    }
     if (target == '502.example.com:443') {
       // 502 Bad Gateway, a response code mostly resembling immediate connection error
       stream.respond({ ':status': 502 });
