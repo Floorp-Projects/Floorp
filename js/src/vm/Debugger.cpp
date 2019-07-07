@@ -11502,7 +11502,13 @@ bool DebuggerObject::callMethod(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  return object->call(cx, object, thisv, args, callArgs.rval());
+  Rooted<Maybe<Completion>> completion(
+      cx, DebuggerObject::call(cx, object, thisv, args));
+  if (!completion.get()) {
+    return false;
+  }
+
+  return completion->buildCompletionValue(cx, object->owner(), callArgs.rval());
 }
 
 /* static */
@@ -11573,7 +11579,13 @@ bool DebuggerObject::applyMethod(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  return object->call(cx, object, thisv, args, callArgs.rval());
+  Rooted<Maybe<Completion>> completion(
+      cx, DebuggerObject::call(cx, object, thisv, args));
+  if (!completion.get()) {
+    return false;
+  }
+
+  return completion->buildCompletionValue(cx, object->owner(), callArgs.rval());
 }
 
 static void EnterDebuggeeObjectRealm(JSContext* cx, Maybe<AutoRealm>& ar,
@@ -12562,9 +12574,10 @@ Result<Completion> DebuggerObject::setProperty(JSContext* cx,
 }
 
 /* static */
-bool DebuggerObject::call(JSContext* cx, HandleDebuggerObject object,
-                          HandleValue thisv_, Handle<ValueVector> args,
-                          MutableHandleValue result) {
+Maybe<Completion> DebuggerObject::call(JSContext* cx,
+                                       HandleDebuggerObject object,
+                                       HandleValue thisv_,
+                                       Handle<ValueVector> args) {
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
@@ -12572,7 +12585,7 @@ bool DebuggerObject::call(JSContext* cx, HandleDebuggerObject object,
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Object",
                               "call", referent->getClass()->name);
-    return false;
+    return Nothing();
   }
 
   RootedValue calleev(cx, ObjectValue(*referent));
@@ -12581,15 +12594,15 @@ bool DebuggerObject::call(JSContext* cx, HandleDebuggerObject object,
   // that is where any exceptions must be reported.
   RootedValue thisv(cx, thisv_);
   if (!dbg->unwrapDebuggeeValue(cx, &thisv)) {
-    return false;
+    return Nothing();
   }
   Rooted<ValueVector> args2(cx, ValueVector(cx));
   if (!args2.append(args.begin(), args.end())) {
-    return false;
+    return Nothing();
   }
   for (unsigned i = 0; i < args2.length(); ++i) {
     if (!dbg->unwrapDebuggeeValue(cx, args2[i])) {
-      return false;
+      return Nothing();
     }
   }
 
@@ -12600,18 +12613,18 @@ bool DebuggerObject::call(JSContext* cx, HandleDebuggerObject object,
   EnterDebuggeeObjectRealm(cx, ar, referent);
   if (!cx->compartment()->wrap(cx, &calleev) ||
       !cx->compartment()->wrap(cx, &thisv)) {
-    return false;
+    return Nothing();
   }
   for (unsigned i = 0; i < args2.length(); ++i) {
     if (!cx->compartment()->wrap(cx, args2[i])) {
-      return false;
+      return Nothing();
     }
   }
 
-  // Call the function. Use receiveCompletionValue to return to the debugger
-  // compartment and populate args.rval().
+  // Call the function.
   LeaveDebuggeeNoExecute nnx(cx);
 
+  RootedValue result(cx);
   bool ok;
   {
     InvokeArgs invokeArgs(cx);
@@ -12622,11 +12635,13 @@ bool DebuggerObject::call(JSContext* cx, HandleDebuggerObject object,
         invokeArgs[i].set(args2[i]);
       }
 
-      ok = js::Call(cx, calleev, thisv, invokeArgs, result);
+      ok = js::Call(cx, calleev, thisv, invokeArgs, &result);
     }
   }
 
-  return dbg->receiveCompletionValue(ar, ok, result, result);
+  Rooted<Completion> completion(cx, Completion::fromJSResult(cx, ok, result));
+  ar.reset();
+  return Some(std::move(completion.get()));
 }
 
 /* static */
