@@ -38,11 +38,11 @@ collect().then(value => {
   assertDeepEq(value, [2, 4]);
 
   Pattern([
-    EXACT({ return: new DebuggerObjectPattern("Promise") }),
-    EXACT({ return: 2 }),
-    EXACT({ return: new DebuggerObjectPattern("Promise") }),
-    EXACT({ return: 4 }),
-    EXACT({ return: "ok" }),
+    EXACT({ return: new DebuggerObjectPattern("Promise"), await: true }),
+    EXACT({ return: 2, yield: true }),
+    EXACT({ return: new DebuggerObjectPattern("Promise"), await: true }),
+    EXACT({ return: 4, yield: true }),
+    EXACT({ return: "ok", await: true }),
     EXACT({ return: "ok" }),
   ]).assert(log);
 
