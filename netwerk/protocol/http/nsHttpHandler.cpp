@@ -284,6 +284,7 @@ nsHttpHandler::nsHttpHandler()
       mTCPKeepaliveLongLivedIdleTimeS(600),
       mEnforceH1Framing(FRAMECHECK_BARELY),
       mDefaultHpackBuffer(4096),
+      mBug1563538(true),
       mMaxHttpResponseHeaderSize(393216),
       mFocusedWindowTransactionRatio(0.9f),
       mSpeculativeConnectEnabled(false),
@@ -1898,6 +1899,13 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetInt(HTTP_PREF("spdy.default-hpack-buffer"), &val);
     if (NS_SUCCEEDED(rv)) {
       mDefaultHpackBuffer = val;
+    }
+  }
+
+  if (PREF_CHANGED(HTTP_PREF("spdy.bug1563538"))) {
+    rv = Preferences::GetBool(HTTP_PREF("spdy.bug1563538"), &cVar);
+    if (NS_SUCCEEDED(rv)) {
+      mBug1563538 = cVar;
     }
   }
 
