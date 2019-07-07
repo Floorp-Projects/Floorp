@@ -210,7 +210,6 @@
   MACRO(index, index, "index")                                                 \
   MACRO(infinity, infinity, "infinity")                                        \
   MACRO(Infinity, Infinity, "Infinity")                                        \
-  MACRO(initial, initial, "initial")                                           \
   MACRO(InitializeCollator, InitializeCollator, "InitializeCollator")          \
   MACRO(InitializeDateTimeFormat, InitializeDateTimeFormat,                    \
         "InitializeDateTimeFormat")                                            \
