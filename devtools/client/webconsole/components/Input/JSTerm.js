@@ -905,10 +905,22 @@ class JSTerm extends Component {
    * Even handler for the "beforeChange" event fired by codeMirror. This event is fired
    * when codeMirror is about to make a change to its DOM representation.
    */
-  _onBeforeChange() {
-    // clear the completionText before the change is done to prevent a visual glitch.
-    // See Bug 1491776.
-    this.setAutoCompletionText("");
+  _onBeforeChange(cm, change) {
+    // If the user did not type a character that matches the completion text, then we
+    // clear it before the change is done to prevent a visual glitch.
+    // See Bugs 1491776 & 1558248.
+    const { from, to, origin, text } = change;
+    const completionText = this.getAutoCompletionText();
+
+    const addedCharacterMatchCompletion =
+      from.line === to.line &&
+      from.ch === to.ch &&
+      origin === "+input" &&
+      completionText.startsWith(text.join(""));
+
+    if (!completionText || change.canceled || !addedCharacterMatchCompletion) {
+      this.setAutoCompletionText("");
+    }
   }
 
   /**
