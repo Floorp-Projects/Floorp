@@ -11,6 +11,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-tab**
+  * ⚠️ **This is a breaking change**: Now `TabsUseCases.SelectTabUseCase` is an interface, if you want to rely on its previous behavior you could keep using `TabsUseCases.selectTab` or use `TabsUseCases.DefaultSelectTabUseCase`.
+
+* **feature-awesomebar**
+  * `SessionSuggestionProvider` now have a new parameter `excludeSelectedSession`, to ignore the selected session on the suggestions.
+
 * **concept-engine** and **browser-session**
   * ⚠️ **This is a breaking change**: Function signature changed  `Session.Observer.onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit` from to `Session.Observer.onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit`
   * ⚠️ **This is a breaking change**: Function signature changed  `EngineSession.Observer.onTrackerBlocked(url: String) = Unit` from to `EngineSession.Observer.onTrackerBlocked(tracker: Tracker) = Unit`

@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.internal.loadLambda
@@ -18,7 +19,8 @@ import java.util.UUID
 class SessionSuggestionProvider(
     private val sessionManager: SessionManager,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
-    private val icons: BrowserIcons? = null
+    private val icons: BrowserIcons? = null,
+    private val excludeSelectedSession: Boolean = false
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -30,8 +32,7 @@ class SessionSuggestionProvider(
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
         sessionManager.sessions.forEach { session ->
-            if ((session.url.contains(text, ignoreCase = true) ||
-                    session.title.contains(text, ignoreCase = true)) && !session.private
+            if (session.contains(text) && !session.private && shouldIncludeSelectedSession(session)
             ) {
                 suggestions.add(
                     AwesomeBar.Suggestion(
@@ -48,4 +49,17 @@ class SessionSuggestionProvider(
 
         return suggestions
     }
+
+    private fun Session.contains(text: String) =
+        (url.contains(text, ignoreCase = true) || title.contains(text, ignoreCase = true))
+
+    private fun shouldIncludeSelectedSession(session: Session): Boolean {
+        return if (excludeSelectedSession) {
+            !isSelectedSession(session)
+        } else {
+            true
+        }
+    }
+
+    private fun isSelectedSession(session: Session) = sessionManager.selectedSession?.equals(session) ?: false
 }

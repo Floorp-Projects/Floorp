@@ -16,15 +16,22 @@ import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 class TabsUseCases(
     sessionManager: SessionManager
 ) {
-    class SelectTabUseCase internal constructor(
+    /**
+     * Contract for use cases that select a tab.
+     */
+    interface SelectTabUseCase {
+        operator fun invoke(session: Session)
+    }
+
+    class DefaultSelectTabUseCase internal constructor(
         private val sessionManager: SessionManager
-    ) {
+    ) : SelectTabUseCase {
         /**
          * Marks the provided session as selected.
          *
          * @param session The session to select.
          */
-        operator fun invoke(session: Session) {
+        override operator fun invoke(session: Session) {
             sessionManager.select(session)
         }
     }
@@ -146,7 +153,7 @@ class TabsUseCases(
         }
     }
 
-    val selectTab: SelectTabUseCase by lazy { SelectTabUseCase(sessionManager) }
+    val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
     val removeTab: RemoveTabUseCase by lazy { RemoveTabUseCase(sessionManager) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
     val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }

@@ -131,4 +131,42 @@ class SessionSuggestionProviderTest {
         val provider = SessionSuggestionProvider(mock(), mock())
         assertTrue(provider.shouldClearSuggestions)
     }
+
+    @Test
+    fun `When excludeSelectedSession is true provider should not include the selected session`() = runBlocking {
+        val sessionManager = SessionManager(mock())
+        val session = Session("https://wikipedia.org")
+        val selectedSession = Session("https://www.mozilla.org")
+
+        sessionManager.add(selectedSession)
+        sessionManager.add(session)
+        sessionManager.select(selectedSession)
+
+        val useCase: TabsUseCases.SelectTabUseCase = mock()
+
+        val provider = SessionSuggestionProvider(sessionManager, useCase, excludeSelectedSession = true)
+        val suggestions = provider.onInputChanged("org")
+
+        assertEquals(1, suggestions.size)
+        assertEquals(session.url, suggestions.first().description)
+    }
+
+    @Test
+    fun `When excludeSelectedSession is false provider should include the selected session`() = runBlocking {
+        val sessionManager = SessionManager(mock())
+        val session = Session("https://wikipedia.org")
+        val selectedSession = Session("https://www.mozilla.org")
+
+        sessionManager.add(selectedSession)
+        sessionManager.add(session)
+        sessionManager.select(selectedSession)
+
+        val useCase: TabsUseCases.SelectTabUseCase = mock()
+
+        val provider = SessionSuggestionProvider(sessionManager, useCase, excludeSelectedSession = false)
+        val suggestions = provider.onInputChanged("mozilla")
+
+        assertEquals(1, suggestions.size)
+        assertEquals(selectedSession.url, suggestions.first().description)
+    }
 }
