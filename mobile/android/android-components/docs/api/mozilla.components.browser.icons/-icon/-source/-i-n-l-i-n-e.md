@@ -2,7 +2,7 @@
 
 # INLINE
 
-`INLINE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L38)
+`INLINE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L40)
 
 This icon was inlined in the document.
 

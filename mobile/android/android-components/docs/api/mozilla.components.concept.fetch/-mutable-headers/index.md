@@ -28,3 +28,9 @@ A collection of HTTP [Headers](../-headers/index.md) (mutable) of a [Request](..
 | [getAll](get-all.md) | `fun getAll(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>`<br>Returns the list of values corresponding to the specified header field name. |
 | [iterator](iterator.md) | `fun iterator(): `[`MutableIterator`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterator/index.html)`<`[`Header`](../-header/index.md)`>`<br>Returns an iterator over the headers that supports removing elements during iteration. |
 | [set](set.md) | `fun set(index: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, header: `[`Header`](../-header/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the [Header](../-header/index.md) at the specified [index](set.md#mozilla.components.concept.fetch.MutableHeaders$set(kotlin.Int, mozilla.components.concept.fetch.Header)/index).`fun set(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`MutableHeaders`](./index.md)<br>Set the only occurrence of the header; potentially overriding an already existing header. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [toJSONArray](../../mozilla.components.support.ktx.android.org.json/kotlin.collections.-iterable/to-j-s-o-n-array.md) | `fun `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<`[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`>.toJSONArray(): <ERROR CLASS>` |

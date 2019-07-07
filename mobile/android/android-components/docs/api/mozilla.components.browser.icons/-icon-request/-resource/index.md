@@ -2,7 +2,7 @@
 
 # Resource
 
-`data class Resource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L40)
+`data class Resource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L42)
 
 An icon resource that can be loaded.
 
@@ -16,6 +16,8 @@ An icon resource that can be loaded.
 
 `mimeType` - Optional MIME type of this icon resource (if known).
 
+`maskable` - True if the icon represents as full-bleed icon that can be cropped to other shapes.
+
 ### Types
 
 | Name | Summary |
@@ -26,12 +28,13 @@ An icon resource that can be loaded.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Resource(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, type: `[`Type`](-type/index.md)`, sizes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Size`](../../../mozilla.components.concept.engine.manifest/-size/index.md)`> = emptyList(), mimeType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>An icon resource that can be loaded. |
+| [&lt;init&gt;](-init-.md) | `Resource(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, type: `[`Type`](-type/index.md)`, sizes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Size`](../../../mozilla.components.concept.engine.manifest/-size/index.md)`> = emptyList(), mimeType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, maskable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>An icon resource that can be loaded. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [maskable](maskable.md) | `val maskable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>True if the icon represents as full-bleed icon that can be cropped to other shapes. |
 | [mimeType](mime-type.md) | `val mimeType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Optional MIME type of this icon resource (if known). |
 | [sizes](sizes.md) | `val sizes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Size`](../../../mozilla.components.concept.engine.manifest/-size/index.md)`>`<br>Optional list of icon sizes provided by this resource (if known). |
 | [type](type.md) | `val type: `[`Type`](-type/index.md)<br>The type of the icon. |

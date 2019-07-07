@@ -257,6 +257,7 @@
 | [mozilla.components.concept.fetch.interceptor.Interceptor](../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) | An [Interceptor](../mozilla.components.concept.fetch.interceptor/-interceptor/index.md) for a [Client](../mozilla.components.concept.fetch/-client/index.md) implementation. |
 | [mozilla.components.service.sync.logins.InvalidKeyException](../mozilla.components.service.sync.logins/-invalid-key-exception.md) | This error is emitted in two cases: |
 | [mozilla.components.service.sync.logins.InvalidRecordException](../mozilla.components.service.sync.logins/-invalid-record-exception.md) | This is thrown on attempts to insert or update a record so that it is no longer valid, where "invalid" is defined as such: |
+| [kotlin.collections.Iterable](../mozilla.components.support.ktx.android.org.json/kotlin.collections.-iterable/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
 | [mozilla.components.service.fretboard.JSONExperimentParser](../mozilla.components.service.fretboard/-j-s-o-n-experiment-parser/index.md) | Default JSON parsing implementation |
 | [org.mozilla.telemetry.serialize.JSONPingSerializer](../org.mozilla.telemetry.serialize/-j-s-o-n-ping-serializer/index.md) | TelemetryPingSerializer that uses the org.json library provided by the Android system. |
 | [mozilla.components.browser.search.suggestions.JSONResponse](../mozilla.components.browser.search.suggestions/-j-s-o-n-response.md) | The Parser is a function that takes a JSON Response and maps it to a Suggestion list. |
@@ -291,6 +292,9 @@
 | [androidx.lifecycle.LiveData](../mozilla.components.support.android.test/androidx.lifecycle.-live-data/index.md) (extensions in package mozilla.components.support.android.test) |  |
 | [mozilla.components.browser.session.engine.request.LoadRequestMetadata](../mozilla.components.browser.session.engine.request/-load-request-metadata/index.md) |  |
 | [mozilla.components.browser.session.engine.request.LoadRequestOption](../mozilla.components.browser.session.engine.request/-load-request-option/index.md) | Simple enum class for defining the set of characteristics of a [LoadRequest](#). |
+| [mozilla.components.support.locale.LocaleAwareAppCompatActivity](../mozilla.components.support.locale/-locale-aware-app-compat-activity/index.md) | Base activity for apps that want to customized the system defined language by their own. |
+| [mozilla.components.support.locale.LocaleAwareApplication](../mozilla.components.support.locale/-locale-aware-application/index.md) | Base application for apps that want to customized the system defined language by their own. |
+| [mozilla.components.support.locale.LocaleManager](../mozilla.components.support.locale/-locale-manager/index.md) | Helper for apps that want to change locale defined by the system. |
 | [org.mozilla.telemetry.measurement.LocaleMeasurement](../org.mozilla.telemetry.measurement/-locale-measurement/index.md) |  |
 | [mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider](../mozilla.components.browser.search.provider.localization/-locale-search-localization-provider/index.md) | LocalizationProvider implementation that only provides the language and country from the system's default languageTag. |
 | [mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater](../mozilla.components.browser.engine.gecko.integration/-locale-setting-updater/index.md) | Class to set the locales setting for geckoview, updating from the locale of the device. |
@@ -461,10 +465,12 @@
 | [mozilla.components.feature.sync.StorageSync](../mozilla.components.feature.sync/-storage-sync/index.md) | A feature implementation which orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md)-s. |
 | [mozilla.components.support.utils.StorageUtils](../mozilla.components.support.utils/-storage-utils/index.md) |  |
 | [mozilla.components.lib.state.Store](../mozilla.components.lib.state/-store/index.md) | A generic store holding an immutable [State](../mozilla.components.lib.state/-state.md). |
+| [mozilla.components.lib.state.StoreException](../mozilla.components.lib.state/-store-exception/index.md) | Exception for otherwise unhandled errors caught while reducing state or while managing/notifying observers. |
 | [mozilla.components.concept.sync.StoreSyncStatus](../mozilla.components.concept.sync/-store-sync-status/index.md) |  |
 | [kotlin.String](../mozilla.components.browser.engine.system.matcher/kotlin.-string/index.md) (extensions in package mozilla.components.browser.engine.system.matcher) |  |
 | [kotlin.String](../mozilla.components.lib.jexl.ext/kotlin.-string/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [kotlin.String](../mozilla.components.support.ktx.kotlin/kotlin.-string/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
+| [kotlin.String](../mozilla.components.support.locale/kotlin.-string/index.md) (extensions in package mozilla.components.support.locale) |  |
 | [mozilla.components.service.glean.private.StringListMetricType](../mozilla.components.service.glean.private/-string-list-metric-type/index.md) | This implements the developer facing API for recording string list metrics. |
 | [mozilla.components.service.glean.private.StringMetricType](../mozilla.components.service.glean.private/-string-metric-type/index.md) | This implements the developer facing API for recording string metrics. |
 | [org.mozilla.telemetry.util.StringUtils](../org.mozilla.telemetry.util/-string-utils/index.md) |  |

@@ -2,7 +2,7 @@
 
 # SessionManager
 
-`class SessionManager : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L23)
+`class SessionManager : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L22)
 
 This class provides access to a centralized registry of all active sessions.
 
@@ -17,14 +17,13 @@ This class provides access to a centralized registry of all active sessions.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, defaultSession: () -> `[`Session`](../-session/index.md)` = null, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`? = null, delegate: `[`LegacySessionManager`](../-legacy-session-manager/index.md)` = LegacySessionManager(engine, defaultSession))`<br>This class provides access to a centralized registry of all active sessions. |
+| [&lt;init&gt;](-init-.md) | `SessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`? = null, delegate: `[`LegacySessionManager`](../-legacy-session-manager/index.md)` = LegacySessionManager(engine))`<br>This class provides access to a centralized registry of all active sessions. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
 | [all](all.md) | `val all: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Session`](../-session/index.md)`>`<br>Returns a list of all active sessions (including CustomTab sessions). |
-| [defaultSession](default-session.md) | `val defaultSession: () -> `[`Session`](../-session/index.md) |
 | [engine](engine.md) | `val engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md) |
 | [selectedSession](selected-session.md) | `val selectedSession: `[`Session`](../-session/index.md)`?`<br>Gets the currently selected session if there is one. |
 | [selectedSessionOrThrow](selected-session-or-throw.md) | `val selectedSessionOrThrow: `[`Session`](../-session/index.md)<br>Gets the currently selected session or throws an IllegalStateException if no session is selected. |

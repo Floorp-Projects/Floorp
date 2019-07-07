@@ -2,7 +2,7 @@
 
 # installableManifest
 
-`fun `[`Session`](../mozilla.components.browser.session/-session/index.md)`.installableManifest(): `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ext/Session.kt#L23)
+`fun `[`Session`](../mozilla.components.browser.session/-session/index.md)`.installableManifest(): `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ext/Session.kt#L22)
 
 Checks if the current session represents an installable web app.
 If so, return the web app manifest. Otherwise, return null.

@@ -2,7 +2,7 @@
 
 # MEMORY
 
-`MEMORY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L43)
+`MEMORY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L45)
 
 This icon was loaded from an in-memory cache.
 

@@ -2,7 +2,7 @@
 
 # RestoreAction
 
-`data class RestoreAction : `[`TabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L41)
+`data class RestoreAction : `[`TabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L54)
 
 Restores state from a (partial) previous state.
 
@@ -16,5 +16,5 @@ Restores state from a (partial) previous state.
 
 | Name | Summary |
 |---|---|
-| [selectedTabId](selected-tab-id.md) | `val selectedTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
-| [tabs](tabs.md) | `val tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabSessionState`](../../../mozilla.components.browser.state.state/-tab-session-state/index.md)`>` |
+| [selectedTabId](selected-tab-id.md) | `val selectedTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>the ID of the tab to select. |
+| [tabs](tabs.md) | `val tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabSessionState`](../../../mozilla.components.browser.state.state/-tab-session-state/index.md)`>`<br>the [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md)s to restore. |

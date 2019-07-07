@@ -10,6 +10,12 @@
 | [State](-state.md) | `interface State`<br>Generic interface for a [State](-state.md) maintained by a [Store](-store/index.md). |
 | [Store](-store/index.md) | `open class Store<S : `[`State`](-state.md)`, A : `[`Action`](-action.md)`>`<br>A generic store holding an immutable [State](-state.md). |
 
+### Exceptions
+
+| Name | Summary |
+|---|---|
+| [StoreException](-store-exception/index.md) | `class StoreException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Exception for otherwise unhandled errors caught while reducing state or while managing/notifying observers. |
+
 ### Type Aliases
 
 | Name | Summary |

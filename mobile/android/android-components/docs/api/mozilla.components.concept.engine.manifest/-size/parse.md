@@ -2,8 +2,8 @@
 
 # parse
 
-`fun parse(raw: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Size`](index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/Size.kt#L30)
+`fun parse(raw: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Size`](index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/Size.kt#L44)
 
-Parse a value from an HTML sizes attribute (512x512, 16x16, etc).
+Parses a value from an HTML sizes attribute (512x512, 16x16, etc).
 Returns null if the value was invalid.
 

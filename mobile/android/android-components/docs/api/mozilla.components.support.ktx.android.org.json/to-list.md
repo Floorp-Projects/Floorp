@@ -2,7 +2,7 @@
 
 # toList
 
-`fun <T> <ERROR CLASS>?.toList(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`T`](to-list.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/org/json/JSONArray.kt#L35)
+`fun <T> <ERROR CLASS>?.toList(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`T`](to-list.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/org/json/JSONArray.kt#L28)
 
 Convenience method to convert a JSONArray into a List
 

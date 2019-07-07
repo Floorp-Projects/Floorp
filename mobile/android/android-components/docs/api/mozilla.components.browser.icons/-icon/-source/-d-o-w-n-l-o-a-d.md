@@ -2,7 +2,7 @@
 
 # DOWNLOAD
 
-`DOWNLOAD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L33)
+`DOWNLOAD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L35)
 
 This icon was downloaded.
 

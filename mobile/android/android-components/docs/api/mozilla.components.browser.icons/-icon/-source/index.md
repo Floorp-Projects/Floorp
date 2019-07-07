@@ -2,7 +2,7 @@
 
 # Source
 
-`enum class Source` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L24)
+`enum class Source` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L26)
 
 The source of an [Icon](../index.md).
 

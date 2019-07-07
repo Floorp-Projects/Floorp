@@ -2,7 +2,7 @@
 
 # Size
 
-`data class Size` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/Size.kt#L14)
+`data class Size` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/Size.kt#L17)
 
 Represents dimensions for an image.
 Corresponds to values of the "sizes" HTML attribute.
@@ -18,6 +18,8 @@ Corresponds to values of the "sizes" HTML attribute.
 | Name | Summary |
 |---|---|
 | [height](height.md) | `val height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Height of the image. |
+| [maxLength](max-length.md) | `val maxLength: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets the longest length between width and height. |
+| [minLength](min-length.md) | `val minLength: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets the shortest length between width and height. |
 | [width](width.md) | `val width: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Width of the image. |
 
 ### Functions
@@ -36,4 +38,4 @@ Corresponds to values of the "sizes" HTML attribute.
 
 | Name | Summary |
 |---|---|
-| [parse](parse.md) | `fun parse(raw: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Size`](./index.md)`?`<br>Parse a value from an HTML sizes attribute (512x512, 16x16, etc). Returns null if the value was invalid. |
+| [parse](parse.md) | `fun parse(raw: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Size`](./index.md)`?`<br>Parses a value from an HTML sizes attribute (512x512, 16x16, etc). Returns null if the value was invalid. |

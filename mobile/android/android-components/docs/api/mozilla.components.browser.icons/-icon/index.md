@@ -2,7 +2,7 @@
 
 # Icon
 
-`data class Icon` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L16)
+`data class Icon` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/Icon.kt#L17)
 
 An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) after processing an [IconRequest](../-icon-request/index.md)
 
@@ -16,7 +16,7 @@ An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) aft
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Icon(bitmap: <ERROR CLASS>, color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, source: `[`Source`](-source/index.md)`)`<br>An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) after processing an [IconRequest](../-icon-request/index.md) |
+| [&lt;init&gt;](-init-.md) | `Icon(bitmap: <ERROR CLASS>, color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, source: `[`Source`](-source/index.md)`, maskable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) after processing an [IconRequest](../-icon-request/index.md) |
 
 ### Properties
 
@@ -24,4 +24,5 @@ An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) aft
 |---|---|
 | [bitmap](bitmap.md) | `val bitmap: <ERROR CLASS>`<br>The loaded icon as a [Bitmap](#). |
 | [color](color.md) | `val color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>The dominant color of the icon. Will be null if no color could be extracted. |
+| [maskable](maskable.md) | `val maskable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>True if the icon represents as full-bleed icon that can be cropped to other shapes. |
 | [source](source.md) | `val source: `[`Source`](-source/index.md)<br>The source of the icon. |
