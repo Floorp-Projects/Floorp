@@ -208,10 +208,6 @@ pref("ui.menu.incremental_search.timeout", 1000);
 // If true, all popups won't hide automatically on blur
 pref("ui.popup.disable_autohide", false);
 
-#ifdef XP_MACOSX
-pref("ui.touchbar.layout", "Back,Forward,Reload,OpenLocation,NewTab,Share");
-#endif
-
 // 0 = default: always, except in high contrast mode
 // 1 = always
 // 2 = never
