@@ -17,4 +17,21 @@ interface nsITouchBarUpdater : nsISupports
    * Updates an array of nsITouchBarInputs in the specified window.
    */
   void updateTouchBarInputs(in nsIBaseWindow aWindow, in Array<nsITouchBarInput> aInputs);
+
+  /**
+   * Enter the native Touch Bar customization window.
+   */
+  void enterCustomizeMode();
+
+  /**
+   * Checks if the user is using a Touch Bar-compatible Mac.
+   */
+  boolean isTouchBarInitialized();
+
+  /**
+   * Sets whether the Touch Bar is initialized.
+   * NOTE: This method is for internal unit tests only! Normally, the system
+   * sets this value after a Touch Bar is initialized on compatible Macs.
+   */
+  void setTouchBarInitialized(in boolean aIsInitialized);
 };

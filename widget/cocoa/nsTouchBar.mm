@@ -38,21 +38,25 @@ static char sIdentifierAssociationKey;
     }
 
     self.delegate = self;
+    // This customization identifier is how users' custom layouts are saved by macOS.
+    // If this changes, all users' layouts would be reset to the default layout.
+    self.customizationIdentifier = @"com.mozilla.firefox.touchbar.defaultbar";
     self.mappedLayoutItems = [NSMutableDictionary dictionary];
-    nsCOMPtr<nsIArray> layoutItems;
+    nsCOMPtr<nsIArray> allItems;
 
-    nsresult rv = mTouchBarHelper->GetLayout(getter_AddRefs(layoutItems));
-    if (NS_FAILED(rv) || !layoutItems) {
+    nsresult rv = mTouchBarHelper->GetAllItems(getter_AddRefs(allItems));
+    if (NS_FAILED(rv) || !allItems) {
       return nil;
     }
 
     uint32_t itemCount = 0;
-    layoutItems->GetLength(&itemCount);
-    // This is copied to self.defaultItemIdentifiers. Required since
-    // [self.mappedLayoutItems allKeys] does not preserve order.
-    NSMutableArray* orderedLayoutIdentifiers = [NSMutableArray arrayWithCapacity:itemCount];
+    allItems->GetLength(&itemCount);
+    // This is copied to self.customizationAllowedItemIdentifiers. Required since
+    // [self.mappedItems allKeys] does not preserve order.
+    // One slot is added for the spacer item.
+    NSMutableArray* orderedIdentifiers = [NSMutableArray arrayWithCapacity:itemCount + 1];
     for (uint32_t i = 0; i < itemCount; ++i) {
-      nsCOMPtr<nsITouchBarInput> input = do_QueryElementAt(layoutItems, i);
+      nsCOMPtr<nsITouchBarInput> input = do_QueryElementAt(allItems, i);
       if (!input) {
         continue;
       }
@@ -61,10 +65,19 @@ static char sIdentifierAssociationKey;
 
       // Add new input to dictionary for lookup of properties in delegate.
       self.mappedLayoutItems[[convertedInput nativeIdentifier]] = convertedInput;
-      orderedLayoutIdentifiers[i] = [convertedInput nativeIdentifier];
+      orderedIdentifiers[i] = [convertedInput nativeIdentifier];
     }
+    [orderedIdentifiers addObject:@"NSTouchBarItemIdentifierFlexibleSpace"];
 
-    self.defaultItemIdentifiers = [orderedLayoutIdentifiers copy];
+    NSArray* defaultItemIdentifiers = @[
+      [CustomButtonIdentifier stringByAppendingPathExtension:@"back"],
+      [CustomButtonIdentifier stringByAppendingPathExtension:@"forward"],
+      [CustomButtonIdentifier stringByAppendingPathExtension:@"reload"],
+      [CustomMainButtonIdentifier stringByAppendingPathExtension:@"open-location"],
+      [CustomButtonIdentifier stringByAppendingPathExtension:@"new-tab"], ShareScrubberIdentifier
+    ];
+    self.defaultItemIdentifiers = [defaultItemIdentifiers copy];
+    self.customizationAllowedItemIdentifiers = [orderedIdentifiers copy];
   }
 
   return self;
@@ -77,7 +90,7 @@ static char sIdentifierAssociationKey;
   }
 
   [self.defaultItemIdentifiers release];
-
+  [self.customizationAllowedItemIdentifiers release];
   [self.mappedLayoutItems removeAllObjects];
   [self.mappedLayoutItems release];
   [super dealloc];
