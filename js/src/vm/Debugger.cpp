@@ -2205,13 +2205,9 @@ bool Debugger::receiveCompletionValue(Maybe<AutoRealm>& ar, bool ok,
                                       HandleValue val, MutableHandleValue vp) {
   JSContext* cx = ar->context();
 
-  ResumeMode resumeMode;
-  RootedValue value(cx);
-  RootedSavedFrame exnStack(cx);
-  resultToCompletion(cx, ok, val, &resumeMode, &value, &exnStack);
+  Rooted<Completion> completion(cx, Completion::fromJSResult(cx, ok, val));
   ar.reset();
-  return wrapDebuggeeValue(cx, &value) &&
-         newCompletionValue(cx, resumeMode, value, exnStack, vp);
+  return completion.get().buildCompletionValue(cx, this, vp);
 }
 
 /*** Firing debugger hooks **************************************************/
