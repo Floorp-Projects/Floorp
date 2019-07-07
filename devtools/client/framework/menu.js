@@ -53,17 +53,21 @@ Menu.prototype.insert = function(pos, menuItem) {
 };
 
 /**
- * Show the Menu with anchor element's coordinate.
- * For example, In the case of zoom in/out the devtool panel, we should multiply
- * element's position to zoom value.
- * If you know the screen coodinate of display position, you should use Menu.pop().
+ * Show the Menu next to the provided target. Anchor point is bottom-left.
  *
- * @param {int} x
- * @param {int} y
+ * @param {Element} target
+ *        The element to use as anchor.
  * @param {Document} doc
+ *        The document that should own the popup.
  */
-Menu.prototype.popupWithZoom = function(x, y, doc) {
+Menu.prototype.popupAtTarget = function(target, doc) {
   const zoom = getCurrentZoom(doc);
+
+  const rect = target.getBoundingClientRect();
+  const defaultView = target.ownerDocument.defaultView;
+  const x = rect.left + defaultView.mozInnerScreenX;
+  const y = rect.bottom + defaultView.mozInnerScreenY;
+
   this.popup(x * zoom, y * zoom, doc);
 };
 
