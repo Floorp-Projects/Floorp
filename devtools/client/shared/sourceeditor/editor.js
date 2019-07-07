@@ -429,7 +429,7 @@ Editor.prototype = {
       "scroll",
     ];
     for (const eventName of pipedEvents) {
-      cm.on(eventName, () => this.emit(eventName));
+      cm.on(eventName, (...args) => this.emit(eventName, ...args));
     }
 
     cm.on("change", () => {
