@@ -48,6 +48,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction* aWrapped,
       mFilterReadCode(NS_ERROR_NOT_INITIALIZED),
       mForce(false),
       mReadSegmentReturnValue(NS_OK),
+      mCloseReason(NS_ERROR_UNEXPECTED),
       mNudgeCounter(0) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction ctor %p\n", this));
@@ -130,6 +131,16 @@ void TLSFilterTransaction::Close(nsresult aReason) {
   }
   mTransaction->Close(aReason);
   mTransaction = nullptr;
+
+  if (gHttpHandler->Bug1563538()) {
+    if (NS_FAILED(aReason)) {
+      mCloseReason = aReason;
+    } else {
+      mCloseReason = NS_BASE_STREAM_CLOSED;
+    }
+  } else {
+    MOZ_ASSERT(NS_ERROR_UNEXPECTED == mCloseReason);
+  }
 }
 
 nsresult TLSFilterTransaction::OnReadSegment(const char* aData, uint32_t aCount,
@@ -326,7 +337,7 @@ nsresult TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader* aReader,
   LOG(("TLSFilterTransaction::ReadSegments %p max=%d\n", this, aCount));
 
   if (!mTransaction) {
-    return NS_ERROR_UNEXPECTED;
+    return mCloseReason;
   }
 
   mReadSegmentReturnValue = NS_OK;
@@ -351,7 +362,7 @@ nsresult TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter* aWriter,
   LOG(("TLSFilterTransaction::WriteSegments %p max=%d\n", this, aCount));
 
   if (!mTransaction) {
-    return NS_ERROR_UNEXPECTED;
+    return mCloseReason;
   }
 
   mSegmentWriter = aWriter;
@@ -649,6 +660,11 @@ nsresult TLSFilterTransaction::SetProxiedTransaction(
        this, aTrans, aSpdyConnectTransaction));
 
   mTransaction = aTrans;
+
+  // Reverting mCloseReason to the default value for consistency to indicate we
+  // are no longer in closed state.
+  mCloseReason = NS_ERROR_UNEXPECTED;
+
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
   nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(mSecInfo));
@@ -829,23 +845,6 @@ SpdyConnectTransaction* TLSFilterTransaction::QuerySpdyConnectTransaction() {
   return mTransaction->QuerySpdyConnectTransaction();
 }
 
-class SocketTransportShim : public nsISocketTransport {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITRANSPORT
-  NS_DECL_NSISOCKETTRANSPORT
-
-  explicit SocketTransportShim(nsISocketTransport* aWrapped, bool aIsWebsocket)
-      : mWrapped(aWrapped), mIsWebsocket(aIsWebsocket){};
-
- private:
-  virtual ~SocketTransportShim() = default;
-
-  nsCOMPtr<nsISocketTransport> mWrapped;
-  bool mIsWebsocket;
-  nsCOMPtr<nsIInterfaceRequestor> mSecurityCallbacks;
-};
-
 class WeakTransProxy final : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -889,6 +888,33 @@ class WeakTransFreeProxy final : public Runnable {
 
  private:
   RefPtr<WeakTransProxy> mProxy;
+};
+
+class SocketTransportShim : public nsISocketTransport {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITRANSPORT
+  NS_DECL_NSISOCKETTRANSPORT
+
+  explicit SocketTransportShim(SpdyConnectTransaction* aTrans,
+                               nsISocketTransport* aWrapped, bool aIsWebsocket)
+      : mWrapped(aWrapped), mIsWebsocket(aIsWebsocket) {
+    mWeakTrans = new WeakTransProxy(aTrans);
+  }
+
+ private:
+  virtual ~SocketTransportShim() {
+    if (!OnSocketThread()) {
+      RefPtr<WeakTransFreeProxy> p = new WeakTransFreeProxy(mWeakTrans);
+      mWeakTrans = nullptr;
+      p->Dispatch();
+    }
+  }
+
+  nsCOMPtr<nsISocketTransport> mWrapped;
+  bool mIsWebsocket;
+  nsCOMPtr<nsIInterfaceRequestor> mSecurityCallbacks;
+  RefPtr<WeakTransProxy> mWeakTrans;  // SpdyConnectTransaction *
 };
 
 class OutputStreamShim : public nsIAsyncOutputStream {
@@ -1030,7 +1056,7 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
     int32_t httpResponseCode) {
   mConnInfo = aConnInfo;
 
-  mTunnelTransport = new SocketTransportShim(aTransport, mIsWebsocket);
+  mTunnelTransport = new SocketTransportShim(this, aTransport, mIsWebsocket);
   mTunnelStreamIn = new InputStreamShim(this, mIsWebsocket);
   mTunnelStreamOut = new OutputStreamShim(this, mIsWebsocket);
   mTunneledConn = new nsHttpConnection();
@@ -1801,7 +1827,36 @@ NS_IMETHODIMP
 SocketTransportShim::Close(nsresult aReason) {
   if (mIsWebsocket) {
     LOG3(("WARNING: SocketTransportShim::Close %p", this));
+  } else {
+    LOG(("SocketTransportShim::Close %p", this));
   }
+
+  if (gHttpHandler->Bug1563538()) {
+    // Must always post, because mSession->CloseTransaction releases the
+    // Http2Stream which is still on stack.
+    RefPtr<SocketTransportShim> self(this);
+
+    nsCOMPtr<nsIEventTarget> sts =
+        do_GetService("@mozilla.org/network/socket-transport-service;1");
+    Unused << sts->Dispatch(NS_NewRunnableFunction(
+        "SocketTransportShim::Close", [self = std::move(self), aReason]() {
+          RefPtr<NullHttpTransaction> baseTrans =
+              self->mWeakTrans->QueryTransaction();
+          if (!baseTrans) {
+            return;
+          }
+          SpdyConnectTransaction* trans =
+              baseTrans->QuerySpdyConnectTransaction();
+          MOZ_ASSERT(trans);
+          if (!trans) {
+            return;
+          }
+
+          trans->mSession->CloseTransaction(trans, aReason);
+        }));
+    return NS_OK;
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
