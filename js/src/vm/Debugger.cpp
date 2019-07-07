@@ -11528,6 +11528,7 @@ bool DebuggerObject::callMethod(JSContext* cx, unsigned argc, Value* vp) {
 bool DebuggerObject::getPropertyMethod(JSContext* cx, unsigned argc,
                                        Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "getProperty", args, object)
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   RootedId id(cx);
   if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
@@ -11537,17 +11538,16 @@ bool DebuggerObject::getPropertyMethod(JSContext* cx, unsigned argc,
   RootedValue receiver(cx,
                        args.length() < 2 ? ObjectValue(*object) : args.get(1));
 
-  if (!DebuggerObject::getProperty(cx, object, id, receiver, args.rval())) {
-    return false;
-  }
-
-  return true;
+  Rooted<Completion> comp(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(cx, comp, getProperty(cx, object, id, receiver));
+  return comp.get().buildCompletionValue(cx, dbg, args.rval());
 }
 
 /* static */
 bool DebuggerObject::setPropertyMethod(JSContext* cx, unsigned argc,
                                        Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "setProperty", args, object)
+  Debugger* dbg = Debugger::fromChildJSObject(object);
 
   RootedId id(cx);
   if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
@@ -11559,12 +11559,10 @@ bool DebuggerObject::setPropertyMethod(JSContext* cx, unsigned argc,
   RootedValue receiver(cx,
                        args.length() < 3 ? ObjectValue(*object) : args.get(2));
 
-  if (!DebuggerObject::setProperty(cx, object, id, value, receiver,
-                                   args.rval())) {
-    return false;
-  }
-
-  return true;
+  Rooted<Completion> comp(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(cx, comp,
+                             setProperty(cx, object, id, value, receiver));
+  return comp.get().buildCompletionValue(cx, dbg, args.rval());
 }
 
 /* static */
@@ -12522,9 +12520,10 @@ bool DebuggerObject::deleteProperty(JSContext* cx, HandleDebuggerObject object,
 }
 
 /* static */
-bool DebuggerObject::getProperty(JSContext* cx, HandleDebuggerObject object,
-                                 HandleId id, HandleValue receiver_,
-                                 MutableHandleValue result) {
+Result<Completion> DebuggerObject::getProperty(JSContext* cx,
+                                               HandleDebuggerObject object,
+                                               HandleId id,
+                                               HandleValue receiver_) {
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
@@ -12532,7 +12531,7 @@ bool DebuggerObject::getProperty(JSContext* cx, HandleDebuggerObject object,
   // that is where any exceptions must be reported.
   RootedValue receiver(cx, receiver_);
   if (!dbg->unwrapDebuggeeValue(cx, &receiver)) {
-    return false;
+    return cx->alreadyReportedError();
   }
 
   // Enter the debuggee compartment and rewrap all input value for that
@@ -12542,22 +12541,22 @@ bool DebuggerObject::getProperty(JSContext* cx, HandleDebuggerObject object,
   EnterDebuggeeObjectRealm(cx, ar, referent);
   if (!cx->compartment()->wrap(cx, &referent) ||
       !cx->compartment()->wrap(cx, &receiver)) {
-    return false;
+    return cx->alreadyReportedError();
   }
   cx->markId(id);
 
   LeaveDebuggeeNoExecute nnx(cx);
 
-  bool ok = GetProperty(cx, referent, receiver, id, result);
-
-  return dbg->receiveCompletionValue(ar, ok, result, result);
+  RootedValue result(cx);
+  bool ok = GetProperty(cx, referent, receiver, id, &result);
+  return Completion::fromJSResult(cx, ok, result);
 }
 
 /* static */
-bool DebuggerObject::setProperty(JSContext* cx, HandleDebuggerObject object,
-                                 HandleId id, HandleValue value_,
-                                 HandleValue receiver_,
-                                 MutableHandleValue result) {
+Result<Completion> DebuggerObject::setProperty(JSContext* cx,
+                                               HandleDebuggerObject object,
+                                               HandleId id, HandleValue value_,
+                                               HandleValue receiver_) {
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
@@ -12567,7 +12566,7 @@ bool DebuggerObject::setProperty(JSContext* cx, HandleDebuggerObject object,
   RootedValue receiver(cx, receiver_);
   if (!dbg->unwrapDebuggeeValue(cx, &value) ||
       !dbg->unwrapDebuggeeValue(cx, &receiver)) {
-    return false;
+    return cx->alreadyReportedError();
   }
 
   // Enter the debuggee compartment and rewrap all input value for that
@@ -12578,7 +12577,7 @@ bool DebuggerObject::setProperty(JSContext* cx, HandleDebuggerObject object,
   if (!cx->compartment()->wrap(cx, &referent) ||
       !cx->compartment()->wrap(cx, &value) ||
       !cx->compartment()->wrap(cx, &receiver)) {
-    return false;
+    return cx->alreadyReportedError();
   }
   cx->markId(id);
 
@@ -12587,8 +12586,8 @@ bool DebuggerObject::setProperty(JSContext* cx, HandleDebuggerObject object,
   ObjectOpResult opResult;
   bool ok = SetProperty(cx, referent, id, value, receiver, opResult);
 
-  result.setBoolean(ok && opResult.reallyOk());
-  return dbg->receiveCompletionValue(ar, ok, result, result);
+  return Completion::fromJSResult(cx, ok,
+                                  BooleanValue(ok && opResult.reallyOk()));
 }
 
 /* static */
