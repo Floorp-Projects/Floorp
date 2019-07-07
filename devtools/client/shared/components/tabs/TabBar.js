@@ -313,18 +313,7 @@ class Tabbar extends Component {
     });
 
     // Show a drop down menu with frames.
-    // XXX Missing menu API for specifying target (anchor)
-    // and relative position to it. See also:
-    // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Method/openPopup
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1274551
-    const rect = target.getBoundingClientRect();
-    const screenX = target.ownerDocument.defaultView.mozInnerScreenX;
-    const screenY = target.ownerDocument.defaultView.mozInnerScreenY;
-    menu.popupWithZoom(
-      rect.left + screenX,
-      rect.bottom + screenY,
-      this.props.menuDocument
-    );
+    menu.popupAtTarget(target, this.props.menuDocument);
 
     return menu;
   }

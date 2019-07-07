@@ -541,6 +541,14 @@ textarea.jsterm-input-node:focus {
 .jsterm-cm .cm-auto-complete-shadow-text::after {
   content: attr(title);
   color: var(--theme-comment);
+  /* This is important for the completion text not to move while the user is typing */
+  /* See Bugs 1491776 & 1558248 */
+  position: absolute;
+}
+
+.jsterm-cm .CodeMirror-hscrollbar {
+  /* We never want to see the horizontal scrollbar */
+  display: none !important;
 }
 
 /* Security styles */
