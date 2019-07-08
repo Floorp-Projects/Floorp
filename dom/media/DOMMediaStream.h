@@ -640,7 +640,6 @@ class DOMMediaStream
   nsCOMPtr<nsIPrincipal> mVideoPrincipal;
   nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*>
       mPrincipalChangeObservers;
-  CORSMode mCORSMode;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream, NS_DOMMEDIASTREAM_IID)
