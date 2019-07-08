@@ -148,7 +148,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         """
         from mozhttpd import MozHttpd
         from mozprofile import Preferences
-        from mozdevice import ADBDevice, ADBProcessError, ADBTimeoutError
+        from mozdevice import ADBDevice, ADBTimeoutError
         from six import string_types
         from marionette_driver.marionette import Marionette
 
@@ -256,22 +256,14 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
             # There is a delay between execute_script() returning and the profile data
             # actually getting written out, so poll the device until we get a profile.
             for i in range(50):
-                try:
-                    localprof = '/builds/worker/workspace/default.profraw'
-                    adbdevice.pull(profdata, localprof)
-                    stats = os.stat(localprof)
-                    if stats.st_size == 0:
-                        # The file may not have been fully written yet, so retry until we
-                        # get actual data.
-                        time.sleep(2)
-                    else:
-                        break
-                except ADBProcessError:
-                    # The file may not exist at all yet, which would raise an
-                    # ADBProcessError, so retry.
-                    time.sleep(2)
+                if not adbdevice.process_exist(app):
+                    break
+                time.sleep(2)
             else:
-                raise Exception("Unable to pull default.profraw")
+                raise Exception("Android App (%s) never quit" % app)
+
+            localprof = '/builds/worker/workspace/default.profraw'
+            adbdevice.pull(profdata, localprof)
             adbdevice.pull(jarlog, '/builds/worker/workspace/en-US.log')
         except ADBTimeoutError:
             self.fatal('INFRA-ERROR: Failed with an ADBTimeoutError',
