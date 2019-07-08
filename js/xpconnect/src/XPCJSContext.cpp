@@ -778,6 +778,7 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
 static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
   JSContext* cx = xpccx->Context();
 
+  bool useBaselineInterp = Preferences::GetBool(JS_OPTIONS_DOT_STR "blinterp");
   bool useBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");
   bool useIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion");
   bool useAsmJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "asmjs");
@@ -811,6 +812,8 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "jit.full_debug_checks");
 #endif
 
+  int32_t baselineInterpThreshold =
+      Preferences::GetInt(JS_OPTIONS_DOT_STR "blinterp.threshold", -1);
   int32_t baselineThreshold =
       Preferences::GetInt(JS_OPTIONS_DOT_STR "baselinejit.threshold", -1);
   int32_t normalIonThreshold =
@@ -907,8 +910,15 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
     xr->GetInSafeMode(&safeMode);
     if (safeMode) {
       JS::ContextOptionsRef(cx).disableOptionsForSafeMode();
+      useBaselineInterp = false;
     }
   }
+
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
+                                useBaselineInterp);
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
+      baselineInterpThreshold);
 
   JS_SetParallelParsingEnabled(cx, parallelParsing);
   JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
