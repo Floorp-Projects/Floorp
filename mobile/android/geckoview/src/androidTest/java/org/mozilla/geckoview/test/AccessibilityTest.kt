@@ -40,7 +40,6 @@ import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 
 const val DISPLAY_WIDTH = 480
 const val DISPLAY_HEIGHT = 640
@@ -48,7 +47,6 @@ const val DISPLAY_HEIGHT = 640
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 @WithDisplay(width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT)
-@WithDevToolsAPI
 class AccessibilityTest : BaseSessionTest() {
     lateinit var view: View
     val screenRect = Rect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)

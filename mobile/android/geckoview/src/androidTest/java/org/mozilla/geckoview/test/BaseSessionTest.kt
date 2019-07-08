@@ -153,22 +153,13 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
             sessionRule.synthesizeTap(this, x, y)
 
     fun GeckoSession.evaluateJS(js: String): Any? =
-            sessionRule.evaluateExtJS(this, js)
-
-    fun GeckoSession.evaluateExtJS(js: String): Any? =
-            sessionRule.evaluateExtJS(this, js)
+            sessionRule.evaluateJS(this, js)
 
     fun GeckoSession.evaluatePromiseJS(js: String): GeckoSessionTestRule.ExtensionPromise =
             sessionRule.evaluatePromiseJS(this, js)
 
     fun GeckoSession.waitForJS(js: String): Any? =
             sessionRule.waitForJS(this, js)
-
-    infix fun Any?.dot(prop: Any): Any? =
-            if (prop is Int) this.asJSList<Any>()[prop] else this.asJSMap<Any>()[prop]
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T> Any?.asJSMap(): Map<String, T> = this as Map<String, T>
 
     @Suppress("UNCHECKED_CAST")
     fun Any?.asJsonArray(): JSONArray = this as JSONArray
@@ -184,7 +175,4 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
         return result
     }
-
-    fun Any?.asJSPromise(): GeckoSessionTestRule.PromiseWrapper =
-            this as GeckoSessionTestRule.PromiseWrapper
 }

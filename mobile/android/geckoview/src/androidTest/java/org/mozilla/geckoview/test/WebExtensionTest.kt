@@ -18,7 +18,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.HttpBin
 import java.net.URI
@@ -35,7 +34,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun registerWebExtension() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
@@ -136,7 +134,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun contentMessaging() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
@@ -144,7 +141,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun backgroundMessaging() {
         testOnMessage(true)
     }
@@ -211,7 +207,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun contentPortMessaging() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
@@ -219,7 +214,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun backgroundPortMessaging() {
         testPortMessage(true)
     }
@@ -293,7 +287,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun contentPortDisconnect() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
@@ -306,7 +299,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun contentPortDisconnectAfterRefresh() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
@@ -373,7 +365,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun contentPortDisconnectFromApp() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
@@ -446,7 +437,6 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    @WithDevToolsAPI
     fun iframeTopLevel() {
         val httpBin = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
 

@@ -65,6 +65,13 @@
             "name": "selector"
           }
         ]
+      },
+      {
+        "name": "getRequestedLocales",
+        "type": "function",
+        "async": true,
+        "description": "Gets the requested locales.",
+        "parameters": []
       }
     ]
   }
