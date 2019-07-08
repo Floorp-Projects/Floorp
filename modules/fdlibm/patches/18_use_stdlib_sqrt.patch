@@ -1,0 +1,255 @@
+diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
+--- a/modules/fdlibm/src/e_acos.cpp
++++ b/modules/fdlibm/src/e_acos.cpp
+@@ -33,16 +33,17 @@
+  *
+  * Special cases:
+  *	if x is NaN, return x itself;
+  *	if |x|>1, return NaN with invalid signal.
+  *
+  * Function needed: sqrt
+  */
+ 
++#include <cmath>
+ #include <float.h>
+ 
+ #include "math_private.h"
+ 
+ static const double
+ one=  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+ pi =  3.14159265358979311600e+00, /* 0x400921FB, 0x54442D18 */
+ pio2_hi =  1.57079632679489655800e+00; /* 0x3FF921FB, 0x54442D18 */
+@@ -82,23 +83,23 @@ double
+ 	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
+ 	    q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));
+ 	    r = p/q;
+ 	    return pio2_hi - (x - (pio2_lo-x*r));
+ 	} else  if (hx<0) {		/* x < -0.5 */
+ 	    z = (one+x)*0.5;
+ 	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
+ 	    q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));
+-	    s = sqrt(z);
++	    s = std::sqrt(z);
+ 	    r = p/q;
+ 	    w = r*s-pio2_lo;
+ 	    return pi - 2.0*(s+w);
+ 	} else {			/* x > 0.5 */
+ 	    z = (one-x)*0.5;
+-	    s = sqrt(z);
++	    s = std::sqrt(z);
+ 	    df = s;
+ 	    SET_LOW_WORD(df,0);
+ 	    c  = (z-df*df)/(s+df);
+ 	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
+ 	    q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));
+ 	    r = p/q;
+ 	    w = r*s+c;
+ 	    return 2.0*(df+w);
+diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
+--- a/modules/fdlibm/src/e_acosh.cpp
++++ b/modules/fdlibm/src/e_acosh.cpp
+@@ -24,16 +24,17 @@
+  *		acosh(x) := log(2x-1/(sqrt(x*x-1)+x)) if x>2; else
+  *		acosh(x) := log1p(t+sqrt(2.0*t+t*t)); where t=x-1.
+  *
+  * Special cases:
+  *	acosh(x) is NaN with signal if x<1.
+  *	acosh(NaN) is NaN without signal.
+  */
+ 
++#include <cmath>
+ #include <float.h>
+ 
+ #include "math_private.h"
+ 
+ static const double
+ one	= 1.0,
+ ln2	= 6.93147180559945286227e-01;  /* 0x3FE62E42, 0xFEFA39EF */
+ 
+@@ -50,14 +51,14 @@ double
+ 	    if(hx >=0x7ff00000) {	/* x is inf of NaN */
+ 	        return x+x;
+ 	    } else 
+ 		return __ieee754_log(x)+ln2;	/* acosh(huge)=log(2x) */
+ 	} else if(((hx-0x3ff00000)|lx)==0) {
+ 	    return 0.0;			/* acosh(1) = 0 */
+ 	} else if (hx > 0x40000000) {	/* 2**28 > x > 2 */
+ 	    t=x*x;
+-	    return __ieee754_log(2.0*x-one/(x+sqrt(t-one)));
++	    return __ieee754_log(2.0*x-one/(x+std::sqrt(t-one)));
+ 	} else {			/* 1<x<2 */
+ 	    t = x-one;
+-	    return log1p(t+sqrt(2.0*t+t*t));
++	    return log1p(t+std::sqrt(2.0*t+t*t));
+ 	}
+ }
+diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
+--- a/modules/fdlibm/src/e_asin.cpp
++++ b/modules/fdlibm/src/e_asin.cpp
+@@ -39,16 +39,17 @@
+  *			= pio4_hi+(pio4-2f)-(2s*z*R(z)-(pio2_lo+2c))
+  *
+  * Special cases:
+  *	if x is NaN, return x itself;
+  *	if |x|>1, return NaN with invalid signal.
+  *
+  */
+ 
++#include <cmath>
+ #include <float.h>
+ 
+ #include "math_private.h"
+ 
+ static const double
+ one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+ huge =  1.000e+300,
+ pio2_hi =  1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
+@@ -90,17 +91,17 @@ double
+ 	    w = p/q;
+ 	    return x+x*w;
+ 	}
+ 	/* 1> |x|>= 0.5 */
+ 	w = one-fabs(x);
+ 	t = w*0.5;
+ 	p = t*(pS0+t*(pS1+t*(pS2+t*(pS3+t*(pS4+t*pS5)))));
+ 	q = one+t*(qS1+t*(qS2+t*(qS3+t*qS4)));
+-	s = sqrt(t);
++	s = std::sqrt(t);
+ 	if(ix>=0x3FEF3333) { 	/* if |x| > 0.975 */
+ 	    w = p/q;
+ 	    t = pio2_hi-(2.0*(s+s*w)-pio2_lo);
+ 	} else {
+ 	    w  = s;
+ 	    SET_LOW_WORD(w,0);
+ 	    c  = (t-w*w)/(s+w);
+ 	    r  = p/q;
+diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
+--- a/modules/fdlibm/src/e_hypot.cpp
++++ b/modules/fdlibm/src/e_hypot.cpp
+@@ -41,16 +41,17 @@
+  *	hypot(x,y) is INF if x or y is +INF or -INF; else
+  *	hypot(x,y) is NAN if x or y is NAN.
+  *
+  * Accuracy:
+  * 	hypot(x,y) returns sqrt(x^2+y^2) with error less 
+  * 	than 1 ulps (units in the last place) 
+  */
+ 
++#include <cmath>
+ #include <float.h>
+ 
+ #include "math_private.h"
+ 
+ double
+ __ieee754_hypot(double x, double y)
+ {
+ 	double a,b,t1,t2,y1,y2,w;
+@@ -100,26 +101,26 @@ double
+ 	    }
+ 	}
+     /* medium size a and b */
+ 	w = a-b;
+ 	if (w>b) {
+ 	    t1 = 0;
+ 	    SET_HIGH_WORD(t1,ha);
+ 	    t2 = a-t1;
+-	    w  = sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
++	    w  = std::sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
+ 	} else {
+ 	    a  = a+a;
+ 	    y1 = 0;
+ 	    SET_HIGH_WORD(y1,hb);
+ 	    y2 = b - y1;
+ 	    t1 = 0;
+ 	    SET_HIGH_WORD(t1,ha+0x00100000);
+ 	    t2 = a - t1;
+-	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
++	    w  = std::sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
+ 	}
+ 	if(k!=0) {
+ 	    u_int32_t high;
+ 	    t1 = 1.0;
+ 	    GET_HIGH_WORD(high,t1);
+ 	    SET_HIGH_WORD(t1,high+(k<<20));
+ 	    return t1*w;
+ 	} else return w;
+diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
+--- a/modules/fdlibm/src/e_pow.cpp
++++ b/modules/fdlibm/src/e_pow.cpp
+@@ -52,16 +52,18 @@
+  *
+  * Constants :
+  * The hexadecimal values are the intended ones for the following
+  * constants. The decimal values may be used, provided that the
+  * compiler will convert from decimal to binary accurately enough
+  * to produce the hexadecimal values shown.
+  */
+ 
++#include <cmath>
++
+ #include "math_private.h"
+ 
+ static const double
+ bp[] = {1.0, 1.5,},
+ dp_h[] = { 0.0, 5.84962487220764160156e-01,}, /* 0x3FE2B803, 0x40000000 */
+ dp_l[] = { 0.0, 1.35003920212974897128e-08,}, /* 0x3E4CFDEB, 0x43CFD006 */
+ zero    =  0.0,
+ one	=  1.0,
+@@ -147,17 +149,17 @@ double
+ 		    return (hy<0)?-y: zero;
+ 	    }
+ 	    if(iy==0x3ff00000) {	/* y is  +-1 */
+ 		if(hy<0) return one/x; else return x;
+ 	    }
+ 	    if(hy==0x40000000) return x*x; /* y is  2 */
+ 	    if(hy==0x3fe00000) {	/* y is  0.5 */
+ 		if(hx>=0)	/* x >= +0 */
+-		return sqrt(x);
++		return std::sqrt(x);
+ 	    }
+ 	}
+ 
+ 	ax   = fabs(x);
+     /* special value of x */
+ 	if(lx==0) {
+ 	    if(ix==0x7ff00000||ix==0||ix==0x3ff00000){
+ 		z = ax;			/*x is +-0,+-inf,+-1*/
+diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
+--- a/modules/fdlibm/src/s_asinh.cpp
++++ b/modules/fdlibm/src/s_asinh.cpp
+@@ -19,16 +19,17 @@
+  *		asinh(x) = sign(x) * log [ |x| + sqrt(x*x+1) ]
+  *	we have
+  *	asinh(x) := x  if  1+x*x=1,
+  *		 := sign(x)*(log(x)+ln2)) for large |x|, else
+  *		 := sign(x)*log(2|x|+1/(|x|+sqrt(x*x+1))) if|x|>2, else
+  *		 := sign(x)*log1p(|x| + x^2/(1 + sqrt(1+x^2)))
+  */
+ 
++#include <cmath>
+ #include <float.h>
+ 
+ #include "math_private.h"
+ 
+ static const double
+ one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+ ln2 =  6.93147180559945286227e-01, /* 0x3FE62E42, 0xFEFA39EF */
+ huge=  1.00000000000000000000e+300;
+@@ -43,15 +44,15 @@ asinh(double x)
+ 	if(ix>=0x7ff00000) return x+x;	/* x is inf or NaN */
+ 	if(ix< 0x3e300000) {	/* |x|<2**-28 */
+ 	    if(huge+x>one) return x;	/* return x inexact except 0 */
+ 	}
+ 	if(ix>0x41b00000) {	/* |x| > 2**28 */
+ 	    w = __ieee754_log(fabs(x))+ln2;
+ 	} else if (ix>0x40000000) {	/* 2**28 > |x| > 2.0 */
+ 	    t = fabs(x);
+-	    w = __ieee754_log(2.0*t+one/(__ieee754_sqrt(x*x+one)+t));
++	    w = __ieee754_log(2.0*t+one/(std::sqrt(x*x+one)+t));
+ 	} else {		/* 2.0 > |x| > 2**-28 */
+ 	    t = x*x;
+-	    w =log1p(fabs(x)+t/(one+__ieee754_sqrt(one+t)));
++	    w =log1p(fabs(x)+t/(one+std::sqrt(one+t)));
+ 	}
+ 	if(hx>0) return w; else return -w;
+ }
