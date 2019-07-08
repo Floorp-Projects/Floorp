@@ -148,6 +148,16 @@ bool FeaturePolicy::AllowsFeatureInternal(const nsAString& aFeatureName,
   return false;
 }
 
+void FeaturePolicy::Features(nsTArray<nsString>& aFeatures) {
+  RefPtr<FeaturePolicy> self = this;
+  FeaturePolicyUtils::ForEachFeature(
+      [self, &aFeatures](const char* aFeatureName) {
+        nsString featureName;
+        featureName.AppendASCII(aFeatureName);
+        aFeatures.AppendElement(featureName);
+      });
+}
+
 void FeaturePolicy::AllowedFeatures(nsTArray<nsString>& aAllowedFeatures) {
   RefPtr<FeaturePolicy> self = this;
   FeaturePolicyUtils::ForEachFeature(
