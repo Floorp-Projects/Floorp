@@ -25,20 +25,13 @@ class DecodedStreamTrackSource : public dom::MediaStreamTrackSource {
   explicit DecodedStreamTrackSource(OutputStreamManager* aManager,
                                     OutputStreamData* aData, TrackID aTrackID,
                                     nsIPrincipal* aPrincipal,
-                                    CORSMode aCORSMode,
                                     AbstractThread* aAbstractMainThread)
-      : dom::MediaStreamTrackSource(aPrincipal, nsString()),
-        mCORSMode(aCORSMode) {
+      : dom::MediaStreamTrackSource(aPrincipal, nsString()) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Other;
-  }
-
-  CORSMode GetCORSMode() const override {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mCORSMode;
   }
 
   void Stop() override {
@@ -62,8 +55,6 @@ class DecodedStreamTrackSource : public dom::MediaStreamTrackSource {
 
  protected:
   virtual ~DecodedStreamTrackSource() { MOZ_ASSERT(NS_IsMainThread()); }
-
-  const CORSMode mCORSMode;
 };
 
 NS_IMPL_ADDREF_INHERITED(DecodedStreamTrackSource, dom::MediaStreamTrackSource)
@@ -94,8 +85,7 @@ OutputStreamData::~OutputStreamData() {
 }
 
 void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
-                                nsIPrincipal* aPrincipal, CORSMode aCORSMode,
-                                bool aAsyncAddTrack) {
+                                nsIPrincipal* aPrincipal, bool aAsyncAddTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mDOMStream);
 
@@ -104,7 +94,7 @@ void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
       mDOMStream.get(), aAsyncAddTrack ? " (async)" : "");
 
   RefPtr<dom::MediaStreamTrackSource> source = new DecodedStreamTrackSource(
-      mManager, this, aTrackID, aPrincipal, aCORSMode, mAbstractMainThread);
+      mManager, this, aTrackID, aPrincipal, mAbstractMainThread);
   RefPtr<dom::MediaStreamTrack> track =
       mDOMStream->CreateDOMTrack(aTrackID, aType, source);
   mTracks.AppendElement(track.get());
@@ -147,7 +137,6 @@ void OutputStreamData::SetPrincipal(nsIPrincipal* aPrincipal) {
 OutputStreamManager::OutputStreamManager(SourceMediaStream* aSourceStream,
                                          TrackID aNextTrackID,
                                          nsIPrincipal* aPrincipal,
-                                         CORSMode aCORSMode,
                                          AbstractThread* aAbstractMainThread)
     : mSourceStream(aSourceStream),
       mAbstractMainThread(aAbstractMainThread),
@@ -156,7 +145,6 @@ OutputStreamManager::OutputStreamManager(SourceMediaStream* aSourceStream,
           aPrincipal ? MakePrincipalHandle(aPrincipal) : PRINCIPAL_HANDLE_NONE,
           "OutputStreamManager::mPrincipalHandle (Canonical)"),
       mPrincipal(aPrincipal),
-      mCORSMode(aCORSMode),
       mNextTrackID(aNextTrackID),
       mPlaying(true)  // mSourceStream always starts non-suspended
 {
@@ -176,7 +164,7 @@ void OutputStreamManager::Add(DOMMediaStream* aDOMStream) {
                                 this, mAbstractMainThread, aDOMStream))
                             ->get();
   for (const Pair<TrackID, MediaSegment::Type>& pair : mLiveTracks) {
-    p->AddTrack(pair.first(), pair.second(), mPrincipal, mCORSMode, false);
+    p->AddTrack(pair.first(), pair.second(), mPrincipal, false);
   }
 }
 
@@ -245,7 +233,7 @@ void OutputStreamManager::AddTrack(MediaSegment::Type aType) {
   mLiveTracks.AppendElement(MakePair(id, aType));
   AutoRemoveDestroyedStreams();
   for (const auto& data : mStreams) {
-    data->AddTrack(id, aType, mPrincipal, mCORSMode, true);
+    data->AddTrack(id, aType, mPrincipal, true);
   }
 }
 

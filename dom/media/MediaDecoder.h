@@ -172,9 +172,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  // Sets the CORSMode for MediaStreamTracks that will be created by us.
-  void SetOutputStreamCORSMode(CORSMode aCORSMode);
-
   // Add an output stream. All decoder output will be sent to the stream.
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
@@ -188,6 +185,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // Get the next TrackID to be allocated by DecodedStream,
   // or the last set TrackID if there is no DecodedStream sink.
   TrackID GetNextOutputStreamTrackID();
+
+  // Update the principal for any output streams and their tracks.
+  void SetOutputStreamPrincipal(nsIPrincipal* aPrincipal);
 
   // Return the duration of the video in seconds.
   virtual double GetDuration();
@@ -628,7 +628,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // True if the media is same-origin with the element. Data can only be
   // passed to MediaStreams when this is true.
-  Canonical<bool> mSameOriginMedia;
+  bool mSameOriginMedia;
 
   // We can allow video decoding in background when we match some special
   // conditions, eg. when the cursor is hovering over the tab. This observer is
@@ -646,9 +646,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   }
   AbstractCanonical<bool>* CanonicalLooping() { return &mLooping; }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
-  AbstractCanonical<bool>* CanonicalSameOriginMedia() {
-    return &mSameOriginMedia;
-  }
 
  private:
   // Notify owner when the audible state changed
