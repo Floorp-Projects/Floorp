@@ -520,6 +520,14 @@ impl<'a> Tokenizer<'a> {
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub struct SourcePosition(pub(crate) usize);
 
+impl SourcePosition {
+    /// Returns the current byte index in the original input.
+    #[inline]
+    pub fn byte_index(&self) -> usize {
+        self.0
+    }
+}
+
 /// The line and column number for a given position within the input.
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub struct SourceLocation {
