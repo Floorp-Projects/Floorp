@@ -166,10 +166,9 @@ bool gfxFontEntry::TestCharacterMap(uint32_t aCh) {
 nsresult gfxFontEntry::InitializeUVSMap() {
   // mUVSOffset will not be initialized
   // until cmap is initialized.
-  if (!mCharacterMap && !mShmemCharacterMap) {
+  if (!mCharacterMap) {
     ReadCMAP();
-    NS_ASSERTION(mCharacterMap || mShmemCharacterMap,
-                 "failed to initialize character map");
+    NS_ASSERTION(mCharacterMap, "failed to initialize character map");
   }
 
   if (!mUVSOffset) {
