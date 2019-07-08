@@ -8,8 +8,8 @@
  * same domain.
  */
 
-const SIMPLE_URL = URL_ROOT + "service-workers/simple.html";
-const OTHER_SCOPE_URL = URL_ROOT + "service-workers/scope-page.html";
+const SIMPLE_URL = URL_ROOT + "resources/service-workers/simple.html";
+const OTHER_SCOPE_URL = URL_ROOT + "resources/service-workers/scope-page.html";
 
 add_task(async function() {
   await enableApplicationPanel();

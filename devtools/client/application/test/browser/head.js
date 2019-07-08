@@ -3,7 +3,7 @@
 
 /* eslint-env browser */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* import-globals-from ../../shared/test/shared-head.js */
+/* import-globals-from ../../../shared/test/shared-head.js */
 
 "use strict";
 
