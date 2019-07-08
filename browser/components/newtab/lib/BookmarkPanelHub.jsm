@@ -127,9 +127,9 @@ class _BookmarkPanelHub {
 
     const createElement = elem =>
       target.document.createElementNS("http://www.w3.org/1999/xhtml", elem);
-
-    if (!target.container.querySelector("#cfrMessageContainer")) {
-      const recommendation = createElement("div");
+    let recommendation = target.container.querySelector("#cfrMessageContainer");
+    if (!recommendation) {
+      recommendation = createElement("div");
       const headerContainer = createElement("div");
       headerContainer.classList.add("cfrMessageHeader");
       recommendation.setAttribute("id", "cfrMessageContainer");
@@ -190,6 +190,41 @@ class _BookmarkPanelHub {
     }
 
     this.toggleRecommendation(true);
+    this._adjustPanelHeight(win, recommendation);
+  }
+
+  /**
+   * Adjust the size of the container for locales where the message is
+   * longer than the fixed 150px set for height
+   */
+  async _adjustPanelHeight(window, messageContainer) {
+    const { document } = window;
+    // Contains the screenshot of the page we are bookmarking
+    const screenshotContainer = document.getElementById(
+      "editBookmarkPanelImage"
+    );
+    // Wait for strings to be added which can change element height
+    await document.l10n.translateElements([messageContainer]);
+    window.requestAnimationFrame(() => {
+      let { height } = messageContainer.getBoundingClientRect();
+      if (height > 150) {
+        messageContainer.classList.add("longMessagePadding");
+        // Get the new value with the added padding
+        height = messageContainer.getBoundingClientRect().height;
+        // Needs to be adjusted to match the message height
+        screenshotContainer.style.height = `${height}px`;
+      }
+    });
+  }
+
+  /**
+   * Restore the panel back to the original size so the slide in
+   * animation can run again
+   */
+  _restorePanelHeight(window) {
+    const { document } = window;
+    // Contains the screenshot of the page we are bookmarking
+    document.getElementById("editBookmarkPanelImage").style.height = "";
   }
 
   toggleRecommendation(visible) {
@@ -224,6 +259,7 @@ class _BookmarkPanelHub {
         target || this._response.target
       ).container.querySelector("#cfrMessageContainer");
       if (container) {
+        this._restorePanelHeight(this._response.win);
         container.remove();
       }
     }
@@ -250,7 +286,7 @@ class _BookmarkPanelHub {
     // Remove any existing message
     this.hideMessage(panelTarget);
     // Reset the reference to the panel elements
-    this._response = { target: panelTarget };
+    this._response = { target: panelTarget, win };
     // Required if we want to preview messages that include fluent strings
     win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
     win.MozXULElement.insertFTLIfNeeded("browser/branding/sync-brand.ftl");
