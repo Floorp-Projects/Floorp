@@ -25,10 +25,12 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.net.URI
@@ -280,7 +282,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                     GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", request.uri, notNullValue())
-                assertThat("URI should match", request.uri, startsWith("resource://android"))
+                assertThat("URI should match", request.uri,
+                        startsWith(GeckoSessionTestRule.TEST_ENDPOINT))
                 return null
             }
         })
@@ -997,7 +1000,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
         sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
             // We get two onLoadRequest calls for the link click,
@@ -1044,7 +1047,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        // about:blank
+        newSession.waitForPageStop()
+        // NEW_SESSION_CHILD_HTML_PATH
         newSession.waitForPageStop()
 
         newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
@@ -1069,7 +1075,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
         newSession.waitForPageStop()
 
         assertThat("window.opener should be set",
@@ -1088,15 +1094,20 @@ class NavigationDelegateTest : BaseSessionTest() {
                    mainSession.settings.useMultiprocess,
                    equalTo(false))
 
+        mainSession.loadTestPath(HELLO_HTML_PATH);
+        mainSession.waitForPageStop();
+
         val newSession = delegateNewSession(
                 GeckoSessionSettings.Builder(mainSession.settings)
                 .useMultiprocess(true)
                 .build())
-        mainSession.evaluateJS("window.open('http://example.com')")
+
+        mainSession.evaluateJS("window.open('http://example.com'); true")
         newSession.waitForPageStop()
 
         assertThat("window.opener should be set",
-                   newSession.evaluateJS("window.opener"), notNullValue())
+                   newSession.evaluateJS("window.opener != null") as Boolean,
+                   equalTo(true))
     }
 
     @WithDevToolsAPI
@@ -1108,11 +1119,12 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        sessionRule.session.evaluateJS("$('#noOpenerLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#noOpenerLink').click()")
         newSession.waitForPageStop()
 
         assertThat("window.opener should not be set",
-                   newSession.evaluateJS("window.opener"), nullValue())
+                   newSession.evaluateJS("window.opener"),
+                   equalTo(JSONObject.NULL))
     }
 
     @WithDevToolsAPI
@@ -1138,7 +1150,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
@@ -1190,7 +1202,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
         sessionRule.session.waitUntilCalled(GeckoSession.NavigationDelegate::class,
                                             "onNewSession")

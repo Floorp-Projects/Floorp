@@ -4,7 +4,6 @@
 
 package org.mozilla.geckoview.test
 
-import android.app.assist.AssistStructure
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.net.Uri
@@ -21,7 +20,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
-import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
@@ -35,21 +33,16 @@ import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import android.widget.EditText
 import org.hamcrest.Matchers.*
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.test.util.HttpBin
-
-import java.net.URI
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ContentDelegateTest : BaseSessionTest() {
-    companion object {
-        val TEST_ENDPOINT: String = "http://localhost:4243"
-    }
-
     @Test fun titleChange() {
         sessionRule.session.loadTestPath(TITLE_CHANGE_HTML_PATH)
 
@@ -206,16 +199,21 @@ class ContentDelegateTest : BaseSessionTest() {
         // Set up promises to monitor the values changing.
         val promises = autoFills.flatMap { entry ->
             // Repeat each test with both the top document and the iframe document.
-            arrayOf("document", "$('#iframe').contentDocument").map { doc ->
-                mainSession.evaluateJS("""new Promise(resolve =>
-                $doc.querySelector('${entry.key}').addEventListener(
-                    'input', event => {
-                      let eventInterface =
-                        event instanceof InputEvent ? "InputEvent" :
-                        event instanceof UIEvent ? "UIEvent" :
-                        event instanceof Event ? "Event" : "Unknown";
-                      resolve(['${entry.key}', event.target.value, '${entry.value}', eventInterface]);
-                    }, { once: true }))""").asJSPromise()
+            arrayOf("document", "document.querySelector('#iframe').contentDocument").map { doc ->
+                mainSession.evaluatePromiseJS("""new Promise(resolve =>
+                    $doc.querySelector('${entry.key}').addEventListener(
+                      'input', event => {
+                        let eventInterface =
+                          event instanceof InputEvent ? "InputEvent" :
+                          event instanceof UIEvent ? "UIEvent" :
+                          event instanceof Event ? "Event" : "Unknown";
+                        resolve([
+                          '${entry.key}',
+                          event.target.value,
+                          '${entry.value}',
+                          eventInterface
+                        ]);
+                }, { once: true }))""")
             }
         }
 
@@ -238,7 +236,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Should have HTML tag",
                            child.htmlInfo!!.tag, not(isEmptyOrNullString()))
                 assertThat("Web domain should match",
-                           child.webDomain, equalTo("android"))
+                           child.webDomain, equalTo(GeckoSessionTestRule.TEST_ENDPOINT))
             }
 
             if (EditText::class.java.name == child.className) {
@@ -368,7 +366,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat("Should not have focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
 
-        mainSession.evaluateJS("$('#pass1').focus()")
+        mainSession.evaluateJS("document.querySelector('#pass1').focus()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
@@ -385,7 +383,7 @@ class ContentDelegateTest : BaseSessionTest() {
                    countAutoFillNodes({ node -> node.width > 0 && node.height > 0 }),
                    equalTo(7))
 
-        mainSession.evaluateJS("$('#pass1').blur()")
+        mainSession.evaluateJS("document.querySelector('#pass1').blur()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
             @AssertCalled(count = 1)
             override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
@@ -722,7 +720,7 @@ class ContentDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("full-screen-api.allow-trusted-requests-only" to false))
         mainSession.loadTestPath(FULLSCREEN_PATH)
         mainSession.waitForPageStop()
-        mainSession.evaluateJS("$('#fullscreen').requestFullscreen()")
+        mainSession.evaluateJS("document.querySelector('#fullscreen').requestFullscreen(); true")
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
                 assertThat("Div went fullscreen", fullScreen, equalTo(true))
@@ -741,7 +739,7 @@ class ContentDelegateTest : BaseSessionTest() {
     @WithDevToolsAPI
     @Test fun fullscreen() {
         goFullscreen()
-        mainSession.evaluateJS("document.exitFullscreen()")
+        mainSession.evaluateJS("document.exitFullscreen(); true")
         waitForFullscreenExit()
     }
 
@@ -776,42 +774,33 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @Test fun webAppManifest() {
-        val httpBin = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page load should succeed", success, equalTo(true))
+            }
 
-        try {
-            httpBin.start()
+            @AssertCalled(count = 1)
+            override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
+                // These values come from the manifest at assets/www/manifest.webmanifest
+                assertThat("name should match", manifest.getString("name"), equalTo("App"))
+                assertThat("short_name should match", manifest.getString("short_name"), equalTo("app"))
+                assertThat("display should match", manifest.getString("display"), equalTo("standalone"))
 
-            mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
-            mainSession.waitUntilCalled(object : Callbacks.All {
+                // The color here is "cadetblue" converted to hex.
+                assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#5f9ea0"))
+                assertThat("background_color should match", manifest.getString("background_color"), equalTo("#c0feee"))
+                assertThat("start_url should match", manifest.getString("start_url"), endsWith("/assets/www/start/index.html"))
 
-                @AssertCalled(count = 1)
-                override fun onPageStop(session: GeckoSession, success: Boolean) {
-                    assertThat("Page load should succeed", success, equalTo(true))
-                }
+                val icon = manifest.getJSONArray("icons").getJSONObject(0);
 
-                @AssertCalled(count = 1)
-                override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
-                    // These values come from the manifest at assets/www/manifest.webmanifest
-                    assertThat("name should match", manifest.getString("name"), equalTo("App"))
-                    assertThat("short_name should match", manifest.getString("short_name"), equalTo("app"))
-                    assertThat("display should match", manifest.getString("display"), equalTo("standalone"))
-
-                    // The color here is "cadetblue" converted to hex.
-                    assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#5f9ea0"))
-                    assertThat("background_color should match", manifest.getString("background_color"), equalTo("#c0feee"))
-                    assertThat("start_url should match", manifest.getString("start_url"), equalTo("$TEST_ENDPOINT/assets/www/start/index.html"))
-
-                    val icon = manifest.getJSONArray("icons").getJSONObject(0);
-
-                    val iconSrc = Uri.parse(icon.getString("src"))
-                    assertThat("icon should have a valid src", iconSrc, notNullValue())
-                    assertThat("icon src should be absolute", iconSrc.isAbsolute, equalTo(true))
-                    assertThat("icon should have sizes", icon.getString("sizes"),  not(isEmptyOrNullString()))
-                    assertThat("icon type should match", icon.getString("type"), equalTo("image/gif"))
-                }
-            })
-        } finally {
-            httpBin.stop()
-        }
+                val iconSrc = Uri.parse(icon.getString("src"))
+                assertThat("icon should have a valid src", iconSrc, notNullValue())
+                assertThat("icon src should be absolute", iconSrc.isAbsolute, equalTo(true))
+                assertThat("icon should have sizes", icon.getString("sizes"),  not(isEmptyOrNullString()))
+                assertThat("icon type should match", icon.getString("type"), equalTo("image/gif"))
+            }
+        })
     }
 }

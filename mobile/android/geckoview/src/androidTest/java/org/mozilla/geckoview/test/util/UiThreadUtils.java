@@ -139,7 +139,14 @@ public class UiThreadUtils {
 
         TIMEOUT_RUNNABLE.set(timeout);
 
+        MessageQueue.IdleHandler handler = null;
         try {
+            handler = () -> {
+                HANDLER.postDelayed(() -> {}, 100);
+                return true;
+            };
+
+            HANDLER.getLooper().getQueue().addIdleHandler(handler);
             while (!condition.test()) {
                 final Message msg;
                 try {
@@ -155,6 +162,9 @@ public class UiThreadUtils {
             }
         } finally {
             TIMEOUT_RUNNABLE.cancel();
+            if (handler != null) {
+                HANDLER.getLooper().getQueue().removeIdleHandler(handler);
+            }
         }
     }
 }

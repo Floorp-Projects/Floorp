@@ -21,6 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TEST_ENDPOINT
 
 @RunWith(AndroidJUnit4::class)
 @TimeoutMillis(45000)
@@ -134,7 +135,7 @@ class MediaElementTest : BaseSessionTest() {
 
     private fun playMediaFromScript(path: String) {
         waitUntilVideoReady(path)
-        sessionRule.evaluateJS(mainSession, "$('video').play()")
+        mainSession.evaluateJS("document.querySelector('video').play()")
         waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAY)
         waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAYING)
     }
@@ -201,7 +202,7 @@ class MediaElementTest : BaseSessionTest() {
 
     private fun fullscreenMedia(path: String) {
         waitUntilVideoReady(path)
-        sessionRule.evaluateJS(mainSession, "$('video').requestFullscreen()")
+        mainSession.evaluateJS("document.querySelector('video').requestFullscreen()")
         var waiting = true
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
@@ -244,7 +245,8 @@ class MediaElementTest : BaseSessionTest() {
     @Test
     fun oggMetadataMedia() {
         val meta = waitForMetadata(VIDEO_OGG_PATH)
-        assertThat("Current source is set", meta?.currentSource, equalTo("resource://android/assets/www/videos/video.ogg"))
+        assertThat("Current source is set", meta?.currentSource,
+                equalTo("$TEST_ENDPOINT/assets/www/videos/video.ogg"))
         assertThat("Width is set", meta?.width, equalTo(320L))
         assertThat("Height is set", meta?.height, equalTo(240L))
         assertThat("Video is seekable", meta?.isSeekable, equalTo(true))
@@ -296,7 +298,8 @@ class MediaElementTest : BaseSessionTest() {
     @Test
     fun webmMetadataMedia() {
         val meta = waitForMetadata(VIDEO_WEBM_PATH)
-        assertThat("Current source is set", meta?.currentSource, equalTo("resource://android/assets/www/videos/gizmo.webm"))
+        assertThat("Current source is set", meta?.currentSource,
+                equalTo("$TEST_ENDPOINT/assets/www/videos/gizmo.webm"))
         assertThat("Width is set", meta?.width, equalTo(560L))
         assertThat("Height is set", meta?.height, equalTo(320L))
         assertThat("Video is seekable", meta?.isSeekable, equalTo(true))
@@ -377,7 +380,8 @@ class MediaElementTest : BaseSessionTest() {
     fun mp4MetadataMedia() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
         val meta = waitForMetadata(VIDEO_MP4_PATH)
-        assertThat("Current source is set", meta?.currentSource, equalTo("resource://android/assets/www/videos/short.mp4"))
+        assertThat("Current source is set", meta?.currentSource,
+                equalTo("$TEST_ENDPOINT/assets/www/videos/short.mp4"))
         assertThat("Width is set", meta?.width, equalTo(320L))
         assertThat("Height is set", meta?.height, equalTo(240L))
         assertThat("Video is seekable", meta?.isSeekable, equalTo(true))
@@ -438,7 +442,7 @@ class MediaElementTest : BaseSessionTest() {
         sessionRule.runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         val media = waitUntilVideoReadyNoPrefs(AUTOPLAY_PATH)
-        val promise = sessionRule.evaluateJS(mainSession, "$('video').play()").asJSPromise()
+        val promise = sessionRule.evaluateJS(mainSession, "document.querySelector('video').play()").asJSPromise()
         var exceptionCaught = false
         try {
             val result = promise.value as Boolean
@@ -461,7 +465,7 @@ class MediaElementTest : BaseSessionTest() {
         sessionRule.runtime.settings.autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED
 
         val media = waitUntilVideoReadyNoPrefs(VIDEO_WEBM_PATH)
-        val promise = sessionRule.evaluateJS(mainSession, "$('video').play()").asJSPromise()
+        val promise = sessionRule.evaluateJS(mainSession, "document.querySelector('video').play()").asJSPromise()
         var exceptionCaught = false
         try {
             promise.value
