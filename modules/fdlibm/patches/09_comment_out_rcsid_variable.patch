@@ -325,30 +325,6 @@ diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
   *	2. 
   *		                                    E + E/(E+1)
   *	    0        <= x <= 22     :  sinh(x) := --------------, E=expm1(x)
-diff --git a/modules/fdlibm/src/e_sqrt.cpp b/modules/fdlibm/src/e_sqrt.cpp
---- a/modules/fdlibm/src/e_sqrt.cpp
-+++ b/modules/fdlibm/src/e_sqrt.cpp
-@@ -6,18 +6,18 @@
-  *
-  * Developed at SunSoft, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* __ieee754_sqrt(x)
-  * Return correctly rounded sqrt.
-  *           ------------------------------------------
-  *	     |  Use the hardware sqrt if you have one |
-  *           ------------------------------------------
-  * Method: 
-  *   Bit by bit method using integer arithmetic. (Slow, but portable) 
 diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 --- a/modules/fdlibm/src/k_exp.cpp
 +++ b/modules/fdlibm/src/k_exp.cpp
