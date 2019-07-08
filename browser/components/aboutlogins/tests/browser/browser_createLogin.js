@@ -86,7 +86,7 @@ add_task(async function test_create_login() {
         ok(loginFound, "Expected number of logins found in login-list");
 
         let loginListItem = [
-          ...loginList.shadowRoot.querySelectorAll("login-list-item"),
+          ...loginList.shadowRoot.querySelectorAll(".login-list-item"),
         ].find(l => l._login.origin == aOriginTuple[1]);
         ok(
           !!loginListItem,

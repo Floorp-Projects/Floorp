@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import LoginListItem from "./login-list-item.js";
+import LoginListItemFactory from "./login-list-item.js";
 import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 
 const collator = new Intl.Collator();
@@ -18,7 +18,7 @@ export default class LoginList extends HTMLElement {
     this._logins = [];
     this._filter = "";
     this._selectedGuid = null;
-    this._blankLoginListItem = new LoginListItem({});
+    this._blankLoginListItem = LoginListItemFactory.create({});
   }
 
   connectedCallback() {
@@ -44,6 +44,7 @@ export default class LoginList extends HTMLElement {
     window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
+    this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
     this._createLoginButton.addEventListener("click", this);
   }
@@ -85,7 +86,7 @@ export default class LoginList extends HTMLElement {
     let chunkSize = 5;
     for (let i = 0; i < this._logins.length; i++) {
       let login = this._logins[i];
-      let listItem = new LoginListItem(login);
+      let listItem = LoginListItemFactory.create(login);
       if (login.guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
       }
@@ -109,15 +110,33 @@ export default class LoginList extends HTMLElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "click": {
+        if (event.originalTarget == this._createLoginButton) {
+          window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
+          recordTelemetryEvent({ object: "new_login", method: "new" });
+          return;
+        }
+
+        let loginListItem = event.originalTarget.closest(".login-list-item");
+        if (!loginListItem || !loginListItem.dataset.guid) {
+          return;
+        }
+
+        this.dispatchEvent(
+          new CustomEvent("AboutLoginsLoginSelected", {
+            bubbles: true,
+            composed: true,
+            detail: loginListItem._login,
+          })
+        );
+
+        recordTelemetryEvent({ object: "existing_login", method: "select" });
+        break;
+      }
       case "change": {
         const sort = this._sortSelect.value;
         this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
         this.render();
-        break;
-      }
-      case "click": {
-        window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
-        recordTelemetryEvent({ object: "new_login", method: "new" });
         break;
       }
       case "AboutLoginsClearSelection": {
@@ -147,7 +166,7 @@ export default class LoginList extends HTMLElement {
         }
 
         let listItem = this._list.querySelector(
-          `login-list-item[data-guid="${event.detail.guid}"]`
+          `.login-list-item[data-guid="${event.detail.guid}"]`
         );
         if (listItem) {
           this._setListItemAsSelected(listItem);
@@ -179,7 +198,7 @@ export default class LoginList extends HTMLElement {
     ) {
       // Select the first visible login after any possible filter is applied.
       let firstVisibleListItem = this._list.querySelector(
-        "login-list-item[data-guid]:not([hidden])"
+        ".login-list-item[data-guid]:not([hidden])"
       );
       if (firstVisibleListItem) {
         this._selectedGuid = firstVisibleListItem.dataset.guid;
