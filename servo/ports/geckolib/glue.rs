@@ -6607,11 +6607,6 @@ pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Quotes_GetInitialValue() -> style_traits::arc_slice::ForgottenArcSlicePtr<specified::list::QuotePair> {
-    computed::Quotes::get_initial_value().0.forget()
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Create(
     buffer: *mut u8,
     len: usize,
