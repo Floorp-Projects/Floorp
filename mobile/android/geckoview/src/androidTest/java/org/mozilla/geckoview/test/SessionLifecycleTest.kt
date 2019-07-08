@@ -215,6 +215,9 @@ class SessionLifecycleTest : BaseSessionTest() {
     @Test fun readFromParcel_moduleUpdated() {
         val session = sessionRule.createOpenSession()
 
+        session.loadTestPath(HELLO_HTML_PATH)
+        session.waitForPageStop()
+
         // Disable navigation notifications on the old, open session.
         assertThat("Old session navigation delegate should be null",
                    session.navigationDelegate, nullValue())

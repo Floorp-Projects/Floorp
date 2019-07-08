@@ -1085,8 +1085,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                    mainSession.settings.useMultiprocess,
                    equalTo(false))
 
-        mainSession.loadTestPath(HELLO_HTML_PATH);
-        mainSession.waitForPageStop();
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
 
         val newSession = delegateNewSession(
                 GeckoSessionSettings.Builder(mainSession.settings)
