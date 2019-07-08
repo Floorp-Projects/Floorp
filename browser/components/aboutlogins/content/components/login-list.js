@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import LoginListItem from "./login-list-item.js";
-import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 
 const collator = new Intl.Collator();
 const sortFnOptions = {
@@ -30,10 +29,9 @@ export default class LoginList extends HTMLElement {
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginListTemplate.content.cloneNode(true));
 
-    this._count = shadowRoot.querySelector(".count");
-    this._createLoginButton = shadowRoot.querySelector(".create-login-button");
-    this._list = shadowRoot.querySelector("ol");
-    this._sortSelect = shadowRoot.querySelector("#login-sort");
+    this._count = this.shadowRoot.querySelector(".count");
+    this._list = this.shadowRoot.querySelector("ol");
+    this._sortSelect = this.shadowRoot.querySelector("#login-sort");
 
     this.render();
 
@@ -46,7 +44,6 @@ export default class LoginList extends HTMLElement {
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
     this.addEventListener("keydown", this);
-    this._createLoginButton.addEventListener("click", this);
   }
 
   /**
@@ -97,11 +94,6 @@ export default class LoginList extends HTMLElement {
         const sort = this._sortSelect.value;
         this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
         this.render();
-        break;
-      }
-      case "click": {
-        window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
-        recordTelemetryEvent({ object: "new_login", method: "new" });
         break;
       }
       case "AboutLoginsClearSelection": {
