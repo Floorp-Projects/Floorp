@@ -126,6 +126,11 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // closed.
   bool IsInProcess() const { return mIsInProcess; }
 
+  // Has this BrowsingContext been discarded. A discarded browsing context has
+  // been destroyed, and may not be available on the other side of an IPC
+  // message.
+  bool IsDiscarded() const { return mIsDiscarded; }
+
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
   nsIDocShell* GetDocShell() { return mDocShell; }
