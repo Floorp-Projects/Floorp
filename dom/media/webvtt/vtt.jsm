@@ -546,7 +546,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       } else {
         this._applyNonPseudoCueStyles();
       }
-      this.applyStyles(this._getNodeDefaultStyles(cue));
+      this._applyDefaultStylesOnRootNode();
     }
 
     getCueBoxPositionAndSize() {
@@ -608,7 +608,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       // too large area for the background color as the size of root node won't
       // be adjusted by cue size.
       this.applyStyles({
-        "color": "rgba(255, 255, 255, 1)",
         "white-space": "pre-line",
         "font": this.fontSize + " sans-serif",
         "background-color": "rgba(0, 0, 0, 0.8)",
@@ -617,42 +616,43 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     }
 
     // spec https://www.w3.org/TR/webvtt1/#applying-css-properties
-    _getNodeDefaultStyles(cue) {
-      let styles = {
-        "position": "absolute",
-        // "unicode-bidi": "plaintext", (uncomment this line after fixing bug1558431)
-        "overflow-wrap": "break-word",
-        // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
-        "font": this.fontSize + " sans-serif",
-        "white-space": "pre-line",
-        "text-align": cue.align,
-      }
-
-      this._processCueSetting(cue, styles);
-      return styles;
-    }
-
-    // spec https://www.w3.org/TR/webvtt1/#processing-cue-settings
-    _processCueSetting(cue, styles) {
+    _applyDefaultStylesOnRootNode() {
+      // The variables writing-mode, top, left, width, and height are calculated
+      // in the spec 7.2, https://www.w3.org/TR/webvtt1/#processing-cue-settings
       // spec 7.2.1, calculate 'writing-mode'.
-      styles["writing-mode"] = this._getCueWritingMode(cue);
+      const writingMode = this._getCueWritingMode();
 
       // spec 7.2.2 ~ 7.2.7, calculate 'width', 'height', 'left' and 'top'.
-      const {width, height, left, top} = this._getCueSizeAndPosition(cue);
-      styles["width"] = width;
-      styles["height"] = height;
-      styles["left"] = left;
-      styles["top"] = top;
+      const {width, height, left, top} = this._getCueSizeAndPosition();
+
+      this.applyStyles({
+        "position": "absolute",
+        // "unicode-bidi": "plaintext", (uncomment this line after fixing bug1558431)
+        "writing-mode": writingMode,
+        "top": top,
+        "left": left,
+        "width": width,
+        "height": height,
+        "overflow-wrap": "break-word",
+        // "text-wrap": "balance", (we haven't supported this CSS attribute yet)
+        "white-space": "pre-line",
+        "font": this.fontSize + " sans-serif",
+        "color": "rgba(255, 255, 255, 1)",
+        "white-space": "pre-line",
+        "text-align": this.cue.align,
+      });
     }
 
-    _getCueWritingMode(cue) {
+    _getCueWritingMode() {
+      const cue = this.cue;
       if (cue.vertical == "") {
         return "horizontal-tb";
       }
       return cue.vertical == "lr" ? "vertical-lr" : "vertical-rl";
     }
 
-    _getCueSizeAndPosition(cue) {
+    _getCueSizeAndPosition() {
+      const cue = this.cue;
       // spec 7.2.2, determine the value of maximum size for cue as per the
       // appropriate rules from the following list.
       let maximumSize;
