@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = ["Target"];
 const { Connection } = ChromeUtils.import(
   "chrome://remote/content/Connection.jsm"
 );
-const { WebSocketDebuggerTransport } = ChromeUtils.import(
+const { WebSocketTransport } = ChromeUtils.import(
   "chrome://remote/content/server/WebSocketTransport.jsm"
 );
 const { WebSocketHandshake } = ChromeUtils.import(
@@ -43,7 +43,7 @@ class Target {
 
   async handle(request, response) {
     const so = await WebSocketHandshake.upgrade(request, response);
-    const transport = new WebSocketDebuggerTransport(so);
+    const transport = new WebSocketTransport(so);
     const conn = new Connection(transport, response._connection);
     this.sessions.set(conn, new this.sessionClass(conn, this));
   }
