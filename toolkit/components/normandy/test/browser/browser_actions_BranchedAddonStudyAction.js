@@ -780,6 +780,10 @@ decorate_task(
   async function unenrollMissingAddonTest([study], sendEventStub) {
     const action = new BranchedAddonStudyAction();
 
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.monitorConsole(() => SimpleTest.finish(), [
+      { message: /could not uninstall addon/i },
+    ]);
     await action.unenroll(study.recipeId);
 
     sendEventStub.assertEvents([

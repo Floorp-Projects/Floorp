@@ -137,8 +137,6 @@ enum StructuredCloneTags {
 
   SCTAG_DOM_STRUCTURED_CLONE_HOLDER,
 
-  SCTAG_DOM_BROWSING_CONTEXT,
-
   // IMPORTANT: If you plan to add an new IDB tag, it _must_ be add before the
   // "less stable" tags!
 };

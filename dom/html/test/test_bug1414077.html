@@ -12,34 +12,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1414077
 
 /** Test for Bug 1414077 **/
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+SimpleTest.waitForExplicitFinish();
 
-add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.enable_automatic_image_resizing", true]]});
+SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, function() {
+  var testWin = document.querySelector("iframe");
+  testWin.height = 0;
+  testWin.width = 0;
+  testWin.src = "image.png";
+  testWin.onload = function() {
+    var testDoc = testWin.contentDocument;
 
-  return new Promise(resolve => {
-    var testWin = document.querySelector("iframe");
-    testWin.src = "image.png";
-    testWin.onload = function() {
-      var testDoc = testWin.contentDocument;
+    // testDoc should be a image document.
+    ok(testDoc.imageIsOverflowing, "image is overflowing");
+    ok(testDoc.imageIsResized, "image is resized to fit visible area by default");
 
-      // testDoc should be a image document.
-      ok(testDoc.imageIsOverflowing, "image is overflowing");
-      ok(testDoc.imageIsResized, "image is resized to fit visible area by default");
+    // Restore image to original size.
+    testDoc.restoreImage();
+    ok(testDoc.imageIsOverflowing, "image is overflowing");
+    ok(!testDoc.imageIsResized, "image is restored to original size");
 
-      // Restore image to original size.
-      testDoc.restoreImage();
-      ok(testDoc.imageIsOverflowing, "image is overflowing");
-      ok(!testDoc.imageIsResized, "image is restored to original size");
+    // Resize the image to fit visible area
+    testDoc.shrinkToFit();
+    ok(testDoc.imageIsOverflowing, "image is overflowing");
+    ok(testDoc.imageIsResized, "image is resized to fit visible area");
 
-      // Resize the image to fit visible area
-      testDoc.shrinkToFit();
-      ok(testDoc.imageIsOverflowing, "image is overflowing");
-      ok(testDoc.imageIsResized, "image is resized to fit visible area");
-
-      resolve();
-    };
-  })
+    SimpleTest.finish();
+  };
 });
 
 </script>
@@ -47,6 +45,6 @@ add_task(async function() {
 
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1414077">Mozilla Bug 1414077</a>
-<iframe width="0" height="0"></iframe>
+<iframe></iframe>
 </body>
 </html>
