@@ -814,7 +814,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
 
   js::WriteOnceData<bool> jitSupportsFloatingPoint;
   js::WriteOnceData<bool> jitSupportsUnalignedAccesses;
-  js::WriteOnceData<bool> jitSupportsSimd;
 
  private:
   static mozilla::Atomic<size_t> liveRuntimesCount;
