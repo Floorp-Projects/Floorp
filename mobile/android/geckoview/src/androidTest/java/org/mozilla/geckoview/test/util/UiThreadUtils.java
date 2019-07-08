@@ -126,6 +126,35 @@ public class UiThreadUtils {
         }
     }
 
+    public interface Condition {
+        boolean test();
+    }
+
+    public static void waitForCondition(Condition condition, final long timeout) {
+         // Adapted from GeckoThread.pumpMessageLoop.
+        final MessageQueue queue = HANDLER.getLooper().getQueue();
+
+        TIMEOUT_RUNNABLE.set(timeout);
+
+        try {
+            while (!condition.test()) {
+                final Message msg;
+                try {
+                    msg = (Message) sGetNextMessage.invoke(queue);
+                } catch (final IllegalAccessException | InvocationTargetException e) {
+                    throw unwrapRuntimeException(e);
+                }
+                if (msg.getTarget() == null) {
+                    HANDLER.getLooper().quit();
+                    return;
+                }
+                msg.getTarget().dispatchMessage(msg);
+            }
+        } finally {
+            TIMEOUT_RUNNABLE.cancel();
+        }
+    }
+
     public static void loopUntilIdle(final long timeout) {
         // Adapted from GeckoThread.pumpMessageLoop.
         final MessageQueue queue = HANDLER.getLooper().getQueue();
