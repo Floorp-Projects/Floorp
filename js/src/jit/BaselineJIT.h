@@ -101,7 +101,12 @@ static constexpr uint32_t BaselineMaxScriptLength = 0x0fffffffu;
 
 // Limit the locals on a given script so that stack check on baseline frames
 // doesn't overflow a uint32_t value.
-// (MAX_JSSCRIPT_SLOTS * sizeof(Value)) must fit within a uint32_t.
+// (BaselineMaxScriptSlots * sizeof(Value)) must fit within a uint32_t.
+//
+// This also applies to the Baseline Interpreter: it ensures we don't run out
+// of stack space (and throw over-recursion exceptions) for scripts with a huge
+// number of locals. The C++ interpreter avoids this by having heap-allocated
+// stack frames.
 static constexpr uint32_t BaselineMaxScriptSlots = 0xffffu;
 
 // An entry in the BaselineScript return address table. These entries are used
@@ -549,6 +554,8 @@ MethodStatus CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp);
 
 JitExecStatus EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
                                     jsbytecode* pc);
+
+bool CanBaselineInterpretScript(JSScript* script);
 
 // Called by the Baseline Interpreter to compile a script for the Baseline JIT.
 // |res| is set to the native code address in the BaselineScript to jump to, or
