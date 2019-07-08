@@ -90,7 +90,7 @@ bool ElemOpEmitter::emitGet() {
   } else {
     op = JSOP_GETELEM;
   }
-  if (!bce_->emitElemOpBase(op)) {
+  if (!bce_->emitElemOpBase(op, ShouldInstrument::Yes)) {
     //              [stack] # if Get
     //              [stack] ELEM
     //              [stack] # if Call
@@ -211,7 +211,7 @@ bool ElemOpEmitter::emitAssignment(EmitSetFunctionName emitSetFunName) {
           : isSuper() ? bce_->sc->strict() ? JSOP_STRICTSETELEM_SUPER
                                            : JSOP_SETELEM_SUPER
                       : bce_->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-  if (!bce_->emitElemOpBase(setOp)) {
+  if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] ELEM
     return false;
   }
@@ -290,7 +290,7 @@ bool ElemOpEmitter::emitIncDec() {
       isSuper()
           ? (bce_->sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER)
           : (bce_->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM);
-  if (!bce_->emitElemOpBase(setOp)) {
+  if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] N? N+1
     return false;
   }

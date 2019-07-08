@@ -211,6 +211,7 @@ class MOZ_STACK_CLASS TryEmitter {
   MOZ_MUST_USE bool emitTryEnd();
   MOZ_MUST_USE bool emitCatchEnd();
   MOZ_MUST_USE bool emitFinallyEnd();
+  MOZ_MUST_USE bool instrumentEntryPoint();
 };
 
 } /* namespace frontend */
