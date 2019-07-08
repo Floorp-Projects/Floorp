@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test.util;
 
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoResult;
 
 import android.os.Handler;
@@ -13,15 +14,16 @@ import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.internal.runner.InstrumentationConnection;
 import android.util.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 public class UiThreadUtils {
-    private static final String LOGTAG = "UiThreadUtils";
-    private static long sLongestWait;
-
     private static Method sGetNextMessage = null;
     static {
         try {
@@ -59,16 +61,6 @@ public class UiThreadUtils {
 
     public static final Handler HANDLER = new Handler(Looper.getMainLooper());
     private static final TimeoutRunnable TIMEOUT_RUNNABLE = new TimeoutRunnable();
-    private static final MessageQueue.IdleHandler IDLE_HANDLER = new MessageQueue.IdleHandler() {
-        @Override
-        public boolean queueIdle() {
-            final Message msg = Message.obtain(HANDLER);
-            msg.obj = HANDLER;
-            HANDLER.sendMessageAtFrontOfQueue(msg);
-            return false; // Remove this idle handler.
-        }
-    };
-
     private static RuntimeException unwrapRuntimeException(final Throwable e) {
         final Throwable cause = e.getCause();
         if (cause != null && cause instanceof RuntimeException) {
@@ -91,9 +83,7 @@ public class UiThreadUtils {
     public static <T> T waitForResult(@NonNull GeckoResult<T> result, long timeout) throws Throwable {
         final ResultHolder<T> holder = new ResultHolder<>(result);
 
-        while (!holder.isComplete) {
-            loopUntilIdle(timeout);
-        }
+        waitForCondition(() -> holder.isComplete, timeout);
 
         if (holder.error != null) {
             throw holder.error;
@@ -122,6 +112,27 @@ public class UiThreadUtils {
         boolean test();
     }
 
+    public static void loopUntilIdle(final long timeout) {
+        AtomicBoolean idle = new AtomicBoolean(false);
+
+        MessageQueue.IdleHandler handler = null;
+        try {
+            handler = () -> {
+                idle.set(true);
+                // Remove handler
+                return false;
+            };
+
+            HANDLER.getLooper().getQueue().addIdleHandler(handler);
+
+            waitForCondition(() -> idle.get(), timeout);
+        } finally {
+            if (handler != null) {
+                HANDLER.getLooper().getQueue().removeIdleHandler(handler);
+            }
+        }
+    }
+
     public static void waitForCondition(Condition condition, final long timeout) {
          // Adapted from GeckoThread.pumpMessageLoop.
         final MessageQueue queue = HANDLER.getLooper().getQueue();
@@ -144,51 +155,6 @@ public class UiThreadUtils {
             }
         } finally {
             TIMEOUT_RUNNABLE.cancel();
-        }
-    }
-
-    public static void loopUntilIdle(final long timeout) {
-        // Adapted from GeckoThread.pumpMessageLoop.
-        final MessageQueue queue = HANDLER.getLooper().getQueue();
-        if (timeout > 0) {
-            TIMEOUT_RUNNABLE.set(timeout);
-        } else {
-            queue.addIdleHandler(IDLE_HANDLER);
-        }
-
-        final long startTime = SystemClock.uptimeMillis();
-        try {
-            while (true) {
-                final Message msg;
-                try {
-                    msg = (Message) sGetNextMessage.invoke(queue);
-                } catch (final IllegalAccessException | InvocationTargetException e) {
-                    throw unwrapRuntimeException(e);
-                }
-                if (msg.getTarget() == HANDLER && msg.obj == HANDLER) {
-                    // Our idle signal.
-                    break;
-                } else if (msg.getTarget() == null) {
-                    HANDLER.getLooper().quit();
-                    return;
-                }
-                msg.getTarget().dispatchMessage(msg);
-
-                if (timeout > 0) {
-                    TIMEOUT_RUNNABLE.cancel();
-                    queue.addIdleHandler(IDLE_HANDLER);
-                }
-            }
-
-            final long waitDuration = SystemClock.uptimeMillis() - startTime;
-            if (waitDuration > sLongestWait) {
-                sLongestWait = waitDuration;
-                Log.i(LOGTAG, "New longest wait: " + waitDuration + "ms");
-            }
-        } finally {
-            if (timeout > 0) {
-                TIMEOUT_RUNNABLE.cancel();
-            }
         }
     }
 }
