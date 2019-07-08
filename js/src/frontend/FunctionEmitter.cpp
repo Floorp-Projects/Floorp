@@ -425,7 +425,9 @@ bool FunctionScriptEmitter::prepareForParameters() {
     // parameter exprs, any unobservable environment ops (like pushing the
     // call object, setting '.this', etc) need to go in the prologue, else it
     // messes up breakpoint tests.
-    bce_->switchToMain();
+    if (!bce_->switchToMain()) {
+      return false;
+    }
   }
 
   if (!functionEmitterScope_->enterFunction(bce_, funbox_)) {
@@ -438,7 +440,9 @@ bool FunctionScriptEmitter::prepareForParameters() {
   }
 
   if (!funbox_->hasParameterExprs) {
-    bce_->switchToMain();
+    if (!bce_->switchToMain()) {
+      return false;
+    }
   }
 
   // Parameters can't reuse the reject try-catch block from the function body,
@@ -524,7 +528,7 @@ bool FunctionScriptEmitter::emitAsyncFunctionRejectEpilogue() {
     //              [stack] GEN
     return false;
   }
-  if (!bce_->emit1(JSOP_FINALYIELDRVAL)) {
+  if (!bce_->emitYieldOp(JSOP_FINALYIELDRVAL)) {
     //              [stack]
     return false;
   }
@@ -720,7 +724,7 @@ bool FunctionScriptEmitter::emitEndBody() {
   // Always end the script with a JSOP_RETRVAL. Some other parts of the
   // codebase depend on this opcode,
   // e.g. InterpreterRegs::setToEndOfScript.
-  if (!bce_->emit1(JSOP_RETRVAL)) {
+  if (!bce_->emitReturnRval()) {
     //              [stack]
     return false;
   }
