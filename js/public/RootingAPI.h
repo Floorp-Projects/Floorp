@@ -523,6 +523,11 @@ class TenuredHeap : public js::HeapBase<T, TenuredHeap<T>> {
   uintptr_t bits;
 };
 
+static MOZ_ALWAYS_INLINE bool ObjectIsMarkedGray(
+    const JS::TenuredHeap<JSObject*>& obj) {
+  return ObjectIsMarkedGray(obj.unbarrieredGetPtr());
+}
+
 /**
  * Reference to a T that has been rooted elsewhere. This is most useful
  * as a parameter type, which guarantees that the T lvalue is properly
