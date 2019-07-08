@@ -156,7 +156,7 @@ function do_test() {
 
   var prop = "quotes"
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "inherit", "initial", "unset", "none", "revert" ];
+  var expected = [ "inherit", "initial", "unset", "revert", "auto", "none" ];
   ok(testValues(values, expected), "property quotes's values.");
 
   // Regression test for bug 1255384.
