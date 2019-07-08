@@ -5806,7 +5806,7 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   }
 
   nsPresContext* pc = mOuter->PresContext();
-  MOZ_ASSERT(pc->IsRootContentDocument(),
+  MOZ_ASSERT(pc->IsRootContentDocumentCrossProcess(),
              "The pres context should be for the root content document");
 
   RefPtr<MobileViewportManager> manager =
