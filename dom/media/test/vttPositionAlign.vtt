@@ -23,3 +23,64 @@ Cue 6 : PositionAlign should be "auto", but computedPositionAlign should be "lin
 
 00:00.700 --> 00:00.800 position:50%,auto align:middle
 Cue 7 : PositionAlign should be "auto", but computedPositionAlign should be "center".
+
+NOTE ### These following cues are set with `align:start` ###
+
+00:00.700 --> 00:00.800 align:start
+LTR character in the beginning and align is "start", so computedPositionAlign should be "line-left".
+
+00:00.700 --> 00:00.800 align:start
+שלום RTL character in the beginning and align is "start", so computedPositionAlign should be "line-right".
+
+00:00.700 --> 00:00.800 align:start
+@ neutral charater in the beginning, but the first strong charater is LTR in "align:start". So computedPositionAlign should be "line-left".
+
+00:00.700 --> 00:00.800 align:start
+@ש neutral charater in the beginning, but the first strong charater is RTL in "align:start". So computedPositionAlign should be "line-right".
+
+NOTE
+This line contains only neutral charater, we would treat its base direction as
+LTR. However, if there are other following lines contains non-neutral
+charaters, we would detemine the base direction by the following line.
+
+00:00.700 --> 00:00.800 align:start
+@
+
+00:00.700 --> 00:00.800 align:start
+@
+The second line starts with LTR charater, computedPositionAlign should be "line-left".
+
+00:00.700 --> 00:00.800 align:start
+@
+שThe second line starts with RTL charater, computedPositionAlign should be "line-right".
+
+NOTE ### These following cues are set with `align:end` ###
+
+00:00.700 --> 00:00.800 align:end
+LTR character in the beginning and align is "end", so computedPositionAlign should be "line-right".
+
+00:00.700 --> 00:00.800 align:end
+ש RTL character in the beginning and align is "end", so computedPositionAlign should be "line-left".
+
+00:00.700 --> 00:00.800 align:end
+@ neutral charater in the beginning, but the first strong charater is LTR in "align:end". So computedPositionAlign should be "line-right".
+
+00:00.700 --> 00:00.800 align:end
+@ש neutral charater in the beginning, but the first strong charater is RTL in "align:end". So computedPositionAlign should be "line-left".
+
+NOTE
+This line contains only neutral charater, we would treat its base direction as
+LTR. However, if there are other following lines contains non-neutral
+charaters, we would detemine the base direction by the following line.
+
+00:00.700 --> 00:00.800 align:end
+@
+
+00:00.700 --> 00:00.800 align:end
+@
+The second line starts with LTR charater, computedPositionAlign should be "line-right".
+
+00:00.700 --> 00:00.800 align:end
+@
+שThe second line starts with RTL charater, computedPositionAlign should be "line-left".
+
