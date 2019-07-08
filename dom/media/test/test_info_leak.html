@@ -162,6 +162,7 @@ function startTest(test, token) {
   createMedia(test.type, test.name, token);  
 }
 
+SimpleTest.waitForExplicitFinish();
 createTestArray().then(testArray => {
   manager.runTests(testArray, startTest);
 });

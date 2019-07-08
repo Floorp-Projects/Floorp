@@ -13,27 +13,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1124898
 
   /** Test for Bug 1124898 **/
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-																			true]]});
-  SimpleTest.expectAssertions(0, 1); // Dumb unrelated widget assertion - see bug 1126023.
-  var w = window.open("about:blank", "w", "chrome");
-  is(w.eval('typeof getAttention'), 'function', 'getAttention exists on regular chrome window');
-  is(w.eval('typeof messageManager'), 'object', 'messageManager exists on regular chrome window');
-  var contentURL = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
-  w.location = contentURL;
-  tryWindow();
+  (async () => {
+    await SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 
-  function tryWindow() {
-    if (w.document.title != 'empty test page') {
-      info("Document not loaded yet - retrying");
-      SimpleTest.executeSoon(tryWindow);
-      return;
+    SimpleTest.expectAssertions(0, 1); // Dumb unrelated widget assertion - see bug 1126023.
+
+    var w = window.open("about:blank", "w", "chrome");
+    is(w.eval('typeof getAttention'), 'function', 'getAttention exists on regular chrome window');
+    is(w.eval('typeof messageManager'), 'object', 'messageManager exists on regular chrome window');
+    var contentURL = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    w.location = contentURL;
+    tryWindow();
+
+    function tryWindow() {
+      if (w.document.title != 'empty test page') {
+        info("Document not loaded yet - retrying");
+        SimpleTest.executeSoon(tryWindow);
+        return;
+      }
+      is(w.eval('typeof getAttention'), 'undefined', 'getAttention doesnt exist on content-in-chrome window');
+      is(w.eval('typeof messageManager'), 'undefined', 'messageManager doesnt exist on content-in-chrome window');
+      w.close();
+      SimpleTest.finish();
     }
-    is(w.eval('typeof getAttention'), 'undefined', 'getAttention doesnt exist on content-in-chrome window');
-    is(w.eval('typeof messageManager'), 'undefined', 'messageManager doesnt exist on content-in-chrome window');
-    w.close();
-    SimpleTest.finish();
-  }
+  })();
 
   </script>
 </head>

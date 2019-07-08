@@ -459,14 +459,6 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   var simpleTestScope = {};
   this._scriptLoader.loadSubScript(
-    "chrome://mochikit/content/tests/SimpleTest/specialpowersAPI.js",
-    simpleTestScope
-  );
-  this._scriptLoader.loadSubScript(
-    "chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js",
-    simpleTestScope
-  );
-  this._scriptLoader.loadSubScript(
     "chrome://mochikit/content/tests/SimpleTest/ChromePowers.js",
     simpleTestScope
   );
