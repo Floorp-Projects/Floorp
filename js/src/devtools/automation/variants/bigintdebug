@@ -1,7 +1,0 @@
-{
-    "configure-args": "--enable-bigint",
-    "debug": true,
-    "env": {
-        "JSTESTS_EXTRA_ARGS": "--jitflags=debug"
-    }
-}
