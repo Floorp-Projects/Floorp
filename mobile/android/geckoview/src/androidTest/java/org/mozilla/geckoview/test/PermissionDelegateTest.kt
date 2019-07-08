@@ -17,6 +17,7 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 
+import org.junit.Assume.assumeThat
 import org.hamcrest.Matchers.*
 import org.junit.Assert.fail
 import org.junit.Test
@@ -225,6 +226,8 @@ class PermissionDelegateTest : BaseSessionTest() {
 
     @WithDevToolsAPI
     @Test fun notification_reject() {
+        //Disable for frequent failures Bug 1542525
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
