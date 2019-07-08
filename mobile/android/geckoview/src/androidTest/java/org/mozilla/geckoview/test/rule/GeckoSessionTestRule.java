@@ -472,7 +472,7 @@ public class GeckoSessionTestRule implements TestRule {
             } else if (other instanceof MethodCall) {
                 final MethodCall otherCall = (MethodCall) other;
                 return (session == null || otherCall.session == null ||
-                        session == otherCall.session) &&
+                        session.equals(otherCall.session)) &&
                         methodsEqual(method, ((MethodCall) other).method);
             } else if (other instanceof Method) {
                 return methodsEqual(method, (Method) other);
@@ -1674,8 +1674,10 @@ public class GeckoSessionTestRule implements TestRule {
         beforeWait();
 
         while (!calledAny || !methodCalls.isEmpty()) {
-            final int checkIndex = index;
-            UiThreadUtils.waitForCondition(() -> (checkIndex < mCallRecords.size()), mTimeoutMillis);
+            final int currentIndex = index;
+
+            // Let's wait for more messages if we reached the end
+            UiThreadUtils.waitForCondition(() -> (currentIndex < mCallRecords.size()), mTimeoutMillis);
 
             if (SystemClock.uptimeMillis() - startTime > mTimeoutMillis) {
                 throw new UiThreadUtils.TimeoutException("Timed out after " + mTimeoutMillis + "ms");
@@ -1787,7 +1789,7 @@ public class GeckoSessionTestRule implements TestRule {
             final CallRecord record = mCallRecords.get(index);
             if (!record.method.getDeclaringClass().isInstance(callback) ||
                     (session != null && DEFAULT_DELEGATES.contains(
-                            record.method.getDeclaringClass()) && record.args[0] != session)) {
+                            record.method.getDeclaringClass()) && !session.equals(record.args[0]))) {
                 continue;
             }
 
