@@ -4,11 +4,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SpecialPowersAPIParent", "SpecialPowersError"];
-
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -16,14 +15,26 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.jsm",
 });
 
-class SpecialPowersError extends Error {
-  get name() {
-    return "SpecialPowersError";
-  }
-}
+this.SpecialPowersError = function(aMsg) {
+  Error.call(this);
+  // let {stack} = new Error();
+  this.message = aMsg;
+  this.name = "SpecialPowersError";
+};
+SpecialPowersError.prototype = Object.create(Error.prototype);
+
+SpecialPowersError.prototype.toString = function() {
+  return `${this.name}: ${this.message}`;
+};
+
+this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
+  this._crashDumpDir = null;
+  this._processCrashObserversRegistered = false;
+  this._chromeScriptListeners = [];
+  this._extensions = new Map();
+};
 
 function parseKeyValuePairs(text) {
   var lines = text.split("\n");
@@ -85,49 +96,7 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
-const PREF_TYPES = {
-  [Ci.nsIPrefBranch.PREF_INVALID]: "INVALID",
-  [Ci.nsIPrefBranch.PREF_INT]: "INT",
-  [Ci.nsIPrefBranch.PREF_BOOL]: "BOOL",
-  [Ci.nsIPrefBranch.PREF_STRING]: "CHAR",
-  number: "INT",
-  boolean: "BOOL",
-  string: "CHAR",
-};
-
-// We share a single preference environment stack between all
-// SpecialPowers instances, across all processes.
-let prefUndoStack = [];
-let inPrefEnvOp = false;
-
-function doPrefEnvOp(fn) {
-  if (inPrefEnvOp) {
-    throw new Error(
-      "Reentrant preference environment operations not supported"
-    );
-  }
-  inPrefEnvOp = true;
-  try {
-    return fn();
-  } finally {
-    inPrefEnvOp = false;
-  }
-}
-
-// Supplies the unique IDs for tasks created by SpecialPowers.spawn(),
-// used to bounce assertion messages back down to the correct child.
-let nextTaskID = 1;
-
-class SpecialPowersAPIParent extends JSWindowActorParent {
-  constructor() {
-    super();
-    this._crashDumpDir = null;
-    this._processCrashObserversRegistered = false;
-    this._chromeScriptListeners = [];
-    this._extensions = new Map();
-    this._taskActors = new Map();
-  }
-
+SpecialPowersObserverAPI.prototype = {
   _observe(aSubject, aTopic, aData) {
     function addDumpIDToMessage(propertyName) {
       try {
@@ -169,10 +138,10 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
 
           addDumpIDToMessage("dumpID");
         }
-        this.sendAsyncMessage("SPProcessCrashService", message);
+        this._sendAsyncMessage("SPProcessCrashService", message);
         break;
     }
-  }
+  },
 
   _getCrashDumpDir() {
     if (!this._crashDumpDir) {
@@ -180,7 +149,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       this._crashDumpDir.append("minidumps");
     }
     return this._crashDumpDir;
-  }
+  },
 
   _getPendingCrashDumpDir() {
     if (!this._pendingCrashDumpDir) {
@@ -189,7 +158,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       this._pendingCrashDumpDir.append("pending");
     }
     return this._pendingCrashDumpDir;
-  }
+  },
 
   _getExtraData(dumpId) {
     let extraFile = this._getCrashDumpDir().clone();
@@ -198,7 +167,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       return null;
     }
     return parseKeyValuePairsFromFile(extraFile);
-  }
+  },
 
   _deleteCrashDumpFiles(aFilenames) {
     var crashDumpDir = this._getCrashDumpDir();
@@ -217,7 +186,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       }
     });
     return success;
-  }
+  },
 
   _findCrashDumpFiles(aToIgnore) {
     var crashDumpDir = this._getCrashDumpDir();
@@ -235,7 +204,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       }
     }
     return crashDumpFiles.concat();
-  }
+  },
 
   _deletePendingCrashDumpFiles() {
     var crashDumpDir = this._getPendingCrashDumpDir();
@@ -251,11 +220,61 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       }
     }
     return removed;
-  }
+  },
 
   _getURI(url) {
     return Services.io.newURI(url);
-  }
+  },
+
+  _readUrlAsString(aUrl) {
+    // Fetch script content as we can't use scriptloader's loadSubScript
+    // to evaluate http:// urls...
+    var scriptableStream = Cc[
+      "@mozilla.org/scriptableinputstream;1"
+    ].getService(Ci.nsIScriptableInputStream);
+
+    var channel = NetUtil.newChannel({
+      uri: aUrl,
+      loadUsingSystemPrincipal: true,
+    });
+    var input = channel.open();
+    scriptableStream.init(input);
+
+    var str;
+    var buffer = [];
+
+    while ((str = scriptableStream.read(4096))) {
+      buffer.push(str);
+    }
+
+    var output = buffer.join("");
+
+    scriptableStream.close();
+    input.close();
+
+    var status;
+    if (channel instanceof Ci.nsIHttpChannel) {
+      status = channel.responseStatus;
+    }
+
+    if (status == 404) {
+      throw new SpecialPowersError(
+        "Error while executing chrome script '" +
+          aUrl +
+          "':\n" +
+          "The script doesn't exists. Ensure you have registered it in " +
+          "'support-files' in your mochitest.ini."
+      );
+    }
+
+    return output;
+  },
+
+  _sendReply(aMessage, aReplyName, aReplyMsg) {
+    let mm = aMessage.target.frameLoader.messageManager;
+    mm.sendAsyncMessage(aReplyName, aReplyMsg);
+  },
+
   _notifyCategoryAndObservers(subject, topic, data) {
     const serviceMarker = "service,";
 
@@ -295,158 +314,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         observer.observe(subject, topic, data);
       } catch (e) {}
     });
-  }
-
-  /*
-    Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
-    All actions performed must modify the relevant pref.
-  */
-  _applyPrefs(actions) {
-    for (let pref of actions) {
-      if (pref.action == "set") {
-        this._setPref(pref.name, pref.type, pref.value, pref.iid);
-      } else if (pref.action == "clear") {
-        Services.prefs.clearUserPref(pref.name);
-      }
-    }
-  }
-
-  /**
-   * Take in a list of pref changes to make, pushes their current values
-   * onto the restore stack, and makes the changes.  When the test
-   * finishes, these changes are reverted.
-   *
-   * |inPrefs| must be an object with up to two properties: "set" and "clear".
-   * pushPrefEnv will set prefs as indicated in |inPrefs.set| and will unset
-   * the prefs indicated in |inPrefs.clear|.
-   *
-   * For example, you might pass |inPrefs| as:
-   *
-   *  inPrefs = {'set': [['foo.bar', 2], ['magic.pref', 'baz']],
-   *             'clear': [['clear.this'], ['also.this']] };
-   *
-   * Notice that |set| and |clear| are both an array of arrays.  In |set|, each
-   * of the inner arrays must have the form [pref_name, value] or [pref_name,
-   * value, iid].  (The latter form is used for prefs with "complex" values.)
-   *
-   * In |clear|, each inner array should have the form [pref_name].
-   *
-   * If you set the same pref more than once (or both set and clear a pref),
-   * the behavior of this method is undefined.
-   */
-  pushPrefEnv(inPrefs) {
-    return doPrefEnvOp(() => {
-      let pendingActions = [];
-      let cleanupActions = [];
-
-      for (let [action, prefs] of Object.entries(inPrefs)) {
-        for (let pref of prefs) {
-          let name = pref[0];
-          let value = null;
-          let iid = null;
-          let type = PREF_TYPES[Services.prefs.getPrefType(name)];
-          let originalValue = null;
-
-          if (pref.length == 3) {
-            value = pref[1];
-            iid = pref[2];
-          } else if (pref.length == 2) {
-            value = pref[1];
-          }
-
-          /* If pref is not found or invalid it doesn't exist. */
-          if (type !== "INVALID") {
-            if (
-              (Services.prefs.prefHasUserValue(name) && action == "clear") ||
-              action == "set"
-            ) {
-              originalValue = this._getPref(name, type);
-            }
-          } else if (action == "set") {
-            /* name doesn't exist, so 'clear' is pointless */
-            if (iid) {
-              type = "COMPLEX";
-            }
-          }
-
-          if (type === "INVALID") {
-            type = PREF_TYPES[typeof value];
-          }
-          if (type === "INVALID") {
-            throw new Error("Unexpected preference type");
-          }
-
-          pendingActions.push({ action, type, name, value, iid });
-
-          /* Push original preference value or clear into cleanup array */
-          var cleanupTodo = { type, name, value: originalValue, iid };
-          if (originalValue == null) {
-            cleanupTodo.action = "clear";
-          } else {
-            cleanupTodo.action = "set";
-          }
-          cleanupActions.push(cleanupTodo);
-        }
-      }
-
-      prefUndoStack.push(cleanupActions);
-      this._applyPrefs(pendingActions);
-    });
-  }
-
-  async popPrefEnv() {
-    return doPrefEnvOp(() => {
-      let env = prefUndoStack.pop();
-      if (env) {
-        this._applyPrefs(env);
-        return true;
-      }
-      return false;
-    });
-  }
-
-  flushPrefEnv() {
-    while (prefUndoStack.length) {
-      this.popPrefEnv();
-    }
-  }
-
-  _setPref(name, type, value, iid) {
-    switch (type) {
-      case "BOOL":
-        return Services.prefs.setBoolPref(name, value);
-      case "INT":
-        return Services.prefs.setIntPref(name, value);
-      case "CHAR":
-        return Services.prefs.setCharPref(name, value);
-      case "COMPLEX":
-        return Services.prefs.setComplexValue(name, iid, value);
-    }
-    throw new Error(`Unexpected preference type: ${type}`);
-  }
-
-  _getPref(name, type, defaultValue, iid) {
-    switch (type) {
-      case "BOOL":
-        if (defaultValue !== undefined) {
-          return Services.prefs.getBoolPref(name, defaultValue);
-        }
-        return Services.prefs.getBoolPref(name);
-      case "INT":
-        if (defaultValue !== undefined) {
-          return Services.prefs.getIntPref(name, defaultValue);
-        }
-        return Services.prefs.getIntPref(name);
-      case "CHAR":
-        if (defaultValue !== undefined) {
-          return Services.prefs.getCharPref(name, defaultValue);
-        }
-        return Services.prefs.getCharPref(name);
-      case "COMPLEX":
-        return Services.prefs.getComplexValue(name, iid);
-    }
-    throw new Error(`Unexpected preference type: ${type}`);
-  }
+  },
 
   /**
    * messageManager callback function
@@ -458,15 +326,6 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
     switch (aMessage.name) {
-      case "PushPrefEnv":
-        return this.pushPrefEnv(aMessage.data);
-
-      case "PopPrefEnv":
-        return this.popPrefEnv();
-
-      case "FlushPrefEnv":
-        return this.flushPrefEnv();
-
       case "SPPrefService": {
         let prefs = Services.prefs;
         let prefType = aMessage.json.prefType.toUpperCase();
@@ -507,6 +366,43 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
           throw new SpecialPowersError("Invalid operation for SPPrefService");
         }
 
+        // Now we make the call
+        switch (prefType) {
+          case "BOOL":
+            if (aMessage.json.op == "get") {
+              if (defaultValue !== undefined) {
+                return prefs.getBoolPref(prefName, defaultValue);
+              }
+              return prefs.getBoolPref(prefName);
+            }
+            return prefs.setBoolPref(prefName, prefValue);
+          case "INT":
+            if (aMessage.json.op == "get") {
+              if (defaultValue !== undefined) {
+                return prefs.getIntPref(prefName, defaultValue);
+              }
+              return prefs.getIntPref(prefName);
+            }
+            return prefs.setIntPref(prefName, prefValue);
+          case "CHAR":
+            if (aMessage.json.op == "get") {
+              if (defaultValue !== undefined) {
+                return prefs.getCharPref(prefName, defaultValue);
+              }
+              return prefs.getCharPref(prefName);
+            }
+            return prefs.setCharPref(prefName, prefValue);
+          case "COMPLEX":
+            if (aMessage.json.op == "get") {
+              return prefs.getComplexValue(prefName, iid);
+            }
+            return prefs.setComplexValue(prefName, iid, prefValue);
+          case "":
+            if (aMessage.json.op == "clear") {
+              prefs.clearUserPref(prefName);
+              return undefined;
+            }
+        }
         return undefined; // See comment at the beginning of this function.
       }
 
@@ -538,7 +434,11 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let promises = aMessage.json.crashIds.map(crashId => {
           return Services.crashmanager.ensureCrashIsPresent(crashId);
         });
-        return Promise.all(promises);
+
+        Promise.all(promises).then(() => {
+          this._sendReply(aMessage, "SPProcessCrashManagerWait", {});
+        });
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPPermissionManager": {
@@ -596,6 +496,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
             Services.obs.notifyObservers(null, topic, data);
             break;
           case "add":
+            this._registerObservers._self = this;
             this._registerObservers._add(topic);
             break;
           default:
@@ -608,12 +509,14 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
 
       case "SPLoadChromeScript": {
         let id = aMessage.json.id;
+        let jsScript;
         let scriptName;
 
-        let jsScript = aMessage.json.function.body;
         if (aMessage.json.url) {
+          jsScript = this._readUrlAsString(aMessage.json.url);
           scriptName = aMessage.json.url;
         } else if (aMessage.json.function) {
+          jsScript = aMessage.json.function.body;
           scriptName =
             aMessage.json.function.name ||
             "<loadChromeScript anonymous function>";
@@ -624,41 +527,58 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         // Setup a chrome sandbox that has access to sendAsyncMessage
         // and {add,remove}MessageListener in order to communicate with
         // the mochitest.
-        let sb = new SpecialPowersSandbox(
-          scriptName,
-          data => {
-            this.sendAsyncMessage("Assert", data);
-          },
-          aMessage.data
+        let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+        let sandboxOptions = Object.assign(
+          { wantGlobalProperties: ["ChromeUtils"] },
+          aMessage.json.sandboxOptions
         );
+        let sb = Cu.Sandbox(systemPrincipal, sandboxOptions);
+        let mm = aMessage.target.frameLoader.messageManager;
+        sb.sendAsyncMessage = (name, message) => {
+          mm.sendAsyncMessage("SPChromeScriptMessage", { id, name, message });
+        };
+        sb.addMessageListener = (name, listener) => {
+          this._chromeScriptListeners.push({ id, name, listener });
+        };
+        sb.removeMessageListener = (name, listener) => {
+          let index = this._chromeScriptListeners.findIndex(function(obj) {
+            return obj.id == id && obj.name == name && obj.listener == listener;
+          });
+          if (index >= 0) {
+            this._chromeScriptListeners.splice(index, 1);
+          }
+        };
+        sb.browserElement = aMessage.target;
 
-        Object.assign(sb.sandbox, {
-          sendAsyncMessage: (name, message) => {
-            this.sendAsyncMessage("SPChromeScriptMessage", {
-              id,
-              name,
-              message,
-            });
+        // Also expose assertion functions
+        let reporter = function(err, message, stack) {
+          // Pipe assertions back to parent process
+          mm.sendAsyncMessage("SPChromeScriptAssert", {
+            id,
+            name: scriptName,
+            err,
+            message,
+            stack,
+          });
+        };
+        Object.defineProperty(sb, "assert", {
+          get() {
+            let scope = Cu.createObjectIn(sb);
+            Services.scriptloader.loadSubScript(
+              "resource://specialpowers/Assert.jsm",
+              scope
+            );
+
+            let assert = new scope.Assert(reporter);
+            delete sb.assert;
+            return (sb.assert = assert);
           },
-          addMessageListener: (name, listener) => {
-            this._chromeScriptListeners.push({ id, name, listener });
-          },
-          removeMessageListener: (name, listener) => {
-            let index = this._chromeScriptListeners.findIndex(function(obj) {
-              return (
-                obj.id == id && obj.name == name && obj.listener == listener
-              );
-            });
-            if (index >= 0) {
-              this._chromeScriptListeners.splice(index, 1);
-            }
-          },
-          actorParent: this.manager,
+          configurable: true,
         });
 
         // Evaluate the chrome script
         try {
-          Cu.evalInSandbox(jsScript, sb.sandbox, "1.8", scriptName, 1);
+          Cu.evalInSandbox(jsScript, sb, "1.8", scriptName, 1);
         } catch (e) {
           throw new SpecialPowersError(
             "Error while executing chrome script '" +
@@ -678,13 +598,9 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let id = aMessage.json.id;
         let name = aMessage.json.name;
         let message = aMessage.json.message;
-        let result;
-        for (let listener of this._chromeScriptListeners) {
-          if (listener.name == name && listener.id == id) {
-            result = listener.listener(message);
-          }
-        }
-        return result;
+        return this._chromeScriptListeners
+          .filter(o => o.name == name && o.id == id)
+          .map(o => o.listener(message));
       }
 
       case "SPImportInMainProcess": {
@@ -710,11 +626,17 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
       }
 
       case "SPRequestDumpCoverageCounters": {
-        return PerTestCoverageUtils.afterTest();
+        PerTestCoverageUtils.afterTest().then(() =>
+          this._sendReply(aMessage, "SPRequestDumpCoverageCounters", {})
+        );
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPRequestResetCoverageCounters": {
-        return PerTestCoverageUtils.beforeTest();
+        PerTestCoverageUtils.beforeTest().then(() =>
+          this._sendReply(aMessage, "SPRequestResetCoverageCounters", {})
+        );
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPCheckServiceWorkers": {
@@ -741,7 +663,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let extension = ExtensionTestCommon.generate(ext);
 
         let resultListener = (...args) => {
-          this.sendAsyncMessage("SPExtensionMessage", {
+          this._sendReply(aMessage, "SPExtensionMessage", {
             id,
             type: "testResult",
             args,
@@ -750,7 +672,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
 
         let messageListener = (...args) => {
           args.shift();
-          this.sendAsyncMessage("SPExtensionMessage", {
+          this._sendReply(aMessage, "SPExtensionMessage", {
             id,
             type: "testMessage",
             args,
@@ -782,7 +704,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
           }
           // ext is always the "real" Extension object, even when "extension"
           // is a MockExtension.
-          this.sendAsyncMessage("SPExtensionMessage", {
+          this._sendReply(aMessage, "SPExtensionMessage", {
             id,
             type: "extensionSetId",
             args: [ext.id, ext.uuid],
@@ -793,7 +715,7 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         // they're run on a bare archive rather than a running instance,
         // as the add-on manager runs them.
         let extensionData = new ExtensionData(extension.rootURI);
-        return extensionData
+        extensionData
           .loadManifest()
           .then(
             () => {
@@ -816,14 +738,24 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
             if (extension.id) {
               await ExtensionTestCommon.setIncognitoOverride(extension);
             }
-            return extension.startup().then(
-              () => {},
-              e => {
-                dump(`Extension startup failed: ${e}\n${e.stack}`);
-                throw e;
-              }
-            );
+            return extension.startup();
+          })
+          .then(() => {
+            this._sendReply(aMessage, "SPExtensionMessage", {
+              id,
+              type: "extensionStarted",
+              args: [],
+            });
+          })
+          .catch(e => {
+            dump(`Extension startup failed: ${e}\n${e.stack}`);
+            this._sendReply(aMessage, "SPExtensionMessage", {
+              id,
+              type: "extensionFailed",
+              args: [],
+            });
           });
+        return undefined;
       }
 
       case "SPExtensionMessage": {
@@ -837,42 +769,34 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         this._extensions.delete(id);
-        return extension.shutdown().then(() => {
-          return extension._uninstallPromise;
-        });
-      }
-
-      case "Spawn": {
-        let { browsingContext, task, args, caller } = aMessage.data;
-
-        let spParent = browsingContext.currentWindowGlobal.getActor(
-          "SpecialPowers"
-        );
-
-        let taskId = nextTaskID++;
-        spParent._taskActors.set(taskId, this);
-
-        return spParent
-          .sendQuery("Spawn", { task, args, caller, taskId })
-          .finally(() => {
-            spParent._taskActors.delete(taskId);
+        let done = async () => {
+          await extension._uninstallPromise;
+          this._sendReply(aMessage, "SPExtensionMessage", {
+            id,
+            type: "extensionUnloaded",
+            args: [],
           });
-      }
-
-      case "ProxiedAssert": {
-        let { taskId, data } = aMessage.data;
-        let actor = this._taskActors.get(taskId);
-
-        actor.sendAsyncMessage("Assert", data);
+        };
+        extension.shutdown().then(done, done);
         return undefined;
       }
 
       case "SPRemoveAllServiceWorkers": {
-        return ServiceWorkerCleanUp.removeAll();
+        ServiceWorkerCleanUp.removeAll().then(() => {
+          this._sendReply(aMessage, "SPServiceWorkerCleanupComplete", {
+            id: aMessage.data.id,
+          });
+        });
+        return undefined;
       }
 
       case "SPRemoveServiceWorkerDataForExampleDomain": {
-        return ServiceWorkerCleanUp.removeFromHost("example.com");
+        ServiceWorkerCleanUp.removeFromHost("example.com").then(() => {
+          this._sendReply(aMessage, "SPServiceWorkerCleanupComplete", {
+            id: aMessage.data.id,
+          });
+        });
+        return undefined;
       }
 
       default:
@@ -885,5 +809,5 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     // we should never be arriving here anyway.
     throw new SpecialPowersError("Unreached code"); // eslint-disable-line no-unreachable
     return undefined;
-  }
-}
+  },
+};

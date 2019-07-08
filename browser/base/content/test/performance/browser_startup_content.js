@@ -20,9 +20,8 @@ const kDumpAllStacks = false;
 const whitelist = {
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
-    "resource://specialpowers/SpecialPowersChild.jsm",
-    "resource://specialpowers/SpecialPowersAPI.jsm",
-    "resource://specialpowers/WrapPrivileged.jsm",
+    "resource://specialpowers/specialpowers.js",
+    "resource://specialpowers/specialpowersAPI.js",
 
     "resource://gre/modules/ContentProcessSingleton.jsm",
 
@@ -65,6 +64,8 @@ const whitelist = {
   ]),
   frameScripts: new Set([
     // Test related
+    "resource://specialpowers/MozillaLogger.js",
+    "resource://specialpowers/specialpowersFrameScript.js",
     "chrome://mochikit/content/shutdown-leaks-collector.js",
     "chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js",
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",

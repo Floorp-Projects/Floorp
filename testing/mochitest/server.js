@@ -316,6 +316,7 @@ function createMochitestServer(serverBasePath) {
   server.registerDirectory("/", serverBasePath);
   server.registerPathHandler("/server/shutdown", serverShutdown);
   server.registerPathHandler("/server/debug", serverDebug);
+  server.registerPathHandler("/nested_oop", nestedTest);
   server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
   server.registerContentType("jar", "application/x-jar");
   server.registerContentType("ogg", "application/ogg");
@@ -723,6 +724,39 @@ function convertManifestToTestLinks(root, manifest) {
     }, {}),
     paths.length,
   ];
+}
+
+/**
+ * Produce a test harness page that has one remote iframe
+ */
+function nestedTest(metadata, response) {
+  response.setStatusLine("1.1", 200, "OK");
+  response.setHeader("Content-type", "text/html;charset=utf-8", false);
+  response.write(
+    HTML(
+      HEAD(
+        TITLE("Mochitest | ", metadata.path),
+        LINK({
+          rel: "stylesheet",
+          type: "text/css",
+          href: "/static/harness.css",
+        }),
+        SCRIPT({ type: "text/javascript", src: "/nested_setup.js" }),
+        SCRIPT(
+          { type: "text/javascript" },
+          "window.onload = addPermissions; gTestURL = '/tests?" +
+            metadata.queryString +
+            "';"
+        )
+      ),
+      BODY(
+        DIV(
+          { class: "container" },
+          DIV({ class: "frameholder", id: "holder-div" })
+        )
+      )
+    )
+  );
 }
 
 /**
