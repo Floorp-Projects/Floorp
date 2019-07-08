@@ -306,6 +306,11 @@ class DebuggerObject : public NativeObject {
                                                    Value* vp);
   static MOZ_MUST_USE bool unwrapMethod(JSContext* cx, unsigned argc,
                                         Value* vp);
+  static MOZ_MUST_USE bool setInstrumentationMethod(JSContext* cx,
+                                                    unsigned argc, Value* vp);
+  static MOZ_MUST_USE bool setInstrumentationActiveMethod(JSContext* cx,
+                                                          unsigned argc,
+                                                          Value* vp);
   static MOZ_MUST_USE bool getErrorReport(JSContext* cx,
                                           HandleObject maybeError,
                                           JSErrorReport*& report);
