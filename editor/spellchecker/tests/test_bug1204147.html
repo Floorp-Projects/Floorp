@@ -29,7 +29,7 @@ var content = document.getElementById("content");
 var firstLoad = true;
 var script;
 
-var loadListener = function(evt) {
+var loadListener = async function(evt) {
   if (firstLoad) {
     /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
@@ -53,7 +53,7 @@ var loadListener = function(evt) {
       addMessageListener("en_GB-exists", () => en_GB.exists());
       addMessageListener("destroy", () => hunspell.removeDirectory(en_GB));
     });
-    is(script.sendSyncMessage("en_GB-exists")[0][0], true,
+    is(await script.sendQuery("en_GB-exists"), true,
        "true expected (en-GB directory should exist)");
   }
 
@@ -97,7 +97,7 @@ var loadListener = function(evt) {
       content.removeEventListener("load", loadListener);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
-      script.sendSyncMessage("destroy");
+      script.sendAsyncMessage("destroy");
 
       // Reset the preference, so the last value we set doesn't collide with the next test.
       SimpleTest.finish();

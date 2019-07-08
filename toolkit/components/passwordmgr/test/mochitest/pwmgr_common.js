@@ -238,11 +238,11 @@ function disableMasterPassword() {
 }
 
 function setMasterPassword(enable) {
-  PWMGR_COMMON_PARENT.sendSyncMessage("setMasterPassword", { enable });
+  PWMGR_COMMON_PARENT.sendAsyncMessage("setMasterPassword", { enable });
 }
 
 function isLoggedIn() {
-  return PWMGR_COMMON_PARENT.sendSyncMessage("isLoggedIn")[0][0];
+  return PWMGR_COMMON_PARENT.sendQuery("isLoggedIn");
 }
 
 function logoutMasterPassword() {
@@ -401,7 +401,7 @@ function runChecksAfterCommonInit(aFunction = null) {
       registerRunTests()
     );
   }
-  PWMGR_COMMON_PARENT.sendSyncMessage("setupParent", {
+  PWMGR_COMMON_PARENT.sendAsyncMessage("setupParent", {
     testDependsOnDeprecatedLogin: gTestDependsOnDeprecatedLogin,
   });
   return PWMGR_COMMON_PARENT;
@@ -415,6 +415,9 @@ const PWMGR_COMMON_PARENT = runInParent(
 
 SimpleTest.registerCleanupFunction(() => {
   SpecialPowers.popPrefEnv();
+
+  PWMGR_COMMON_PARENT.sendAsyncMessage("cleanup");
+
   runInParent(function cleanupParent() {
     // eslint-disable-next-line no-shadow
     const { Services } = ChromeUtils.import(
@@ -460,6 +463,10 @@ let { LoginHelper } = SpecialPowers.Cu.import(
   "resource://gre/modules/LoginHelper.jsm",
   {}
 );
+let { Services } = SpecialPowers.Cu.import(
+  "resource://gre/modules/Services.jsm",
+  {}
+);
 /**
  * Proxy for Services.logins (nsILoginManager).
  * Only supports arguments which support structured clone plus {nsILoginInfo}
@@ -482,17 +489,11 @@ this.LoginManager = new Proxy(
           return val;
         });
 
-        let messageRV = PWMGR_COMMON_PARENT.sendSyncMessage(
-          "proxyLoginManager",
-          {
-            args: cloneableArgs,
-            loginInfoIndices,
-            methodName: prop,
-          }
-        )[0];
-
-        // Handle methods with no return value such as removeLogin.
-        return messageRV ? messageRV[0] : undefined;
+        return PWMGR_COMMON_PARENT.sendQuery("proxyLoginManager", {
+          args: cloneableArgs,
+          loginInfoIndices,
+          methodName: prop,
+        });
       };
     },
   }

@@ -16,7 +16,6 @@
 #include "nsQueryObject.h"
 
 #include "mozilla/dom/URL.h"
-#include "nsDOMWindowList.h"
 #include "nsIConsoleService.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDOMWindow.h"
