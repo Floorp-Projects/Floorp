@@ -317,8 +317,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
 
   RefPtr<BrowsingContext> parentContext = parentDocShell->GetBrowsingContext();
 
-  // Don't create a child docshell for a closed browsing context.
-  if (NS_WARN_IF(!parentContext) || parentContext->GetClosed()) {
+  // Don't create a child docshell for a discarded browsing context.
+  if (NS_WARN_IF(!parentContext) || parentContext->IsDiscarded()) {
     return nullptr;
   }
 
