@@ -2881,10 +2881,37 @@ static bool MoveToPending(nsIFile* dumpFile, nsIFile* extraFile,
   return true;
 }
 
+static nsresult CreateMinidumpsDirectoryLazily(nsIFile* miniDumpsDir) {
+  bool fileExists;
+  nsresult rv;
+
+  miniDumpsDir->Append(NS_LITERAL_STRING("minidumps"));
+  miniDumpsDir->Exists(&fileExists);
+  if (!fileExists) {
+    rv = miniDumpsDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsAutoString pathStr;
+  rv = miniDumpsDir->GetPath(pathStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CrashReporter::SetMinidumpPath(pathStr);
+
+  return NS_OK;
+}
+
 static void OnChildProcessDumpRequested(void* aContext,
                                         const ClientInfo& aClientInfo,
                                         const xpstring& aFilePath) {
   nsCOMPtr<nsIFile> minidump;
+  nsCOMPtr<nsIFile> miniDumpsDir;
+
+  nsresult rv = NS_GetSpecialDirectory("ProfD", getter_AddRefs(miniDumpsDir));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = CreateMinidumpsDirectoryLazily(miniDumpsDir);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // Hold the mutex until the current dump request is complete, to
   // prevent UnsetExceptionHandler() from pulling the rug out from
@@ -2893,6 +2920,8 @@ static void OnChildProcessDumpRequested(void* aContext,
   if (!isSafeToDump) return;
 
   CreateFileFromPath(aFilePath, getter_AddRefs(minidump));
+  rv = minidump->MoveTo(miniDumpsDir, EmptyString());
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   uint32_t pid = aClientInfo.pid();
 
