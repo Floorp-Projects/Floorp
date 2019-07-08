@@ -165,6 +165,7 @@ VRManager::VRManager()
 
 void VRManager::OpenShmem() {
   if (mExternalShmem) {
+    mExternalShmem->Clear();
     return;
   }
 #if defined(XP_WIN)
