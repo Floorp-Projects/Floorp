@@ -48,7 +48,7 @@ class WebChannelChild extends ActorChild {
     if (whitelist != _lastWhitelistValue) {
       let urls = whitelist.split(/\s+/);
       _cachedWhitelist = urls.map(origin =>
-        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin)
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin)
       );
     }
     return _cachedWhitelist;

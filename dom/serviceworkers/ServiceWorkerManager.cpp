@@ -203,7 +203,7 @@ nsresult PopulateRegistrationData(
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aRegistration);
 
-  if (NS_WARN_IF(!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal())) {
+  if (NS_WARN_IF(!BasePrincipal::Cast(aPrincipal)->IsContentPrincipal())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -824,7 +824,7 @@ class GetRegistrationsRunnable final : public Runnable {
 
     nsTArray<ServiceWorkerRegistrationDescriptor> array;
 
-    if (NS_WARN_IF(!BasePrincipal::Cast(principal)->IsCodebasePrincipal())) {
+    if (NS_WARN_IF(!BasePrincipal::Cast(principal)->IsContentPrincipal())) {
       return NS_OK;
     }
 
@@ -1156,7 +1156,7 @@ ServiceWorkerInfo* ServiceWorkerManager::GetActiveWorkerInfoForScope(
     return nullptr;
   }
   nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(scopeURI, aOriginAttributes);
+      BasePrincipal::CreateContentPrincipal(scopeURI, aOriginAttributes);
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetServiceWorkerRegistrationInfo(principal, scopeURI);
   if (!registration) {
@@ -1564,7 +1564,7 @@ nsresult ServiceWorkerManager::PrincipalToScopeKey(nsIPrincipal* aPrincipal,
                                                    nsACString& aKey) {
   MOZ_ASSERT(aPrincipal);
 
-  if (!BasePrincipal::Cast(aPrincipal)->IsCodebasePrincipal()) {
+  if (!BasePrincipal::Cast(aPrincipal)->IsContentPrincipal()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1975,7 +1975,7 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
     }
 
     // non-subresource request means the URI contains the principal
-    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
+    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
         uri, loadInfo->GetOriginAttributes());
 
     RefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -2214,7 +2214,7 @@ void ServiceWorkerManager::SoftUpdateInternal(
   }
 
   nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(scopeURI, aOriginAttributes);
+      BasePrincipal::CreateContentPrincipal(scopeURI, aOriginAttributes);
   if (NS_WARN_IF(!principal)) {
     return;
   }

@@ -192,7 +192,7 @@ nsresult GetPrincipalFromOrigin(const nsACString& aOrigin,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(uri, attrs);
   principal.forget(aPrincipal);
   return NS_OK;
 }
@@ -201,7 +201,7 @@ nsresult GetPrincipal(nsIURI* aURI, bool aIsInIsolatedMozBrowserElement,
                       nsIPrincipal** aPrincipal) {
   mozilla::OriginAttributes attrs(aIsInIsolatedMozBrowserElement);
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
   principal.forget(aPrincipal);
@@ -211,7 +211,7 @@ nsresult GetPrincipal(nsIURI* aURI, bool aIsInIsolatedMozBrowserElement,
 nsresult GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal) {
   mozilla::OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
   principal.forget(aPrincipal);
@@ -280,7 +280,7 @@ already_AddRefed<nsIPrincipal> GetNextSubDomainPrincipal(
   attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
 
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
+      mozilla::BasePrincipal::CreateContentPrincipal(newURI, attrs);
 
   return principal.forget();
 }
@@ -2379,10 +2379,10 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
     nsCOMPtr<nsIPrincipal> prin = aPrincipal;
     if (!prin) {
       if (aURI) {
-        prin = mozilla::BasePrincipal::CreateCodebasePrincipal(
+        prin = mozilla::BasePrincipal::CreateContentPrincipal(
             aURI, OriginAttributes());
       } else if (!aOriginNoSuffix.IsEmpty()) {
-        prin = mozilla::BasePrincipal::CreateCodebasePrincipal(aOriginNoSuffix);
+        prin = mozilla::BasePrincipal::CreateContentPrincipal(aOriginNoSuffix);
       }
     }
     MOZ_ASSERT(prin);
@@ -2481,7 +2481,7 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
       rv = GetPrincipal(aURI, getter_AddRefs(principal));
     } else {
       principal =
-          mozilla::BasePrincipal::CreateCodebasePrincipal(aOriginNoSuffix);
+          mozilla::BasePrincipal::CreateContentPrincipal(aOriginNoSuffix);
     }
     MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
                   PermissionAvailable(principal, mTypeArray[aType]));
@@ -2518,7 +2518,7 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
         }
       } else {
         principal =
-            mozilla::BasePrincipal::CreateCodebasePrincipal(aOriginNoSuffix);
+            mozilla::BasePrincipal::CreateContentPrincipal(aOriginNoSuffix);
       }
       RemoveFromPrincipal(principal, mTypeArray[aType]);
     } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {

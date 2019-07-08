@@ -496,7 +496,7 @@ DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
  *        - window: the window to get the loadGroup from
  *        - charset: the charset to use if the channel doesn't provide one
  *        - principal: the principal to use, if omitted, the request is loaded
- *                     with a codebase principal corresponding to the url being
+ *                     with a content principal corresponding to the url being
  *                     loaded, using the origin attributes of the window, if any.
  *        - cacheKey: when loading from cache, use this key to retrieve a cache
  *                    specific to a given SHEntry. (Allows loading POST
@@ -713,7 +713,7 @@ function newChannelForURL(
     // and it may not be correct.
     let prin = principal;
     if (!prin) {
-      prin = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+      prin = Services.scriptSecurityManager.createContentPrincipal(uri, {});
     }
 
     channelOptions.loadingPrincipal = prin;

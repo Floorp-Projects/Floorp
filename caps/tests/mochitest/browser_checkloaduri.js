@@ -300,7 +300,7 @@ add_task(async function() {
     if (sourceString.startsWith("about:test-chrome-privs")) {
       source = ssm.getSystemPrincipal();
     } else {
-      source = ssm.createCodebasePrincipal(makeURI(sourceString), {});
+      source = ssm.createContentPrincipal(makeURI(sourceString), {});
     }
     for (let [
       target,

@@ -47,7 +47,7 @@ function test_openUILink_checkPrincipal() {
         "sanity: correct principalToInherit"
       );
       ok(
-        content.document.nodePrincipal.isCodebasePrincipal,
+        content.document.nodePrincipal.isContentPrincipal,
         "sanity: correct doc.nodePrincipal"
       );
       is(

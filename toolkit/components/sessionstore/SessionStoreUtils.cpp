@@ -1104,7 +1104,7 @@ void SessionStoreUtils::RestoreSessionStorage(
 
     // OriginAttributes are always after a '^' character
     int32_t pos = entry.mKey.RFindChar('^');
-    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
+    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
         NS_ConvertUTF16toUTF8(Substring(entry.mKey, 0, pos)));
     nsresult rv;
     nsCOMPtr<nsIDOMStorageManager> storageManager =

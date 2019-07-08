@@ -14,7 +14,7 @@ function promiseEvent(target, event) {
 
 add_task(async function() {
   let principal = Services.scriptSecurityManager
-    .createCodebasePrincipalFromOrigin("http://example.com/");
+    .createContentPrincipalFromOrigin("http://example.com/");
 
   let webnav = Services.appShell.createWindowlessBrowser(false);
 

@@ -468,7 +468,7 @@ Scriptability::Scriptability(JS::Realm* realm)
   nsIPrincipal* prin = nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
   mImmuneToScriptPolicy = PrincipalImmuneToScriptPolicy(prin);
 
-  // If we're not immune, we should have a real principal with a codebase URI.
+  // If we're not immune, we should have a real principal with a URI.
   // Check the URI against the new-style domain policy.
   if (!mImmuneToScriptPolicy) {
     nsCOMPtr<nsIURI> codebase;

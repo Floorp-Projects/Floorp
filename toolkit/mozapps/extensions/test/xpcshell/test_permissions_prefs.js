@@ -9,7 +9,7 @@ const PREF_XPI_WHITELIST_PERMISSIONS = "xpinstall.whitelist.add";
 const PREF_XPI_BLACKLIST_PERMISSIONS = "xpinstall.blacklist.add";
 
 function newPrincipal(uri) {
-  return Services.scriptSecurityManager.createCodebasePrincipal(
+  return Services.scriptSecurityManager.createContentPrincipal(
     NetUtil.newURI(uri),
     {}
   );

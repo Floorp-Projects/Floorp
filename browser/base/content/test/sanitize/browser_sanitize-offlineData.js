@@ -30,7 +30,7 @@ function hasIndexedDB(origin) {
   return new Promise(resolve => {
     let hasData = true;
     let uri = Services.io.newURI(origin);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       {}
     );

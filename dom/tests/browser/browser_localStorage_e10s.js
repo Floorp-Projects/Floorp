@@ -72,7 +72,7 @@ function triggerAndWaitForLocalStorageFlush() {
  * like asking for intermittent failures.
  */
 function clearOriginStorageEnsuringNoPreload() {
-  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
     HELPER_PAGE_ORIGIN
   );
 
@@ -111,7 +111,7 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
     knownTab.tab.linkedBrowser,
     HELPER_PAGE_ORIGIN,
     function(origin) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(
+      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
       if (Services.lsm.nextGenLocalStorageEnabled) {

@@ -2424,7 +2424,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                  "must have a load context or pass in an explicit principal");
 
       nsCOMPtr<nsIPrincipal> principal;
-      nsresult rv = securityManager->GetLoadContextCodebasePrincipal(
+      nsresult rv = securityManager->GetLoadContextContentPrincipal(
           mDocumentURI, loadContext, getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
         SetPrincipals(principal, principal);
@@ -5429,12 +5429,12 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
       do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
     // Get a URI from the document principal. We use the original
-    // codebase in case the codebase was changed by SetDomain
-    nsCOMPtr<nsIURI> codebaseURI;
-    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+    // content URI in case the domain was changed by SetDomain
+    nsCOMPtr<nsIURI> principalURI;
+    NodePrincipal()->GetURI(getter_AddRefs(principalURI));
 
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
+    if (!principalURI) {
+      // Document's principal is not a content or null (may be system), so
       // can't set cookies
 
       return;
@@ -5442,14 +5442,14 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
 
     nsCOMPtr<nsIChannel> channel(mChannel);
     if (!channel) {
-      channel = CreateDummyChannelForCookies(codebaseURI);
+      channel = CreateDummyChannelForCookies(principalURI);
       if (!channel) {
         return;
       }
     }
 
     nsAutoCString cookie;
-    service->GetCookieString(codebaseURI, channel, cookie);
+    service->GetCookieString(principalURI, channel, cookie);
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
     UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
@@ -5488,11 +5488,11 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
       do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service && mDocumentURI) {
     // The code for getting the URI matches Navigator::CookieEnabled
-    nsCOMPtr<nsIURI> codebaseURI;
-    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+    nsCOMPtr<nsIURI> principalURI;
+    NodePrincipal()->GetURI(getter_AddRefs(principalURI));
 
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
+    if (!principalURI) {
+      // Document's principal is not a content or null (may be system), so
       // can't set cookies
 
       return;
@@ -5500,19 +5500,19 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
 
     nsCOMPtr<nsIChannel> channel(mChannel);
     if (!channel) {
-      channel = CreateDummyChannelForCookies(codebaseURI);
+      channel = CreateDummyChannelForCookies(principalURI);
       if (!channel) {
         return;
       }
     }
 
     NS_ConvertUTF16toUTF8 cookie(aCookie);
-    service->SetCookieString(codebaseURI, nullptr, cookie, channel);
+    service->SetCookieString(principalURI, nullptr, cookie, channel);
   }
 }
 
 already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
-    nsIURI* aCodebaseURI) {
+    nsIURI* aContentURI) {
   // The cookie service reads the privacy status of the channel we pass to it in
   // order to determine which cookie database to query.  In some cases we don't
   // have a proper channel to hand it to the cookie service though.  This
@@ -5524,7 +5524,7 @@ already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
   // The following channel is never openend, so it does not matter what
   // securityFlags we pass; let's follow the principle of least privilege.
   nsCOMPtr<nsIChannel> channel;
-  NS_NewChannel(getter_AddRefs(channel), aCodebaseURI, this,
+  NS_NewChannel(getter_AddRefs(channel), aContentURI, this,
                 nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                 nsIContentPolicy::TYPE_INVALID);
   nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);

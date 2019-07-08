@@ -446,7 +446,7 @@ function openLinkIn(url, where, params) {
   // can not do it for NullPrincipals since NullPrincipals are only
   // identical if they actually are the same object (See Bug: 1346759)
   function useOAForPrincipal(principal) {
-    if (principal && principal.isCodebasePrincipal) {
+    if (principal && principal.isContentPrincipal) {
       let attrs = {
         userContextId: aUserContextId,
         privateBrowsingId:

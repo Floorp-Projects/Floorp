@@ -68,7 +68,7 @@ function clearAllPlacesFavicons() {
 }
 
 function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI) {
-  let expectedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let expectedPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     aPageURI,
     { firstPartyDomain: aFirstPartyDomain }
   );

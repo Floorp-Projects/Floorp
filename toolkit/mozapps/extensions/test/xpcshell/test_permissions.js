@@ -8,7 +8,7 @@
 const XPI_MIMETYPE = "application/x-xpinstall";
 
 function newPrincipal(uri) {
-  return Services.scriptSecurityManager.createCodebasePrincipal(
+  return Services.scriptSecurityManager.createContentPrincipal(
     NetUtil.newURI(uri),
     {}
   );

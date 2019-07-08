@@ -122,7 +122,7 @@ class SubstitutingProtocolHandler {
   nsresult ResolveJARURI(nsIURL* aURL, nsIURI** aResult);
 
   // In general, we expect the principal of a document loaded from a
-  // substituting URI to be a codebase principal for that URI (rather than
+  // substituting URI to be a content principal for that URI (rather than
   // a principal for whatever is underneath). However, this only works if
   // the protocol handler for the underlying URI doesn't set an explicit
   // owner (which chrome:// does, for example). So we want to require that

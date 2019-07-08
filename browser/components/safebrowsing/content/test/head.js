@@ -79,7 +79,7 @@ function waitForDBInit(callback) {
   // The second part: we might have missed the event. Just do
   // an internal database lookup to confirm if the url has been
   // added.
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
     Services.io.newURI(PHISH_URL),
     {}
   );

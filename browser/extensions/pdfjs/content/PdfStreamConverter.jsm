@@ -1129,7 +1129,7 @@ PdfStreamConverter.prototype = {
     // e.g. useful for NoScript. Make make sure we reuse the origin attributes
     // from the request channel to keep isolation consistent.
     var uri = NetUtil.newURI(PDF_VIEWER_WEB_PAGE);
-    var resourcePrincipal = Services.scriptSecurityManager.createCodebasePrincipal(
+    var resourcePrincipal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       aRequest.loadInfo.originAttributes
     );

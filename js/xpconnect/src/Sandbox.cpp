@@ -1237,16 +1237,16 @@ nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative* wrapper,
 
 /*
  * For sandbox constructor the first argument can be a URI string in which case
- * we use the related Codebase Principal for the sandbox.
+ * we use the related Content Principal for the sandbox.
  */
-bool ParsePrincipal(JSContext* cx, HandleString codebase,
+bool ParsePrincipal(JSContext* cx, HandleString contentUrl,
                     const OriginAttributes& aAttrs, nsIPrincipal** principal) {
   MOZ_ASSERT(principal);
-  MOZ_ASSERT(codebase);
+  MOZ_ASSERT(contentUrl);
   nsCOMPtr<nsIURI> uri;
-  nsAutoJSString codebaseStr;
-  NS_ENSURE_TRUE(codebaseStr.init(cx, codebase), false);
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), codebaseStr);
+  nsAutoJSString contentStr;
+  NS_ENSURE_TRUE(contentStr.init(cx, contentUrl), false);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), contentStr);
   if (NS_FAILED(rv)) {
     JS_ReportErrorASCII(cx, "Creating URI from string failed");
     return false;
@@ -1256,7 +1256,7 @@ bool ParsePrincipal(JSContext* cx, HandleString codebase,
   // sandbox constructor. But creating a sandbox based on a string is a
   // deprecated API so no need to add features to it.
   nsCOMPtr<nsIPrincipal> prin =
-      BasePrincipal::CreateCodebasePrincipal(uri, aAttrs);
+      BasePrincipal::CreateContentPrincipal(uri, aAttrs);
   prin.forget(principal);
 
   if (!*principal) {
@@ -1339,7 +1339,7 @@ static bool GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
   // check to make sure that it is the same as the OA found before.
   // In the second pass, we ignore objects, and use the OA found in pass 0
   // (or the previously computed OA if we have obtained it from the options)
-  // to construct codebase principals.
+  // to construct content principals.
   //
   // The effective OA selected above will also be set as the OA of the
   // expanded principal object.
@@ -1413,7 +1413,7 @@ static bool GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
 
     nsCOMPtr<nsIPrincipal> principal;
     if (allowed.isString()) {
-      // In case of string let's try to fetch a codebase principal from it.
+      // In case of string let's try to fetch a content principal from it.
       RootedString str(cx, allowed.toString());
 
       // attrs here is either a default OriginAttributes in case the
