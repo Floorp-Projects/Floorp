@@ -120,11 +120,13 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private val preDrawListener = object : ViewTreeObserver.OnPreDrawListener {
         override fun onPreDraw(): Boolean {
-            viewLifecycleOwner.lifecycleScope.launch {
-                delay(ANIM_SCROLL_DELAY)
-                restoreLayoutState()
+            if (view != null) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    delay(ANIM_SCROLL_DELAY)
+                    restoreLayoutState()
 //                startPostponedEnterTransition()
-            }.invokeOnCompletion { sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this) }
+                }.invokeOnCompletion { sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this) }
+            }
             return true
         }
     }
@@ -753,37 +755,40 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun scrollAndAnimateCollection(tabsAddedToCollectionSize: Int, changedCollection: TabCollection? = null) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val recyclerView = sessionControlComponent.view
-            delay(ANIM_SCROLL_DELAY)
-            val tabsSize = getListOfSessions().size
+        if (view != null) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val recyclerView = sessionControlComponent.view
+                delay(ANIM_SCROLL_DELAY)
+                val tabsSize = getListOfSessions().size
 
-            var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
-            changedCollection?.let { changedCollection ->
-                requireComponents.core.tabCollectionStorage.cachedTabCollections.filterIndexed { index, tabCollection ->
-                    if (tabCollection.id == changedCollection.id) {
-                        indexOfCollection = tabsSize + NON_TAB_ITEM_NUM + index
-                        return@filterIndexed true
-                    }
-                    false
+                var indexOfCollection = tabsSize + NON_TAB_ITEM_NUM
+                changedCollection?.let { changedCollection ->
+                    requireComponents.core.tabCollectionStorage.cachedTabCollections
+                        .filterIndexed { index, tabCollection ->
+                            if (tabCollection.id == changedCollection.id) {
+                                indexOfCollection = tabsSize + NON_TAB_ITEM_NUM + index
+                                return@filterIndexed true
+                            }
+                            false
+                        }
                 }
-            }
-            val lastVisiblePosition =
-                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition() ?: 0
-            if (lastVisiblePosition < indexOfCollection) {
-                val onScrollListener = object : RecyclerView.OnScrollListener() {
-                    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                        super.onScrollStateChanged(recyclerView, newState)
-                        if (newState == SCROLL_STATE_IDLE) {
-                            animateCollection(tabsAddedToCollectionSize, indexOfCollection)
-                            recyclerView.removeOnScrollListener(this)
+                val lastVisiblePosition =
+                    (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition() ?: 0
+                if (lastVisiblePosition < indexOfCollection) {
+                    val onScrollListener = object : RecyclerView.OnScrollListener() {
+                        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                            super.onScrollStateChanged(recyclerView, newState)
+                            if (newState == SCROLL_STATE_IDLE) {
+                                animateCollection(tabsAddedToCollectionSize, indexOfCollection)
+                                recyclerView.removeOnScrollListener(this)
+                            }
                         }
                     }
+                    recyclerView.addOnScrollListener(onScrollListener)
+                    recyclerView.smoothScrollToPosition(indexOfCollection)
+                } else {
+                    animateCollection(tabsAddedToCollectionSize, indexOfCollection)
                 }
-                recyclerView.addOnScrollListener(onScrollListener)
-                recyclerView.smoothScrollToPosition(indexOfCollection)
-            } else {
-                animateCollection(tabsAddedToCollectionSize, indexOfCollection)
             }
         }
     }
