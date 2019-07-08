@@ -7116,15 +7116,12 @@ var gCSSProperties = {
     domProp: "quotes",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: [
-      "none",
-      "'\"' '\"'",
-      "'' ''",
+    initial_values: [
       '"\u201C" "\u201D" "\u2018" "\u2019"',
       '"\\201C" "\\201D" "\\2018" "\\2019"',
     ],
-    invalid_values: ["'\"'", '"" "" ""'],
+    other_values: ["none", "'\"' '\"'"],
+    invalid_values: [],
   },
   right: {
     domProp: "right",
