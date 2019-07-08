@@ -320,6 +320,15 @@ renaming_overrides_prefixing = true
   inline bool IsNone() const;
 """
 
+"Quotes" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleQuotes() {}
+ public:
+"""
+
 # TODO(emilio): Add hooks to cbindgen to be able to generate MOZ_MUST_USE_TYPE
 # or MOZ_MUST_USE on the functions.
 "Owned" = """
