@@ -4,13 +4,16 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["WebSocketHandshake"];
+var EXPORTED_SYMBOLS = ["WebSocketServer"];
 
 // This file is an XPCOM service-ified copy of ../devtools/server/socket/websocket-server.js.
 
 const CC = Components.Constructor;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Stream } = ChromeUtils.import(
+  "chrome://remote/content/server/Stream.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -26,8 +29,52 @@ const CryptoHash = CC(
 );
 const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
 
+// limit the header size to put an upper bound on allocated memory
+const HEADER_MAX_LEN = 8000;
+
 // TODO(ato): Merge this with httpd.js so that we can respond to both HTTP/1.1
 // as well as WebSocket requests on the same server.
+
+/**
+ * Read a line from async input stream
+ * and return promise that resolves to the line once it has been read.
+ * If the line is longer than HEADER_MAX_LEN, will throw error.
+ */
+function readLine(input) {
+  return new Promise((resolve, reject) => {
+    let line = "";
+    const wait = () => {
+      input.asyncWait(
+        stream => {
+          try {
+            const amountToRead = HEADER_MAX_LEN - line.length;
+            line += Stream.delimitedRead(input, "\n", amountToRead);
+
+            if (line.endsWith("\n")) {
+              resolve(line.trimRight());
+              return;
+            }
+
+            if (line.length >= HEADER_MAX_LEN) {
+              throw new Error(
+                `Failed to read HTTP header longer than ${HEADER_MAX_LEN} bytes`
+              );
+            }
+
+            wait();
+          } catch (ex) {
+            reject(ex);
+          }
+        },
+        0,
+        0,
+        threadManager.currentThread
+      );
+    };
+
+    wait();
+  });
+}
 
 /**
  * Write a string of bytes to async output stream
@@ -62,6 +109,38 @@ function writeString(output, data) {
     wait();
   });
 }
+
+/**
+ * Read HTTP request from async input stream.
+ *
+ * @return Request line (string) and Map of header names and values.
+ */
+const readHttpRequest = async function(input) {
+  let requestLine = "";
+  const headers = new Map();
+
+  while (true) {
+    const line = await readLine(input);
+    if (line.length == 0) {
+      break;
+    }
+
+    if (!requestLine) {
+      requestLine = line;
+    } else {
+      const colon = line.indexOf(":");
+      if (colon == -1) {
+        throw new Error(`Malformed HTTP header: ${line}`);
+      }
+
+      const name = line.slice(0, colon).toLowerCase();
+      const value = line.slice(colon + 1).trim();
+      headers.set(name, value);
+    }
+  }
+
+  return { requestLine, headers };
+};
 
 /** Write HTTP response (array of strings) to async output stream. */
 function writeHttpResponse(output, response) {
@@ -171,6 +250,18 @@ async function createWebSocket(transport, input, output) {
   });
 }
 
+/**
+ * Accept an incoming WebSocket server connection.
+ * Takes an established nsISocketTransport in the parameters.
+ * Performs the WebSocket handshake and waits for the WebSocket to open.
+ * Returns Promise with a WebSocket ready to send and receive messages.
+ */
+async function accept(transport, input, output) {
+  const request = await readHttpRequest(input);
+  await serverHandshake(request, output);
+  return createWebSocket(transport, input, output);
+}
+
 /** Upgrade an existing HTTP request from httpd.js to WebSocket. */
 async function upgrade(request, response) {
   // handle response manually, allowing us to send arbitrary data
@@ -191,4 +282,4 @@ async function upgrade(request, response) {
   return createWebSocket(transport, input, output);
 }
 
-const WebSocketHandshake = { upgrade };
+const WebSocketServer = { accept, upgrade };
