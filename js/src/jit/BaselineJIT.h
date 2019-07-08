@@ -535,6 +535,10 @@ inline bool IsBaselineEnabled(JSContext* cx) {
 #endif
 }
 
+inline bool IsBaselineInterpreterOrJitEnabled(JSContext* cx) {
+  return IsBaselineEnabled(cx) || JitOptions.baselineInterpreter;
+}
+
 enum class BaselineTier { Interpreter, Compiler };
 
 template <BaselineTier Tier>
