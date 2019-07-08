@@ -21,26 +21,30 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var resource = getPlayableVideo(gSmallTests).name;
+async function start() {
+  const resource = getPlayableVideo(gSmallTests).name;
+  vin.src = "http://example.org:8000/tests/dom/media/test/" + resource;
+  vin.preload = "metadata";
 
-vin.src = "http://example.org:8000/tests/dom/media/test/" + resource;
-vin.preload = "metadata";
-
-vin.onloadedmetadata = function () {
+  await new Promise(r => vin.onloadedmetadata = r);
   vout.srcObject = vin.mozCaptureStreamUntilEnded();
   vin.play();
   vout.play();
-};
 
-vout.onended = function() {
+  await new Promise(r => vout.onended = r);
   var ctx = SpecialPowers.wrap(c.getContext("2d"));
   ctx.drawWindow(window, 0, 0, 10, 10, "rgb(255, 255, 0)", 0);
   var data = ctx.getImageData(2, 2, 1, 1);
   // Captured cross-origin video streams should render entirely black.
   is(data.data.join(','), "0,0,0,255", "expected black");
   vout.style.position = "";
-  SimpleTest.finish();
-};
+}
+
+(async () => {
+  try { await start(); }
+  catch(e) { ok(false, `Rejected with ${e}`); }
+  finally { SimpleTest.finish(); }
+})();
 </script>
 </pre>
 </body>
