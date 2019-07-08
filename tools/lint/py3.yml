@@ -24,7 +24,6 @@ py3:
         - testing/tps
         - testing/web-platform
         - toolkit
-        - tools/jprof
         - tools/profiler
         - tools/rb
         - xpcom/idl-parser
