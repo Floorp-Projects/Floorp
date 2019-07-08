@@ -6724,6 +6724,83 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
   return true;
 }
 
+template <>
+bool BaselineCompilerCodeGen::emit_JSOP_INSTRUMENTATION_ACTIVE() {
+  frame.syncStack(0);
+
+  // RealmInstrumentation cannot be removed from a global without destroying the
+  // entire realm, so its active address can be embedded into jitcode.
+  const int32_t* address = RealmInstrumentation::addressOfActive(cx->global());
+
+  Register scratch = R0.scratchReg();
+  masm.load32(AbsoluteAddress(address), scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, R0);
+  frame.push(R0, JSVAL_TYPE_BOOLEAN);
+
+  return true;
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_JSOP_INSTRUMENTATION_ACTIVE() {
+  prepareVMCall();
+
+  using Fn = bool (*)(JSContext*, MutableHandleValue);
+  if (!callVM<Fn, InstrumentationActiveOperation>()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
+}
+
+template <>
+bool BaselineCompilerCodeGen::emit_JSOP_INSTRUMENTATION_CALLBACK() {
+  JSObject* obj = RealmInstrumentation::getCallback(cx->global());
+  MOZ_ASSERT(obj);
+  frame.push(ObjectValue(*obj));
+  return true;
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_JSOP_INSTRUMENTATION_CALLBACK() {
+  prepareVMCall();
+
+  using Fn = JSObject* (*)(JSContext*);
+  if (!callVM<Fn, InstrumentationCallbackOperation>()) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
+}
+
+template <>
+bool BaselineCompilerCodeGen::emit_JSOP_INSTRUMENTATION_SCRIPT_ID() {
+  int32_t scriptId;
+  RootedScript script(cx, handler.script());
+  if (!RealmInstrumentation::getScriptId(cx, cx->global(), script,
+                                         &scriptId)) {
+    return false;
+  }
+  frame.push(Int32Value(scriptId));
+  return true;
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_JSOP_INSTRUMENTATION_SCRIPT_ID() {
+  prepareVMCall();
+  pushScriptArg();
+
+  using Fn = bool (*)(JSContext*, HandleScript, MutableHandleValue);
+  if (!callVM<Fn, InstrumentationScriptIdOperation>()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitPrologue() {
 #ifdef JS_USE_LINK_REGISTER
