@@ -17,10 +17,6 @@
 namespace mozilla {
 namespace dom {
 
-JSWindowActorChild::JSWindowActorChild(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal ? aGlobal
-                      : xpc::NativeGlobal(xpc::PrivilegedJunkScope())) {}
-
 JSWindowActorChild::~JSWindowActorChild() { MOZ_ASSERT(!mManager); }
 
 JSObject* JSWindowActorChild::WrapObject(JSContext* aCx,

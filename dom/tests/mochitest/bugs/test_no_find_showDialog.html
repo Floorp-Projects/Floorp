@@ -8,7 +8,7 @@
   <iframe src="about:blank"></iframe>
   <script type="text/javascript">
 
-  async function checkForFindDialog() {
+  function checkForFindDialog() {
     let chromeScript = SpecialPowers.loadChromeScript(_ => {
       addMessageListener("test:check", () => {
         const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -25,7 +25,7 @@
 
     });
 
-    let sawFind = await chromeScript.sendQuery("test:check");
+    let sawFind = chromeScript.sendSyncMessage("test:check")[0][0];
     chromeScript.destroy();
     return sawFind;
   }
@@ -67,7 +67,7 @@
          "Should return false and not show a dialog if we pass an empty string.");
 
       // Double check to ensure that the parent didn't open a find dialog
-      let sawWindow = await checkForFindDialog();
+      let sawWindow = checkForFindDialog();
       ok(!sawWindow, "Should never have seen the dialog.");
     });
   }

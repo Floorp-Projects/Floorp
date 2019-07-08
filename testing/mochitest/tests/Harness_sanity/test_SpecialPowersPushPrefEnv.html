@@ -9,19 +9,19 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-async function starttest() {
+function starttest() {
   try {
-    await SpecialPowers.setBoolPref("test.bool", 1);
+    SpecialPowers.setBoolPref("test.bool", 1);
   } catch(e) {
-    await SpecialPowers.setBoolPref("test.bool", true);
+    SpecialPowers.setBoolPref("test.bool", true);
   }
   try {
-    await SpecialPowers.setIntPref("test.int", true);
+    SpecialPowers.setIntPref("test.int", true);
   } catch(e) {
-    await SpecialPowers.setIntPref("test.int", 1);
+    SpecialPowers.setIntPref("test.int", 1);
   }
-  await SpecialPowers.setCharPref("test.char", 'test');
-  await SpecialPowers.setBoolPref("test.cleanup", false);
+  SpecialPowers.setCharPref("test.char", 'test');
+  SpecialPowers.setBoolPref("test.cleanup", false);
 
   setTimeout(test1, 0, 0);
 }
