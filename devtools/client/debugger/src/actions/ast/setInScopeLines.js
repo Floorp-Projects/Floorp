@@ -6,7 +6,6 @@
 
 import {
   hasInScopeLines,
-  hasSourceActor,
   getSourceWithContent,
   getVisibleSelectedFrame,
 } from "../../selectors";
@@ -67,11 +66,7 @@ export function setInScopeLines(cx: Context) {
     }
 
     const { location } = visibleFrame;
-
-    if (
-      hasInScopeLines(getState(), location) ||
-      !hasSourceActor(getState(), location.sourceId)
-    ) {
+    if (hasInScopeLines(getState(), location)) {
       return;
     }
 
