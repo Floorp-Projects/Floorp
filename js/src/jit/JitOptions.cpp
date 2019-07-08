@@ -235,6 +235,10 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(spectreJitToCxxCalls, true);
 #endif
 
+  // These are set to their actual values in InitializeJit.
+  SET_DEFAULT(supportsFloatingPoint, false);
+  SET_DEFAULT(supportsUnalignedAccesses, false);
+
   // Toggles the optimization whereby offsets are folded into loads and not
   // included in the bounds check.
   SET_DEFAULT(wasmFoldOffsets, true);

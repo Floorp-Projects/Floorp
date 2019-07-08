@@ -812,9 +812,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
     return scriptDataTable_.ref();
   }
 
-  js::WriteOnceData<bool> jitSupportsFloatingPoint;
-  js::WriteOnceData<bool> jitSupportsUnalignedAccesses;
-
  private:
   static mozilla::Atomic<size_t> liveRuntimesCount;
 
