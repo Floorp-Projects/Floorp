@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * For more information on this interface, please see
- * https://w3c.github.io/webappsec-feature-policy/#idl-index
+ * https://wicg.github.io/feature-policy/#policy
  */
 
 [NoInterfaceObject]
-interface FeaturePolicy {
+interface Policy {
   boolean allowsFeature(DOMString feature, optional DOMString origin);
   sequence<DOMString> features();
   sequence<DOMString> allowedFeatures();
