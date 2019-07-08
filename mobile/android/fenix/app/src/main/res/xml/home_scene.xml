@@ -12,7 +12,8 @@
         <OnSwipe
             motion:dragDirection="dragUp"
             motion:touchAnchorId="@id/home_component"
-            motion:touchAnchorSide="top" />
+            motion:touchAnchorSide="top"
+            motion:onTouchUp="stop"/>
 
         <KeyFrameSet>
             <KeyPosition
