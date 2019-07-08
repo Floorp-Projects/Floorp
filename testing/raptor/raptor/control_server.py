@@ -322,7 +322,7 @@ class RaptorControlServer():
             LOG.info("shutting down android app %s" % self.app_name)
         else:
             LOG.info("shutting down browser (pid: %d)" % self.browser_proc.pid)
-        self.kill_thread = threading.Thread(target=self.wait_for_quit)
+        self.kill_thread = threading.Thread(target=self.wait_for_quit, kwargs={'timeout': 0})
         self.kill_thread.daemon = True
         self.kill_thread.start()
 
