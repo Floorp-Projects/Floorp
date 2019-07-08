@@ -120,11 +120,7 @@ function waitScrollFinish(aTarget) {
  */
 function setTestPluginEnabledState(aState, aPluginName) {
   let name = aPluginName || "Test Plug-in";
-  let resolved = false;
-  SpecialPowers.setTestPluginEnabledState(aState, name).then(() => {
-    resolved = true;
-  });
-  SpecialPowers.Services.tm.spinEventLoopUntil(() => resolved);
+  SpecialPowers.setTestPluginEnabledState(aState, name);
 }
 
 /**

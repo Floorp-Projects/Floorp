@@ -336,6 +336,7 @@ UNIFIED_SOURCES += [
     'nsDOMNavigationTiming.cpp',
     'nsDOMSerializer.cpp',
     'nsDOMTokenList.cpp',
+    'nsDOMWindowList.cpp',
     'nsFocusManager.cpp',
     'nsFrameLoader.cpp',
     'nsFrameLoaderOwner.cpp',

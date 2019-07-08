@@ -70,21 +70,30 @@ async function runTests() {
     const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
     addMessageListener("loadTrackers", __ => {
-      return UrlClassifierTestUtils.addTestTrackers();
+      UrlClassifierTestUtils.addTestTrackers().then(___ => {
+        sendAsyncMessage("trackersLoaded");
+      });
     });
 
     addMessageListener("unloadTrackers", __ => {
       UrlClassifierTestUtils.cleanupTestTrackers();
+      sendAsyncMessage("trackersUnloaded");
     });
   });
 
-  await chromeScript.sendQuery("loadTrackers");
+  await new Promise(resolve => {
+    chromeScript.addMessageListener("trackersLoaded", resolve);
+    chromeScript.sendAsyncMessage("loadTrackers");
+  });
 
   for (let test in tests) {
     await runTest(tests[test]);
   }
 
-  await chromeScript.sendQuery("unloadTrackers");
+  await new Promise(resolve => {
+    chromeScript.addMessageListener("trackersUnloaded", resolve);
+    chromeScript.sendSyncMessage("unloadTrackers");
+  });
 
   chromeScript.destroy();
   SimpleTest.finish();

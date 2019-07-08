@@ -52,14 +52,13 @@ function pressButton() {
 }
 
 let frames_loaded = 0;
-async function startTest() {
+function startTest() {
   frames_loaded++;
-  let promise = SpecialPowers.pushPrefEnv({ "set": [
+  SpecialPowers.pushPrefEnv({ "set": [
                               ["dom.gamepad.extensions.enabled", true],
                               ["dom.gamepad.extensions.lightindicator", true],
                               ["dom.gamepad.extensions.multitouch", true]] });
   if (frames_loaded == 2) {
-  await promise;
   // Add a gamepad
   GamepadService.addGamepad("test gamepad", // id
                       GamepadService.standardMapping,

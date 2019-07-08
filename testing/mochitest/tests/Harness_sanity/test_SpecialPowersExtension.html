@@ -31,26 +31,26 @@ function dispatchTestEvent() {
 dump("\nSPECIALPTEST:::Test script loaded " + (new Date).getTime() + "\n");
 SimpleTest.waitForExplicitFinish();
 var startTime = new Date();
-async function starttest(){
+function starttest(){
   dump("\nSPECIALPTEST:::Test script running after load " + (new Date).getTime() + "\n");
 
   /** Test for SpecialPowers extension **/
   is(SpecialPowers.sanityCheck(), "foo", "check to see whether the Special Powers extension is installed.");
 
   // Test a sync call into chrome
-  await SpecialPowers.setBoolPref('extensions.checkCompatibility', true);
+  SpecialPowers.setBoolPref('extensions.checkCompatibility', true);
   is(SpecialPowers.getBoolPref('extensions.checkCompatibility'), true, "Check to see if we can set a preference properly");
-  await SpecialPowers.clearUserPref('extensions.checkCompatibility');
+  SpecialPowers.clearUserPref('extensions.checkCompatibility');
 
   // Test a int pref
-  await SpecialPowers.setIntPref('extensions.foobar', 42);
+  SpecialPowers.setIntPref('extensions.foobar', 42);
   is(SpecialPowers.getIntPref('extensions.foobar'), 42, "Check int pref");
-  await SpecialPowers.clearUserPref('extensions.foobar');
+  SpecialPowers.clearUserPref('extensions.foobar');
 
   // Test a string pref
-  await SpecialPowers.setCharPref("extensions.foobaz", "hi there");
+  SpecialPowers.setCharPref("extensions.foobaz", "hi there");
   is(SpecialPowers.getCharPref("extensions.foobaz"), "hi there", "Check string pref");
-  await SpecialPowers.clearUserPref("extensions.foobaz");
+  SpecialPowers.clearUserPref("extensions.foobaz");
 
   // Test an invalid pref
   var retVal = null;
@@ -59,8 +59,7 @@ async function starttest(){
   } catch (ex) {
     retVal = ex;
   }
-  is(retVal.result, SpecialPowers.Cr.NS_ERROR_UNEXPECTED,
-     "received an exception trying to get an unset preference value");
+  is(retVal.message, "Error getting pref 'extensions.checkCompat0123456789'", "received an exception trying to get an unset preference value");
 
   SpecialPowers.addChromeEventListener("TestEvent", testEventListener, true, true);
   SpecialPowers.addChromeEventListener("TestEvent", testEventListener2, true, false);
