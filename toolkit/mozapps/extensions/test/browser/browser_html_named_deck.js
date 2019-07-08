@@ -4,12 +4,6 @@
 
 "use strict";
 
-add_task(async function enableHtmlViews() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-});
-
 const DEFAULT_SECTION_NAMES = ["one", "two", "three"];
 
 function makeButton({ doc, name, deckId }) {

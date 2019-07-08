@@ -23,9 +23,6 @@ const SUPPORT_URL = Services.urlFormatter.formatURL(
 );
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
   gProvider = new MockProvider();
 });
 

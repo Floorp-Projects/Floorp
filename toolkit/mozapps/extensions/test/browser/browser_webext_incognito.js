@@ -16,24 +16,13 @@ AddonTestUtils.initMochitest(this);
 function get_test_items() {
   var items = {};
 
-  if (gManagerWindow.useHtmlViews) {
-    for (let item of gManagerWindow
-      .getHtmlBrowser()
-      .contentDocument.querySelectorAll("addon-card")) {
-      items[item.getAttribute("addon-id")] = item;
-    }
-  } else {
-    for (let item of gManagerWindow.document.getElementById("addon-list")
-      .childNodes) {
-      items[item.mAddon.id] = item;
-    }
+  for (let item of gManagerWindow
+    .getHtmlBrowser()
+    .contentDocument.querySelectorAll("addon-card")) {
+    items[item.getAttribute("addon-id")] = item;
   }
 
   return items;
-}
-
-function get(aId) {
-  return gManagerWindow.document.getElementById(aId);
 }
 
 function getHtmlElem(selector) {
@@ -43,184 +32,88 @@ function getHtmlElem(selector) {
 }
 
 function getPrivateBrowsingBadge(card) {
-  if (gManagerWindow.useHtmlViews) {
-    return card.querySelector(".addon-badge-private-browsing-allowed");
-  }
-  return card.ownerDocument.getAnonymousElementByAttribute(
-    card,
-    "anonid",
-    "privateBrowsing"
-  );
+  return card.querySelector(".addon-badge-private-browsing-allowed");
 }
 
 function getPreferencesButtonAtListView(card) {
-  if (gManagerWindow.useHtmlViews) {
-    return card.querySelector("panel-item[action='preferences']");
-  }
-  return card._preferencesBtn;
+  return card.querySelector("panel-item[action='preferences']");
 }
 
 function getPreferencesButtonAtDetailsView() {
-  if (gManagerWindow.useHtmlViews) {
-    return getHtmlElem("panel-item[action='preferences']");
-  }
-  return gManagerWindow.document.getElementById("detail-prefs-btn");
+  return getHtmlElem("panel-item[action='preferences']");
 }
 
 function isInlineOptionsVisible() {
-  if (gManagerWindow.useHtmlViews) {
-    // The following button is used to open the inline options browser.
-    return !getHtmlElem("named-deck-button[name='preferences']").hidden;
-  }
-  return !!gManagerWindow.document.getElementById("addon-options");
+  // The following button is used to open the inline options browser.
+  return !getHtmlElem("named-deck-button[name='preferences']").hidden;
 }
 
 function getPrivateBrowsingValue() {
-  if (gManagerWindow.useHtmlViews) {
-    return getHtmlElem("input[type='radio'][name='private-browsing']:checked")
-      .value;
-  }
-  return gManagerWindow.document.getElementById("detail-privateBrowsing").value;
+  return getHtmlElem("input[type='radio'][name='private-browsing']:checked")
+    .value;
 }
 
 async function setPrivateBrowsingValue(value) {
-  if (gManagerWindow.useHtmlViews) {
-    let radio = getHtmlElem(
-      `input[type="radio"][name="private-browsing"][value="${value}"]`
-    );
-    EventUtils.synthesizeMouseAtCenter(
-      radio,
-      { clickCount: 1 },
-      radio.ownerGlobal
-    );
-    return TestUtils.waitForCondition(
-      () => radio.checked,
-      `Waiting for privateBrowsing=${value}`
-    );
-  }
-  let privateBrowsing = gManagerWindow.document.getElementById(
-    "detail-privateBrowsing"
+  let radio = getHtmlElem(
+    `input[type="radio"][name="private-browsing"][value="${value}"]`
   );
-  let radio = privateBrowsing.querySelector(`radio[value="${value}"]`);
-  EventUtils.synthesizeMouseAtCenter(radio, { clickCount: 1 }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(
+    radio,
+    { clickCount: 1 },
+    radio.ownerGlobal
+  );
   return TestUtils.waitForCondition(
-    () => privateBrowsing.value == value,
+    () => radio.checked,
     `Waiting for privateBrowsing=${value}`
   );
 }
 
 // Check whether the private browsing inputs are visible in the details view.
 function checkIsModifiable(expected) {
-  if (gManagerWindow.useHtmlViews) {
-    if (expected) {
-      is_element_visible(
-        getHtmlElem(".addon-detail-row-private-browsing"),
-        "Private browsing should be visible"
-      );
-    } else {
-      is_element_hidden(
-        getHtmlElem(".addon-detail-row-private-browsing"),
-        "Private browsing should be hidden"
-      );
-    }
-    checkHelpRow(".addon-detail-row-private-browsing", expected);
-    return;
-  }
   if (expected) {
     is_element_visible(
-      get("detail-privateBrowsing-row"),
+      getHtmlElem(".addon-detail-row-private-browsing"),
       "Private browsing should be visible"
-    );
-    is_element_visible(
-      get("detail-privateBrowsing-row-footer"),
-      "Private browsing footer should be visible"
     );
   } else {
     is_element_hidden(
-      get("detail-privateBrowsing-row"),
+      getHtmlElem(".addon-detail-row-private-browsing"),
       "Private browsing should be hidden"
     );
-    is_element_hidden(
-      get("detail-privateBrowsing-row-footer"),
-      "Private browsing footer should be hidden"
-    );
   }
+  checkHelpRow(".addon-detail-row-private-browsing", expected);
 }
 
 // Check whether the details view shows that private browsing is forcibly disallowed.
 function checkIsDisallowed(expected) {
-  if (gManagerWindow.useHtmlViews) {
-    if (expected) {
-      is_element_visible(
-        getHtmlElem(".addon-detail-row-private-browsing-disallowed"),
-        "Private browsing should be disallowed"
-      );
-    } else {
-      is_element_hidden(
-        getHtmlElem(".addon-detail-row-private-browsing-disallowed"),
-        "Private browsing should not be disallowed"
-      );
-    }
-    checkHelpRow(".addon-detail-row-private-browsing-disallowed", expected);
-    return;
-  }
   if (expected) {
     is_element_visible(
-      get("detail-privateBrowsing-disallowed"),
+      getHtmlElem(".addon-detail-row-private-browsing-disallowed"),
       "Private browsing should be disallowed"
-    );
-    is_element_visible(
-      get("detail-privateBrowsing-disallowed-footer"),
-      "Private browsing footer should be disallowed"
     );
   } else {
     is_element_hidden(
-      get("detail-privateBrowsing-disallowed"),
+      getHtmlElem(".addon-detail-row-private-browsing-disallowed"),
       "Private browsing should not be disallowed"
     );
-    is_element_hidden(
-      get("detail-privateBrowsing-disallowed-footer"),
-      "Private browsing footer should not be disallowed"
-    );
   }
+  checkHelpRow(".addon-detail-row-private-browsing-disallowed", expected);
 }
 
 // Check whether the details view shows that private browsing is forcibly allowed.
 function checkIsRequired(expected) {
-  if (gManagerWindow.useHtmlViews) {
-    if (expected) {
-      is_element_visible(
-        getHtmlElem(".addon-detail-row-private-browsing-required"),
-        "Private browsing should be required"
-      );
-    } else {
-      is_element_hidden(
-        getHtmlElem(".addon-detail-row-private-browsing-required"),
-        "Private browsing should not be required"
-      );
-    }
-    checkHelpRow(".addon-detail-row-private-browsing-required", expected);
-    return;
-  }
   if (expected) {
     is_element_visible(
-      get("detail-privateBrowsing-required"),
-      "Private required should be visible"
-    );
-    is_element_visible(
-      get("detail-privateBrowsing-required-footer"),
-      "Private required footer should be visible"
+      getHtmlElem(".addon-detail-row-private-browsing-required"),
+      "Private browsing should be required"
     );
   } else {
     is_element_hidden(
-      get("detail-privateBrowsing-required"),
-      "Private required should be hidden"
-    );
-    is_element_hidden(
-      get("detail-privateBrowsing-required-footer"),
-      "Private required footer should be hidden"
+      getHtmlElem(".addon-detail-row-private-browsing-required"),
+      "Private browsing should not be required"
     );
   }
+  checkHelpRow(".addon-detail-row-private-browsing-required", expected);
 }
 
 function checkHelpRow(selector, expected) {
@@ -249,7 +142,7 @@ add_task(function clearInitialTelemetry() {
   Services.telemetry.clearEvents();
 });
 
-async function test_badge_and_toggle_incognito() {
+add_task(async function test_badge_and_toggle_incognito() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.allowPrivateBrowsingByDefault", false]],
   });
@@ -393,9 +286,9 @@ async function test_badge_and_toggle_incognito() {
   );
 
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
-}
+});
 
-async function test_addon_preferences_button() {
+add_task(async function test_addon_preferences_button() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.allowPrivateBrowsingByDefault", false]],
   });
@@ -468,18 +361,10 @@ async function test_addon_preferences_button() {
     };
 
     const setAddonPrivateBrowsingAccess = async (id, allowPrivateBrowsing) => {
-      let cardUpdatedPromise;
-      if (gManagerWindow.useHtmlViews) {
-        cardUpdatedPromise = BrowserTestUtils.waitForEvent(
-          getHtmlElem("addon-card"),
-          "update"
-        );
-      } else {
-        cardUpdatedPromise = BrowserTestUtils.waitForEvent(
-          gManagerWindow,
-          "ViewChanged"
-        );
-      }
+      const cardUpdatedPromise = BrowserTestUtils.waitForEvent(
+        getHtmlElem("addon-card"),
+        "update"
+      );
       is(
         getPrivateBrowsingValue(),
         allowPrivateBrowsing ? "0" : "1",
@@ -510,14 +395,12 @@ async function test_addon_preferences_button() {
           allowPrivateBrowsing ? "added" : "removed"
         }`
       );
-      if (gManagerWindow.useHtmlViews) {
-        let badge = getPrivateBrowsingBadge(getHtmlElem("addon-card"));
-        is(
-          !badge.hidden,
-          allowPrivateBrowsing,
-          `Expected private browsing badge at ${id}`
-        );
-      }
+      let badge = getPrivateBrowsingBadge(getHtmlElem("addon-card"));
+      is(
+        !badge.hidden,
+        allowPrivateBrowsing,
+        `Expected private browsing badge at ${id}`
+      );
     };
 
     const extensions = [];
@@ -574,14 +457,13 @@ async function test_addon_preferences_button() {
   // run tests in private and non-private windows.
   await runTest(true);
   await runTest(false);
-}
+});
 
-async function test_addon_postinstall_incognito_hidden_checkbox(withHtmlViews) {
+add_task(async function test_addon_postinstall_incognito_hidden_checkbox() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.allowPrivateBrowsingByDefault", false],
       ["extensions.langpacks.signatures.required", false],
-      ["extensions.htmlaboutaddons.enabled", withHtmlViews],
     ],
   });
 
@@ -708,9 +590,7 @@ async function test_addon_postinstall_incognito_hidden_checkbox(withHtmlViews) {
   // It is not possible to create a privileged add-on and install it, so just
   // simulate an installed privileged add-on and check the UI.
   await test_incognito_of_privileged_addons();
-
-  // No popPrefEnv because of bug 1557397.
-}
+});
 
 // Checks that the private browsing flag of privileged add-ons cannot be modified.
 async function test_incognito_of_privileged_addons() {
@@ -753,53 +633,3 @@ async function test_incognito_of_privileged_addons() {
 
   provider.unregister();
 }
-
-add_task(async function test_badge_and_toggle_incognito_on_XUL_aboutaddons() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", false]],
-  });
-  await test_badge_and_toggle_incognito();
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function test_badge_and_toggle_incognito_on_HTML_aboutaddons() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
-  });
-  await test_badge_and_toggle_incognito();
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function test_addon_preferences_button_on_XUL_aboutaddons() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.htmlaboutaddons.enabled", false],
-      ["extensions.htmlaboutaddons.inline-options.enabled", false],
-    ],
-  });
-  await test_addon_preferences_button();
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(async function test_addon_preferences_button_on_HTML_aboutaddons() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.htmlaboutaddons.enabled", true],
-      ["extensions.htmlaboutaddons.inline-options.enabled", true],
-    ],
-  });
-  await test_addon_preferences_button();
-  // No popPrefEnv because of bug 1557397.
-});
-
-add_task(
-  async function test_addon_postinstall_incognito_hidden_checkbox_on_XUL_aboutaddons() {
-    await test_addon_postinstall_incognito_hidden_checkbox(false);
-  }
-);
-
-add_task(
-  async function test_addon_postinstall_incognito_hidden_checkbox_on_HTML_aboutaddons() {
-    await test_addon_postinstall_incognito_hidden_checkbox(true);
-  }
-);
