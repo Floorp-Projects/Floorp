@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.util.Callbacks
 import org.junit.Ignore
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -68,6 +69,11 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.session.loadUri(testUri)
         sessionRule.session.waitUntilCalled(GeckoSession.HistoryDelegate::class,
                                             "onVisited", "getVisited")
+
+        // Sometimes link changes are not applied immediately, wait for a little bit
+        UiThreadUtils.waitForCondition({
+            sessionRule.getLinkColor(testUri, "#mozilla") == VISITED_COLOR
+        }, sessionRule.env.defaultTimeoutMillis)
 
         assertThat(
             "Mozilla should be visited",
