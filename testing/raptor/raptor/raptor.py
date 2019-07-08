@@ -722,6 +722,8 @@ class RaptorAndroid(Raptor):
         self.remote_test_root = os.path.abspath(os.path.join(os.sep, 'sdcard', 'raptor'))
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
         self.os_baseline_data = None
+        self.screen_off_timeout = 0
+        self.screen_brightness = 127
 
     def set_reverse_port(self, port):
         tcp_port = "tcp:{}".format(port)
