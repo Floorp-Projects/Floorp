@@ -540,8 +540,16 @@ inline bool IsBaselineEnabled(JSContext* cx) {
 #endif
 }
 
+inline bool IsBaselineInterpreterEnabled() {
+#ifdef JS_CODEGEN_NONE
+  return false;
+#else
+  return JitOptions.baselineInterpreter && JitOptions.supportsFloatingPoint;
+#endif
+}
+
 inline bool IsBaselineInterpreterOrJitEnabled(JSContext* cx) {
-  return IsBaselineEnabled(cx) || JitOptions.baselineInterpreter;
+  return IsBaselineInterpreterEnabled() || IsBaselineEnabled(cx);
 }
 
 enum class BaselineTier { Interpreter, Compiler };

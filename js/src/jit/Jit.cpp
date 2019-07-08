@@ -140,7 +140,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
   do {
     // Make sure we can enter Baseline Interpreter or JIT code. Note that
     // the prologue has warm-up checks to tier up if needed.
-    if (JitOptions.baselineInterpreter) {
+    if (IsBaselineInterpreterEnabled()) {
       if (script->jitScript()) {
         break;
       }
@@ -178,7 +178,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
     }
 
     // Try to enter the Baseline Interpreter.
-    if (JitOptions.baselineInterpreter) {
+    if (IsBaselineInterpreterEnabled()) {
       jit::MethodStatus status =
           jit::CanEnterBaselineMethod<BaselineTier::Interpreter>(cx, state);
       if (status == jit::Method_Error) {

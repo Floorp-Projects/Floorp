@@ -318,7 +318,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
 }
 
 bool jit::CanBaselineInterpretScript(JSScript* script) {
-  MOZ_ASSERT(JitOptions.baselineInterpreter);
+  MOZ_ASSERT(IsBaselineInterpreterEnabled());
 
   if (script->hasForceInterpreterOp()) {
     return false;
@@ -336,7 +336,7 @@ bool jit::CanBaselineInterpretScript(JSScript* script) {
 
 static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
                                                 HandleScript script) {
-  MOZ_ASSERT(JitOptions.baselineInterpreter);
+  MOZ_ASSERT(IsBaselineInterpreterEnabled());
 
   if (script->jitScript()) {
     return Method_Compiled;
@@ -992,7 +992,7 @@ void BaselineScript::toggleProfilerInstrumentation(bool enable) {
 }
 
 void BaselineInterpreter::toggleProfilerInstrumentation(bool enable) {
-  if (!JitOptions.baselineInterpreter) {
+  if (!IsBaselineInterpreterEnabled()) {
     return;
   }
 
@@ -1002,7 +1002,7 @@ void BaselineInterpreter::toggleProfilerInstrumentation(bool enable) {
 }
 
 void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
-  if (!JitOptions.baselineInterpreter) {
+  if (!IsBaselineInterpreterEnabled()) {
     return;
   }
 
@@ -1026,7 +1026,7 @@ void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
 
 void BaselineInterpreter::toggleCodeCoverageInstrumentationUnchecked(
     bool enable) {
-  if (!JitOptions.baselineInterpreter) {
+  if (!IsBaselineInterpreterEnabled()) {
     return;
   }
 
@@ -1144,8 +1144,9 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
 
 bool jit::GenerateBaselineInterpreter(JSContext* cx,
                                       BaselineInterpreter& interpreter) {
-  // Temporary JitOptions check to prevent crashes for now.
-  if (JitOptions.baselineInterpreter) {
+  // Temporary IsBaselineInterpreterEnabled check to not generate the
+  // interpreter code (until it's enabled by default).
+  if (IsBaselineInterpreterEnabled()) {
     BaselineInterpreterGenerator generator(cx);
     return generator.generate(interpreter);
   }
